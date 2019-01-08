@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package apollo.data;
+
+import "cyber/proto/record.proto";
+
+message RecordData {
+  optional string path = 1;
+  repeated apollo.cyber.proto.SingleMessage messages = 2;
+}
