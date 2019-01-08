@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package apollo.data;
+
+import "modules/data/fuel/proto/record_data.proto";
+
+message RecordIOStatus {
+  optional bool success = 1;
+}
+
+service RecordIO {
+  // Load record from RecordData.path and populate RecordData.messages.
+  rpc LoadRecord(RecordData) returns (RecordData) {}
+  // Dump RecordData.messages to RecordData.path.
+  // Return OK on success, or HTTP_LOGIC_ERROR / HTTP_RUNTIME_ERROR accordingly.
+  rpc DumpRecord(RecordData) returns (RecordIOStatus) {}
+}
