@@ -2,16 +2,22 @@ syntax = "proto2";
 
 package apollo.data.fuel;
 
-import "modules/data/fuel/proto/record_data.proto";
+import "cyber/proto/record.proto";
 
-message RecordIOStatus {
-  optional bool success = 1;
+message RecordPath {
+  optional string path = 1;
 }
 
+message RecordData {
+  optional string path = 1;
+  repeated apollo.cyber.proto.SingleMessage messages = 2;
+}
+
+message None {}
+
 service RecordIO {
-  // Load record from RecordData.path and populate RecordData.messages.
-  rpc LoadRecord(RecordData) returns (RecordData) {}
-  // Dump RecordData.messages to RecordData.path.
-  // Return OK on success, or HTTP_LOGIC_ERROR / HTTP_RUNTIME_ERROR accordingly.
-  rpc DumpRecord(RecordData) returns (RecordIOStatus) {}
+  // Load record from given path.
+  rpc LoadRecord(RecordPath) returns (stream apollo.cyber.proto.ChunkBody) {}
+  // Dump messages to record.
+  rpc DumpRecord(stream RecordData) returns (None) {}
 }
