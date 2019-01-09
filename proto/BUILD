@@ -1,4 +1,5 @@
 package(default_visibility = ["//visibility:public"])
+load("//tools:grpc_library.bzl", "cc_grpc_library")
 
 cc_proto_library(
     name = "record_data_proto",
@@ -15,16 +16,12 @@ proto_library(
     ],
 )
 
-cc_proto_library(
-    name = "record_io_proto",
-    deps = [
-        ":record_io_proto_lib",
-    ],
-)
-
-proto_library(
-    name = "record_io_proto_lib",
+cc_grpc_library(
+    name = "record_io_grpc",
     srcs = ["record_io.proto"],
+    deps_cc = [
+        ":record_data_proto",
+    ],
     deps = [
         ":record_data_proto_lib",
     ],

@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package apollo.data;
+package apollo.data.fuel;
 
 import "modules/data/fuel/proto/record_data.proto";
 
