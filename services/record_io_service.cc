@@ -29,9 +29,12 @@ class RecordIOService final : public RecordIO::Service {
     // Read until the last section, which is SECTION_INDEX.
     while (reader.ReadSection(&section) &&
            section.type != SectionType::SECTION_INDEX) {
-      if (section.type == SectionType::SECTION_CHUNK_BODY &&
-          reader.ReadSection<ChunkBody>(section.size, &chunk)) {
-        CHECK(output->Write(chunk));
+      if (section.type == SectionType::SECTION_CHUNK_BODY) {
+        if (reader.ReadSection<ChunkBody>(section.size, &chunk)) {
+          CHECK(output->Write(chunk));
+        }
+      } else {
+        reader.SkipSection(section.size);
       }
     }
     return grpc::Status::OK;
@@ -73,4 +76,5 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
   server->Wait();
+  return 0;
 }
