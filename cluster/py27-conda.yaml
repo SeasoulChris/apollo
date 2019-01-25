@@ -1,0 +1,16 @@
+name: py27
+dependencies:
+  - python = 2.7
+
+  # Google infra
+  - protobuf
+  - python-gflags
+
+  # Data science
+  - h5py
+  - numpy
+  - pyspark = 2.4.0
+
+  - pip:
+    # Google infra
+    - glog

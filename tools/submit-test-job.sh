@@ -8,15 +8,21 @@
 #       sudo apt-get install openjdk-8-jdk
 #       sudo update-alternatives --config java
 
-cd "$( dirname "${BASH_SOURCE[0]}" )"
-source env.sh
+cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+source tools/base.sh
 
 WORKERS=1
+K8S=http://127.0.0.1:8080
 
+# Make fueling package to submit job.
+rm -fr ./fueling.zip && zip -r ./fueling.zip ./fueling
+
+WORKERS=1
 spark-submit \
     --master k8s://${K8S} \
     --deploy-mode cluster \
     --conf spark.executor.instances=${WORKERS} \
     --conf spark.kubernetes.container.image=${REPO}:${TAG} \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
-    /apollo/modules/data/fuel/jobs/test.py
+    --py-files ./fueling.zip \
+    $1
