@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-#
-# Prerequisite:
-#   spark-submit:
-#       sudo pip install pyspark==2.4.0
-#
-#   JDK 8?:
-#       sudo apt-get install openjdk-8-jdk
-#       sudo update-alternatives --config java
 
 LOCAL_JOB="$1"
 
-# Update config.
+# Config.
 IMAGE=apolloauto/spark:20190129_0000
 K8S=https://180.76.185.100:6443
 WORKERS=5
