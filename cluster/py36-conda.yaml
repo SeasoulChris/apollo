@@ -1,11 +1,12 @@
+# TODO(all): Depend on Cyber wrapper update.
 name: py36
 dependencies:
   - python = 3.6
 
   # Google infra
+  - gflags
   - glog
   - protobuf
-  - python-gflags
 
   # Data science
   - h5py

@@ -3,10 +3,15 @@
 LOCAL_JOB="$1"
 
 # Config.
-CORES=8
+CORES=4
+ENV=py27
 
-# Specify the version you use.
-# source /usr/local/miniconda2/bin/activate py27
-source /usr/local/miniconda2/bin/activate py37
+CONDA=/usr/local/miniconda2/bin/conda
+# Update your conda and env:
+#   ${CONDA} update -n base -c defaults conda
+   ${CONDA} env update -f /apollo/modules/data/fuel/cluster/${ENV}-conda.yaml
 
-spark-submit --master "local[${CORES}]" ${LOCAL_JOB}
+source ${CONDA} activate ${ENV}
+source /apollo/scripts/apollo_base.sh
+
+spark-submit --master "local[${CORES}]" "${LOCAL_JOB}"
