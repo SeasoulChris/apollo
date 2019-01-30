@@ -34,7 +34,7 @@ practices are:
 1. Put all Python modules in ./fueling/ folder, and import them with full path
    like `import fueling.io.xxx`.
 
-### Test you pipeline at local
+### Test your pipeline at local
 
 ```bash
 tools/submit-job-to-local.sh /path/to/spark/job.py
