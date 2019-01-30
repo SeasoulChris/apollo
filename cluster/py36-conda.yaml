@@ -1,6 +1,6 @@
-name: py37
+name: py36
 dependencies:
-  - python = 3.7
+  - python = 3.6
 
   # Google infra
   - glog
