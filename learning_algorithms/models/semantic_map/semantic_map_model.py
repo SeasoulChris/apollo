@@ -39,8 +39,7 @@ Dataset set-up
 '''
 def process_img(filepath, transform, verbose=False):
     img = torch.from_numpy(cv.imread(filepath))
-    img = img.transpose(1, 2)
-    img = img.transpose(0, 1)
+    img = img.permute((2, 0, 1))
 
     norm_func = torchvision.transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])

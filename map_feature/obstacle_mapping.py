@@ -103,7 +103,7 @@ if __name__ == '__main__':
     print("Finish reading proto...")
 
     output_dir = './data/'
-    if os.path.exists(output_dir):
+    if os.path.isdir(output_dir):
         print(output_dir + " directory exists, delete it!")
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)

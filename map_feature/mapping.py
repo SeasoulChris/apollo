@@ -17,7 +17,6 @@
 import numpy as np
 import cv2 as cv
 from modules.map.proto import map_pb2
-from scipy import misc
 
 
 class Mapping(object):
@@ -179,4 +178,3 @@ if __name__ == '__main__':
     mapping = Mapping("san_mateo")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(mapping.region + ".png", mapping.base_map)
-    # misc.imsave(self.region + ".jpg", self.base_map)
