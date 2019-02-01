@@ -18,7 +18,6 @@ import os
 import shutil
 import numpy as np
 import cv2 as cv
-from modules.map.proto import map_pb2
 from modules.prediction.proto import offline_features_pb2
 from mapping import Mapping
 
@@ -35,6 +34,7 @@ class ObstacleMapping(object):
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map
+            cv.imwrite(mapping.region + ".png", base_map)
             center_idx = mapping.get_trans_point(center_point)
 
         self.frame_env = frame_env
