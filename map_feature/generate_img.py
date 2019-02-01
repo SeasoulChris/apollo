@@ -44,17 +44,19 @@ if __name__ == '__main__':
         with open(input_file, 'r') as file_in:
             list_frame.ParseFromString(file_in.read())
         print("Finish reading proto: " + input_file)
-        for frame_env in list_frame.frame_env:
-            obstacle_mapping = ObstacleMapping("san_mateo", frame_env)
-            for history in frame_env.obstacles_history:
-                if not history.is_trainable:
-                    continue
-                key = "{}@{:.3f}".format(history.feature[0].id, history.feature[0].timestamp)
-                filename = key + ".png"
-                obs_pos = []
-                for feature in history.feature:
-                    obs_pos.append((feature.position.x, feature.position.y))
-                obs_pos_dict[key] = obs_pos
-                img = obstacle_mapping.crop_by_history(history)
-                cv.imwrite(os.path.join(output_dir + filename), img)
-    np.save(os.path.join(output_dir+"obs_pos.npy"), obs_pos_dict)
+        for idx, frame_env in enumerate(list_frame.frame_env):
+            try:
+                obstacle_mapping = ObstacleMapping("san_mateo", frame_env)
+                # print("Drawing frame " + str(idx) + "/" + str(len(list_frame.frame_env)))
+                for history in frame_env.obstacles_history:
+                    if not history.is_trainable:
+                        continue
+                    key = "{}@{:.3f}".format(history.feature[0].id, history.feature[0].timestamp)
+                    img = obstacle_mapping.crop_by_history(history)
+                    filename = "/" + key + ".png"
+                    cv.imwrite(os.path.join(output_dir + filename), img)
+                    obs_pos_dict[key] = [(feature.position.x, feature.position.y) for feature in history.feature]
+                    # print("Writing to: " + os.path.join(output_dir + filename))
+            except:
+                print("Possible error on frame: " + str(idx) + "/" + str(len(list_frame.frame_env)))
+    np.save(os.path.join(output_dir+"/obs_pos.npy"), obs_pos_dict)

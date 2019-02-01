@@ -29,12 +29,13 @@ class ObstacleMapping(object):
         center_point = np.array([frame_env.ego_history.feature[0].position.x, frame_env.ego_history.feature[0].position.y])
         if region=="san_mateo" and os.path.exists("san_mateo.png"):
             base_map = cv.imread("san_mateo.png")
-            print("san_mateo.png exist, read it directly!")
+            # print("san_mateo.png exist, read it directly!")
             center_idx = [int(np.round((center_point[0]-559000)/0.1)), int(12000-np.round((center_point[1]-4156860)/0.1))]
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map
             cv.imwrite(mapping.region + ".png", base_map)
+            print("Drawing map: " + mapping.region + ".png")
             center_idx = mapping.get_trans_point(center_point)
 
         self.frame_env = frame_env
@@ -122,5 +123,5 @@ if __name__ == '__main__':
                 obs_pos.append((feature.position.x, feature.position.y))
             obs_pos_dict[key] = obs_pos
             img = obstacle_mapping.crop_by_history(history)
-            cv.imwrite(os.path.join(output_dir + filename), img)
-    np.save(os.path.join(output_dir+"obs_pos.npy"), obs_pos_dict)
+            cv.imwrite(os.path.join(output_dir + "/" + filename), img)
+    np.save(os.path.join(output_dir+"/obs_pos.npy"), obs_pos_dict)
