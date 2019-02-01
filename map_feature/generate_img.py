@@ -33,8 +33,8 @@ if __name__ == '__main__':
     if os.path.isdir(output_dir):
         print(output_dir + " directory exists!")
     else:
-		os.mkdir(output_dir)
-		print("Making output directory: " + output_dir)
+        os.makedirs(output_dir)
+        print("Making output directory: " + output_dir)
 
     obs_pos_dict = dict()
     list_input = glob.glob(args.input+'/frame_env.*.bin')
