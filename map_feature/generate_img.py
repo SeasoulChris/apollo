@@ -56,5 +56,5 @@ if __name__ == '__main__':
                     obs_pos.append((feature.position.x, feature.position.y))
                 obs_pos_dict[key] = obs_pos
                 img = obstacle_mapping.crop_by_history(history)
-                cv.imwrite(output_dir + filename, img)
-    np.save(output_dir+"obs_pos.npy", obs_pos_dict)
+                cv.imwrite(os.path.join(output_dir + filename), img)
+    np.save(os.path.join(output_dir+"obs_pos.npy"), obs_pos_dict)
