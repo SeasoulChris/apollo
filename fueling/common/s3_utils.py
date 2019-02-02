@@ -6,6 +6,11 @@ import boto3
 import botocore.client
 import glog
 
+import fueling.common.spark_utils as spark_utils
+
+
+kS3MountPath = '/mnt/bos'
+
 
 def S3Client():
     """Get S3 client."""
@@ -16,7 +21,19 @@ def S3Client():
                         region_name='bj',
                         config=botocore.client.Config(signature_version='s3v4'))
 
-def ListObjects(bucket='apollo-platform', prefix=''):
+def IsDirObject(obj):
+    return obj[u'Key'].endswith('/')
+
+def IsFileObject(obj):
+    return not obj[u'Key'].endswith('/')
+
+def ObjectToKey(obj):
+    return obj[u'Key']
+
+def KeyToMountPath(key):
+    return '{}/{}'.format(kS3MountPath, key)
+
+def ListObjects(bucket, prefix=''):
     """
     Get a list of objects in format:
     {u'Key': '/path/to/file',
@@ -32,7 +49,16 @@ def ListObjects(bucket='apollo-platform', prefix=''):
         for obj in page['Contents']:
             yield obj
 
-def ListObjectKeys(bucket='apollo-platform', prefix=''):
-    """Return a list of keys matched the prefix."""
-    for obj in ListObjects(bucket, prefix):
-        yield obj['Key']
+def ListFiles(bucket, prefix=''):
+    """Get a RDD of files."""
+    return spark_utils.CurrentContext() \
+        .parallelize(ListObjects(bucket, prefix)) \
+        .filter(IsFileObject) \
+        .map(ObjectToKey)
+
+def ListDirs(bucket, prefix=''):
+    """Get a RDD of dirs."""
+    return spark_utils.CurrentContext() \
+        .parallelize(ListObjects(bucket, prefix)) \
+        .filter(IsDirObject) \
+        .map(ObjectToKey)

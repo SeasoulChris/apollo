@@ -2,7 +2,17 @@
 
 from pyspark import SparkContext, SparkConf
 
+
+kCurrentContext = None
+
+
 def GetContext(app_name='SparkJob'):
-    """Get Spark context."""
+    """Get new Spark context."""
     conf = SparkConf().setAppName(app_name)
-    return SparkContext(conf=conf)
+    kCurrentContext = SparkContext(conf=conf)
+    return kCurrentContext
+
+
+def CurrentContext():
+    """Get existing or new Spark context."""
+    return kCurrentContext or GetContext()
