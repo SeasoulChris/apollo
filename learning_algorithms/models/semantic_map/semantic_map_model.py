@@ -38,13 +38,12 @@ Dataset set-up
 ========================================================================
 '''
 def process_img(filepath, transform, verbose=False):
-    img = torch.from_numpy(cv.imread(filepath))
-    img = img.permute((2, 0, 1))
-
-    norm_func = torchvision.transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    img = img.float() / 255.0
-    img = norm_func(img)
+    raw_img = cv.imread(filepath)
+    img_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])])
+    img = img_transform(img)
 
     if transform is not None:
         img = transform(img)
