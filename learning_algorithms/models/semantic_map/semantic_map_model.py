@@ -17,6 +17,7 @@
 import cv2 as cv
 import glob
 import numpy as np
+import os
 
 import torch
 import torch.nn as nn
@@ -57,9 +58,12 @@ class SemanticMapDataset(Dataset):
             print('Failed to load' + self.items[idx])
 
         # TODO(jiacheng): implement this.
-        sample_obs_feature = None
+        key = os.path.basename(img_name).replace(".png","")
+        sample_obs_feature = torch.rand(20)
 
-        return sample_img, sample_obs_feature
+        sample_label = torch.rand(20)
+
+        return (sample_img, sample_obs_feature), sample_label
 
 
 '''
@@ -84,9 +88,17 @@ class SemanticMapModel(nn.Module):
             nn.Linear(130, num_pred_points * 2)
         )
     
-    def forward(self, X): 
+    def forward(self, X):
         img, obs_feature = X
         out = self.cnn(img)
         out = out.view(out.size(0), -1)
         out = torch.cat([out, obs_feature], 1)
         return self.fc(out)
+
+class SemanticMapLoss():
+    def loss_fn(self, y_pred, y_true):
+        loss_func = nn.MSELoss()
+        return loss_func(y_pred, y_true)
+
+    def loss_info(self, y_pred, y_true):
+        return
