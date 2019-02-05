@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-
+import datetime
+import operator
 import os.path
-
-from cyber_py.record import RecordReader
 
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
+import fueling.common.spark_utils as spark_utils
 
 
 kWantedChannels = {
@@ -48,35 +48,44 @@ kWantedChannels = {
 
 kBucket = 'apollo-platform'
 # Original records are public-test/path/to/*.record, sharded to M.
-kOriginKeyPrefix = 'public-test/2019/'
+kOriginPrefix = 'public-test/2019/'
 # We will process them to small-records/path/to/*.record, sharded to N.
-kTargetKeyPrefix = 'small-records/2019/'
+kTargetPrefix = 'small-records/2019/'
 
-FuncKeyToPath = lambda key: '/mnt/bos/%s' % key
 
+def ShardToFile(dir_msg):
+    target_dir, msg = dir_msg
+    dt = datetime.datetime.fromtimestamp(msg.timestamp / (10**9))
+    target_file = os.path.join(target_dir, dt.strftime('%Y-%m-%d-%H-%M-00.record'))
+    return target_file, msg
 
 def Main():
-    files = s3_utils.ListFiles(kBucket, kOriginKeyPrefix)
-    files.persist()
+    files = s3_utils.ListFiles(kBucket, kOriginPrefix).persist()
 
-    upload_complete_dirs = (files
-        .filter(lambda path: path.endswith('/UPLOAD_COMPLETE'))
+    # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
+    complete_dirs = (files
+        .filter(lambda path: path.endswith('/COMPLETE'))
         .keyBy(os.path.dirname))
 
     # -> target_dir, which is "small-records/..."
-    processed_dirs = s3_utils.ListDirs(kBucket, kTargetKeyPrefix).map(lambda path: path, None)
+    processed_dirs = s3_utils.ListDirs(kBucket, kTargetPrefix).keyBy(lambda path: path)
 
     (files
         .filter(record_utils.IsRecordFile)       # -> record
         .keyBy(os.path.dirname)                  # -> (task_dir, record)
-        .join(upload_complete_dirs)              # -> (task_dir, (record, todo=True))
-        .mapValues(lambda path, _: path)         # -> (task_dir, record)
-        # -> (target_dir, record)
-        .map(lambda task_dir, record: task_dir.replace(kOriginKeyPrefix, kTargetKeyPrefix, 1), record)
-        .subtractByKey(processed_dirs)           # -> (target_dir, file), which is not processed
-        .flatMapValues(record_utils.ReadRecord)  # -> (target_dir, PyBagMessage)
-        .groupByKey()                            # -> (target_dir, PyBagMessages)
-        .map(record_utils.WriteRecord)           # -> (target_dir, None)
+        .join(complete_dirs)                     # -> (task_dir, (record, _))
+        .mapValues(operator.itemgetter(0))       # -> (task_dir, record)
+        .map(spark_utils.MapKey(                 # -> (target_dir, record)
+             lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
+        .subtractByKey(processed_dirs)           # -> (target_dir, record), which is not processed
+        .flatMapValues(                          # -> (target_dir, PyBagMessage)
+            record_utils.ReadRecord(kWantedChannels))
+        .map(ShardToFile)                        # -> (target_file, PyBagMessage)
+        .groupByKey()                            # -> (target_file, PyBagMessages)
+        .mapValues(                              # -> (target_file, PyBagMessages_sequence)
+            lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
+        .map(spark_utils.MapKey(lambda target_file: os.path.join('/apollo/data/test', os.path.basename(target_file))))  # For test
+        .map(record_utils.WriteRecord)           # -> (None)
         .count())                                # Simply trigger action.
 
 

@@ -22,8 +22,8 @@
    sudo update-alternatives --config java
 
    # Conda env.
-   conda env update -f cluster/py27-conda.yaml
-   conda activate py27
+   /usr/local/miniconda2/bin/conda env update -f cluster/py27-conda.yaml
+   source /usr/local/miniconda2/bin/activate py27
    ```
 
 ## Develop pipeline jobs

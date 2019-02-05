@@ -9,7 +9,7 @@ import glog
 import fueling.common.spark_utils as spark_utils
 
 
-kS3MountPath = '/mnt/bos'
+S3MountPath = '/mnt/bos'
 
 
 def S3Client():
@@ -21,17 +21,8 @@ def S3Client():
                         region_name='bj',
                         config=botocore.client.Config(signature_version='s3v4'))
 
-def IsDirObject(obj):
-    return obj[u'Key'].endswith('/')
-
-def IsFileObject(obj):
-    return not obj[u'Key'].endswith('/')
-
-def ObjectToKey(obj):
-    return obj[u'Key']
-
-def KeyToMountPath(key):
-    return '{}/{}'.format(kS3MountPath, key)
+def AbsPath(obj_rel_path):
+    return os.path.join(S3MountPath, obj_rel_path)
 
 def ListObjects(bucket, prefix=''):
     """
@@ -46,19 +37,19 @@ def ListObjects(bucket, prefix=''):
     paginator = s3.get_paginator('list_objects')
     page_iterator = paginator.paginate(Bucket=bucket, Prefix=prefix)
     for page in page_iterator:
-        for obj in page['Contents']:
+        for obj in page.get('Contents', []):
             yield obj
 
 def ListFiles(bucket, prefix=''):
     """Get a RDD of files."""
-    return spark_utils.CurrentContext() \
+    return spark_utils.GetContext() \
         .parallelize(ListObjects(bucket, prefix)) \
-        .filter(IsFileObject) \
-        .map(ObjectToKey)
+        .filter(lambda obj: not obj['Key'].endswith('/')) \
+        .map(lambda obj: obj['Key'])
 
 def ListDirs(bucket, prefix=''):
     """Get a RDD of dirs."""
-    return spark_utils.CurrentContext() \
+    return spark_utils.GetContext() \
         .parallelize(ListObjects(bucket, prefix)) \
-        .filter(IsDirObject) \
-        .map(ObjectToKey)
+        .filter(lambda obj: obj['Key'].endswith('/')) \
+        .map(lambda obj: obj['Key'])
