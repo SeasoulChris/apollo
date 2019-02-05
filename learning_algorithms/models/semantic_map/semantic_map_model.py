@@ -15,21 +15,17 @@
 ###############################################################################
 
 import cv2 as cv
-import math
+import glob
 import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from torchvision import models
 from torchvision import transforms
-
-from utilities.IO_utils import *
 
 
 '''
@@ -37,32 +33,26 @@ from utilities.IO_utils import *
 Dataset set-up
 ========================================================================
 '''
-def process_img(filepath, transform, verbose=False):
-    raw_img = cv.imread(filepath)
-    img_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])])
-    img = img_transform(img)
-
-    if transform is not None:
-        img = transform(img)
-    
-    return img
-
 class SemanticMapDataset(Dataset):
-    def __init__(self, dir, transform=None, is_simple_dataloader=False,
-                 verbose=False):
-        self.all_files = GetListOfFiles(dir)
-        self.transform = transform
-        self.is_simple_dataloader = is_simple_dataloader
+    def __init__(self, dir, transform=None, verbose=False):
+        self.items = glob.glob(dir+"/**/*.png", recursive=True)
+        if transform:
+            self.transform = transform
+        else:
+            self.transform = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                             std=[0.229, 0.224, 0.225])])
         self.verbose = verbose
 
     def __len__(self):
-        return len(self.all_files)
+        return len(self.items)
     
     def __getitem__(self, idx):
-        sample_img = process_img(self.all_files[idx], self.transform, self.verbose)
+        img_name = self.items[idx]
+        sample_img = cv.imread(img_name)
+        if self.transform:
+            sample_img = self.transform(sample_img)
         if sample_img is None:
             print('Failed to load' + self.items[idx])
 
