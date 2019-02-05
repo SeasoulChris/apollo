@@ -84,7 +84,6 @@ def Main():
         .groupByKey()                            # -> (target_file, PyBagMessages)
         .mapValues(                              # -> (target_file, PyBagMessages_sequence)
             lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
-        .map(spark_utils.MapKey(lambda target_file: os.path.join('/apollo/data/test', os.path.basename(target_file))))  # For test
         .map(record_utils.WriteRecord)           # -> (None)
         .count())                                # Simply trigger action.
 

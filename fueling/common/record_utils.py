@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import errno
 import fnmatch
+import os
 
 from cyber_py.record import RecordReader, RecordWriter
 
@@ -30,12 +32,21 @@ def WriteRecord(path_to_messages):
 
     PyBagMessage = namedtuple(topic, message, data_type, timestamp)
     """
+    # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
+    path = s3_utils.AbsPath(path)
+    try:
+        os.makedirs(os.path.dirname(path))
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
     writer = RecordWriter(0, 0)
-    writer.open(s3_utils.AbsPath(path))
+    writer.open(path)
     for msg in py_bag_messages:
-        writer.WriteMessage(msg.topic, msg.message, msg.timestamp, msg.data_type)
+        # As a generated record, we ignored the proto desc.
+        writer.write_channel(msg.topic, msg.data_type, '')
+        writer.write_message(msg.topic, msg.message, msg.timestamp)
     writer.close()
     # Dummy map result.
     return None
