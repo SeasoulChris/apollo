@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import datetime
 import operator
-import os.path
+import os
 
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
@@ -67,25 +67,37 @@ def Main():
         .filter(lambda path: path.endswith('/COMPLETE'))
         .keyBy(os.path.dirname))
 
-    # -> target_dir, which is "small-records/..."
+    # target_dir, which is "small-records/..."
     processed_dirs = s3_utils.ListDirs(kBucket, kTargetPrefix).keyBy(lambda path: path)
 
-    (files
-        .filter(record_utils.IsRecordFile)       # -> record
-        .keyBy(os.path.dirname)                  # -> (task_dir, record)
-        .join(complete_dirs)                     # -> (task_dir, (record, _))
-        .mapValues(operator.itemgetter(0))       # -> (task_dir, record)
-        .map(spark_utils.MapKey(                 # -> (target_dir, record)
-             lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
-        .subtractByKey(processed_dirs)           # -> (target_dir, record), which is not processed
-        .flatMapValues(                          # -> (target_dir, PyBagMessage)
-            record_utils.ReadRecord(kWantedChannels))
-        .map(ShardToFile)                        # -> (target_file, PyBagMessage)
-        .groupByKey()                            # -> (target_file, PyBagMessages)
-        .mapValues(                              # -> (target_file, PyBagMessages_sequence)
-            lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
-        .map(record_utils.WriteRecord)           # -> (None)
-        .count())                                # Simply trigger action.
+    # Find all todo jobs.
+    todo_jobs = (files
+        .filter(record_utils.IsRecordFile)  # -> record
+        .keyBy(os.path.dirname)             # -> (task_dir, record)
+        .join(complete_dirs)                # -> (task_dir, (record, _))
+        .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
+        .map(spark_utils.MapKey(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
+                                            # -> (target_dir, record)
+        .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
+        .persist())
+
+    # Read the input data and write to target file.
+    (todo_jobs
+        .flatMapValues(record_utils.ReadRecord(kWantedChannels))  # -> (target_dir, PyBagMessage)
+        .map(ShardToFile)                                         # -> (target_file, PyBagMessage)
+        .groupByKey()                                             # -> (target_file, PyBagMessages)
+        .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
+                                        # -> (target_file, PyBagMessages_sequence)
+        .map(record_utils.WriteRecord)  # -> (None)
+        .count())                       # Simply trigger action.
+
+    # Create COMPLETE mark.
+    (todo_jobs
+        .keys()                                            # -> target_dir
+        .distinct()                                        # -> unique_target_dir
+        .map(lambda path: os.path.join(path, 'COMPLETE'))  # -> unique_target_dir/COMPLETE
+        .map(os.mknod)                                     # Touch file
+        .count())                                          # Simply trigger action.
 
 
 if __name__ == '__main__':

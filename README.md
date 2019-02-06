@@ -17,13 +17,12 @@
 1. Install additional tools for the Apollo container.
 
    ```bash
-   # JDK 8
-   sudo apt-get install openjdk-8-jdk
-   sudo update-alternatives --config java
-
-   # Conda env.
-   /usr/local/miniconda2/bin/conda env update -f cluster/py27-conda.yaml
-   source /usr/local/miniconda2/bin/activate py27
+   # Upgrade conda first.
+   sudo /usr/local/miniconda2/bin/conda update -n base -c defaults conda
+   # Install and activate env. Currently we only have Python 2.7, because
+   # Python 3.6 dependes on Cyber python wrapper upgrade.
+   conda env update -f cluster/py27-conda.yaml
+   source activate py27
    ```
 
 ## Develop pipeline jobs
@@ -32,7 +31,7 @@ We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good
 practices are:
 
 1. Put all Python modules in ./fueling/ folder, and import them with full path
-   like `import fueling.io.xxx`.
+   like `import fueling.common.s3_utils`.
 
 ### Test your pipeline at local
 
