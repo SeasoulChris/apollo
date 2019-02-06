@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import pprint
 import time
 
 from cyber_py.record import RecordReader
@@ -11,7 +12,8 @@ def DummyProcess(elem):
     time.sleep(60)
     return elem
 
-print(spark_utils.GetContext('Test')
+# Spark cascade style programming.
+res = (spark_utils.GetContext('Test')
     # [record_path, ...]
     .parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
     # [message, ...]
@@ -23,6 +25,7 @@ print(spark_utils.GetContext('Test')
     # [topic:n, ...]
     .reduceByKey(lambda a, b: a + b)
     # Dummy process to leave some time for UI show at http://localhost:4040
-    .map(DummyProcess)
-    # Trigger actions and gather result to memory
-    .collect())
+    .map(DummyProcess))
+
+# Gather result to memory and print nicely.
+pprint.PrettyPrinter().pprint(res..collect())
