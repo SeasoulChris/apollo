@@ -15,21 +15,18 @@
 ###############################################################################
 
 import cv2 as cv
-import math
+import glob
 import numpy as np
+import os
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from torchvision import models
 from torchvision import transforms
-
-from utilities.IO_utils import *
 
 
 '''
@@ -37,40 +34,36 @@ from utilities.IO_utils import *
 Dataset set-up
 ========================================================================
 '''
-def process_img(filepath, transform, verbose=False):
-    img = torch.from_numpy(cv.imread(filepath))
-    img = img.permute((2, 0, 1))
-
-    norm_func = torchvision.transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    img = img.float() / 255.0
-    img = norm_func(img)
-
-    if transform is not None:
-        img = transform(img)
-    
-    return img
-
 class SemanticMapDataset(Dataset):
-    def __init__(self, dir, transform=None, is_simple_dataloader=False,
-                 verbose=False):
-        self.all_files = GetListOfFiles(dir)
-        self.transform = transform
-        self.is_simple_dataloader = is_simple_dataloader
+    def __init__(self, dir, transform=None, verbose=False):
+        self.items = glob.glob(dir+"/**/*.png", recursive=True)
+        if transform:
+            self.transform = transform
+        else:
+            self.transform = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                             std=[0.229, 0.224, 0.225])])
         self.verbose = verbose
 
     def __len__(self):
-        return len(self.all_files)
+        return len(self.items)
     
     def __getitem__(self, idx):
-        sample_img = process_img(self.all_files[idx], self.transform, self.verbose)
+        img_name = self.items[idx]
+        sample_img = cv.imread(img_name)
+        if self.transform:
+            sample_img = self.transform(sample_img)
         if sample_img is None:
             print('Failed to load' + self.items[idx])
 
         # TODO(jiacheng): implement this.
-        sample_obs_feature = None
+        key = os.path.basename(img_name).replace(".png","")
+        sample_obs_feature = torch.rand(20)
 
-        return sample_img, sample_obs_feature
+        sample_label = torch.rand(20)
+
+        return (sample_img, sample_obs_feature), sample_label
 
 
 '''
@@ -95,9 +88,17 @@ class SemanticMapModel(nn.Module):
             nn.Linear(130, num_pred_points * 2)
         )
     
-    def forward(self, X): 
+    def forward(self, X):
         img, obs_feature = X
         out = self.cnn(img)
         out = out.view(out.size(0), -1)
         out = torch.cat([out, obs_feature], 1)
         return self.fc(out)
+
+class SemanticMapLoss():
+    def loss_fn(self, y_pred, y_true):
+        loss_func = nn.MSELoss()
+        return loss_func(y_pred, y_true)
+
+    def loss_info(self, y_pred, y_true):
+        return
