@@ -37,7 +37,7 @@ def cuda(x):
     return x.cuda() if torch.cuda.is_available() else x
 
 def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
-                  batch_preprocess, batch_size=1024, print_period=100):
+                  batch_preprocess=None, batch_size=1024, print_period=100):
     model.train()
 
     loss_history = []
@@ -50,7 +50,8 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
         optimizer.zero_grad()
         X = train_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = train_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        X, y = batch_preprocess(X, y)
+        if batch_preprocess is not None:
+            X, y = batch_preprocess(X, y)
         pred = model(X)
         train_loss = loss.loss_fn(pred, y)
         loss_history.append(train_loss.item())
@@ -71,7 +72,7 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
     print('Training Loss: {}'.format(train_loss))
     loss.loss_info(pred_y, train_y)
 
-def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess,
+def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
                   batch_size=1024):
     model.eval()
 
@@ -82,7 +83,8 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess,
     for i in range(num_of_batch):
         X = valid_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = valid_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        X, y = batch_preprocess(X, y)
+        if batch_preprocess is not None:
+            X, y = batch_preprocess(X, y)
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
         loss_history.append(valid_loss.item())
@@ -98,7 +100,7 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess,
     return valid_loss
 
 def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss,
-                        optimizer, scheduler, epochs, save_name, batch_preprocess,
+                        optimizer, scheduler, epochs, save_name, batch_preprocess=None,
                         train_batch=1024, print_period=100, valid_batch=1024):
     best_valid_loss = float('+inf')
     for epoch in range(1, epochs+1):
