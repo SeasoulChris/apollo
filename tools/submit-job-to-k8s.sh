@@ -1,36 +1,39 @@
 #!/usr/bin/env bash
 
-LOCAL_JOB="$1"
+# Input.
+LOCAL_JOB_FILE="$1"
 
 # Config.
-IMAGE=apolloauto/spark:20190129_0000
+IMAGE=apolloauto/spark:20190207_1139
 K8S=https://180.76.185.100:6443
-WORKERS=5
+WORKERS=2
 
 set -x
 set -e
 
-# Upload job files to BOS.
-JOB_PATH="/mnt/bos/modules/data/jobs"
-PREFIX="${JOB_PATH}/$(date +%Y%m%d-%H%M)_${USER}"
-JOB_FILE="${PREFIX}_$(basename ${LOCAL_JOB})"
-FUELING_PKG="${PREFIX}_fueling.zip"
+# Upload local files to remote.
+REMOTE_JOB_PATH="/mnt/bos/modules/data/jobs"
+REMOTE_PREFIX="${REMOTE_JOB_PATH}/$(date +%Y%m%d-%H%M)_${USER}"
+REMOTE_JOB_FILE="${REMOTE_PREFIX}_$(basename ${LOCAL_JOB_FILE})"
+REMOTE_FUELING_PKG="${REMOTE_PREFIX}_fueling.zip"
 
-sudo mkdir -p "${JOB_PATH}"
-sudo cp "${LOCAL_JOB}" "${JOB_FILE}"
+sudo mkdir -p "${REMOTE_JOB_PATH}"
+sudo cp "${LOCAL_JOB_FILE}" "${REMOTE_JOB_FILE}"
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
-  rm -f fueling.zip && \
-  zip -r fueling.zip fueling && \
-  sudo cp fueling.zip "${FUELING_PKG}"
+  LOCAL_FUELING_PKG=".fueling.zip"
+  rm -f "${LOCAL_FUELING_PKG}" && \
+  zip -r "${LOCAL_FUELING_PKG}" fueling && \
+  sudo cp "${LOCAL_FUELING_PKG}" "${REMOTE_FUELING_PKG}"
 popd
 
 # Submit job with fueling package.
 spark-submit \
-    --master k8s://${K8S} \
+    --master "k8s://${K8S}" \
     --deploy-mode cluster \
-    --conf spark.executor.instances=${WORKERS} \
-    --conf spark.kubernetes.container.image=${IMAGE} \
-    --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
-    --py-files "${FUELING_PKG}" \
-    ${JOB_FILE}
+    --conf spark.executor.instances="${WORKERS}" \
+    --conf spark.kubernetes.container.image="${IMAGE}" \
+    --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
+    --conf spark.kubernetes.container.image.pullSecrets="dockerhub.com" \
+    --py-files "${REMOTE_FUELING_PKG}" \
+    "${REMOTE_JOB_FILE}"

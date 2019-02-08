@@ -60,7 +60,7 @@ def ShardToFile(dir_msg):
     return target_file, msg
 
 def Main():
-    files = s3_utils.ListFiles(kBucket, kOriginPrefix).persist()
+    files = s3_utils.ListFiles(kBucket, kOriginPrefix).cache()
 
     # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
     complete_dirs = (files
@@ -79,7 +79,7 @@ def Main():
         .map(spark_utils.MapKey(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
                                             # -> (target_dir, record)
         .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
-        .persist())
+        .cache())
 
     # Read the input data and write to target file.
     (todo_jobs
@@ -92,12 +92,13 @@ def Main():
         .count())                       # Simply trigger action.
 
     # Create COMPLETE mark.
-    (todo_jobs
+    finished_jobs = (todo_jobs
         .keys()                                            # -> target_dir
         .distinct()                                        # -> unique_target_dir
         .map(lambda path: os.path.join(path, 'COMPLETE'))  # -> unique_target_dir/COMPLETE
         .map(os.mknod)                                     # Touch file
         .count())                                          # Simply trigger action.
+    print('Finished %d jobs!' % finished_jobs)
 
 
 if __name__ == '__main__':
