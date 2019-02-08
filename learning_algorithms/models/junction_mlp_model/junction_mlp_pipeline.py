@@ -95,6 +95,8 @@ if __name__ == "__main__":
 
     # Model training:
     model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss, \
-                        optimizer, scheduler, epochs, 'junction_mlp_model.pth', \
+                        optimizer, scheduler, epochs, 'junction_mlp_model.pt', \
                         train_batch=1024)
-    torch.save(model.state_dict(), args.savepath + "junction_mlp_model.pth")
+    savepath = args.savepath + "junction_mlp_model.pt"
+    traced_script_module = torch.jit.trace(model, X_train[0:1])
+    traced_script_module.save(savepath)
