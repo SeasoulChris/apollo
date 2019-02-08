@@ -4,7 +4,9 @@
 LOCAL_JOB_FILE="$1"
 
 # Config.
-IMAGE=apolloauto/spark:20190207_1139
+# TODO(xiangquan): We got problem on pulling from private repo. Use a public
+# repo for now as there is no confidential things in the image.
+IMAGE=xiangquan/spark:20190207_1717
 K8S=https://180.76.185.100:6443
 WORKERS=2
 
@@ -23,7 +25,7 @@ sudo cp "${LOCAL_JOB_FILE}" "${REMOTE_JOB_FILE}"
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}" && \
-  zip -r "${LOCAL_FUELING_PKG}" fueling && \
+  zip -r "${LOCAL_FUELING_PKG}" fueling -x *.pyc && \
   sudo cp "${LOCAL_FUELING_PKG}" "${REMOTE_FUELING_PKG}"
 popd
 
