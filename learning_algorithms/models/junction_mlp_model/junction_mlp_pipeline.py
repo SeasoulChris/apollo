@@ -54,11 +54,6 @@ def data_preprocessing(data):
     Y = data[:, -dim_output:]
     return torch.FloatTensor(X), torch.FloatTensor(Y)
 
-def batch_preprocess(X, y):
-    idx_1 = np.arange(X.shape[0]).tolist()
-    idx_2 = torch.argsort(X[:,-1], descending=True).tolist()
-    return X[idx_2], y[idx_2]
-
 if __name__ == "__main__":
 
     # data parser:
@@ -77,14 +72,15 @@ if __name__ == "__main__":
     X_train, Y_train = data_preprocessing(train_data)
     X_test, Y_test = data_preprocessing(test_data)
 
+    print(X_train.shape)
     # Model and training setup
     model = JunctionMLPModel(dim_input)
-    loss = SemanticMapLoss()
-    learning_rate = 1e-4
+    loss = JunctionMLPLoss()
+    learning_rate = 1e-3
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.3, patience=2, min_lr=1e-9, verbose=True, mode='min')
-    epochs = 10
+        optimizer, factor=0.3, patience=2, min_lr=1e-8, verbose=True, mode='min')
+    epochs = 20
 
     # CUDA setup:
     if (torch.cuda.is_available()):
@@ -100,5 +96,5 @@ if __name__ == "__main__":
     # Model training:
     model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss, \
                         optimizer, scheduler, epochs, 'junction_mlp_model.pth', \
-                        batch_preprocess, train_batch=1000)
+                        train_batch=1024)
     torch.save(model.state_dict(), args.savepath + "junction_mlp_model.pth")
