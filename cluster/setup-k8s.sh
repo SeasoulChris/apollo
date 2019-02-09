@@ -14,13 +14,10 @@ function AddClusterAdmin() {
 AddClusterAdmin default spark
 
 # Add docker secret.
-DOCKER_REGISTRY_SERVER="docker.io"
-DOCKER_USER="autoapollo"
-DOCKER_PASSWORD="<TODO>"
-DOCKER_EMAIL="apollo.baidu@gmail.com"
-
+DOCKER_USER="<INPUT>"
+DOCKER_PASSWORD="<INPUT>"
 kubectl create secret docker-registry dockerhub.com \
-    --docker-server="${DOCKER_REGISTRY_SERVER}" \
+    --docker-server="docker.io" \
     --docker-username="${DOCKER_USER}" \
     --docker-password="${DOCKER_PASSWORD}" \
-    --docker-email="${DOCKER_EMAIL}"
+    --docker-email="apollo.baidu@gmail.com"

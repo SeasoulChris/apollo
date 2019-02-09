@@ -4,11 +4,13 @@
 LOCAL_JOB_FILE="$1"
 
 # Config.
-# TODO(xiangquan): We got problem on pulling from private repo. Use a public
-# repo for now as there is no confidential things in the image.
-IMAGE=xiangquan/spark:20190207_1717
-K8S=https://180.76.185.100:6443
-WORKERS=2
+IMAGE="apolloauto/spark:20190209_1155"
+K8S="https://180.76.185.100:6443"
+WORKERS=1
+CORES=1
+CONDA_ENV="py27"
+AWS_KEY="<INPUT>"
+AWS_SEC="<INPUT>"
 
 set -x
 set -e
@@ -34,8 +36,15 @@ spark-submit \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
     --conf spark.executor.instances="${WORKERS}" \
-    --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
+    --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.container.image.pullSecrets="dockerhub.com" \
+    --conf spark.kubernetes.executor.request.cores="${CORES}" \
+    --conf spark.kubernetes.pyspark.pythonVersion=2 \
+    --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
+    --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
+    --conf spark.executorEnv.APOLLO_BOS_BUCKET="apollo-platform" \
+    --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
+    --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --py-files "${REMOTE_FUELING_PKG}" \
     "${REMOTE_JOB_FILE}"

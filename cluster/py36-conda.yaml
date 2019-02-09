@@ -1,0 +1,17 @@
+# This env is pure, clean and state-of-art Python 3 favored. We only specify
+# versions for Python itself and PySpark which should be align with the cloud
+# cluster. All other libraries should be kept at the latest version.
+name: py36
+dependencies:
+  - python = 3.6
+  - pyspark = 2.4.0
+
+  # Google infra
+  - gflags
+  - glog
+  - protobuf
+
+  # Data science
+  - boto3
+  - h5py
+  - numpy

@@ -1,6 +1,7 @@
-name: py27-fuel
+name: py27
 dependencies:
   - python = 2.7
+  - pyspark = 2.4.0
 
   # Google infra
     # Known bug for higher versions.
@@ -13,4 +14,3 @@ dependencies:
   - h5py = 2.3.0
     # Known bug for different versions.
   - numpy = 1.8.2
-  - pyspark = 2.4.0

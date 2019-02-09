@@ -4,7 +4,7 @@ LOCAL_JOB="$1"
 
 # Config.
 CORES=4
-ENV=py27-fuel
+ENV=py27
 
 source /usr/local/miniconda2/bin/activate ${ENV}
 source /apollo/scripts/apollo_base.sh
