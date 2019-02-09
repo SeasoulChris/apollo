@@ -1,4 +1,4 @@
-name: py27
+name: py27-fuel
 dependencies:
   - python = 2.7
 
