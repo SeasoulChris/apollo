@@ -1,0 +1,23 @@
+# Install miniconda:
+#   https://conda.io/miniconda.html
+# Init or update:
+#   conda env update -f conda_env.yml
+# Activate:
+#   source activate dynamic-model-training
+# Deactivate:
+#   source deactivate
+# Remove:
+#   conda env remove dynamic-model-training
+name: dynamic-model-training
+dependencies:
+  - python=2.7
+  - glog
+  - h5py
+  - numpy
+  - keras-gpu
+  - protobuf
+  - tensorflow-gpu
+  - scikit-learn
+  - matplotlib
+  - pip:
+    - bpython
