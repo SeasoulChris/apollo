@@ -38,9 +38,8 @@ spark-submit \
     --conf spark.executor.instances="${WORKERS}" \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
-    --conf spark.kubernetes.container.image.pullSecrets="dockerhub.com" \
     --conf spark.kubernetes.executor.request.cores="${CORES}" \
-    --conf spark.kubernetes.pyspark.pythonVersion=2 \
+    --conf spark.kubernetes.pyspark.pythonVersion=3 \
     --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
     --conf spark.executorEnv.APOLLO_BOS_BUCKET="apollo-platform" \
