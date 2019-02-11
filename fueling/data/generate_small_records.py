@@ -3,6 +3,8 @@ import datetime
 import operator
 import os
 
+import glog
+
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.spark_utils as spark_utils
@@ -90,16 +92,17 @@ def Main():
                                         # -> (target_file, PyBagMessages_sequence)
         .map(record_utils.WriteRecord)  # -> (None)
         .count())                       # Simply trigger action.
-    print('Finished %d records!' % records_count)
+    glog.info('Finished %d records!' % records_count)
 
     # Create COMPLETE mark.
     tasks_count = (todo_jobs
         .keys()                                            # -> target_dir
         .distinct()                                        # -> unique_target_dir
-        .map(lambda path: os.path.join(path, 'COMPLETE'))  # -> unique_target_dir/COMPLETE
+        .map(lambda path: os.path.join(s3_utils.S3MountPath, path, 'COMPLETE'))
+                                                           # -> unique_target_dir/COMPLETE
         .map(os.mknod)                                     # Touch file
         .count())                                          # Simply trigger action.
-    print('Finished %d tasks!' % tasks_count)
+    glog.info('Finished %d tasks!' % tasks_count)
 
 
 if __name__ == '__main__':

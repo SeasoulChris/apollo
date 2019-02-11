@@ -4,6 +4,8 @@ import errno
 import fnmatch
 import os
 
+import glog
+
 from cyber_py.record import RecordReader, RecordWriter
 
 import fueling.common.s3_utils as s3_utils
@@ -21,7 +23,8 @@ def ReadRecord(wanted_channels=None):
                 if wanted_channels is None or msg.topic in wanted_channels:
                     yield msg
         except Exception as e:
-            # Stop poping messages elegantly if exception happends, including the normal StopIteration.
+            # Stop poping messages elegantly if exception happends, including
+            # the normal StopIteration.
             raise StopIteration
     return ReadRecordFunc
 
@@ -40,10 +43,10 @@ def WriteRecord(path_to_messages):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-    print('Write record to %s' % path)
+    glog.info('Write record {}'.format(path))
     writer = RecordWriter(0, 0)
     writer.open(path)
-    topics = {}
+    topics = set()
     for msg in py_bag_messages:
         if msg.topic not in topics:
             # As a generated record, we ignored the proto desc.
@@ -52,4 +55,4 @@ def WriteRecord(path_to_messages):
         writer.write_message(msg.topic, msg.message, msg.timestamp)
     writer.close()
     # Dummy map result.
-    return 1
+    return None

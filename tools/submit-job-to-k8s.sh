@@ -38,11 +38,13 @@ popd
 "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
+    --conf spark.driver.memory="${MEMORY}" \
     --conf spark.executor.instances="${WORKERS}" \
+    --conf spark.executor.memory="${MEMORY}" \
+\
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.executor.request.cores="${CORES}" \
-    --conf spark.executor.memory="${MEMORY}" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
