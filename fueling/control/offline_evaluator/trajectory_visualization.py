@@ -46,7 +46,7 @@ from scipy.signal import savgol_filter
 from random import choice
 from random import randint
 from random import shuffle
-from features.parameters_training import dim
+from fueling.control.features.parameters_training import dim
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -100,7 +100,7 @@ def generate_evaluation_data(segments):
     print "X size = ", X.shape
     print "Y size = ", Y_imu.shape
 
-    text_file = open("../conf/sim_control_lincoln.pb.txt", "r")
+    text_file = open("fueling/control/conf/sim_control_lincoln.pb.txt", "r")
     lines = text_file.readlines()
     #print lines
     table_length = len(lines)/5
@@ -145,12 +145,11 @@ def generate_evaluation_data(segments):
 def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     Y_imu[:,0] = savgol_filter(Y_imu[:,0], 51, 3) # window size 51, polynomial order 3
     Y_mlp[:,0] = savgol_filter(Y_mlp[:,0], 51, 3) # window size 51, polynomial order 3
-
-    plt.figure(figsize=(3,2))
-    plt.title("Acceleration")
-    plt.plot(Y_imu[:,0], color = 'blue',label = "IMU acceleration")
-    plt.plot(Y_mlp[:,0], color = 'red', label = "Acceleration by MLP")
-    plt.plot(Y_point_mass[:,0], color = 'green',label = "Acceleration by sim_point_mass")
+    #plt.figure(figsize=(3,2))
+    #plt.title("Acceleration")
+    #plt.plot(Y_imu[:,0], color = 'blue',label = "IMU acceleration")
+    #plt.plot(Y_mlp[:,0], color = 'red', label = "Acceleration by MLP")
+    #plt.plot(Y_point_mass[:,0], color = 'green',label = "Acceleration by sim_point_mass")
     RMSE_mlp_acceleration = sqrt(mean_squared_error(Y_imu[:,0],Y_mlp[:,0]))
     RMSE_point_mass_acceleration = sqrt(mean_squared_error(Y_imu[:,0],Y_point_mass[:,0]))
     RMS_acceleration = sqrt(sum(n*n for n in Y_imu[:,0])/len(Y_imu[:,0]))
@@ -158,14 +157,14 @@ def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     txt.write("\n")
     txt.write("Acceleration RMSE of sim_point_mass:"+ str(RMSE_point_mass_acceleration) + ", Error Rate:" + str(RMSE_point_mass_acceleration/RMS_acceleration))
     txt.write("\n")
-    pdf.savefig()  # saves the current figure into a pdf page
-    plt.close()
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #plt.close()
 
-    plt.figure(figsize=(3,2))
-    plt.title("Angular speed")
-    plt.plot(Y_imu[:,1], color = 'blue',label = "IMU angular speed")
-    plt.plot(Y_mlp[:,1], color = 'red', label = "Angular speed by MLP")
-    plt.plot(Y_point_mass[:,1], color = 'green',label = "Angular speed by sim_point_mass")
+    #plt.figure(figsize=(3,2))
+    #plt.title("Angular speed")
+    #plt.plot(Y_imu[:,1], color = 'blue',label = "IMU angular speed")
+    #plt.plot(Y_mlp[:,1], color = 'red', label = "Angular speed by MLP")
+    #plt.plot(Y_point_mass[:,1], color = 'green',label = "Angular speed by sim_point_mass")
     RMSE_mlp_angular_speed = sqrt(mean_squared_error(Y_imu[:,1],Y_mlp[:,1]))
     RMSE_point_mass_angular_speed = sqrt(mean_squared_error(Y_imu[:,1],Y_point_mass[:,1]))
     RMS_angular_speed = sqrt(sum(n*n for n in Y_imu[:,1])/len(Y_imu[:,1]))
@@ -173,8 +172,8 @@ def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     txt.write("\n")
     txt.write( "Angular speed RMSE of sim_point_mass:" + str(RMSE_point_mass_angular_speed) + ", Error Rate:" +str(RMSE_point_mass_angular_speed/RMS_angular_speed))
     txt.write("\n")
-    pdf.savefig()  # saves the current figure into a pdf page
-    plt.close()
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #plt.close()
 
 def normalize_angle(theta):
     theta = theta % (2 * math.pi)
@@ -204,40 +203,40 @@ def plot_first_integral(I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     RMSE_point_mass_speed = sqrt(mean_squared_error(I_point_mass[:,0],I_ground_truth[:,0]))
     RMS_speed = sqrt(sum(n*n for n in I_ground_truth[:,0])/len(I_ground_truth[:,0]))
 
-    plt.figure(figsize=(3,2))
-    plt.title("Speed")
-    plt.plot(I_ground_truth[:,0], color = 'blue',label = "Ground-truth speed")
-    plt.plot(I_imu[:,0], color = 'orange',label = "Incremental speed by sensors")
-    plt.plot(I_mlp[:,0], color = 'red', label = "Speed by MLP")
-    plt.plot(I_point_mass[:,0], color = 'green',label = "Speed by sim_point_mass")
+    #plt.figure(figsize=(3,2))
+    #plt.title("Speed")
+    #plt.plot(I_ground_truth[:,0], color = 'blue',label = "Ground-truth speed")
+    #plt.plot(I_imu[:,0], color = 'orange',label = "Incremental speed by sensors")
+    #plt.plot(I_mlp[:,0], color = 'red', label = "Speed by MLP")
+    #plt.plot(I_point_mass[:,0], color = 'green',label = "Speed by sim_point_mass")
     txt.write( "Speed RMSE of sensor:" + str(RMSE_imu_speed) + ", Error Rate:"+ str(RMSE_imu_speed/RMS_speed))
     txt.write("\n")
     txt.write( "Speed RMSE of MLP:" + str(RMSE_mlp_speed) + ", Error Rate:" + str(RMSE_mlp_speed/RMS_speed))
     txt.write("\n")
     txt.write( "Speed RMSE of sim_point_mass:" + str(RMSE_point_mass_speed) + ", Error Rate:" + str(RMSE_point_mass_speed/RMS_speed)) 
     txt.write("\n")
-    pdf.savefig()  # saves the current figure into a pdf page
-    plt.close()
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #plt.close()
 
     RMSE_imu_heading = sqrt(mean_squared_error(I_imu[:,1],I_ground_truth[:,1]))
     RMSE_mlp_heading = sqrt(mean_squared_error(I_mlp[:,1],I_ground_truth[:,1]))
     RMSE_point_mass_heading = sqrt(mean_squared_error(I_point_mass[:,1],I_ground_truth[:,1]))
     RMS_heading = sqrt(sum(n*n for n in I_ground_truth[:,1])/len(I_ground_truth[:,1]))
 
-    plt.figure(figsize=(3,2))
-    plt.title("Heading")
-    plt.plot(I_ground_truth[:,1], color = 'blue', label = "Ground-truth heading")
-    plt.plot(I_imu[:,1], color = 'orange', label = "Incremental heading by angular speed")
-    plt.plot(I_mlp[:,1], color = 'red', label = "Heading by MLP")
-    plt.plot(I_point_mass[:,1], color = 'green', label = "Heading by sim_point_mass")
+    #plt.figure(figsize=(3,2))
+    #plt.title("Heading")
+    #plt.plot(I_ground_truth[:,1], color = 'blue', label = "Ground-truth heading")
+    #plt.plot(I_imu[:,1], color = 'orange', label = "Incremental heading by angular speed")
+    #plt.plot(I_mlp[:,1], color = 'red', label = "Heading by MLP")
+    #plt.plot(I_point_mass[:,1], color = 'green', label = "Heading by sim_point_mass")
     txt.write( "Heading RMSE of sensor:" + str(RMSE_imu_heading) + ", Error Rate:" + str(RMSE_imu_heading/RMS_heading))
     txt.write("\n")
     txt.write( "Heading RMSE of MLP:" + str(RMSE_mlp_heading) + ", Error Rate:" + str(RMSE_mlp_heading/RMS_heading))
     txt.write("\n")
     txt.write( "Heading RMSE of sim_point_mass:" + str(RMSE_point_mass_heading) + ", Error Rate:" +str(RMSE_point_mass_heading/RMS_heading))
     txt.write("\n")
-    pdf.savefig()  # saves the current figure into a pdf page
-    plt.close()
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #plt.close()
     return I_imu, I_mlp, I_point_mass
 
 def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
@@ -259,16 +258,16 @@ def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
             T_point_mass[k,1] = T_point_mass[k-1,1] + I_point_mass[k,0]*np.sin(I_point_mass[k,1])*0.01
             Trajectory_length += np.sqrt((T_ground_truth[k,0] - T_ground_truth[k-1,0]) ** 2 + (T_ground_truth[k,1] - T_ground_truth[k-1,1]) ** 2)
 
-    fig = plt.figure(figsize=(3,2))
-    plt.title("Trajectory")
-    plt.plot(T_ground_truth[:,0], T_ground_truth[:,1], color = 'blue', label = "Ground-truth Tracjectory")
-    plt.plot(T_ground_truth[-1,0], T_ground_truth[-1,1], color = 'blue', marker = 'x')
-    plt.plot(T_imu[:,0], T_imu[:,1], color = 'orange', label = "Generated Tracjectory by IMU")
-    plt.plot(T_imu[-1,0], T_imu[-1,1], color = 'orange', marker = 'x')
-    plt.plot(T_mlp[:,0], T_mlp[:,1], color = 'red', label = "Tracjectory by MLP")
-    plt.plot(T_mlp[-1,0], T_mlp[-1,1],color = 'red', marker = 'x')
-    plt.plot(T_point_mass[:,0], T_point_mass[:,1], color = 'green',label = "Tracjectory by sim_point_mass")
-    plt.plot(T_point_mass[-1,0], T_point_mass[-1,1], color = 'green', marker = 'x')
+    #fig = plt.figure(figsize=(3,2))
+    #plt.title("Trajectory")
+    #plt.plot(T_ground_truth[:,0], T_ground_truth[:,1], color = 'blue', label = "Ground-truth Tracjectory")
+    #plt.plot(T_ground_truth[-1,0], T_ground_truth[-1,1], color = 'blue', marker = 'x')
+    #plt.plot(T_imu[:,0], T_imu[:,1], color = 'orange', label = "Generated Tracjectory by IMU")
+    #plt.plot(T_imu[-1,0], T_imu[-1,1], color = 'orange', marker = 'x')
+    #plt.plot(T_mlp[:,0], T_mlp[:,1], color = 'red', label = "Tracjectory by MLP")
+    #plt.plot(T_mlp[-1,0], T_mlp[-1,1],color = 'red', marker = 'x')
+    #plt.plot(T_point_mass[:,0], T_point_mass[:,1], color = 'green',label = "Tracjectory by sim_point_mass")
+    #plt.plot(T_point_mass[-1,0], T_point_mass[-1,1], color = 'green', marker = 'x')
 
     RMSE_imu_trajectory = sqrt(mean_squared_error(T_imu, T_ground_truth))
     RMSE_mlp_trajectory = sqrt(mean_squared_error(T_mlp, T_ground_truth))
@@ -278,10 +277,10 @@ def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
     txt.write( "Trajectory RMSE of MLP:" + str(RMSE_mlp_trajectory) + ", Error Rate:" + str(RMSE_mlp_trajectory/Trajectory_length))
     txt.write("\n")
     txt.write( "Trajectory RMSE of sim_point_mass:" + str(RMSE_point_mass_trajectory) + ", Error Rate:" + str(RMSE_point_mass_trajectory/Trajectory_length)) 
-    pdf.savefig()  # saves the current figure into a pdf page
-    plt.close()
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #plt.close()
 
-def trajectory_visualization(timestr):
+def visualize(timestr, dirs = '/mnt/bos/modules/control/evaluation_result/'):
 
     # NOTE: YOU MAY NEED TO CHANGE THIS PATH ACCORDING TO YOUR ENVIRONMENT
     current_script_path = os.path.dirname(os.path.realpath(__file__))
@@ -303,8 +302,8 @@ def trajectory_visualization(timestr):
     X = (X - mean_param_norm) / std_param_norm
     Y_mlp = model.predict(X)
 
-    txt = open ('/mnt/bos/modules/control/evaluation_result/Evaluation_Metrics_'+ timestr + '.txt','w')
-    with PdfPages('/mnt/bos/modules/control/evaluation_result/Trajectory_Visualization_' + timestr + '.pdf') as pdf:
+    txt = open (dirs + 'Evaluation_Metrics_'+ timestr + '.txt','w')
+    with PdfPages(dirs + 'Trajectory_Visualization_' + timestr + '.pdf') as pdf:
         plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt)
         I_imu, I_mlp, I_point_mass = plot_first_integral(I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt)
         plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt)

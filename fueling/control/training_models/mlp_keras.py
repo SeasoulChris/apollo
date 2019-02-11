@@ -16,9 +16,9 @@
 # limitations under the License.
 ###############################################################################
 
-import lib.proto.fnn_model_pb2
-from lib.proto.fnn_model_pb2 import FnnModel, Layer
-from features.parameters_training import dim
+import fueling.control.lib.proto.fnn_model_pb2
+from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
+from fueling.control.features.parameters_training import dim
 from time import time
 import os
 import glob

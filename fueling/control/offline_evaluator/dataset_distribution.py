@@ -29,7 +29,7 @@ from scipy import interpolate
 from scipy.signal import savgol_filter
 
 import time
-from features.parameters_training import dim
+from fueling.control.features.parameters_training import dim
 
 # Constants
 dim_input = dim["pose"] + dim["incremental"] + dim["control"] # accounts for mps
