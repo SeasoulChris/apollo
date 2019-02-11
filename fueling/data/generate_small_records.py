@@ -82,7 +82,7 @@ def Main():
         .cache())
 
     # Read the input data and write to target file.
-    (todo_jobs
+    records_count = (todo_jobs
         .flatMapValues(record_utils.ReadRecord(kWantedChannels))  # -> (target_dir, PyBagMessage)
         .map(ShardToFile)                                         # -> (target_file, PyBagMessage)
         .groupByKey()                                             # -> (target_file, PyBagMessages)
@@ -90,15 +90,16 @@ def Main():
                                         # -> (target_file, PyBagMessages_sequence)
         .map(record_utils.WriteRecord)  # -> (None)
         .count())                       # Simply trigger action.
+    print('Finished %d records!' % records_count)
 
     # Create COMPLETE mark.
-    finished_jobs = (todo_jobs
+    tasks_count = (todo_jobs
         .keys()                                            # -> target_dir
         .distinct()                                        # -> unique_target_dir
         .map(lambda path: os.path.join(path, 'COMPLETE'))  # -> unique_target_dir/COMPLETE
         .map(os.mknod)                                     # Touch file
         .count())                                          # Simply trigger action.
-    print('Finished %d jobs!' % finished_jobs)
+    print('Finished %d tasks!' % tasks_count)
 
 
 if __name__ == '__main__':

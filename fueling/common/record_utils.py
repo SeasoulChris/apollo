@@ -40,13 +40,16 @@ def WriteRecord(path_to_messages):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-
+    print('Write record to %s' % path)
     writer = RecordWriter(0, 0)
     writer.open(path)
+    topics = {}
     for msg in py_bag_messages:
-        # As a generated record, we ignored the proto desc.
-        writer.write_channel(msg.topic, msg.data_type, '')
+        if msg.topic not in topics:
+            # As a generated record, we ignored the proto desc.
+            writer.write_channel(msg.topic, msg.data_type, '')
+            topics.add(msg.topic)
         writer.write_message(msg.topic, msg.message, msg.timestamp)
     writer.close()
     # Dummy map result.
-    return None
+    return 1

@@ -19,20 +19,20 @@ set -x
 set -e
 
 # Upload local files to remote.
-REMOTE_JOB_PATH="/mnt/bos/modules/data/jobs"
-REMOTE_PREFIX="${REMOTE_JOB_PATH}/$(date +%Y%m%d-%H%M)_${USER}"
-REMOTE_JOB_FILE="${REMOTE_PREFIX}_$(basename ${LOCAL_JOB_FILE})"
-REMOTE_FUELING_PKG="${REMOTE_PREFIX}_fueling.zip"
+REMOTE_JOB_PATH="/mnt/bos/modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
+REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${LOCAL_JOB_FILE})"
+REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
 sudo mkdir -p "${REMOTE_JOB_PATH}"
 sudo cp "${LOCAL_JOB_FILE}" "${REMOTE_JOB_FILE}"
 
-pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd "$( dirname "${BASH_SOURCE[0]}" )/../fueling"
   LOCAL_FUELING_PKG=".fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}" && \
-  zip -r "${LOCAL_FUELING_PKG}" fueling -x *.pyc && \
+  zip -r "${LOCAL_FUELING_PKG}" fueling/* -x *.pyc && \
   sudo cp "${LOCAL_FUELING_PKG}" "${REMOTE_FUELING_PKG}"
 popd
+
 
 # Submit job with fueling package.
 "${APOLLO_SPARK_REPO}/bin/spark-submit" \
@@ -53,5 +53,5 @@ popd
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
 \
-    --py-files "${REMOTE_FUELING_PKG}" \
+    --py-files "file://${REMOTE_FUELING_PKG}" \
     "${REMOTE_JOB_FILE}"
