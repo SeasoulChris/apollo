@@ -19,5 +19,6 @@ dependencies:
   - tensorflow-gpu
   - scikit-learn
   - matplotlib
+  - pyspark = 2.4.0
   - pip:
     - bpython
