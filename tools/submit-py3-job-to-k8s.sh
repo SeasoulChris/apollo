@@ -4,13 +4,16 @@
 LOCAL_JOB_FILE="$1"
 
 # Config.
-IMAGE="apolloauto/spark:20190209_1155"
+IMAGE="xiangquan/spark:20190210_2114"
 K8S="https://180.76.185.100:6443"
 WORKERS=1
 CORES=1
 CONDA_ENV="py36"
 AWS_KEY="<INPUT>"
 AWS_SEC="<INPUT>"
+APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
+APOLLO_ENABLED="no"
+# End of config.
 
 set -x
 set -e
@@ -32,7 +35,7 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
 popd
 
 # Submit job with fueling package.
-spark-submit \
+"${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
     --conf spark.executor.instances="${WORKERS}" \
@@ -40,10 +43,15 @@ spark-submit \
     --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.executor.request.cores="${CORES}" \
     --conf spark.kubernetes.pyspark.pythonVersion=3 \
+\
+    --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
+    --conf spark.executorEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
     --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
-    --conf spark.executorEnv.APOLLO_BOS_BUCKET="apollo-platform" \
-    --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
+    --conf spark.kubernetes.driverEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
+    --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
+    --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
+\
     --py-files "${REMOTE_FUELING_PKG}" \
     "${REMOTE_JOB_FILE}"
