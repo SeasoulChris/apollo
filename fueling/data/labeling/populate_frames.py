@@ -169,12 +169,7 @@ def mark_complete(todo_files):
 
 def Main():
     """Main function"""
-    #todo_files = get_todo_files()
-
-    sc = spark_utils.GetContext()
-    todo_files = sc.parallelize([
-        ('modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05', 'public-test/2019/2019-01-03/2019-01-03-14-56-05/20190103145605.record.00000')
-    ])
+    todo_files = get_todo_files()
 
     msgs_rdd = (todo_files                                                       # -> (target_dir, record_file) 
         .map(record_to_target_partition)                                         # -> (target_dir_partition, record_file)
