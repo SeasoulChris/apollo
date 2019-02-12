@@ -5,18 +5,21 @@ import operator
 import os
 import pprint
 import re
+import subprocess
+import sys
 import textwrap
 import time
 from collections import defaultdict
 
 from cyber_py import record
-from pyspark.sql import SQLContext
 from pyspark.sql import Row
+from pyspark.sql import SQLContext
 from pyspark.sql import functions as F
 
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.spark_utils as spark_utils
+from fueling.data.labeling.populate_utils import FramePopulator
 
 kBucket = 'apollo-platform'
 # Original records are public-test/path/to/*.record, sharded to M.
@@ -85,16 +88,21 @@ def create_dataframe(sqlContext, msgs_rdd, topics):
         msgs_rdd \
         .filter(lambda (_1, _2, topic): topic in operator.itemgetter(*topics)(kWantedChannels)) \
         .map(lambda x: Row(target=x[0], time=x[1], topic=x[2])))
-    
-def write_to_file(file_path, msgs):
-    """TODO: place holder.  Write message to file"""
-    with open(file_path, 'w') as outfile:
-        for msg in msgs:
-            outfile.write('{}-{}'.format(msg.topic, msg.timestamp))
+
+def get_initial_pose(frames):
+    """From all the to-be-searialized frames get the smallest pose for usage of initial point"""
+    initial_pose_time = sys.float_info.max 
+    initial_pose_msg = None
+    for key in frames:
+        for msg in frames[key]:
+            if msg.topic == kWantedChannels['pose'] and msg.timestamp < initial_pose_time:
+                initial_pose_time = msg.timestamp
+                initial_pose_msg = msg
+    return initial_pose_msg
 
 def construct_frames(frames):
     """Construct the frame by using given messages."""
-    """TODO: need to change this dirty hard worker"""
+    """Read the according message ONCE again, to avoid playing big messages in memory"""
     target_dir, msgs = frames
     all_frames_msgs = list(msgs)
     '''
@@ -103,28 +111,29 @@ def construct_frames(frames):
 
     all_frames_msgs like:
     (
-      ('lidar-1-time','lidar-topic'), ('camera-1-time','camera-1-topic'), ('camera-2-time','camera-2-topic')...
-      ('lidar-2-time','lidar-topic'), ('camera-1-time','camera-1-topic'), ('camera-2-time','camera-2-topic')...
+      ('lidar-1-topic','lidar-1-time'), ('camera-1-topic','camera-1-time')...
+      ('lidar-2-topic','lidar-2-time'), ('camera-2-topic','camera-2-time')...
       ...
     )
     '''
     record_files = target_partition_to_records(target_dir)
     messages_to_write = defaultdict(list)
-
+    
     for record_file in record_files:
         freader = record.RecordReader(os.path.join(s3_utils.S3MountPath, record_file))
         for msg in freader.read_messages():
             for frame in all_frames_msgs:
                 msg_map = dict(frame)
-                if msg.timestamp in msg_map and msg.topic == msg_map[msg.timestamp]:
-                    messages_to_write[frame[0][0]].append(msg)
+                if msg.topic in msg_map and msg.timestamp == msg_map[msg.topic]:
+                    messages_to_write[frame[0][1]].append(msg)
+                    break
 
+    initial_pose = get_initial_pose(messages_to_write)
+    populator = FramePopulator(target_dir, initial_pose)
     for frame_file in messages_to_write:
-        file_path = os.path.join(s3_utils.S3MountPath, os.path.join(target_dir, str(frame_file)))
-        write_to_file(file_path, messages_to_write[frame_file])            
+        populator.construct_frames(messages_to_write[frame_file])        
 
 def get_sql_query(sqlContext, msgs_rdd):
-    """Transform RDD to DataFrame and get SQL query"""
     lidar_df = create_dataframe(sqlContext, msgs_rdd, ('lidar-128',))
     other_sensor_df = create_dataframe(sqlContext, msgs_rdd, [x for x in kWantedChannels.keys() if x != 'lidar-128'])
 
@@ -160,7 +169,12 @@ def mark_complete(todo_files):
 
 def Main():
     """Main function"""
-    todo_files = get_todo_files()
+    #todo_files = get_todo_files()
+
+    sc = spark_utils.GetContext()
+    todo_files = sc.parallelize([
+        ('modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05', 'public-test/2019/2019-01-03/2019-01-03-14-56-05/20190103145605.record.00000')
+    ])
 
     msgs_rdd = (todo_files                                                       # -> (target_dir, record_file) 
         .map(record_to_target_partition)                                         # -> (target_dir_partition, record_file)
