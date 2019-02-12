@@ -1,29 +1,16 @@
 #!/usr/bin/env python
-import datetime
-import operator
-import pprint
-import fueling.common.record_utils as record_utils
-import fueling.common.spark_utils as spark_utils
-
-from fueling.control.features.features import GetDatapoints
-
 import glob
-import os
-import sys
-import glog
 
 import h5py
-from cyber_py import cyber
-from cyber_py import record
-from google.protobuf.descriptor_pb2 import FileDescriptorProto
 import numpy as np
-import argparse
-import time
-from cyber_py.record import RecordReader
 
+from cyber_py.record import RecordReader
+import fueling.common.record_utils as record_utils
+import fueling.common.spark_utils as spark_utils
+from fueling.control.features.features import GetDatapoints
 from modules.canbus.proto.chassis_pb2 import Chassis
-from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+
 
 MAX_PHASE_DELTA = 0.01
 MIN_SEGMENT_LENGTH = 10
@@ -31,26 +18,11 @@ MIN_SEGMENT_LENGTH = 10
 WantedChannels = ['/apollo/canbus/chassis',
                   '/apollo/localization/pose']
 
-path = os.path.join("/apollo/modules/data/fuel/fueling/control/records/",
-                    "20190201110438.record.00130")
-
 pathname = "/apollo/modules/data/fuel/fueling/control/records/"
 
 
 def FoldToRecords(pathname):
     return glob.glob(pathname + "/*.record.*")
-
-
-def ProcessChassisMsg(msg):
-    msg_new_cs = Chassis()
-    msg_new_cs.ParseFromString(msg[1])
-    return msg_new_cs
-
-
-def ProcessPoseMsg(msg):
-    msg_new_pose = LocalizationEstimate()
-    msg_new_pose.ParseFromString(msg[1])
-    return msg_new_pose
 
 
 def to_list(a):
@@ -88,6 +60,7 @@ def processSeg(elem):
 
 
 def BuildTrainingDataset(chassis, pose):
+    """align chassis and pose data and build data segment"""
     chassis.sort(key=lambda x: x.header.timestamp_sec)
     pose.sort(key=lambda x: x.header.timestamp_sec)
     # In the record, control and chassis always have same number of frames
@@ -124,32 +97,44 @@ def BuildTrainingDataset(chassis, pose):
 
 
 def Run(elem):
+    """ write data segment to hdf5 file """
     time_stamp = str((int)(elem[0][1].header.timestamp_sec))
     outFile = h5py.File(
         "./training_dataset_{}.hdf5".format(time_stamp), "w")
     chassis = elem[0]
     pose = elem[1]
     i = 0
+    res = []
     for mini_dataset in BuildTrainingDataset(chassis, pose):
         name = "_segment_" + str(i).zfill(3)
         outFile.create_dataset(name, data=mini_dataset, dtype="float32")
         i += 1
-    return i
+        res.append(mini_dataset)
+    outFile.close()
+    return len(res[0]), len(res[0][0])
 
 
 if __name__ == '__main__':
 
     channels = (spark_utils.GetContext('Test')
-                .parallelize([pathname])  # folder
-                .flatMap(FoldToRecords)  # record
+                # folder path
+                .parallelize([pathname])
+                # record path
+                .flatMap(FoldToRecords)
+                # read message
                 .flatMap(record_utils.ReadRecord(WantedChannels))
+                # parse message
                 .map(processMSG))
 
     pre_segment = (channels
+                   # choose time as key, group msg into 1 sec
                    .keyBy(lambda x: (int)(x.header.timestamp_sec))
+                   # combine chassis message and pose message with the same key
                    .combineByKey(to_list, append, extend))
 
     data = (pre_segment
+            # msg list
             .mapValues(processSeg)
+            # align msg, generate data segment, write to hdf5 file.
             .mapValues(Run))
     print data.count()
