@@ -134,6 +134,7 @@ def construct_frames(frames):
         populator.construct_frames(messages_to_write[frame_file])        
 
 def get_sql_query(sqlContext, msgs_rdd):
+    """Transform RDD to DataFrame and get SQL query"""
     lidar_df = create_dataframe(sqlContext, msgs_rdd, ('lidar-128',))
     other_sensor_df = create_dataframe(sqlContext, msgs_rdd, [x for x in kWantedChannels.keys() if x != 'lidar-128'])
 
