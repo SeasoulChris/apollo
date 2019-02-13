@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.control.proto.featurePlan;
+
+message featurePlan {
+    repeated featureInfo feature = 1;
+}
+
+message featureInfo {
+    optional double speed_lower_bound = 1;
+    optional double speed_upper_bound = 2;
+    
+    optional double accel_range_lower_bound = 3;
+    optional double accel_range_upper_bound = 4;
+    
+    optional double steer_range_lower_bound = 5;
+    optional double steer_range_upper_bound = 6;
+}
+

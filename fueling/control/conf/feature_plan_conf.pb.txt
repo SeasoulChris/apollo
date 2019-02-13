@@ -1,0 +1,5760 @@
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 0.0
+  speed_upper_bound: 10.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 10.0
+  speed_upper_bound: 20.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 20.0
+  speed_upper_bound: 30.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 30.0
+  speed_upper_bound: 40.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 40.0
+  speed_upper_bound: 50.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -100.0
+  accel_range_upper_bound: -80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -80.0
+  accel_range_upper_bound: -60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -60.0
+  accel_range_upper_bound: -40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -40.0
+  accel_range_upper_bound: -20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: -20.0
+  accel_range_upper_bound: 0.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 0.0
+  accel_range_upper_bound: 20.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 20.0
+  accel_range_upper_bound: 40.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 40.0
+  accel_range_upper_bound: 60.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 60.0
+  accel_range_upper_bound: 80.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -180.0
+  steer_range_upper_bound: -150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -150.0
+  steer_range_upper_bound: -120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -120.0
+  steer_range_upper_bound: -90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -90.0
+  steer_range_upper_bound: -60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -60.0
+  steer_range_upper_bound: -30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: -30.0
+  steer_range_upper_bound: 0.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 0.0
+  steer_range_upper_bound: 30.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 30.0
+  steer_range_upper_bound: 60.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 60.0
+  steer_range_upper_bound: 90.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 90.0
+  steer_range_upper_bound: 120.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 120.0
+  steer_range_upper_bound: 150.0
+}
+feature {
+  speed_lower_bound: 50.0
+  speed_upper_bound: 60.0
+  accel_range_lower_bound: 80.0
+  accel_range_upper_bound: 100.0
+  steer_range_lower_bound: 150.0
+  steer_range_upper_bound: 180.0
+}
