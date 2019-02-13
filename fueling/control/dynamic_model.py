@@ -5,8 +5,9 @@ import h5py
 import numpy as np
 import fueling.common.spark_utils as spark_utils
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
+import fueling.control.training_models.mlp_keras as mlp_keras
 
-def extract_model(files, sub_module):
+def load_model(files, sub_module):
     models = (spark_utils.get_context('Test')
                 .parallelize(files)  #all the model files 
                 .filter(lambda x: sub_module in x) #model weights files 
@@ -31,11 +32,11 @@ def generate_segments(h5):
     print('Segments count: ', len(segments))
     return segments
 
-def Main():
+def model_evalution():
     files = glob.glob("/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5")
     print ("Files: %s" % files)
-    model_weights = extract_model(files, 'weights')
-    model_norms = extract_model(files, 'norms')
+    model_weights = load_model(files, 'weights')
+    model_norms = load_model(files, 'norms')
 
     h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
     records = (spark_utils.get_context('Test')
@@ -47,7 +48,14 @@ def Main():
     models = (model_weights
                 .intersection(model_norms)
                 .cartesian(records)
-                .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1], 'fueling/control/')))
+                .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1])))
+
+def model_training():
+    mlp_keras.mlp_keras('mlp_two_layer')
+
+def Main():
+    model_training()
+    model_evalution()
 
 if __name__ == '__main__':
     Main()

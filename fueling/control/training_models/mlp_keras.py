@@ -16,7 +16,7 @@
 # limitations under the License.
 ###############################################################################
 
-import fueling.control.lib.proto.fnn_model_pb2
+import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 from fueling.control.features.parameters_training import dim
 from time import time
@@ -72,21 +72,20 @@ dim_output = dim["incremental"]  # the speed mps is also output
 input_features = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
 
+
 def setup_model(model_name):
-    if model_name == 'mlp_two_layer':
-        with open('../conf/mlp_two_layer.json', 'r') as f:
-            model = model_from_json(f.read())
-        print ('Load Two-layer MLP Model')
-    else:
-        with open('../conf/mlp_three_layer.json', 'r') as f:
+    if model_name == 'mlp_three_layer':
+        with open('fueling/control/conf/mlp_three_layer.json', 'r') as f:
             model = model_from_json(f.read())
         print ('Load Three-layer MLP Model')
+    else:
+        with open('fueling/control/conf/mlp_two_layer.json', 'r') as f:
+            model = model_from_json(f.read())
+        print ('Load Two-layer MLP Model')
     model.compile(loss='mean_squared_error',
                   optimizer='adam',
                   metrics=['mse'])
     return model
-
-# TODO use argparse for hdf5 file dir
 
 
 def generate_segments(h5s):
@@ -135,9 +134,9 @@ def generate_data(segments):
     X[:, 1] = savgol_filter(X[:, 1], 51, 3)
     # window size 51, polynomial order 3
     Y[:, 0] = savgol_filter(Y[:, 0], 51, 3)
-    hf = h5py.File('training_Y.h5', 'w')
-    hf.create_dataset('training_X', data=X)
-    hf.create_dataset('training_Y', data=Y)
+    #hf = h5py.File('training_data.h5', 'w')
+    #hf.create_dataset('training_X', data=X)
+    #hf.create_dataset('training_Y', data=Y)
     return X, Y
 
 
@@ -177,11 +176,11 @@ def save_model(model, param_norm, filename):
             previous_dim = net_layer.layer_output_dim
 
         if config['activation'] == 'relu':
-            net_layer.layer_activation_func = lib.proto.fnn_model_pb2.Layer.RELU
+            net_layer.layer_activation_func = fnn_model_pb2.Layer.RELU
         elif config['activation'] == 'tanh':
-            net_layer.layer_activation_func = lib.proto.fnn_model_pb2.Layer.TANH
+            net_layer.layer_activation_func = fnn_model_pb2.Layer.TANH
         elif config['activation'] == 'sigmoid':
-            net_layer.layer_activation_func = lib.proto.fnn_model_pb2.Layer.SIGMOID
+            net_layer.layer_activation_func = fnn_model_pb2.Layer.SIGMOID
 
         weights, bias = layer.get_weights()
         net_layer.layer_bias.columns.extend(bias.reshape(-1).tolist())
@@ -195,7 +194,7 @@ def save_model(model, param_norm, filename):
     # print text_format.MessageToString(net_params)
 
 
-def mlp_keras(model_name):
+def mlp_keras(model_name = 'mlp_two_layer', out_dirs = '/mnt/bos/modules/control/dynamic_model_output/'):
 
     # NOTE: YOU MAY NEED TO CHANGE THIS PATH ACCORDING TO YOUR ENVIRONMENT
     hdf5 = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/*.hdf5')
@@ -232,13 +231,13 @@ def mlp_keras(model_name):
     print "MSE on testing data is ", evaluation[1]
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-    save_model(model, param_norm, '/mnt/bos/modules/control/dynamic_model_output/fnn_model_'+timestr+'.bin')
+    save_model(model, param_norm, out_dirs + 'fnn_model_' + timestr + '.bin')
     
     # save norm_params to hdf5
-    hf = h5py.File('/mnt/bos/modules/control/dynamic_model_output/fnn_model_norms_'+timestr+'.h5', 'w')
-    hf.create_dataset('mean', data=param_norm[0])
-    hf.create_dataset('std', data=param_norm[1])
+    hf = h5py.File(out_dirs + 'fnn_model_norms_' + timestr + '.h5', 'w')
+    hf.create_dataset('mean', data = param_norm[0])
+    hf.create_dataset('std', data = param_norm[1])
     hf.close()
 
-    model.save('/mnt/bos/modules/control/dynamic_model_output/fnn_model_weights_'+timestr+'.h5')
+    model.save(out_dirs + 'fnn_model_weights_' + timestr + '.h5')
 
