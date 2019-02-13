@@ -22,8 +22,8 @@
    # Install and activate env. Currently we only have Python 2.7, because
    # Python 3.6 depends on Cyber python wrapper upgrade.
    sudo rm -fr /usr/local/miniconda2/envs/py27
-   conda env update -f cluster/py27-conda.yaml
-   source activate py27-fuel
+   conda env update -f configs/py27-conda.yaml
+   source activate py27
    ```
 
 ## Develop pipeline jobs

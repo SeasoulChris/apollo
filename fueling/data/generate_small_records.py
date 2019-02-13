@@ -78,7 +78,7 @@ def Main():
         .keyBy(os.path.dirname)             # -> (task_dir, record)
         .join(complete_dirs)                # -> (task_dir, (record, _))
         .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
-        .map(spark_utils.MapKey(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
+        .map(spark_utils.map_key(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
                                             # -> (target_dir, record)
         .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
         .cache())
@@ -88,7 +88,7 @@ def Main():
         .flatMapValues(record_utils.ReadRecord(kWantedChannels))  # -> (target_dir, PyBagMessage)
         .map(ShardToFile)                                         # -> (target_file, PyBagMessage)
         .groupByKey()                                             # -> (target_file, PyBagMessages)
-        .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
+        .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp)) ->
                                         # -> (target_file, PyBagMessages_sequence)
         .map(record_utils.WriteRecord)  # -> (None)
         .count())                       # Simply trigger action.

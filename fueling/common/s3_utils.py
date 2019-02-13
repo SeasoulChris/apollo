@@ -1,3 +1,4 @@
+"""S3 related utils, which are used for AWS S3 or Baidu BOS."""
 #!/usr/bin/env python
 
 import os
@@ -42,14 +43,14 @@ def ListObjects(bucket, prefix=''):
 
 def ListFiles(bucket, prefix=''):
     """Get a RDD of files."""
-    return spark_utils.GetContext() \
+    return spark_utils.get_context() \
         .parallelize(ListObjects(bucket, prefix)) \
         .filter(lambda obj: not obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])
 
 def ListDirs(bucket, prefix=''):
     """Get a RDD of dirs."""
-    return spark_utils.GetContext() \
+    return spark_utils.get_context() \
         .parallelize(ListObjects(bucket, prefix)) \
         .filter(lambda obj: obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])

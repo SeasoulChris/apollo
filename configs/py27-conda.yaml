@@ -14,3 +14,7 @@ dependencies:
   - h5py = 2.3.0
     # Known bug for different versions.
   - numpy = 1.8.2
+
+  # Other.
+  - pip:
+    - pylint

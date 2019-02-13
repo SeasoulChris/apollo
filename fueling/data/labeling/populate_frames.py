@@ -59,7 +59,7 @@ def get_todo_files():
         .keyBy(os.path.dirname)             # -> (task_dir, record)
         .join(complete_dirs)                # -> (task_dir, (record, _))
         .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
-        .map(spark_utils.MapKey(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
+        .map(spark_utils.map_key(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
                                             # -> (target_dir, record)
         .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
         .cache())

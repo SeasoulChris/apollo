@@ -15,3 +15,7 @@ dependencies:
   - boto3
   - h5py
   - numpy
+
+  # Other.
+  - pip:
+    - pylint

@@ -116,7 +116,7 @@ def Run(elem):
 
 if __name__ == '__main__':
 
-    channels = (spark_utils.GetContext('Test')
+    channels = (spark_utils.get_context('Test')
                 # folder path
                 .parallelize([pathname])
                 # record path

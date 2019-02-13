@@ -13,7 +13,7 @@ def DummyProcess(elem):
     return elem
 
 # Spark cascade style programming.
-res = (spark_utils.GetContext('Test')
+res = (spark_utils.get_context('Test')
     # [record_path, ...]
     .parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
     # [message, ...]

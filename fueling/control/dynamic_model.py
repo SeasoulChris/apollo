@@ -7,7 +7,7 @@ import fueling.common.spark_utils as spark_utils
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
 
 def extract_model(files, sub_module):
-    models = (spark_utils.GetContext('Test')
+    models = (spark_utils.get_context('Test')
                 .parallelize(files)  #all the model files 
                 .filter(lambda x: sub_module in x) #model weights files 
                 .map(lambda x: extract_file_id(x, 'fnn_model_' + sub_module +'_', '.h5'))
@@ -38,7 +38,7 @@ def Main():
     model_norms = extract_model(files, 'norms')
 
     h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
-    records = (spark_utils.GetContext('Test')
+    records = (spark_utils.get_context('Test')
                 .parallelize(h5s)  #all the records for evaluation
                 .map(lambda h5:(extract_file_id(h5, '/hdf5_evaluation/', '.hdf5'), generate_segments(h5)))
                 .cache())

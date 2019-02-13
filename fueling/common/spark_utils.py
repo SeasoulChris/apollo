@@ -1,20 +1,22 @@
+"""Spark related utils."""
 #!/usr/bin/env python
 
 from pyspark import SparkContext, SparkConf
 
 
-kCurrentContext = None
+CURRENT_CONTEXT = None
 
-def GetContext(app_name='SparkJob'):
+def get_context(app_name='SparkJob'):
     """Get new Spark context."""
-    global kCurrentContext
-    if kCurrentContext is None:
+    global CURRENT_CONTEXT
+    if CURRENT_CONTEXT is None:
         conf = SparkConf().setAppName(app_name)
-        kCurrentContext = SparkContext(conf=conf)
-    return kCurrentContext
+        CURRENT_CONTEXT = SparkContext(conf=conf)
+    return CURRENT_CONTEXT
 
-def MapKey(func):
+def map_key(func):
     """Map a key with func."""
-    def MapKeyValue(key_value):
+    def map_key_value(key_value):
+        """Actual action on the key-value input."""
         return func(key_value[0]), key_value[1]
-    return MapKeyValue
+    return map_key_value
