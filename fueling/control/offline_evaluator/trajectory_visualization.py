@@ -46,7 +46,10 @@ from scipy.signal import savgol_filter
 from random import choice
 from random import randint
 from random import shuffle
+import fueling.common.spark_utils as spark_utils
 from fueling.control.features.parameters_training import dim
+import fueling.control.lib.proto.fnn_model_pb2
+from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -71,21 +74,6 @@ dim_input = dim["pose"] + dim["incremental"] + dim["control"] # accounts for mps
 dim_output = dim["incremental"] # the speed mps is also output
 input_features = ["speed mps","speed incremental","angular incremental","throttle","brake","steering"]
 
-# TODO use argparse for hdf5 file dir
-def generate_segments(h5s):
-    segments = []
-    for h5 in h5s:
-        print('Loading {}'.format(h5))
-        with h5py.File(h5, 'r+') as f:
-            names = [n for n in f.keys()]
-            if len(names) < 1:
-                continue
-            for i in range(len(names)):
-                ds = np.array(f[names[i]])
-                segments.append(ds)
-    print('Segments count: ', len(segments))
-    return segments
-
 
 def generate_evaluation_data(segments):
     total_len = 0
@@ -102,9 +90,7 @@ def generate_evaluation_data(segments):
 
     text_file = open("fueling/control/conf/sim_control_lincoln.pb.txt", "r")
     lines = text_file.readlines()
-    #print lines
     table_length = len(lines)/5
-    print table_length
     calibration_table = np.zeros([table_length, 3])
     for k in range(len(lines)):
         if k%5 != 0 and k%5 != 4:
@@ -280,31 +266,50 @@ def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
     #pdf.savefig()  # saves the current figure into a pdf page
     #plt.close()
 
-def visualize(timestr, dirs = '/mnt/bos/modules/control/evaluation_result/'):
+# TODO refactor model loading from binary file 
+def load_model_refactor (filename):
+    net_params = FnnModel()
+    f = open(filename, "rb")
+    net_params.ParseFromString(f.read())
+    f.close()
+    mean_param_norm = np.array(net_params.samples_mean)
+    std_param_norm = np.array(net_params.samples_std)
+    
+    model = Sequential()
+    model.add(Dense(net_params.layer[0].layer_output_dim,
+                    input_dim=net_params.dim_input,
+                    init='he_normal',
+                    activation='relu',
+                    weights=[np.array(net_params.layer[0].layer_input_weight),np.array(net_params.layer[0].layer_bias)]))
+    for i in range(1, net_params.num_layer-1):
+        model.add(Dense(net_params.layer[i].layer_output_dim,
+                        init='he_normal',
+                        activation='relu',
+                         weights=[np.array(net_params.layer[i].layer_input_weight),np.array(net_params.layer[i].layer_bias)]))
+    model.add(Dense(net_params.dim_output,
+                    init='he_normal',
+                    weights=[np.array(net_params.layer[num_layer-1].layer_input_weight),np.array(net_params.layer[num_layer-1].layer_bias)]))
+    return model, mean_param_norm, std_param_norm
 
-    # NOTE: YOU MAY NEED TO CHANGE THIS PATH ACCORDING TO YOUR ENVIRONMENT
-    current_script_path = os.path.dirname(os.path.realpath(__file__))
-    
-    hdf5_evaluation = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
-    print "hdf5_evaluation files are :"
-    print hdf5_evaluation
-    segments_evaluation = generate_segments(hdf5_evaluation)
-    
-    X, I_ground_truth, Y_imu, Y_point_mass, T_ground_truth = generate_evaluation_data(segments_evaluation)
+                
+def evaluate(timestr, h5_segments, dirs = '/mnt/bos/modules/control/evaluation_result/'):
+
+    X, I_ground_truth, Y_imu, Y_point_mass, T_ground_truth = generate_evaluation_data(h5_segments[1])
 
     model = load_model ('/mnt/bos/modules/control/dynamic_model_output/fnn_model_weights_'+timestr+'.h5')
-
+    
     hf = h5py.File('/mnt/bos/modules/control/dynamic_model_output/fnn_model_norms_'+timestr+'.h5', 'r')
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
     hf.close()
-
+    
     X = (X - mean_param_norm) / std_param_norm
     Y_mlp = model.predict(X)
 
-    txt = open (dirs + 'Evaluation_Metrics_'+ timestr + '.txt','w')
+    txt = open (dirs + 'evaluation_metrics_for_model_'+ timestr + '_under_scenario_' + h5_segments[0] + '.txt','w')
     with PdfPages(dirs + 'Trajectory_Visualization_' + timestr + '.pdf') as pdf:
         plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt)
         I_imu, I_mlp, I_point_mass = plot_first_integral(I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt)
         plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt)
     txt.close()
+
