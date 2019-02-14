@@ -10,7 +10,7 @@ import glog
 import fueling.common.spark_utils as spark_utils
 
 
-S3MountPath = '/mnt/bos'
+S3_MOUNT_PATH = '/mnt/bos'
 
 
 def S3Client():
@@ -23,7 +23,7 @@ def S3Client():
                         config=botocore.client.Config(signature_version='s3v4'))
 
 def AbsPath(obj_rel_path):
-    return os.path.join(S3MountPath, obj_rel_path)
+    return os.path.join(S3_MOUNT_PATH, obj_rel_path)
 
 def ListObjects(bucket, prefix=''):
     """

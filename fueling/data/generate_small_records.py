@@ -10,7 +10,7 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.spark_utils as spark_utils
 
 
-kWantedChannels = {
+WANTED_CHANNELS = {
     '/apollo/canbus/chassis',
     '/apollo/canbus/chassis_detail',
     '/apollo/control',
@@ -48,11 +48,11 @@ kWantedChannels = {
     '/tf_static',
 }
 
-kBucket = 'apollo-platform'
+BUCKET = 'apollo-platform'
 # Original records are public-test/path/to/*.record, sharded to M.
-kOriginPrefix = 'public-test/2019/'
+ORIGIN_PREFIX = 'public-test/2019/'
 # We will process them to small-records/path/to/*.record, sharded to N.
-kTargetPrefix = 'small-records/2019/'
+TARGET_PREFIX = 'small-records/2019/'
 
 
 def ShardToFile(dir_msg):
@@ -62,7 +62,7 @@ def ShardToFile(dir_msg):
     return target_file, msg
 
 def Main():
-    files = s3_utils.ListFiles(kBucket, kOriginPrefix).cache()
+    files = s3_utils.ListFiles(BUCKET, ORIGIN_PREFIX).cache()
 
     # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
     complete_dirs = (files
@@ -70,35 +70,35 @@ def Main():
         .keyBy(os.path.dirname))
 
     # target_dir, which is "small-records/..."
-    processed_dirs = s3_utils.ListDirs(kBucket, kTargetPrefix).keyBy(lambda path: path)
+    processed_dirs = s3_utils.ListDirs(BUCKET, TARGET_PREFIX).keyBy(lambda path: path)
 
     # Find all todo jobs.
     todo_jobs = (files
-        .filter(record_utils.IsRecordFile)  # -> record
+        .filter(record_utils.is_record_file)  # -> record
         .keyBy(os.path.dirname)             # -> (task_dir, record)
         .join(complete_dirs)                # -> (task_dir, (record, _))
         .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
-        .map(spark_utils.map_key(lambda src_dir: src_dir.replace(kOriginPrefix, kTargetPrefix, 1)))
+        .map(spark_utils.map_key(lambda src_dir: src_dir.replace(ORIGIN_PREFIX, TARGET_PREFIX, 1)))
                                             # -> (target_dir, record)
         .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
         .cache())
 
     # Read the input data and write to target file.
     records_count = (todo_jobs
-        .flatMapValues(record_utils.ReadRecord(kWantedChannels))  # -> (target_dir, PyBagMessage)
-        .map(ShardToFile)                                         # -> (target_file, PyBagMessage)
-        .groupByKey()                                             # -> (target_file, PyBagMessages)
-        .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp)) ->
-                                        # -> (target_file, PyBagMessages_sequence)
-        .map(record_utils.WriteRecord)  # -> (None)
-        .count())                       # Simply trigger action.
+        .flatMapValues(record_utils.read_record(WANTED_CHANNELS))  # -> (target_dir, PyBagMessage)
+        .map(ShardToFile)                                          # -> (target_file, PyBagMessage)
+        .groupByKey()                                              # -> (target_file, PyBagMessages)
+        .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
+                                         # -> (target_file, PyBagMessages_sequence)
+        .map(record_utils.write_record)  # -> (None)
+        .count())                        # Simply trigger action.
     glog.info('Finished %d records!' % records_count)
 
     # Create COMPLETE mark.
     tasks_count = (todo_jobs
         .keys()                                            # -> target_dir
         .distinct()                                        # -> unique_target_dir
-        .map(lambda path: os.path.join(s3_utils.S3MountPath, path, 'COMPLETE'))
+        .map(lambda path: os.path.join(s3_utils.S3_MOUNT_PATH, path, 'COMPLETE'))
                                                            # -> unique_target_dir/COMPLETE
         .map(os.mknod)                                     # Touch file
         .count())                                          # Simply trigger action.

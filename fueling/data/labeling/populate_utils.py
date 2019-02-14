@@ -72,7 +72,7 @@ def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
     if yaml_file_name is None:
         return None
-    yaml_file_name = os.path.join(s3_utils.S3MountPath, yaml_file_name)
+    yaml_file_name = os.path.join(s3_utils.S3_MOUNT_PATH, yaml_file_name)
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 
@@ -387,7 +387,7 @@ class FramePopulator:
     def __init__(self, task_dir, pose_message):     
         stationary_pole = pose_to_stationary_pole(pose_message) 
 
-        self._task_dir = os.path.join(s3_utils.S3MountPath, task_dir)
+        self._task_dir = os.path.join(s3_utils.S3_MOUNT_PATH, task_dir)
         if not os.path.exists(self._task_dir):
             run_shell_script('sudo mkdir -p {} -m 755'.format(self._task_dir))
 

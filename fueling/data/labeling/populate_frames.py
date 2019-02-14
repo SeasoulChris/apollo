@@ -55,7 +55,7 @@ def get_todo_files():
 
     # Find all todo jobs.
     todo_files = (files
-        .filter(record_utils.IsRecordFile)  # -> record
+        .filter(record_utils.is_record_file)  # -> record
         .keyBy(os.path.dirname)             # -> (task_dir, record)
         .join(complete_dirs)                # -> (task_dir, (record, _))
         .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
@@ -79,7 +79,7 @@ def target_partition_to_records(target_partition):
     src_record_file = target_partition.replace(kTargetPrefix, kOriginPrefix, 1).rsplit('#', 1)[0]
     for rec in range(seq * kSliceSize, (seq+1) * kSliceSize):
         ret_record = '{}.record.{:05d}'.format(src_record_file, rec)
-        if os.path.exists(os.path.join(s3_utils.S3MountPath, ret_record)):
+        if os.path.exists(os.path.join(s3_utils.S3_MOUNT_PATH, ret_record)):
             yield ret_record
 
 def create_dataframe(sqlContext, msgs_rdd, topics):
@@ -120,7 +120,7 @@ def construct_frames(frames):
     messages_to_write = defaultdict(list)
     
     for record_file in record_files:
-        freader = record.RecordReader(os.path.join(s3_utils.S3MountPath, record_file))
+        freader = record.RecordReader(os.path.join(s3_utils.S3_MOUNT_PATH, record_file))
         for msg in freader.read_messages():
             for frame in all_frames_msgs:
                 msg_map = dict(frame)
@@ -164,7 +164,7 @@ def mark_complete(todo_files):
     todo_files \
         .keys() \
         .distinct() \
-        .map(lambda path: os.path.join(s3_utils.S3MountPath, os.path.join(path, 'COMPLETE'))) \
+        .map(lambda path: os.path.join(s3_utils.S3_MOUNT_PATH, os.path.join(path, 'COMPLETE'))) \
         .map(os.mknod) \
         .count()
 
@@ -174,7 +174,7 @@ def Main():
 
     msgs_rdd = (todo_files                                                       # -> (target_dir, record_file) 
         .map(record_to_target_partition)                                         # -> (target_dir_partition, record_file)
-        .flatMapValues(record_utils.ReadRecord(kWantedChannels.values()))        # -> (target_dir_partition, message)
+        .flatMapValues(record_utils.read_record(kWantedChannels.values()))        # -> (target_dir_partition, message)
         .map(lambda (target, msg): (target, msg.timestamp, msg.topic))           # -> (target_dir_partition, timestamp, topic)
         .cache())
 

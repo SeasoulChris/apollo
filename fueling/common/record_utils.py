@@ -12,24 +12,25 @@ from cyber_py.record import RecordReader, RecordWriter
 import fueling.common.s3_utils as s3_utils
 
 
-def IsRecordFile(path):
+def is_record_file(path):
     """Naive check if a path is a record."""
     return path.endswith('.record') or fnmatch.fnmatch(path, '*.record.?????')
 
-def ReadRecord(wanted_channels=None):
+def read_record(wanted_channels=None):
     """record_path -> [PyBagMessage, ...] or None if error occurs."""
-    def ReadRecordFunc(record_path):
+    def read_record_func(record_path):
+        """Wrapper function."""
         try:
             for msg in RecordReader(s3_utils.AbsPath(record_path)).read_messages():
                 if wanted_channels is None or msg.topic in wanted_channels:
                     yield msg
-        except Exception as e:
+        except Exception:
             # Stop poping messages elegantly if exception happends, including
             # the normal StopIteration.
             raise StopIteration
-    return ReadRecordFunc
+    return read_record_func
 
-def WriteRecord(path_to_messages):
+def write_record(path_to_messages):
     """
     Write a list of messages to the record path. Note that this is just a Spark
     transformation which needs to be flushed by an action, such as 'count()'.
@@ -41,8 +42,8 @@ def WriteRecord(path_to_messages):
     path = s3_utils.AbsPath(path)
     try:
         os.makedirs(os.path.dirname(path))
-    except OSError as e:
-        if e.errno != errno.EEXIST:
+    except OSError as error:
+        if error.errno != errno.EEXIST:
             raise
     glog.info('Write record {}'.format(path))
     writer = RecordWriter(0, 0)

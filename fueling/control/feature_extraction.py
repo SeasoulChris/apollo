@@ -122,7 +122,7 @@ if __name__ == '__main__':
                 # record path
                 .flatMap(FoldToRecords)
                 # read message
-                .flatMap(record_utils.ReadRecord(WantedChannels))
+                .flatMap(record_utils.read_record(WantedChannels))
                 # parse message
                 .map(processMSG))
 
