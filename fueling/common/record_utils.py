@@ -21,7 +21,7 @@ def read_record(wanted_channels=None):
     def read_record_func(record_path):
         """Wrapper function."""
         try:
-            for msg in RecordReader(s3_utils.AbsPath(record_path)).read_messages():
+            for msg in RecordReader(s3_utils.abs_path(record_path)).read_messages():
                 if wanted_channels is None or msg.topic in wanted_channels:
                     yield msg
         except Exception:
@@ -39,7 +39,7 @@ def write_record(path_to_messages):
     """
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
-    path = s3_utils.AbsPath(path)
+    path = s3_utils.abs_path(path)
     try:
         os.makedirs(os.path.dirname(path))
     except OSError as error:

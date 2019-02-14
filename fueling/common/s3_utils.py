@@ -13,19 +13,20 @@ import fueling.common.spark_utils as spark_utils
 S3_MOUNT_PATH = '/mnt/bos'
 
 
-def S3Client():
+def s3_client():
     """Get S3 client."""
-    if len(os.environ.get('AWS_ACCESS_KEY_ID', '')) == 0:
+    if not os.environ.get('AWS_ACCESS_KEY_ID'):
         glog.error('No S3 credentials found in system environment.')
         return None
     return boto3.client('s3', endpoint_url='http://s3.bj.bcebos.com',
                         region_name='bj',
                         config=botocore.client.Config(signature_version='s3v4'))
 
-def AbsPath(obj_rel_path):
+def abs_path(obj_rel_path):
+    """Get absolute mounted path of an S3 object."""
     return os.path.join(S3_MOUNT_PATH, obj_rel_path)
 
-def ListObjects(bucket, prefix=''):
+def list_objects(bucket, prefix=''):
     """
     Get a list of objects in format:
     {u'Key': '/path/to/file',
@@ -34,23 +35,22 @@ def ListObjects(bucket, prefix=''):
      u'Size': 141022543, ...
     }
     """
-    s3 = S3Client()
-    paginator = s3.get_paginator('list_objects')
+    paginator = s3_client().get_paginator('list_objects')
     page_iterator = paginator.paginate(Bucket=bucket, Prefix=prefix)
     for page in page_iterator:
         for obj in page.get('Contents', []):
             yield obj
 
-def ListFiles(bucket, prefix=''):
+def list_files(bucket, prefix=''):
     """Get a RDD of files."""
     return spark_utils.get_context() \
-        .parallelize(ListObjects(bucket, prefix)) \
+        .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: not obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])
 
-def ListDirs(bucket, prefix=''):
+def list_dirs(bucket, prefix=''):
     """Get a RDD of dirs."""
     return spark_utils.get_context() \
-        .parallelize(ListObjects(bucket, prefix)) \
+        .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])

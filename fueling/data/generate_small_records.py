@@ -62,7 +62,7 @@ def ShardToFile(dir_msg):
     return target_file, msg
 
 def Main():
-    files = s3_utils.ListFiles(BUCKET, ORIGIN_PREFIX).cache()
+    files = s3_utils.list_files(BUCKET, ORIGIN_PREFIX).cache()
 
     # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
     complete_dirs = (files
@@ -70,17 +70,17 @@ def Main():
         .keyBy(os.path.dirname))
 
     # target_dir, which is "small-records/..."
-    processed_dirs = s3_utils.ListDirs(BUCKET, TARGET_PREFIX).keyBy(lambda path: path)
+    processed_dirs = s3_utils.list_dirs(BUCKET, TARGET_PREFIX).keyBy(lambda path: path)
 
     # Find all todo jobs.
     todo_jobs = (files
         .filter(record_utils.is_record_file)  # -> record
-        .keyBy(os.path.dirname)             # -> (task_dir, record)
-        .join(complete_dirs)                # -> (task_dir, (record, _))
-        .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
+        .keyBy(os.path.dirname)               # -> (task_dir, record)
+        .join(complete_dirs)                  # -> (task_dir, (record, _))
+        .mapValues(operator.itemgetter(0))    # -> (task_dir, record)
         .map(spark_utils.map_key(lambda src_dir: src_dir.replace(ORIGIN_PREFIX, TARGET_PREFIX, 1)))
-                                            # -> (target_dir, record)
-        .subtractByKey(processed_dirs)      # -> (target_dir, record), which is not processed
+                                              # -> (target_dir, record)
+        .subtractByKey(processed_dirs)        # -> (target_dir, record), which is not processed
         .cache())
 
     # Read the input data and write to target file.

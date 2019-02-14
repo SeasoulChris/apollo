@@ -43,7 +43,7 @@ kWantedChannels = {
 
 def get_todo_files():
     """Get to be processed files in rdd format."""
-    files = s3_utils.ListFiles(kBucket, kOriginPrefix).persist()
+    files = s3_utils.list_files(kBucket, kOriginPrefix).persist()
 
     # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
     complete_dirs = (files
@@ -51,7 +51,7 @@ def get_todo_files():
         .keyBy(os.path.dirname))
 
     # target_dir
-    processed_dirs = s3_utils.ListDirs(kBucket, kTargetPrefix).keyBy(lambda path: path)
+    processed_dirs = s3_utils.list_dirs(kBucket, kTargetPrefix).keyBy(lambda path: path)
 
     # Find all todo jobs.
     todo_files = (files
