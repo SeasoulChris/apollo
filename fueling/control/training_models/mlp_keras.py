@@ -232,7 +232,7 @@ def mlp_keras(model_name = 'mlp_two_layer', out_dirs = '/mnt/bos/modules/control
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
     save_model(model, param_norm, out_dirs + 'fnn_model_' + timestr + '.bin')
-    
+
     # save norm_params to hdf5
     hf = h5py.File(out_dirs + 'fnn_model_norms_' + timestr + '.h5', 'w')
     hf.create_dataset('mean', data = param_norm[0])
@@ -240,4 +240,3 @@ def mlp_keras(model_name = 'mlp_two_layer', out_dirs = '/mnt/bos/modules/control
     hf.close()
 
     model.save(out_dirs + 'fnn_model_weights_' + timestr + '.h5')
-

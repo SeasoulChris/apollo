@@ -9,12 +9,12 @@ import fueling.control.training_models.mlp_keras as mlp_keras
 
 def load_model(files, sub_module):
     models = (spark_utils.get_context('Test')
-                .parallelize(files)  #all the model files 
-                .filter(lambda x: sub_module in x) #model weights files 
+                .parallelize(files)  #all the model files
+                .filter(lambda x: sub_module in x) #model weights files
                 .map(lambda x: extract_file_id(x, 'fnn_model_' + sub_module +'_', '.h5'))
                 .distinct())
     return models
-    
+
 def extract_file_id(file_name, start_position, end_position):
     model_id = file_name.split(start_position)[1].split(end_position)[0]
     return model_id

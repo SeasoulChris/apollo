@@ -29,7 +29,7 @@ from scipy import interpolate
 from scipy.signal import savgol_filter
 
 import time
-from fueling.control.features.parameters_training import dim
+from features.parameters_training import dim
 
 # Constants
 dim_input = dim["pose"] + dim["incremental"] + dim["control"] # accounts for mps
@@ -66,12 +66,12 @@ def generate_data(segments):
             if k>0:
                 X[i,0] = segment[k-1,14] #speed mps
                 X[i,1] = segment[k-1,8] * np.cos(segment[k-1,0]) + segment[k-1,9] * np.sin(segment[k-1,0]) #acc
-                X[i,2] = segment[k-1,13] #angular speed 
-                X[i,3] = segment[k-1,15] #control from chassis 
-                X[i,4] = segment[k-1,16] #control from chassis 
-                X[i,5] = segment[k-1,17] #control from chassis 
-                Y[i,0] = segment[k,8] * np.cos(segment[k,0]) + segment[k,9] * np.sin(segment[k,0]) #acc next 
-                Y[i,1] = segment[k,13] #angular speed next 
+                X[i,2] = segment[k-1,13] #angular speed
+                X[i,3] = segment[k-1,15] #control from chassis
+                X[i,4] = segment[k-1,16] #control from chassis
+                X[i,5] = segment[k-1,17] #control from chassis
+                Y[i,0] = segment[k,8] * np.cos(segment[k,0]) + segment[k,9] * np.sin(segment[k,0]) #acc next
+                Y[i,1] = segment[k,13] #angular speed next
                 i += 1
     X[:,1] = savgol_filter(X[:,1], 51, 3) # window size 51, polynomial order 3
     Y[:,0] = savgol_filter(Y[:,0], 51, 3) # window size 51, polynomial order 3
