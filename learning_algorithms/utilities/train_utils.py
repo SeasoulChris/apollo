@@ -50,7 +50,7 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
         optimizer.zero_grad()
         X = train_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = train_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        if batch_preprocess is not None:
+        if batch_preprocess:
             X, y = batch_preprocess(X, y)
         pred = model(X)
         train_loss = loss.loss_fn(pred, y)
@@ -83,7 +83,7 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
     for i in range(num_of_batch):
         X = valid_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = valid_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        if batch_preprocess is not None:
+        if batch_preprocess:
             X, y = batch_preprocess(X, y)
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
