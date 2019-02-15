@@ -19,15 +19,19 @@
 
 import os
 import glob
-import h5py
 import numpy as np
 import sys
 import time
+import math
+from math import sqrt
+from random import choice
+from random import randint
+from random import shuffle
+
+import h5py
 import google.protobuf.text_format as text_format
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-import math
-from math import sqrt
 from keras.callbacks import ModelCheckpoint
 from keras.metrics import mse
 from keras.models import Sequential, Model
@@ -43,12 +47,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from scipy import interpolate
 from scipy.signal import savgol_filter
-from random import choice
-from random import randint
-from random import shuffle
-import fueling.common.spark_utils as spark_utils
+
 from fueling.control.features.parameters_training import dim
-import fueling.control.lib.proto.fnn_model_pb2
 from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 
 # System setup

@@ -6,8 +6,7 @@ import os
 import boto3
 import botocore.client
 import glog
-
-import fueling.common.spark_utils as spark_utils
+import pyspark_utils.helper as spark_helper
 
 
 S3_MOUNT_PATH = '/mnt/bos'
@@ -43,14 +42,14 @@ def list_objects(bucket, prefix=''):
 
 def list_files(bucket, prefix=''):
     """Get a RDD of files."""
-    return spark_utils.get_context() \
+    return spark_helper.get_context() \
         .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: not obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])
 
 def list_dirs(bucket, prefix=''):
     """Get a RDD of dirs."""
-    return spark_utils.get_context() \
+    return spark_helper.get_context() \
         .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])

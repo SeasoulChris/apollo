@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 import sys
 import glob
+
 import h5py
 import numpy as np
-import fueling.common.spark_utils as spark_utils
+import pyspark_utils.helper as spark_helper
+
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
 import fueling.control.training_models.mlp_keras as mlp_keras
 
+
 def load_model(files, sub_module):
-    models = (spark_utils.get_context('Test')
+    models = (spark_helper.get_context('Test')
                 .parallelize(files)  #all the model files
                 .filter(lambda x: sub_module in x) #model weights files
                 .map(lambda x: extract_file_id(x, 'fnn_model_' + sub_module +'_', '.h5'))
@@ -39,7 +42,7 @@ def model_evalution():
     model_norms = load_model(files, 'norms')
 
     h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
-    records = (spark_utils.get_context('Test')
+    records = (spark_helper.get_context('Test')
                 .parallelize(h5s)  #all the records for evaluation
                 .map(lambda h5:(extract_file_id(h5, '/hdf5_evaluation/', '.hdf5'), generate_segments(h5)))
                 .cache())

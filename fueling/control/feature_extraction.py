@@ -3,10 +3,10 @@ import glob
 
 import h5py
 import numpy as np
+import pyspark_utils.helper as spark_helper
 
 from cyber_py.record import RecordReader
 import fueling.common.record_utils as record_utils
-import fueling.common.spark_utils as spark_utils
 from fueling.control.features.features import GetDatapoints
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
@@ -116,7 +116,7 @@ def Run(elem):
 
 if __name__ == '__main__':
 
-    channels = (spark_utils.get_context('Test')
+    channels = (spark_helper.get_context('Test')
                 # folder path
                 .parallelize([pathname])
                 # record path
