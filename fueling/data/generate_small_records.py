@@ -69,8 +69,8 @@ def Main():
         .filter(lambda path: path.endswith('/COMPLETE'))
         .keyBy(os.path.dirname))
 
-    # target_dir, which is "small-records/..."
-    processed_dirs = s3_utils.list_dirs(BUCKET, TARGET_PREFIX).keyBy(lambda path: path)
+    # (target_dir, _), which is "small-records/..."
+    processed_dirs = s3_utils.list_dirs(BUCKET, TARGET_PREFIX).map(lambda path: path, None)
 
     # Find all todo jobs.
     todo_jobs = (files
