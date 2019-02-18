@@ -1,72 +1,88 @@
 #!/usr/bin/env python
+
+"""Utils classes and functions to support populating frames"""
+
 import os
 import subprocess
-import sys
-import time
 
 #import cv2
 import math
 import numpy as np
 import yaml
-from copy import deepcopy
 from google.protobuf.json_format import MessageToJson
 
-from cyber_py import cyber
 from cyber_py import record
-import fueling.common.s3_utils as s3_utils
-
 from modules.data.proto import frame_pb2
 from modules.common.proto.geometry_pb2 import Point3D
+from modules.common.proto.geometry_pb2 import PointENU
 from modules.common.proto.geometry_pb2 import Quaternion
 from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
-from modules.drivers.proto.sensor_image_pb2 import Image
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+import fueling.common.s3_utils as s3_utils
+
 # Map channels to processing functions
-g_channel_process_map = {}
+CHANNEL_PROCESS_MAP = {}
 
-sensor_params = {
-    'lidar_channel': '/apollo/sensor/lidar128/compensator/PointCloud2',
-    'lidar_extrinsics': '/modules/calibration/mkz6/velodyne_params/velodyne128_novatel_extrinsics.yaml',
+SENSOR_PARAMS = {
+    'lidar_channel':
+    '/apollo/sensor/lidar128/compensator/PointCloud2',
+    'lidar_extrinsics':
+    '/modules/calibration/mkz6/velodyne_params/velodyne128_novatel_extrinsics.yaml',
 
-    'front6mm_channel': '/apollo/sensor/camera/front_6mm/image/compressed',
-    'front6mm_intrinsics': '/modules/calibration/mkz6/camera_params/front_6mm_intrinsics.yaml',
-    'front6mm_extrinsics': 'modules/calibration/mkz6/camera_params/front_6mm_extrinsics.yaml',
+    'front6mm_channel':
+    '/apollo/sensor/camera/front_6mm/image/compressed',
+    'front6mm_intrinsics':
+    '/modules/calibration/mkz6/camera_params/front_6mm_intrinsics.yaml',
+    'front6mm_extrinsics':
+    'modules/calibration/mkz6/camera_params/front_6mm_extrinsics.yaml',
 
-    'front12mm_channel': '/apollo/sensor/camera/front_12mm/image/compressed',
-    'front12mm_intrinsics': '/modules/calibration/mkz6/camera_params/front_12mm_intrinsics.yaml',
-    'front12mm_extrinsics': '/modules/calibration/mkz6/camera_params/front_12mm_extrinsics.yaml',
+    'front12mm_channel':
+    '/apollo/sensor/camera/front_12mm/image/compressed',
+    'front12mm_intrinsics':
+    '/modules/calibration/mkz6/camera_params/front_12mm_intrinsics.yaml',
+    'front12mm_extrinsics':
+    '/modules/calibration/mkz6/camera_params/front_12mm_extrinsics.yaml',
 
-    'left_fisheye_channel': '/apollo/sensor/camera/left_fisheye/image/compressed',
-    'left_fisheye_intrinsics': '/modules/calibration/mkz6/camera_params/left_fisheye_intrinsics.yaml',
-    'left_fisheye_extrinsics': '/modules/calibration/mkz6/camera_params/left_fisheye_velodyne128_extrinsics.yaml',
+    'left_fisheye_channel':
+    '/apollo/sensor/camera/left_fisheye/image/compressed',
+    'left_fisheye_intrinsics':
+    '/modules/calibration/mkz6/camera_params/left_fisheye_intrinsics.yaml',
+    'left_fisheye_extrinsics':
+    '/modules/calibration/mkz6/camera_params/left_fisheye_velodyne128_extrinsics.yaml',
 
-    'right_fisheye_channel': '/apollo/sensor/camera/right_fisheye/image/compressed',
-    'right_fisheye_intrinsics': '/modules/calibration/mkz6/camera_params/right_fisheye_intrinsics.yaml',
-    'right_fisheye_extrinsics': '/modules/calibration/mkz6/camera_params/right_fisheye_velodyne128_extrinsics.yaml',
+    'right_fisheye_channel':
+    '/apollo/sensor/camera/right_fisheye/image/compressed',
+    'right_fisheye_intrinsics':
+    '/modules/calibration/mkz6/camera_params/right_fisheye_intrinsics.yaml',
+    'right_fisheye_extrinsics':
+    '/modules/calibration/mkz6/camera_params/right_fisheye_velodyne128_extrinsics.yaml',
 
-    'rear6mm_channel': '/apollo/sensor/camera/rear_6mm/image/compressed',
-    'rear6mm_intrinsics': '/modules/calibration/mkz6/camera_params/rear_6mm_intrinsics.yaml',
-    'rear6mm_extrinsics': '/modules/calibration/mkz6/camera_params/rear_6mm_extrinsics.yaml',
+    'rear6mm_channel':
+    '/apollo/sensor/camera/rear_6mm/image/compressed',
+    'rear6mm_intrinsics':
+    '/modules/calibration/mkz6/camera_params/rear_6mm_intrinsics.yaml',
+    'rear6mm_extrinsics':
+    '/modules/calibration/mkz6/camera_params/rear_6mm_extrinsics.yaml',
 
-    'pose_channel': '/apollo/localization/pose',
-    
-    'radar_front_channel': '/apollo/sensor/radar/front',
-    'radar_front_extrinsics': '/modules/calibration/mkz6/radar_params/radar_front_extrinsics.yaml',
+    'pose_channel':
+    '/apollo/localization/pose',
 
-    'radar_rear_channel': '/apollo/sensor/radar/rear',
-    'radar_rear_extrinsics': '/modules/calibration/mkz6/radar_params/radar_rear_extrinsics.yaml',
+    'radar_front_channel':
+    '/apollo/sensor/radar/front',
+    'radar_front_extrinsics':
+    '/modules/calibration/mkz6/radar_params/radar_front_extrinsics.yaml',
 
-    'image_url': 'https://s3-us-west-1.amazonaws.com/scale-labeling'
+    'radar_rear_channel':
+    '/apollo/sensor/radar/rear',
+    'radar_rear_extrinsics':
+    '/modules/calibration/mkz6/radar_params/radar_rear_extrinsics.yaml',
+
+    'image_url':
+    'https://s3-us-west-1.amazonaws.com/scale-labeling'
 }
-
-def run_shell_script(command):
-    """Simple wrapper to run shell command"""
-    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p.communicate()
-    return p.returncode
 
 def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
@@ -78,162 +94,225 @@ def load_yaml_settings(yaml_file_name):
 
 def dump_img_bin(data, output_dir, frame_id, channel):
     """Dump image bytes to binary file."""
-    if not os.path.exists(output_dir):
-        run_shell_script('sudo mkdir -p {} -m 755'.format(output_dir))
+    create_dir_if_not_exist(output_dir)
     with open('{}/image_bin-{}_{}'.format(output_dir, frame_id, channel), 'wb') as bin_file:
         bin_file.write(data)
 
-def point3d_to_matrix(P):
+def point3d_to_matrix(point):
     """Convert a 3-items array to 4*1 matrix."""
-    mat = np.zeros(shape=(4,1), dtype=float) 
-    mat = np.array([[P.x],[P.y],[P.z],[1]])
+    mat = np.zeros(shape=(4, 1), dtype=float)
+    mat = np.array([[point.x], [point.y], [point.z], [1]])
     return mat
 
-def quaternion_to_roation(Q):
+def quaternion_to_roation(qtn):
     """Convert quaternion vector to 3x3 rotation matrix."""
-    rotation_mat = np.zeros(shape=(3,3), dtype=float)
-    rotation_mat[0][0] = Q.qw**2 + Q.qx**2 - Q.qy**2 - Q.qz**2
-    rotation_mat[0][1] = 2 * (Q.qx*Q.qy - Q.qw*Q.qz)
-    rotation_mat[0][2] = 2 * (Q.qx*Q.qz + Q.qw*Q.qy)
-    rotation_mat[1][0] = 2 * (Q.qx*Q.qy + Q.qw*Q.qz)
-    rotation_mat[1][1] = Q.qw**2 - Q.qx**2 + Q.qy**2 - Q.qz**2
-    rotation_mat[1][2] = 2 * (Q.qy*Q.qz - Q.qw*Q.qx)
-    rotation_mat[2][0] = 2 * (Q.qx*Q.qz - Q.qw*Q.qy)    
-    rotation_mat[2][1] = 2 * (Q.qy*Q.qz + Q.qw*Q.qx)    
-    rotation_mat[2][2] = Q.qw**2 - Q.qx**2 - Q.qy**2 + Q.qz**2
+    rotation_mat = np.zeros(shape=(3, 3), dtype=float)
+    rotation_mat[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
+    rotation_mat[0][1] = 2 * (qtn.qx*qtn.qy - qtn.qw*qtn.qz)
+    rotation_mat[0][2] = 2 * (qtn.qx*qtn.qz + qtn.qw*qtn.qy)
+    rotation_mat[1][0] = 2 * (qtn.qx*qtn.qy + qtn.qw*qtn.qz)
+    rotation_mat[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
+    rotation_mat[1][2] = 2 * (qtn.qy*qtn.qz - qtn.qw*qtn.qx)
+    rotation_mat[2][0] = 2 * (qtn.qx*qtn.qz - qtn.qw*qtn.qy)
+    rotation_mat[2][1] = 2 * (qtn.qy*qtn.qz + qtn.qw*qtn.qx)
+    rotation_mat[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
     return rotation_mat
 
-def rotation_to_quaternion(R):
-    """Convert 3x3 rotation matrix to quaternion vector."""
-    q = Quaternion()
-    q.qx = np.absolute(np.sqrt(1+R[0][0]-R[1][1]-R[2][2])) * \
-        np.sign(R[2][1]-R[1][2]) * 0.5
-    q.qy = np.absolute(np.sqrt(1-R[0][0]+R[1][1]-R[2][2])) * \
-        np.sign(R[0][2]-R[2][0]) * 0.5 
-    q.qz = np.absolute(np.sqrt(1-R[0][0]-R[1][1]+R[2][2])) * \
-        np.sign(R[1][0]-R[0][1]) * 0.5
-    q.qw = np.sqrt(1 - q.qx * q.qx - q.qy * q.qy - q.qz * q.qz)
-    return q
+def rotation_to_quaternion(rot):
+    """Convert 3x3 rottation matrix to quaternion vector."""
+    qtn = Quaternion()
+    qtn.qx = np.absolute(np.sqrt(1+rot[0][0]-rot[1][1]-rot[2][2])) * \
+        np.sign(rot[2][1]-rot[1][2]) * 0.5
+    qtn.qy = np.absolute(np.sqrt(1-rot[0][0]+rot[1][1]-rot[2][2])) * \
+        np.sign(rot[0][2]-rot[2][0]) * 0.5
+    qtn.qz = np.absolute(np.sqrt(1-rot[0][0]-rot[1][1]+rot[2][2])) * \
+        np.sign(rot[1][0]-rot[0][1]) * 0.5
+    qtn.qw = np.sqrt(1 - qtn.qx * qtn.qx - qtn.qy * qtn.qy - qtn.qz * qtn.qz)
+    return qtn
 
-def generate_transform(Q, D):
+def generate_transform(qtn, dev):
     """Generate a matrix with rotation and deviation/translation."""
-    tranform = np.zeros(shape=(4,4), dtype=float)
-    tranform[0][0] = Q.qw**2 + Q.qx**2 - Q.qy**2 - Q.qz**2
-    tranform[0][1] = 2 * (Q.qx*Q.qy - Q.qw*Q.qz)
-    tranform[0][2] = 2 * (Q.qx*Q.qz + Q.qw*Q.qy)
-    tranform[1][0] = 2 * (Q.qx*Q.qy + Q.qw*Q.qz)
-    tranform[1][1] = Q.qw**2 - Q.qx**2 + Q.qy**2 - Q.qz**2
-    tranform[1][2] = 2 * (Q.qy*Q.qz - Q.qw*Q.qx)
-    tranform[2][0] = 2 * (Q.qx*Q.qz - Q.qw*Q.qy)
-    tranform[2][1] = 2 * (Q.qy*Q.qz + Q.qw*Q.qx)
-    tranform[2][2] = Q.qw**2 - Q.qx**2 - Q.qy**2 + Q.qz**2
-    tranform[0][3] = D.x 
-    tranform[1][3] = D.y 
-    tranform[2][3] = D.z
-    tranform[3] = [0,0,0,1]
+    tranform = np.zeros(shape=(4, 4), dtype=float)
+    tranform[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
+    tranform[0][1] = 2 * (qtn.qx*qtn.qy - qtn.qw*qtn.qz)
+    tranform[0][2] = 2 * (qtn.qx*qtn.qz + qtn.qw*qtn.qy)
+    tranform[1][0] = 2 * (qtn.qx*qtn.qy + qtn.qw*qtn.qz)
+    tranform[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
+    tranform[1][2] = 2 * (qtn.qy*qtn.qz - qtn.qw*qtn.qx)
+    tranform[2][0] = 2 * (qtn.qx*qtn.qz - qtn.qw*qtn.qy)
+    tranform[2][1] = 2 * (qtn.qy*qtn.qz + qtn.qw*qtn.qx)
+    tranform[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
+    tranform[0][3] = dev.x
+    tranform[1][3] = dev.y
+    tranform[2][3] = dev.z
+    tranform[3] = [0, 0, 0, 1]
     return tranform
 
-def get_rotation_from_tranform(T):
+def get_rotation_from_tranform(transform):
     """Extract rotation matrix out from transform matrix."""
-    rotation = np.zeros(shape=(3,3), dtype=float)
-    rotation[0][0] = T[0][0]
-    rotation[0][1] = T[0][1]
-    rotation[0][2] = T[0][2]
-    rotation[1][0] = T[1][0]
-    rotation[1][1] = T[1][1]
-    rotation[1][2] = T[1][2]
-    rotation[2][0] = T[2][0]
-    rotation[2][1] = T[2][1]
-    rotation[2][2] = T[2][2]
+    rotation = np.zeros(shape=(3, 3), dtype=float)
+    rotation[0][0] = transform[0][0]
+    rotation[0][1] = transform[0][1]
+    rotation[0][2] = transform[0][2]
+    rotation[1][0] = transform[1][0]
+    rotation[1][1] = transform[1][1]
+    rotation[1][2] = transform[1][2]
+    rotation[2][0] = transform[2][0]
+    rotation[2][1] = transform[2][1]
+    rotation[2][2] = transform[2][2]
     return rotation
 
-def transform_coordinate(P, T):
+def transform_coordinate(point, transform):
     """Transform coordinate system according to rotation and translation."""
-    point_mat = point3d_to_matrix(P)
+    point_mat = point3d_to_matrix(point)
     #point_rotation = np.matmul(T, point_mat)
-    point_mat = np.dot(T, point_mat)
-    P.x = point_mat[0][0]
-    P.y = point_mat[1][0]
-    P.z = point_mat[2][0]
+    point_mat = np.dot(transform, point_mat)
+    point.x = point_mat[0][0]
+    point.y = point_mat[1][0]
+    point.z = point_mat[2][0]
 
-def multiply_quaternion(Q1, Q2):
-    """Multiple two quaternions. Q1 is the rotation applied AFTER Q2."""
-    q = Quaternion()
-    q.qw = Q1.qw*Q2.qw - Q1.qx*Q2.qx - Q1.qy*Q2.qy - Q1.qz*Q2.qz
-    q.qx = Q1.qw*Q2.qx + Q1.qx*Q2.qw + Q1.qy*Q2.qz - Q1.qz*Q2.qy
-    q.qy = Q1.qw*Q2.qy - Q1.qx*Q2.qy + Q1.qy*Q2.qw + Q1.qz*Q2.qx
-    q.qz = Q1.qw*Q2.qz + Q1.qx*Q2.qy - Q1.qy*Q2.qx + Q1.qz*Q2.qw
-    return q
+def multiply_quaternion(qtn1, qtn2):
+    """Multiple two quaternions. qtn1 is the rotation applied AFTER qtn2."""
+    qtn = Quaternion()
+    qtn.qw = qtn1.qw*qtn2.qw - qtn1.qx*qtn2.qx - qtn1.qy*qtn2.qy - qtn1.qz*qtn2.qz
+    qtn.qx = qtn1.qw*qtn2.qx + qtn1.qx*qtn2.qw + qtn1.qy*qtn2.qz - qtn1.qz*qtn2.qy
+    qtn.qy = qtn1.qw*qtn2.qy - qtn1.qx*qtn2.qy + qtn1.qy*qtn2.qw + qtn1.qz*qtn2.qx
+    qtn.qz = qtn1.qw*qtn2.qz + qtn1.qx*qtn2.qy - qtn1.qy*qtn2.qx + qtn1.qz*qtn2.qw
+    return qtn
 
-def get_world_coordinate(T, pose):
+def get_world_coordinate(transform, pose):
     """Get world coordinate by using transform matrix (imu pose)"""
-    pose_transform = generate_transform(pose._orientation, pose._position)
-    T = np.dot(pose_transform, T)
-    return T
+    pose_transform = generate_transform(pose.orientation, pose.position)
+    transform = np.dot(pose_transform, transform)
+    return transform
 
-def convert_to_world_coordinate(P, T, stationary_pole):
+def convert_to_world_coordinate(point, transform, stationary_pole):
     """
     Convert to world coordinate by two steps:
     1. from imu to world by using transform matrix (imu pose)
     2. every point substract by the original point to match the visualizer
     """
-    transform_coordinate(P, T)
-    P.x -= stationary_pole[0]
-    P.y -= stationary_pole[1]
-    P.z -= stationary_pole[2]
+    transform_coordinate(point, transform)
+    point.x -= stationary_pole[0]
+    point.y -= stationary_pole[1]
+    point.z -= stationary_pole[2]
 
-def pose_to_stationary_pole(pose_message):
-    _channel, message, _type, _timestamp = pose_message
-    localization = LocalizationEstimate()
-    localization.ParseFromString(message)
-    position = localization.pose.position
-    return (position.x, position.y, position.z)
+def euler_to_quaternion(roll, pitch, yaw):
+    """Euler to Quaternion"""
+    qtnx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - \
+        np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qtny = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + \
+        np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qtnz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - \
+        np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qtnw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + \
+        np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    return [qtnx, qtny, qtnz, qtnw]
+
+def quaternion_to_euler(qtnx, qtny, qtnz, qtnw):
+    """Quaternion to Euler"""
+    tzero = +2.0 * (qtnw * qtnx + qtny * qtnz)
+    tone = +1.0 - 2.0 * (qtnx * qtnx + qtny * qtny)
+    roll = math.atan2(tzero, tone)
+    ttwo = +2.0 * (qtnw * qtny - qtnz * qtnx)
+    ttwo = +1.0 if ttwo > +1.0 else ttwo
+    ttwo = -1.0 if ttwo < -1.0 else ttwo
+    pitch = math.asin(ttwo)
+    tthree = +2.0 * (qtnw * qtnz + qtnx * qtny)
+    tfour = +1.0 - 2.0 * (qtny * qtny + qtnz * qtnz)
+    yaw = math.atan2(tthree, tfour)
+    return [yaw, pitch, roll]
+
+def get_mean_pose(pose_left, pose_right):
+    """Get mean value of two poses"""
+    if pose_left is None and pose_right is None:
+        return None
+    elif pose_left is None:
+        return GpsSensor(pose_right.message)
+    elif pose_right is None:
+        return GpsSensor(pose_left.message)
+
+    pose_left = GpsSensor(pose_left.message)
+    pose_right = GpsSensor(pose_right.message)
+    pose_mean = GpsSensor(None)
+    pose_mean.position = PointENU()
+    pose_mean.position.x = pose_left.position.x + \
+        (pose_right.position.x - pose_left.position.x) / 2
+    pose_mean.position.y = pose_left.position.y + \
+        (pose_right.position.y - pose_left.position.y) / 2
+    pose_mean.position.z = pose_left.position.z + \
+        (pose_right.position.z - pose_left.position.z) / 2
+    euler1 = quaternion_to_euler(pose_left.orientation.qx,
+                                 pose_left.orientation.qy,
+                                 pose_left.orientation.qz,
+                                 pose_left.orientation.qw)
+    euler2 = quaternion_to_euler(pose_right.orientation.qx,
+                                 pose_right.orientation.qy,
+                                 pose_right.orientation.qz,
+                                 pose_right.orientation.qw)
+    euler_mean_yaw = euler1[0] + (euler2[0] - euler1[0]) / 2
+    euler_mean_pitch = euler1[1] + (euler2[1] - euler1[1]) / 2
+    euler_mean_roll = euler1[2] + (euler2[2] - euler1[2]) / 2
+    orientation = euler_to_quaternion(euler_mean_roll, euler_mean_pitch, euler_mean_yaw)
+    pose_mean.orientation = Quaternion()
+    pose_mean.orientation.qx = orientation[0]
+    pose_mean.orientation.qy = orientation[1]
+    pose_mean.orientation.qz = orientation[2]
+    pose_mean.orientation.qw = orientation[3]
+    return pose_mean
+
+def create_dir_if_not_exist(dir_path):
+    """Simple wrapper to run shell command"""
+    if os.path.exists(dir_path):
+        return 0
+    command = 'sudo mkdir -p {} -m 755'.format(dir_path)
+    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    prc.communicate()
+    return prc.returncode
+
+def read_messages_func(record_file):
+    """Define a util function to read messages from record file"""
+    freader = record.RecordReader(record_file)
+    return freader.read_messages()
 
 class Sensor(object):
     """Sensor class representing various of sensors."""
-    def __init__(self, channel, intrinsics, extrinsics, stationary_pole):
+    def __init__(self, channel, intrinsics, extrinsics):
         """Constructor."""
         self._channel = channel
         self._intrinsics = load_yaml_settings(intrinsics)
         self._extrinsics = load_yaml_settings(extrinsics)
-        self._stationary_pole = stationary_pole
-        self.initialize_transform()
-        g_channel_process_map[self._channel] = self
- 
-    def process(self, message, frame, pose):
+        CHANNEL_PROCESS_MAP[self._channel] = self
+        if self._extrinsics is None:
+            return
+        qtn = Quaternion()
+        qtn.qw = self._extrinsics['transform']['rotation']['w']
+        qtn.qx = self._extrinsics['transform']['rotation']['x']
+        qtn.qy = self._extrinsics['transform']['rotation']['y']
+        qtn.qz = self._extrinsics['transform']['rotation']['z']
+        dev = Point3D()
+        dev.x = self._extrinsics['transform']['translation']['x']
+        dev.y = self._extrinsics['transform']['translation']['y']
+        dev.z = self._extrinsics['transform']['translation']['z']
+        self.transform = generate_transform(qtn, dev)
+
+    def process(self, message, frame, pose, stationary_pole):
         """Processing function."""
         pass
 
-    def initialize_transform(self):
-        if self._extrinsics is None:
-            return
-        q = Quaternion()
-        q.qw = self._extrinsics['transform']['rotation']['w']
-        q.qx = self._extrinsics['transform']['rotation']['x']
-        q.qy = self._extrinsics['transform']['rotation']['y']
-        q.qz = self._extrinsics['transform']['rotation']['z']
-        d = Point3D()
-        d.x = self._extrinsics['transform']['translation']['x']
-        d.y = self._extrinsics['transform']['translation']['y']
-        d.z = self._extrinsics['transform']['translation']['z']
-        self._transform = generate_transform(q, d)
-
     def add_transform(self, transform):
-        self._transform = np.dot(transform, self._transform)
+        """Add a new transform"""
+        self.transform = np.dot(transform, self.transform)
 
 class PointCloudSensor(Sensor):
     """Lidar sensor that hold pointcloud data."""
-    def __init__(self, channel, intrinsics, extrinsics, stationary_pole):
-        """Initialization."""
-        super(PointCloudSensor, self).__init__(channel, intrinsics, extrinsics, stationary_pole)
-
-    def process(self, message, frame, pose):
+    def process(self, message, frame, pose, stationary_pole):
         """Process PointCloud message."""
         point_cloud = PointCloud()
         point_cloud.ParseFromString(message)
-        transform = get_world_coordinate(self._transform, pose)
+        transform = get_world_coordinate(self.transform, pose)
         for point in point_cloud.point:
-            convert_to_world_coordinate(point, transform, self._stationary_pole)
+            convert_to_world_coordinate(point, transform, stationary_pole)
             vector4 = frame_pb2.Vector4()
             vector4.x = point.x
             vector4.y = point.y
@@ -243,43 +322,51 @@ class PointCloudSensor(Sensor):
             point_frame.CopyFrom(vector4)
 
         point = Point3D()
-        point.x = 0; point.y = 0; point.z = 0
-        transform = get_world_coordinate(self._transform, pose)
-        convert_to_world_coordinate(point, transform, self._stationary_pole)
+        point.x = 0
+        point.y = 0
+        point.z = 0
+        transform = get_world_coordinate(self.transform, pose)
+        convert_to_world_coordinate(point, transform, stationary_pole)
         frame.device_position.x = point.x
         frame.device_position.y = point.y
         frame.device_position.z = point.z
         rotation = get_rotation_from_tranform(transform)
-        q = rotation_to_quaternion(rotation)
-        # TODO: either apply it to all or do not apply it
-        #q = apply_scale_rotation(q)
-        frame.device_heading.x = q.qx
-        frame.device_heading.y = q.qy
-        frame.device_heading.z = q.qz
-        frame.device_heading.w = q.qw
+        qtn = rotation_to_quaternion(rotation)
+        # todo: either apply it to all or do not apply it
+        # q = apply_scale_rotation(q)
+        frame.device_heading.x = qtn.qx
+        frame.device_heading.y = qtn.qy
+        frame.device_heading.z = qtn.qz
+        frame.device_heading.w = qtn.qw
 
 class RadarSensor(Sensor):
     """Radar sensor that hold radar data."""
-    def __init__(self, channel, intrinsics, extrinsics, transforms, type, stationary_pole):
+    def __init__(self, channel, intrinsics, extrinsics):
         """Initialization."""
-        super(RadarSensor, self).__init__(channel, intrinsics, extrinsics, stationary_pole)
-        self._type = type
-        for T in transforms:
-            self.add_transform(T)
+        super(RadarSensor, self).__init__(channel, intrinsics, extrinsics)
+        self._radar_type = None
+        self.transforms = None
 
-    def process(self, message, frame, pose):
+    def set_radar_properties(self, radar_type, transforms):
+        """Set additional properties for RadarSensor type"""
+        self._radar_type = radar_type
+        self.transforms = transforms
+        for transform in self.transforms:
+            self.add_transform(transform)
+
+    def process(self, message, frame, pose, stationary_pole):
         """Processing radar message."""
         radar = ContiRadar()
         radar.ParseFromString(message)
-        transform = get_world_coordinate(self._transform, pose)
+        transform = get_world_coordinate(self.transform, pose)
         for point in radar.contiobs:
             point3d = Point3D()
             point3d.x = point.longitude_dist
             point3d.y = point.lateral_dist
             point3d.z = 0
-            convert_to_world_coordinate(point3d, transform, self._stationary_pole)
+            convert_to_world_coordinate(point3d, transform, stationary_pole)
             radar_point = frame_pb2.RadarPoint()
-            radar_point.type = self._type 
+            radar_point.type = self._radar_type
             radar_point.position.x = point3d.x
             radar_point.position.y = point3d.y
             radar_point.position.z = point3d.z
@@ -287,7 +374,7 @@ class RadarSensor(Sensor):
             point3d.x = point.longitude_dist + point.longitude_vel
             point3d.y = point.lateral_dist + point.lateral_vel
             point3d.z = 0
-            convert_to_world_coordinate(point3d, transform, self._stationary_pole)
+            convert_to_world_coordinate(point3d, transform, stationary_pole)
             radar_point.direction.x = point3d.x - radar_point.position.x
             radar_point.direction.y = point3d.y - radar_point.position.y
             radar_point.direction.z = point3d.z - radar_point.position.z
@@ -297,28 +384,34 @@ class RadarSensor(Sensor):
 
 class ImageSensor(Sensor):
     """Image sensor that hold camera data."""
-    def __init__(self, channel, intrinsics, extrinsics, task_dir, transforms, stationary_pole):
+    def __init__(self, channel, intrinsics, extrinsics):
         """Initialization."""
-        super(ImageSensor, self).__init__(channel, intrinsics, extrinsics, stationary_pole)
-        self._task_dir = task_dir
-        self._frame_id = 0
-        for T in transforms:
-            self.add_transform(T)
+        super(ImageSensor, self).__init__(channel, intrinsics, extrinsics)
+        self._task_dir = None
+        self.frame_id = 0
+        self.transforms = None
 
-    def process(self, message, frame, pose):
+    def set_camera_properties(self, task_dir, transforms):
+        """Set additional properties for ImageSensor type"""
+        self._task_dir = task_dir
+        self.transforms = transforms
+        for transform in self.transforms:
+            self.add_transform(transform)
+
+    def process(self, message, frame, pose, stationary_pole):
         """Processing image message."""
         image = CompressedImage()
         image.ParseFromString(message)
         camera_image = frame_pb2.CameraImage()
         camera_image.timestamp = image.header.timestamp_sec
-        dump_img_bin(image.data, 
-            os.path.join(self._task_dir, 'images'), 
-            self._frame_id, 
-            self.get_image_name())
+        dump_img_bin(image.data,
+                     os.path.join(self._task_dir, 'images'),
+                     self.frame_id,
+                     self.get_image_name())
         camera_image.image_url = '{}/{}/images/pic-{}_{}.jpg'.format(
-            sensor_params['image_url'], 
+            SENSOR_PARAMS['image_url'],
             os.path.basename(self._task_dir),
-            self._frame_id,
+            self.frame_id,
             self.get_image_name())
         camera_image.k1 = self._intrinsics['D'][0]
         camera_image.k2 = self._intrinsics['D'][1]
@@ -331,143 +424,287 @@ class ImageSensor(Sensor):
         camera_image.cx = self._intrinsics['K'][2]
         camera_image.cy = self._intrinsics['K'][5]
         point = Point3D()
-        point.x = 0; point.y = 0; point.z = 0
-        transform = get_world_coordinate(self._transform, pose)
-        convert_to_world_coordinate(point, transform, self._stationary_pole)
+        point.x = 0
+        point.y = 0
+        point.z = 0
+        transform = get_world_coordinate(self.transform, pose)
+        convert_to_world_coordinate(point, transform, stationary_pole)
         camera_image.position.x = point.x
         camera_image.position.y = point.y
         camera_image.position.z = point.z
         rotation = get_rotation_from_tranform(transform)
-        q = rotation_to_quaternion(rotation)
-        # TODO: either apply it to all or do not apply it
-        #q = apply_scale_rotation(q)
-        camera_image.heading.x = q.qx
-        camera_image.heading.y = q.qy
-        camera_image.heading.z = q.qz
-        camera_image.heading.w = q.qw
+        qtn = rotation_to_quaternion(rotation)
+        # todo: either apply it to all or do not apply it
+        # qtn = apply_scale_rotation(q)
+        camera_image.heading.x = qtn.qx
+        camera_image.heading.y = qtn.qy
+        camera_image.heading.z = qtn.qz
+        camera_image.heading.w = qtn.qw
         camera_image.channel = self._channel
         image_frame = frame.images.add()
         image_frame.CopyFrom(camera_image)
-    
+
     def get_image_name(self):
         """A nasty way to get image name from map."""
-        for name in sensor_params:
-            if sensor_params[name] == self._channel:
+        for name in SENSOR_PARAMS:
+            if SENSOR_PARAMS[name] == self._channel:
                 return name
+        return None
 
-class GpsSensor(Sensor):
+class GpsSensor(object):
     """GPS sensor that hold pose data."""
-    def __init__(self, channel, intrinsics, extrinsics, stationary_pole):
+    def __init__(self, message):
         """Initialization."""
-        super(GpsSensor, self).__init__(channel, intrinsics, extrinsics, None)
-        
-    def process(self, message, frame, pose):
+        self.position = None
+        self.orientation = None
+        if message is not None:
+            localization = LocalizationEstimate()
+            localization.ParseFromString(message)
+            self.position = localization.pose.position
+            self.orientation = localization.pose.orientation
+
+    def process(self, frame):
         """Process Pose message."""
-        localization = LocalizationEstimate()
-        localization.ParseFromString(message)
-
-        self._position = localization.pose.position
-        self._orientation = localization.pose.orientation
-
         gps_pose = frame_pb2.GPSPose()
-        gps_pose.lat = localization.pose.position.x
-        gps_pose.lon = localization.pose.position.y
-        gps_pose.bearing = localization.pose.orientation.qw
-        gps_pose.x = localization.pose.position.x
-        gps_pose.y = localization.pose.position.y
-        gps_pose.z = localization.pose.position.z
-        gps_pose.qw = localization.pose.orientation.qw
-        gps_pose.qx = localization.pose.orientation.qx
-        gps_pose.qy = localization.pose.orientation.qy
-        gps_pose.qz = localization.pose.orientation.qz
+        gps_pose.lat = self.position.x
+        gps_pose.lon = self.position.y
+        gps_pose.bearing = self.orientation.qw
         frame.device_gps_pose.CopyFrom(gps_pose)
 
-class FramePopulator:
+    def flush_to_frame(self):
+        """Place holder"""
+        pass
+
+    def correct_localization(self):
+        """Place holder"""
+        pass
+
+class FramePopulator(object):
     """Extract sensors data from record file, and populate to JSON."""
-    def __init__(self, task_dir, pose_message):     
-        stationary_pole = pose_to_stationary_pole(pose_message) 
-
+    def __init__(self, task_dir):
+        self._stationary_pole = None
         self._task_dir = os.path.join(s3_utils.S3_MOUNT_PATH, task_dir)
-        if not os.path.exists(self._task_dir):
-            run_shell_script('sudo mkdir -p {} -m 755'.format(self._task_dir))
+        create_dir_if_not_exist(self._task_dir)
 
-        self._gps_pose = GpsSensor(sensor_params['pose_channel'], None, None, None)
-        self._pointcloud_128 = PointCloudSensor(
-            channel=sensor_params['lidar_channel'],
+        pointcloud_128 = PointCloudSensor(
+            channel=SENSOR_PARAMS['lidar_channel'],
             intrinsics=None,
-            extrinsics=sensor_params['lidar_extrinsics'],
-            stationary_pole=stationary_pole
-        )
-        self._image_front_6mm = ImageSensor(
-            channel=sensor_params['front6mm_channel'],
-            intrinsics=sensor_params['front6mm_intrinsics'],
-            extrinsics=sensor_params['front6mm_extrinsics'],
-            task_dir=self._task_dir,
-            transforms=[self._pointcloud_128._transform],
-            stationary_pole=stationary_pole)
-        self._image_front_12mm = ImageSensor(
-            channel=sensor_params['front12mm_channel'],
-            intrinsics=sensor_params['front12mm_intrinsics'],
-            extrinsics=sensor_params['front12mm_extrinsics'],
-            task_dir=self._task_dir,
-            transforms=[self._pointcloud_128._transform],
-            stationary_pole=stationary_pole)
-        self._image_left_fisheye = ImageSensor(
-            channel=sensor_params['left_fisheye_channel'],
-            intrinsics=sensor_params['left_fisheye_intrinsics'],
-            extrinsics=sensor_params['left_fisheye_extrinsics'],
-            task_dir=self._task_dir,
-            transforms=[self._pointcloud_128._transform],
-            stationary_pole=stationary_pole)
-        self._image_right_fisheye = ImageSensor(
-            channel=sensor_params['right_fisheye_channel'],
-            intrinsics=sensor_params['right_fisheye_intrinsics'],
-            extrinsics=sensor_params['right_fisheye_extrinsics'],
-            task_dir=self._task_dir,
-            transforms=[self._pointcloud_128._transform],
-            stationary_pole=stationary_pole)
-        self._image_rear = ImageSensor(
-            channel=sensor_params['rear6mm_channel'],
-            intrinsics=sensor_params['rear6mm_intrinsics'],
-            extrinsics=sensor_params['rear6mm_extrinsics'],
-            task_dir=self._task_dir,
-            transforms=[self._pointcloud_128._transform],
-            stationary_pole=stationary_pole)
-        self._radar_front = RadarSensor(
-            channel=sensor_params['radar_front_channel'],
+            extrinsics=SENSOR_PARAMS['lidar_extrinsics'])
+        image_front_6mm = ImageSensor(
+            channel=SENSOR_PARAMS['front6mm_channel'],
+            intrinsics=SENSOR_PARAMS['front6mm_intrinsics'],
+            extrinsics=SENSOR_PARAMS['front6mm_extrinsics'])
+        image_front_6mm.set_camera_properties(
+            self._task_dir,
+            [pointcloud_128.transform])
+        image_front_12mm = ImageSensor(
+            channel=SENSOR_PARAMS['front12mm_channel'],
+            intrinsics=SENSOR_PARAMS['front12mm_intrinsics'],
+            extrinsics=SENSOR_PARAMS['front12mm_extrinsics'])
+        image_front_12mm.set_camera_properties(
+            self._task_dir,
+            [pointcloud_128.transform])
+        image_left_fisheye = ImageSensor(
+            channel=SENSOR_PARAMS['left_fisheye_channel'],
+            intrinsics=SENSOR_PARAMS['left_fisheye_intrinsics'],
+            extrinsics=SENSOR_PARAMS['left_fisheye_extrinsics'])
+        image_left_fisheye.set_camera_properties(
+            self._task_dir,
+            [pointcloud_128.transform])
+        image_right_fisheye = ImageSensor(
+            channel=SENSOR_PARAMS['right_fisheye_channel'],
+            intrinsics=SENSOR_PARAMS['right_fisheye_intrinsics'],
+            extrinsics=SENSOR_PARAMS['right_fisheye_extrinsics'])
+        image_right_fisheye.set_camera_properties(
+            self._task_dir,
+            [pointcloud_128.transform])
+        image_rear = ImageSensor(
+            channel=SENSOR_PARAMS['rear6mm_channel'],
+            intrinsics=SENSOR_PARAMS['rear6mm_intrinsics'],
+            extrinsics=SENSOR_PARAMS['rear6mm_extrinsics'])
+        image_rear.set_camera_properties(
+            self._task_dir,
+            [pointcloud_128.transform])
+        radar_front = RadarSensor(
+            channel=SENSOR_PARAMS['radar_front_channel'],
             intrinsics=None,
-            extrinsics=sensor_params['radar_front_extrinsics'],
-            transforms=[self._pointcloud_128._transform],
-            type=frame_pb2.RadarPoint.FRONT,
-            stationary_pole=stationary_pole)
-        self._radar_rear = RadarSensor(
-            channel=sensor_params['radar_rear_channel'],
+            extrinsics=SENSOR_PARAMS['radar_front_extrinsics'])
+        radar_front.set_radar_properties(
+            frame_pb2.RadarPoint.FRONT,
+            [pointcloud_128.transform])
+        radar_rear = RadarSensor(
+            channel=SENSOR_PARAMS['radar_rear_channel'],
             intrinsics=None,
-            extrinsics=sensor_params['radar_rear_extrinsics'],
-            transforms=[self._pointcloud_128._transform],
-            type=frame_pb2.RadarPoint.REAR,
-            stationary_pole=stationary_pole)
+            extrinsics=SENSOR_PARAMS['radar_rear_extrinsics'])
+        radar_rear.set_radar_properties(
+            frame_pb2.RadarPoint.REAR,
+            [pointcloud_128.transform])
 
-    def construct_frames(self, msgs):
+    def construct_frames(self, message_structs):
         """Construct the frames by using given messages."""
         frame = frame_pb2.Frame()
-        lidar_msg = next(x for x in msgs if x.topic == sensor_params['lidar_channel'])
+        lidar_msg = \
+          next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
+        lidar_pose = get_mean_pose(lidar_msg.pose_left, lidar_msg.pose_right)
+        lidar_pose.process(frame)
+        if self._stationary_pole is None:
+            self._stationary_pole = \
+                (lidar_pose.position.x, lidar_pose.position.y, lidar_pose.position.z)
 
-        msgs.sort(key=lambda x: x.topic==sensor_params['pose_channel'], reverse=True)
+        for message_struct in message_structs:
+            channel, message, _type, _timestamp = message_struct.message
+            pose = get_mean_pose(message_struct.pose_left, message_struct.pose_right)
+            if isinstance(CHANNEL_PROCESS_MAP[channel], ImageSensor):
+                CHANNEL_PROCESS_MAP[channel].frame_id = lidar_msg.message.timestamp
+            CHANNEL_PROCESS_MAP[channel].process(message, frame, pose, self._stationary_pole)
 
-        for msg in msgs:
-            channel, message, _type, _timestamp = msg
-            if isinstance(g_channel_process_map[channel], ImageSensor):
-                g_channel_process_map[channel]._frame_id = lidar_msg.timestamp
-            g_channel_process_map[channel].process(message, frame, g_channel_process_map[sensor_params['pose_channel']])
-
-        frame.timestamp = lidar_msg.timestamp
+        frame.timestamp = lidar_msg.message.timestamp
         frame_dir = os.path.join(self._task_dir, 'frames')
-        if not os.path.exists(frame_dir):
-            run_shell_script('sudo mkdir -p {} -m 755'.format(frame_dir))
-        
-        file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.timestamp))
-        jsonObj = MessageToJson(frame, False, True)
+        create_dir_if_not_exist(frame_dir)
+        file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.message.timestamp))
+        json_obj = MessageToJson(frame, False, True)
         with open(file_name, 'w') as outfile:
-            outfile.write(jsonObj)
-  
+            outfile.write(json_obj)
+
+    def count_frames(self):
+        """Place holder"""
+        pass
+
+    def get_initial_frame(self):
+        """Place holder"""
+        pass
+
+class DataStream(object):
+    """Logic data buffer to manage data reading from different kinds of sources."""
+    def __init__(self, data_source, load_func):
+        """Initialization. Load the initial data from source"""
+        self._data_source = data_source
+        self._data_source_index = 0
+        self._buffer = []
+        self._load_func = load_func
+        self._item_number_released = 0
+        self._iterators = []
+        self.load_more()
+
+    def register(self, iterator):
+        """Register iterator so they can be updated correspondingly."""
+        self._iterators.append(iterator)
+
+    def read_item(self, index):
+        """Read and return a single item by index."""
+        if index >= len(self._buffer):
+            index -= self.load_more()
+        if index < 0 or index >= len(self._buffer):
+            return None
+        return self._buffer[index]
+
+    def load_more(self):
+        """Load more data from source to buffer"""
+        if self._data_source_index >= len(self._data_source):
+            return 0
+        self._buffer.extend(self._load_func(self._data_source[self._data_source_index]))
+        self._data_source_index += 1
+        # Update each iterator's index if applicable
+        item_number_released = len(self._buffer)/3
+        for iterator in self._iterators:
+            if not iterator.okay_to_update_index(item_number_released+1):
+                return 0
+        if self._data_source_index <= 1:
+            return 0
+        del self._buffer[:item_number_released]
+        for iterator in self._iterators:
+            iterator.update_index(item_number_released+1)
+        return item_number_released+1
+
+class DataStreamIterator(object):
+    """DataStream iterator for accessing the DataStream object."""
+    def __init__(self, data_stream):
+        """Initialization."""
+        self._data_stream = data_stream
+        self._index = 0
+        self._data_stream.register(self)
+
+    def update_index(self, offset):
+        """Update index according to data stream change"""
+        self._index -= offset
+
+    def next(self, func):
+        """Get next item that satisfy func."""
+        item = self._data_stream.read_item(self._index)
+        while item is not None and not func(item):
+            self._index += 1
+            item = self._data_stream.read_item(self._index)
+        self._index += 1
+        return item
+
+    def set_item(self):
+        """Place holder"""
+        pass
+
+class MessageStruct(object):
+    """Data structure representing messages with left and right poses."""
+    def __init__(self, msg, pose_left, pose_right):
+        self.message = msg
+        self.pose_left = pose_left
+        self.pose_right = pose_right
+
+    def check_msg(self):
+        """Place holder"""
+        pass
+
+    def check_pose_left(self):
+        """Place holder"""
+        pass
+
+    def check_pose_right(self):
+        """Place holder"""
+        pass
+
+class Builder(object):
+    """Used for building objects with specific sequences and properties."""
+    def __init__(self, message_struct, rules):
+        self._guide_lines = {}
+        for rule in rules:
+            self._guide_lines[rule] = None
+        self.build(message_struct)
+
+    def build(self, message_struct):
+        """Check if the message can be accepted. Return 1 if yes, 0 if not."""
+        topic = message_struct.message.topic
+        if self._guide_lines[topic] is None:
+            self._guide_lines[topic] = message_struct
+            if all(self._guide_lines[x] is not None for x in self._guide_lines):
+                return 1, None  # means message accepted and builder done
+            return 0, None   # means message accepted
+        return 0, message_struct # means message not accepted
+
+    def complete(self, frame_populator):
+        """Builder complete, and send messages to framepopulator in this case"""
+        messages = self._guide_lines.values()
+        frame_populator.construct_frames(messages)
+
+class BuilderManager(object):
+    """Builder management pool."""
+    def __init__(self, rules, frame_populator):
+        self._builder_list = []
+        self._rules = rules
+        self._frame_populator = frame_populator
+
+    def get_builder(self):
+        """Place holder"""
+        pass
+
+    def set_builder(self):
+        """Place holder"""
+        pass
+
+    def throw_to_pool(self, message_struct):
+        """Process new coming message. Loop each builder in the list and find the right one"""
+        for builder in self._builder_list:
+            status, msg = builder.build(message_struct)
+            if msg is None:
+                if status == 1:
+                    builder.complete(self._frame_populator)
+                    self._builder_list.remove(builder)
+                return
+        self._builder_list.append(Builder(message_struct, self._rules))
