@@ -18,4 +18,4 @@ dependencies:
   # Other.
   - pip:
     - pylint
-    - pyspark-utils
+    - pyspark-utils >= 1.2.1
