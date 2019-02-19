@@ -2,6 +2,7 @@
 #!/usr/bin/env python
 
 import os
+import string
 
 import boto3
 import botocore.client
@@ -53,3 +54,43 @@ def list_dirs(bucket, prefix=''):
         .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: obj['Key'].endswith('/')) \
         .map(lambda obj: obj['Key'])
+
+def file_exists(bucket, remote_path):
+    """Check if specified file is existing"""
+    return len(list(list_objects(bucket, remote_path))) > 0
+
+def upload_file(bucket, local_path, remote_path, meta_data=None):
+    """Upload a file from local to BOS"""
+    # arguments validation
+    if not os.path.exists(local_path):
+        raise ValueError('No local file/folder found for uploading')
+
+    allowed_chars = set(string.ascii_letters + string.digits + '/' + '-' + '_')
+    if set(remote_path) > allowed_chars:
+        raise ValueError('Only ascii digits dash and underscore characters are allowed in paths')
+
+    sub_paths = remote_path.split('/')
+    minimal_path_depth = 2
+    maximal_path_depth = 10
+    if len(sub_paths) < minimal_path_depth or len(sub_paths) > maximal_path_depth:
+        raise ValueError('Destination path is either too short or too long')
+
+    if file_exists(bucket, remote_path):
+        raise ValueError('Destination already exists')
+
+    if not file_exists(bucket, sub_paths[0]):
+        raise ValueError('Creating folders or files under root is not allowed')
+
+    # Set default MetaData if it's not specified
+    if meta_data is None:
+        meta_data = {'User': 'apollo-user'}
+
+    # Actually upload
+    s3_client().upload_file(local_path,
+                            bucket,
+                            remote_path,
+                            ExtraArgs={"Metadata": meta_data})
+
+def download_file(bucket, remote_path, local_path):
+    """Download a file from BOS to local"""
+    s3_client().download_file(bucket, remote_path, local_path)
