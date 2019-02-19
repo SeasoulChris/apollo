@@ -12,7 +12,8 @@
               | - replay-engine
    ```
 
-   `bstart`, `binto` and build Apollo as usual.
+   `bstart`, `binto` and build Apollo as usual. Then you'll see the repo mounted
+   at /apollo/modules/data/fuel, as a part of the whole apollo workspace.
 
 1. Install additional tools for the Apollo container.
 
@@ -33,6 +34,10 @@ practices are:
 
 1. Put all Python modules in ./fueling/ folder, and import them with full path
    like `import fueling.common.s3_utils`.
+
+1. Put all test data in ./testdata/modules/... folder, make sure your job works
+   perfectly at local. And when it is submited to a cluster, the huge test files
+   are efficiently ignored.
 
 ### Test your pipeline at local
 
