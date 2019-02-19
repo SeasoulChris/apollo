@@ -53,7 +53,7 @@ def list_dirs(bucket, prefix=''):
     return spark_helper.get_context() \
         .parallelize(list_objects(bucket, prefix)) \
         .filter(lambda obj: obj['Key'].endswith('/')) \
-        .map(lambda obj: obj['Key'])
+        .map(lambda obj: obj['Key'][:-1])  # Remove the trailing slash.
 
 def file_exists(bucket, remote_path):
     """Check if specified file is existing"""
