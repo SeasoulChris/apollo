@@ -8,8 +8,18 @@ import os
 import glog
 
 from cyber_py.record import RecordReader, RecordWriter
+from modules.canbus.proto.chassis_pb2 import Chassis
+from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
+from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 import fueling.common.s3_utils as s3_utils
+
+
+CHANNEL_TO_TYPE = {
+    '/apollo/canbus/chassis': Chassis,
+    '/apollo/hmi/status': HMIStatus,
+    '/apollo/localization/pose': LocalizationEstimate,
+}
 
 
 def is_record_file(path):
@@ -58,3 +68,13 @@ def write_record(path_to_messages):
     writer.close()
     # Dummy map result.
     return None
+
+def message_to_proto(py_bag_message):
+    """Convert an Apollo py_bag_message to proto."""
+    proto_type = CHANNEL_TO_TYPE.get(py_bag_message.topic)
+    if proto_type is None:
+        glog.error('Parser for {} is not implemented!'.format(py_bag_message.topic))
+        return None
+    proto = proto_type()
+    proto.ParseFromString(py_bag_message.message)
+    return proto
