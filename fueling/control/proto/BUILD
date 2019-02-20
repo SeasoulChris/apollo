@@ -1,9 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
-    name = "feature_plan_lib",
+    name = "feature_key_lib",
     srcs = [
-        "feature_plan.proto",
+        "feature_key.proto",
     ],
     deps = [
         "//modules/common/proto:drive_state_proto_lib",

@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.control.proto.feature_key;
+
+message featureKey {
+    optional double speed_slice = 1;
+    optional double acc_slice = 2;
+    optional double steer_slice = 3;
+    optional double speed_max = 4;
+    optional double throttle_max = 5;
+    optional double brake_max = 6;
+}
