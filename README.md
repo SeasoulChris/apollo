@@ -39,7 +39,7 @@ practices are:
    own `run_test()` and `run_prod()` functions. Generally they should share most
    procedures and only differ in input and output locations or scale.
 
-1. Put all test data in ./testdata/modules/... folder, make sure your job works
+1. Put all test data in ./testdata/module/... folder, make sure your job works
    perfectly at local. And when it is submited to a cluster, the huge test files
    are efficiently ignored.
 

@@ -26,11 +26,11 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
     def run_test(self):
         """Run test."""
         records = [
-            '/apollo/modules/data/fuel/testdata/modules/control/left_40_10/1.record.00000',
-            '/apollo/modules/data/fuel/testdata/modules/control/right_40_10/1.record.00000',
+            '/apollo/modules/data/fuel/testdata/control/left_40_10/1.record.00000',
+            '/apollo/modules/data/fuel/testdata/control/right_40_10/1.record.00000',
         ]
-        origin_prefix = '/apollo/modules/data/fuel/testdata/modules/control'
-        target_prefix = '/apollo/modules/data/fuel/testdata/modules/control/generated'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
         dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix)
