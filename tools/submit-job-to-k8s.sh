@@ -4,11 +4,12 @@
 LOCAL_JOB_FILE="$1"
 
 # Config.
-IMAGE="xiangquan/spark:20190210_2216"
+IMAGE="xiangquan/spark:20190220_0901"
 K8S="https://180.76.185.100:6443"
-WORKERS=1
-CORES=1
-MEMORY=8g
+DRIVER_MEMORY=4g
+EXECUTORS=2
+EXECUTOR_CORES=1
+EXECUTOR_MEMORY=10g
 CONDA_ENV="py27"
 AWS_KEY="<INPUT>"
 AWS_SEC="<INPUT>"
@@ -35,16 +36,16 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
 popd
 
 # Submit job with fueling package.
-"${APOLLO_SPARK_REPO}/bin/spark-submit" \
+sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
-    --conf spark.driver.memory="${MEMORY}" \
-    --conf spark.executor.instances="${WORKERS}" \
-    --conf spark.executor.memory="${MEMORY}" \
+    --conf spark.driver.memory="${DRIVER_MEMORY}" \
+    --conf spark.executor.instances="${EXECUTORS}" \
+    --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
-    --conf spark.kubernetes.executor.request.cores="${CORES}" \
+    --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \

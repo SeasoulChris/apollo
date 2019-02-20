@@ -87,7 +87,7 @@ class GenerateSmallRecordsPipeline(BasePipeline):
             .filter(lambda path: path.endswith('/COMPLETE'))
             .map(os.path.dirname))
         # task_dir, whose target_dir has already been generated.
-        dir_blacklist_rdd = (
+        blacklist_dirs_rdd = (
             s3_utils.list_dirs(bucket, target_prefix)
             .map(lambda target_dir: target_dir.replace(target_prefix, origin_prefix, 1)))
 
@@ -138,4 +138,4 @@ class GenerateSmallRecordsPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    GenerateSmallRecordsPipeline().run_test()
+    GenerateSmallRecordsPipeline().run_prod()
