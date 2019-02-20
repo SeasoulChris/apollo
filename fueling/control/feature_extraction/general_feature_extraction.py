@@ -3,12 +3,16 @@
 This is a module to extraction features from records
 with folder path as part of the key
 """
+import os
+
 import h5py
 import numpy as np
+import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
 from fueling.control.features.features import GetDatapoints
+import fueling.common.record_utils as record_utils
+import fueling.common.s3_utils as s3_utils
 import fueling.control.features.common_feature_extraction as CommonFE
 
 
@@ -21,16 +25,28 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        folder_path = ["/apollo/modules/data/fuel/testdata/modules/control/left_40_10",
-                       "/apollo/modules/data/fuel/testdata/modules/control/right_40_10"]
+        records = [
+            '/apollo/modules/data/fuel/testdata/modules/control/left_40_10/1.record.00000',
+            '/apollo/modules/data/fuel/testdata/modules/control/right_40_10/1.record.00000',
+        ]
+        origin_prefix = '/apollo/modules/data/fuel/testdata/modules/control'
+        target_prefix = '/apollo/modules/data/fuel/testdata/modules/control/generated'
 
-        spark_context = self.get_spark_context()
-        records_rdd = spark_context.parallelize(folder_path)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
+        self.run(dir_to_records, origin_prefix, target_prefix)
 
-        self.run(records_rdd)
+    def run_prod(self):
+        """Run prod."""
+        bucket = 'apollo-platform'
+        origin_prefix = 'small-records/2019/'
+        target_prefix = 'modules/control/feature_extraction_hf5/2019/'
 
-    @staticmethod
-    def run(records_rdd):
+        files = s3_utils.list_files(bucket, origin_prefix).cache()
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
+        self.run(spark_op.filter_keys(dir_to_records, complete_dirs), origin_prefix, target_prefix)
+
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         wanted_chs = ['/apollo/canbus/chassis',
                       '/apollo/localization/pose']
@@ -79,9 +95,14 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             """ write data segment to hdf5 file """
             folder_path = str(elem[0][0])
             time_stamp = str(elem[0][1])
-            out_file = h5py.File(
-                "{}/training_dataset_{}.hdf5".format(folder_path, time_stamp), "w")
+            out_file_path = "{}/training_dataset_{}.hdf5".format(
+                folder_path.replace(origin_prefix, target_prefix, 1),
+                time_stamp)
+            out_dir = os.path.dirname(out_file_path)
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
 
+            out_file = h5py.File(out_file_path, "w")
             chassis = elem[1][0]
             pose = elem[1][1]
             i = 0
@@ -93,11 +114,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             out_file.close()
             return elem
 
-        channels_rdd = (records_rdd
-                        # add foler path as key
-                        .keyBy(lambda x: x)
-                        # record path
-                        .flatMapValues(CommonFE.folder_to_record)
+        channels_rdd = (dir_to_records_rdd
                         # read message
                         .flatMapValues(record_utils.read_record(wanted_chs))
                         # parse message
