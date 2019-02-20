@@ -28,12 +28,16 @@ from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
 
+sys.path.append('../../utilities')
+
+from helper_utils import *
 
 '''
 ========================================================================
 Dataset set-up
 ========================================================================
 '''
+
 class SemanticMapDataset(Dataset):
     def __init__(self, dir, transform=None, verbose=False):
         self.items = glob.glob(dir+"/**/*.png", recursive=True)
@@ -52,16 +56,29 @@ class SemanticMapDataset(Dataset):
     def __getitem__(self, idx):
         img_name = self.items[idx]
         sample_img = cv.imread(img_name)
-        if self.transform:
-            sample_img = self.transform(sample_img)
         if sample_img is None:
             print('Failed to load' + self.items[idx])
+        if self.transform:
+            sample_img = self.transform(sample_img)
 
         # TODO(jiacheng): implement this.
-        key = os.path.basename(img_name).replace(".png","")
-        sample_obs_feature = torch.rand(20)
+        try:
+            key = os.path.basename(img_name).replace(".png","")
+            pos_dict = np.load(os.path.join(os.path.dirname(img_name),'obs_pos.npy')).item()
+            past_pos = pos_dict[key]
+            label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","features-san-mateo-new").replace("image-valid","features-san-mateo-new"),'future_status.npy')).item()
+            future_pos = label_dict[key]
+            origin = future_pos[0]
+            past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
+            future_pos = [world_coord_to_relative_coord(pos, origin) for pos in future_pos]
 
-        sample_label = torch.rand(20)
+            sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
+            sample_label = torch.FloatTensor(future_pos[0:10]).view(-1)
+        except:
+            return self.__getitem__(idx+1)
+
+        if len(sample_obs_feature) != 20 or len(sample_label) != 20:
+            return self.__getitem__(idx+1)
 
         return (sample_img, sample_obs_feature), sample_label
 
@@ -91,6 +108,7 @@ class SemanticMapModel(nn.Module):
     def forward(self, X):
         img, obs_feature = X
         out = self.cnn(img)
+        out.requires_grad = False
         out = out.view(out.size(0), -1)
         out = torch.cat([out, obs_feature], 1)
         return self.fc(out)
@@ -101,4 +119,6 @@ class SemanticMapLoss():
         return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-        return
+        out = y_pred - y_true
+        out = torch.sum(out ** 2)
+        return out
