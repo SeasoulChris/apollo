@@ -5,7 +5,6 @@
 import os
 import subprocess
 
-#import cv2
 import math
 import numpy as np
 import yaml
@@ -483,7 +482,7 @@ class FramePopulator(object):
     """Extract sensors data from record file, and populate to JSON."""
     def __init__(self, task_dir):
         self._stationary_pole = None
-        self._task_dir = os.path.join(s3_utils.S3_MOUNT_PATH, task_dir)
+        self._task_dir = task_dir
         create_dir_if_not_exist(self._task_dir)
 
         pointcloud_128 = PointCloudSensor(
@@ -624,6 +623,10 @@ class DataStreamIterator(object):
         self._index = 0
         self._data_stream.register(self)
 
+    def okay_to_update_index(self, offset):
+        """Determine if index is big enough to be updated"""
+        return self._index - offset >= 0
+
     def update_index(self, offset):
         """Update index according to data stream change"""
         self._index -= offset
@@ -636,10 +639,6 @@ class DataStreamIterator(object):
             item = self._data_stream.read_item(self._index)
         self._index += 1
         return item
-
-    def set_item(self):
-        """Place holder"""
-        pass
 
 class MessageStruct(object):
     """Data structure representing messages with left and right poses."""
