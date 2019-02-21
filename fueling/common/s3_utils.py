@@ -75,17 +75,30 @@ def upload_file(bucket, local_path, remote_path, aws_keys, meta_data=None):
     if set(remote_path) > allowed_chars:
         raise ValueError('Only ascii digits dash and underscore characters are allowed in paths')
 
+    max_path_length = 1024
+    if len(remote_path) > max_path_length:
+        raise ValueError('Path length exceeds the limitation')
+
+    if remote_path.endswith('/'):
+        raise ValueError('Do not support uploading a folder')
+
     sub_paths = remote_path.split('/')
+    if remote_path.startswith('/') or not file_exists(bucket, sub_paths[0]+'/', aws_ak, aws_sk):
+        raise ValueError('Creating folders or files under root is not allowed')
+
     minimal_path_depth = 2
     maximal_path_depth = 10
-    if len(sub_paths) < minimal_path_depth or len(sub_paths) > maximal_path_depth:
+    minimal_sub_path_len = 1
+    maximal_sub_path_len = 256
+    if len(sub_paths) < minimal_path_depth or \
+        len(sub_paths) > maximal_path_depth or \
+        any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths):
         raise ValueError('Destination path is either too short or too long')
 
-    if file_exists(bucket, remote_path, aws_ak, aws_sk):
+    overwrite_whitelist = ('modules/control/control_conf/mkz7/',)
+    if file_exists(bucket, remote_path, aws_ak, aws_sk) and \
+        not any(remote_path.startswith(x) for x in overwrite_whitelist):
         raise ValueError('Destination already exists')
-
-    if not file_exists(bucket, sub_paths[0], aws_ak, aws_sk):
-        raise ValueError('Creating folders or files under root is not allowed')
 
     # Set default MetaData if it's not specified
     if meta_data is None:
