@@ -18,6 +18,7 @@ import cv2 as cv
 import glob
 import numpy as np
 import os
+import sys
 
 import torch
 import torch.nn as nn
@@ -96,6 +97,8 @@ class SemanticMapModel(nn.Module):
         self.cnn = cnn_net(pretrained=pretrained)
         fc_in_features = self.cnn.fc.in_features
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
+        for param in self.cnn.parameters():
+            param.requires_grad = False
 
         self.fc = nn.Sequential(
             nn.Linear(fc_in_features + obs_feature_size, 500),
@@ -108,7 +111,6 @@ class SemanticMapModel(nn.Module):
     def forward(self, X):
         img, obs_feature = X
         out = self.cnn(img)
-        out.requires_grad = False
         out = out.view(out.size(0), -1)
         out = torch.cat([out, obs_feature], 1)
         return self.fc(out)
@@ -120,5 +122,5 @@ class SemanticMapLoss():
 
     def loss_info(self, y_pred, y_true):
         out = y_pred - y_true
-        out = torch.sum(out ** 2)
+        out = torch.mean(out ** 2)
         return out

@@ -46,8 +46,8 @@ if __name__ == "__main__":
     train_dataset = SemanticMapDataset(args.train_dir)
     valid_dataset = SemanticMapDataset(args.valid_dir)
 
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=4)
-    valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=16)
+    valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=True, num_workers=16)
 
     # Model and training setup
     model = SemanticMapModel(10, 20)
