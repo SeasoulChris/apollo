@@ -23,10 +23,11 @@
 
 SRC_DIR=$1
 TARGET_DIR=$2
+REGION=$3
 
 set -e
 
 source /apollo/scripts/apollo_base.sh
 source /apollo/cyber/setup.bash 
 
-python modules/tools/prediction/map_feature/generate_img.py -i=${SRC_DIR} -o=${TARGET_DIR}
+python modules/tools/prediction/map_feature/generate_img.py -i=${SRC_DIR} -o=${TARGET_DIR} -r=${REGION}

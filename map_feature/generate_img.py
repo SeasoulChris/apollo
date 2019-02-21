@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate imgs for a folder of frame_env.x.bin')
     parser.add_argument('-i', '--input', type=str, help='input directory')
     parser.add_argument('-o', '--output', type=str, help='output directory')
+    parser.add_argument('-r', '--region', type=str, default="san_mateo", help='image region')
     args = parser.parse_args()
 
     output_dir = args.output
@@ -46,7 +47,7 @@ if __name__ == '__main__':
         print("Finish reading proto: " + input_file)
         for idx, frame_env in enumerate(list_frame.frame_env):
             try:
-                obstacle_mapping = ObstacleMapping("san_mateo", frame_env)
+                obstacle_mapping = ObstacleMapping(args.region, frame_env)
                 # print("Drawing frame " + str(idx) + "/" + str(len(list_frame.frame_env)))
                 for history in frame_env.obstacles_history:
                     if not history.is_trainable:
