@@ -87,7 +87,7 @@ class GenerateSmallRecords(BasePipeline):
 
     def run(self, records_rdd, whitelist_dirs_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
-        tasks_count = (
+        dir_to_records = (
             # -> (task_dir, record)
             spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
             # -> (target_dir, record)
@@ -97,31 +97,38 @@ class GenerateSmallRecords(BasePipeline):
             # -> (target_dir, record), target_dir/COMPLETE not exists
             .filter(spark_op.filter_key(
                 lambda target_dir: not os.path.exists(os.path.join(target_dir, 'COMPLETE'))))
-            .repartition(GenerateSmallRecords.PARTITION)
-            # -> (target_dir, msg)
-            .flatMapValues(record_utils.read_record(GenerateSmallRecords.CHANNELS))
+            # -> (target_dir, records)
+            .groupByKey()
+            .collect())
+        sc = self.get_spark_context()
+        for target_dir, records in dir_to_records:
+            glog.info('Processing {} source records to {}'.format(len(records), target_dir))
+            GenerateSmallRecords.process_records_to_dir(target_dir, sc.parallelize(records))
+        glog.info('Finished %d tasks!' % len(dir_to_records))
+
+    @staticmethod
+    def process_records_to_dir(target_dir, records_rdd):
+        """Process all records to the target dir."""
+        records_count = (
+            records_rdd
+            # -> (msgs)
+            .flatMap(record_utils.read_record(GenerateSmallRecords.CHANNELS))
             # -> (target_file, msg)
-            .map(lambda dir_msg: (
-                os.path.join(dir_msg[0], datetime.fromtimestamp(
-                    dir_msg[1].timestamp / (10 ** 9)).strftime('%Y%m%d%H%M00.record')),
-                dir_msg[1]))
+            .map(lambda msg: (
+                os.path.join(target_dir, datetime.fromtimestamp(msg.timestamp / (10 ** 9)).strftime(
+                    '%Y%m%d%H%M00.record')),
+                msg))
             # -> (target_file, msgs)
             .groupByKey()
             # -> (target_file, sorted_msgs)
             .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
             # -> (target_file)
             .map(record_utils.write_record)
-            # -> (target_dir)
-            .map(os.path.dirname)
-            # -> (target_dir)
-            .distinct()
-            # -> (target_dir/COMPLETE)
-            .map(lambda path: os.path.join(path, 'COMPLETE'))
-            # Touch file.
-            .map(os.mknod)
             # Trigger actions.
             .count())
-        glog.info('Finished %d tasks!' % tasks_count)
+        glog.info('Wrote {} records to {}'.format(records_count, target_dir))
+        if records_count > 0:
+            os.mknod(os.path.join(target_dir, 'COMPLETE'))
 
 
 if __name__ == '__main__':
