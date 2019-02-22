@@ -12,8 +12,6 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
-import fueling.common.s3_utils as s3_utils
-
 
 CHANNEL_TO_TYPE = {
     '/apollo/canbus/chassis': Chassis,
@@ -30,8 +28,9 @@ def read_record(wanted_channels=None):
     """record_path -> [PyBagMessage, ...] or None if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
+        glog.info('Read record {}'.format(record_path))
         try:
-            for msg in RecordReader(s3_utils.abs_path(record_path)).read_messages():
+            for msg in RecordReader(record_path).read_messages():
                 if wanted_channels is None or msg.topic in wanted_channels:
                     yield msg
         except Exception:
@@ -49,7 +48,6 @@ def write_record(path_to_messages):
     """
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
-    path = s3_utils.abs_path(path)
     try:
         os.makedirs(os.path.dirname(path))
     except OSError as error:
@@ -67,7 +65,7 @@ def write_record(path_to_messages):
         writer.write_message(msg.topic, msg.message, msg.timestamp)
     writer.close()
     # Dummy map result.
-    return None
+    return path
 
 def message_to_proto(py_bag_message):
     """Convert an Apollo py_bag_message to proto."""
