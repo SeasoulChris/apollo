@@ -274,6 +274,17 @@ def read_messages_func(record_file):
     freader = record.RecordReader(record_file)
     return freader.read_messages()
 
+def get_messages_number(record_file, channels):
+    """Return a set of message numbers for specified channels"""
+    message_numbers = []
+    try:
+        freader = record.RecordReader(record_file)
+        for channel in channels:
+            message_numbers.append(freader.get_messagenumber(channel))
+    except Exception:
+        return None
+    return message_numbers
+
 class Sensor(object):
     """Sensor class representing various of sensors."""
     def __init__(self, channel, intrinsics, extrinsics):

@@ -34,30 +34,48 @@ WANTED_CHANNELS = {
 }
 
 # Helper functions
-def get_todo_files(bucket, original_prefix, target_prefix):
+def get_todo_files(spark_context, original_prefix, target_prefix, bucket=None, root_dir=None):
     """Get to be processed files in rdd format."""
-    files = s3_utils.list_files(bucket, original_prefix).persist()
-
-    # (task_dir, _), which is "public-test/..." with 'COMPLETE' mark.
-    complete_dirs = (files
-                     .filter(lambda path: path.endswith('/COMPLETE'))
-                     .keyBy(os.path.dirname))
-
-    # target_dir
-    processed_dirs = s3_utils.list_dirs(bucket, target_prefix).keyBy(lambda path: path)
-
-    # Find all todo jobs.
-    todo_files = (files
-                  .filter(record_utils.is_record_file)  # -> record
-                  .keyBy(os.path.dirname)             # -> (task_dir, record)
-                  .join(complete_dirs)                # -> (task_dir, (record, _))
-                  .mapValues(operator.itemgetter(0))  # -> (task_dir, record)
-                  .map(spark_op.do_key(
-                      lambda src_dir: src_dir.replace(original_prefix, target_prefix, 1)))
-                  .subtractByKey(processed_dirs)      # -> (target_dir, record) unprocessed files
+    if bucket is not None:
+        record_files = s3_utils.list_files(bucket, original_prefix)
+        processed_files = s3_utils.list_files(bucket, target_prefix)
+    elif root_dir is not None:
+        record_files = (spark_context
+                        .parallelize(os.listdir(os.path.join(root_dir, original_prefix)))
+                        .map(lambda path: os.path.join(original_prefix, path)))
+        processed_files = (spark_context
+                           .parallelize(os.listdir(os.path.join(root_dir, target_prefix)))
+                           .map(lambda path: os.path.join(target_prefix, path)))
+    processed_dirs = (processed_files
+                      .filter(lambda path: path.endswith('/COMPLETE'))
+                      .map(os.path.dirname)
+                      .map(lambda path: path.replace(target_prefix, original_prefix, 1)))
+    candidate_dirs = (record_files
+                      .filter(lambda path: path.endswith('/COMPLETE'))
+                      .map(os.path.dirname))
+    todo_files = record_files.keyBy(os.path.dirname)
+    todo_files = spark_op.filter_keys(todo_files, candidate_dirs)
+    todo_files = spark_op.substract_keys(todo_files, processed_dirs)
+    todo_files = (todo_files
+                  .filter(lambda todo_target: are_all_channels_available(todo_target, root_dir))
+                  .map(spark_op.do_key(lambda key: key.replace(original_prefix, target_prefix, 1)))
                   .cache())
-
     return todo_files
+
+def are_all_channels_available(todo_target, root_dir):
+    """Filter record files out if they do not have required channels or simply not readable"""
+    _, record_file = todo_target
+    if not record_utils.is_record_file(record_file):
+        return False
+    channels_to_verify = WANTED_CHANNELS.values()
+    channels_to_verify.append('/apollo/localization/pose')
+    numbers = populate_utils\
+        .get_messages_number(os.path.join(root_dir, record_file), channels_to_verify)
+    minimal_required_number = 8
+    if numbers is None or len(numbers) < len(channels_to_verify) or \
+        any(num < minimal_required_number for num in numbers):
+        return False
+    return True
 
 def record_to_target_partition(target_record):
     """Shard source record file to a certain partition."""
@@ -144,7 +162,6 @@ def get_sql_query(sql_context, msgs_rdd):
         sql_context,
         msgs_rdd,
         [x for x in WANTED_CHANNELS if x != 'lidar-128'])
-
     table_name = 'all_sensor_table'
     lidar_df \
         .join(other_sensor_df \
@@ -153,7 +170,6 @@ def get_sql_query(sql_context, msgs_rdd):
             lidar_df.target == other_sensor_df.target) \
         .drop(other_sensor_df.target) \
         .registerTempTable(table_name)
-
     return textwrap.dedent("""
         SELECT A.target, A.topic, A.time, A.btopic, A.btime FROM %(table_name)s A
         INNER JOIN
@@ -184,22 +200,21 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        spark_context = self.get_spark_context()
-        original_prefix = 'modules/data/fuel/testdata/data/labeling/original/'
-        target_prefix = 'modules/data/fuel/testdata/data/labeling/generated/'
+        original_prefix = 'modules/data/fuel/testdata/data/labeling/original'
+        target_prefix = 'modules/data/fuel/testdata/data/labeling/generated'
         root_dir = '/apollo'
-        # This is for testing, and files locations are subject to change
-        todo_files = spark_context.parallelize([
-            ('modules/data/fuel/testdata/data/labeling/generated',
-             'modules/data/fuel/testdata/data/labeling/original/20190220215801.record.00000'),
-            ('modules/data/fuel/testdata/data/labeling/generated',
-             'modules/data/fuel/testdata/data/labeling/original/20190220215801.record.00002'),
-            ('modules/data/fuel/testdata/data/labeling/generated',
-             'modules/data/fuel/testdata/data/labeling/original/20190220215801.record.00003')
-        ])
+        populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_prefix))
+        todo_files = get_todo_files(self.get_spark_context(),
+                                    original_prefix,
+                                    target_prefix,
+                                    None,
+                                    root_dir)
+        if todo_files.count() == 0:
+            print 'Labeling: no input to process, quit now'
+            return
         self.run(todo_files, root_dir, original_prefix, target_prefix)
         mark_complete(todo_files, root_dir)
-        print 'All Done: labeling, TEST.'
+        print 'Labeling: All Done, TEST.'
 
     def run_prod(self):
         """Run prod."""
@@ -209,10 +224,17 @@ class PopulateFramesPipeline(BasePipeline):
         # Target labeling frames folder containing the populated N frames
         target_prefix = 'modules/data/labeling/2019/'
         root_dir = s3_utils.S3_MOUNT_PATH
-        todo_files = get_todo_files(bucket, original_prefix, target_prefix)
+        todo_files = get_todo_files(self.get_spark_context(),
+                                    original_prefix,
+                                    target_prefix,
+                                    bucket,
+                                    root_dir)
+        if todo_files.count() == 0:
+            print 'Labeling: no input to process, quit now'
+            return
         self.run(todo_files, root_dir, original_prefix, target_prefix)
         mark_complete(todo_files, root_dir)
-        print 'All Done: labeling, PROD.'
+        print 'Labeling: All Done, PROD.'
 
     def run(self, todo_files, root_dir, original_prefix, target_prefix):
         """Run the pipeline with given arguments."""
