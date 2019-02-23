@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-from datetime import datetime
+import datetime
 import errno
 import os
+import pytz
 
 import glog
 import pyspark_utils.op as spark_op
@@ -15,9 +16,10 @@ import fueling.common.s3_utils as s3_utils
 
 class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
-    PARTITION = 100  # This should be related to worker count.
-    FILE_SEGMENT_INTERVAL_SEC = 60
-    RECORD_FORMAT = '%Y-%m-%d_%H-%M-%S.record'
+    RECORD_FORMAT = '%Y%m%d%H%M00.record'
+    MSG_TIMEZONE = pytz.timezone('UTC')
+    LOCAL_TIMEZONE = pytz.timezone('America/Los_Angeles')
+
     CHANNELS = {
         '/apollo/canbus/chassis',
         '/apollo/canbus/chassis_detail',
@@ -87,48 +89,76 @@ class GenerateSmallRecords(BasePipeline):
 
     def run(self, records_rdd, whitelist_dirs_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
-        dir_to_records = (
-            # -> (task_dir, record)
+        tasks_count = (
+            # (task_dir, record)
             spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
             # -> (target_dir, record)
             .map(lambda dir_record: (
                 s3_utils.abs_path(dir_record[0].replace(origin_prefix, target_prefix, 1)),
                 s3_utils.abs_path(dir_record[1])))
-            # -> (target_dir, record), target_dir/COMPLETE not exists
-            .filter(spark_op.filter_key(
-                lambda target_dir: not os.path.exists(os.path.join(target_dir, 'COMPLETE'))))
             # -> (target_dir, records)
             .groupByKey()
-            .collect())
-        sc = self.get_spark_context()
-        for target_dir, records in dir_to_records:
-            glog.info('Processing {} source records to {}'.format(len(records), target_dir))
-            GenerateSmallRecords.process_records_to_dir(target_dir, sc.parallelize(records))
-        glog.info('Finished %d tasks!' % len(dir_to_records))
-
-    @staticmethod
-    def process_records_to_dir(target_dir, records_rdd):
-        """Process all records to the target dir."""
-        records_count = (
-            records_rdd
-            # -> (msgs)
-            .flatMap(record_utils.read_record(GenerateSmallRecords.CHANNELS))
-            # -> (target_file, msg)
-            .map(lambda msg: (
-                os.path.join(target_dir, datetime.fromtimestamp(msg.timestamp / (10 ** 9)).strftime(
-                    '%Y%m%d%H%M00.record')),
-                msg))
-            # -> (target_file, msgs)
-            .groupByKey()
-            # -> (target_file, sorted_msgs)
-            .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
-            # -> (target_file)
-            .map(record_utils.write_record)
+            # -> (target_dir, records), target_dir not exists
+            .filter(spark_op.filter_key(
+                lambda target_dir: not os.path.exists(os.path.join(target_dir, 'COMPLETE'))))
+            # -> (target_dir, sorted_records)
+            .mapValues(sorted)
+            # -> target_dir
+            .map(GenerateSmallRecords.generate_small_records)
+            # -> target_dir, which is finished
+            .filter(lambda target_dir: target_dir is not None)
+            # -> target_dir/COMPLETE
+            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
+            # Touch file.
+            .map(os.mknod)
             # Trigger actions.
             .count())
-        glog.info('Wrote {} records to {}'.format(records_count, target_dir))
-        if records_count > 0:
-            os.mknod(os.path.join(target_dir, 'COMPLETE'))
+        glog.info('Finished %d tasks!' % tasks_count)
+
+    @staticmethod
+    def generate_small_records(input):
+        """(target_dir, records) -> target_dir"""
+        target_dir, records = input
+        glog.info('Processing {} records to directory {}'.format(len(records), target_dir))
+        # Create folder.
+        try:
+            os.makedirs(target_dir)
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
+
+        writer = RecordWriter(0, 0)
+        current_output_file = None
+        known_channels = set()
+        output_messages = 0
+        for record in records:
+            glog.info('Processing {}'.format(record))
+            try:
+                reader = RecordReader(record)
+                for msg in reader.read_messages():
+                    if msg.topic not in GenerateSmallRecords.CHANNELS:
+                        continue
+                    dt = datetime.datetime.fromtimestamp(
+                            msg.timestamp / (10 ** 9), GenerateSmallRecords.MSG_TIMEZONE
+                        ).astimezone(GenerateSmallRecords.LOCAL_TIMEZONE)
+                    output_file = os.path.join(target_dir,
+                                               dt.strftime(GenerateSmallRecords.RECORD_FORMAT))
+                    if output_file != current_output_file:
+                        if current_output_file is not None:
+                            writer.close()
+                        current_output_file = output_file
+                        writer.open(current_output_file)
+                    if msg.topic not in known_channels:
+                        writer.write_channel(msg.topic, msg.data_type,
+                                             reader.get_protodesc(msg.topic))
+                        known_channels.add(msg.topic)
+                    writer.write_message(msg.topic, msg.message, msg.timestamp)
+                    output_messages += 1
+            except Exception:
+                glog.error('Failed to read record {}'.format(record))
+        if current_output_file is not None:
+            writer.close()
+        return target_dir if output_messages > 0 else None
 
 
 if __name__ == '__main__':
