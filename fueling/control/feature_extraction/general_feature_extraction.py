@@ -27,12 +27,13 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
         """Run test."""
         records = [
             '/apollo/modules/data/fuel/testdata/control/left_40_10/1.record.00000',
-            '/apollo/modules/data/fuel/testdata/control/right_40_10/1.record.00000',
+            '/apollo/modules/data/fuel/testdata/control/transit/1.record.00000',
         ]
         origin_prefix = '/apollo/modules/data/fuel/testdata/control'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(
+            records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -42,9 +43,12 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
         target_prefix = 'modules/control/feature_extraction_hf5/2019/'
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
-        self.run(spark_op.filter_keys(dir_to_records, complete_dirs), origin_prefix, target_prefix)
+        complete_dirs = files.filter(
+            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(
+            record_utils.is_record_file).keyBy(os.path.dirname)
+        self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
+                 origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
@@ -113,12 +117,27 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                 i += 1
             out_file.close()
             return elem
+        wanted_vehicle = 'Transit'
 
-        channels_rdd = (dir_to_records_rdd
+        folder_vehicle_rdd = (dir_to_records_rdd
+                              .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
+                              # parse message
+                              .mapValues(record_utils.message_to_proto)
+                              .mapValues(lambda elem: elem.current_vehicle)
+                              .filter(lambda elem: elem[1] == wanted_vehicle)
+                              # remove duplication of folders
+                              .distinct()
+                              # choose only folder path
+                              .map(lambda x: x[0]))
+
+        channels_rdd = (folder_vehicle_rdd
+                        .keyBy(lambda x: x)
+                        # record path
+                        .flatMapValues(CommonFE.folder_to_record)
                         # read message
                         .flatMapValues(record_utils.read_record(wanted_chs))
                         # parse message
-                        .mapValues(CommonFE.process_msg))
+                        .mapValues(record_utils.message_to_proto))
 
         pre_segment_rdd = (channels_rdd
                            # choose time as key, group msg into 1 sec
@@ -131,7 +150,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                     .mapValues(CommonFE.process_seg)
                     # align msg, generate data segment, write to hdf5 file.
                     .map(gen_hdf5))
-        data_rdd.count()
+        print data_rdd.count()
 
 
 if __name__ == '__main__':
