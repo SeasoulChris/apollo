@@ -75,9 +75,9 @@ class GenerateSmallRecords(BasePipeline):
         """Run prod."""
         bucket = 'apollo-platform'
         # Original records are public-test/path/to/*.record, sharded to M.
-        origin_prefix = 'public-test/2019/'
+        origin_prefix = 'public-test/2019/2019-01-04/2019-01-04-16-25-40'
         # We will process them to small-records/path/to/*.record, sharded to N.
-        target_prefix = 'small-records/2019/'
+        target_prefix = 'small-records/2019/2019-01-04/2019-01-04-16-25-40'
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         records_rdd = files.filter(record_utils.is_record_file)
@@ -85,10 +85,16 @@ class GenerateSmallRecords(BasePipeline):
         whitelist_dirs_rdd = (
             files.filter(lambda path: path.endswith('/COMPLETE'))
             .map(os.path.dirname))
+
         self.run(records_rdd, whitelist_dirs_rdd, origin_prefix, target_prefix)
 
     def run(self, records_rdd, whitelist_dirs_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
+        records_rdd = records_rdd.cache()
+        whitelist_dirs_rdd = whitelist_dirs_rdd.cache()
+        glog.info('================= Get {} records'.format(len(records_rdd.collect())))
+        glog.info('================= Get {} whitelist_dirs'.format(len(whitelist_dirs_rdd.collect())))
+
         tasks_count = (
             # (task_dir, record)
             spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
@@ -96,20 +102,26 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda dir_record: (
                 s3_utils.abs_path(dir_record[0].replace(origin_prefix, target_prefix, 1)),
                 s3_utils.abs_path(dir_record[1])))
-            # -> (target_dir, records)
-            .groupByKey()
-            # -> (target_dir, records), target_dir not exists
+            # -> (target_dir, record), target_dir/COMPLETE not exists
             .filter(spark_op.filter_key(
                 lambda target_dir: not os.path.exists(os.path.join(target_dir, 'COMPLETE'))))
-            # -> (target_dir, sorted_records)
-            .mapValues(sorted)
-            # -> (target_dir, sorted_records)
             .repartition(os.environ.get('APOLLO_EXECUTORS', 20))
-            # -> target_dir
-            .mapPartitions(lambda inputs:
-                           [GenerateSmallRecords.generate_small_records(input) for input in inputs])
-            # -> target_dir, which is finished
-            .filter(lambda target_dir: target_dir is not None)
+            .cache())
+        glog.info('================= Get {} tasks'.format(len(tasks_count.collect())))
+
+        tasks_count = (tasks_count
+            # -> (target_file, msg)
+            .mapPartitions(GenerateSmallRecords.read_records)
+            # -> (target_file, msgs)
+            .groupByKey()
+            # -> (target_file, sorted_msgs)
+            .mapValues(lambda msgs: sorted(msgs, key=lambda msg: msg.timestamp))
+            # -> (target_file)
+            .map(record_utils.write_record)
+            # -> (target_dir)
+            .map(os.path.dirname)
+            # -> (target_dir)
+            .distinct()
             # -> target_dir/COMPLETE
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Touch file.
@@ -119,50 +131,24 @@ class GenerateSmallRecords(BasePipeline):
         glog.info('Finished %d tasks!' % tasks_count)
 
     @staticmethod
-    def generate_small_records(input):
-        """(target_dir, records) -> target_dir"""
-        target_dir, records = input
-        glog.info('Processing {} records to directory {}'.format(len(records), target_dir))
-        # Create folder.
-        try:
-            os.makedirs(target_dir)
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
-
-        writer = RecordWriter(0, 0)
-        current_output_file = None
-        known_channels = set()
-        output_messages = 0
-        for record in records:
-            glog.info('Processing {}'.format(record))
+    def read_records(input):
+        result = []
+        for target_dir, record in input:
+            glog.info('Read record {}'.format(record))
             try:
                 reader = RecordReader(record)
                 for msg in reader.read_messages():
                     if msg.topic not in GenerateSmallRecords.CHANNELS:
                         continue
                     dt = datetime.datetime.fromtimestamp(
-                            msg.timestamp / (10 ** 9), GenerateSmallRecords.MSG_TIMEZONE
-                        ).astimezone(GenerateSmallRecords.LOCAL_TIMEZONE)
-                    output_file = os.path.join(target_dir,
+                        msg.timestamp / (10 ** 9), GenerateSmallRecords.MSG_TIMEZONE
+                    ).astimezone(GenerateSmallRecords.LOCAL_TIMEZONE)
+                    target_file = os.path.join(target_dir,
                                                dt.strftime(GenerateSmallRecords.RECORD_FORMAT))
-                    if output_file != current_output_file:
-                        if current_output_file is not None:
-                            writer.close()
-                        current_output_file = output_file
-                        writer.open(current_output_file)
-                    if msg.topic not in known_channels:
-                        writer.write_channel(msg.topic, msg.data_type,
-                                             reader.get_protodesc(msg.topic))
-                        known_channels.add(msg.topic)
-                    writer.write_message(msg.topic, msg.message, msg.timestamp)
-                    output_messages += 1
-            except Exception:
-                glog.error('Failed to read record {}'.format(record))
-        if current_output_file is not None:
-            writer.close()
-        return target_dir if output_messages > 0 else None
-
+                    result.append((target_file, msg))
+            except Exception as error:
+                glog.error('Failed to read record {}: {}'.format(record, error))
+        return result
 
 if __name__ == '__main__':
     GenerateSmallRecords().run_prod()
