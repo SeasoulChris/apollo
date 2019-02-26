@@ -129,6 +129,8 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                               .distinct()
                               # choose only folder path
                               .map(lambda x: x[0]))
+        print folder_vehicle_rdd.count()
+        # print folder_vehicle_rdd.take(1)
 
         channels_rdd = (folder_vehicle_rdd
                         .keyBy(lambda x: x)
@@ -138,19 +140,25 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                         .flatMapValues(record_utils.read_record(wanted_chs))
                         # parse message
                         .mapValues(record_utils.message_to_proto))
+        print channels_rdd.count()
+        # print channels_rdd.take(1)
 
         pre_segment_rdd = (channels_rdd
                            # choose time as key, group msg into 1 sec
                            .map(CommonFE.gen_key)
                            # combine chassis message and pose message with the same key
                            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
+        print pre_segment_rdd.count()
+        print pre_segment_rdd.take(1)
 
         data_rdd = (pre_segment_rdd
                     # msg list(path_key,(chassis,pose))
                     .mapValues(CommonFE.process_seg)
                     # align msg, generate data segment, write to hdf5 file.
                     .map(gen_hdf5))
+
         print data_rdd.count()
+        # print data_rdd.take(1)
 
 
 if __name__ == '__main__':
