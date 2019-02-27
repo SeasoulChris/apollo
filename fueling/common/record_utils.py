@@ -7,6 +7,7 @@ import os
 
 import glog
 
+from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
@@ -36,8 +37,21 @@ def read_record(wanted_channels=None):
         except Exception:
             # Stop poping messages elegantly if exception happends, including
             # the normal StopIteration.
+            glog.error('Failed to read record {}'.format(record_path))
             raise StopIteration
     return read_record_func
+
+def read_record_header(record_path):
+    """record_path -> Header, or None if error occurs."""
+    glog.info('Read record header {}'.format(record_path))
+    try:
+        reader = RecordReader(record_path)
+        header = Header()
+        header.ParseFromString(reader.get_headerstring())
+        return header
+    except Exception:
+        glog.error('Failed to read record header {}'.format(record_path))
+        return None
 
 def write_record(path_to_messages):
     """
