@@ -49,12 +49,12 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
-    --conf spark.executorEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
+    --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
