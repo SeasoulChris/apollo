@@ -116,6 +116,8 @@ class GenerateSmallRecords(BasePipeline):
             .mapValues(sorted)
             # -> target_file
             .map(GenerateSmallRecords.process_file)
+            # -> target_file
+            .filter(lambda path: path is not None)
             # -> target_dir
             .map(os.path.dirname)
             # -> target_dir
