@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import errno
 import os
-import pprint
 
 import glog
 import pyspark_utils.op as spark_op
 
-from cyber_py.record import RecordReader, RecordWriter
+from cyber_py.record import RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
@@ -67,14 +66,14 @@ class GenerateSmallRecords(BasePipeline):
         origin_prefix = '/apollo/docs/demo_guide'
         target_prefix = '/apollo/data'
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
-    
+
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         # Original records are public-test/path/to/*.record, sharded to M.
-        origin_prefix = 'public-test/2019/'
+        origin_prefix = 'public-test/2019/2019-01'
         # We will process them to small-records/path/to/*.record, sharded to N.
-        target_prefix = 'small-records/2019/'
+        target_prefix = 'small-records/2019/2019-01'
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         records_rdd = files.filter(record_utils.is_record_file)
@@ -93,6 +92,9 @@ class GenerateSmallRecords(BasePipeline):
     def run(self, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
+        partitions = int(os.environ.get('APOLLO_EXECUTORS', 20)) * 10
+        glog.info('Run pipeline in {} partitions'.format(partitions))
+
         # (task_dir, record)
         todo_jobs = spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
         tasks_count = (
@@ -102,6 +104,8 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda dir_record: (
                 s3_utils.abs_path(dir_record[0].replace(origin_prefix, target_prefix, 1)),
                 s3_utils.abs_path(dir_record[1])))
+            # -> (target_dir, record)
+            .repartition(partitions)
             # -> (target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # -> (target_dir, (record, header)), where header is valid
@@ -112,8 +116,21 @@ class GenerateSmallRecords(BasePipeline):
             .groupByKey()
             # -> (target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
-        )
-        pprint.PrettyPrinter().pprint(tasks_count.collect())
+            # -> (target_dir, record)
+            .repartition(partitions)
+            # -> target_file
+            .map(GenerateSmallRecords.process_file)
+            # -> target_dir
+            .map(os.path.dirname)
+            # -> target_dir
+            .distinct()
+            # -> target_dir/COMPLETE
+            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
+            # Touch file.
+            .map(GenerateSmallRecords.touch_file)
+            # Trigger actions.
+            .count())
+        glog.info('Processed {} tasks'.format(tasks_count))
 
     @staticmethod
     def shard_to_files(input):
@@ -129,6 +146,48 @@ class GenerateSmallRecords(BasePipeline):
             dt = time_utils.msg_time_to_datetime(begin_time)
             target_file = os.path.join(target_dir, dt.strftime(RECORD_FORMAT))
             yield (target_file, (record, begin_time, begin_time + RECORD_DURATION_NS))
+
+    @staticmethod
+    def process_file(input):
+        """(target_file, (record, start_time, end_time)s) -> target_file"""
+        target_file, records = input
+        glog.info('Processing {} records to {}'.format(len(records), target_file))
+        try:
+            os.makedirs(os.path.dirname(target_file))
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
+
+        _, start_time, end_time = records[0]
+        reader = record_utils.read_record(GenerateSmallRecords.CHANNELS, start_time, end_time)
+        writer = RecordWriter(0, 0)
+        try:
+            writer.open(target_file)
+        except Exception as e:
+            glog.error('Failed to write to target file {}: {}'.format(target_file, e))
+            writer.close()
+            return None
+
+        topics = set()
+        for record, _, _ in records:
+            glog.info('Read record {}'.format(record))
+            for msg in reader(record):
+                if msg.topic not in topics:
+                    # As a generated record, we ignored the proto desc.
+                    writer.write_channel(msg.topic, msg.data_type, '')
+                    topics.add(msg.topic)
+                writer.write_message(msg.topic, msg.message, msg.timestamp)
+        writer.close()
+        return target_file
+
+    @staticmethod
+    def touch_file(path):
+        """Touch file."""
+        if not os.path.exists(path):
+            glog.info('Touch file {}'.format(path))
+            os.mknod(path)
+        return path
+
 
 if __name__ == '__main__':
     GenerateSmallRecords().run_prod()

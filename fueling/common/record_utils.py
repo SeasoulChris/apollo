@@ -25,14 +25,16 @@ def is_record_file(path):
     """Naive check if a path is a record."""
     return path.endswith('.record') or fnmatch.fnmatch(path, '*.record.?????')
 
-def read_record(wanted_channels=None):
+def read_record(channels, start_time_ns=0, end_time_ns=18446744073709551615):
     """record_path -> [PyBagMessage, ...] or None if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
+        channel_set = set(channels)
         glog.info('Read record {}'.format(record_path))
         try:
             for msg in RecordReader(record_path).read_messages():
-                if wanted_channels is None or msg.topic in wanted_channels:
+                if (msg.topic in channel_set and
+                    msg.timestamp >= start_time_ns and msg.timestamp < end_time_ns):
                     yield msg
         except Exception:
             # Stop poping messages elegantly if exception happends, including
