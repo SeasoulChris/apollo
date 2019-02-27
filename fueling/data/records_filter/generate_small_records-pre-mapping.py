@@ -171,7 +171,6 @@ class GenerateSmallRecords(BasePipeline):
 
         topics = set()
         for record, _, _ in records:
-            glog.info('Read record {}'.format(record))
             for msg in reader(record):
                 if msg.topic not in topics:
                     # As a generated record, we ignored the proto desc.
