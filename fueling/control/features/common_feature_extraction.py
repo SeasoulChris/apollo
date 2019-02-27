@@ -18,11 +18,11 @@ import fueling.common.h5_utils as h5_utils
 
 
 FEATURE_KEY = FeatureKey.featureKey()
-FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
+FILENAME = "/mnt/bos/modules/control/common/feature_key_conf.pb.txt"
 proto_utils.get_pb_from_text_file(FILENAME, FEATURE_KEY)
 
 CONTROL_CONF = ControlConf.ControlConf()
-FILENAME_CONTROL_CONF = "/apollo/modules/control/conf/control_conf.pb.txt"
+FILENAME_CONTROL_CONF = "/mnt/bos/modules/control/common/control_conf.pb.txt"
 proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
 
 # TODO change based on vehicle model
