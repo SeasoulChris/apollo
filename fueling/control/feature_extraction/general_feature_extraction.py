@@ -5,6 +5,7 @@ with folder path as part of the key
 """
 import os
 
+import glog
 import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
@@ -68,6 +69,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             times_pose = np.array([x.header.timestamp_sec for x in pose])
             times_cs = np.array([x.header.timestamp_sec for x in chassis])
 
+            glog.info("start time index {} {}".format(times_cs[0], times_pose[0])) 
             index = [0, 0]
 
             def align():
@@ -97,6 +99,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                             index[1] += seg_len
                             align()
                             break
+            glog.info("build data done")
 
         def gen_hdf5(elem):
             """ write data segment to hdf5 file """
@@ -120,6 +123,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                     name, data=mini_dataset, dtype="float32")
                 i += 1
             out_file.close()
+            glog.info("Created all mini_dataset")
             return elem
 
         dir_to_records_rdd = dir_to_records_rdd.map(
@@ -137,7 +141,9 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                               # choose only folder path
                               .map(lambda x: x[0]))
 
-        print folder_vehicle_rdd.first()
+        glog.info('Finished %d folder_vehicle_rdd!' % folder_vehicle_rdd.count())
+        glog.info('folder_vehicle_rdd first elem: %s ' % folder_vehicle_rdd.take(1))
+        
         channels_rdd = (folder_vehicle_rdd
                         .keyBy(lambda x: x)
                         # record path
@@ -146,20 +152,26 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                         .flatMapValues(record_utils.read_record(wanted_chs))
                         # parse message
                         .mapValues(record_utils.message_to_proto))
+        glog.info('Finished %d channels_rdd!' % channels_rdd.count())
+        glog.info('channels_rdd first elem: %s' % channels_rdd.take(1))
+
 
         pre_segment_rdd = (channels_rdd
                            # choose time as key, group msg into 1 sec
                            .map(CommonFE.gen_key)
                            # combine chassis message and pose message with the same key
                            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
-
+        glog.info('Finished %d pre_segment_rdd!' % pre_segment_rdd.count())
+        glog.info('pre_segment_rdd first elem: %s' % pre_segment_rdd.take(1))
+        
         data_rdd = (pre_segment_rdd
                     # msg list(path_key,(chassis,pose))
                     .mapValues(CommonFE.process_seg)
                     # align msg, generate data segment, write to hdf5 file.
                     .map(gen_hdf5))
 
-        print data_rdd.count()
+        glog.info('Finished %d data_rdd!' % data_rdd.count())
+        glog.info('data_rdd first elem: %s' % data_rdd.take(1))
 
 
 if __name__ == '__main__':
