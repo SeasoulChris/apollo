@@ -17,6 +17,8 @@ dependencies:
   - numpy
 
   # Other.
+  - termcolor
+
   - pip:
     - pylint
     - pyspark-utils
