@@ -104,8 +104,6 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda dir_record: (
                 s3_utils.abs_path(dir_record[0].replace(origin_prefix, target_prefix, 1)),
                 s3_utils.abs_path(dir_record[1])))
-            # -> (target_dir, record)
-            .repartition(partitions)
             # -> (target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # -> (target_dir, (record, header)), where header is valid
@@ -116,8 +114,6 @@ class GenerateSmallRecords(BasePipeline):
             .groupByKey()
             # -> (target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
-            # -> (target_dir, record)
-            .repartition(partitions)
             # -> target_file
             .map(GenerateSmallRecords.process_file)
             # -> target_dir
@@ -152,6 +148,11 @@ class GenerateSmallRecords(BasePipeline):
         """(target_file, (record, start_time, end_time)s) -> target_file"""
         target_file, records = input
         glog.info('Processing {} records to {}'.format(len(records), target_file))
+
+        if os.path.exists(target_file) and record_utils.read_record_header(target_file) is not None:
+            glog.info('Skip generating exist record {}'.format(target_file))
+            return target_file
+
         try:
             os.makedirs(os.path.dirname(target_file))
         except OSError as error:
