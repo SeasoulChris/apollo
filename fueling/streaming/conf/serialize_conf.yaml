@@ -1,0 +1,47 @@
+---
+  name: 'lidar-128'
+  topic: '/apollo/sensor/lidar128/compensator/PointCloud2'
+
+---
+  name: 'front-6mm'
+  topic: '/apollo/sensor/camera/front_6mm/image/compressed'
+
+---
+  name: 'front-12mm'
+  topic: '/apollo/sensor/camera/front_12mm/image/compressed'
+
+---
+  name: 'rear-6mm'
+  topic: '/apollo/sensor/camera/rear_6mm/image/compressed'
+
+---
+  name: 'left-fisheye'
+  topic: '/apollo/sensor/camera/left_fisheye/image/compressed'
+
+---
+  name: 'right-fisheye'
+  topic: '/apollo/sensor/camera/right_fisheye/image/compressed'
+
+---
+  name: 'front-radar'
+  topic: '/apollo/sensor/radar/front'
+
+---
+  name: 'rear-radar'
+  topic: '/apollo/sensor/radar/rear'
+
+---
+  name: 'pose'
+  topic: '/apollo/localization/pose'
+
+---
+  name: 'hmi-status'
+  topic: '/apollo/hmi/status'
+  fields:
+    - current_vehicle
+
+---
+  name: 'chasis'
+  topic: '/apollo/canbus/chassis'
+  fields:
+    - header.timestamp_sec
