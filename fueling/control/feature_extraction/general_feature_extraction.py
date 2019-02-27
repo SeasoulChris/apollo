@@ -58,6 +58,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                       '/apollo/localization/pose']
         max_phase_delta = 0.01
         min_segment_length = 10
+        wanted_vehicle = 'Transit'
 
         def build_training_dataset(chassis, pose):
             """align chassis and pose data and build data segment"""
@@ -101,8 +102,9 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             """ write data segment to hdf5 file """
             folder_path = str(elem[0][0])
             time_stamp = str(elem[0][1])
-            out_file_path = "{}/training_dataset_{}.hdf5".format(
-                folder_path.replace(origin_prefix, target_prefix, 1),
+            out_file_path = "{}/{}_{}.hdf5".format(
+                folder_path.replace(
+                    origin_prefix, target_prefix, 1), wanted_vehicle,
                 time_stamp)
             out_dir = os.path.dirname(out_file_path)
             if not os.path.exists(out_dir):
@@ -119,7 +121,6 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                 i += 1
             out_file.close()
             return elem
-        wanted_vehicle = 'Transit'
 
         dir_to_records_rdd = dir_to_records_rdd.map(
             lambda x: (os.path.join(

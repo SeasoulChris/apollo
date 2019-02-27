@@ -2,6 +2,8 @@
 """ extracting sample set for mkz7 """
 # pylint: disable = fixme
 # pylint: disable = no-member
+import os
+
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.control.features.common_feature_extraction as CommonFE
@@ -16,25 +18,45 @@ class SampleSetFeatureExtractionPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        folder_path = ["/apollo/modules/data/fuel/testdata/control/left_40_10",
-                       "/apollo/modules/data/fuel/testdata/control/transit"]
+        records = ["modules/data/fuel/testdata/control/left_40_10/1.record.00000",
+                   "modules/data/fuel/testdata/control/transit/1.record.00000"]
 
-        spark_context = self.get_spark_context()
-        records_rdd = spark_context.parallelize(folder_path)
+        origin_prefix = 'modules/data/fuel/testdata/control'
+        target_prefix = 'modules/data/fuel/testdata/control/generated'
+        root_dir = '/apollo'
 
-        self.run(records_rdd)
+        dir_to_records = self.get_spark_context().parallelize(
+            records).keyBy(os.path.dirname)
 
-    @staticmethod
-    def run(records_rdd):
+        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+
+    def run_prod(self):
+        """Run prod."""
+        bucket = 'apollo-platform'
+        origin_prefix = 'small-records/2019/'
+        target_prefix = 'modules/control/feature_extraction_hf5/2019/'
+        root_dir = s3_utils.S3_MOUNT_PATH
+
+        files = s3_utils.list_files(bucket, origin_prefix).cache()
+        complete_dirs = files.filter(
+            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(
+            record_utils.is_record_file).keyBy(os.path.dirname)
+        root_dir = s3_utils.S3_MOUNT_PATH
+        self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
+                 origin_prefix, target_prefix, root_dir)
+
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
         wanted_vehicle = 'Mkz7'
         wanted_chs = ['/apollo/canbus/chassis',
                       '/apollo/localization/pose']
 
-        folder_vehicle_rdd = (records_rdd
-                              # key as folder path
-                              .keyBy(lambda x: x)
-                              .flatMapValues(CommonFE.folder_to_record)
+        dir_to_records_rdd = dir_to_records_rdd.map(
+            lambda x: (os.path.join(
+                root_dir, x[0]), os.path.join(root_dir, x[1])))
+
+        folder_vehicle_rdd = (dir_to_records_rdd
                               .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
                               # parse message
                               .mapValues(record_utils.message_to_proto)
@@ -77,7 +99,7 @@ class SampleSetFeatureExtractionPipeline(BasePipeline):
                             # generate segment w.r.t time
                             .mapValues(CommonFE.gen_segment)
                             # write all segment into a hdf5 file
-                            .map(CommonFE.write_h5_with_key))
+                            .map(lambda elem: CommonFE.write_h5_with_key(elem, origin_prefix, target_prefix, wanted_vehicle)))
         print data_segment_rdd.count()
 
 

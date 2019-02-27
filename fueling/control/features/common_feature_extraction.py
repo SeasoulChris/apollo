@@ -178,9 +178,12 @@ def gen_segment(elem):
     return segments
 
 
-def write_h5_with_key(elem):
+def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file, use feature key as file name"""
     key = str(elem[0][1])
     folder_path = str(elem[0][0])
-    h5_utils.write_h5(elem[1], folder_path, key)
+    folder_path = folder_path.replace(
+        origin_prefix, target_prefix, 1)
+    file_name = vehicle_type+'_'+key
+    h5_utils.write_h5(elem[1], folder_path, file_name)
     return elem[0]
