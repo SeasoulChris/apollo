@@ -114,8 +114,6 @@ class GenerateSmallRecords(BasePipeline):
         finished_tasks = (
             # (target_dir, record)
             tasks_rdd
-            # -> (target_dir, record)
-            .repartition(int(os.environ.get('APOLLO_EXECUTORS', 20)) * 10)
             # -> (target_dir, msg)
             .flatMapValues(record_utils.read_record(GenerateSmallRecords.CHANNELS))
             # -> (target_file, msg)
