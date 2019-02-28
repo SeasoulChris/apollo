@@ -60,15 +60,18 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         sc = self.get_spark_context()
-        records_rdd = sc.parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
-        whitelist_dirs_rdd = sc.parallelize(['/apollo/docs/demo_guide'])
+        root_dir = '/apollo'
+        records_rdd = sc.parallelize(['docs/demo_guide/demo_3.5.record'])
+        whitelist_dirs_rdd = sc.parallelize(['docs/demo_guide'])
         blacklist_dirs_rdd = sc.parallelize([])
-        origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data'
-        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
+        origin_prefix = 'docs/demo_guide'
+        target_prefix = 'data'
+        self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
+                 origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
+        root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         # Original records are public-test/path/to/*.record, sharded to M.
         origin_prefix = 'public-test/2019/2019-01'
@@ -87,9 +90,10 @@ class GenerateSmallRecords(BasePipeline):
             .filter(lambda path: path.endswith('/COMPLETE'))
             .map(os.path.dirname)
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
+        self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
+                 origin_prefix, target_prefix)
 
-    def run(self, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
+    def run(self, root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 20)) * 10
@@ -101,9 +105,10 @@ class GenerateSmallRecords(BasePipeline):
             # -> (task_dir, record)
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # -> (target_dir, record)
-            .map(lambda dir_record: (
-                s3_utils.abs_path(dir_record[0].replace(origin_prefix, target_prefix, 1)),
-                s3_utils.abs_path(dir_record[1])))
+            .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
+            # -> (target_dir, record), in absolute path style.
+            .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
+                                     os.path.join(root_dir, dir_record[1]))
             # -> (target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # -> (target_dir, (record, header)), where header is valid
