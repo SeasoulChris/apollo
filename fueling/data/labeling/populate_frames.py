@@ -17,6 +17,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.data.labeling.populate_utils as populate_utils
+import fueling.streaming.streaming_utils as streaming_utils
 
 # Partition records into slices, this is to tell how many records files in one slice
 SLICE_SIZE = 3
@@ -200,55 +201,51 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        original_prefix = 'modules/data/fuel/testdata/data/labeling/original'
-        target_prefix = 'modules/data/fuel/testdata/data/labeling/generated'
         root_dir = '/apollo'
-        populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_prefix))
-        todo_files = get_todo_files(self.get_spark_context(),
-                                    original_prefix,
-                                    target_prefix,
-                                    None,
-                                    root_dir)
-        if todo_files.count() == 0:
-            print 'Labeling: no input to process, quit now'
-            return
-        self.run(todo_files, root_dir, original_prefix, target_prefix)
-        mark_complete(todo_files, root_dir)
+        target_dir = 'modules/data/labeling/generated'
+        populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
+
+        _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
+
+        self.run(todo_tasks, root_dir, target_dir)
+
+        mark_complete(todo_tasks, root_dir)
+
         print 'Labeling: All Done, TEST.'
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
-        # Original records are public-test/path/to/*.record, sharded to M
-        original_prefix = 'public-test/2019/'
-        # Target labeling frames folder containing the populated N frames
-        target_prefix = 'modules/data/labeling/2019/'
         root_dir = s3_utils.S3_MOUNT_PATH
-        todo_files = get_todo_files(self.get_spark_context(),
-                                    original_prefix,
-                                    target_prefix,
-                                    bucket,
-                                    root_dir)
-        if todo_files.count() == 0:
-            print 'Labeling: no input to process, quit now'
-            return
-        self.run(todo_files, root_dir, original_prefix, target_prefix)
-        mark_complete(todo_files, root_dir)
+        target_dir = 'modules/data/labeling/generated'
+        populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
+
+        _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
+
+        self.run(todo_tasks, root_dir, target_dir)
+
+        mark_complete(todo_tasks, root_dir)
+
         print 'Labeling: All Done, PROD.'
 
-    def run(self, todo_files, root_dir, original_prefix, target_prefix):
+    def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
-        msgs_rdd = (todo_files     # -> (target_dir, record_file)
-                    # -> (target_dir_partition, record_file)
+        spark_context = self.get_spark_context()
+        msgs_rdd = (spark_context.parallelize(todo_tasks)      # -> (task_dir)
+                    # -> (target_dir, task_dir)
+                    .keyBy(lambda task_dir: os.path.join(target_dir, os.path.basename(task_dir)))
+                    # -> (target_dir, record_files)
+                    .flatMapValues(streaming_utils.list_records_for_task)
+                    # -> (target_partition, record_files)
                     .map(record_to_target_partition)
-                    # -> (target_dir_partition, message)
-                    .flatMapValues(record_utils.read_record(WANTED_CHANNELS.values()))
-                    # -> (target_dir_partition, timestamp, topic)
-                    .map(lambda (target, msg): (target, msg.timestamp, msg.topic))
-                    .cache())
+                    # -> (target_partition, messages_metadata)
+                    .flatMapValues(lambda record: streaming_utils
+                        .load_meta_data(record, WANTED_CHANNELS.values()))
+                    # -> (target_partition, timestamp, topic)
+                    .map(lambda (target, topic, timestamp, fields): (target, timestamp, topic))
+                    .cache()
+                    )
 
         # Transform RDD to DataFrame, run SQL and tranform back when done
-        spark_context = self.get_spark_context()
         sql_context = SQLContext(spark_context)
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context
