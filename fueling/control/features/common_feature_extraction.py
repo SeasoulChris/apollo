@@ -58,12 +58,16 @@ def process_seg(elem):
     """group Chassis and Localization msgs to list seperately"""
     chassis = []
     pose = []
+    count_chassis = 0
+    count_pose = 0
     for each_elem in elem:
         if each_elem.header.module_name == "canbus":
+            count_chassis = 1
             chassis.append(each_elem)
         else:
+            count_pose = 1
             pose.append(each_elem)
-    return (chassis, pose)
+    return ((count_pose + count_chassis), (chassis, pose))
 
 
 def to_list(elem):
@@ -100,10 +104,10 @@ def pair_cs_pose(elem):
             index[0] += 1
             index[1] += 1
         else:
-            while index[0] < len(times_cs) and index[1] < len(times_pose)\
+            while index[0] < len(times_cs) and index[1] < len(times_pose) \
                     and times_cs[index[0]] < times_pose[index[1]] - MAX_PHASE_DELTA:
                 index[0] += 1
-            while index[0] < len(times_cs) and index[1] < len(times_pose)\
+            while index[0] < len(times_cs) and index[1] < len(times_pose) \
                     and times_pose[index[1]] < times_cs[index[0]] - MAX_PHASE_DELTA:
                 index[1] += 1
 

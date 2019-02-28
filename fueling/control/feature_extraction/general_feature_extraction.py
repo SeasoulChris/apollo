@@ -104,8 +104,10 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
 
         def gen_hdf5(elem):
             """ write data segment to hdf5 file """
+            # glog.info("Processing data in folder:" % str(elem[0][0]))
             folder_path = str(elem[0][0])
             time_stamp = str(elem[0][1])
+            glog.info("Processing data in folder: %s" % folder_path)
             out_file_path = "{}/{}_{}.hdf5".format(
                 folder_path.replace(
                     origin_prefix, target_prefix, 1), wanted_vehicle,
@@ -164,16 +166,15 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                            # combine chassis message and pose message with the same key
                            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
         glog.info('Finished %d pre_segment_rdd!' % pre_segment_rdd.count())
-        glog.info('pre_segment_rdd first elem: %s' % pre_segment_rdd.take(1))
 
         data_rdd = (pre_segment_rdd
                     # msg list(path_key,(chassis,pose))
                     .mapValues(CommonFE.process_seg)
+                    .filter(lambda elem: elem[1][0] == 2)
+                    .mapValues(lambda elem: elem[1])
                     # align msg, generate data segment, write to hdf5 file.
                     .map(gen_hdf5))
-
         glog.info('Finished %d data_rdd!' % data_rdd.count())
-        glog.info('data_rdd first elem: %s' % data_rdd.take(1))
 
 
 if __name__ == '__main__':
