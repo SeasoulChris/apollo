@@ -43,6 +43,21 @@ practices are:
    perfectly at local. And when it is submited to a cluster, the huge test files
    are efficiently ignored.
 
+And good coding practices are:
+
+1. Filter early, filter often.
+
+1. Cascade simple transformations, instead of making a huge complicate one.
+
+1. All transformations should be repeatable and consistant. The process and even
+   the executor could fail any time, then the Spark will try to re-allocate the
+   task to other peers. So be careful about letting flatMap() and
+   flatMapValues() work with "yield" mappers. Because it's stateful, if a task
+   failed unexpectedly, the pipeline have no idea about how to recover.
+
+1. Reading record header is much faster than reading record, if you can do
+   significatnt filtering on records according to its header, do it.
+
 ### Test your pipeline at local
 
 ```bash
