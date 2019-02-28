@@ -44,7 +44,9 @@ MIN_SEGMENT_LENGTH = 10
 
 def folder_to_record(pathname):
     """ folder path to record path"""
-    return glob.glob(pathname + "/*.record.*")
+    record_path_list = (glob.glob(pathname + "/*.record")+glob.glob(
+        pathname + "/*.record.*"))
+    return record_path_list
 
 
 def gen_key(elem):

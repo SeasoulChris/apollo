@@ -69,7 +69,8 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             times_pose = np.array([x.header.timestamp_sec for x in pose])
             times_cs = np.array([x.header.timestamp_sec for x in chassis])
 
-            glog.info("start time index {} {}".format(times_cs[0], times_pose[0])) 
+            glog.info("start time index {} {}".format(
+                times_cs[0], times_pose[0]))
             index = [0, 0]
 
             def align():
@@ -141,9 +142,11 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                               # choose only folder path
                               .map(lambda x: x[0]))
 
-        glog.info('Finished %d folder_vehicle_rdd!' % folder_vehicle_rdd.count())
-        glog.info('folder_vehicle_rdd first elem: %s ' % folder_vehicle_rdd.take(1))
-        
+        glog.info('Finished %d folder_vehicle_rdd!' %
+                  folder_vehicle_rdd.count())
+        glog.info('folder_vehicle_rdd first elem: %s ' %
+                  folder_vehicle_rdd.take(1))
+
         channels_rdd = (folder_vehicle_rdd
                         .keyBy(lambda x: x)
                         # record path
@@ -155,7 +158,6 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
         glog.info('Finished %d channels_rdd!' % channels_rdd.count())
         glog.info('channels_rdd first elem: %s' % channels_rdd.take(1))
 
-
         pre_segment_rdd = (channels_rdd
                            # choose time as key, group msg into 1 sec
                            .map(CommonFE.gen_key)
@@ -163,7 +165,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
         glog.info('Finished %d pre_segment_rdd!' % pre_segment_rdd.count())
         glog.info('pre_segment_rdd first elem: %s' % pre_segment_rdd.take(1))
-        
+
         data_rdd = (pre_segment_rdd
                     # msg list(path_key,(chassis,pose))
                     .mapValues(CommonFE.process_seg)
