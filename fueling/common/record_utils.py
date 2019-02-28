@@ -48,8 +48,13 @@ def read_record_header(record_path):
     glog.info('Read record header {}'.format(record_path))
     try:
         reader = RecordReader(record_path)
+        header_str = reader.get_headerstring()
+        if not header_str:
+            glog.error('Failed to read record header {}'.format(record_path))
+            return None
+
         header = Header()
-        header.ParseFromString(reader.get_headerstring())
+        header.ParseFromString(header_str)
         return header
     except Exception:
         glog.error('Failed to read record header {}'.format(record_path))

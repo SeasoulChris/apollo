@@ -114,6 +114,7 @@ class GenerateSmallRecords(BasePipeline):
             .groupByKey()
             # -> (target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
+            .persist()
             # -> target_file
             .map(GenerateSmallRecords.process_file)
             # -> target_file
