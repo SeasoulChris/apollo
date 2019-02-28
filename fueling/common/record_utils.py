@@ -48,17 +48,14 @@ def read_record_header(record_path):
     glog.info('Read record header {}'.format(record_path))
     try:
         reader = RecordReader(record_path)
-        header_str = reader.get_headerstring()
-        if not header_str:
-            glog.error('Failed to read record header {}'.format(record_path))
-            return None
-
         header = Header()
-        header.ParseFromString(header_str)
-        return header
-    except Exception:
-        glog.error('Failed to read record header {}'.format(record_path))
-        return None
+        header.ParseFromString(reader.get_headerstring())
+        if header.message_number > 0:
+            return header
+        glog.error('No message in record {} or its header is broken'.format(record_path))
+    except Exception as e:
+        glog.error('Failed to read record header {}: {}'.format(record_path, e))
+    return None
 
 def write_record(path_to_messages):
     """
