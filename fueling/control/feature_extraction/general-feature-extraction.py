@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-"""
-This is a module to extraction features from records
-with folder path as part of the key
-"""
+"""Extraction features from records with folder path as part of the key"""
+
 import os
 
 import glog
@@ -17,8 +15,9 @@ import fueling.common.s3_utils as s3_utils
 import fueling.control.features.common_feature_extraction as CommonFE
 
 
-class GeneralFeatureExtractionPipeline(BasePipeline):
+class GeneralFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
+    WANTED_VEHICLE = 'Transit'
 
     def __init__(self):
         """ initialize """
@@ -59,7 +58,6 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
                       '/apollo/localization/pose']
         max_phase_delta = 0.01
         min_segment_length = 10
-        wanted_vehicle = 'Transit'
 
         def build_training_dataset(chassis, pose):
             """align chassis and pose data and build data segment"""
@@ -110,7 +108,7 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             glog.info("Processing data in folder: %s" % folder_path)
             out_file_path = "{}/{}_{}.hdf5".format(
                 folder_path.replace(
-                    origin_prefix, target_prefix, 1), wanted_vehicle,
+                    origin_prefix, target_prefix, 1), GeneralFeatureExtraction.WANTED_VEHICLE,
                 time_stamp)
             out_dir = os.path.dirname(out_file_path)
             if not os.path.exists(out_dir):
@@ -129,25 +127,27 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
             glog.info("Created all mini_dataset")
             return elem
 
-        dir_to_records_rdd = dir_to_records_rdd.map(
-            lambda x: (os.path.join(
-                root_dir, x[0]), os.path.join(root_dir, x[1])))
+        folder_vehicle_rdd = (
+            # (dir, record)
+            dir_to_records_rdd
+            # -> (dir, record), in absolute path
+            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
+            # -> (dir, HMIStatus msg)
+            .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
+            # -> (dir, HMIStatus)
+            .mapValues(record_utils.message_to_proto)
+            # -> (dir, current_vehicle)
+            .mapValues(lambda hmi_status: hmi_status.current_vehicle)
+            # -> (dir, current_vehicle)
+            .filter(spark_op.filter_value(
+                lambda vehicle: vehicle == GeneralFeatureExtraction.WANTED_VEHICLE))
+            # -> dir
+            .keys()
+            # Deduplicate.
+            .distinct())
 
-        folder_vehicle_rdd = (dir_to_records_rdd
-                              .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
-                              # parse message
-                              .mapValues(record_utils.message_to_proto)
-                              .mapValues(lambda elem: elem.current_vehicle)
-                              .filter(lambda elem: elem[1] == wanted_vehicle)
-                              # remove duplication of folders
-                              .distinct()
-                              # choose only folder path
-                              .map(lambda x: x[0]))
-
-        glog.info('Finished %d folder_vehicle_rdd!' %
-                  folder_vehicle_rdd.count())
-        glog.info('folder_vehicle_rdd first elem: %s ' %
-                  folder_vehicle_rdd.take(1))
+        glog.info('Finished %d folder_vehicle_rdd!' % folder_vehicle_rdd.count())
+        glog.info('folder_vehicle_rdd first elem: %s ' % folder_vehicle_rdd.take(1))
 
         channels_rdd = (folder_vehicle_rdd
                         .keyBy(lambda x: x)
@@ -178,4 +178,4 @@ class GeneralFeatureExtractionPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    GeneralFeatureExtractionPipeline().run_test()
+    GeneralFeatureExtraction().run_test()
