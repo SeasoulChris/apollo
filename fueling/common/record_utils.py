@@ -13,11 +13,14 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+HMI_STATUS_CHANNEL = '/apollo/hmi/status'
+CHASSIS_CHANNEL = '/apollo/canbus/chassis'
+LOCALIZATION_CHANNEL = '/apollo/localization/pose'
 
 CHANNEL_TO_TYPE = {
-    '/apollo/canbus/chassis': Chassis,
-    '/apollo/hmi/status': HMIStatus,
-    '/apollo/localization/pose': LocalizationEstimate,
+    CHASSIS_CHANNEL: Chassis,
+    HMI_STATUS_CHANNEL: HMIStatus,
+    LOCALIZATION_CHANNEL: LocalizationEstimate,
 }
 
 

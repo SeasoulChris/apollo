@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Extraction features from records with folder path as part of the key"""
 
+from collections import Counter
+import operator
 import os
 
 import glog
@@ -12,12 +14,15 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
+import fueling.common.time_utils as time_utils
 import fueling.control.features.common_feature_extraction as CommonFE
 
 
+WANTED_VEHICLE = 'Transit'
+MIN_MSG_PER_SEGMENT = 100
+
 class GeneralFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
-    WANTED_VEHICLE = 'Transit'
 
     def __init__(self):
         """ initialize """
@@ -51,23 +56,16 @@ class GeneralFeatureExtraction(BasePipeline):
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
-        wanted_chs = ['/apollo/canbus/chassis',
-                      '/apollo/localization/pose']
-
         def _gen_hdf5(elem):
             """ write data segment to hdf5 file """
             # glog.info("Processing data in folder:" % str(elem[0][0]))
-            folder_path = str(elem[0][0])
-            timestamp = str(elem[0][1])
+            (folder_path, segment_id), (chassis, pose) = elem
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
-            out_file_path = "{}/{}_{}.hdf5".format(out_dir, self.WANTED_VEHICLE, timestamp)
+            out_file_path = "{}/{}_{}.hdf5".format(out_dir, WANTED_VEHICLE, segment_id)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
-
             out_file = h5py.File(out_file_path, "w")
-            chassis = elem[1][0]
-            pose = elem[1][1]
             i = 0
             for mini_dataset in self.build_training_dataset(chassis, pose):
                 name = "_segment_" + str(i).zfill(3)
@@ -77,38 +75,61 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 
-        dir_to_records = (
-            dir_to_records_rdd
-            # -> (dir, record), in absolute path
-            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
-            .cache())
+        # -> (dir, record), in absolute path
+        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
+                                                           os.path.join(root_dir, x[1])))
 
         selected_vehicles = (
             # -> (dir, vehicle)
             self.get_vehicle_of_dirs(dir_to_records)
             # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
-            .filter(spark_op.filter_value(lambda vehicle: vehicle == self.WANTED_VEHICLE)))
+            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
+            # -> dir
+            .keys())
 
-        result = (
-            dir_to_records
-            # -> (dir, record)
-            .subtractByKey(selected_vehicles)
+        channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
+        dir_to_msgs = (
+            spark_op.filter_keys(dir_to_records, selected_vehicles)
             # -> (dir, msg)
-            .flatMapValues(record_utils.read_record(wanted_chs))
-            # -> (dir, Chassis|Pose)
-            .mapValues(record_utils.message_to_proto)
-            # -> (dir_minute, Chassis|Pose)
-            .map(CommonFE.gen_key)
-            # -> (dir_minute, [Chassises, Poses])
-            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend)
-            # -> (dir_minute, segment)
-            .mapValues(CommonFE.process_seg)
-            # -> (dir_minute, segment), where segment contains both Chassis and Pose
-            .filter(lambda elem: elem[1][0] == 2)
-            # -> (dir_minute, (Chassises, Poses))
-            .mapValues(lambda elem: elem[1])
-            # align msg, generate data segment, write to hdf5 file.
-            .map(_gen_hdf5))
+            .flatMapValues(record_utils.read_record(channels))
+            # -> (dir_segment, msg)
+            .map(self.gen_segment))
+
+        valid_segments = (
+            dir_to_msgs
+            # -> (dir_segment, topic_counter)
+            .mapValues(lambda msg: Counter([msg.topic]))
+            # -> (dir_segment, topic_counter)
+            .reduceByKey(operator.add)
+            # -> (dir_segment, topic_counter)
+            .filter(spark_op.filter_value(
+                lambda counter:
+                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
+                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
+            # -> dir_segment
+            .keys())
+
+        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments)
+
+        def _parse_and_group_msgs(key_to_msgs):
+            return (
+                # (key, msg)
+                key_to_msgs
+                # -> (key, proto)
+                .mapValues(record_utils.message_to_proto)
+                # -> (key, protos)
+                .groupByKey()
+                # -> (key, proto_list)
+                .mapValues(list))
+
+        chassises = _parse_and_group_msgs(
+            dir_to_msgs.filter(spark_op.filter_value(
+                lambda msg: msg.topic == record_utils.CHASSIS_CHANNEL)))
+        poses = _parse_and_group_msgs(
+            dir_to_msgs.filter(spark_op.filter_value(
+                lambda msg: msg.topic == record_utils.LOCALIZATION_CHANNEL)))
+
+        result = chassises.join(poses).map(_gen_hdf5)
         glog.info('Generated %d h5 files!' % result.count())
 
     @staticmethod
@@ -118,7 +139,7 @@ class GeneralFeatureExtraction(BasePipeline):
         Convert RDD(dir, record) to RDD(dir, vehicle).
         """
         def _get_vehicle_from_records(records):
-            reader = record_utils.read_record(['/apollo/hmi/status'])
+            reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
             for record in records:
                 glog.info('Try getting vehicle name from {}'.format(record))
                 for msg in reader(record):
@@ -129,6 +150,14 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info('Failed to get vehicle name')
             return ''
         return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
+
+    @staticmethod
+    def gen_segment(dir_to_msg):
+        """Generate new key which contains a segment id part."""
+        task_dir, msg = dir_to_msg
+        dt = time_utils.msg_time_to_datetime(msg.timestamp)
+        segment_id = dt.strftime('%Y%m%d-%H%M')
+        return ((task_dir, segment_id), msg)
 
     @staticmethod
     def build_training_dataset(chassis, pose):
