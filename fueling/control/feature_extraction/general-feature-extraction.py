@@ -32,8 +32,7 @@ class GeneralFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
@@ -44,10 +43,8 @@ class GeneralFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         root_dir = s3_utils.S3_MOUNT_PATH
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
@@ -56,61 +53,15 @@ class GeneralFeatureExtraction(BasePipeline):
         """ processing RDD """
         wanted_chs = ['/apollo/canbus/chassis',
                       '/apollo/localization/pose']
-        max_phase_delta = 0.01
-        min_segment_length = 10
 
-        def build_training_dataset(chassis, pose):
-            """align chassis and pose data and build data segment"""
-            chassis.sort(key=lambda x: x.header.timestamp_sec)
-            pose.sort(key=lambda x: x.header.timestamp_sec)
-            # In the record, control and chassis always have same number of frames
-            times_pose = np.array([x.header.timestamp_sec for x in pose])
-            times_cs = np.array([x.header.timestamp_sec for x in chassis])
-
-            glog.info("start time index {} {}".format(
-                times_cs[0], times_pose[0]))
-            index = [0, 0]
-
-            def align():
-                """align up chassis and pose data w.r.t time """
-                while index[0] < len(times_cs) and index[1] < len(times_pose) \
-                        and abs(times_cs[index[0]] - times_pose[index[1]]) > max_phase_delta:
-                    while index[0] < len(times_cs) and index[1] < len(times_pose) \
-                            and times_cs[index[0]] < times_pose[index[1]] - max_phase_delta:
-                        index[0] += 1
-                    while index[0] < len(times_cs) and index[1] < len(times_pose) \
-                            and times_pose[index[1]] < times_cs[index[0]] - max_phase_delta:
-                        index[1] += 1
-
-            align()
-
-            while index[0] < len(times_cs)-1 and index[1] < len(times_pose)-1:
-                limit = min(len(times_cs)-index[0], len(times_pose)-index[1])
-
-                for seg_len in range(1, limit):
-                    delta = abs(times_cs[index[0]+seg_len]
-                                - times_pose[index[1]+seg_len])
-                    if delta > max_phase_delta or seg_len == limit-1:
-                        if seg_len >= min_segment_length or seg_len == limit - 1:
-                            yield GetDatapoints(pose[index[1]:index[1]+seg_len],
-                                                chassis[index[0]:index[0]+seg_len])
-                            index[0] += seg_len
-                            index[1] += seg_len
-                            align()
-                            break
-            glog.info("build data done")
-
-        def gen_hdf5(elem):
+        def _gen_hdf5(elem):
             """ write data segment to hdf5 file """
             # glog.info("Processing data in folder:" % str(elem[0][0]))
             folder_path = str(elem[0][0])
-            time_stamp = str(elem[0][1])
+            timestamp = str(elem[0][1])
             glog.info("Processing data in folder: %s" % folder_path)
-            out_file_path = "{}/{}_{}.hdf5".format(
-                folder_path.replace(
-                    origin_prefix, target_prefix, 1), GeneralFeatureExtraction.WANTED_VEHICLE,
-                time_stamp)
-            out_dir = os.path.dirname(out_file_path)
+            out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
+            out_file_path = "{}/{}_{}.hdf5".format(out_dir, self.WANTED_VEHICLE, timestamp)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
 
@@ -118,63 +69,109 @@ class GeneralFeatureExtraction(BasePipeline):
             chassis = elem[1][0]
             pose = elem[1][1]
             i = 0
-            for mini_dataset in build_training_dataset(chassis, pose):
+            for mini_dataset in self.build_training_dataset(chassis, pose):
                 name = "_segment_" + str(i).zfill(3)
-                out_file.create_dataset(
-                    name, data=mini_dataset, dtype="float32")
+                out_file.create_dataset(name, data=mini_dataset, dtype="float32")
                 i += 1
             out_file.close()
-            glog.info("Created all mini_dataset")
+            glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 
-        folder_vehicle_rdd = (
-            # (dir, record)
+        dir_to_records = (
             dir_to_records_rdd
             # -> (dir, record), in absolute path
             .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
-            # -> (dir, HMIStatus msg)
-            .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
-            # -> (dir, HMIStatus)
+            .cache())
+
+        selected_vehicles = (
+            # -> (dir, vehicle)
+            self.get_vehicle_of_dirs(dir_to_records)
+            # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
+            .filter(spark_op.filter_value(lambda vehicle: vehicle == self.WANTED_VEHICLE)))
+
+        result = (
+            dir_to_records
+            # -> (dir, record)
+            .subtractByKey(selected_vehicles)
+            # -> (dir, msg)
+            .flatMapValues(record_utils.read_record(wanted_chs))
+            # -> (dir, Chassis|Pose)
             .mapValues(record_utils.message_to_proto)
-            # -> (dir, current_vehicle)
-            .mapValues(lambda hmi_status: hmi_status.current_vehicle)
-            # -> (dir, current_vehicle)
-            .filter(spark_op.filter_value(
-                lambda vehicle: vehicle == GeneralFeatureExtraction.WANTED_VEHICLE))
-            # -> dir
-            .keys()
-            # Deduplicate.
-            .distinct())
+            # -> (dir_minute, Chassis|Pose)
+            .map(CommonFE.gen_key)
+            # -> (dir_minute, [Chassises, Poses])
+            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend)
+            # -> (dir_minute, segment)
+            .mapValues(CommonFE.process_seg)
+            # -> (dir_minute, segment), where segment contains both Chassis and Pose
+            .filter(lambda elem: elem[1][0] == 2)
+            # -> (dir_minute, (Chassises, Poses))
+            .mapValues(lambda elem: elem[1])
+            # align msg, generate data segment, write to hdf5 file.
+            .map(_gen_hdf5))
+        glog.info('Generated %d h5 files!' % result.count())
 
-        glog.info('Finished %d folder_vehicle_rdd!' % folder_vehicle_rdd.count())
-        glog.info('folder_vehicle_rdd first elem: %s ' % folder_vehicle_rdd.take(1))
+    @staticmethod
+    def get_vehicle_of_dirs(dir_to_records_rdd):
+        """
+        Extract HMIStatus.current_vehicle from each dir.
+        Convert RDD(dir, record) to RDD(dir, vehicle).
+        """
+        def _get_vehicle_from_records(records):
+            reader = record_utils.read_record(['/apollo/hmi/status'])
+            for record in records:
+                glog.info('Try getting vehicle name from {}'.format(record))
+                for msg in reader(record):
+                    hmi_status = record_utils.message_to_proto(msg)
+                    vehicle = hmi_status.current_vehicle
+                    glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
+                    return vehicle
+            glog.info('Failed to get vehicle name')
+            return ''
+        return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
 
-        channels_rdd = (folder_vehicle_rdd
-                        .keyBy(lambda x: x)
-                        # record path
-                        .flatMapValues(CommonFE.folder_to_record)
-                        # read message
-                        .flatMapValues(record_utils.read_record(wanted_chs))
-                        # parse message
-                        .mapValues(record_utils.message_to_proto))
-        glog.info('Finished %d channels_rdd!' % channels_rdd.count())
-        glog.info('channels_rdd first elem: %s' % channels_rdd.take(1))
+    @staticmethod
+    def build_training_dataset(chassis, pose):
+        """align chassis and pose data and build data segment"""
+        max_phase_delta = 0.01
+        min_segment_length = 10
 
-        pre_segment_rdd = (channels_rdd
-                           # choose time as key, group msg into 1 sec
-                           .map(CommonFE.gen_key)
-                           # combine chassis message and pose message with the same key
-                           .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
-        glog.info('Finished %d pre_segment_rdd!' % pre_segment_rdd.count())
+        chassis.sort(key=lambda x: x.header.timestamp_sec)
+        pose.sort(key=lambda x: x.header.timestamp_sec)
+        # In the record, control and chassis always have same number of frames
+        times_pose = np.array([x.header.timestamp_sec for x in pose])
+        times_cs = np.array([x.header.timestamp_sec for x in chassis])
 
-        data_rdd = (pre_segment_rdd
-                    # msg list(path_key,(chassis,pose))
-                    .mapValues(CommonFE.process_seg)
-                    .filter(lambda elem: elem[1][0] == 2)
-                    .mapValues(lambda elem: elem[1])
-                    # align msg, generate data segment, write to hdf5 file.
-                    .map(gen_hdf5))
-        glog.info('Finished %d data_rdd!' % data_rdd.count())
+        glog.info("start time index {} {}".format(times_cs[0], times_pose[0]))
+        index = [0, 0]
+
+        def align():
+            """align up chassis and pose data w.r.t time """
+            while (index[0] < len(times_cs) and index[1] < len(times_pose) and
+                   abs(times_cs[index[0]] - times_pose[index[1]]) > max_phase_delta):
+                while (index[0] < len(times_cs) and index[1] < len(times_pose) and
+                       times_cs[index[0]] < times_pose[index[1]] - max_phase_delta):
+                    index[0] += 1
+                while (index[0] < len(times_cs) and index[1] < len(times_pose) and
+                       times_pose[index[1]] < times_cs[index[0]] - max_phase_delta):
+                    index[1] += 1
+
+        align()
+
+        while index[0] < len(times_cs) - 1 and index[1] < len(times_pose) - 1:
+            limit = min(len(times_cs) - index[0], len(times_pose) - index[1])
+
+            for seg_len in range(1, limit):
+                delta = abs(times_cs[index[0] + seg_len] - times_pose[index[1] + seg_len])
+                if delta > max_phase_delta or seg_len == limit - 1:
+                    if seg_len >= min_segment_length or seg_len == limit - 1:
+                        yield GetDatapoints(pose[index[1] : index[1] + seg_len],
+                                            chassis[index[0] : index[0] + seg_len])
+                        index[0] += seg_len
+                        index[1] += seg_len
+                        align()
+                        break
+        glog.info("build data done")
 
 
 if __name__ == '__main__':
