@@ -29,7 +29,7 @@ sys.path.append('../../utilities')
 
 from train_utils import *
 
-dim_input = 7 + 72
+dim_input = 114
 dim_output = 12
 
 def load_h5(filename):

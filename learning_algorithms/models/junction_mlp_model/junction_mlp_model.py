@@ -24,7 +24,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 
-dim_input = 7 + 72
+dim_input = 114
 dim_output = 12
 
 '''
@@ -49,7 +49,7 @@ class JunctionMLPModel(nn.Module):
     
     def forward(self, X):
         out = self.mlp(X)
-        out = torch.mul(out, X[:,7:79:6])
+        # out = torch.mul(out, X[:,18:114:8])
         out = F.softmax(out)
         return out
 
