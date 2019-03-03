@@ -77,7 +77,7 @@ class GeneralFeatureExtraction(BasePipeline):
 
         # -> (dir, record), in absolute path
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1])))
+                                                           os.path.join(root_dir, x[1]))).cache()
 
         selected_vehicles = (
             # -> (dir, vehicle)
@@ -93,7 +93,8 @@ class GeneralFeatureExtraction(BasePipeline):
             # -> (dir, msg)
             .flatMapValues(record_utils.read_record(channels))
             # -> (dir_segment, msg)
-            .map(self.gen_segment))
+            .map(self.gen_segment)
+            .cache())
 
         valid_segments = (
             dir_to_msgs
@@ -109,7 +110,7 @@ class GeneralFeatureExtraction(BasePipeline):
             # -> dir_segment
             .keys())
 
-        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments)
+        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments).cache()
 
         def _parse_and_group_msgs(key_to_msgs):
             return (

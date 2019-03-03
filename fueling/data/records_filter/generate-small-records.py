@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import errno
 import os
+import pprint
 
 import glog
 import pyspark_utils.op as spark_op
@@ -101,14 +102,14 @@ class GenerateSmallRecords(BasePipeline):
 
         # (task_dir, record)
         todo_jobs = spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
-        tasks_count = (
+        tasks = (
             # -> (task_dir, record)
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # -> (target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # -> (target_dir, record), in absolute path style.
             .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
-                                     os.path.join(root_dir, dir_record[1]))
+                                     os.path.join(root_dir, dir_record[1])))
             # -> (target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # -> (target_dir, (record, header)), where header is valid
@@ -132,9 +133,9 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Touch file.
             .map(GenerateSmallRecords.touch_file)
-            # Trigger actions.
-            .count())
-        glog.info('Processed {} tasks'.format(tasks_count))
+            .cache())
+        glog.info('Processed {} tasks'.format(tasks.count()))
+        pprint.PrettyPrinter().pprint(tasks.collect())
 
     @staticmethod
     def shard_to_files(input):
