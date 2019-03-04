@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 import errno
 import os
-import pprint
 
-import glog
 import pyspark_utils.op as spark_op
 
 from cyber_py.record import RecordWriter
 
-from fueling.common.base_pipeline import BasePipeline
+import fueling.common.base_pipeline as base_pipeline
+import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 
 
-class GenerateSmallRecords(BasePipeline):
+class GenerateSmallRecords(base_pipeline.BasePipeline):
     """GenerateSmallRecords pipeline."""
     CHANNELS = {
         '/apollo/canbus/chassis',
@@ -102,7 +101,7 @@ class GenerateSmallRecords(BasePipeline):
 
         # (task_dir, record)
         todo_jobs = spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
-        tasks = (
+        tasks_count = (
             # -> (task_dir, record)
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # -> (target_dir, record)
@@ -133,9 +132,9 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Touch file.
             .map(GenerateSmallRecords.touch_file)
-            .cache())
-        glog.info('Processed {} tasks'.format(tasks.count()))
-        pprint.PrettyPrinter().pprint(tasks.collect())
+            # Trigger actions.
+            .count())
+        glog.info('Processed {} tasks'.format(tasks_count))
 
     @staticmethod
     def shard_to_files(input):

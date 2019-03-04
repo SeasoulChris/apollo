@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-import datetime
-import errno
 import os
-import pytz
 
 import glog
 import pyspark_utils.op as spark_op
 
-from cyber_py.record import RecordReader, RecordWriter
-
-from fueling.common.base_pipeline import BasePipeline
+import fueling.common.base_pipeline as base_pipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 
-class GenerateSmallRecords(BasePipeline):
+class GenerateSmallRecords(base_pipeline.BasePipeline):
     """GenerateSmallRecords pipeline."""
     RECORD_FORMAT = '%Y%m%d%H%M00.record'
     CHANNELS = {

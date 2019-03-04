@@ -32,18 +32,23 @@ def read_record(channels, start_time_ns=0, end_time_ns=18446744073709551615):
     """record_path -> [PyBagMessage, ...] or None if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
-        channel_set = set(channels)
         glog.info('Read record {}'.format(record_path))
         try:
-            for msg in RecordReader(record_path).read_messages():
-                if (msg.topic in channel_set and
-                    msg.timestamp >= start_time_ns and msg.timestamp < end_time_ns):
-                    yield msg
-        except Exception:
+            reader = RecordReader(record_path)
+            channel_set = {
+                channel
+                for channel in set(channels).intersection(reader.get_channellist())
+                if reader.get_messagenumber(channel) > 0}
+            if channel_set:
+                return [msg for msg in reader.read_messages() if (
+                    msg.topic in channel_set and
+                    msg.timestamp >= start_time_ns and
+                    msg.timestamp < end_time_ns)]
+        except Exception as err:
             # Stop poping messages elegantly if exception happends, including
             # the normal StopIteration.
-            glog.error('Failed to read record {}'.format(record_path))
-            raise StopIteration
+            glog.error('Failed to read record {}: {}'.format(record_path, err))
+        return []
     return read_record_func
 
 def read_record_header(record_path):

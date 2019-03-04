@@ -4,7 +4,7 @@
 LOCAL_JOB_FILE="$1"
 
 # Config.
-IMAGE="xiangquan/spark:20190222_1046"
+IMAGE="xiangquan/spark:20190303_1654"
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
 EXECUTORS=10
