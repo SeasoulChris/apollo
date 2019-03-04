@@ -49,7 +49,7 @@ class JunctionMLPModel(nn.Module):
     
     def forward(self, X):
         out = self.mlp(X)
-        # out = torch.mul(out, X[:,18:114:8])
+        out = torch.mul(out, X[:,18:114:8])
         out = F.softmax(out)
         return out
 
