@@ -6,14 +6,14 @@ import pyspark_utils.op as spark_op
 
 from cyber_py.record import RecordWriter
 
-import fueling.common.base_pipeline as base_pipeline
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 
 
-class GenerateSmallRecords(base_pipeline.BasePipeline):
+class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
     CHANNELS = {
         '/apollo/canbus/chassis',
