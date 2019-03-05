@@ -13,8 +13,6 @@ import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
-from modules.routing.proto.routing_pb2 import RoutingResponse
-
 def list_end_files(target_dir):
     """
     List all end files recursively under the specified dir.  
@@ -44,20 +42,18 @@ def get_todo_tasks(original_prefix, target_prefix, list_func):
 def execute_task(task):
     """Execute task by task"""
     dest_dir, source_dir = task
-    map_dir = 'modules/map/data/san_mateo'
     glog.info('Executing task with src_dir: {}, dst_dir: {}'.format(source_dir, dest_dir))
 
-    records = list(glob.glob(source_dir + "/*.record.?????"))
-    if len(records) == 0:
-        glog.warning('No records file found in {}'.format(source_dir))
+    record_file = next((x for x in os.listdir(source_dir) if record_utils.is_record_file(x)), None)
+    if record_file is None:
+        glog.warn('No records file found in {}'.format(source_dir))
         return
-    for msg in RecordReader(records[0]).read_messages():
-        if msg.topic == '/apollo/routing_response_history':
-            proto = RoutingResponse()
-            proto.ParseFromString(msg.message)
-            if proto.map_version.startswith('sunnyvale'):
-                map_dir = 'modules/map/data/sunnyvale_with_two_offices'
-            break
+    map_dir = '/mnt/bos/modules/map/data/san_mateo'
+    message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages() \
+         if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
+    if message is not None:
+        if record_utils.message_to_proto().map_version.startswith('sunnyvale'):
+            map_dir = '/mnt/bos/modules/map/data/sunnyvale_with_two_offices'
 
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
@@ -68,8 +64,10 @@ def execute_task(task):
                 map_dir))
     if return_code != 0:
         glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
-        return
-    
+        # Print log here only, since rerunning will probably fail again.  
+        # Need people intervention instead 
+        #return
+
     # Mark complete
     complete_file = os.path.join(dest_dir, 'COMPLETE')
     glog.info('Touching complete file {}'.format(complete_file))
