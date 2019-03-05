@@ -5,13 +5,12 @@ import errno
 import fnmatch
 import os
 
-import glog
-
 from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+import fueling.common.colored_glog as glog
 
 HMI_STATUS_CHANNEL = '/apollo/hmi/status'
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'

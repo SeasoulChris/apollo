@@ -5,13 +5,13 @@ from collections import Counter
 import operator
 import os
 
-import glog
 import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
+import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
