@@ -16,7 +16,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
-import fueling.control.features.common_feature_extraction as CommonFE
 
 
 WANTED_VEHICLE = 'Transit'
