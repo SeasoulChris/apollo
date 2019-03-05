@@ -2,9 +2,9 @@
 """
 common functions for feature extractin
 """
-
+import os
 import glob
-
+import glog
 import h5py
 import numpy as np
 
@@ -15,6 +15,8 @@ import modules.control.proto.control_conf_pb2 as ControlConf
 import modules.data.fuel.fueling.control.proto.feature_key_pb2 as FeatureKey
 import common.proto_utils as proto_utils
 import fueling.common.h5_utils as h5_utils
+import fueling.common.record_utils as record_utils
+import fueling.common.time_utils as time_utils
 
 
 FEATURE_KEY = FeatureKey.featureKey()
@@ -42,11 +44,32 @@ MAX_PHASE_DELTA = 0.01
 MIN_SEGMENT_LENGTH = 10
 
 
-def folder_to_record(pathname):
-    """ folder path to record path"""
-    record_path_list = (glob.glob(pathname + "/*.record")+glob.glob(
-        pathname + "/*.record.*"))
-    return record_path_list
+def get_vehicle_of_dirs(dir_to_records_rdd):
+    """
+    Extract HMIStatus.current_vehicle from each dir.
+    Convert RDD(dir, record) to RDD(dir, vehicle).
+    """
+    def _get_vehicle_from_records(records):
+        reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
+        for record in records:
+            glog.info('Try getting vehicle name from {}'.format(record))
+            for msg in reader(record):
+                hmi_status = record_utils.message_to_proto(msg)
+                vehicle = hmi_status.current_vehicle
+                glog.info('Get vehicle name "{}" from record {}'.format(
+                    vehicle, record))
+                return vehicle
+        glog.info('Failed to get vehicle name')
+        return ''
+    return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
+
+
+def gen_pre_segment(dir_to_msg):
+    """Generate new key which contains a segment id part."""
+    task_dir, msg = dir_to_msg
+    dt = time_utils.msg_time_to_datetime(msg.timestamp)
+    segment_id = dt.strftime('%Y%m%d-%H%M')
+    return ((task_dir, segment_id), msg)
 
 
 def gen_key(elem):
@@ -58,16 +81,12 @@ def process_seg(elem):
     """group Chassis and Localization msgs to list seperately"""
     chassis = []
     pose = []
-    count_chassis = 0
-    count_pose = 0
     for each_elem in elem:
         if each_elem.header.module_name == "canbus":
-            count_chassis = 1
             chassis.append(each_elem)
         else:
-            count_pose = 1
             pose.append(each_elem)
-    return ((count_pose + count_chassis), (chassis, pose))
+    return (chassis, pose)
 
 
 def to_list(elem):

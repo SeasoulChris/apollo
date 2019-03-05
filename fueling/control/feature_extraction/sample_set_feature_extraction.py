@@ -2,19 +2,26 @@
 """ extracting sample set for mkz7 """
 # pylint: disable = fixme
 # pylint: disable = no-member
+
+from collections import Counter
+import operator
 import os
 
 import glog
+import glob
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
-import fueling.control.features.common_feature_extraction as CommonFE
+import fueling.common.s3_utils as s3_utils
+import fueling.control.features.feature_extraction_utils as feature_extraction_utils
+
+WANTED_VEHICLE = 'Mkz7'
+MIN_MSG_PER_SEGMENT = 100
 
 
 class SampleSetFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
-    WANTED_VEHICLE = 'Mkz7'
 
     def __init__(self):
         """ initialize """
@@ -52,92 +59,83 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
-        wanted_chs = ['/apollo/canbus/chassis',
-                      '/apollo/localization/pose']
+        # -> (dir, record), in absolute path
+        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
+                                                           os.path.join(root_dir, x[1])))
 
-        folder_vehicle_rdd = (
-            # (dir, record)
-            dir_to_records_rdd
-            # -> (dir, record), in absolute path
-            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
-            # -> (dir, HMIStatus msg)
-            .flatMapValues(record_utils.read_record(['/apollo/hmi/status']))
-            # -> (dir, HMIStatus)
-            .mapValues(record_utils.message_to_proto)
-            # -> (dir, current_vehicle)
-            .mapValues(lambda elem: elem.current_vehicle)
-            # -> (dir, current_vehicle)
-            .filter(spark_op.filter_value(
-                lambda vehicle: vehicle == SampleSetFeatureExtraction.WANTED_VEHICLE))
+        selected_vehicles = (
+            # -> (dir, vehicle)
+            feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
+            # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
+            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
             # -> dir
-            .keys()
-            # Deduplicate.
-            .distinct())
+            .keys())
 
-        glog.info('Finished %d folder_vehicle_rdd!' %
-                  folder_vehicle_rdd.count())
-        glog.info('folder_vehicle_rdd first elem: %s ' %
-                  folder_vehicle_rdd.take(1))
+        glog.info('Finished %d selected_vehicles!' % selected_vehicles.count())
+        glog.info('First elem in selected_vehicles is : %s ' %
+                  selected_vehicles.first())
 
-        channels_rdd = (
-            # (dir)
-            folder_vehicle_rdd
-            # -> (dir,dir)
-            .keyBy(lambda x: x)
-            # -> (dir,record)
-            .flatMapValues(CommonFE.folder_to_record)
-            # ->(dir,pose and chassis msg)
-            .flatMapValues(record_utils.read_record(wanted_chs))
-            # ->(dir,pose or chassis)
-            .mapValues(record_utils.message_to_proto))
+        channels = {record_utils.CHASSIS_CHANNEL,
+                    record_utils.LOCALIZATION_CHANNEL}
+        dir_to_msgs = (
+            spark_op.filter_keys(dir_to_records, selected_vehicles)
+            # -> (dir, msg)
+            .flatMapValues(record_utils.read_record(channels))
+            # -> (dir_segment, msg)
+            .map(feature_extraction_utils.gen_pre_segment))
+        glog.info('Finished %d dir_to_msgs!' % dir_to_msgs.count())
 
-        glog.info('Finished %d channels_rdd!' %
-                  channels_rdd.count())
+        valid_segments = (
+            dir_to_msgs
+            # -> (dir_segment, topic_counter)
+            .mapValues(lambda msg: Counter([msg.topic]))
+            # -> (dir_segment, topic_counter)
+            .reduceByKey(operator.add)
+            # -> (dir_segment, topic_counter)
+            .filter(spark_op.filter_value(
+                    lambda counter:
+                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
+                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
+            # -> dir_segment
+            .keys())
 
-        pre_segment_rdd = (
-            #(dir, pose or chassis)
-            channels_rdd
-            # -> ((dir,time_stamp_per_min), pose or chassis)
-            .map(CommonFE.gen_key)
-            # -> combine to the same key
-            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
-        glog.info('Finished %d pre_segment_rdd!' %
-                  pre_segment_rdd.count())
+        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments)
+
+        glog.info('Finished %d valid_segments!' % dir_to_msgs.count())
 
         data_rdd = (
-            # ((dir,time_stamp_per_min), pose and chassis list)
-            pre_segment_rdd
-            # -> (key, (has_pose_list+has_chassis_list), (pose_list, chassis_list))
-            .mapValues(CommonFE.process_seg)
-            # -> (key, (has_pose_list+has_chassis_list), (pose_list, chassis_list))
-            .filter(lambda elem: elem[1][0] == 2)
-            # ->(key,  (pose_list, chassis_list))
-            .mapValues(lambda elem: elem[1])
+            # ((dir,time_stamp_per_min), msg)
+            dir_to_msgs
+            # ((dir,time_stamp_per_min), proto)
+            .mapValues(record_utils.message_to_proto)
+            # ((dir,time_stamp_per_min), (chassis_proto or pose_proto))
+            .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append, feature_extraction_utils.extend)
+            # -> (key, (chassis_proto_list, pose_proto_list))
+            .mapValues(feature_extraction_utils.process_seg)
             # ->(key,  (paired_pose_chassis))
-            .flatMapValues(CommonFE.pair_cs_pose)
+            .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # ->((dir, time_stamp_sec), data_point)
-            .map(CommonFE.get_data_point))
+            .map(feature_extraction_utils.get_data_point))
 
-        glog.info('Finished %d data_rdd!' %
-                  data_rdd.count())
+        glog.info('Finished %d data_point!' % data_rdd.count())
 
         # data feature set
         featured_data_rdd = (
             #((dir, time_stamp_sec), data_point)
             data_rdd
             # -> ((dir,feature_key),(time_stamp_sec,data_point))
-            .map(CommonFE.feature_key_value)
+            .map(feature_extraction_utils.feature_key_value)
             # -> ((dir,feature_key), list of (time_stamp_sec,data_point))
-            .combineByKey(CommonFE.to_list, CommonFE.append, CommonFE.extend))
+            .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append, feature_extraction_utils.extend))
 
         glog.info('Finished %d featured_data_rdd!' % featured_data_rdd.count())
 
         data_segment_rdd = (featured_data_rdd
-                            # generate segment w.r.t time
-                            .mapValues(CommonFE.gen_segment)
+                            # generate segment w.r.t feature keys
+                            .mapValues(feature_extraction_utils.gen_segment)
                             # write all segment into a hdf5 file
                             .map(lambda elem:
-                                 CommonFE.write_h5_with_key(elem, origin_prefix, target_prefix, SampleSetFeatureExtraction.WANTED_VEHICLE)))
+                                 feature_extraction_utils.write_h5_with_key(elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
         glog.info('Finished %d data_segment_rdd!' %
                   data_segment_rdd.count())
 
