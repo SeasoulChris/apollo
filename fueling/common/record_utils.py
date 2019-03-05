@@ -1,7 +1,6 @@
 """Cyber records related utils."""
 #!/usr/bin/env python
 
-import errno
 import fnmatch
 import os
 
@@ -10,7 +9,9 @@ from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+
 import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 
 HMI_STATUS_CHANNEL = '/apollo/hmi/status'
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'
@@ -73,11 +74,7 @@ def write_record(path_to_messages):
     """
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
-    try:
-        os.makedirs(os.path.dirname(path))
-    except OSError as error:
-        if error.errno != errno.EEXIST:
-            raise
+    file_utils.makedirs(os.path.dirname(path))
     glog.info('Write record {}'.format(path))
     writer = RecordWriter(0, 0)
     writer.open(path)

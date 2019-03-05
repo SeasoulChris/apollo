@@ -8,6 +8,7 @@ from cyber_py.record import RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
@@ -131,7 +132,7 @@ class GenerateSmallRecords(BasePipeline):
             # -> target_dir/COMPLETE
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Touch file.
-            .map(GenerateSmallRecords.touch_file)
+            .map(file_utils.touch)
             # Trigger actions.
             .count())
         glog.info('Processed {} tasks'.format(tasks_count))
@@ -187,14 +188,6 @@ class GenerateSmallRecords(BasePipeline):
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
         writer.close()
         return target_file
-
-    @staticmethod
-    def touch_file(path):
-        """Touch file."""
-        if not os.path.exists(path):
-            glog.info('Touch file {}'.format(path))
-            os.mknod(path)
-        return path
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
 import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
@@ -62,16 +63,14 @@ class GeneralFeatureExtraction(BasePipeline):
             (folder_path, segment_id), (chassis, pose) = elem
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
+            file_utils.makedirs(out_dir)
             out_file_path = "{}/{}_{}.hdf5".format(out_dir, WANTED_VEHICLE, segment_id)
-            if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
-            out_file = h5py.File(out_file_path, "w")
-            i = 0
-            for mini_dataset in self.build_training_dataset(chassis, pose):
-                name = "_segment_" + str(i).zfill(3)
-                out_file.create_dataset(name, data=mini_dataset, dtype="float32")
-                i += 1
-            out_file.close()
+            with h5py.File(out_file_path, "w") as out_file:
+                i = 0
+                for mini_dataset in self.build_training_dataset(chassis, pose):
+                    name = "_segment_" + str(i).zfill(3)
+                    out_file.create_dataset(name, data=mini_dataset, dtype="float32")
+                    i += 1
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 

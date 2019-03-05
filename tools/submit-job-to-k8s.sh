@@ -3,6 +3,11 @@
 # Input.
 LOCAL_JOB_FILE="$1"
 
+# Current cluster resources (Show usage with "kubectl top nodes"):
+#   CPU Cores: 64
+#   Memory: 500GB
+#   Ephemeral Storage: 2TB
+
 # Config.
 IMAGE="xiangquan/spark:20190304_1922"
 K8S="https://180.76.98.43:6443"
