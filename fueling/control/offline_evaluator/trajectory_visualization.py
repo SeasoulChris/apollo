@@ -290,14 +290,16 @@ def load_model_refactor (filename):
                     weights=[np.array(net_params.layer[num_layer-1].layer_input_weight),np.array(net_params.layer[num_layer-1].layer_bias)]))
     return model, mean_param_norm, std_param_norm
 
-                
-def evaluate(timestr, h5_segments, dirs = '/mnt/bos/modules/control/evaluation_result/'):
+
+def evaluate(timestr, h5_segments, dirs = '/mnt/bos/modules/control/evaluation_result/'):               
+#def evaluate(timestr, h5_segments, dirs = 'fueling/control/data/evaluation_result/'):#local dirs 
 
     X, I_ground_truth, Y_imu, Y_point_mass, T_ground_truth = generate_evaluation_data(h5_segments[1])
 
-    model = load_model ('/mnt/bos/modules/control/dynamic_model_output/fnn_model_weights_'+timestr+'.h5')
-    
-    hf = h5py.File('/mnt/bos/modules/control/dynamic_model_output/fnn_model_norms_'+timestr+'.h5', 'r')
+    #model = load_model ('fueling/control/data/model_output/fnn_model_weights_'+timestr+'.h5') #local dirs 
+    #hf = h5py.File('fueling/control/data/model_output/fnn_model_norms_'+timestr+'.h5', 'r') #local dirs 
+    model = load_model ('/mnt/bos/modules/control/dynamic_model_output/fnn_model_weights_'+timestr+'.h5') #bos dirs 
+    hf = h5py.File('/mnt/bos/modules/control/dynamic_model_output/fnn_model_norms_'+timestr+'.h5', 'r') #bos dirs 
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
     hf.close()

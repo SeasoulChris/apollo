@@ -193,11 +193,13 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
     # print text_format.MessageToString(net_params)
 
-
+# bos dirs
 def mlp_keras(model_name = 'mlp_two_layer', out_dirs = '/mnt/bos/modules/control/dynamic_model_output/'):
-
+# local dirs
+#def mlp_keras(model_name = 'mlp_two_layer', out_dirs = 'fueling/control/data/model_output/'): 
     # NOTE: YOU MAY NEED TO CHANGE THIS PATH ACCORDING TO YOUR ENVIRONMENT
-    hdf5 = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/*.hdf5')
+    hdf5 = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
+    #hdf5 = glob.glob('fueling/control/data/hdf5/*/*/*.hdf5')
     print "hdf5 files are :"
     print hdf5
 
