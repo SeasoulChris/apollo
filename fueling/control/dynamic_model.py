@@ -17,18 +17,24 @@ class DynamicModel(BasePipeline):
 
     def run_test(self):
         self.model_training()
-        self.model_evalution()
+
+        files = glob.glob('/apollo/modules/data/fueling/control/data/model_output/*.h5')
+        h5s = glob.glob('/apollo/modules/data/fueling/control/data/hdf5_evaluation/*.hdf5')
+        self.model_evalution(files, h5s)
 
     def run_prod(self):
-        return self.run_test()
+        self.model_training()
+
+        files = glob.glob("/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5")
+        h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
+        self.model_evalution(files, h5s)
 
     def load_model(self, files, sub_module):
-        models = (spark_helper.get_context('Test')
-                    .parallelize(files)  #all the model files
-                    .filter(lambda x: sub_module in x) #model weights files
-                    .map(lambda x: self.extract_file_id(x, 'fnn_model_' + sub_module +'_', '.h5'))
-                    .distinct())
-        return models
+        return (
+            self.get_spark_context().parallelize(files)  # All the model files
+            .filter(lambda x: sub_module in x)  # Model weights files
+            .map(lambda x: self.extract_file_id(x, 'fnn_model_' + sub_module +'_', '.h5'))
+            .distinct())
 
     def extract_file_id(self, file_name, start_position, end_position):
         model_id = file_name.split(start_position)[1].split(end_position)[0]
@@ -50,25 +56,23 @@ class DynamicModel(BasePipeline):
     def model_training(self):
         mlp_keras.mlp_keras('mlp_two_layer')
 
-    def model_evalution(self):
-        files = glob.glob("/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5") #bos dirs
-        #files = glob.glob('fueling/control/data/model_output/*.h5') #local dirs
+    def model_evalution(self, files, h5s):
         print ("Files: %s" % files)
         model_weights = self.load_model(files, 'weights')
         model_norms = self.load_model(files, 'norms')
 
-        h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5') #bos dirs
-        #h5s = glob.glob('fueling/control/data/hdf5_evaluation/*.hdf5') #local dirs
-        records = (spark_helper.get_context('Test')
-                    .parallelize(h5s)  #all the records for evaluation
-                    .map(lambda h5:(self.extract_file_id(h5, '/hdf5_evaluation/', '.hdf5'), self.generate_segments(h5)))
-                    .cache())
+        records = (
+            self.get_spark_context().parallelize(h5s)  # All the records for evaluation
+            .map(lambda h5:(self.extract_file_id(h5, '/hdf5_evaluation/', '.hdf5'),
+                            self.generate_segments(h5)))
+            .cache())
         print('Get {} records'.format(records.count()))
 
-        models = (model_weights
-                    .intersection(model_norms)
-                    .cartesian(records)
-                    .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1])))
+        models = (
+            model_weights
+            .intersection(model_norms)
+            .cartesian(records)
+            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1])))
 
 if __name__ == '__main__':
     # Gather result to memory and print nicely.
