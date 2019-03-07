@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+import operator
+import os
+
+import pyspark_utils.op as spark_op
+
+from fueling.common.base_pipeline import BasePipeline
+import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
+import fueling.common.s3_utils as s3_utils
+
+
+class DumpFeatureProto(BasePipeline):
+    """Records to feature proto pipeline."""
+    def __init__(self):
+        BasePipeline.__init__(self, 'dump-feature-proto')
+
+    def run_test(self):
+        """Run test."""
+        sc = self.get_spark_context()
+        root_dir = '/apollo'
+        records_dir = sc.parallelize(['docs/demo_guide'])
+        origin_prefix = 'docs/demo_guide'
+        target_prefix = 'data/prediction/dump_feature_proto'
+        self.run(root_dir, records_dir, origin_prefix, target_prefix)
+
+    def run_prod(self):
+        """Run prod."""
+        root_dir = s3_utils.S3_MOUNT_PATH
+        bucket = 'apollo-platform'
+        origin_prefix = 'small-records/2019/2019-01'
+        target_prefix = 'modules/prediction/dump_feature_proto/2019/2019-01'
+
+        records_dir = (
+            # file, start with origin_prefix
+            s3_utils.list_files(bucket, origin_prefix)
+            # -> record_file
+            .filter(record_utils.is_record_file)
+            # -> record_dir
+            .map(os.path.dirname)
+            # -> record_dir, which is unique
+            .distinct())
+        self.run(root_dir, records_dir, origin_prefix, target_prefix)
+
+    def run(self, root_dir, records_dir_rdd, origin_prefix, target_prefix):
+        """Run the pipeline with given arguments."""
+        result = (
+            # record_dir
+            records_dir_rdd
+            # -> (record_dir, target_dir)
+            .map(lambda record_dir: (record_dir,
+                                     record_dir.replace(origin_prefix, target_prefix, 1)))
+            # -> (record_dir, target_dir), in absolute path
+            .map(lambda src_dst: (os.path.join(root_dir, src_dst[0]),
+                                  os.path.join(root_dir, src_dst[1])))
+            # -> (record_dir, target_dir), target_dir is created
+            .mapValues(file_utils.makedirs)
+            # -> 0/1
+            .map(spark_op.do_tuple(self.process_dir))
+            .cache())
+        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+
+    @staticmethod
+    def process_dir(src_dir, target_dir):
+        """Call prediction C++ code."""
+        command = (
+            'cd /apollo && '
+            'bash modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
+            '"{}" "{}"'.format(src_dir, target_dir))
+        if os.system(command) == 0:
+            glog.info('Successfuly processed {} to {}'.format(src_dir, target_dir))
+            return 1
+        else:
+            glog.error('Failed to process {} to {}'.format(src_dir, target_dir))
+        return 0
+
+
+if __name__ == '__main__':
+    DumpFeatureProto().run_test()

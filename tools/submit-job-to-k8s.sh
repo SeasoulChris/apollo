@@ -9,7 +9,7 @@ LOCAL_JOB_FILE="$1"
 #   Ephemeral Storage: 2TB
 
 # Config.
-IMAGE="xiangquan/spark:20190304_1922"
+IMAGE="xiangquan/spark:20190306_1513"
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
 EXECUTORS=16
