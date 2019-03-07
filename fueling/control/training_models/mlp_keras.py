@@ -58,16 +58,13 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-dim_input = dim["pose"] + dim["incremental"] + \
-    dim["control"]  # accounts for mps
+dim_input = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
 dim_output = dim["incremental"]  # the speed mps is also output
 input_features = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
@@ -75,16 +72,14 @@ input_features = ["speed mps", "speed incremental",
 
 def setup_model(model_name):
     if model_name == 'mlp_three_layer':
-        with open('fueling/control/conf/mlp_three_layer.json', 'r') as f:
-            model = model_from_json(f.read())
+        with open('fueling/control/conf/mlp_three_layer.json', 'r') as fin:
+            model = model_from_json(fin.read())
         print ('Load Three-layer MLP Model')
     else:
-        with open('fueling/control/conf/mlp_two_layer.json', 'r') as f:
-            model = model_from_json(f.read())
+        with open('fueling/control/conf/mlp_two_layer.json', 'r') as fin:
+            model = model_from_json(fin.read())
         print ('Load Two-layer MLP Model')
-    model.compile(loss='mean_squared_error',
-                  optimizer='adam',
-                  metrics=['mse'])
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mse'])
     return model
 
 
@@ -92,13 +87,9 @@ def generate_segments(h5s):
     segments = []
     for h5 in h5s:
         print('Loading {}'.format(h5))
-        with h5py.File(h5, 'r+') as f:
-            names = [n for n in f.keys()]
-            if len(names) < 1:
-                continue
-            for i in range(len(names)):
-                ds = np.array(f[names[i]])
-                segments.append(ds)
+        with h5py.File(h5, 'r+') as fin:
+            for ds in fin.itervalues():
+                segments.append(np.array(ds))
     shuffle(segments)
     print('Segments count: ', len(segments))
     return segments
@@ -106,16 +97,15 @@ def generate_segments(h5s):
 
 def generate_data(segments):
     total_len = 0
-    for i in range(len(segments)):
-        total_len += (segments[i].shape[0] - 2)
+    for segment in segments:
+        total_len += (segment.shape[0] - 2)
     print "total_len = ", total_len
     X = np.zeros([total_len, dim_input])
     Y = np.zeros([total_len, dim_output])
     print "Y size = ", Y.shape
     shuffle(segments)
     i = 0
-    for j in range(len(segments)):
-        segment = segments[j]
+    for segment in segments:
         for k in range(segment.shape[0] - 1):
             if k > 0:
                 X[i, 0] = segment[k-1, 14]  # speed mps
@@ -193,24 +183,15 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
     # print text_format.MessageToString(net_params)
 
-# bos dirs
-def mlp_keras(model_name = 'mlp_two_layer', out_dirs = '/mnt/bos/modules/control/dynamic_model_output/'):
-# local dirs
-#def mlp_keras(model_name = 'mlp_two_layer', out_dirs = 'fueling/control/data/model_output/'): 
-    # NOTE: YOU MAY NEED TO CHANGE THIS PATH ACCORDING TO YOUR ENVIRONMENT
-    hdf5 = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
-    #hdf5 = glob.glob('fueling/control/data/hdf5/*/*/*.hdf5')
-    print "hdf5 files are :"
-    print hdf5
-
+def mlp_keras(hdf5, out_dirs, model_name = 'mlp_two_layer'):
+    print "hdf5 files are:", hdf5
     segments = generate_segments(hdf5)
     X, Y = generate_data(segments)
 
     print "X shape = ", X.shape
     print "Y shape = ", Y.shape
 
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=0.2, random_state=42)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
     print "X_train shape = ", X_train.shape
     print "Y_train shape = ", Y_train.shape

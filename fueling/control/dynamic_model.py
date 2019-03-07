@@ -16,14 +16,19 @@ class DynamicModel(BasePipeline):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
-        self.model_training()
+        hdf5 = glob.glob('/apollo/modules/data/fueling/control/data/hdf5/*/*/*.hdf5')
+        out_dirs = '/apollo/modules/data/fueling/control/data/model_output'
+        mlp_keras.mlp_keras(hdf5, out_dirs)
 
         files = glob.glob('/apollo/modules/data/fueling/control/data/model_output/*.h5')
         h5s = glob.glob('/apollo/modules/data/fueling/control/data/hdf5_evaluation/*.hdf5')
         self.model_evalution(files, h5s)
 
     def run_prod(self):
-        self.model_training()
+        hdf5 = glob.glob(
+            '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
+        out_dirs = '/mnt/bos/modules/control/dynamic_model_output'
+        mlp_keras.mlp_keras(hdf5, out_dirs)
 
         files = glob.glob("/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5")
         h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
@@ -52,9 +57,6 @@ class DynamicModel(BasePipeline):
                 segments.append(ds)
         print('Segments count: ', len(segments))
         return segments
-
-    def model_training(self):
-        mlp_keras.mlp_keras('mlp_two_layer')
 
     def model_evalution(self, files, h5s):
         print ("Files: %s" % files)
