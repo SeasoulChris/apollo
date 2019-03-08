@@ -99,22 +99,22 @@ class SampleSetFeatureExtraction(BasePipeline):
             .keys())
 
         data_segment_rdd = (
-            # ((dir,time_stamp_per_min), msg)
+            # -> ((dir, timestamp_per_min), msg)
             spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # ((dir,time_stamp_per_min), proto)
-            .mapValues(record_utils.message_to_proto)
-            # ((dir,time_stamp_per_min), (chassis_proto or pose_proto))
-            .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
-                          feature_extraction_utils.extend)
-            # -> (key, (chassis_proto_list, pose_proto_list))
-            .mapValues(feature_extraction_utils.process_seg)
+            # -> ((dir, timestamp_per_min), msgs)
+            .groupByKey()
+            # -> ((dir, timestamp_per_min), proto_dict)
+            .mapValues(record_utils.messages_to_proto_dict())
+            # -> (key, (chassis_list, pose_list))
+            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
+                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
             # ->(key,  (paired_pose_chassis))
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
-            # ->((dir, time_stamp_sec), data_point)
+            # ->((dir, timestamp_sec), data_point)
             .map(feature_extraction_utils.get_data_point)
-            # -> ((dir,feature_key),(time_stamp_sec,data_point))
+            # -> ((dir, feature_key), (timestamp_sec, data_point))
             .map(feature_extraction_utils.feature_key_value)
-            # -> ((dir,feature_key), list of (time_stamp_sec,data_point))
+            # -> ((dir, feature_key), list of (timestamp_sec, data_point))
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
                           feature_extraction_utils.extend)
             # generate segment w.r.t feature keys

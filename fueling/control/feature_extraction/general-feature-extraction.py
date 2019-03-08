@@ -108,27 +108,17 @@ class GeneralFeatureExtraction(BasePipeline):
             # -> dir_segment
             .keys())
 
-        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments).cache()
-
-        def _parse_and_group_msgs(key_to_msgs):
-            return (
-                # (key, msg)
-                key_to_msgs
-                # -> (key, proto)
-                .mapValues(record_utils.message_to_proto)
-                # -> (key, protos)
-                .groupByKey()
-                # -> (key, proto_list)
-                .mapValues(list))
-
-        chassises = _parse_and_group_msgs(
-            dir_to_msgs.filter(spark_op.filter_value(
-                lambda msg: msg.topic == record_utils.CHASSIS_CHANNEL)))
-        poses = _parse_and_group_msgs(
-            dir_to_msgs.filter(spark_op.filter_value(
-                lambda msg: msg.topic == record_utils.LOCALIZATION_CHANNEL)))
-
-        result = chassises.join(poses).map(_gen_hdf5)
+        result = (
+            # -> (dir_segment, msg)
+            spark_op.filter_keys(dir_to_msgs, valid_segments)
+            # -> (dir_segment, msgs)
+            .groupByKey()
+            # -> (dir_segment, proto_dict)
+            .mapValues(record_utils.messages_to_proto_dict())
+            # -> (dir_segment, (chassis_list, pose_list))
+            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
+                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
+            .map(_gen_hdf5)
         glog.info('Generated %d h5 files!' % result.count())
 
     @staticmethod
@@ -163,9 +153,6 @@ class GeneralFeatureExtraction(BasePipeline):
         """align chassis and pose data and build data segment"""
         max_phase_delta = 0.01
         min_segment_length = 10
-
-        chassis.sort(key=lambda x: x.header.timestamp_sec)
-        pose.sort(key=lambda x: x.header.timestamp_sec)
         # In the record, control and chassis always have same number of frames
         times_pose = np.array([x.header.timestamp_sec for x in pose])
         times_cs = np.array([x.header.timestamp_sec for x in chassis])

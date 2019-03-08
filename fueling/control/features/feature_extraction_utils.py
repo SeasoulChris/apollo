@@ -192,7 +192,7 @@ def gen_segment(elem):
     pre_time = elem[0][0]
     data_set = np.array(elem[0][1])
     for i in range(1, len(elem)):
-        if (elem[i][0]-pre_time) <= 2*MAX_PHASE_DELTA:
+        if (elem[i][0] - pre_time) <= 2 * MAX_PHASE_DELTA:
             data_set = np.vstack([data_set, elem[i][1]])
         else:
             if i > MIN_SEGMENT_LENGTH:

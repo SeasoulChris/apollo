@@ -1,9 +1,9 @@
 #!/usr/bin/env python
+
 import glob
 
 import h5py
 import numpy as np
-import pyspark_utils.helper as spark_helper
 
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
 import fueling.control.training_models.mlp_keras as mlp_keras
@@ -47,19 +47,13 @@ class DynamicModel(BasePipeline):
             .distinct())
 
     def extract_file_id(self, file_name, start_position, end_position):
-        model_id = file_name.split(start_position)[1].split(end_position)[0]
-        return model_id
+        return file_name.split(start_position)[1].split(end_position)[0]
 
     def generate_segments(self, h5_file):
         segments = []
         print 'Loading {}'.format(h5_file)
-        with h5py.File(h5_file, 'r+') as f:
-            names = [n for n in f.keys()]
-            if len(names) < 1:
-                return
-            for i in range(len(names)):
-                data_segment = np.array(f[names[i]])
-                segments.append(data_segment)
+        with h5py.File(h5_file, 'r+') as fin:
+            segments = [np.array(segment) for segment in fin.values()]
         print 'Segments count: ', len(segments)
         return segments
 

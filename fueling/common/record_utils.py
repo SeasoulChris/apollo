@@ -1,6 +1,7 @@
 """Cyber records related utils."""
 #!/usr/bin/env python
 
+import collections
 import fnmatch
 import os
 
@@ -102,3 +103,20 @@ def message_to_proto(py_bag_message):
     proto = proto_type()
     proto.ParseFromString(py_bag_message.message)
     return proto
+
+def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
+    """py_bag_messages -> {topic:[protos]]."""
+    def converter_func(py_bag_messages):
+        """Wrapper function."""
+        if sort_by_msg_time:
+            py_bag_messages = sorted(py_bag_messages, key=lambda msg: msg.timestamp)
+
+        result = collections.defaultdict(list)
+        for msg in py_bag_messages:
+            result[msg.topic].append(message_to_proto(msg))
+
+        if sort_by_header_time:
+            for topic, protos in result.iteritems():
+                result[topic] = sorted(protos, key=lambda proto: proto.header.timestamp_sec)
+        return result
+    return converter_func
