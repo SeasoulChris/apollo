@@ -61,8 +61,10 @@ class SampleSetFeatureExtraction(BasePipeline):
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
         # -> (dir, record), in absolute path
-        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1])))
+        dir_to_records = (
+            dir_to_records_rdd
+            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1]))
+            .cache())
 
         selected_vehicles = (
             # -> (dir, vehicle)
@@ -72,10 +74,6 @@ class SampleSetFeatureExtraction(BasePipeline):
             # -> dir
             .keys())
 
-        glog.info('Finished %d selected_vehicles!' % selected_vehicles.count())
-        glog.info('First elem in selected_vehicles is : %s ' %
-                  selected_vehicles.first())
-
         channels = {record_utils.CHASSIS_CHANNEL,
                     record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
@@ -83,8 +81,8 @@ class SampleSetFeatureExtraction(BasePipeline):
             # -> (dir, msg)
             .flatMapValues(record_utils.read_record(channels))
             # -> (dir_segment, msg)
-            .map(feature_extraction_utils.gen_pre_segment))
-        glog.info('Finished %d dir_to_msgs!' % dir_to_msgs.count())
+            .map(feature_extraction_utils.gen_pre_segment)
+            .cache())
 
         valid_segments = (
             dir_to_msgs
@@ -100,13 +98,9 @@ class SampleSetFeatureExtraction(BasePipeline):
             # -> dir_segment
             .keys())
 
-        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments)
-
-        glog.info('Finished %d valid_segments!' % dir_to_msgs.count())
-
-        data_rdd = (
+        data_segment_rdd = (
             # ((dir,time_stamp_per_min), msg)
-            dir_to_msgs
+            spark_op.filter_keys(dir_to_msgs, valid_segments)
             # ((dir,time_stamp_per_min), proto)
             .mapValues(record_utils.message_to_proto)
             # ((dir,time_stamp_per_min), (chassis_proto or pose_proto))
@@ -117,24 +111,12 @@ class SampleSetFeatureExtraction(BasePipeline):
             # ->(key,  (paired_pose_chassis))
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # ->((dir, time_stamp_sec), data_point)
-            .map(feature_extraction_utils.get_data_point))
-
-        glog.info('Finished %d data_point!' % data_rdd.count())
-
-        # data feature set
-        featured_data_rdd = (
-            #((dir, time_stamp_sec), data_point)
-            data_rdd
+            .map(feature_extraction_utils.get_data_point)
             # -> ((dir,feature_key),(time_stamp_sec,data_point))
             .map(feature_extraction_utils.feature_key_value)
             # -> ((dir,feature_key), list of (time_stamp_sec,data_point))
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
-                          feature_extraction_utils.extend))
-
-        glog.info('Finished %d featured_data_rdd!' % featured_data_rdd.count())
-
-        data_segment_rdd = (
-            featured_data_rdd
+                          feature_extraction_utils.extend)
             # generate segment w.r.t feature keys
             .mapValues(feature_extraction_utils.gen_segment)
             # write all segment into a hdf5 file
