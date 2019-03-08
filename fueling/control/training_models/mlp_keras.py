@@ -1,32 +1,33 @@
 #!/usr/bin/env python
 
-from time import time
-import os
-import glob
 from datetime import datetime
 from random import choice
 from random import randint
 from random import shuffle
+from time import time
+import glob
+import os
+
 from keras.callbacks import ModelCheckpoint
-from keras.metrics import mse
-from keras.models import Sequential, Model
-from keras.models import model_from_json
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Dense, Input
 from keras.layers import Activation
 from keras.layers import Dropout
-from keras.utils import np_utils
+from keras.metrics import mse
+from keras.models import Sequential, Model
+from keras.models import model_from_json
 from keras.regularizers import l1, l2
-from sklearn.model_selection import train_test_split
+from keras.utils import np_utils
 from scipy.signal import savgol_filter
-import h5py
-import numpy as np
+from sklearn.model_selection import train_test_split
 import google.protobuf.text_format as text_format
+import h5py
 import matplotlib.pyplot as plt
+import numpy as np
 
-import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 from fueling.control.features.parameters_training import dim
+import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -177,7 +178,9 @@ def save_model(model, param_norm, filename):
 
 def mlp_keras(hdf5, out_dirs, model_name = 'mlp_two_layer'):
     print "hdf5 files are:", hdf5
-    segments = generate_segments(hdf5)
+    mlp_keras_segments(generate_segments(hdf5), out_dirs, model_name)
+
+def mlp_keras_segments(segments, out_dirs, model_name = 'mlp_two_layer'):
     x_data, y_data = generate_data(segments)
 
     print "x shape = ", x_data.shape

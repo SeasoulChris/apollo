@@ -73,7 +73,8 @@ class DynamicModel(BasePipeline):
             model_weights
             .intersection(model_norms)
             .cartesian(records)
-            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1], model_dirs, grading_dirs)))
+            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1],
+                                                                     model_dirs, grading_dirs)))
 
 
 if __name__ == '__main__':
