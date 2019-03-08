@@ -17,12 +17,12 @@ acc_max_condition = 5.0
 train_percetage = 0.9
 
 # Mkz7
-segment_brake_list = np.linspace(-35.0, -21.0, num=11).tolist()
-segment_throttle_list = np.linspace(18.0, 60.0, num=11).tolist()
+# segment_brake_list = np.linspace(-35.0, -21.0, num=11).tolist()
+# segment_throttle_list = np.linspace(18.0, 60.0, num=11).tolist()
 
 # # transient
-# segment_brake_list = np.linspace(-30.0, -7.0, num=11).tolist()
-# segment_throttle_list = np.linspace(5.0, 30.0, num=11).tolist()
+segment_brake_list = np.linspace(-30.0, -7.0, num=11).tolist()
+segment_throttle_list = np.linspace(5.0, 30.0, num=11).tolist()
 
 segment_speed_list = np.linspace(0.0, 18.0, num=11).tolist()
 segment_cmd_list = segment_brake_list + segment_throttle_list

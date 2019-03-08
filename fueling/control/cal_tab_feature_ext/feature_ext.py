@@ -18,7 +18,7 @@ import fueling.common.colored_glog as glog
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
-WANTED_VEHICLE = 'Mkz7'
+WANTED_VEHICLE = 'Transit'
 MIN_MSG_PER_SEGMENT = 1
 
 

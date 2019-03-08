@@ -28,10 +28,10 @@ FILENAME_CONTROL_CONF = "/mnt/bos/modules/control/common/control_conf.pb.txt"
 proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
 
 # TODO change based on vehicle model
-THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+THROTTLE_DEADZONE = 5.0  # CONTROL_CONF.lon_controller_conf.throttle_deadzone
 THROTTLE_MAX = FEATURE_KEY.throttle_max
 
-BRAKE_DEADZONE = CONTROL_CONF.lon_controller_conf.brake_deadzone
+BRAKE_DEADZONE = 7.0  # CONTROL_CONF.lon_controller_conf.brake_deadzone
 BRAKE_MAX = FEATURE_KEY.brake_max
 
 SPEED_SLICE = FEATURE_KEY.speed_slice

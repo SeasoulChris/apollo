@@ -16,7 +16,7 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-WANTED_VEHICLE = 'Mkz7'
+WANTED_VEHICLE = 'Transit'
 MIN_MSG_PER_SEGMENT = 100
 
 
@@ -37,7 +37,8 @@ class SampleSetFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(
+            records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -49,8 +50,10 @@ class SampleSetFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
+        complete_dirs = files.filter(
+            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(
+            record_utils.is_record_file).keyBy(os.path.dirname)
         root_dir = s3_utils.S3_MOUNT_PATH
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
@@ -70,9 +73,11 @@ class SampleSetFeatureExtraction(BasePipeline):
             .keys())
 
         glog.info('Finished %d selected_vehicles!' % selected_vehicles.count())
-        glog.info('First elem in selected_vehicles is : %s ' % selected_vehicles.first())
+        glog.info('First elem in selected_vehicles is : %s ' %
+                  selected_vehicles.first())
 
-        channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
+        channels = {record_utils.CHASSIS_CHANNEL,
+                    record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
             spark_op.filter_keys(dir_to_records, selected_vehicles)
             # -> (dir, msg)
