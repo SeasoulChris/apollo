@@ -22,10 +22,10 @@ WANTED_VEHICLE = 'Mkz7'
 MIN_MSG_PER_SEGMENT = 1
 
 
-class CalTabFeatureExt(BasePipeline):
+class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'feature_ext')
+        BasePipeline.__init__(self, 'calibration_table_feature_extraction')
 
     def run_test(self):
         """Run test."""
@@ -39,8 +39,7 @@ class CalTabFeatureExt(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -52,11 +51,8 @@ class CalTabFeatureExt(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
-        root_dir = s3_utils.S3_MOUNT_PATH
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
@@ -64,7 +60,7 @@ class CalTabFeatureExt(BasePipeline):
         """ processing RDD """
         # -> (dir, record), in absolute path
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1])))
+                                                           os.path.join(root_dir, x[1]))).cache()
 
         selected_vehicles = (
             # -> (dir, vehicle)
@@ -74,10 +70,6 @@ class CalTabFeatureExt(BasePipeline):
             # -> dir
             .keys())
 
-        glog.info('Finished %d selected_vehicles!' % selected_vehicles.count())
-        glog.info('First elem in selected_vehicles is : %s ' %
-                  selected_vehicles.first())
-
         channels = {record_utils.CHASSIS_CHANNEL,
                     record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
@@ -85,8 +77,8 @@ class CalTabFeatureExt(BasePipeline):
             # -> (dir, msg)
             .flatMapValues(record_utils.read_record(channels))
             # -> (dir_segment, msg)
-            .map(feature_extraction_utils.gen_pre_segment))
-        glog.info('Finished %d dir_to_msgs!' % dir_to_msgs.count())
+            .map(feature_extraction_utils.gen_pre_segment)
+            .cache())
 
         valid_segments = (
             dir_to_msgs
@@ -96,28 +88,24 @@ class CalTabFeatureExt(BasePipeline):
             .reduceByKey(operator.add)
             # -> (dir_segment, topic_counter)
             .filter(spark_op.filter_value(
-                    lambda counter:
+                lambda counter:
                     counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
                     counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
             # -> dir_segment
             .keys())
 
-        dir_to_msgs = spark_op.filter_keys(dir_to_msgs, valid_segments)
-
-        glog.info('Finished %d valid_segments!' % dir_to_msgs.count())
-
-        data_rdd = (dir_to_msgs
-                    # ((dir,time_stamp_per_min), proto)
+        data_rdd = (spark_op.filter_keys(dir_to_msgs, valid_segments)
+                    # ((dir, time_stamp_per_min), proto)
                     .mapValues(record_utils.message_to_proto)
-                    # ((dir,time_stamp_per_min), (chassis_proto or pose_proto))
+                    # ((dir, time_stamp_per_min), (chassis_proto or pose_proto))
                     .combineByKey(feature_extraction_utils.to_list,
                                   feature_extraction_utils.append, feature_extraction_utils.extend)
                     # -> (key, (chassis_proto_list, pose_proto_list))
                     .mapValues(feature_extraction_utils.process_seg)
-                    # ((folder,time/min),(chassis,pose))
+                    # ((folder, time/min), (chassis,pose))
                     .mapValues(feature_extraction_utils.pair_cs_pose))
 
-        # ((folder,time/min),feature_matrix)
+        # ((folder, time/min), feature_matrix)
         calibration_table_rdd = (data_rdd
                                  # feature generator
                                  .mapValues(calibration_table_utils.feature_generate)
@@ -133,9 +121,8 @@ class CalTabFeatureExt(BasePipeline):
                                  .map(lambda elem: calibration_table_utils.write_h5_train_test
                                       (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
-        glog.info('Finished %d calibration_table_rdd!' %
-                  calibration_table_rdd.count())
+        glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
 
 
 if __name__ == '__main__':
-    CalTabFeatureExt().run_test()
+    CalibrationTableFeatureExtraction().run_test()
