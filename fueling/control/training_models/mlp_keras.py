@@ -42,16 +42,20 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(
+            os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(
+            os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
+DIM_INPUT = dim["pose"] + dim["incremental"] + \
+    dim["control"]  # accounts for mps
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
+TIME_STEPS = 3
 
 
 def setup_model(model_name):
@@ -61,7 +65,7 @@ def setup_model(model_name):
     """
     model = Sequential()
     model.add(Dense(10,
-                    input_dim=6,
+                    input_dim=5,
                     init='he_normal',
                     activation='relu',
                     W_regularizer=l2(0.001)))
@@ -86,31 +90,40 @@ def generate_segments(h5s):
         print('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as fin:
             for ds in fin.itervalues():
-                segments.append(np.array(ds))
-    shuffle(segments)
+                if len(segments) == 0:
+                    segments.append(np.array(ds))
+                else:
+                    segments[-1] = np.concatenate((segments[-1],
+                                                   np.array(ds)), axis=0)
+    # shuffle(segments)
     print('Segments count: ', len(segments))
     return segments
 
 
 def generate_data(segments):
     total_len = 0
+    TIME_STEPS = 3
     for segment in segments:
-        total_len += (segment.shape[0] - 2)
+        total_len += (segment.shape[0] - TIME_STEPS)
     print "total_len = ", total_len
     x_data = np.zeros([total_len, DIM_INPUT])
     y_data = np.zeros([total_len, DIM_OUTPUT])
-    shuffle(segments)
+    # shuffle(segments)
     i = 0
     for segment in segments:
-        for k in range(segment.shape[0] - 1):
-            if k > 0:
-                x_data[i, 0] = segment[k-1, 14]  # speed mps
-                x_data[i, 1] = segment[k-1, 8] * \
-                    np.cos(segment[k-1, 0]) + segment[k-1, 9] * \
-                    np.sin(segment[k-1, 0])  # acc
-                x_data[i, 3] = segment[k-1, 15]  # control from chassis
-                x_data[i, 4] = segment[k-1, 16]  # control from chassis
-                x_data[i, 5] = segment[k-1, 17]  # control from chassis
+        for k in range(segment.shape[0]):
+            if k >= TIME_STEPS:
+                x_data[i, 0] = segment[k-TIME_STEPS, 14]  # speed mps
+                x_data[i, 1] = segment[k-TIME_STEPS, 8] * \
+                    np.cos(segment[k-TIME_STEPS, 0]) + segment[k-TIME_STEPS, 9] * \
+                    np.sin(segment[k-TIME_STEPS, 0])  # acc
+                x_data[i, 2] = segment[k-TIME_STEPS, 13]  # angular speed
+                # control from chassis
+                x_data[i, 3] = segment[k-TIME_STEPS, 15]
+                # control from chassis
+                x_data[i, 4] = segment[k-TIME_STEPS, 16]
+                # control from chassis
+                x_data[i, 5] = segment[k-TIME_STEPS, 17]
                 y_data[i, 0] = segment[k, 8] * \
                     np.cos(segment[k, 0]) + segment[k, 9] * \
                     np.sin(segment[k, 0])  # acc next
@@ -176,31 +189,31 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
     # print text_format.MessageToString(net_params)
 
-def mlp_keras(hdf5, out_dirs, model_name = 'mlp_two_layer'):
+
+def mlp_keras(hdf5, out_dirs, model_name='mlp_two_layer'):
     print "hdf5 files are:", hdf5
     mlp_keras_segments(generate_segments(hdf5), out_dirs, model_name)
 
 def mlp_keras_segments(segments, out_dirs, model_name = 'mlp_two_layer'):
     x_data, y_data = generate_data(segments)
-
+    param_norm = get_param_norm(x_data)
+    x_data = (x_data - param_norm[0]) / param_norm[1]
+    x_data = x_data[:, [0, 1, 3, 4, 5]]
+    y_data[:, 0] = (y_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
+    y_data[:, 1] = (y_data[:, 1] - param_norm[0][2]) / param_norm[1][2]
     print "x shape = ", x_data.shape
     print "y shape = ", y_data.shape
 
-    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
-
+    x_train, x_test, y_train, y_test = train_test_split(
+        x_data, y_data, test_size=0.2, random_state=42)
     print "x_train shape = ", x_train.shape
     print "y_train shape = ", y_train.shape
 
-    param_norm = get_param_norm(x_train)
-    x_train = (x_train - param_norm[0]) / param_norm[1]
-
     model = setup_model(model_name)
-    model.fit(x_train, y_train,
-              shuffle=True,
-              nb_epoch=30,
-              batch_size=32)
-
-    x_test = (x_test - param_norm[0]) / param_norm[1]
+    training_history = model.fit(x_train, y_train,
+                                 shuffle=True,
+                                 nb_epoch=30,
+                                 batch_size=32)
 
     evaluation = model.evaluate(x_test, y_test)
     print "\nModel evaluation: "
@@ -208,12 +221,12 @@ def mlp_keras_segments(segments, out_dirs, model_name = 'mlp_two_layer'):
     print "MSE on testing data is ", evaluation[1]
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-    save_model(model, param_norm, out_dirs + 'fnn_model_' + timestr + '.bin')
+    save_model(model, param_norm, out_dirs + 'mlp/fnn_model_' + timestr + '.bin')
 
     # save norm_params to hdf5
-    h5_file = h5py.File(out_dirs + 'fnn_model_norms_' + timestr + '.h5', 'w')
+    h5_file = h5py.File(out_dirs + 'mlp/fnn_model_norms_' + timestr + '.h5', 'w')
     h5_file.create_dataset('mean', data=param_norm[0])
     h5_file.create_dataset('std', data=param_norm[1])
     h5_file.close()
 
-    model.save(out_dirs + 'fnn_model_weights_' + timestr + '.h5')
+    model.save(out_dirs + 'mlp/fnn_model_weights_' + timestr + '.h5')

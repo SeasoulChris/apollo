@@ -18,26 +18,24 @@ class DynamicModel(BasePipeline):
     def run_test(self):
         hdf5 = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5')
-        model_dirs = '/apollo/modules/data/fuel/fueling/control/data/model_output/'
-        grading_dirs = '/apollo/modules/data/fuel/fueling/control/data/evaluation_result/'
-        mlp_keras.mlp_keras(hdf5, model_dirs)
+        dirs = '/apollo/modules/data/fuel/fueling/control/data/'
+        mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
-            '/apollo/modules/data/fuel/fueling/control/data/model_output/*.h5')
+            '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
         h5s = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/hdf5_evaluation/*.hdf5')
-        self.model_evalution(files, h5s, model_dirs, grading_dirs)
+        self.model_evalution(files, h5s, dirs)
 
     def run_prod(self):
         hdf5 = glob.glob(
             '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
-        model_dirs = '/mnt/bos/modules/control/dynamic_model_output'
-        grading_dirs = '/mnt/bos/modules/control/evaluation_result'
-        mlp_keras.mlp_keras(hdf5, model_dirs)
+        dirs = '/mnt/bos/modules/control/'
+        mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
             "/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5")
         h5s = glob.glob(
             '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
-        self.model_evalution(files, h5s, model_dirs, grading_dirs)
+        self.model_evalution(files, h5s, dirs)
 
     def load_model(self, files, sub_module):
         return (
@@ -57,7 +55,7 @@ class DynamicModel(BasePipeline):
         print 'Segments count: ', len(segments)
         return segments
 
-    def model_evalution(self, files, h5s, model_dirs, grading_dirs):
+    def model_evalution(self, files, h5s, dirs):
         print ("Files: %s" % files)
         model_weights = self.load_model(files, 'weights')
         model_norms = self.load_model(files, 'norms')
@@ -73,8 +71,7 @@ class DynamicModel(BasePipeline):
             model_weights
             .intersection(model_norms)
             .cartesian(records)
-            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1],
-                                                                     model_dirs, grading_dirs)))
+            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1], dirs)))
 
 
 if __name__ == '__main__':
