@@ -1,0 +1,25 @@
+name: py36
+dependencies:
+  - python = 3.6
+  - pyspark = 2.4.0
+
+  # Google infra
+  - gflags
+  - glog
+  - protobuf
+  - tensorflow-gpu
+
+  # Data science
+  - boto3
+  - h5py
+  - keras-gpu
+  - matplotlib
+  - numpy
+  - scikit-learn
+
+  # Other.
+  - termcolor
+
+  - pip:
+    - pylint
+    - pyspark-utils

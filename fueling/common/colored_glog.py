@@ -37,8 +37,8 @@ def _colored_check(msg):
 
 
 def debug(msg, *args, **kwargs):
-    """Equivalent to glog.debug()."""
-    glog.debug(_colored_debug(msg), *args, **kwargs)
+    """Equivalent to glog.debug(). But debug() doesn't show it by default, we use info() instead."""
+    glog.info(_colored_debug(msg), *args, **kwargs)
 
 
 def info(msg, *args, **kwargs):
