@@ -12,6 +12,10 @@ import glog
 import termcolor
 
 
+def _colored_debug(msg):
+    return termcolor.colored(msg, 'grey') if msg else None
+
+
 def _colored_info(msg):
     return termcolor.colored(msg, 'blue') if msg else None
 
@@ -30,6 +34,11 @@ def _colored_fatal(msg):
 
 def _colored_check(msg):
     return _colored_fatal(msg)
+
+
+def debug(msg, *args, **kwargs):
+    """Equivalent to glog.debug()."""
+    glog.debug(_colored_debug(msg), *args, **kwargs)
 
 
 def info(msg, *args, **kwargs):
