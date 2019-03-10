@@ -96,9 +96,6 @@ class GenerateSmallRecords(BasePipeline):
     def run(self, root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
-        partitions = int(os.environ.get('APOLLO_EXECUTORS', 20)) * 10
-        glog.info('Run pipeline in {} partitions'.format(partitions))
-
         # (task_dir, record)
         todo_jobs = spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
         tasks_count = (

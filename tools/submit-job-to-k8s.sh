@@ -44,6 +44,7 @@ popd
 sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
+    --conf spark.default.parallelism="${EXECUTORS}" \
     --conf spark.driver.memory="${DRIVER_MEMORY}" \
     --conf spark.executor.instances="${EXECUTORS}" \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
