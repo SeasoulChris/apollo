@@ -1,23 +1,28 @@
 #!/usr/bin/env bash
 
-SERVICE=$1
-PORT=$2
-NAMESPACE=$3
+PORT=$1
+NAMESPACE=$2
 
 function usage() {
-  echo "$0 <SERVICE> <PORT> [NAMESPACE=default]"
-  echo "Available services are:"
-  kubectl get svc
+  echo "$0 <PORT> [NAMESPACE=default]"
+  exit 0
 }
 
-if [ -z "${SERVICE}" ]; then
-  usage
-elif [ -z "${PORT}" ]; then
+if [ -z "${PORT}" ]; then
   usage
 else
   if [ -z "${NAMESPACE}" ]; then
     NAMESPACE=default
   fi
-  echo "Please visit http://localhost:8001/api/v1/namespaces/${NAMESPACE}/services/http:${SERVICE}:${PORT}/proxy/"
-  kubectl proxy
+
+  SERVICES=$(kubectl get svc | grep "${PORT}/" | awk '{print $1}')
+  if [ -z "${SERVICES}" ]; then
+    echo "Cannot found any service with port ${PORT}"
+  else
+    echo "Available services:"
+    while read -r service; do
+      echo "*    http://localhost:8001/api/v1/namespaces/${NAMESPACE}/services/http:${service}:${PORT}/proxy/"
+    done <<< "${SERVICES}"
+    kubectl proxy
+  fi
 fi

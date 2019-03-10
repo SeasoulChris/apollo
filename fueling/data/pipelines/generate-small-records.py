@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import errno
 import os
 
 import pyspark_utils.op as spark_op
@@ -120,7 +119,6 @@ class GenerateSmallRecords(BasePipeline):
             .groupByKey()
             # -> (target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
-            .persist()
             # -> target_file
             .map(GenerateSmallRecords.process_file)
             # -> target_file
@@ -158,16 +156,10 @@ class GenerateSmallRecords(BasePipeline):
         target_file, records = input
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
-        if os.path.exists(target_file) and record_utils.read_record_header(target_file) is not None:
+        if os.path.exists(target_file):
             glog.info('Skip generating exist record {}'.format(target_file))
             return target_file
-
-        try:
-            os.makedirs(os.path.dirname(target_file))
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
-
+        file_utils.makedirs(os.path.dirname(target_file))
         _, start_time, end_time = records[0]
         reader = record_utils.read_record(GenerateSmallRecords.CHANNELS, start_time, end_time)
         writer = RecordWriter(0, 0)

@@ -33,17 +33,17 @@ def is_record_file(path):
     """Naive check if a path is a record."""
     return path.endswith('.record') or fnmatch.fnmatch(path, '*.record.?????')
 
-def read_record(channels, start_time_ns=0, end_time_ns=18446744073709551615):
-    """record_path -> [PyBagMessage, ...] or None if error occurs."""
+def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615):
+    """record_path -> [PyBagMessage, ...] or [] if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
-        glog.info('Read record {}'.format(record_path))
+        glog.debug('Read record {}'.format(record_path))
         try:
             reader = RecordReader(record_path)
-            channel_set = {
-                channel
-                for channel in set(channels).intersection(reader.get_channellist())
-                if reader.get_messagenumber(channel) > 0}
+            channel_set = {channel for channel in reader.get_channellist()
+                           if reader.get_messagenumber(channel) > 0}
+            if channels:
+                channel_set.intersection_update(channels)
             if channel_set:
                 return [msg for msg in reader.read_messages() if (
                     msg.topic in channel_set and
@@ -58,7 +58,7 @@ def read_record(channels, start_time_ns=0, end_time_ns=18446744073709551615):
 
 def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
-    glog.info('Read record header {}'.format(record_path))
+    glog.debug('Read record header {}'.format(record_path))
     try:
         reader = RecordReader(record_path)
         header = Header()
@@ -80,7 +80,7 @@ def write_record(path_to_messages):
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
     file_utils.makedirs(os.path.dirname(path))
-    glog.info('Write record {}'.format(path))
+    glog.debug('Write record {}'.format(path))
     writer = RecordWriter(0, 0)
     writer.open(path)
     topics = set()
