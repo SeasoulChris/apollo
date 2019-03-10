@@ -1,6 +1,6 @@
-name: py36
+name: fuel-py27
 dependencies:
-  - python = 3.6
+  - python = 2.7
   - pyspark = 2.4.0
 
   # Google infra

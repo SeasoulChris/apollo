@@ -1,6 +1,6 @@
 # Apollo Fuel
 
-## Setup
+## Setup Env
 
 1. Clone the repo along with other apollo repos:
 
@@ -15,17 +15,38 @@
    `bstart`, `binto` and build Apollo as usual. Then you'll see the repo mounted
    at /apollo/modules/data/fuel, as a part of the whole apollo workspace.
 
-1. Install additional tools for the Apollo container.
+1. [Install miniconda](https://docs.conda.io/en/latest/miniconda.html).
+
+   If it's already installed, update it to the latest.
 
    ```bash
-   # Upgrade conda first.
    sudo /usr/local/miniconda2/bin/conda update -n base -c defaults conda
-   # Install and activate env. Currently we only have Python 2.7, because
-   # Python 3.6 depends on Cyber python wrapper upgrade.
-   sudo rm -fr /usr/local/miniconda2/envs/py27
-   conda env update -f configs/py27-conda.yaml
-   source activate py27
    ```
+
+1. Install env and activate.
+
+   ```bash
+   conda env update -f configs/conda-py27-cyber.yaml
+   source activate fuel-py27-cyber
+   ```
+
+   Available envs are:
+   * `fuel-py27-cyber` configs/conda-py27-cyber.yaml
+   * `fuel-py27` configs/conda-py27.yaml
+   * `fuel-py36` configs/conda-py36.yaml
+
+   Use the Cyber compatible env if you need to read, write Cyber records, or
+   call Cyber functions. Otherwise, please use the standard envs.
+
+### Ongoing efforts
+
+1. `fuel-py27` is in deprecation along with Python 2.7 retiring. Any new jobs
+   should NOT depend on it.
+1. `fuel-py27-cyber` is in deprecation along with Cyber wrapper upgrade.
+   * If the upcoming Python3 wrapper is compatible with the standard env， we'll
+     unify everything into `fuel-py36`.
+   * If the upcoming Python3 wrapper still has strong restrictions on lib
+     versions, we'll maintain a new `fuel-py36-cyber`.
 
 ## Develop pipeline jobs
 

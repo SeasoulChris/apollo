@@ -2,6 +2,11 @@
 
 # Input.
 LOCAL_JOB_FILE="$1"
+CONDA_ENV="$2"
+
+if [ -z "${CONDA_ENV}" ]; then
+  CONDA_ENV="fuel-py27-cyber"
+fi
 
 # Current cluster resources (Show usage with "kubectl top nodes"):
 #   CPU Cores: 64
@@ -15,11 +20,9 @@ DRIVER_MEMORY=2g
 EXECUTORS=16
 EXECUTOR_CORES=3
 EXECUTOR_MEMORY=24g
-CONDA_ENV="py27"
 AWS_KEY="<INPUT>"
 AWS_SEC="<INPUT>"
 APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
-APOLLO_ENABLED="yes"
 # End of config.
 
 set -x
@@ -54,12 +57,10 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.executorEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_ENABLED="${APOLLO_ENABLED}" \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
