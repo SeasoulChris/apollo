@@ -14,7 +14,7 @@ fi
 #   Ephemeral Storage: 2TB
 
 # Config.
-IMAGE="xiangquan/spark:20190306_1513"
+IMAGE="xiangquan/spark:20190310_1324"
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
 EXECUTORS=16
