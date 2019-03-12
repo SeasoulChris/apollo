@@ -7,12 +7,12 @@ dependencies:
   - gflags
   - glog
   - protobuf
-  - tensorflow-gpu
+  - tensorflow
 
   # Data science
   - boto3
   - h5py
-  - keras-gpu
+  - keras
   - matplotlib
   - numpy
   - scikit-learn

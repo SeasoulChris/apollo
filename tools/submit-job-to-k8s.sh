@@ -1,12 +1,46 @@
 #!/usr/bin/env bash
 
-# Input.
-LOCAL_JOB_FILE="$1"
-CONDA_ENV="$2"
+# Default config.
+JOB_FILE=""
+CONDA_ENV="fuel-py27-cyber"
+EXECUTORS=16
+EXECUTOR_CORES=3
+EXECUTOR_MEMORY=24g
+IMAGE="xiangquan/spark:20190311_1452"
 
-if [ -z "${CONDA_ENV}" ]; then
-  CONDA_ENV="fuel-py27-cyber"
-fi
+while [ $# -gt 0 ]; do
+    case "$1" in
+    --env)
+        shift
+        CONDA_ENV=$1
+        ;;
+    --job)
+        shift
+        JOB_FILE=$1
+        ;;
+    --workers)
+        shift
+        EXECUTORS=$1
+        ;;
+    --worker-cpu)
+        shift
+        EXECUTOR_CORES=$1
+        ;;
+    --worker-memory)
+        shift
+        EXECUTOR_MEMORY=$1
+        ;;
+    --image)
+        shift
+        IMAGE=$1
+        ;;
+    *)
+        echo -e "Unknown option: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
 
 # Current cluster resources (Show usage with "kubectl top nodes"):
 #   CPU Cores: 64
@@ -14,12 +48,8 @@ fi
 #   Ephemeral Storage: 2TB
 
 # Config.
-IMAGE="xiangquan/spark:20190310_1324"
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
-EXECUTORS=16
-EXECUTOR_CORES=3
-EXECUTOR_MEMORY=24g
 AWS_KEY="<INPUT>"
 AWS_SEC="<INPUT>"
 APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
@@ -30,11 +60,11 @@ set -e
 
 # Upload local files to remote.
 REMOTE_JOB_PATH="/mnt/bos/modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
-REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${LOCAL_JOB_FILE})"
+REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
 sudo mkdir -p "${REMOTE_JOB_PATH}"
-sudo cp "${LOCAL_JOB_FILE}" "${REMOTE_JOB_FILE}"
+sudo cp "${JOB_FILE}" "${REMOTE_JOB_FILE}"
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"

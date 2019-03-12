@@ -63,7 +63,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         # -> (dir, record), in absolute path
         dir_to_records = (
             dir_to_records_rdd
-            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1]))
+            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
             .cache())
 
         selected_vehicles = (

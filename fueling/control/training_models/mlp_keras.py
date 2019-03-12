@@ -1,33 +1,24 @@
 #!/usr/bin/env python
 
 from datetime import datetime
-from random import choice
-from random import randint
 from random import shuffle
 from time import time
 import glob
 import os
 
-from keras.callbacks import ModelCheckpoint
-from keras.layers.normalization import BatchNormalization
 from keras.layers import Dense, Input
 from keras.layers import Activation
-from keras.layers import Dropout
 from keras.metrics import mse
 from keras.models import Sequential, Model
-from keras.models import model_from_json
-from keras.regularizers import l1, l2
-from keras.utils import np_utils
 from scipy.signal import savgol_filter
 from sklearn.model_selection import train_test_split
 import google.protobuf.text_format as text_format
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
-from fueling.control.features.parameters_training import dim
-import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
+from module.data.fuel.fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
+from module.data.fuel.fueling.control.features.parameters_training import dim
+import module.data.fuel.fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -42,12 +33,10 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
 DIM_INPUT = dim["pose"] + dim["incremental"] + \
@@ -93,8 +82,7 @@ def generate_segments(h5s):
                 if len(segments) == 0:
                     segments.append(np.array(ds))
                 else:
-                    segments[-1] = np.concatenate((segments[-1],
-                                                   np.array(ds)), axis=0)
+                    segments[-1] = np.concatenate((segments[-1], np.array(ds)), axis=0)
     # shuffle(segments)
     print('Segments count: ', len(segments))
     return segments
