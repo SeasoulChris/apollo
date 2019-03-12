@@ -61,7 +61,7 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
         optimizer.zero_grad()
         X = train_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = train_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        if batch_preprocess:
+        if batch_preprocess is not None:
             X, y = batch_preprocess(X, y)
         pred = model(X)
         train_loss = loss.loss_fn(pred, y)
@@ -94,7 +94,7 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
     for i in range(num_of_batch):
         X = valid_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
         y = valid_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        if batch_preprocess:
+        if batch_preprocess is not None:
             X, y = batch_preprocess(X, y)
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
@@ -160,7 +160,7 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch,
     logging.info('Training loss: {}'.format(train_loss))
     print('Training Loss: {}'.format(train_loss))
 
-def valid_dataloader(valid_loader, model, loss):
+def valid_dataloader(valid_loader, model, loss, analyzer=None):
     model.eval()
 
     loss_history = []
@@ -174,6 +174,8 @@ def valid_dataloader(valid_loader, model, loss):
         if valid_loss_info is not None:
             print ('Validation avg displacement = {}'.format(valid_loss_info))
             logging.info('Validation avg displacement = {}'.format(valid_loss_info))
+        if analyzer is not None:
+            analyzer.process(X, y, pred)
 
     valid_loss = np.mean(loss_history)
     logging.info('Validation loss: {}.'.format(valid_loss))
