@@ -57,11 +57,12 @@ def execute_task(task):
 
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
-    return_code = os.system('bash {}/logsim_generator.sh {} {} {}' \
-        .format(os.path.dirname(os.path.realpath(__file__)), \
-                source_dir, \
-                dest_dir, \
-                map_dir))
+    simulation_path = '/apollo/modules/data/fuel/fueling/simulation'
+    return_code = os.system('cd {} && ./bin/logsim_generator_executable {} {} {} --alsologtostderr'
+                    .format(simulation_path,
+                        '--input_dir='+source_dir,
+                        '--output_dir='+dest_dir,
+                        '--scenario_map_dir='+map_dir))
     if return_code != 0:
         glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
         # Print log here only, since rerunning will probably fail again.  
@@ -97,10 +98,10 @@ class ScenarioExtractionPipeline(BasePipeline):
         self.run(todo_tasks, original_prefix, target_prefix)
         glog.info('Simulation: All Done, TEST')
 
-    def run_prod(self, input_dir):
+    def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = 'small-records/2019'
-        target_prefix = 'logsim_scenarios/2019'
+        target_prefix = 'modules/simulation/logsim_scenarios/2019'
         bucket = 'apollo-platform'
 
         todo_tasks = get_todo_tasks(original_prefix, \
