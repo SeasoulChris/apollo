@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
+# Current cluster resources (Show usage with "kubectl top nodes"):
+#   CPU Cores: 64
+#   Memory: 500GB
+#   Ephemeral Storage: 2TB
+
 # Default config.
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=16
 EXECUTOR_CORES=3
 EXECUTOR_MEMORY=24g
-IMAGE="xiangquan/spark:20190311_1452"
+IMAGE="xiangquan/spark:20190311_1741"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -41,11 +46,6 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
-
-# Current cluster resources (Show usage with "kubectl top nodes"):
-#   CPU Cores: 64
-#   Memory: 500GB
-#   Ephemeral Storage: 2TB
 
 # Config.
 K8S="https://180.76.98.43:6443"

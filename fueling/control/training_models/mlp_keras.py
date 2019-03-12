@@ -16,9 +16,9 @@ import google.protobuf.text_format as text_format
 import h5py
 import numpy as np
 
-from module.data.fuel.fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
-from module.data.fuel.fueling.control.features.parameters_training import dim
-import module.data.fuel.fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
+from fueling.control.features.parameters_training import dim
+from modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
+import modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -179,10 +179,7 @@ def save_model(model, param_norm, filename):
 
 
 def mlp_keras(hdf5, out_dirs, model_name='mlp_two_layer'):
-    print "hdf5 files are:", hdf5
-    mlp_keras_segments(generate_segments(hdf5), out_dirs, model_name)
-
-def mlp_keras_segments(segments, out_dirs, model_name = 'mlp_two_layer'):
+    segments = generate_segments(hdf5)
     x_data, y_data = generate_data(segments)
     param_norm = get_param_norm(x_data)
     x_data = (x_data - param_norm[0]) / param_norm[1]
