@@ -58,6 +58,7 @@ DIM_INPUT = dim["pose"] + dim["incremental"] + \
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
+DIM_LSTM_LENGTH = dim["timesteps"]
 
 
 def generate_mlp_data(segments, dirs, timestr):
@@ -85,7 +86,7 @@ def generate_mlp_data(segments, dirs, timestr):
             calibration_table[k/5, k % 5-1] = float(lines[k].split(':')[1])
 
     hf = h5py.File(
-        dirs+'dynamic_model_output/fnn_model_norms_'+timestr+'.h5', 'r')
+        dirs+'dynamic_model_output/mlp_model_norms_'+timestr+'.h5', 'r')
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
     hf.close()
@@ -93,7 +94,7 @@ def generate_mlp_data(segments, dirs, timestr):
     f = interpolate.interp2d(
         calibration_table[:, 0], calibration_table[:, 1], calibration_table[:, 2], kind='linear')
     model = load_model(
-        dirs+'dynamic_model_output/fnn_model_weights_'+timestr+'.h5')
+        dirs+'dynamic_model_output/mlp_model_weights_'+timestr+'.h5')
 
     i = 0
     velocity_point_mass = 0
@@ -160,11 +161,128 @@ def generate_mlp_data(segments, dirs, timestr):
     return I_ground_truth, Y_imu, Y_point_mass, Y_mlp, T_ground_truth
 
 
+def generate_lstm_data(segments, dirs, timestr):
+    total_len = 0
+    for i in range(len(segments)):
+        total_len += (segments[i].shape[0] - 1)
+    print "total_len = ", total_len
+    X = np.zeros([total_len, DIM_INPUT])
+    I_ground_truth = np.zeros([total_len, DIM_OUTPUT])
+    Y_imu = np.zeros([total_len, DIM_OUTPUT])
+    Y_point_mass = np.zeros([total_len, DIM_OUTPUT])
+    Y_mlp = np.zeros([total_len, DIM_OUTPUT])
+    T_ground_truth = np.zeros([total_len, DIM_OUTPUT])
+    feature = np.zeros([total_len, DIM_INPUT])
+    print "X size = ", X.shape
+    print "Y size = ", Y_imu.shape
+
+    text_file = open(dirs+'conf/sim_control_lincoln.pb.txt', 'r')
+    lines = text_file.readlines()
+    #print lines
+    table_length = len(lines)/5
+    print table_length
+    calibration_table = np.zeros([table_length, 3])
+    for k in range(len(lines)):
+        if k % 5 != 0 and k % 5 != 4:
+            calibration_table[k/5, k % 5-1] = float(lines[k].split(':')[1])
+
+    hf = h5py.File(
+        dirs+'dynamic_model_output/lstm_model_norms_'+timestr+'.h5', 'r')
+    mean_param_norm = np.array(hf.get('mean'))
+    std_param_norm = np.array(hf.get('std'))
+    hf.close()
+
+    f = interpolate.interp2d(
+        calibration_table[:, 0], calibration_table[:, 1], calibration_table[:, 2], kind='linear')
+    model = load_model(
+        dirs+'dynamic_model_output/lstm_model_weights_'+timestr+'.h5')
+
+    i = 0
+    velocity_point_mass = 0
+    acceleration_point_mass = 0
+    velocity_mlp = 0
+    acceleration_mlp = 0
+    angular_velocity_mlp = 0
+
+    for j in range(len(segments)):
+        segment = segments[j]
+        for k in range(segment.shape[0]):
+            if k > 0:
+                I_ground_truth[i, 0] = segment[k, 14]  # speed_mps
+                I_ground_truth[i, 1] = segment[k, 0]  # heading
+
+                feature[i, 0] = segment[k, 14]
+                feature[i, 1] = segment[k, 8] * \
+                    np.cos(segment[k, 0]) + segment[k, 9] * \
+                    np.sin(segment[k, 0])
+                feature[i, 2] = segment[k, 13]
+                feature[i, 3] = segment[k, 15]
+                feature[i, 4] = segment[k, 16]
+                feature[i, 5] = segment[k, 17]
+
+                Y_imu[i, 0] = segment[k, 8] * \
+                    np.cos(segment[k, 0]) + segment[k, 9] * \
+                    np.sin(segment[k, 0])
+                Y_imu[i, 1] = segment[k, 13]
+
+                if segment[k-1, 15]-0.15141527 > segment[k-1, 16] - 0.13727017:
+                    lon_cmd = segment[k-1, 15]
+                else:
+                    lon_cmd = -segment[k-1, 16]
+
+                velocity_point_mass = segment[k-1, 14]
+                acceleration_point_mass = segment[k-1, 8] * np.cos(
+                    segment[k-1, 0]) + segment[k-1, 9] * np.sin(segment[k-1, 0])
+                velocity_point_mass += acceleration_point_mass * 0.01
+                acceleration_point_mass = f(
+                    velocity_point_mass, lon_cmd * 100.0)
+                Y_point_mass[i, 0] = acceleration_point_mass
+                Y_point_mass[i, 1] = segment[k-1, 17] * \
+                    8.203 / 16 * velocity_point_mass / 2.8448
+
+                if i < DIM_LSTM_LENGTH:
+                    velocity_mlp = segment[k-1, 14]
+                    acceleration_mlp = segment[k-1, 8] * np.cos(
+                        segment[k-1, 0]) + segment[k-1, 9] * np.sin(segment[k-1, 0])
+                    angular_velocity_mlp = segment[k-1, 13]
+                    Y_mlp[i, 0] = segment[k, 8] * \
+                        np.cos(segment[k, 0]) + segment[k, 9] * \
+                        np.sin(segment[k, 0])
+                    Y_mlp[i, 1] = segment[k, 13]
+
+                if i >= DIM_LSTM_LENGTH:
+                    X_array = np.reshape(np.transpose(
+                        X[(i-DIM_LSTM_LENGTH):i, :]), (1, DIM_INPUT, DIM_LSTM_LENGTH))
+                    #print X_array
+                    Y_mlp[i, :] = model.predict(X_array)
+                    acceleration_mlp = Y_mlp[i, 0] * \
+                        std_param_norm[1] + mean_param_norm[1]
+                    Y_mlp[i, 0] = acceleration_mlp
+                    angular_velocity_mlp = Y_mlp[i, 1] * \
+                        std_param_norm[2] + mean_param_norm[2]
+                    Y_mlp[i, 1] = angular_velocity_mlp
+
+                velocity_mlp += Y_mlp[i, 0] * 0.01
+
+                X[i, 0] = velocity_mlp  # speed mps
+                X[i, 1] = acceleration_mlp
+                X[i, 2] = angular_velocity_mlp
+                X[i, 3] = segment[k-1, 15]  # throttle control from chassis
+                X[i, 4] = segment[k-1, 16]  # brake control from chassis
+                X[i, 5] = segment[k-1, 17]  # steering control from chassis
+                X[i, :] = (X[i, :] - mean_param_norm) / std_param_norm
+                #print X
+                #print "X size = ", X.shape
+
+                T_ground_truth[i, 0] = segment[k, 19]
+                T_ground_truth[i, 1] = segment[k, 20]
+                i += 1
+
+    return I_ground_truth, Y_imu, Y_point_mass, Y_mlp, T_ground_truth
+
+
 def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
-    # window size 51, polynomial order 3
-    Y_imu[:, 0] = savgol_filter(Y_imu[:, 0], 51, 3)
-    # window size 51, polynomial order 3
-    Y_mlp[:, 0] = savgol_filter(Y_mlp[:, 0], 51, 3)
+
     # plt.figure(figsize=(3,2))
     # plt.title("Acceleration")
     # plt.plot(Y_imu[:,0], color = 'blue',label = "IMU acceleration")
@@ -333,13 +451,20 @@ def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
     # plt.close()
 
 
-def evaluate(timestr, h5_segments, dirs):
-
-    I_ground_truth, Y_imu, Y_point_mass, Y_mlp, T_ground_truth = generate_mlp_data(
-        h5_segments[1], dirs, timestr)
-    txt = open(dirs + 'evaluation_result/evaluation_metrics_for_model_' + timestr +
-               '_under_scenario_' + h5_segments[0] + '.txt', 'w')
-    with PdfPages(dirs + 'evaluation_result/trajectory_visualization_' + timestr + '.pdf') as pdf:
+def evaluate(model_info, h5_segments, dirs):
+    print 'model name:', model_info[0]
+    if model_info[0] == 'mlp':
+        I_ground_truth, Y_imu, Y_point_mass, Y_mlp, T_ground_truth = generate_mlp_data(
+            h5_segments[1], dirs, model_info[1])
+    elif model_info[0] == 'lstm':
+        I_ground_truth, Y_imu, Y_point_mass, Y_mlp, T_ground_truth = generate_lstm_data(
+            h5_segments[1], dirs, model_info[1])
+    else:
+        return
+    txt = open(dirs+'evaluation_result/evaluation_metrics_for_'+model_info[0]+'_model_'+model_info[1] +
+               '_under_scenario_'+h5_segments[0]+'.txt', 'w')
+    with PdfPages(dirs+'evaluation_result/trajectory_visualization_for_'+model_info[0]+'_model_'+model_info[1] +
+                  '_under_scenario_'+h5_segments[0]+'.pdf') as pdf:
         plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt)
         I_imu, I_mlp, I_point_mass = plot_first_integral(
             I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt)

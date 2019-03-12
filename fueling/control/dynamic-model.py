@@ -7,6 +7,7 @@ import numpy as np
 
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
 import fueling.control.training_models.mlp_keras as mlp_keras
+import fueling.control.training_models.lstm_keras as lstm_keras
 
 from fueling.common.base_pipeline import BasePipeline
 
@@ -20,6 +21,7 @@ class DynamicModel(BasePipeline):
             '/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5')
         dirs = '/apollo/modules/data/fuel/fueling/control/data/'
         mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
+        lstm_keras.lstm_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
         h5s = glob.glob(
@@ -31,8 +33,9 @@ class DynamicModel(BasePipeline):
             '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
         dirs = '/mnt/bos/modules/control/'
         mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
+        lstm_keras.lstm_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
-            "/mnt/bos/modules/control/dynamic_model_output/fnn_model_*.h5")
+            "/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5")
         h5s = glob.glob(
             '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
         self.model_evalution(files, h5s, dirs)
@@ -41,7 +44,8 @@ class DynamicModel(BasePipeline):
         return (
             self.get_spark_context().parallelize(files)  # All the model files
             .filter(lambda x: sub_module in x)  # Model weights files
-            .map(lambda x: self.extract_file_id(x, 'fnn_model_' + sub_module + '_', '.h5'))
+            .map(lambda x: (self.extract_file_id(x, 'dynamic_model_output/', '_model_' + sub_module + '_'),
+                            self.extract_file_id(x, '_model_' + sub_module + '_', '.h5')))
             .distinct())
 
     def extract_file_id(self, file_name, start_position, end_position):
