@@ -82,7 +82,7 @@ And good coding practices are:
 ### Test your pipeline at local
 
 ```bash
-tools/submit-job-to-local.sh /path/to/spark/job.py
+tools/submit-job-to-local.sh --job /path/to/spark/job.py
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
 
@@ -93,24 +93,3 @@ daily or weekly according to your need.
 
 Talk to the data team (usa-data@baidu.com) if you are pretty familliar with the
 infra and want to get more control.
-
-## TODO
-
-1. Support private docker repo. This should be doable by add k8s secret:
-
-   ```bash
-   kubectl create secret docker-registry "<secret_name>" \
-       --docker-server="docker.io" \
-       --docker-username="${DOCKER_USER}" \
-       --docker-password="${DOCKER_PASSWORD}" \
-       --docker-email="xxx@baidu.com"
-   ```
-
-   and then reference it with
-
-   ```bash
-   spark-submit ... --conf spark.kubernetes.container.image.pullSecrets="<secret_name>"
-   ```
-
-   But in a quick trial it failed for the Baidu CCE. Not sure if it's a bug for
-   us or for the cloud provider.

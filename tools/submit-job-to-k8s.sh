@@ -58,6 +58,11 @@ APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd
 set -x
 set -e
 
+if [ -z "${JOB_FILE}" ]; then
+  echo "No --job specified."
+  exit 1
+fi
+
 # Upload local files to remote.
 REMOTE_JOB_PATH="/mnt/bos/modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
 REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
