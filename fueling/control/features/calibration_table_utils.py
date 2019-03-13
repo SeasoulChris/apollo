@@ -6,6 +6,7 @@ import glob
 
 from fueling.control.features.filters import Filters
 import fueling.common.h5_utils as h5_utils
+import fueling.common.file_utils as file_utils
 
 
 # calibration table constant
@@ -246,86 +247,54 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     # throttle train file
     glog.info('throttle file size: %d' % throttle_train.shape[0])
     glog.info('throttle train file size: %d' % throttle_train_feature_num)
-    folder_path = folder_path = folder_path.replace(
-        origin_prefix, target_prefix, 1)
-    throttle_train_file = h5py.File(
-        "{}/{}_throttle_train_{}.hdf5".format(folder_path, vehicle_type, key), "w")
-    throttle_train_file.create_dataset(
-        "segment", data=throttle_train[0:throttle_train_feature_num, :], dtype="float32")
-    throttle_train_file.close()
 
-    throttle_test_file = h5py.File(
-        "{}/{}_throttle_test_{}.hdf5".format(folder_path, vehicle_type, key), "w")
-    throttle_test_file.create_dataset(
-        "segment", data=throttle_test[0:throttle_test_feature_num, :], dtype="float32")
-    throttle_test_file.close()
+    # folder_path = folder_path.replace(
+    #     origin_prefix, target_prefix, 1)
+    folder_path = target_prefix
 
-    brake_train_file = h5py.File(
-        "{}/{}_brake_train_{}.hdf5".format(folder_path, vehicle_type, key), "w")
-    brake_train_file.create_dataset(
-        "segment", data=brake_train[0:brake_train_feature_num, :], dtype="float32")
-    brake_train_file.close()
+    # throttle train file
+    throttle_train_file_dir = (
+        "{}/{}/throttle/train".format(folder_path, vehicle_type))
 
-    brake_test_file = h5py.File(
-        "{}/{}_brake_test_{}.hdf5".format(folder_path, vehicle_type, key), "w")
-    brake_test_file.create_dataset(
-        "segment", data=brake_test[0:brake_test_feature_num, :], dtype="float32")
-    brake_test_file.close()
+    glog.info('Writing hdf5 file to %s' % throttle_train_file_dir)
+
+    throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
+    write_h5_cal_tab(throttle_train_data, throttle_train_file_dir, key)
+
+    # throttle test file
+    throttle_test_file_dir = (
+        "{}/{}/throttle/test".format(folder_path, vehicle_type))
+
+    glog.info('Writing hdf5 file to %s' % throttle_test_file_dir)
+
+    throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
+    write_h5_cal_tab(throttle_test_data, throttle_test_file_dir, key)
+
+    # brake train file
+    brake_train_file_dir = (
+        "{}/{}/brake/train".format(folder_path, vehicle_type))
+
+    glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
+
+    brake_train_data = brake_train[0:brake_train_feature_num, :]
+    write_h5_cal_tab(brake_train_data, brake_train_file_dir, key)
+
+    # brake test file
+    brake_test_file_dir = (
+        "{}/{}/brake/test".format(folder_path, vehicle_type))
+
+    glog.info('Writing hdf5 file to %s' % brake_test_file_dir)
+
+    brake_test_data = brake_test[0:brake_test_feature_num, :]
+    write_h5_cal_tab(brake_test_data, brake_test_file_dir, key)
 
     return feature_num
 
 
-def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
-    dir = elem[0]
-    hdf5_file = glob.glob(
-        '{}/{}_{}_{}_*.hdf5'.format(dir, vehicle_type, brake_or_throttle, train_or_test))
-    return (elem[0], hdf5_file)
-
-
-def generate_segments(h5s):
-    segments = []
-    for h5 in h5s:
-        print('Loading {}'.format(h5))
-        with h5py.File(h5, 'r+') as f:
-            names = [n for n in f.keys()]
-            print('f.keys', f.keys())
-            if len(names) < 1:
-                continue
-            for i in range(len(names)):
-                ds = np.array(f[names[i]])
-                segments.append(ds)
-    # shuffle(segments)
-    print('Segments count: ', len(segments))
-    return segments
-
-
-def generate_data(segments):
-    """ combine data from each segments """
-    total_len = 0
-    for i in range(len(segments)):
-        total_len += segments[i].shape[0]
-    print("total_len = ", total_len)
-    dim_input = 2
-    dim_output = 1
-    X = np.zeros([total_len, dim_input])
-    Y = np.zeros([total_len, dim_output])
-    i = 0
-    for j in range(len(segments)):
-        segment = segments[j]
-        for k in range(segment.shape[0]):
-            if k > 0:
-                X[i, 0:2] = segment[k, 0:2]
-                Y[i, 0] = segment[k, 2]
-                i += 1
-    return X, Y
-
-
-# def train_model(elem):
-#     """
-#     train model
-#     """
-#     params, train_cost, test_cost = obj.model.train(X_train, Y_train,
-#                                                     X_test, Y_test,
-#                                                     alpha=obj.alpha, print_loss=True)
-#     print(mode + " model train cost: " + str(train_cost))
-#     print(mode + " model test cost: " + str(test_cost))
+def write_h5_cal_tab(data, file_dir, file_name):
+    file_utils.makedirs(file_dir)
+    h5_file = h5py.File(
+        "{}/{}.hdf5".format(file_dir, file_name), "w")
+    h5_file.create_dataset(
+        "segment", data, dtype="float32")
+    h5_file.close()

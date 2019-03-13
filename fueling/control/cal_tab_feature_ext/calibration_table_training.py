@@ -48,7 +48,6 @@ class CalibrationTableTraining(BasePipeline):
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
                                                            os.path.join(root_dir, x[1]))).cache()
 
-        # print(dir_to_records.first())
         train_file_rdd = (dir_to_records
                           # training data (hdf5 file) vehicle
                           .map(lambda elem:
@@ -66,10 +65,12 @@ class CalibrationTableTraining(BasePipeline):
                          .mapValues(calibration_table_utils.generate_segments)
                          #   generate training data: x_train_data, y_train_data
                          .mapValues(calibration_table_utils.generate_data)).cache()
-                         spark_op.join()
 
-        print(test_file_rdd.first())
+        train_model_rdd = (train_file_rdd
+                           .join(test_file_rdd)
+                           .mapValues())
 
+        print(train_model_rdd.first())
     # train model(train data, test data)
 
     # write table
