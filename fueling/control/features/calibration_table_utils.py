@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import random
 import glog
+import glob
 
 from fueling.control.features.filters import Filters
 import fueling.common.h5_utils as h5_utils
@@ -200,15 +201,15 @@ def feature_store(elem):
     return segment_feature[0:counter, :]
 
 
-def write_h5_whole(elem):
-    """write to h5 file, use feature key as file name"""
-    key = str(elem[0][1])
-    folder_path = str(elem[0][0])
-    out_file = h5py.File(
-        "{}/training_dataset_{}.hdf5".format(folder_path, key), "w")
-    out_file.create_dataset("segment", data=elem[1], dtype="float32")
-    out_file.close()
-    return elem[0]
+# def write_h5_whole(elem):
+#     """write to h5 file, use feature key as file name"""
+#     key = str(elem[0][1])
+#     folder_path = str(elem[0][0])
+#     out_file = h5py.File(
+#         "{}/training_dataset_{}.hdf5".format(folder_path, key), "w")
+#     out_file.create_dataset("segment", data=elem[1], dtype="float32")
+#     out_file.close()
+#     return elem[0]
 
 
 def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
@@ -272,3 +273,59 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     brake_test_file.close()
 
     return feature_num
+
+
+def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
+    dir = elem[0]
+    hdf5_file = glob.glob(
+        '{}/{}_{}_{}_*.hdf5'.format(dir, vehicle_type, brake_or_throttle, train_or_test))
+    return (elem[0], hdf5_file)
+
+
+def generate_segments(h5s):
+    segments = []
+    for h5 in h5s:
+        print('Loading {}'.format(h5))
+        with h5py.File(h5, 'r+') as f:
+            names = [n for n in f.keys()]
+            print('f.keys', f.keys())
+            if len(names) < 1:
+                continue
+            for i in range(len(names)):
+                ds = np.array(f[names[i]])
+                segments.append(ds)
+    # shuffle(segments)
+    print('Segments count: ', len(segments))
+    return segments
+
+
+def generate_data(segments):
+    """ combine data from each segments """
+    total_len = 0
+    for i in range(len(segments)):
+        total_len += segments[i].shape[0]
+    print("total_len = ", total_len)
+    dim_input = 2
+    dim_output = 1
+    X = np.zeros([total_len, dim_input])
+    Y = np.zeros([total_len, dim_output])
+    i = 0
+    for j in range(len(segments)):
+        segment = segments[j]
+        for k in range(segment.shape[0]):
+            if k > 0:
+                X[i, 0:2] = segment[k, 0:2]
+                Y[i, 0] = segment[k, 2]
+                i += 1
+    return X, Y
+
+
+# def train_model(elem):
+#     """
+#     train model
+#     """
+#     params, train_cost, test_cost = obj.model.train(X_train, Y_train,
+#                                                     X_test, Y_test,
+#                                                     alpha=obj.alpha, print_loss=True)
+#     print(mode + " model train cost: " + str(train_cost))
+#     print(mode + " model test cost: " + str(test_cost))

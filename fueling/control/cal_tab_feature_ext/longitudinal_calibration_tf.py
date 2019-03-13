@@ -20,21 +20,21 @@ class LonAutoCalibrationTF(object):
         # select mode
         self.mode = mode
         if mode == 'throttle':
-            self.traindata_folder = "throttle_train"
-            self.testdata_folder = "throttle_test"
+            self.traindata_filename = "throttle_train"
+            self.testdata_filename = "throttle_test"
             self.table_filename = "mkz_throttle_calibration_table.pb.txt"
-
-            self.axis_cmd_min = 18.0
-            self.axis_cmd_max = 60.0
+            # 5.0~30.0
+            self.axis_cmd_min = 5.0  # Transit # 18.0 Mkz7
+            self.axis_cmd_max = 30.0  # Transit # 60.0 Mkz7
             self.layer = [2, 15, 1]
             self.alpha = 0.05
         elif mode == 'brake':
             self.traindata_filename = "brake_train"
             self.testdata_filename = "brake_test"
             self.table_filename = "mkz_brake_calibration_table.pb.txt"
-
-            self.axis_cmd_min = -35.0
-            self.axis_cmd_max = -21.0
+            # Transit-30.0 ~ -7.0
+            self.axis_cmd_min = -30.0  # -35.0 Mkz7
+            self.axis_cmd_max = -7.0  # -21.0 Mkz7
             self.layer = [2, 10, 1]
             self.alpha = 0.05
         else:
