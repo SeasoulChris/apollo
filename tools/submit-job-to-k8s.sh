@@ -67,12 +67,14 @@ REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
 "${BOS_FSTOOL_EXECUTABLE}" -s "${JOB_FILE}" -d "${REMOTE_JOB_FILE}"
+REMOTE_JOB_FILE="${BOS_MOUNT_POINT}/${REMOTE_JOB_FILE}"
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}" && \
   zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc && \
   "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
+  REMOTE_FUELING_PKG="${BOS_MOUNT_POINT}/${REMOTE_FUELING_PKG}"
 popd
 
 # Submit job with fueling package.
@@ -100,4 +102,4 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
 \
-    "${BOS_MOUNT_POINT}/${REMOTE_JOB_FILE}"
+    "${REMOTE_JOB_FILE}"
