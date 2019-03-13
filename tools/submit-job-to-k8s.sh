@@ -5,39 +5,34 @@
 #   Memory: 500GB
 #   Ephemeral Storage: 2TB
 
-# Default config.
+# Default value for configurable arguments.
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=16
 EXECUTOR_CORES=3
 EXECUTOR_MEMORY=24g
-IMAGE="hub.baidubce.com/apollo/spark:latest"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-    --env)
+    --env|-e)
         shift
         CONDA_ENV=$1
         ;;
-    --job)
+    --job|-j)
         shift
         JOB_FILE=$1
         ;;
-    --workers)
+    --workers|-w)
         shift
         EXECUTORS=$1
         ;;
-    --worker-cpu)
+    --worker-cpu|-c)
         shift
         EXECUTOR_CORES=$1
         ;;
-    --worker-memory)
+    --worker-memory|-m)
         shift
         EXECUTOR_MEMORY=$1
-        ;;
-    --image)
-        shift
-        IMAGE=$1
         ;;
     *)
         echo -e "Unknown option: $1"
@@ -47,8 +42,9 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# Config.
+# Generally fixed config.
 K8S="https://180.76.98.43:6443"
+IMAGE="hub.baidubce.com/apollo/spark:latest"
 DRIVER_MEMORY=2g
 AWS_KEY="<INPUT>"
 AWS_SEC="<INPUT>"
