@@ -28,7 +28,7 @@ def get_todo_records(root_dir, target_dir=None):
     ---
     Parameters:
     1. root_dir, for example '/mnt/bos' for production, and '/apollo' for test
-    2. target_dir, the directory where results are generated, it's purely a setting that the app
+    2. target_dir, the directory where results are generated, it's purely a setting that the application
     defines by itself.  For example 'modules/perception/whatever/generated'.
     After processing successfully we would want to put a COMPLETE file under the task to avoid it
     being processed again.
@@ -92,7 +92,7 @@ def load_messages(root_dir, record_file, topics):
     messages = sorted(load_meta_data(root_dir, record_file, topics), key=operator.itemgetter(1))
     data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
     for idx in range(0, len(messages)):
-        messages[idx] = messages[idx]._replace(objpath=os.path.join(data_dir, \
+        messages[idx] = messages[idx]._replace(objpath=os.path.join(data_dir,
             '{}-{}'.format(topic_to_file_name(messages[idx].topic), messages[idx].timestamp)))
     return messages
 
@@ -203,7 +203,7 @@ def upload_images(root_dir, record_dir, record_file):
     create_dir_if_not_exist(image_path)
     for message_name in os.listdir(record_dir):
         if message_name.find('compressed') != -1 and not message_name.endswith('compressed'):
-            shutil.copy2(os.path.join(record_dir, message_name), \
+            shutil.copy2(os.path.join(record_dir, message_name),
                 os.path.join(image_path, message_name))
 
 def build_meta_from_line(topic, line):

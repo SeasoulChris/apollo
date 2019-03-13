@@ -3,7 +3,6 @@
 """This script extracts sensor messages for labeling"""
 
 from collections import Counter
-import glog
 import operator
 import os
 import re
@@ -168,10 +167,8 @@ def mark_complete(todo_tasks, target_dir, root_dir):
     for task in todo_tasks:
         task_path = os.path.join(root_dir, target_dir)
         task_path = os.path.join(task_path, os.path.basename(task))
-        populate_utils.chmod_dir(task_path, 777)
         streaming_utils.write_to_file(\
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
-        populate_utils.chmod_dir(task_path, 755)
 
 class PopulateFramesPipeline(BasePipeline):
     """PopulateFrames pipeline."""
@@ -215,6 +212,7 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
+        # Creating SQL query will fail and throw if input is empty, so check it here first
         if todo_tasks is None or len(todo_tasks) == 0:
             glog.warn('Labeling: no tasks to process, quit now')
             return
@@ -232,7 +230,7 @@ class PopulateFramesPipeline(BasePipeline):
                     # -> (target_partition, record_files)
                     .map(record_to_target_partition)
                     # -> (target_partition, messages_metadata)
-                    .flatMapValues(lambda record: streaming_utils \
+                    .flatMapValues(lambda record: streaming_utils
                         .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
                     # -> (target_partition, timestamp, topic)
                     .map(lambda (target, meta): (target, meta.timestamp, meta.topic))

@@ -41,15 +41,17 @@ def parse_record(record_file, root_dir):
     2. parsing and record key meta data in each message, and put to text files partitioned by topic
     3. putting message data itself to a standalone file for quick access
     """
-    yaml_file_path = '{}/{}/{}/{}'.format(root_dir, \
-        streaming_utils.STREAMING_PATH, streaming_utils.STREAMING_CONF, 'serialize_conf.yaml')
+    yaml_file_path = '{}/{}/{}/{}'.format(root_dir,
+                                          streaming_utils.STREAMING_PATH,
+                                          streaming_utils.STREAMING_CONF, 'serialize_conf.yaml')
     settings = list(yaml.load_all(file(yaml_file_path, 'r')))
     record_file = record_file.strip()
     glog.info('Executor: processsing record file : {}'.format(record_file))
     if not record_utils.is_record_file(record_file):
         return
-    record_dir = streaming_utils.record_to_stream_path(record_file, root_dir, \
-        streaming_utils.STREAMING_DATA)
+    record_dir = streaming_utils.record_to_stream_path(record_file,
+                                                       root_dir,
+                                                       streaming_utils.STREAMING_DATA)
     glog.info('Executor: record directory : {}'.format(record_dir))
     streaming_utils.create_dir_if_not_exist(record_dir)
     topic_files = [os.path.join(record_dir, \
@@ -63,7 +65,7 @@ def parse_record(record_file, root_dir):
             if renamed_topic in topic_file_handles:
                 line = str(message.timestamp)
                 fields = next(x for x in settings if x.get('topic') == message.topic)\
-                    .get('fields')
+                         .get('fields')
                 if fields is not None:
                     line = build_line_with_fields(line, fields, message)
                 topic_file_handles[renamed_topic].write(line+"\n")
@@ -71,8 +73,9 @@ def parse_record(record_file, root_dir):
         glog.info('completed serializing record file {}, now upload images'.format(record_file))
         streaming_utils.upload_images(root_dir, record_dir, record_file)
         glog.info('completed everything about {}, and marking complete'.format(record_file))
-        streaming_utils.write_to_file(\
-            os.path.join(record_dir, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
+        streaming_utils.write_to_file(os.path.join(record_dir, 'COMPLETE'),
+                                      'w',
+                                      '{:.6f}'.format(time.time()))
     finally:
         for topic in topic_file_handles:
             topic_file_handles[topic].close()

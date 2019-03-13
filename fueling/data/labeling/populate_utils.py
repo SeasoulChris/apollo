@@ -284,16 +284,7 @@ def create_dir_if_not_exist(dir_path):
     """Simple wrapper to run shell command"""
     if os.path.exists(dir_path):
         return 0
-    command = 'sudo mkdir -p {} -m 777'.format(dir_path)
-    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    prc.communicate()
-    return prc.returncode
-
-def chmod_dir(dir_path, mode):
-    """Simple wrapper to run shell command"""
-    if not os.path.exists(dir_path):
-        return 0
-    command = 'sudo chmod {} {}'.format(mode, dir_path)
+    command = 'sudo mkdir -p {} -m 755'.format(dir_path)
     prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     prc.communicate()
     return prc.returncode
@@ -438,7 +429,7 @@ class ImageSensor(Sensor):
         """Processing image message."""
         camera_image = frame_pb2.CameraImage()
         camera_image.timestamp = float(timestamp)/(10**9)
-        dump_img_name(os.path.join(self._task_dir, 'images'), \
+        dump_img_name(os.path.join(self._task_dir, 'images'),
             timestamp, self.get_image_name())
         camera_image.image_url = '{}/{}/images/pic-{}_{}.jpg'.format(
             SENSOR_PARAMS['image_url'],
