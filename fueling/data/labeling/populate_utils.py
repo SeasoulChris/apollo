@@ -2,6 +2,7 @@
 
 """Utils classes and functions to support populating frames"""
 
+import gc
 import os
 import subprocess
 
@@ -9,6 +10,8 @@ import math
 import numpy as np
 import yaml
 from google.protobuf.json_format import MessageToJson
+from pyquaternion import Quaternion as PyQuaternion
+from urllib import quote
 
 from cyber_py import record
 from modules.data.proto import frame_pb2
@@ -20,51 +23,56 @@ from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
+import fueling.streaming.streaming_utils as streaming_utils
 
 # Map channels to processing functions
 CHANNEL_PROCESS_MAP = {}
+
+# Set precision explicitly
+np.set_printoptions(precision=17)
 
 SENSOR_PARAMS = {
     'lidar_channel':
     '/apollo/sensor/lidar128/compensator/PointCloud2',
     'lidar_extrinsics':
-    '/modules/calibration/mkz6/velodyne_params/velodyne128_novatel_extrinsics.yaml',
+    'modules/calibration/mkz6/velodyne_params/velodyne128_novatel_extrinsics.yaml',
 
     'front6mm_channel':
     '/apollo/sensor/camera/front_6mm/image/compressed',
     'front6mm_intrinsics':
-    '/modules/calibration/mkz6/camera_params/front_6mm_intrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/front_6mm_intrinsics.yaml',
     'front6mm_extrinsics':
     'modules/calibration/mkz6/camera_params/front_6mm_extrinsics.yaml',
 
     'front12mm_channel':
     '/apollo/sensor/camera/front_12mm/image/compressed',
     'front12mm_intrinsics':
-    '/modules/calibration/mkz6/camera_params/front_12mm_intrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/front_12mm_intrinsics.yaml',
     'front12mm_extrinsics':
-    '/modules/calibration/mkz6/camera_params/front_12mm_extrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/front_12mm_extrinsics.yaml',
 
     'left_fisheye_channel':
     '/apollo/sensor/camera/left_fisheye/image/compressed',
     'left_fisheye_intrinsics':
-    '/modules/calibration/mkz6/camera_params/left_fisheye_intrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/left_fisheye_intrinsics.yaml',
     'left_fisheye_extrinsics':
-    '/modules/calibration/mkz6/camera_params/left_fisheye_velodyne128_extrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/left_fisheye_velodyne128_extrinsics.yaml',
 
     'right_fisheye_channel':
     '/apollo/sensor/camera/right_fisheye/image/compressed',
     'right_fisheye_intrinsics':
-    '/modules/calibration/mkz6/camera_params/right_fisheye_intrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/right_fisheye_intrinsics.yaml',
     'right_fisheye_extrinsics':
-    '/modules/calibration/mkz6/camera_params/right_fisheye_velodyne128_extrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/right_fisheye_velodyne128_extrinsics.yaml',
 
     'rear6mm_channel':
     '/apollo/sensor/camera/rear_6mm/image/compressed',
     'rear6mm_intrinsics':
-    '/modules/calibration/mkz6/camera_params/rear_6mm_intrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/rear_6mm_intrinsics.yaml',
     'rear6mm_extrinsics':
-    '/modules/calibration/mkz6/camera_params/rear_6mm_extrinsics.yaml',
+    'modules/calibration/mkz6/camera_params/rear_6mm_extrinsics.yaml',
 
     'pose_channel':
     '/apollo/localization/pose',
@@ -72,12 +80,12 @@ SENSOR_PARAMS = {
     'radar_front_channel':
     '/apollo/sensor/radar/front',
     'radar_front_extrinsics':
-    '/modules/calibration/mkz6/radar_params/radar_front_extrinsics.yaml',
+    'modules/calibration/mkz6/radar_params/radar_front_extrinsics.yaml',
 
     'radar_rear_channel':
     '/apollo/sensor/radar/rear',
     'radar_rear_extrinsics':
-    '/modules/calibration/mkz6/radar_params/radar_rear_extrinsics.yaml',
+    'modules/calibration/mkz6/radar_params/radar_rear_extrinsics.yaml',
 
     'image_url':
     'https://s3-us-west-1.amazonaws.com/scale-labeling'
@@ -96,6 +104,13 @@ def dump_img_bin(data, output_dir, frame_id, channel):
     create_dir_if_not_exist(output_dir)
     with open('{}/image_bin-{}_{}'.format(output_dir, frame_id, channel), 'wb') as bin_file:
         bin_file.write(data)
+
+def dump_img_name(output_dir, timestamp, topic):
+    """Write image file name only"""
+    create_dir_if_not_exist(output_dir)
+    image_file_name = os.path.join(output_dir, 'image-{}_{}'.format(timestamp, topic))
+    if not os.path.exists(image_file_name):
+        os.mknod(image_file_name)
 
 def point3d_to_matrix(point):
     """Convert a 3-items array to 4*1 matrix."""
@@ -164,11 +179,12 @@ def get_rotation_from_tranform(transform):
 def transform_coordinate(point, transform):
     """Transform coordinate system according to rotation and translation."""
     point_mat = point3d_to_matrix(point)
-    #point_rotation = np.matmul(T, point_mat)
     point_mat = np.dot(transform, point_mat)
-    point.x = point_mat[0][0]
-    point.y = point_mat[1][0]
-    point.z = point_mat[2][0]
+    trans_point = Point3D()
+    trans_point.x = point_mat[0][0]
+    trans_point.y = point_mat[1][0]
+    trans_point.z = point_mat[2][0]
+    return trans_point
 
 def multiply_quaternion(qtn1, qtn2):
     """Multiple two quaternions. qtn1 is the rotation applied AFTER qtn2."""
@@ -191,10 +207,11 @@ def convert_to_world_coordinate(point, transform, stationary_pole):
     1. from imu to world by using transform matrix (imu pose)
     2. every point substract by the original point to match the visualizer
     """
-    transform_coordinate(point, transform)
-    point.x -= stationary_pole[0]
-    point.y -= stationary_pole[1]
-    point.z -= stationary_pole[2]
+    trans_point = transform_coordinate(point, transform)
+    trans_point.x -= stationary_pole[0]
+    trans_point.y -= stationary_pole[1]
+    trans_point.z -= stationary_pole[2]
+    return trans_point
 
 def euler_to_quaternion(roll, pitch, yaw):
     """Euler to Quaternion"""
@@ -222,49 +239,61 @@ def quaternion_to_euler(qtnx, qtny, qtnz, qtnw):
     yaw = math.atan2(tthree, tfour)
     return [yaw, pitch, roll]
 
-def get_mean_pose(pose_left, pose_right):
+def get_interp_pose(timestamp, pose_left, pose_right):
     """Get mean value of two poses"""
-    if pose_left is None and pose_right is None:
+    timestamp = float(timestamp)
+    gps_pose_left = None if pose_left is None else \
+        streaming_utils.load_message_obj(pose_left.objpath)
+    gps_pose_right = None if pose_right is None else \
+        streaming_utils.load_message_obj(pose_right.objpath)
+    if gps_pose_left is None and gps_pose_right is None:
         return None
-    elif pose_left is None:
-        return GpsSensor(pose_right.message)
-    elif pose_right is None:
-        return GpsSensor(pose_left.message)
-
-    pose_left = GpsSensor(pose_left.message)
-    pose_right = GpsSensor(pose_right.message)
-    pose_mean = GpsSensor(None)
-    pose_mean.position = PointENU()
-    pose_mean.position.x = pose_left.position.x + \
-        (pose_right.position.x - pose_left.position.x) / 2
-    pose_mean.position.y = pose_left.position.y + \
-        (pose_right.position.y - pose_left.position.y) / 2
-    pose_mean.position.z = pose_left.position.z + \
-        (pose_right.position.z - pose_left.position.z) / 2
-    euler1 = quaternion_to_euler(pose_left.orientation.qx,
-                                 pose_left.orientation.qy,
-                                 pose_left.orientation.qz,
-                                 pose_left.orientation.qw)
-    euler2 = quaternion_to_euler(pose_right.orientation.qx,
-                                 pose_right.orientation.qy,
-                                 pose_right.orientation.qz,
-                                 pose_right.orientation.qw)
-    euler_mean_yaw = euler1[0] + (euler2[0] - euler1[0]) / 2
-    euler_mean_pitch = euler1[1] + (euler2[1] - euler1[1]) / 2
-    euler_mean_roll = euler1[2] + (euler2[2] - euler1[2]) / 2
-    orientation = euler_to_quaternion(euler_mean_roll, euler_mean_pitch, euler_mean_yaw)
-    pose_mean.orientation = Quaternion()
-    pose_mean.orientation.qx = orientation[0]
-    pose_mean.orientation.qy = orientation[1]
-    pose_mean.orientation.qz = orientation[2]
-    pose_mean.orientation.qw = orientation[3]
-    return pose_mean
+    elif gps_pose_left is None:
+        return GpsSensor(gps_pose_right)
+    elif gps_pose_right is None:
+        return GpsSensor(gps_pose_left)
+    sensor_pose_left = GpsSensor(gps_pose_left)
+    sensor_pose_right = GpsSensor(gps_pose_right)
+    sensor_pose_interp = GpsSensor(None)
+    sensor_pose_interp.position = PointENU()
+    interp_in_time = (timestamp - float(pose_left.timestamp)) / \
+        (float(pose_right.timestamp) - float(pose_left.timestamp))
+    sensor_pose_interp.position.x = sensor_pose_left.position.x + \
+        (sensor_pose_right.position.x - sensor_pose_left.position.x) * interp_in_time
+    sensor_pose_interp.position.y = sensor_pose_left.position.y + \
+        (sensor_pose_right.position.y - sensor_pose_left.position.y) * interp_in_time
+    sensor_pose_interp.position.z = sensor_pose_left.position.z + \
+        (sensor_pose_right.position.z - sensor_pose_left.position.z) * interp_in_time
+    pyqt_left = PyQuaternion(w=sensor_pose_left.orientation.qw,
+                             x=sensor_pose_left.orientation.qx,
+                             y=sensor_pose_left.orientation.qy,
+                             z=sensor_pose_left.orientation.qz)
+    pyqt_right = PyQuaternion(w=sensor_pose_right.orientation.qw,
+                              x=sensor_pose_right.orientation.qx,
+                              y=sensor_pose_right.orientation.qy,
+                              z=sensor_pose_right.orientation.qz)
+    pyqt_interp = PyQuaternion.slerp(pyqt_left, pyqt_right, amount=interp_in_time)
+    sensor_pose_interp.orientation = Quaternion()
+    sensor_pose_interp.orientation.qx = pyqt_interp.x
+    sensor_pose_interp.orientation.qy = pyqt_interp.y
+    sensor_pose_interp.orientation.qz = pyqt_interp.z
+    sensor_pose_interp.orientation.qw = pyqt_interp.w
+    return sensor_pose_interp
 
 def create_dir_if_not_exist(dir_path):
     """Simple wrapper to run shell command"""
     if os.path.exists(dir_path):
         return 0
-    command = 'sudo mkdir -p {} -m 755'.format(dir_path)
+    command = 'sudo mkdir -p {} -m 777'.format(dir_path)
+    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    prc.communicate()
+    return prc.returncode
+
+def chmod_dir(dir_path, mode):
+    """Simple wrapper to run shell command"""
+    if not os.path.exists(dir_path):
+        return 0
+    command = 'sudo chmod {} {}'.format(mode, dir_path)
     prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     prc.communicate()
     return prc.returncode
@@ -306,7 +335,7 @@ class Sensor(object):
         dev.z = self._extrinsics['transform']['translation']['z']
         self.transform = generate_transform(qtn, dev)
 
-    def process(self, message, frame, pose, stationary_pole):
+    def process(self, message, timestamp, frame, pose, stationary_pole):
         """Processing function."""
         pass
 
@@ -316,34 +345,32 @@ class Sensor(object):
 
 class PointCloudSensor(Sensor):
     """Lidar sensor that hold pointcloud data."""
-    def process(self, message, frame, pose, stationary_pole):
+    def process(self, message, timestamp, frame, pose, stationary_pole):
         """Process PointCloud message."""
         point_cloud = PointCloud()
         point_cloud.ParseFromString(message)
         transform = get_world_coordinate(self.transform, pose)
         for point in point_cloud.point:
-            convert_to_world_coordinate(point, transform, stationary_pole)
+            point_world = \
+                convert_to_world_coordinate(point, transform, stationary_pole)
             vector4 = frame_pb2.Vector4()
-            vector4.x = point.x
-            vector4.y = point.y
-            vector4.z = point.z
+            vector4.x = point_world.x
+            vector4.y = point_world.y
+            vector4.z = point_world.z
             vector4.i = point.intensity
             point_frame = frame.points.add()
             point_frame.CopyFrom(vector4)
-
         point = Point3D()
         point.x = 0
         point.y = 0
         point.z = 0
         transform = get_world_coordinate(self.transform, pose)
-        convert_to_world_coordinate(point, transform, stationary_pole)
-        frame.device_position.x = point.x
-        frame.device_position.y = point.y
-        frame.device_position.z = point.z
+        point_world = convert_to_world_coordinate(point, transform, stationary_pole)
+        frame.device_position.x = point_world.x
+        frame.device_position.y = point_world.y
+        frame.device_position.z = point_world.z
         rotation = get_rotation_from_tranform(transform)
         qtn = rotation_to_quaternion(rotation)
-        # todo: either apply it to all or do not apply it
-        # q = apply_scale_rotation(q)
         frame.device_heading.x = qtn.qx
         frame.device_heading.y = qtn.qy
         frame.device_heading.z = qtn.qz
@@ -364,7 +391,7 @@ class RadarSensor(Sensor):
         for transform in self.transforms:
             self.add_transform(transform)
 
-    def process(self, message, frame, pose, stationary_pole):
+    def process(self, message, timestamp, frame, pose, stationary_pole):
         """Processing radar message."""
         radar = ContiRadar()
         radar.ParseFromString(message)
@@ -374,21 +401,20 @@ class RadarSensor(Sensor):
             point3d.x = point.longitude_dist
             point3d.y = point.lateral_dist
             point3d.z = 0
-            convert_to_world_coordinate(point3d, transform, stationary_pole)
+            point_world = \
+                convert_to_world_coordinate(point3d, transform, stationary_pole)
             radar_point = frame_pb2.RadarPoint()
             radar_point.type = self._radar_type
-            radar_point.position.x = point3d.x
-            radar_point.position.y = point3d.y
-            radar_point.position.z = point3d.z
-            #radar_point.position.z = 0
+            radar_point.position.x = point_world.x
+            radar_point.position.y = point_world.y
+            radar_point.position.z = point_world.z
             point3d.x = point.longitude_dist + point.longitude_vel
             point3d.y = point.lateral_dist + point.lateral_vel
             point3d.z = 0
-            convert_to_world_coordinate(point3d, transform, stationary_pole)
-            radar_point.direction.x = point3d.x - radar_point.position.x
-            radar_point.direction.y = point3d.y - radar_point.position.y
-            radar_point.direction.z = point3d.z - radar_point.position.z
-            #radar_point.direction.z = 0
+            point_world = convert_to_world_coordinate(point3d, transform, stationary_pole)
+            radar_point.direction.x = point_world.x - radar_point.position.x
+            radar_point.direction.y = point_world.y - radar_point.position.y
+            radar_point.direction.z = point_world.z - radar_point.position.z
             radar_frame = frame.radar_points.add()
             radar_frame.CopyFrom(radar_point)
 
@@ -408,20 +434,16 @@ class ImageSensor(Sensor):
         for transform in self.transforms:
             self.add_transform(transform)
 
-    def process(self, message, frame, pose, stationary_pole):
+    def process(self, message, timestamp, frame, pose, stationary_pole):
         """Processing image message."""
-        image = CompressedImage()
-        image.ParseFromString(message)
         camera_image = frame_pb2.CameraImage()
-        camera_image.timestamp = image.header.timestamp_sec
-        dump_img_bin(image.data,
-                     os.path.join(self._task_dir, 'images'),
-                     self.frame_id,
-                     self.get_image_name())
+        camera_image.timestamp = float(timestamp)/(10**9)
+        dump_img_name(os.path.join(self._task_dir, 'images'), \
+            timestamp, self.get_image_name())
         camera_image.image_url = '{}/{}/images/pic-{}_{}.jpg'.format(
             SENSOR_PARAMS['image_url'],
-            os.path.basename(self._task_dir),
-            self.frame_id,
+            quote(os.path.basename(self._task_dir)),
+            timestamp,
             self.get_image_name())
         camera_image.k1 = self._intrinsics['D'][0]
         camera_image.k2 = self._intrinsics['D'][1]
@@ -438,14 +460,12 @@ class ImageSensor(Sensor):
         point.y = 0
         point.z = 0
         transform = get_world_coordinate(self.transform, pose)
-        convert_to_world_coordinate(point, transform, stationary_pole)
-        camera_image.position.x = point.x
-        camera_image.position.y = point.y
-        camera_image.position.z = point.z
+        point_world = convert_to_world_coordinate(point, transform, stationary_pole)
+        camera_image.position.x = point_world.x 
+        camera_image.position.y = point_world.y
+        camera_image.position.z = point_world.z
         rotation = get_rotation_from_tranform(transform)
         qtn = rotation_to_quaternion(rotation)
-        # todo: either apply it to all or do not apply it
-        # qtn = apply_scale_rotation(q)
         camera_image.heading.x = qtn.qx
         camera_image.heading.y = qtn.qy
         camera_image.heading.z = qtn.qz
@@ -479,21 +499,22 @@ class GpsSensor(object):
         gps_pose.lat = self.position.x
         gps_pose.lon = self.position.y
         gps_pose.bearing = self.orientation.qw
+        gps_pose.x = self.position.x
+        gps_pose.y = self.position.y
+        gps_pose.z = self.position.z
+        gps_pose.qw = self.orientation.qw
+        gps_pose.qx = self.orientation.qx
+        gps_pose.qy = self.orientation.qy
+        gps_pose.qz = self.orientation.qz
         frame.device_gps_pose.CopyFrom(gps_pose)
-
-    def flush_to_frame(self):
-        """Place holder"""
-        pass
-
-    def correct_localization(self):
-        """Place holder"""
-        pass
 
 class FramePopulator(object):
     """Extract sensors data from record file, and populate to JSON."""
-    def __init__(self, task_dir):
+    def __init__(self, root_dir, task_dir, slice_size):
         self._stationary_pole = None
-        self._task_dir = task_dir
+        self._root_dir = root_dir
+        self._task_dir = os.path.join(root_dir, task_dir)
+        self._slice_size = slice_size
         create_dir_if_not_exist(self._task_dir)
 
         pointcloud_128 = PointCloudSensor(
@@ -552,37 +573,52 @@ class FramePopulator(object):
 
     def construct_frames(self, message_structs):
         """Construct the frames by using given messages."""
-        frame = frame_pb2.Frame()
+        frame_dir = os.path.join(self._task_dir, 'frames')
+        create_dir_if_not_exist(frame_dir)
         lidar_msg = \
-          next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
-        lidar_pose = get_mean_pose(lidar_msg.pose_left, lidar_msg.pose_right)
+            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
+                
+        # Filter out the frames that lidar-128 has time diff bigger than designed value
+        max_diff = 30
+        front6mm_msg = \
+            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['front6mm_channel'])
+        diff = abs(float(lidar_msg.message.timestamp) - float(front6mm_msg.message.timestamp))
+        if diff > max_diff * (10**6):
+            glog.warn('time diff between lidar and front6mm is too big: {}, skip this frame'.format(diff))
+            return
+        lidar_pose = get_interp_pose(lidar_msg.message.timestamp, 
+                                     lidar_msg.pose_left, 
+                                     lidar_msg.pose_right)
+        frame = frame_pb2.Frame()
         lidar_pose.process(frame)
         if self._stationary_pole is None:
             self._stationary_pole = \
                 (lidar_pose.position.x, lidar_pose.position.y, lidar_pose.position.z)
+        file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.message.timestamp))
+        if os.path.exists(file_name):
+            glog.info('frame file {} already existed, do nothing'.format(file_name))
+            return
 
         for message_struct in message_structs:
-            channel, message, _type, _timestamp = message_struct.message
-            pose = get_mean_pose(message_struct.pose_left, message_struct.pose_right)
+            channel, timestamp, _, objpath = message_struct.message
+            message_obj = streaming_utils.load_message_obj(objpath)
+            pose = get_interp_pose(message_struct.message.timestamp, 
+                                   message_struct.pose_left, 
+                                   message_struct.pose_right)
             if isinstance(CHANNEL_PROCESS_MAP[channel], ImageSensor):
                 CHANNEL_PROCESS_MAP[channel].frame_id = lidar_msg.message.timestamp
-            CHANNEL_PROCESS_MAP[channel].process(message, frame, pose, self._stationary_pole)
-
-        frame.timestamp = lidar_msg.message.timestamp
-        frame_dir = os.path.join(self._task_dir, 'frames')
-        create_dir_if_not_exist(frame_dir)
-        file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.message.timestamp))
+            CHANNEL_PROCESS_MAP[channel].process(message_obj,
+                                                 timestamp,
+                                                 frame,
+                                                 pose,
+                                                 self._stationary_pole)
+        frame.timestamp = float(lidar_msg.message.timestamp)/(10**9)
+        glog.info('converting proto object to json: {}'.format(file_name))
         json_obj = MessageToJson(frame, False, True)
+        glog.info('preparing to dump json to file: {}'.format(file_name))      
         with open(file_name, 'w') as outfile:
             outfile.write(json_obj)
-
-    def count_frames(self):
-        """Place holder"""
-        pass
-
-    def get_initial_frame(self):
-        """Place holder"""
-        pass
+        glog.info('dumped json: {}'.format(file_name))
 
 class DataStream(object):
     """Logic data buffer to manage data reading from different kinds of sources."""
@@ -622,6 +658,7 @@ class DataStream(object):
         if self._data_source_index <= 1:
             return 0
         del self._buffer[:item_number_released]
+        gc.collect()
         for iterator in self._iterators:
             iterator.update_index(item_number_released+1)
         return item_number_released+1
@@ -658,18 +695,6 @@ class MessageStruct(object):
         self.pose_left = pose_left
         self.pose_right = pose_right
 
-    def check_msg(self):
-        """Place holder"""
-        pass
-
-    def check_pose_left(self):
-        """Place holder"""
-        pass
-
-    def check_pose_right(self):
-        """Place holder"""
-        pass
-
 class Builder(object):
     """Used for building objects with specific sequences and properties."""
     def __init__(self, message_struct, rules):
@@ -690,23 +715,16 @@ class Builder(object):
 
     def complete(self, frame_populator):
         """Builder complete, and send messages to framepopulator in this case"""
-        messages = self._guide_lines.values()
+        messages = self._guide_lines.values()     
         frame_populator.construct_frames(messages)
-
+        
 class BuilderManager(object):
     """Builder management pool."""
     def __init__(self, rules, frame_populator):
         self._builder_list = []
         self._rules = rules
         self._frame_populator = frame_populator
-
-    def get_builder(self):
-        """Place holder"""
-        pass
-
-    def set_builder(self):
-        """Place holder"""
-        pass
+        self._counter = 0
 
     def throw_to_pool(self, message_struct):
         """Process new coming message. Loop each builder in the list and find the right one"""
@@ -714,6 +732,8 @@ class BuilderManager(object):
             status, msg = builder.build(message_struct)
             if msg is None:
                 if status == 1:
+                    glog.info('constructing the {}th frame'.format(self._counter))
+                    self._counter += 1
                     builder.complete(self._frame_populator)
                     self._builder_list.remove(builder)
                 return

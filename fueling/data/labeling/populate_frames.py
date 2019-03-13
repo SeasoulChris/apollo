@@ -3,10 +3,12 @@
 """This script extracts sensor messages for labeling"""
 
 from collections import Counter
+import glog
 import operator
 import os
 import re
 import textwrap
+import time
 
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
@@ -14,13 +16,14 @@ from pyspark.sql import SQLContext
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # Partition records into slices, this is to tell how many records files in one slice
-SLICE_SIZE = 3
+SLICE_SIZE = 4
 
 # The channels we need to populate
 WANTED_CHANNELS = {
@@ -35,47 +38,18 @@ WANTED_CHANNELS = {
 }
 
 # Helper functions
-def get_todo_files(spark_context, original_prefix, target_prefix, bucket=None, root_dir=None):
-    """Get to be processed files in rdd format."""
-    if bucket is not None:
-        record_files = s3_utils.list_files(bucket, original_prefix)
-        processed_files = s3_utils.list_files(bucket, target_prefix)
-    elif root_dir is not None:
-        record_files = (spark_context
-                        .parallelize(os.listdir(os.path.join(root_dir, original_prefix)))
-                        .map(lambda path: os.path.join(original_prefix, path)))
-        processed_files = (spark_context
-                           .parallelize(os.listdir(os.path.join(root_dir, target_prefix)))
-                           .map(lambda path: os.path.join(target_prefix, path)))
-    processed_dirs = (processed_files
-                      .filter(lambda path: path.endswith('/COMPLETE'))
-                      .map(os.path.dirname)
-                      .map(lambda path: path.replace(target_prefix, original_prefix, 1)))
-    candidate_dirs = (record_files
-                      .filter(lambda path: path.endswith('/COMPLETE'))
-                      .map(os.path.dirname))
-    todo_files = record_files.keyBy(os.path.dirname)
-    todo_files = spark_op.filter_keys(todo_files, candidate_dirs)
-    todo_files = spark_op.substract_keys(todo_files, processed_dirs)
-    todo_files = (todo_files
-                  .filter(lambda todo_target: are_all_channels_available(todo_target, root_dir))
-                  .map(spark_op.do_key(lambda key: key.replace(original_prefix, target_prefix, 1)))
-                  .cache())
-    return todo_files
-
 def are_all_channels_available(todo_target, root_dir):
     """Filter record files out if they do not have required channels or simply not readable"""
     _, record_file = todo_target
-    if not record_utils.is_record_file(record_file):
+    if record_file is None or not record_utils.is_record_file(record_file):
         return False
     channels_to_verify = WANTED_CHANNELS.values()
     channels_to_verify.append('/apollo/localization/pose')
-    numbers = populate_utils\
-        .get_messages_number(os.path.join(root_dir, record_file), channels_to_verify)
-    minimal_required_number = 8
-    if numbers is None or len(numbers) < len(channels_to_verify) or \
-        any(num < minimal_required_number for num in numbers):
-        return False
+    minimal_required_number = 16
+    for topic in channels_to_verify:
+        lines = list(streaming_utils.load_topic(root_dir, record_file, topic))
+        if lines is None or len(lines) < minimal_required_number:
+            return False
     return True
 
 def record_to_target_partition(target_record):
@@ -84,15 +58,6 @@ def record_to_target_partition(target_record):
     record_fileparts = os.path.basename(record_file).split('.')
     target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2])/SLICE_SIZE)
     return (target_partition, record_file)
-
-def target_partition_to_records(root_dir, original_prefix, target_prefix, target_partition):
-    """Revert a partition to original record files"""
-    seq = int(re.search(r'[\S]*\d{14}#SS([\d]*)$', target_partition, re.M|re.I).group(1))
-    src_record_file = target_partition.replace(target_prefix, original_prefix, 1).rsplit('#', 1)[0]
-    for rec in range(seq * SLICE_SIZE, (seq+1) * SLICE_SIZE):
-        ret_record = '{}.record.{:05d}'.format(src_record_file, rec)
-        if os.path.exists(os.path.join(root_dir, ret_record)):
-            yield ret_record
 
 def create_dataframe(sql_context, msgs_rdd, topics):
     """Create DataFrame for specified topics"""
@@ -114,10 +79,11 @@ def get_next_message(msg, msg_map, msgs_iterator):
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
     return msg
 
-def construct_frames(root_dir, original_prefix, target_prefix, frames):
+def construct_frames(root_dir, frames):
     """Construct the frame by using given messages.
     Read the according message ONCE again, to avoid playing big messages in memory"""
     target_dir, msgs = frames
+    glog.info('Now executors start the hard working.  target_dir: {}'.format(target_dir))
 
     #target_dir looks like:
     #'modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05/20181113152909#SS0
@@ -129,17 +95,22 @@ def construct_frames(root_dir, original_prefix, target_prefix, frames):
     #  'camera_2_topic-camera_2_time'
     #  ...
     #)
+
     msg_map = Counter(msgs)
-    msgs_stream = populate_utils.DataStream(
-        [os.path.join(root_dir, x) for x in \
-            target_partition_to_records(root_dir, original_prefix, target_prefix, target_dir)],
-        populate_utils.read_messages_func)
+    glog.info('Total messages: {}'.format(sum(msg_map.itervalues())))
+    
+    src_records = list(streaming_utils.target_partition_to_records(root_dir, target_dir, SLICE_SIZE))
+
+    msgs_stream = populate_utils.DataStream(src_records, 
+        lambda x: streaming_utils.load_messages(root_dir, x, WANTED_CHANNELS.values()))
+    pose_stream = populate_utils.DataStream(src_records, 
+        lambda x: streaming_utils.load_messages(root_dir, x, ['/apollo/localization/pose']))
     msgs_iterator = populate_utils.DataStreamIterator(msgs_stream)
-    pose_iterator = populate_utils.DataStreamIterator(msgs_stream)
+    pose_iterator = populate_utils.DataStreamIterator(pose_stream)
 
     builder_manager = populate_utils. \
         BuilderManager(WANTED_CHANNELS.values(),
-                       populate_utils.FramePopulator(os.path.join(root_dir, target_dir)))
+                       populate_utils.FramePopulator(root_dir, target_dir, SLICE_SIZE))
     msg = get_next_message(None, msg_map, msgs_iterator)
     message_struct = populate_utils.MessageStruct(msg, None, None)
     pose = pose_iterator.next(lambda x: x.topic == '/apollo/localization/pose')
@@ -153,9 +124,17 @@ def construct_frames(root_dir, original_prefix, target_prefix, frames):
             if message_struct.pose_right is None or message_struct.pose_right > pose.timestamp:
                 message_struct.pose_right = pose
             builder_manager.throw_to_pool(message_struct)
-            msg = get_next_message(msg, msg_map, msgs_iterator)
+            msg_new = get_next_message(msg, msg_map, msgs_iterator)
+            while msg_new is not None and msg_new.timestamp == msg.timestamp \
+                 and msg_new.topic == msg.topic:
+                builder_manager.throw_to_pool(populate_utils.MessageStruct(
+                    message_struct.message, message_struct.pose_left, message_struct.pose_right))
+                msg_new = get_next_message(msg, msg_map, msgs_iterator)
+            msg = msg_new
             message_struct = populate_utils.MessageStruct(msg, None, None)
 
+    glog.info('Done with target: {}'.format(target_dir))
+    
 def get_sql_query(sql_context, msgs_rdd):
     """Get SQL statements for performing the query."""
     lidar_df = create_dataframe(sql_context, msgs_rdd, ('lidar-128',))
@@ -184,14 +163,15 @@ def get_sql_query(sql_context, msgs_rdd):
             'table_name': table_name
             })
 
-def mark_complete(todo_files, root_dir):
+def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
-    todo_files \
-        .keys() \
-        .distinct() \
-        .map(lambda path: os.path.join(root_dir, os.path.join(path, 'COMPLETE'))) \
-        .map(os.mknod) \
-        .count()
+    for task in todo_tasks:
+        task_path = os.path.join(root_dir, target_dir)
+        task_path = os.path.join(task_path, os.path.basename(task))
+        populate_utils.chmod_dir(task_path, 777)
+        streaming_utils.write_to_file(\
+            os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
+        populate_utils.chmod_dir(task_path, 755)
 
 class PopulateFramesPipeline(BasePipeline):
     """PopulateFrames pipeline."""
@@ -204,48 +184,62 @@ class PopulateFramesPipeline(BasePipeline):
         root_dir = '/apollo'
         target_dir = 'modules/data/labeling/generated'
         populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
+        glog.info('Running TEST, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
+        glog.info('ToDo tasks: {}'.format(todo_tasks))
 
         self.run(todo_tasks, root_dir, target_dir)
 
-        mark_complete(todo_tasks, root_dir)
+        glog.info('Task done, marking COMPLETE')
+        mark_complete(todo_tasks, target_dir, root_dir)
 
-        print 'Labeling: All Done, TEST.'
+        glog.info('Labeling: All Done, TEST.')
 
     def run_prod(self):
         """Run prod."""
         root_dir = s3_utils.S3_MOUNT_PATH
         target_dir = 'modules/data/labeling/generated'
         populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
+        glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
+        glog.info('ToDo tasks: {}'.format(todo_tasks))
 
         self.run(todo_tasks, root_dir, target_dir)
 
-        mark_complete(todo_tasks, root_dir)
+        glog.info('Task done, marking COMPLETE')
+        mark_complete(todo_tasks, target_dir, root_dir)
 
-        print 'Labeling: All Done, PROD.'
+        glog.info('Labeling: All Done, PROD.')
 
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
+        if todo_tasks is None or len(todo_tasks) == 0:
+            glog.warn('Labeling: no tasks to process, quit now')
+            return
+
+        glog.info('Load messages META data for query')
         spark_context = self.get_spark_context()
-        msgs_rdd = (spark_context.parallelize(todo_tasks)      # -> (task_dir)
+        # -> (task_dir)
+        msgs_rdd = (spark_context.parallelize(todo_tasks).distinct()
                     # -> (target_dir, task_dir)
                     .keyBy(lambda task_dir: os.path.join(target_dir, os.path.basename(task_dir)))
                     # -> (target_dir, record_files)
                     .flatMapValues(streaming_utils.list_records_for_task)
+                    .mapValues(lambda record: record.strip())
+                    .filter(lambda record: are_all_channels_available(record, root_dir))
                     # -> (target_partition, record_files)
                     .map(record_to_target_partition)
                     # -> (target_partition, messages_metadata)
-                    .flatMapValues(lambda record: streaming_utils
-                        .load_meta_data(record, WANTED_CHANNELS.values()))
+                    .flatMapValues(lambda record: streaming_utils \
+                        .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
                     # -> (target_partition, timestamp, topic)
-                    .map(lambda (target, topic, timestamp, fields): (target, timestamp, topic))
-                    .cache()
-                    )
+                    .map(lambda (target, meta): (target, meta.timestamp, meta.topic))
+                    .cache())
 
         # Transform RDD to DataFrame, run SQL and tranform back when done
+        glog.info('SQL query to search closest sensor messages')
         sql_context = SQLContext(spark_context)
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context
@@ -262,7 +256,7 @@ class PopulateFramesPipeline(BasePipeline):
          # -> <target, {(topic-time-pair)}>
          .groupByKey()
          # -> process every partition, with all frames belonging to it
-         .map(lambda x: construct_frames(root_dir, original_prefix, target_prefix, x))
+         .map(lambda frames: construct_frames(root_dir, frames))
          # -> simply trigger action
          .count())
 

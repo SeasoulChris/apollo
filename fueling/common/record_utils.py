@@ -9,6 +9,7 @@ from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
+from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
@@ -19,13 +20,22 @@ HMI_STATUS_CHANNEL = '/apollo/hmi/status'
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'
 LOCALIZATION_CHANNEL = '/apollo/localization/pose'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
+FRONT_6mm_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
+FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
+REAR_6mm_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
+LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
+RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,
     HMI_STATUS_CHANNEL: HMIStatus,
     LOCALIZATION_CHANNEL: LocalizationEstimate,
     ROUTING_RESPONSE_HISTORY_CHANNEL: RoutingResponse,
-
+    FRONT_6mm_CHANNEL: CompressedImage,
+    FRONT_12mm_CHANNEL: CompressedImage,
+    REAR_6mm_CHANNEL: CompressedImage,
+    LEFT_FISHEYE_CHANNEL: CompressedImage,
+    RIGHT_FISHEYE_CHANNEL: CompressedImage,
 }
 
 

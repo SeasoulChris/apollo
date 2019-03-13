@@ -21,3 +21,4 @@ dependencies:
   - pip:
     - pylint
     - pyspark-utils
+    - pyquaternion
