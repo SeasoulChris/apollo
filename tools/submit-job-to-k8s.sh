@@ -65,7 +65,7 @@ if [ -z "${JOB_FILE}" ]; then
 fi
 
 # Upload local files to remote.
-BOS_MOINT_POINT="/mnt/bos"
+BOS_MOUNT_POINT="/mnt/bos"
 REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
 REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
