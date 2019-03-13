@@ -39,8 +39,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -97,16 +96,18 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # -> dir_segment
             .keys())
 
-        data_rdd = (spark_op.filter_keys(dir_to_msgs, valid_segments)
-                    # ((dir, time_stamp_per_min), proto)
-                    .mapValues(record_utils.message_to_proto)
-                    # ((dir, time_stamp_per_min), (chassis_proto or pose_proto))
-                    .combineByKey(feature_extraction_utils.to_list,
-                                  feature_extraction_utils.append, feature_extraction_utils.extend)
-                    # -> (key, (chassis_proto_list, pose_proto_list))
-                    .mapValues(feature_extraction_utils.process_seg)
-                    # ((folder, time/min), (chassis,pose))
-                    .mapValues(feature_extraction_utils.pair_cs_pose))
+        data_rdd = (
+            # (dir_segment, msg)
+            spark_op.filter_keys(dir_to_msgs, valid_segments)
+            # -> (dir_segment, msgs)
+            .groupByKey()
+            # -> (dir_segment, proto_dict)
+            .mapValues(record_utils.messages_to_proto_dict())
+            # -> (dir_segment, (chassis_list, pose_list))
+            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
+                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
+            # -> (dir_segment, (chassis, pose))
+            .mapValues(feature_extraction_utils.pair_cs_pose))
 
         # ((folder, time/min), feature_matrix)
         calibration_table_rdd = (data_rdd
