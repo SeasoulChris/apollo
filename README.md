@@ -82,14 +82,17 @@ And good coding practices are:
 ### Test your pipeline at local
 
 ```bash
-tools/submit-job-to-local.sh --job /path/to/spark/job.py
+tools/submit-job-to-local.sh /path/to/spark/job.py
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
 
 ### Run pipeline in cluster
 
-Check in your code to add the job to a pipeline carrier, which might run once,
-daily or weekly according to your need.
+If you are pretty familliar with the infra, please loop the data team in to have
+your job well reviewed, and then run:
 
-Talk to the data team (usa-data@baidu.com) if you are pretty familliar with the
-infra and want to get more control.
+```bash
+tools/submit-job-to-k8s.sh /path/to/spark/job.py
+```
+
+The team shares a lot of resources, please be cautious.

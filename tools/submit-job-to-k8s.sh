@@ -18,10 +18,6 @@ while [ $# -gt 0 ]; do
         shift
         CONDA_ENV=$1
         ;;
-    --job|-j)
-        shift
-        JOB_FILE=$1
-        ;;
     --workers|-w)
         shift
         EXECUTORS=$1
@@ -35,12 +31,21 @@ while [ $# -gt 0 ]; do
         EXECUTOR_MEMORY=$1
         ;;
     *)
-        echo -e "Unknown option: $1"
-        exit 1
+        if [ -f "$1" ]; then
+          JOB_FILE=$1
+        else
+          echo -e "$1: Unknown option or file not exists."
+          exit 1
+        fi
         ;;
     esac
     shift
 done
+
+if [ -z "${JOB_FILE}" ]; then
+  echo "No job specified."
+  exit 1
+fi
 
 # Generally fixed config.
 K8S="https://180.76.98.43:6443"
@@ -54,11 +59,6 @@ BOS_FSTOOL_EXECUTABLE="$( dirname "${BASH_SOURCE[0]}" )/../apps/static/bos_fstoo
 
 set -x
 set -e
-
-if [ -z "${JOB_FILE}" ]; then
-  echo "No --job specified."
-  exit 1
-fi
 
 # Upload local files to remote.
 BOS_MOUNT_POINT="/mnt/bos"
