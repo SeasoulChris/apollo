@@ -15,7 +15,8 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.colored_glog as glog
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-import fueling.control.features.calibration_table_utils as calibration_table_utils
+# import fueling.control.features.calibration_table_utils as calibration_table_utils
+import fueling.control.features.calibration_table_train_utils as calibration_table_train_utils
 
 
 WANTED_VEHICLE = 'Transit'
@@ -51,24 +52,26 @@ class CalibrationTableTraining(BasePipeline):
         train_file_rdd = (dir_to_records
                           # training data (hdf5 file) vehicle
                           .map(lambda elem:
-                               calibration_table_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
+                               calibration_table_train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
                           # generate training data segment
-                          .mapValues(calibration_table_utils.generate_segments)
+                          .mapValues(calibration_table_train_utils.generate_segments)
                           #   generate training data: x_train_data, y_train_data
-                          .mapValues(calibration_table_utils.generate_data)).cache()
+                          .mapValues(calibration_table_train_utils.generate_data)).cache()
 
         test_file_rdd = (dir_to_records
                          # training data (hdf5 file) vehicle
                          .map(lambda elem:
-                              calibration_table_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
+                              calibration_table_train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
                          # generate training data segment
-                         .mapValues(calibration_table_utils.generate_segments)
+                         .mapValues(calibration_table_train_utils.generate_segments)
                          #   generate training data: x_train_data, y_train_data
-                         .mapValues(calibration_table_utils.generate_data)).cache()
+                         .mapValues(calibration_table_train_utils.generate_data)).cache()
 
+        train_layer = [2, 15, 1]
+        train_alpha = 0.05
         train_model_rdd = (train_file_rdd
                            .join(test_file_rdd)
-                           .mapValues())
+                           .mapValues(lambda elem: calibration_table_train_utils.train_model(elem, train_layer, train_alpha)))
 
         print(train_model_rdd.first())
     # train model(train data, test data)
