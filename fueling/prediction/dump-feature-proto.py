@@ -6,7 +6,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
-import fueling.common.file_utils as file_utils
+import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
@@ -28,8 +28,8 @@ class DumpFeatureProto(BasePipeline):
         """Run prod."""
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
-        origin_prefix = 'small-records/2019/2019-01'
-        target_prefix = 'modules/prediction/dump_feature_proto/2019/2019-01'
+        origin_prefix = 'small-records/'
+        target_prefix = 'modules/prediction/dump_feature_proto/'
 
         records_dir = (
             # file, start with origin_prefix
@@ -53,8 +53,6 @@ class DumpFeatureProto(BasePipeline):
             # -> (record_dir, target_dir), in absolute path
             .map(lambda src_dst: (os.path.join(root_dir, src_dst[0]),
                                   os.path.join(root_dir, src_dst[1])))
-            # -> (record_dir, target_dir), target_dir is created
-            .mapValues(file_utils.makedirs)
             # -> 0/1
             .map(spark_op.do_tuple(self.process_dir))
             .cache())
@@ -76,4 +74,4 @@ class DumpFeatureProto(BasePipeline):
 
 
 if __name__ == '__main__':
-    DumpFeatureProto().run_test()
+    DumpFeatureProto().run_prod()

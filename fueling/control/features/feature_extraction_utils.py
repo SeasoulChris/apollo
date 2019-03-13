@@ -4,6 +4,7 @@ common functions for feature extractin
 """
 import os
 import glob
+
 import glog
 import h5py
 import numpy as np

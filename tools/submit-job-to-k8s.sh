@@ -11,7 +11,7 @@ CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=16
 EXECUTOR_CORES=3
 EXECUTOR_MEMORY=24g
-IMAGE="xiangquan/spark:20190311_1741"
+IMAGE="hub.baidubce.com/apollo/spark:latest"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -89,6 +89,8 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
+    --conf spark.kubernetes.container.image.pullPolicy="Always" \
+    --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \

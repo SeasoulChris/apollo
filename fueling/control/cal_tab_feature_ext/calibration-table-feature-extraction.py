@@ -131,4 +131,4 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
 
 if __name__ == '__main__':
-    CalibrationTableFeatureExtraction().run_test()
+    CalibrationTableFeatureExtraction().run_prod()

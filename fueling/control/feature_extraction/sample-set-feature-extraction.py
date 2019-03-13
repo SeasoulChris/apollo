@@ -126,4 +126,4 @@ class SampleSetFeatureExtraction(BasePipeline):
 
 
 if __name__ == '__main__':
-    SampleSetFeatureExtraction().run_test()
+    SampleSetFeatureExtraction().run_prod()
