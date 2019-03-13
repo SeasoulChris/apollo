@@ -10,8 +10,6 @@ import fueling.common.file_utils as file_utils
 from neural_network_tf import NeuralNetworkTF
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
-# from fueling.control.cal_tab_feature_ext.neural_network_tf import NeuralNetworkTF
-
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
     dir = elem[0]

@@ -144,10 +144,5 @@ class CalibrationTableTraining(BasePipeline):
         print(brake_model_rdd.first())
 
 
-# train model(train data, test data)
-
-# write table
-
-
 if __name__ == '__main__':
     CalibrationTableTraining().run_test()
