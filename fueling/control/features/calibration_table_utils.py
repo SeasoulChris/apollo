@@ -1,10 +1,11 @@
+import glob
+import random
+
 import h5py
 import numpy as np
-import random
-import glog
-import glob
 
 from fueling.control.features.filters import Filters
+import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 

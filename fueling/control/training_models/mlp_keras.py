@@ -5,6 +5,7 @@ from random import shuffle
 from time import time
 import glob
 import os
+
 from keras.regularizers import l1, l2
 from keras.layers import Dense, Input
 from keras.layers import Activation
@@ -18,6 +19,7 @@ import numpy as np
 
 from fueling.control.features.parameters_training import dim
 from modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
+import fueling.common.colored_glog as glog
 import modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
@@ -33,16 +35,13 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + \
-    dim["control"]  # accounts for mps
+DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
@@ -55,23 +54,12 @@ def setup_model(model_name):
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
     """
     model = Sequential()
-    model.add(Dense(10,
-                    input_dim=5,
-                    init='he_normal',
-                    activation='relu',
-                    W_regularizer=l2(0.001)))
+    model.add(Dense(10, input_dim=5, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
     if model_name == 'mlp_three_layer':
-        model.add(Dense(4,
-                        init='he_normal',
-                        activation='relu',
-                        W_regularizer=l2(0.001)))
-        print 'Load Three-layer MLP Model'
-    model.add(Dense(2,
-                    init='he_normal',
-                    W_regularizer=l2(0.001)))
-    model.compile(loss='mse',
-                  optimizer='adam',
-                  metrics=['mse'])
+        model.add(Dense(4, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
+        glog.info('Load Three-layer MLP Model')
+    model.add(Dense(2, init='he_normal', W_regularizer=l2(0.001)))
+    model.compile(loss='mse', optimizer='adam', metrics=['mse'])
     return model
     
 
@@ -114,40 +102,34 @@ def save_model(model, param_norm, filename):
     net_params.dim_output = DIM_OUTPUT
     with open(filename, 'wb') as params_file:
         params_file.write(net_params.SerializeToString())
-    # print text_format.MessageToString(net_params)
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dirs, model_name='mlp_two_layer'):
+def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     x_data = (x_data - param_norm[0]) / param_norm[1]
     x_data = x_data[:, [0, 1, 3, 4, 5]]
     y_data[:, 0] = (y_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
     y_data[:, 1] = (y_data[:, 1] - param_norm[0][2]) / param_norm[1][2]
-    print "x shape = ", x_data.shape
-    print "y shape = ", y_data.shape
+    glog.info("x shape = {}, y shape = {}".format(x_data.shape, y_data.shape))
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        x_data, y_data, test_size=0.2, random_state=42)
-    print "x_train shape = ", x_train.shape
-    print "y_train shape = ", y_train.shape
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data,
+                                                        test_size=0.2, random_state=42)
+    glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model(model_name)
-    training_history = model.fit(x_train, y_train,
-                                 shuffle=True,
-                                 nb_epoch=30,
-                                 batch_size=32)
+    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=30, batch_size=32)
 
     evaluation = model.evaluate(x_test, y_test)
-    print "\nModel evaluation: "
-    print "Loss on testing data is ", evaluation[0]
-    print "MSE on testing data is ", evaluation[1]
+    glog.info("Model evaluation on test data: Loss={}, MSE={}".format(evaluation[0], evaluation[1]))
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-    save_model(model, param_norm, out_dirs + 'mlp_model_' + timestr + '.bin')
+    model_bin = os.path.join(out_dir, 'mlp_model_' + timestr + '.bin')
+    save_model(model, param_norm, model_bin)
 
     # save norm_params to hdf5
-    h5_file = h5py.File(out_dirs + 'mlp_model_norms_' + timestr + '.h5', 'w')
-    h5_file.create_dataset('mean', data=param_norm[0])
-    h5_file.create_dataset('std', data=param_norm[1])
-    h5_file.close()
+    norms_h5 = os.path.join(out_dir, 'mlp_model_norms_' + timestr + '.h5')
+    with h5py.File(norms_h5, 'w') as h5_file:
+        h5_file.create_dataset('mean', data=param_norm[0])
+        h5_file.create_dataset('std', data=param_norm[1])
 
-    model.save(out_dirs + 'mlp_model_weights_' + timestr + '.h5')
+    weights_h5 = os.path.join(out_dir, 'mlp_model_weights_' + timestr + '.h5')
+    model.save(weights_h5)
