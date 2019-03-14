@@ -154,7 +154,8 @@ def feature_distribute(elem):
                     curr_segment_speed = segment_speed_list[speed_index]
                     next_segment_speed = segment_speed_list[speed_index + 1]
                     if (speed > curr_segment_speed and speed < next_segment_speed):
-                        grid_dict[curr_segment_cmd][curr_segment_speed].append(feature_index)
+                        grid_dict[curr_segment_cmd][curr_segment_speed].append(
+                            feature_index)
                         break
                 break
 
@@ -164,7 +165,8 @@ def feature_distribute(elem):
             feature_index_list = grid_dict[segment_cmd][segment_speed]
             if len(feature_index_list) == 0:
                 continue
-            acc_list = [elem[feature_index][1] for feature_index in feature_index_list]
+            acc_list = [elem[feature_index][1]
+                        for feature_index in feature_index_list]
             acc_mean = np.mean(acc_list)
             acc_std = np.std(acc_list)
             for index, feature_index in enumerate(feature_index_list):
@@ -247,21 +249,24 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     folder_path = target_prefix
 
     # throttle train file
-    throttle_train_file_dir = "{}/{}/throttle/train".format(folder_path, vehicle_type)
+    throttle_train_file_dir = "{}/{}/throttle/train".format(
+        folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % throttle_train_file_dir)
 
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
     write_h5_cal_tab(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
-    throttle_test_file_dir = "{}/{}/throttle/test".format(folder_path, vehicle_type)
+    throttle_test_file_dir = "{}/{}/throttle/test".format(
+        folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % throttle_test_file_dir)
 
     throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
     write_h5_cal_tab(throttle_test_data, throttle_test_file_dir, key)
 
     # brake train file
-    brake_train_file_dir = "{}/{}/brake/train".format(folder_path, vehicle_type)
+    brake_train_file_dir = "{}/{}/brake/train".format(
+        folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
 
     brake_train_data = brake_train[0:brake_train_feature_num, :]
@@ -280,4 +285,4 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
 def write_h5_cal_tab(data, file_dir, file_name):
     file_utils.makedirs(file_dir)
     with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
-        h5_file.create_dataset("segment", data, dtype="float32")
+        h5_file.create_dataset("segment", data=data, dtype="float32")
