@@ -35,8 +35,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -50,8 +49,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         complete_dirs = files.filter(
             lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
@@ -105,6 +103,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                                            proto_dict[record_utils.LOCALIZATION_CHANNEL]))
             # -> (dir_segment, (chassis, pose))
             .mapValues(feature_extraction_utils.pair_cs_pose))
+
+        target_prefix = os.path.join(root_dir, target_prefix)
 
         calibration_table_rdd = (
             # ((folder, time/min), feature_matrix)
