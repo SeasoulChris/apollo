@@ -8,7 +8,7 @@
 # Default value for configurable arguments.
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
-EXECUTORS=16
+EXECUTORS=15
 EXECUTOR_CORES=3
 EXECUTOR_MEMORY=24g
 

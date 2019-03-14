@@ -74,9 +74,9 @@ class GenerateSmallRecords(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         # Original records are public-test/path/to/*.record, sharded to M.
-        origin_prefix = 'public-test/2019/2019-01'
+        origin_prefix = 'public-test/2019/'
         # We will process them to small-records/path/to/*.record, sharded to N.
-        target_prefix = 'small-records/2019/2019-01'
+        target_prefix = 'small-records/2019/'
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         records_rdd = files.filter(record_utils.is_record_file)
