@@ -39,6 +39,12 @@ def get_todo_tasks(original_prefix, target_prefix, list_func):
                         .map(lambda path: path.replace(target_prefix, original_prefix, 1))
     return original_dirs.subtract(processed_dirs)
 
+def get_abs_path(root_dir, path):
+    """Get absolute path of given file path"""
+    if path.startswith(root_dir) or path.startswith('/'):
+        return path
+    return os.path.join(root_dir, path)
+
 def execute_task(task):
     """Execute task by task"""
     dest_dir, source_dir = task
@@ -95,7 +101,7 @@ class ScenarioExtractionPipeline(BasePipeline):
                                         list_end_files(os.path.join(root_dir, path))))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run(todo_tasks, root_dir, original_prefix, target_prefix)
         glog.info('Simulation: All Done, TEST')
 
     def run_prod(self):
@@ -109,12 +115,13 @@ class ScenarioExtractionPipeline(BasePipeline):
                                     lambda path: s3_utils.list_files(bucket, path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)
         glog.info('Simulation: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run(self, todo_tasks, root_dir, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         todo_tasks \
+            .map(lambda path: get_abs_path(root_dir, path)) \
             .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1)) \
             .map(execute_task) \
             .count()
