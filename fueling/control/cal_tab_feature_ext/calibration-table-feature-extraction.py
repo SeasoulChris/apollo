@@ -123,8 +123,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .map(lambda elem: calibration_table_utils.write_h5_train_test
                  (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
-        glog.info('Finished %d calibration_table_rdd!' %
-                  calibration_table_rdd.count())
+        glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
 
 
 if __name__ == '__main__':

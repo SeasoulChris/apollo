@@ -12,9 +12,9 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
-    dir = elem[0]
+    record_dir = elem[0]
     hdf5_file = glob.glob(
-        '{}/{}/{}/{}/*.hdf5'.format(dir, vehicle_type, brake_or_throttle, train_or_test))
+        '{}/{}/{}/{}/*.hdf5'.format(record_dir, vehicle_type, brake_or_throttle, train_or_test))
     return (elem[0], hdf5_file)
 
 

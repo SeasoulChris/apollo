@@ -29,13 +29,9 @@ FILENAME_CALIBRATION_TABLE_CONF = os.path.join(os.path.dirname(__file__),
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            calibrationTable.calibrationTable())
 
-# BOS
-# FILENAME_CONTROL_CONF = '/mnt/bos/code/apollo-internal/modules_data/'
-# 'calibration/data/transit/control_conf.pb.txt'
-# local
-FILENAME_CONTROL_CONF = '/apollo/modules/data/fuel/fueling/control/conf/vehicle_para/Transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+FILENAME_CONTROL_CONF = '/mnt/bos/code/apollo-internal/modules_data/' \
+                        'calibration/data/transit/control_conf.pb.txt'
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 
 brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
@@ -65,15 +61,12 @@ class CalibrationTableTraining(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = [
-            'modules/data/fuel/testdata/control/']
+        records = ['modules/data/fuel/testdata/control/']
 
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
-
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
@@ -81,20 +74,14 @@ class CalibrationTableTraining(BasePipeline):
         bucket = 'apollo-platform'
 
         # choose folder for wanted vehicle
-        origin_prefix = os.path.join(
-            'modules/control/feature_extraction_hf5/2019/', WANTED_VEHICLE)
+        origin_prefix = os.path.join('modules/control/feature_extraction_hf5/2019/', WANTED_VEHICLE)
         target_prefix = 'modules/control/calibration_table/'
         root_dir = s3_utils.S3_MOUNT_PATH
-
-        files = s3_utils.list_files(bucket, origin_prefix).cache()
-
-        # complete_dirs = files.filter(
-        #     lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.keyBy(os.path.dirname)
-
-        # no '/COMPLETE' file for now
-        self.run(dir_to_records,
-                 origin_prefix, target_prefix, root_dir)
+        dir_to_records = (
+            s3_utils.list_files(bucket, origin_prefix)
+            .filter(lambda path: path.endswith('.hdf5'))
+            .keyBy(os.path.dirname))
+        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
