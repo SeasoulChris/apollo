@@ -39,41 +39,60 @@ class DynamicModelTraining(BasePipeline):
             # -> dict
             .flatMap(lambda segments: self.load_data(segments))
             # -> dict, with unique keys.
-            .reduceByKey(lambda rdd_1, rdd_2: np.vstack((rdd_1, rdd_2)))
+            .reduceByKey(lambda value_1, value_2: self.concatenate_data(value_1, value_2))
             .cache())
         param_norm = (
-            data.filter(lambda key_value: key_value[0] == 'mlp_input_data')
-            # -> (mlp_input_data, param_norm)
-            .mapValues(lambda rdd: self.get_param_norm(rdd))
+            data.filter(lambda key_value: key_value[0] == 'mlp_data')
+            # -> (mlp_data, param_norm)
+            .mapValues(lambda input_output: self.get_param_norm(input_output[0]))
             .values()
             .first())
-        data.foreach(lambda rdd: mlp_keras.mlp_keras(
-            rdd[0][1], rdd[1][1], param_norm, dirs))
-        data.foreach(lambda rdd: lstm_keras.lstm_keras(
-            rdd[2][1], rdd[3][1], param_norm, dirs))
+        print('Param Norm =', param_norm)
+
+        def _train(data_item):
+            key, (input_data, output_data) = data_item
+            if key == 'mlp_data':
+                mlp_keras.mlp_keras(input_data, output_data, param_norm, dirs)
+            elif key == 'lstm_data':
+                lstm_keras.lstm_keras(
+                    input_data, output_data, param_norm, dirs)
+        data.foreach(_train)
 
     def run_prod(self):
-        hdf5 = glob.glob(
+        h5s = glob.glob(
             '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
         dirs = '/mnt/bos/modules/control/'
         data = (
-            self.get_spark_context().parallelize(hdf5)
+            # h5
+            self.get_spark_context().parallelize(h5s)
+            # -> [segment]
             .map(lambda h5: self.generate_segment(h5))
+            # -> dict
             .flatMap(lambda segments: self.load_data(segments))
-            .reduceByKey(np.vstack)
+            # -> dict, with unique keys.
+            .reduceByKey(lambda value_1, value_2: self.concatenate_data(value_1, value_2))
             .cache())
         param_norm = (
-            data.map(lambda rdd: self.get_param_norm(rdd))
-            .cache())
-        data.foreach(lambda rdd: mlp_keras.mlp_keras(
-            rdd[0][1], rdd[1][1], param_norm, dirs))
-        data.foreach(lambda rdd: lstm_keras.lstm_keras(
-            rdd[2][1], rdd[3][1], param_norm, dirs))
+            data.filter(lambda key_value: key_value[0] == 'mlp_data')
+            # -> (mlp_data, param_norm)
+            .mapValues(lambda input_output: self.get_param_norm(input_output[0]))
+            .values()
+            .collect()[0])
+        print('Param Norm =', param_norm)
+
+        def _train(data_item):
+            key, (input_data, output_data) = data_item
+            if key == 'mlp_data':
+                mlp_keras.mlp_keras(input_data, output_data, param_norm, dirs)
+            elif key == 'lstm_data':
+                lstm_keras.lstm_keras(
+                    input_data, output_data, param_norm, dirs)
+        data.foreach(_train)
 
     def generate_segment(self, h5):
         # print('h5 files:', h5)
         segments = []
-        print('################Loading {}'.format(h5))
+        print('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as fin:
             for ds in fin.itervalues():
                 if len(segments) == 0:
@@ -144,20 +163,16 @@ class DynamicModelTraining(BasePipeline):
                     lstm_output_data[m, :] = mlp_output_data[k, :]
                     m += 1
         training_data = [
-            ("mlp_input_data", mlp_input_data),
-            ("mlp_output_data", mlp_output_data),
-            ("lstm_input_data", lstm_input_data),
-            ("lstm_output_data", lstm_output_data)
+            ("mlp_data", (mlp_input_data, mlp_output_data)),
+            ("lstm_data", (lstm_input_data, lstm_output_data))
         ]
         return training_data
 
-    def concatenate_data(self, dict_1, dict_2):
-        return {
-            "mlp_input_data": np.vstack((dict_1["mlp_input_data"], dict_2["mlp_input_data"])),
-            "mlp_output_data": np.vstack((dict_1["mlp_output_data"], dict_2["mlp_output_data"])),
-            "lstm_input_data": np.vstack((dict_1["lstm_input_data"], dict_2["lstm_input_data"])),
-            "lstm_output_data": np.vstack((dict_1["lstm_output_data"], dict_2["lstm_output_data"]))
-        }
+    def concatenate_data(self, value_1, value_2):
+        return (
+            np.vstack((value_1[0], value_2[0])),
+            np.vstack((value_1[1], value_2[1]))
+        )
 
 
 if __name__ == '__main__':
