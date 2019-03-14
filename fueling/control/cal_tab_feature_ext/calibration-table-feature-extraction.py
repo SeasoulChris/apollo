@@ -103,20 +103,20 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # -> (dir_segment, (chassis, pose))
             .mapValues(feature_extraction_utils.pair_cs_pose))
 
-        # ((folder, time/min), feature_matrix)
         calibration_table_rdd = (
+            # ((folder, time/min), feature_matrix)
             data_rdd
-            # feature generator
+            # -> ((folder, time/min), features)
             .mapValues(calibration_table_utils.feature_generate)
-            # process feature: feature filter
+            # -> ((folder, time/min), filtered_features)
             .mapValues(calibration_table_utils.feature_filter)
-            # process feature: feature cut
+            # -> ((folder, time/min), cutted_features)
             .mapValues(calibration_table_utils.feature_cut)
-            # process feature: feature distribute
+            # -> ((folder, time/min), (grid_dict,cutted_features))
             .mapValues(calibration_table_utils.feature_distribute)
-            # process feature: feature store
+            # -> ((folder, time/min), one_matrix)
             .mapValues(calibration_table_utils.feature_store)
-            # write features to hdf5 files
+            # -> number
             .map(lambda elem: calibration_table_utils.write_h5_train_test(
                 elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
