@@ -14,7 +14,7 @@ import common.proto_utils as proto_utils
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.control.features.calibration_table_train_utils as calibration_table_train_utils
+import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
@@ -94,23 +94,22 @@ class CalibrationTableTraining(BasePipeline):
             dir_to_records
             # -> (dir,hdf5_files)
             .map(lambda elem:
-                 calibration_table_train_utils
-                 .choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
+                 train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
             # -> (dir,segments)
-            .mapValues(calibration_table_train_utils.generate_segments)
+            .mapValues(train_utils.generate_segments)
             # -> (dir,x_train_data, y_train_data)
-            .mapValues(calibration_table_train_utils.generate_data))
+            .mapValues(train_utils.generate_data))
 
         throttle_test_file_rdd = (
             # (dir,dir)
             dir_to_records
             # -> (dir,hdf5_files)
             .map(lambda elem:
-                 calibration_table_train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
+                 train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
             # -> (dir,segments)
-            .mapValues(calibration_table_train_utils.generate_segments)
+            .mapValues(train_utils.generate_segments)
             # -> (dir,x_test_data, y_test_data)
-            .mapValues(calibration_table_train_utils.generate_data))
+            .mapValues(train_utils.generate_data))
 
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
 
@@ -121,40 +120,33 @@ class CalibrationTableTraining(BasePipeline):
             .join(throttle_test_file_rdd)
             # -> (dir,result_array)
             .mapValues(lambda elem:
-                       calibration_table_train_utils
-                       .train_model(elem, throttle_train_layer, train_alpha))
+                       train_utils.train_model(elem, throttle_train_layer, train_alpha))
             # -> (a number)
             .map(lambda elem:
-                 calibration_table_train_utils
-                 .write_table(elem,
-                              speed_min, speed_max, speed_segment_num,
-                              throttle_axis_cmd_min, throttle_axis_cmd_max, cmd_segment_num,
-                              throttle_table_filename))
+                 train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
+                                         throttle_axis_cmd_min, throttle_axis_cmd_max,
+                                         cmd_segment_num, throttle_table_filename))
             .count())
 
         brake_train_file_rdd = (
             # (dir,dir)
             dir_to_records
             # -> (dir,hdf5_files)
-            .map(lambda elem:
-                 calibration_table_train_utils
-                 .choose_data_file(elem, WANTED_VEHICLE, 'brake', 'train'))
+            .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'train'))
             # -> (dir,segments)
-            .mapValues(calibration_table_train_utils.generate_segments)
+            .mapValues(train_utils.generate_segments)
             # -> (dir,x_train_data, y_train_data)
-            .mapValues(calibration_table_train_utils.generate_data))
+            .mapValues(train_utils.generate_data))
 
         brake_test_file_rdd = (
             # (dir,dir)
             dir_to_records
             # -> (dir,hdf5_files)
-            .map(lambda elem:
-                 calibration_table_train_utils
-                 .choose_data_file(elem, WANTED_VEHICLE, 'brake', 'test'))
+            .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'test'))
             # -> (dir,segments)
-            .mapValues(calibration_table_train_utils.generate_segments)
+            .mapValues(train_utils.generate_segments)
             # -> (dir,x_train_data, y_train_data)
-            .mapValues(calibration_table_train_utils.generate_data))
+            .mapValues(train_utils.generate_data))
 
         brake_table_filename = WANTED_VEHICLE+'_brake_calibration_table.pb.txt'
 
@@ -164,16 +156,12 @@ class CalibrationTableTraining(BasePipeline):
             # -> (dir,x_train_data, y_train_data, x_test_data, y_test_data)
             .join(brake_test_file_rdd)
             # -> (dir,result_array)
-            .mapValues(lambda elem:
-                       calibration_table_train_utils
-                       .train_model(elem, brake_train_layer, train_alpha))
+            .mapValues(lambda elem: train_utils.train_model(elem, brake_train_layer, train_alpha))
             # -> (a number)
             .map(lambda elem:
-                 calibration_table_train_utils
-                 .write_table(elem,
-                              speed_min, speed_max, speed_segment_num,
-                              brake_axis_cmd_min, brake_axis_cmd_max, cmd_segment_num,
-                              brake_table_filename))
+                 train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
+                                         brake_axis_cmd_min, brake_axis_cmd_max, cmd_segment_num,
+                                         brake_table_filename))
             .count())
 
 
