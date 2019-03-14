@@ -57,8 +57,7 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
             for msg in reader(record):
                 hmi_status = record_utils.message_to_proto(msg)
                 vehicle = hmi_status.current_vehicle
-                glog.info('Get vehicle name "{}" from record {}'.format(
-                    vehicle, record))
+                glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
                 return vehicle
         glog.info('Failed to get vehicle name')
         return ''
@@ -181,8 +180,7 @@ def feature_key_value(elem):
     throttle_key = int(min(throttle, THROTTLE_MAX)/ACC_SLICE)
     brake_key = int(min(brake, BRAKE_MAX)/ACC_SLICE)
 
-    elem_key = int(speed_key*1000+steering_key *
-                   100 + throttle_key*10+brake_key)
+    elem_key = int(speed_key*1000+steering_key * 100 + throttle_key*10+brake_key)
     # ((folder_path,feature_key),(time_stamp,paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
@@ -208,8 +206,7 @@ def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file, use feature key as file name"""
     key = str(elem[0][1])
     folder_path = str(elem[0][0])
-    folder_path = folder_path.replace(
-        origin_prefix, target_prefix, 1)
+    folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
     file_name = vehicle_type+'_'+key
     h5_utils.write_h5(elem[1], folder_path, file_name)
     return elem[0]

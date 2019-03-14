@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-
-"""
-This is a module to extraction features from records
-with folder path as part of the key
-"""
+"""This is a module to extraction features from records with folder path as part of the key"""
 
 from collections import Counter
 import operator
@@ -39,8 +35,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -52,10 +47,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
@@ -111,23 +104,23 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(feature_extraction_utils.pair_cs_pose))
 
         # ((folder, time/min), feature_matrix)
-        calibration_table_rdd = (data_rdd
-                                 # feature generator
-                                 .mapValues(calibration_table_utils.feature_generate)
-                                 # process feature: feature filter
-                                 .mapValues(calibration_table_utils.feature_filter)
-                                 # process feature: feature cut
-                                 .mapValues(calibration_table_utils.feature_cut)
-                                 # process feature: feature distribute
-                                 .mapValues(calibration_table_utils.feature_distribute)
-                                 # process feature: feature store
-                                 .mapValues(calibration_table_utils.feature_store)
-                                 # write features to hdf5 files
-                                 .map(lambda elem: calibration_table_utils.write_h5_train_test
-                                      (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
+        calibration_table_rdd = (
+            data_rdd
+            # feature generator
+            .mapValues(calibration_table_utils.feature_generate)
+            # process feature: feature filter
+            .mapValues(calibration_table_utils.feature_filter)
+            # process feature: feature cut
+            .mapValues(calibration_table_utils.feature_cut)
+            # process feature: feature distribute
+            .mapValues(calibration_table_utils.feature_distribute)
+            # process feature: feature store
+            .mapValues(calibration_table_utils.feature_store)
+            # write features to hdf5 files
+            .map(lambda elem: calibration_table_utils.write_h5_train_test(
+                elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
-        glog.info('Finished %d calibration_table_rdd!' %
-                  calibration_table_rdd.count())
+        glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
 
 
 if __name__ == '__main__':
