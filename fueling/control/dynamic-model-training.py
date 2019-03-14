@@ -2,15 +2,17 @@
 
 import glob
 
+from scipy.signal import savgol_filter
 import h5py
 import numpy as np
+import pyspark_utils.op as spark_op
 
-from scipy.signal import savgol_filter
-
-import fueling.control.training_models.mlp_keras as mlp_keras
 import fueling.control.training_models.lstm_keras as lstm_keras
-from fueling.control.features.parameters_training import dim
+import fueling.control.training_models.mlp_keras as mlp_keras
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.colored_glog import glog
+from fueling.common.s3_utils import s3_utils
+from fueling.control.features.parameters_training import dim
 
 # Constants
 DIM_INPUT = dim["pose"] + dim["incremental"] + \
@@ -28,80 +30,65 @@ class DynamicModelTraining(BasePipeline):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
-        h5s = glob.glob(
-            '/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5')
-        dirs = '/apollo/modules/data/fuel/fueling/control/data/'
-        data = (
-            # h5
-            self.get_spark_context().parallelize(h5s)
-            # -> [segment]
-            .map(lambda h5: self.generate_segment(h5))
-            # -> dict
-            .flatMap(lambda segments: self.load_data(segments))
-            # -> dict, with unique keys.
-            .reduceByKey(lambda value_1, value_2: self.concatenate_data(value_1, value_2))
-            .cache())
-        param_norm = (
-            data.filter(lambda key_value: key_value[0] == 'mlp_data')
-            # -> (mlp_data, param_norm)
-            .mapValues(lambda input_output: self.get_param_norm(input_output[0]))
-            .values()
-            .first())
-        print('Param Norm =', param_norm)
-
-        def _train(data_item):
-            key, (input_data, output_data) = data_item
-            if key == 'mlp_data':
-                mlp_keras.mlp_keras(input_data, output_data, param_norm, dirs)
-            elif key == 'lstm_data':
-                lstm_keras.lstm_keras(
-                    input_data, output_data, param_norm, dirs)
-        data.foreach(_train)
+        h5_rdd = self.get_spark_context().parallelize(
+            glob.glob('/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5'))
+        output_dir = '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/'
+        self.run(h5_rdd, output_dir)
 
     def run_prod(self):
-        h5s = glob.glob(
-            '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
-        dirs = '/mnt/bos/modules/control/'
+        bucket = 'apollo-platform'
+        prefix = 'modules/control/feature_extraction_hf5/hdf5_training/transit_2019'
+        h5_rdd = (
+            # file, which starts with the prefix.
+            s3_utils.list_files(bucket, prefix)
+            # -> file, which ends with 'hdf5'
+            .filter(lambda path: path.endswith('.hdf5')
+            # -> file, in absolute path style.
+            .map(s3_utils.abs_path)))
+        output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
+        self.run(h5_rdd, output_dir)
+
+    def run(self, h5_rdd, output_dir):
         data = (
             # h5
-            self.get_spark_context().parallelize(h5s)
-            # -> [segment]
+            h5_rdd
+            # -> segment
             .map(lambda h5: self.generate_segment(h5))
-            # -> dict
-            .flatMap(lambda segments: self.load_data(segments))
-            # -> dict, with unique keys.
-            .reduceByKey(lambda value_1, value_2: self.concatenate_data(value_1, value_2))
+            # -> ('mlp_data|lstm_data', (input, output))
+            .flatMap(lambda segment: self.load_data(segment))
+            # -> ('mlp_data|lstm_data', (input, output)), with unique keys.
+            .reduceByKey(lambda value_1, value_2: (np.vstack((value_1[0], value_2[0])),
+                                                   np.vstack((value_1[1], value_2[1]))))
             .cache())
+
         param_norm = (
             data.filter(lambda key_value: key_value[0] == 'mlp_data')
             # -> (mlp_data, param_norm)
             .mapValues(lambda input_output: self.get_param_norm(input_output[0]))
+            # param_norm
             .values()
-            .collect()[0])
-        print('Param Norm =', param_norm)
+            .first())
+        glog.info('Param Norm = {}'.format(param_norm))
 
         def _train(data_item):
             key, (input_data, output_data) = data_item
             if key == 'mlp_data':
-                mlp_keras.mlp_keras(input_data, output_data, param_norm, dirs)
+                mlp_keras.mlp_keras(input_data, output_data, param_norm, output_dir)
             elif key == 'lstm_data':
-                lstm_keras.lstm_keras(
-                    input_data, output_data, param_norm, dirs)
+                lstm_keras.lstm_keras(input_data, output_data, param_norm, output_dir)
         data.foreach(_train)
 
     def generate_segment(self, h5):
         # print('h5 files:', h5)
-        segments = []
-        print('Loading {}'.format(h5))
+        segment = None
+        glog.info('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as fin:
             for ds in fin.itervalues():
-                if len(segments) == 0:
-                    segments.append(np.array(ds))
+                if segment is None:
+                    segment = np.array(ds)
                 else:
-                    segments[-1] = np.concatenate((segments[-1],
-                                                   np.array(ds)), axis=0)
-        print('Segments: ', segments)
-        return segments
+                    segment = np.concatenate((segment, np.array(ds)), axis=0)
+        return segment
 
     def get_param_norm(self, feature):
         """
@@ -113,67 +100,50 @@ class DynamicModelTraining(BasePipeline):
         param_norm = (fea_mean, fea_std)
         return param_norm
 
-    def load_data(self, segments):
-        total_len = 0
-        total_sequence_num = 0
-        for segment in segments:
-            total_len += (segment.shape[0] - TIME_STEPS)
-            total_sequence_num += (segment.shape[0] -
-                                   TIME_STEPS - DIM_LSTM_LENGTH)
-        print('total length:', total_len)
+    def load_data(self, segment):
+        total_len = segment.shape[0] - TIME_STEPS
+        total_sequence_num = segment.shape[0] - TIME_STEPS - DIM_LSTM_LENGTH
+        glog.info('Total length: {}'.format(total_len))
+        # smooth IMU acceleration data
+        # window size 51, polynomial order 3
+        segment[:, 8] = savgol_filter(segment[:, 8], 51, 3)
+        # window size 51, polynomial order 3
+        segment[:, 9] = savgol_filter(segment[:, 9], 51, 3)
+
         mlp_input_data = np.zeros([total_len, DIM_INPUT])
         mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
-        lstm_input_data = np.zeros(
-            [total_sequence_num, DIM_INPUT, DIM_LSTM_LENGTH])
-        lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
         i = 0
-        m = 0
-        for segment in segments:
-            # smooth IMU acceleration data
-            # window size 51, polynomial order 3
-            segment[:, 8] = savgol_filter(segment[:, 8], 51, 3)
-            # window size 51, polynomial order 3
-            segment[:, 9] = savgol_filter(segment[:, 9], 51, 3)
+        for k in range(TIME_STEPS, segment.shape[0]):
+            mlp_input_data[i, 0] = segment[k - TIME_STEPS, 14]  # speed mps
+            mlp_input_data[i, 1] = segment[k-TIME_STEPS, 8] * \
+                np.cos(segment[k-TIME_STEPS, 0]) + segment[k-TIME_STEPS, 9] * \
+                np.sin(segment[k-TIME_STEPS, 0])  # acc
+            mlp_input_data[i, 2] = segment[k - TIME_STEPS, 13]  # angular speed
+            # control from chassis
+            mlp_input_data[i, 3] = segment[k-TIME_STEPS, 15]
+            # control from chassis
+            mlp_input_data[i, 4] = segment[k-TIME_STEPS, 16]
+            # control from chassis
+            mlp_input_data[i, 5] = segment[k-TIME_STEPS, 17]
+            mlp_output_data[i, 0] = segment[k, 8] * \
+                np.cos(segment[k, 0]) + segment[k, 9] * \
+                np.sin(segment[k, 0])  # acc next
+            # angular speed next
+            mlp_output_data[i, 1] = segment[k, 13]
+            i += 1
 
-            for k in range(segment.shape[0]):
-                if k >= TIME_STEPS:
-                    mlp_input_data[i, 0] = segment[k -
-                                                   TIME_STEPS, 14]  # speed mps
-                    mlp_input_data[i, 1] = segment[k-TIME_STEPS, 8] * \
-                        np.cos(segment[k-TIME_STEPS, 0]) + segment[k-TIME_STEPS, 9] * \
-                        np.sin(segment[k-TIME_STEPS, 0])  # acc
-                    mlp_input_data[i, 2] = segment[k -
-                                                   TIME_STEPS, 13]  # angular speed
-                    # control from chassis
-                    mlp_input_data[i, 3] = segment[k-TIME_STEPS, 15]
-                    # control from chassis
-                    mlp_input_data[i, 4] = segment[k-TIME_STEPS, 16]
-                    # control from chassis
-                    mlp_input_data[i, 5] = segment[k-TIME_STEPS, 17]
-                    mlp_output_data[i, 0] = segment[k, 8] * \
-                        np.cos(segment[k, 0]) + segment[k, 9] * \
-                        np.sin(segment[k, 0])  # acc next
-                    # angular speed next
-                    mlp_output_data[i, 1] = segment[k, 13]
-                    i += 1
-            for k in range(mlp_input_data.shape[0]):
-                if k >= DIM_LSTM_LENGTH:
-                    lstm_input_data[m, :, :] = np.transpose(
-                        mlp_input_data[(k-DIM_LSTM_LENGTH):k, :])
-                    lstm_output_data[m, :] = mlp_output_data[k, :]
-                    m += 1
+        lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_LSTM_LENGTH])
+        lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
+        m = 0
+        for k in range(DIM_LSTM_LENGTH, mlp_input_data.shape[0]):
+            lstm_input_data[m, :, :] = np.transpose(mlp_input_data[(k-DIM_LSTM_LENGTH):k, :])
+            lstm_output_data[m, :] = mlp_output_data[k, :]
+            m += 1
         training_data = [
             ("mlp_data", (mlp_input_data, mlp_output_data)),
             ("lstm_data", (lstm_input_data, lstm_output_data))
         ]
         return training_data
-
-    def concatenate_data(self, value_1, value_2):
-        return (
-            np.vstack((value_1[0], value_2[0])),
-            np.vstack((value_1[1], value_2[1]))
-        )
-
 
 if __name__ == '__main__':
     DynamicModelTraining().run_test()
