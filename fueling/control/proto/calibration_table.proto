@@ -5,13 +5,13 @@ package apollo_fuel.fueling.control.proto.calibration_table;
 message calibration_table {
     optional double speed_min = 1;
     optional double speed_max = 2;
-    optional int32 speed_slice = 3;
+    optional int32 speed_segment = 3;
 
     optional double throttle_max = 4;
-    optional int32 throttle_slice = 5;
+    optional int32 throttle_segment = 5;
     
     optional double brake_max = 6;
-    optional int32 brake_slice = 7;
+    optional int32 brake_segment = 7;
     
     optional double acc_min = 8;
     optional double acc_max = 9;
@@ -19,8 +19,16 @@ message calibration_table {
     optional double train_percentage = 10;
     optional double steer_condition = 11;
     optional double curvature_condition = 12; 
+    
     optional double throttle_layer = 13;
-    optional double throttle_alpha= 14;
+    optional double throttle_alpha = 14;
+
     optional double brake_layer = 15;
     optional double brake_alpha = 16;
+
+    optional double train_speed_min = 17;
+    optional double train_speed_max = 18;
+    optional double train_speed_segment = 19;
+    optional double train_cmd_segment = 20;
+    
 }

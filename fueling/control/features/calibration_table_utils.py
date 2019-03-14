@@ -10,6 +10,15 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 import common.proto_utils as proto_utils
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
+
+
+CALIBRATION_TABLE_CONF = CalibrationTable.CalibrationTable()
+FILENAME_CALIBRATION_TABLE_CONF = \
+    "/apollo/module/data/fuel/feuling/control/conf/calibration_table_conf.pb.txt"
+proto_utils.get_pb_from_text_file(
+    FILENAME_CALIBRATION_TABLE_CONF, CALIBRATION_TABLE_CONF)
+
 
 # calibration table constant
 steer_condition = 1.0  # 1.0 for this case steering angle is large
