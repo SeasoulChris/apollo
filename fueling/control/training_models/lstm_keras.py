@@ -26,8 +26,8 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 from fueling.control.features.parameters_training import dim
+from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
@@ -43,12 +43,10 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
 DIM_INPUT = dim["pose"] + dim["incremental"] + \
@@ -68,41 +66,37 @@ def setup_model(model_name):
     """
     # create and fit the LSTM network
     model = Sequential()
-    model.add(LSTM(8, activation='relu',  W_regularizer=l2(0.001),
+    model.add(LSTM(8, activation='relu', W_regularizer=l2(0.001),
                    input_shape=(6, DIM_LSTM_LENGTH), init='he_normal'))
     if model_name == 'lstm_three_layer':
         model.add(Dense(4, init='he_normal', activation='relu'))
     model.add(Dense(2, init='he_normal'))
     model.compile(loss='mean_squared_error', optimizer='adam')
-
     return model
 
 
-def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dirs, model_name='lstm_two_layer'):
-
+def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_name='lstm_two_layer'):
     for i in range(DIM_LSTM_LENGTH):
-        lstm_input_data[:, :, i] = (
-            lstm_input_data[:, :, i] - param_norm[0]) / param_norm[1]
-    lstm_output_data[:, 0] = (
-        lstm_output_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
-    lstm_output_data[:, 1] = (
-        lstm_output_data[:, 1] - param_norm[0][2]) / param_norm[1][2]
+        lstm_input_data[:, :, i] = (lstm_input_data[:, :, i] - param_norm[0]) / param_norm[1]
+    lstm_output_data[:, 0] = (lstm_output_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
+    lstm_output_data[:, 1] = (lstm_output_data[:, 1] - param_norm[0][2]) / param_norm[1][2]
 
     split_idx = int(lstm_input_data.shape[0] * 0.8 + 1)
     lstm_input_split = np.split(lstm_input_data, [split_idx])
     lstm_output_split = np.split(lstm_output_data, [split_idx])
 
     model = setup_model(model_name)
-    training_history = model.fit(lstm_input_split[0], lstm_output_split[0], validation_data=(lstm_input_split[1], lstm_output_split[1]),
+    training_history = model.fit(lstm_input_split[0], lstm_output_split[0],
+                                 validation_data=(lstm_input_split[1], lstm_output_split[1]),
                                  epochs=EPOCHS, batch_size=64, verbose=1, shuffle=True)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
     # save norm_params to hdf5
-    h5_file = h5py.File(
-        out_dirs + 'lstm_model_norms_' + timestr + '.h5', 'w')
-    h5_file.create_dataset('mean', data=param_norm[0])
-    h5_file.create_dataset('std', data=param_norm[1])
-    h5_file.close()
+    norms_h5 = os.path.join(out_dir, 'lstm_model_norms_' + timestr + '.h5')
+    with h5py.File(norms_h5, 'w') as h5_file:
+        h5_file.create_dataset('mean', data=param_norm[0])
+        h5_file.create_dataset('std', data=param_norm[1])
 
-    model.save(out_dirs + 'lstm_model_weights_' + timestr + '.h5')
+    weights_h5 = os.path.join(out_dir, 'lstm_model_weights_' + timestr + '.h5')
+    model.save(weights_h5)
