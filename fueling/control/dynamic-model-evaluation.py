@@ -6,22 +6,16 @@ import h5py
 import numpy as np
 
 import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
-import fueling.control.training_models.mlp_keras as mlp_keras
-import fueling.control.training_models.lstm_keras as lstm_keras
 
 from fueling.common.base_pipeline import BasePipeline
 
 
-class DynamicModel(BasePipeline):
+class DynamicModelEvaluation(BasePipeline):
     def __init__(self):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
-        hdf5 = glob.glob(
-            '/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5')
         dirs = '/apollo/modules/data/fuel/fueling/control/data/'
-        mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
-        lstm_keras.lstm_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
         h5s = glob.glob(
@@ -29,11 +23,7 @@ class DynamicModel(BasePipeline):
         self.model_evalution(files, h5s, dirs)
 
     def run_prod(self):
-        hdf5 = glob.glob(
-            '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_training/transit_2019/*/*/*.hdf5')
         dirs = '/mnt/bos/modules/control/'
-        mlp_keras.mlp_keras(hdf5, dirs + 'dynamic_model_output/')
-        lstm_keras.lstm_keras(hdf5, dirs + 'dynamic_model_output/')
         files = glob.glob(
             "/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5")
         h5s = glob.glob(
@@ -46,7 +36,8 @@ class DynamicModel(BasePipeline):
             .filter(lambda x: sub_module in x)  # Model weights files
             .map(lambda x: (self.extract_file_id(x, 'dynamic_model_output/', '_model_' + sub_module + '_'),
                             self.extract_file_id(x, '_model_' + sub_module + '_', '.h5')))
-            .distinct())
+            .distinct()
+            .cache())
 
     def extract_file_id(self, file_name, start_position, end_position):
         return file_name.split(start_position)[1].split(end_position)[0]
@@ -79,4 +70,4 @@ class DynamicModel(BasePipeline):
 
 
 if __name__ == '__main__':
-    DynamicModel().run_test()
+    DynamicModelEvaluation().run_test()

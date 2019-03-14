@@ -73,71 +73,7 @@ def setup_model(model_name):
                   optimizer='adam',
                   metrics=['mse'])
     return model
-
-
-def generate_segments(h5s):
-    segments = []
-    for h5 in h5s:
-        print('Loading {}'.format(h5))
-        with h5py.File(h5, 'r+') as fin:
-            for ds in fin.itervalues():
-                if len(segments) == 0:
-                    segments.append(np.array(ds))
-                else:
-                    segments[-1] = np.concatenate((segments[-1],
-                                                   np.array(ds)), axis=0)
-    # shuffle(segments)
-    print('Segments count: ', len(segments))
-    return segments
-
-
-def generate_data(segments):
-    total_len = 0
-    TIME_STEPS = 3
-    for segment in segments:
-        total_len += (segment.shape[0] - TIME_STEPS)
-    print "total_len = ", total_len
-    x_data = np.zeros([total_len, DIM_INPUT])
-    y_data = np.zeros([total_len, DIM_OUTPUT])
-    # shuffle(segments)
-    i = 0
-    for segment in segments:
-        for k in range(segment.shape[0]):
-            if k >= TIME_STEPS:
-                x_data[i, 0] = segment[k-TIME_STEPS, 14]  # speed mps
-                x_data[i, 1] = segment[k-TIME_STEPS, 8] * \
-                    np.cos(segment[k-TIME_STEPS, 0]) + segment[k-TIME_STEPS, 9] * \
-                    np.sin(segment[k-TIME_STEPS, 0])  # acc
-                x_data[i, 2] = segment[k-TIME_STEPS, 13]  # angular speed
-                # control from chassis
-                x_data[i, 3] = segment[k-TIME_STEPS, 15]
-                # control from chassis
-                x_data[i, 4] = segment[k-TIME_STEPS, 16]
-                # control from chassis
-                x_data[i, 5] = segment[k-TIME_STEPS, 17]
-                y_data[i, 0] = segment[k, 8] * \
-                    np.cos(segment[k, 0]) + segment[k, 9] * \
-                    np.sin(segment[k, 0])  # acc next
-                y_data[i, 1] = segment[k, 13]  # angular speed next
-                i += 1
-    # window size 51, polynomial order 3
-    x_data[:, 1] = savgol_filter(x_data[:, 1], 51, 3)
-    # window size 51, polynomial order 3
-    y_data[:, 0] = savgol_filter(y_data[:, 0], 51, 3)
-    return x_data, y_data
-
-
-def get_param_norm(feature):
-    """
-    normalize the samples and save normalized parameters
-    """
-    fea_mean = np.mean(feature, axis=0)
-    print "feature mean = ", fea_mean
-    fea_std = np.std(feature, axis=0) + 1e-6
-    print "feature std = ", fea_std
-    param_norm = (fea_mean, fea_std)
-    return param_norm
-
+    
 
 def save_model(model, param_norm, filename):
     """
@@ -181,10 +117,7 @@ def save_model(model, param_norm, filename):
     # print text_format.MessageToString(net_params)
 
 
-def mlp_keras(hdf5, out_dirs, model_name='mlp_two_layer'):
-    segments = generate_segments(hdf5)
-    x_data, y_data = generate_data(segments)
-    param_norm = get_param_norm(x_data)
+def mlp_keras(x_data, y_data, param_norm, out_dirs, model_name='mlp_two_layer'):
     x_data = (x_data - param_norm[0]) / param_norm[1]
     x_data = x_data[:, [0, 1, 3, 4, 5]]
     y_data[:, 0] = (y_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
