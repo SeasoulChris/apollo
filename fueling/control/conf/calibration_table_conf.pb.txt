@@ -1,5 +1,7 @@
-speed_min: 1.5
-speed_max: 17.0
+speed_min_condition: 1.5
+speed_max_condition: 17.0
+speed_min: 0
+speed_max: 18
 speed_segment: 11
 throttle_max: 30.0
 throttle_segment: 11
@@ -11,10 +13,6 @@ acc_max: 5.0
 train_percentage: 0.9
 steer_condition: 1.0
 curvature_condition: 0.01
-throttle_layer: 15
-throttle_alpha: 0.5
-brake_layer: 10
-brake_alpha: 0.5
 
 train_speed_min:0.0
 train_speed_max:20.0

@@ -10,48 +10,47 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 import common.proto_utils as proto_utils
-import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
 
 
-CALIBRATION_TABLE_CONF = CalibrationTable.CalibrationTable()
-FILENAME_CALIBRATION_TABLE_CONF = \
-    "/apollo/module/data/fuel/feuling/control/conf/calibration_table_conf.pb.txt"
+CALIBRATION_TABLE_CONF = calibrationTable.calibrationTable()
+FILENAME_CALIBRATION_TABLE_CONF = '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 proto_utils.get_pb_from_text_file(
     FILENAME_CALIBRATION_TABLE_CONF, CALIBRATION_TABLE_CONF)
 
 
 # calibration table constant
-steer_condition = 1.0  # 1.0 for this case steering angle is large
-curvature_condition = 0.01
-speed_min_condition = 1.5
-speed_max_condition = 17.0
-acc_min_condition = -5.0
-acc_max_condition = 5.0
-train_percetage = 0.9
-
-# Mkz7
-# segment_brake_list = np.linspace(-35.0, -21.0, num=11).tolist()
-# segment_throttle_list = np.linspace(18.0, 60.0, num=11).tolist()
+steer_condition = CALIBRATION_TABLE_CONF.steer_condition
+curvature_condition = CALIBRATION_TABLE_CONF.curvature_condition
+speed_min_condition = CALIBRATION_TABLE_CONF.speed_min_condition
+speed_max_condition = CALIBRATION_TABLE_CONF.speed_max_condition
+acc_min_condition = CALIBRATION_TABLE_CONF.acc_min
+acc_max_condition = CALIBRATION_TABLE_CONF.acc_max
+train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 
 
 CONTROL_CONF = ControlConf.ControlConf()
-FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit.pb.txt"
+FILENAME_CONTROL_CONF = "/apollo/modules/data/fuel/fueling/control/conf/vehicle_para/Transit/control_conf.pb.txt"
+# FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit.pb.txt"
 proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
 
 
 THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
-THROTTLE_MAX = FEATURE_KEY.throttle_max
+THROTTLE_MAX = CALIBRATION_TABLE_CONF.throttle_max
 
 BRAKE_DEADZONE = -1*CONTROL_CONF.lon_controller_conf.brake_deadzone
-BRAKE_MAX = -1*FEATURE_KEY.brake_max
+BRAKE_MAX = -1*CALIBRATION_TABLE_CONF.brake_max
 
 
 # # transient
-segment_brake_list = np.linspace(BRAKE_MAX, BRAKE_DEADZONE, num=11).tolist()
+segment_brake_list = np.linspace(
+    BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
 segment_throttle_list = np.linspace(
-    THROTTLE_DEADZONE, THROTTLE_MAX, num=11).tolist()
+    THROTTLE_DEADZONE, THROTTLE_MAX, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
 
-segment_speed_list = np.linspace(0.0, SPEED_MAX, num=SPEED_SLICE).tolist()
+segment_speed_list = np.linspace(
+    CALIBRATION_TABLE_CONF.speed_min, CALIBRATION_TABLE_CONF.speed_max, num=CALIBRATION_TABLE_CONF.speed_segment).tolist()
+
 segment_cmd_list = segment_brake_list + segment_throttle_list
 segment_store_num = 12
 

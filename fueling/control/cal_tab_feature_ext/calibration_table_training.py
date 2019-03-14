@@ -20,6 +20,20 @@ import fueling.control.features.calibration_table_train_utils as calibration_tab
 
 
 WANTED_VEHICLE = 'Transit'
+brake_train_layer = [2, 10, 1]
+throttle_train_layer = [2, 15, 1]
+train_alpha = 0.05
+
+brake_axis_cmd_min = -30.0
+brake_axis_cmd_max = -7.0
+
+speed_min = 0.0
+speed_max = 20.0
+speed_segment_num = 50
+
+throttle_axis_cmd_min = 5.0
+throttle_axis_cmd_max = 30.0
+cmd_segment_num = 10
 
 
 class CalibrationTableTraining(BasePipeline):
@@ -81,17 +95,6 @@ class CalibrationTableTraining(BasePipeline):
                                   #   generate training data: x_train_data, y_train_data
                                   .mapValues(calibration_table_train_utils.generate_data)).cache()
 
-        throttle_train_layer = [2, 15, 1]
-        train_alpha = 0.05
-
-        speed_min = 0.0
-        speed_max = 20.0
-        speed_segment_num = 50
-
-        throttle_axis_cmd_min = 5.0
-        throttle_axis_cmd_max = 30.0
-        cmd_segment_num = 10
-
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
         throttle_model_rdd = (throttle_train_file_rdd
                               .join(throttle_test_file_rdd)
@@ -123,11 +126,6 @@ class CalibrationTableTraining(BasePipeline):
                                .mapValues(calibration_table_train_utils.generate_segments)
                                #   generate training data: x_train_data, y_train_data
                                .mapValues(calibration_table_train_utils.generate_data)).cache()
-
-        brake_train_layer = [2, 10, 1]
-
-        brake_axis_cmd_min = -30.0
-        brake_axis_cmd_max = -7.0
 
         brake_table_filename = WANTED_VEHICLE+'_brake_calibration_table.pb.txt'
         brake_model_rdd = (brake_train_file_rdd
