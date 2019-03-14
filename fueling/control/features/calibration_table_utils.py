@@ -8,7 +8,8 @@ from fueling.control.features.filters import Filters
 import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
-
+import modules.control.proto.control_conf_pb2 as ControlConf
+import common.proto_utils as proto_utils
 
 # calibration table constant
 steer_condition = 1.0  # 1.0 for this case steering angle is large
@@ -23,11 +24,25 @@ train_percetage = 0.9
 # segment_brake_list = np.linspace(-35.0, -21.0, num=11).tolist()
 # segment_throttle_list = np.linspace(18.0, 60.0, num=11).tolist()
 
-# # transient
-segment_brake_list = np.linspace(-30.0, -7.0, num=11).tolist()
-segment_throttle_list = np.linspace(5.0, 30.0, num=11).tolist()
 
-segment_speed_list = np.linspace(0.0, 18.0, num=11).tolist()
+CONTROL_CONF = ControlConf.ControlConf()
+FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit.pb.txt"
+proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
+
+
+THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+THROTTLE_MAX = FEATURE_KEY.throttle_max
+
+BRAKE_DEADZONE = -1*CONTROL_CONF.lon_controller_conf.brake_deadzone
+BRAKE_MAX = -1*FEATURE_KEY.brake_max
+
+
+# # transient
+segment_brake_list = np.linspace(BRAKE_MAX, BRAKE_DEADZONE, num=11).tolist()
+segment_throttle_list = np.linspace(
+    THROTTLE_DEADZONE, THROTTLE_MAX, num=11).tolist()
+
+segment_speed_list = np.linspace(0.0, SPEED_MAX, num=SPEED_SLICE).tolist()
 segment_cmd_list = segment_brake_list + segment_throttle_list
 segment_store_num = 12
 
