@@ -46,7 +46,7 @@ class DynamicModelTraining(BasePipeline):
             # -> (mlp_input_data, param_norm)
             .mapValues(lambda rdd: self.get_param_norm(rdd))
             .values()
-            .collect()[0])
+            .first())
         data.foreach(lambda rdd: mlp_keras.mlp_keras(
             rdd[0][1], rdd[1][1], param_norm, dirs))
         data.foreach(lambda rdd: lstm_keras.lstm_keras(

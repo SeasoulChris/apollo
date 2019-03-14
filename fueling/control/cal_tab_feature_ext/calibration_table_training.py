@@ -29,7 +29,8 @@ FILENAME_CALIBRATION_TABLE_CONF = os.path.join(os.path.dirname(__file__),
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            calibrationTable.calibrationTable())
 
-FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/<TODO>"
+FILENAME_CONTROL_CONF = '/mnt/bos/code/apollo-internal/modules_data/' \
+                        'calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 
@@ -92,8 +93,6 @@ class CalibrationTableTraining(BasePipeline):
         # -> (dir, record), in absolute path
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
                                                            os.path.join(root_dir, x[1]))).cache()
-        print(dir_to_records.first())
-
         throttle_train_file_rdd = (dir_to_records
                                    # training data (hdf5 file) vehicle
                                    .map(lambda elem:
@@ -101,7 +100,7 @@ class CalibrationTableTraining(BasePipeline):
                                    # generate training data segment
                                    .mapValues(calibration_table_train_utils.generate_segments)
                                    #   generate training data: x_train_data, y_train_data
-                                   .mapValues(calibration_table_train_utils.generate_data)).cache()
+                                   .mapValues(calibration_table_train_utils.generate_data))
 
         throttle_test_file_rdd = (dir_to_records
                                   # training data (hdf5 file) vehicle
@@ -110,7 +109,7 @@ class CalibrationTableTraining(BasePipeline):
                                   # generate training data segment
                                   .mapValues(calibration_table_train_utils.generate_segments)
                                   #   generate training data: x_train_data, y_train_data
-                                  .mapValues(calibration_table_train_utils.generate_data)).cache()
+                                  .mapValues(calibration_table_train_utils.generate_data))
 
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
         throttle_model_rdd = (throttle_train_file_rdd
@@ -121,10 +120,8 @@ class CalibrationTableTraining(BasePipeline):
                                    calibration_table_train_utils.write_table(elem,
                                                                              speed_min, speed_max, speed_segment_num,
                                                                              throttle_axis_cmd_min, throttle_axis_cmd_max, cmd_segment_num,
-                                                                             throttle_table_filename)))
-
-        throttle_model_rdd.collect()
-        print(throttle_model_rdd.first())
+                                                                             throttle_table_filename))
+                              .count())
 
         brake_train_file_rdd = (dir_to_records
                                 # training data (hdf5 file) vehicle
@@ -133,7 +130,7 @@ class CalibrationTableTraining(BasePipeline):
                                 # generate training data segment
                                 .mapValues(calibration_table_train_utils.generate_segments)
                                 #   generate training data: x_train_data, y_train_data
-                                .mapValues(calibration_table_train_utils.generate_data)).cache()
+                                .mapValues(calibration_table_train_utils.generate_data))
 
         brake_test_file_rdd = (dir_to_records
                                # training data (hdf5 file) vehicle
@@ -142,7 +139,7 @@ class CalibrationTableTraining(BasePipeline):
                                # generate training data segment
                                .mapValues(calibration_table_train_utils.generate_segments)
                                #   generate training data: x_train_data, y_train_data
-                               .mapValues(calibration_table_train_utils.generate_data)).cache()
+                               .mapValues(calibration_table_train_utils.generate_data))
 
         brake_table_filename = WANTED_VEHICLE+'_brake_calibration_table.pb.txt'
         brake_model_rdd = (brake_train_file_rdd
@@ -153,10 +150,8 @@ class CalibrationTableTraining(BasePipeline):
                                 calibration_table_train_utils.write_table(elem,
                                                                           speed_min, speed_max, speed_segment_num,
                                                                           brake_axis_cmd_min, brake_axis_cmd_max, cmd_segment_num,
-                                                                          brake_table_filename)))
-
-        brake_model_rdd.collect()
-        print(brake_model_rdd.first())
+                                                                          brake_table_filename))
+                           .count())
 
 
 if __name__ == '__main__':
