@@ -1,40 +1,36 @@
+from collections import Counter
 import glob
 import h5py
-from collections import Counter
 import operator
 import os
 
 
+from neural_network_tf import NeuralNetworkTF
 import numpy as np
 import pyspark_utils.op as spark_op
 
-from neural_network_tf import NeuralNetworkTF
-import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 from fueling.common.base_pipeline import BasePipeline
+import common.proto_utils as proto_utils
+import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.colored_glog as glog
-import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.calibration_table_train_utils as calibration_table_train_utils
+import fueling.control.features.calibration_table_utils as calibration_table_utils
+import fueling.control.features.feature_extraction_utils as feature_extraction_utils
+import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
+import modules.control.proto.control_conf_pb2 as ControlConf
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
 
 
-import modules.control.proto.control_conf_pb2 as ControlConf
-import common.proto_utils as proto_utils
-
 WANTED_VEHICLE = 'Transit'
 
+FILENAME_CALIBRATION_TABLE_CONF = os.path.join(os.path.dirname(__file__),
+                                               '../conf/calibration_table_conf.pb.txt'))
+CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
+                                                           calibrationTable.calibrationTable())
 
-CALIBRATION_TABLE_CONF = calibrationTable.calibrationTable()
-FILENAME_CALIBRATION_TABLE_CONF = '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
-proto_utils.get_pb_from_text_file(
-    FILENAME_CALIBRATION_TABLE_CONF, CALIBRATION_TABLE_CONF)
-
-CONTROL_CONF = ControlConf.ControlConf()
-FILENAME_CONTROL_CONF = "/apollo/modules/data/fuel/fueling/control/conf/vehicle_para/Transit/control_conf.pb.txt"
-# FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit.pb.txt"
-proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
+FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/<TODO>"
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 
 brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
