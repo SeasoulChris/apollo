@@ -17,23 +17,44 @@ import fueling.common.colored_glog as glog
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.calibration_table_train_utils as calibration_table_train_utils
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
 
+
+import modules.control.proto.control_conf_pb2 as ControlConf
+import common.proto_utils as proto_utils
 
 WANTED_VEHICLE = 'Transit'
-brake_train_layer = [2, 10, 1]
-throttle_train_layer = [2, 15, 1]
-train_alpha = 0.05
 
-brake_axis_cmd_min = -30.0
-brake_axis_cmd_max = -7.0
 
-speed_min = 0.0
-speed_max = 20.0
-speed_segment_num = 50
+CALIBRATION_TABLE_CONF = calibrationTable.calibrationTable()
+FILENAME_CALIBRATION_TABLE_CONF = '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
+proto_utils.get_pb_from_text_file(
+    FILENAME_CALIBRATION_TABLE_CONF, CALIBRATION_TABLE_CONF)
 
-throttle_axis_cmd_min = 5.0
-throttle_axis_cmd_max = 30.0
-cmd_segment_num = 10
+CONTROL_CONF = ControlConf.ControlConf()
+FILENAME_CONTROL_CONF = "/apollo/modules/data/fuel/fueling/control/conf/vehicle_para/Transit/control_conf.pb.txt"
+# FILENAME_CONTROL_CONF = "/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit.pb.txt"
+proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
+
+
+brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
+                     CALIBRATION_TABLE_CONF.brake_train_layer2,
+                     CALIBRATION_TABLE_CONF.brake_train_layer3]
+throttle_train_layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
+                        CALIBRATION_TABLE_CONF.throttle_train_layer2,
+                        CALIBRATION_TABLE_CONF.throttle_train_layer3]
+train_alpha = CALIBRATION_TABLE_CONF.train_alpha
+
+brake_axis_cmd_min = -1*CONTROL_CONF.lon_controller_conf.brake_deadzone
+brake_axis_cmd_max = -1*CALIBRATION_TABLE_CONF.brake_max
+
+speed_min = CALIBRATION_TABLE_CONF.train_speed_min
+speed_max = CALIBRATION_TABLE_CONF.train_speed_min
+speed_segment_num = CALIBRATION_TABLE_CONF.train_speed_segment
+
+throttle_axis_cmd_min = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+throttle_axis_cmd_max = CALIBRATION_TABLE_CONF.throttle_max
+cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
 
 
 class CalibrationTableTraining(BasePipeline):

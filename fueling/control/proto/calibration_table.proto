@@ -25,7 +25,18 @@ message calibrationTable {
 
     optional double train_speed_min = 17;
     optional double train_speed_max = 18;
-    optional double train_speed_segment = 19;
-    optional double train_cmd_segment = 20;
+    optional int32 train_speed_segment = 19;
+    optional int32 train_cmd_segment = 20;
+
+    optional double train_alpha = 21;
+
+    optional int32 brake_train_layer1 =22;
+    optional int32 brake_train_layer2 =23;
+    optional int32 brake_train_layer3 =24;
+
+
+    optional int32 throttle_train_layer1 =25;
+    optional int32 throttle_train_layer2 =26;
+    optional int32 throttle_train_layer3 =27;
     
 }

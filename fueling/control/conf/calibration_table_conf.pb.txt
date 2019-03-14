@@ -16,5 +16,16 @@ curvature_condition: 0.01
 
 train_speed_min:0.0
 train_speed_max:20.0
-train_speed_segment:10
+train_speed_segment:50
 train_cmd_segment:10
+
+train_alpha:0.05
+
+brake_train_layer1:2
+brake_train_layer2:10
+brake_train_layer3:1
+
+
+throttle_train_layer1:2
+throttle_train_layer2:15
+throttle_train_layer3:1
