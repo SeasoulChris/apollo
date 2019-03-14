@@ -212,8 +212,7 @@ def feature_store(elem):
 
 def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file"""
-    key = str(elem[0][1])
-    folder_path = str(elem[0][0])
+    key = elem[0][1]
     feature = elem[1]
     feature_num = elem[1].shape[0]
     throttle_train_feature_num, throttle_test_feature_num = 0, 0
@@ -245,8 +244,6 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     glog.info('throttle file size: %d' % throttle_train.shape[0])
     glog.info('throttle train file size: %d' % throttle_train_feature_num)
 
-    # folder_path = folder_path.replace(
-    #     origin_prefix, target_prefix, 1)
     folder_path = target_prefix
 
     # throttle train file
