@@ -7,8 +7,8 @@ import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
-import fueling.control.training_models.lstm_keras as lstm_keras
-import fueling.control.training_models.mlp_keras as mlp_keras
+import fueling.control.dynamic_model.lstm_keras as lstm_keras
+import fueling.control.dynamic_model.mlp_keras as mlp_keras
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.colored_glog import glog
 from fueling.common.s3_utils import s3_utils

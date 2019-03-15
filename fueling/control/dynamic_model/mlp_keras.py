@@ -61,7 +61,7 @@ def setup_model(model_name):
     model.add(Dense(2, init='he_normal', W_regularizer=l2(0.001)))
     model.compile(loss='mse', optimizer='adam', metrics=['mse'])
     return model
-    
+
 
 def save_model(model, param_norm, filename):
     """
