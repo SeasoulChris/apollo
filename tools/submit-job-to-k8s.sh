@@ -13,33 +13,33 @@ EXECUTOR_CORES=3
 EXECUTOR_MEMORY=20g
 
 while [ $# -gt 0 ]; do
-    case "$1" in
+  case "$1" in
     --env|-e)
-        shift
-        CONDA_ENV=$1
-        ;;
+      shift
+      CONDA_ENV=$1
+      ;;
     --workers|-w)
-        shift
-        EXECUTORS=$1
-        ;;
+      shift
+      EXECUTORS=$1
+      ;;
     --worker-cpu|-c)
-        shift
-        EXECUTOR_CORES=$1
-        ;;
+      shift
+      EXECUTOR_CORES=$1
+      ;;
     --worker-memory|-m)
-        shift
-        EXECUTOR_MEMORY=$1
-        ;;
+      shift
+      EXECUTOR_MEMORY=$1
+      ;;
     *)
-        if [ -f "$1" ]; then
-          JOB_FILE=$1
-        else
-          echo -e "$1: Unknown option or file not exists."
-          exit 1
-        fi
-        ;;
-    esac
-    shift
+      if [ -f "$1" ]; then
+        JOB_FILE=$1
+      else
+        echo -e "$1: Unknown option or file not exists."
+        exit 1
+      fi
+      ;;
+  esac
+  shift
 done
 
 if [ -z "${JOB_FILE}" ]; then
@@ -71,8 +71,8 @@ REMOTE_JOB_FILE="${BOS_MOUNT_POINT}/${REMOTE_JOB_FILE}"
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"
-  rm -f "${LOCAL_FUELING_PKG}" && \
-  zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc && \
+  rm -f "${LOCAL_FUELING_PKG}"
+  zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
   "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
   REMOTE_FUELING_PKG="${BOS_MOUNT_POINT}/${REMOTE_FUELING_PKG}"
 popd
