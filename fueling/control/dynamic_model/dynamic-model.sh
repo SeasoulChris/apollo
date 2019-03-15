@@ -10,17 +10,14 @@ set -x
 # Feature extraction.
 JOB="fueling/control/feature_extraction/sample-set-feature-extraction.py"
 ENV="fuel-py27-cyber"
-./tools/submit-job-to-k8s.sh "${JOB}" --env "${ENV}" \
-    --workers 16 --worker_cpu 2 --worker_memory 20g
+./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
 
 # Training.
 JOB="fueling/control/dynamic-model/dynamic-model-training.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh "${JOB}" --env "${ENV}" \
-    --workers 2 --worker_cpu 20 --worker_memory 200g
+./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 2 --cpu 20 --memory 200g
 
 # Evaluation
 JOB="fueling/control/dynamic-model/dynamic-model-evaluation.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh "${JOB}" --env "${ENV}" \
-    --workers 16 --worker_cpu 2 --worker_memory 20g
+./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g

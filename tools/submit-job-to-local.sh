@@ -11,7 +11,7 @@ while [ $# -gt 0 ]; do
         shift
         CONDA_ENV=$1
         ;;
-    --worker-cpu|-c)
+    --cpu|-c)
         shift
         EXECUTOR_CORES=$1
         ;;

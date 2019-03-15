@@ -22,11 +22,11 @@ while [ $# -gt 0 ]; do
       shift
       EXECUTORS=$1
       ;;
-    --worker-cpu|-c)
+    --cpu|-c)
       shift
       EXECUTOR_CORES=$1
       ;;
-    --worker-memory|-m)
+    --memory|-m)
       shift
       EXECUTOR_MEMORY=$1
       ;;
