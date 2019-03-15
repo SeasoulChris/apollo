@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import glob
 import random
+import os
 
 import h5py
 import numpy as np
@@ -9,8 +10,8 @@ from fueling.control.features.filters import Filters
 from fueling.control.features.neural_network_tf import NeuralNetworkTF
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
-import fueling.common.h5_utils as h5_utils
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
+import fueling.control.features.calibration_table_utils as calibration_table_utils
 
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
@@ -52,8 +53,8 @@ def generate_data(segments):
         segment = segments[j]
         for k in range(1, segment.shape[0]):
             if k > 0:
-                X[i, 0:2] = segment[k, 0:2]
-                Y[i, 0] = segment[k, 2]
+                X[i, 0:2] = segment[k, [0, 2]]  # speed & cmd
+                Y[i, 0] = segment[k, 1]  # acc
                 i += 1
     return X, Y
 
@@ -104,7 +105,12 @@ def write_table(elem,
             item.speed = speed_array[cmd_index][speed_index]
             item.command = cmd_array[cmd_index][speed_index]
             item.acceleration = acc_array[cmd_index][speed_index]
+
     path = elem[0]
-    with open(path+'/'+table_filename, 'w') as wf:
+
+    calibration_table_utils.write_h5_cal_tab(
+        acc_array, path, table_filename)
+
+    with open(os.path.join(path, table_filename), 'w') as wf:
         wf.write(str(calibration_table_pb))
     return table_filename
