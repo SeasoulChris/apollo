@@ -1,13 +1,15 @@
+#!/usr/bin/env python
+import glob
+import random
+
 import h5py
 import numpy as np
-import random
-import glog
-import glob
 
 from fueling.control.features.filters import Filters
-import fueling.common.h5_utils as h5_utils
+from fueling.control.features.neural_network_tf import NeuralNetworkTF
+import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
-from neural_network_tf import NeuralNetworkTF
+import fueling.common.h5_utils as h5_utils
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 

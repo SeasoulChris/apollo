@@ -1,11 +1,10 @@
+#!/usr/bin/env python
 from collections import Counter
 import glob
 import h5py
 import operator
 import os
 
-
-from neural_network_tf import NeuralNetworkTF
 import numpy as np
 import pyspark_utils.op as spark_op
 
@@ -90,35 +89,35 @@ class CalibrationTableTraining(BasePipeline):
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
                                                            os.path.join(root_dir, x[1]))).cache()
         throttle_train_file_rdd = (
-            # (dir,dir)
+            # (dir, dir)
             dir_to_records
-            # -> (dir,hdf5_files)
+            # -> (dir, hdf5_files)
             .map(lambda elem:
                  train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
-            # -> (dir,segments)
+            # -> (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir,x_train_data, y_train_data)
+            # -> (dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
         throttle_test_file_rdd = (
-            # (dir,dir)
+            # (dir, dir)
             dir_to_records
-            # -> (dir,hdf5_files)
+            # -> (dir, hdf5_files)
             .map(lambda elem:
                  train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
-            # -> (dir,segments)
+            # -> (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir,x_test_data, y_test_data)
+            # -> (dir, x_test_data, y_test_data)
             .mapValues(train_utils.generate_data))
 
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
 
         throttle_model_rdd = (
-            # (dir,x_train_data, y_train_data)
+            # (dir, x_train_data, y_train_data)
             throttle_train_file_rdd
-            # -> (dir,x_train_data, y_train_data, x_test_data, y_test_data)
+            # -> (dir, x_train_data, y_train_data, x_test_data, y_test_data)
             .join(throttle_test_file_rdd)
-            # -> (dir,result_array)
+            # -> (dir, result_array)
             .mapValues(lambda elem:
                        train_utils.train_model(elem, throttle_train_layer, train_alpha))
             # -> (a number)
@@ -129,33 +128,33 @@ class CalibrationTableTraining(BasePipeline):
             .count())
 
         brake_train_file_rdd = (
-            # (dir,dir)
+            # (dir, dir)
             dir_to_records
-            # -> (dir,hdf5_files)
+            # -> (dir, hdf5_files)
             .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'train'))
-            # -> (dir,segments)
+            # -> (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir,x_train_data, y_train_data)
+            # -> (dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
         brake_test_file_rdd = (
-            # (dir,dir)
+            # (dir, dir)
             dir_to_records
-            # -> (dir,hdf5_files)
+            # -> (dir, hdf5_files)
             .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'test'))
-            # -> (dir,segments)
+            # -> (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir,x_train_data, y_train_data)
+            # -> (dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
-        brake_table_filename = WANTED_VEHICLE+'_brake_calibration_table.pb.txt'
+        brake_table_filename = WANTED_VEHICLE + '_brake_calibration_table.pb.txt'
 
         brake_model_rdd = (
-            # (dir,x_train_data, y_train_data)
+            # (dir, x_train_data, y_train_data)
             brake_train_file_rdd
-            # -> (dir,x_train_data, y_train_data, x_test_data, y_test_data)
+            # -> (dir, x_train_data, y_train_data, x_test_data, y_test_data)
             .join(brake_test_file_rdd)
-            # -> (dir,result_array)
+            # -> (dir, result_array)
             .mapValues(lambda elem: train_utils.train_model(elem, brake_train_layer, train_alpha))
             # -> (a number)
             .map(lambda elem:

@@ -8,9 +8,9 @@
 # Default value for configurable arguments.
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
-EXECUTORS=15
+EXECUTORS=16
 EXECUTOR_CORES=3
-EXECUTOR_MEMORY=24g
+EXECUTOR_MEMORY=20g
 
 while [ $# -gt 0 ]; do
     case "$1" in
