@@ -6,6 +6,7 @@ import string
 
 import boto3
 import botocore.client
+import botocore.exceptions
 import glog
 import pyspark_utils.helper as spark_helper
 
@@ -62,7 +63,13 @@ def list_dirs(bucket, prefix=''):
 
 def file_exists(bucket, remote_path, aws_ak, aws_sk):
     """Check if specified file is existing"""
-    return len(list(list_objects(bucket, remote_path, aws_ak, aws_sk))) > 0
+    try:
+        response = s3_client(aws_ak, aws_sk).get_object(Bucket=bucket, Key=remote_path)
+    except botocore.exceptions.ClientError as ex:
+        if ex.response['Error']['Code'] == 'NoSuchKey':
+            return False
+        raise ex
+    return True
 
 def upload_file(bucket, local_path, remote_path, aws_keys, meta_data=None):
     """Upload a file from local to BOS"""
