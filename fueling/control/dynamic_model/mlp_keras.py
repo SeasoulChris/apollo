@@ -18,9 +18,8 @@ import h5py
 import numpy as np
 
 from fueling.control.features.parameters_training import dim
-from modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
+from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.colored_glog as glog
-import modules.data.fuel.fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -87,11 +86,11 @@ def save_model(model, param_norm, filename):
             previous_dim = net_layer.layer_output_dim
 
         if config['activation'] == 'relu':
-            net_layer.layer_activation_func = fnn_model_pb2.Layer.RELU
+            net_layer.layer_activation_func = Layer.RELU
         elif config['activation'] == 'tanh':
-            net_layer.layer_activation_func = fnn_model_pb2.Layer.TANH
+            net_layer.layer_activation_func = Layer.TANH
         elif config['activation'] == 'sigmoid':
-            net_layer.layer_activation_func = fnn_model_pb2.Layer.SIGMOID
+            net_layer.layer_activation_func = Layer.SIGMOID
 
         weights, bias = layer.get_weights()
         net_layer.layer_bias.columns.extend(bias.reshape(-1).tolist())

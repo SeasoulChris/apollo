@@ -27,8 +27,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.control.features.parameters_training import dim
-from fueling.control.lib.proto.fnn_model_pb2 import FnnModel, Layer
-import fueling.control.lib.proto.fnn_model_pb2 as fnn_model_pb2
+from fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.

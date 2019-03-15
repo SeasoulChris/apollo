@@ -6,15 +6,15 @@ import h5py
 import numpy as np
 
 from fueling.control.features.filters import Filters
+import common.proto_utils as proto_utils
 import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
-import common.proto_utils as proto_utils
-import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as fuel_calibration_table_pb2
 
 
-CALIBRATION_TABLE_CONF = calibrationTable.calibrationTable()
+CALIBRATION_TABLE_CONF = fuel_calibration_table_pb2.calibrationTable()
 FILENAME_CALIBRATION_TABLE_CONF = '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 proto_utils.get_pb_from_text_file(
     FILENAME_CALIBRATION_TABLE_CONF, CALIBRATION_TABLE_CONF)
