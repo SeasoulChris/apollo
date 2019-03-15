@@ -10,23 +10,21 @@ import h5py
 import numpy as np
 
 from modules.canbus.proto.chassis_pb2 import Chassis
-from modules.localization.proto.localization_pb2 import LocalizationEstimate
+from modules.control.proto.control_conf_pb2 import ControlConf
+from modules.data.fuel.fueling.control.proto.feature_key_pb2 import featureKey
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
-import modules.control.proto.control_conf_pb2 as ControlConf
-import modules.data.fuel.fueling.control.proto.feature_key_pb2 as FeatureKey
+from modules.localization.proto.localization_pb2 import LocalizationEstimate
 import common.proto_utils as proto_utils
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 
 
-FEATURE_KEY = FeatureKey.featureKey()
 FILENAME = "/mnt/bos/modules/control/common/feature_key_conf.pb.txt"
-proto_utils.get_pb_from_text_file(FILENAME, FEATURE_KEY)
+FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, featureKey())
 
-CONTROL_CONF = ControlConf.ControlConf()
 FILENAME_CONTROL_CONF = "/mnt/bos/modules/control/common/control_conf.pb.txt"
-proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, CONTROL_CONF)
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf())
 
 # TODO change based on vehicle model
 THROTTLE_DEADZONE = 5.0  # CONTROL_CONF.lon_controller_conf.throttle_deadzone
