@@ -70,4 +70,4 @@ class DynamicModelEvaluation(BasePipeline):
 
 
 if __name__ == '__main__':
-    DynamicModelEvaluation().run_test()
+    DynamicModelEvaluation().run_prod()

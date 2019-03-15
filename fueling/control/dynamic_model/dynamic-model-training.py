@@ -146,4 +146,4 @@ class DynamicModelTraining(BasePipeline):
         return training_data
 
 if __name__ == '__main__':
-    DynamicModelTraining().run_test()
+    DynamicModelTraining().run_prod()
