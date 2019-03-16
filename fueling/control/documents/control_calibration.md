@@ -1,16 +1,8 @@
 Control calibration system automatically generates calibration table for different vehicle models. It includes three parts: a frontend data collection monitor system, a data pipeline upload/download tool for uploading collected data and downloading generated calibration tables, and a visualization tool for performance evaluation.
 
-<!-- # Table of Contents
+<!-- # Table of Contents 1\. [Frontend](#frontend) 2\. [Data](#data) - [Upload Tool](#upload) - [Download Tool](#download) 3\. [Visulization](#visulization) -->
 
-1. [Frontend](#frontend)
-2. [Data](#data)
-
-  - [Upload Tool](#upload)
-  - [Download Tool](#download)
-
-3. [Visulization](#visulization) -->
-
-# Frontend
+ # Frontend
 
 In DreamView, a data collection monitor is presented for monitoring the data calibration process. In vehicle calibration mode, collected data frames are visualized in the data calibration monitor. Data frames are categorized into different driving conditions according to their chassis information. The amount of collected data frames are indicated as progress bars.
 
@@ -77,21 +69,35 @@ The brake and throttle specs are different between vehicle models. Therefore, th
 (description)
 
 # Data Uploading/Downloading Tools
+
 upload:
+
 ```
   bos-fstool-upload -s <local_record_file> -d modules/control/data/records/<vehecle_id>/<version>/<task_folder>/YYYYMMDDhhmmss.records.xxxxx
 ```
+
 For example:
 
 ```
   bos-fstool-upload -s 20190314010101.record.00000 modules/control/data/records/MKZ7/2019-03-14/2013-03-14-01-01-01/20190314010101.record.00000
 ```
+
 download:
+
 ```
   bos-fstool-download -s modules/control/calibration/<vihecle_id>/<version>/control_conf.pb.txt <local_folder>/control_conf.pb.txt
 ```
+
 For example:
+
 ```
   bos-fstool-download -s modules/control/calibration/MKZ7/2019-03-14/control_conf.pb.txt ./control_conf.pb.txt
 ```
-# Result Visulization
+
+# Result Visualization
+
+The docker environment does not support Matplotlib. Thus, result are visualized outside of the docker environment. The following two figures show the visualization result of PC training results.
+
+![](images/throttle.png)
+
+![](images/brake.png)

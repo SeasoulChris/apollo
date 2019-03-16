@@ -75,12 +75,15 @@ def feature_generate(elem):
     for i in range(len(elem)):
         chassis = elem[i][0]
         pose = elem[i][1].pose
+
         heading_angle = pose.heading
         acc_x = pose.linear_acceleration.x
         acc_y = pose.linear_acceleration.y
+
         acc = acc_x*math.cos(heading_angle)+acc_y*math.sin(heading_angle)
         feature_cmd = decide_cmd(chassis.throttle_percentage, chassis.brake_percentage)
         driving_mode = (chassis.driving_mode == wanted_driving_mode)
+
         res[i] = np.array([
             chassis.speed_mps,  # 0: speed
             acc,  # 1: acc
@@ -135,8 +138,8 @@ def satisfy_throttle_condition(elem, index):
         elem[index][0] < speed_max_condition and \
         elem[index][2] > segment_throttle_list[0] and \
         elem[index][2] < segment_throttle_list[-1] and \
-        elem[index][1] < 0.0 and \
-        elem[index][1] > acc_min_condition and \
+        elem[index][1] > 0.0 and \
+        elem[index][1] < acc_max_condition and \
         int(elem[index][4]) == 0
     return condition
 
