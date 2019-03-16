@@ -63,7 +63,7 @@ def execute_task(task):
 
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
-    simulation_path = '/apollo/modules/data/fuel/fueling/simulation'
+    simulation_path = '/apollo/modules/simulation'
     return_code = os.system('cd {} && ./bin/logsim_generator_executable {} {} {} --alsologtostderr'
                     .format(simulation_path,
                         '--input_dir='+source_dir,

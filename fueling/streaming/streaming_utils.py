@@ -105,6 +105,13 @@ def load_message_obj(message_file_path):
         return pickle.load(message_file)
     return None
 
+def load_image_data(image_file_path):
+    """Explicitly load image data"""
+    if not os.path.exists(image_file_path) or image_file_path.find('compressed') == -1:
+        return None
+    with open(image_file_path, 'rb') as image_file:
+        return image_file.read()
+    return None
 
 # helper functions
 def record_to_stream_path(record_path, root_dir, sub_folder_name):
