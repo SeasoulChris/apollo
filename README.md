@@ -17,7 +17,6 @@
    at /apollo/modules/data/fuel, as a part of the whole apollo workspace.
 
 1. [Install miniconda](https://docs.conda.io/en/latest/miniconda.html).
-
    If it's already installed, update it to the latest.
 
    ```bash
@@ -56,15 +55,12 @@ practices are:
 
 1. Put all Python modules in ./fueling/ folder, and import them with full path
    like `import fueling.common.s3_utils`.
-
 1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your
    own `run_test()` and `run_prod()` functions. Generally they should share most
    procedures and only differ in input and output locations or scale.
-
 1. Put all test data in ./testdata/module/... folder, make sure your job works
    perfectly at local. And when it is submited to a cluster, the huge test files
    are efficiently ignored.
-
 1. Comment intensively and accurately. Every RDD should be well described with
    the pattern.
 
@@ -86,18 +82,20 @@ practices are:
    import fueling_packages
    ```
 
-And good coding practices are:
+   * It's OK to use `from package import Type` and `import package as alias`
+     statements.
+   * Each section should be in alphabetical order.
 
+1. File and folder name convention: **lower_case_with_underscores** if it's
+   importable, otherwise **lower-case-with-dash**. So all main pipeline jobs
+   should be **dash** style.
 1. Filter early, filter often.
-
 1. Cascade simple transformations, instead of making a huge complicate one.
-
 1. All transformations should be repeatable and consistant. The process and even
    the executor could fail any time, then the Spark will try to re-allocate the
    task to other peers. So be careful about letting flatMap() and
    flatMapValues() work with "yield" mappers. Because it's stateful, if a task
    failed unexpectedly, the pipeline have no idea about how to recover.
-
 1. Reading record header is much faster than reading record, if you can do
    significatnt filtering on records according to its header, do it.
 

@@ -15,6 +15,7 @@ class DynamicModelEvaluation(BasePipeline):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
+        # TODO: It's not "dirs".
         dirs = '/apollo/modules/data/fuel/fueling/control/data/'
         files = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
@@ -23,6 +24,8 @@ class DynamicModelEvaluation(BasePipeline):
 
     def run_prod(self):
         dirs = '/mnt/bos/modules/control/'
+        # TODO: Instead of glob, for S3 stroage it's more efficient to list_files and then filter()
+        # by pattern or extension. Check examples in other pipelines.
         files = glob.glob('/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5')
         h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
         self.model_evalution(files, h5s, dirs)
@@ -31,6 +34,9 @@ class DynamicModelEvaluation(BasePipeline):
         return (
             self.get_spark_context().parallelize(files)  # All the model files
             .filter(lambda x: sub_module in x)  # Model weights files
+            # TODO: Over length.
+            # TODO: Try to avoid string concatenation and split. Use more sub-folders and
+            # os.path.join which is clearer and safer.
             .map(lambda x: (self.extract_file_id(x, 'dynamic_model_output/', '_model_' + sub_module + '_'),
                             self.extract_file_id(x, '_model_' + sub_module + '_', '.h5')))
             .distinct())
@@ -40,6 +46,7 @@ class DynamicModelEvaluation(BasePipeline):
 
     def generate_segments(self, h5_file):
         segments = []
+        # TODO: Use glog.
         print 'Loading {}'.format(h5_file)
         with h5py.File(h5_file, 'r+') as fin:
             segments = [np.array(segment) for segment in fin.values()]

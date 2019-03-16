@@ -27,8 +27,11 @@ def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
+        # TODO: Use glog.
         print('Loading {}'.format(h5))
+        # TODO: Avoid single-char variable name.
         with h5py.File(h5, 'r+') as f:
+            # TODO: Simplify the logic: segments = [np.array(segment) for segment in f.itervalues()]
             names = [n for n in f.keys()]
             print('f.keys', f.keys())
             if len(names) < 1:
@@ -44,6 +47,7 @@ def generate_segments(h5s):
 def generate_data(segments):
     """ combine data from each segments """
     total_len = 0
+    # TODO: Looping a "range(len(segments))" equals looping segments directly.
     for i in range(len(segments)):
         total_len += segments[i].shape[0]
     print("total_len = ", total_len)
@@ -60,11 +64,12 @@ def generate_data(segments):
             i += 1
     return X, Y
 
-
+# TODO: Avoid naming like "elem" which has no information. Describe what it is.
 def train_model(elem, layer, train_alpha):
     """
     train model
     """
+    # TODO: Extract tuples in one go: (X_train, Y_train), (X_test, Y_test) = elem
     X_train = elem[0][0]
     Y_train = elem[0][1]
     X_test = elem[1][0]

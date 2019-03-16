@@ -24,8 +24,10 @@ from parameters import dim
 
 
 def GetDatapoints(pose_slice, cs_slice):
+    # TODO: No assert. Filter bad data ahead in pipeline.
     assert len(cs_slice) == len(pose_slice)
     assert len(cs_slice) > 0
+    # TODO: Spaces around operator.
     out = np.zeros([len(cs_slice), dim["pose"]+dim["chassis"]])
     ref_time = pose_slice[0].header.timestamp_sec
     ref_x = pose_slice[0].pose.position.x

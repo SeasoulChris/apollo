@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# TODO: Fix order per README.md.
 import glob
 import os
 import random
@@ -166,6 +167,7 @@ def feature_distribute(elem):
     """
     distribute feature into each grid
     """
+    # TODO: Use collections.defaultdict(dict)
     grid_dict = {}
     for segment_cmd in segment_cmd_list:
         grid_dict[segment_cmd] = {}
@@ -185,6 +187,7 @@ def feature_distribute(elem):
                     curr_segment_speed = segment_speed_list[speed_index]
                     next_segment_speed = segment_speed_list[speed_index + 1]
                     if (speed > curr_segment_speed and speed < next_segment_speed):
+                        # TODO: Allow 100 chars.
                         grid_dict[curr_segment_cmd][curr_segment_speed].append(
                             feature_index)
                         break
