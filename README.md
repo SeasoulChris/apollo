@@ -9,6 +9,7 @@
               | - apollo
               | - apollo-fuel
               | - apollo-internal
+              | - apollo-spark (If you will run pipeline in cloud by yourself)
               | - replay-engine
    ```
 
@@ -109,11 +110,13 @@ tools/submit-job-to-local.sh /path/to/spark/job.py
 
 ### Run pipeline in cluster
 
-If you are pretty familliar with the infra, please loop the data team in to have
-your job well reviewed, and then run:
+If you are pretty familliar with the infra, please:
+1. Loop the data team in to have your job well reviewed.
+1. Clone `apollo-spark` repo and run `apollo/0_build-spark.sh`
+1. Then run:
 
-```bash
-tools/submit-job-to-k8s.sh /path/to/spark/job.py
-```
+   ```bash
+   tools/submit-job-to-k8s.sh /path/to/spark/job.py
+   ```
 
-The team shares a lot of resources, please be cautious.
+Please request resources carefully, as it may block other teammates' work.
