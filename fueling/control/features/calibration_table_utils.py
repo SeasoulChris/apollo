@@ -32,8 +32,7 @@ train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 
 FILENAME_CONTROL_CONF = \
     '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 
 THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
@@ -50,7 +49,8 @@ segment_throttle_list = np.linspace(
     THROTTLE_DEADZONE, THROTTLE_MAX, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
 
 segment_speed_list = np.linspace(
-    CALIBRATION_TABLE_CONF.speed_min, CALIBRATION_TABLE_CONF.speed_max, num=CALIBRATION_TABLE_CONF.speed_segment).tolist()
+    CALIBRATION_TABLE_CONF.speed_min, CALIBRATION_TABLE_CONF.speed_max,
+    num=CALIBRATION_TABLE_CONF.speed_segment).tolist()
 
 segment_cmd_list = segment_brake_list + segment_throttle_list
 segment_store_num = 12
@@ -79,8 +79,7 @@ def feature_generate(elem):
         acc_x = pose.linear_acceleration.x
         acc_y = pose.linear_acceleration.y
         acc = acc_x*math.cos(heading_angle)+acc_y*math.sin(heading_angle)
-        feature_cmd = decide_cmd(
-            chassis.throttle_percentage, chassis.brake_percentage)
+        feature_cmd = decide_cmd(chassis.throttle_percentage, chassis.brake_percentage)
         driving_mode = (chassis.driving_mode == wanted_driving_mode)
         res[i] = np.array([
             chassis.speed_mps,  # 0: speed
@@ -194,8 +193,7 @@ def feature_distribute(elem):
             feature_index_list = grid_dict[segment_cmd][segment_speed]
             if len(feature_index_list) == 0:
                 continue
-            acc_list = [elem[feature_index][1]
-                        for feature_index in feature_index_list]
+            acc_list = [elem[feature_index][1] for feature_index in feature_index_list]
             acc_mean = np.mean(acc_list)
             acc_std = np.std(acc_list)
             for index, feature_index in enumerate(feature_index_list):
@@ -278,24 +276,21 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     folder_path = target_prefix
 
     # throttle train file
-    throttle_train_file_dir = "{}/{}/throttle/train".format(
-        folder_path, vehicle_type)
+    throttle_train_file_dir = "{}/{}/throttle/train".format(folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % throttle_train_file_dir)
 
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
     write_h5_cal_tab(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
-    throttle_test_file_dir = "{}/{}/throttle/test".format(
-        folder_path, vehicle_type)
+    throttle_test_file_dir = "{}/{}/throttle/test".format(folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % throttle_test_file_dir)
 
     throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
     write_h5_cal_tab(throttle_test_data, throttle_test_file_dir, key)
 
     # brake train file
-    brake_train_file_dir = "{}/{}/brake/train".format(
-        folder_path, vehicle_type)
+    brake_train_file_dir = "{}/{}/brake/train".format(folder_path, vehicle_type)
     glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
 
     brake_train_data = brake_train[0:brake_train_feature_num, :]

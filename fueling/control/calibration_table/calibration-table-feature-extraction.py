@@ -47,8 +47,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
         dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)

@@ -15,8 +15,7 @@ from fueling.common.s3_utils import s3_utils
 from fueling.control.features.parameters_training import dim
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + \
-    dim["control"]  # accounts for mps
+DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]

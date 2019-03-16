@@ -18,16 +18,13 @@ class DynamicModelEvaluation(BasePipeline):
         dirs = '/apollo/modules/data/fuel/fueling/control/data/'
         files = glob.glob(
             '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
-        h5s = glob.glob(
-            '/apollo/modules/data/fuel/fueling/control/data/hdf5_evaluation/*.hdf5')
+        h5s = glob.glob('/apollo/modules/data/fuel/fueling/control/data/hdf5_evaluation/*.hdf5')
         self.model_evalution(files, h5s, dirs)
 
     def run_prod(self):
         dirs = '/mnt/bos/modules/control/'
-        files = glob.glob(
-            "/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5")
-        h5s = glob.glob(
-            '/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
+        files = glob.glob('/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5')
+        h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
         self.model_evalution(files, h5s, dirs)
 
     def load_model(self, files, sub_module):
@@ -36,8 +33,7 @@ class DynamicModelEvaluation(BasePipeline):
             .filter(lambda x: sub_module in x)  # Model weights files
             .map(lambda x: (self.extract_file_id(x, 'dynamic_model_output/', '_model_' + sub_module + '_'),
                             self.extract_file_id(x, '_model_' + sub_module + '_', '.h5')))
-            .distinct()
-            .cache())
+            .distinct())
 
     def extract_file_id(self, file_name, start_position, end_position):
         return file_name.split(start_position)[1].split(end_position)[0]

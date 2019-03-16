@@ -24,8 +24,7 @@ FILENAME = "/mnt/bos/modules/control/common/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, featureKey())
 
 FILENAME_CONTROL_CONF = "/mnt/bos/modules/control/common/control_conf.pb.txt"
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf())
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf())
 
 # TODO change based on vehicle model
 THROTTLE_DEADZONE = 5.0  # CONTROL_CONF.lon_controller_conf.throttle_deadzone
@@ -56,8 +55,7 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
             for msg in reader(record):
                 hmi_status = record_utils.message_to_proto(msg)
                 vehicle = hmi_status.current_vehicle
-                glog.info('Get vehicle name "{}" from record {}'.format(
-                    vehicle, record))
+                glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
                 return vehicle
         glog.info('Failed to get vehicle name')
         return ''
@@ -180,8 +178,7 @@ def feature_key_value(elem):
     throttle_key = int(min(throttle, THROTTLE_MAX)/ACC_SLICE)
     brake_key = int(min(brake, BRAKE_MAX)/ACC_SLICE)
 
-    elem_key = int(speed_key*1000+steering_key *
-                   100 + throttle_key*10+brake_key)
+    elem_key = int(speed_key*1000+steering_key * 100 + throttle_key*10+brake_key)
     # ((folder_path,feature_key),(time_stamp,paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 

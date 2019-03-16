@@ -63,24 +63,26 @@ def generate_data(segments):
     i = 0
     for j in range(len(segments)):
         segment = segments[j]
-        for k in range(segment.shape[0] - 1):
-            if k>0:
-                X[i,0] = segment[k-1,14] #speed mps
-                X[i,1] = segment[k-1,8] * np.cos(segment[k-1,0]) + segment[k-1,9] * np.sin(segment[k-1,0]) #acc
-                X[i,2] = segment[k-1,13] #angular speed
-                X[i,3] = segment[k-1,15] #control from chassis
-                X[i,4] = segment[k-1,16] #control from chassis
-                X[i,5] = segment[k-1,17] #control from chassis
-                Y[i,0] = segment[k,8] * np.cos(segment[k,0]) + segment[k,9] * np.sin(segment[k,0]) #acc next
-                Y[i,1] = segment[k,13] #angular speed next
-                i += 1
+        for k in range(1, segment.shape[0] - 1):
+            X[i, 0] = segment[k - 1, 14] #speed mps
+            X[i, 1] = (segment[k - 1, 8] * np.cos(segment[k-1,0]) +
+                segment[k-1,9] * np.sin(segment[k-1,0]))  #acc
+            X[i, 2] = segment[k - 1, 13] #angular speed
+            X[i, 3] = segment[k - 1, 15] #control from chassis
+            X[i, 4] = segment[k - 1, 16] #control from chassis
+            X[i, 5] = segment[k - 1, 17] #control from chassis
+            Y[i, 0] = (segment[k, 8] * np.cos(segment[k,0]) +
+                segment[k,9] * np.sin(segment[k,0])) #acc next
+            Y[i, 1] = segment[k, 13] #angular speed next
+            i += 1
     X[:,1] = savgol_filter(X[:,1], 51, 3) # window size 51, polynomial order 3
     Y[:,0] = savgol_filter(Y[:,0], 51, 3) # window size 51, polynomial order 3
     return X, Y
 
 def plot_H5_features_hist(X):
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    with PdfPages('/mnt/bos/modules/control/evaluation_result/Dataset_Distribution_' + timestr + '.pdf') as pdf:
+    pdf_file = '/mnt/bos/modules/control/evaluation_result/Dataset_Distribution_%s.pdf' % timestr
+    with PdfPages(pdf_file) as pdf:
         for j in range(dim_input):
             plt.figure(figsize=(4,3))
             plt.hist(X[:,j],bins ='auto')

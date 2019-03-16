@@ -45,16 +45,13 @@ if USE_TENSORFLOW:
 else:
     os.environ["KERAS_BACKEND"] = "theano"
     if USE_GPU:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/gpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/gpu_config")
         os.environ["DEVICE"] = "cuda"  # for pygpu, unclear whether necessary
     else:
-        os.environ["THEANORC"] = os.path.join(
-            os.getcwd(), "theanorc/cpu_config")
+        os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + \
-    dim["control"]  # accounts for mps
+DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]
@@ -85,16 +82,14 @@ def generate_mlp_data(segments, dirs, timestr):
         if k % 5 != 0 and k % 5 != 4:
             calibration_table[k/5, k % 5-1] = float(lines[k].split(':')[1])
 
-    hf = h5py.File(
-        dirs+'dynamic_model_output/mlp_model_norms_'+timestr+'.h5', 'r')
+    hf = h5py.File(dirs+'dynamic_model_output/mlp_model_norms_'+timestr+'.h5', 'r')
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
     hf.close()
 
     f = interpolate.interp2d(
         calibration_table[:, 0], calibration_table[:, 1], calibration_table[:, 2], kind='linear')
-    model = load_model(
-        dirs+'dynamic_model_output/mlp_model_weights_'+timestr+'.h5')
+    model = load_model(dirs + 'dynamic_model_output/mlp_model_weights_'+timestr+'.h5')
 
     i = 0
     velocity_point_mass = 0
@@ -109,8 +104,7 @@ def generate_mlp_data(segments, dirs, timestr):
             if k > 0:
                 I_ground_truth[i, 0] = segment[k, 14]  # speed_mps
                 I_ground_truth[i, 1] = segment[k, 0]  # heading
-                Y_imu[i, 0] = segment[k, 8] * \
-                    np.cos(segment[k, 0]) + segment[k, 9] * \
+                Y_imu[i, 0] = segment[k, 8] * np.cos(segment[k, 0]) + segment[k, 9] * \
                     np.sin(segment[k, 0])
                 Y_imu[i, 1] = segment[k, 13]
 
@@ -129,11 +123,9 @@ def generate_mlp_data(segments, dirs, timestr):
                     angular_velocity_mlp = segment[k-1, 13]
 
                 velocity_point_mass += acceleration_point_mass * 0.01
-                acceleration_point_mass = f(
-                    velocity_point_mass, lon_cmd * 100.0)
+                acceleration_point_mass = f(velocity_point_mass, lon_cmd * 100.0)
                 Y_point_mass[i, 0] = acceleration_point_mass
-                Y_point_mass[i, 1] = segment[k-1, 17] * \
-                    8.203 / 16 * velocity_point_mass / 2.8448
+                Y_point_mass[i, 1] = segment[k-1, 17] * 8.203 / 16 * velocity_point_mass / 2.8448
 
                 # Y_mlp = model.predict(X)
 
@@ -147,11 +139,9 @@ def generate_mlp_data(segments, dirs, timestr):
                 # print "X size = ", X.shape
 
                 Y_mlp[i, :] = model.predict(X[:, [0, 1, 3, 4, 5]])
-                acceleration_mlp = Y_mlp[i, 0] * \
-                    std_param_norm[1] + mean_param_norm[1]
+                acceleration_mlp = Y_mlp[i, 0] * std_param_norm[1] + mean_param_norm[1]
                 Y_mlp[i, 0] = acceleration_mlp
-                angular_velocity_mlp = Y_mlp[i, 1] * \
-                    std_param_norm[2] + mean_param_norm[2]
+                angular_velocity_mlp = Y_mlp[i, 1] * std_param_norm[2] + mean_param_norm[2]
                 Y_mlp[i, 1] = angular_velocity_mlp
                 velocity_mlp += acceleration_mlp * 0.01
 
@@ -176,7 +166,7 @@ def generate_lstm_data(segments, dirs, timestr):
     print "X size = ", X.shape
     print "Y size = ", Y_imu.shape
 
-    text_file = open(dirs+'conf/sim_control_lincoln.pb.txt', 'r')
+    text_file = open(dirs + 'conf/sim_control_lincoln.pb.txt', 'r')
     lines = text_file.readlines()
     #print lines
     table_length = len(lines)/5
@@ -186,16 +176,14 @@ def generate_lstm_data(segments, dirs, timestr):
         if k % 5 != 0 and k % 5 != 4:
             calibration_table[k/5, k % 5-1] = float(lines[k].split(':')[1])
 
-    hf = h5py.File(
-        dirs+'dynamic_model_output/lstm_model_norms_'+timestr+'.h5', 'r')
+    hf = h5py.File(dirs + 'dynamic_model_output/lstm_model_norms_'+timestr+'.h5', 'r')
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
     hf.close()
 
     f = interpolate.interp2d(
         calibration_table[:, 0], calibration_table[:, 1], calibration_table[:, 2], kind='linear')
-    model = load_model(
-        dirs+'dynamic_model_output/lstm_model_weights_'+timestr+'.h5')
+    model = load_model(dirs+'dynamic_model_output/lstm_model_weights_'+timestr+'.h5')
 
     i = 0
     velocity_point_mass = 0
@@ -212,16 +200,14 @@ def generate_lstm_data(segments, dirs, timestr):
                 I_ground_truth[i, 1] = segment[k, 0]  # heading
 
                 feature[i, 0] = segment[k, 14]
-                feature[i, 1] = segment[k, 8] * \
-                    np.cos(segment[k, 0]) + segment[k, 9] * \
+                feature[i, 1] = segment[k, 8] * np.cos(segment[k, 0]) + segment[k, 9] * \
                     np.sin(segment[k, 0])
                 feature[i, 2] = segment[k, 13]
                 feature[i, 3] = segment[k, 15]
                 feature[i, 4] = segment[k, 16]
                 feature[i, 5] = segment[k, 17]
 
-                Y_imu[i, 0] = segment[k, 8] * \
-                    np.cos(segment[k, 0]) + segment[k, 9] * \
+                Y_imu[i, 0] = segment[k, 8] * np.cos(segment[k, 0]) + segment[k, 9] * \
                     np.sin(segment[k, 0])
                 Y_imu[i, 1] = segment[k, 13]
 
@@ -234,19 +220,16 @@ def generate_lstm_data(segments, dirs, timestr):
                 acceleration_point_mass = segment[k-1, 8] * np.cos(
                     segment[k-1, 0]) + segment[k-1, 9] * np.sin(segment[k-1, 0])
                 velocity_point_mass += acceleration_point_mass * 0.01
-                acceleration_point_mass = f(
-                    velocity_point_mass, lon_cmd * 100.0)
+                acceleration_point_mass = f(velocity_point_mass, lon_cmd * 100.0)
                 Y_point_mass[i, 0] = acceleration_point_mass
-                Y_point_mass[i, 1] = segment[k-1, 17] * \
-                    8.203 / 16 * velocity_point_mass / 2.8448
+                Y_point_mass[i, 1] = segment[k-1, 17] * 8.203 / 16 * velocity_point_mass / 2.8448
 
                 if i < DIM_LSTM_LENGTH:
                     velocity_mlp = segment[k-1, 14]
                     acceleration_mlp = segment[k-1, 8] * np.cos(
                         segment[k-1, 0]) + segment[k-1, 9] * np.sin(segment[k-1, 0])
                     angular_velocity_mlp = segment[k-1, 13]
-                    Y_mlp[i, 0] = segment[k, 8] * \
-                        np.cos(segment[k, 0]) + segment[k, 9] * \
+                    Y_mlp[i, 0] = segment[k, 8] * np.cos(segment[k, 0]) + segment[k, 9] * \
                         np.sin(segment[k, 0])
                     Y_mlp[i, 1] = segment[k, 13]
 
@@ -255,11 +238,9 @@ def generate_lstm_data(segments, dirs, timestr):
                         X[(i-DIM_LSTM_LENGTH):i, :]), (1, DIM_INPUT, DIM_LSTM_LENGTH))
                     #print X_array
                     Y_mlp[i, :] = model.predict(X_array)
-                    acceleration_mlp = Y_mlp[i, 0] * \
-                        std_param_norm[1] + mean_param_norm[1]
+                    acceleration_mlp = Y_mlp[i, 0] * std_param_norm[1] + mean_param_norm[1]
                     Y_mlp[i, 0] = acceleration_mlp
-                    angular_velocity_mlp = Y_mlp[i, 1] * \
-                        std_param_norm[2] + mean_param_norm[2]
+                    angular_velocity_mlp = Y_mlp[i, 1] * std_param_norm[2] + mean_param_norm[2]
                     Y_mlp[i, 1] = angular_velocity_mlp
 
                 velocity_mlp += Y_mlp[i, 0] * 0.01
@@ -289,8 +270,7 @@ def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     # plt.plot(Y_mlp[:,0], color = 'red', label = "Acceleration by learning-based-model")
     # plt.plot(Y_point_mass[:,0], color = 'green',label = "Acceleration by sim_point_mass")
     RMSE_mlp_acceleration = sqrt(mean_squared_error(Y_imu[:, 0], Y_mlp[:, 0]))
-    RMSE_point_mass_acceleration = sqrt(
-        mean_squared_error(Y_imu[:, 0], Y_point_mass[:, 0]))
+    RMSE_point_mass_acceleration = sqrt(mean_squared_error(Y_imu[:, 0], Y_point_mass[:, 0]))
     RMS_acceleration = sqrt(sum(n*n for n in Y_imu[:, 0])/len(Y_imu[:, 0]))
     txt.write("Acceleration RMSE of learning-based-model:" + str(RMSE_mlp_acceleration) +
               ", Error Rate:" + str(RMSE_mlp_acceleration/RMS_acceleration))
@@ -307,8 +287,7 @@ def plot_model_output(Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     # plt.plot(Y_mlp[:,1], color = 'red', label = "Angular speed by learning-based-model")
     # plt.plot(Y_point_mass[:,1], color = 'green',label = "Angular speed by sim_point_mass")
     RMSE_mlp_angular_speed = sqrt(mean_squared_error(Y_imu[:, 1], Y_mlp[:, 1]))
-    RMSE_point_mass_angular_speed = sqrt(
-        mean_squared_error(Y_imu[:, 1], Y_point_mass[:, 1]))
+    RMSE_point_mass_angular_speed = sqrt(mean_squared_error(Y_imu[:, 1], Y_point_mass[:, 1]))
     RMS_angular_speed = sqrt(sum(n*n for n in Y_imu[:, 1])/len(Y_imu[:, 1]))
     txt.write("Angular speed RMSE of learning-based-model:" + str(RMSE_mlp_angular_speed) +
               ", Error Rate:" + str(RMSE_mlp_angular_speed/RMS_angular_speed))
@@ -339,21 +318,16 @@ def plot_first_integral(I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt):
         if k > 0:
             I_imu[k, :] = I_imu[k-1, :] + Y_imu[k, :] * 0.01  # by imu sensor
             I_imu[k, 1] = normalize_angle(I_imu[k, 1])
-            I_mlp[k, :] = I_mlp[k-1, :] + Y_mlp[k, :] * \
-                0.01  # by learning-based-model
+            I_mlp[k, :] = I_mlp[k-1, :] + Y_mlp[k, :] * 0.01  # by learning-based-model
             I_mlp[k, 1] = normalize_angle(I_mlp[k, 1])
             I_point_mass[k, :] = I_point_mass[k-1, :] + \
                 Y_point_mass[k, :] * 0.01  # by sim_point_mass
             I_point_mass[k, 1] = normalize_angle(I_point_mass[k, 1])
 
-    RMSE_imu_speed = sqrt(mean_squared_error(
-        I_imu[:, 0], I_ground_truth[:, 0]))
-    RMSE_mlp_speed = sqrt(mean_squared_error(
-        I_mlp[:, 0], I_ground_truth[:, 0]))
-    RMSE_point_mass_speed = sqrt(mean_squared_error(
-        I_point_mass[:, 0], I_ground_truth[:, 0]))
-    RMS_speed = sqrt(
-        sum(n*n for n in I_ground_truth[:, 0])/len(I_ground_truth[:, 0]))
+    RMSE_imu_speed = sqrt(mean_squared_error(I_imu[:, 0], I_ground_truth[:, 0]))
+    RMSE_mlp_speed = sqrt(mean_squared_error(I_mlp[:, 0], I_ground_truth[:, 0]))
+    RMSE_point_mass_speed = sqrt(mean_squared_error(I_point_mass[:, 0], I_ground_truth[:, 0]))
+    RMS_speed = sqrt(sum(n*n for n in I_ground_truth[:, 0])/len(I_ground_truth[:, 0]))
 
     # plt.figure(figsize=(3,2))
     # plt.title("Speed")
@@ -373,14 +347,10 @@ def plot_first_integral(I_ground_truth, Y_imu, Y_mlp, Y_point_mass, pdf, txt):
     # pdf.savefig()  # saves the current figure into a pdf page
     # plt.close()
 
-    RMSE_imu_heading = sqrt(mean_squared_error(
-        I_imu[:, 1], I_ground_truth[:, 1]))
-    RMSE_mlp_heading = sqrt(mean_squared_error(
-        I_mlp[:, 1], I_ground_truth[:, 1]))
-    RMSE_point_mass_heading = sqrt(mean_squared_error(
-        I_point_mass[:, 1], I_ground_truth[:, 1]))
-    RMS_heading = sqrt(
-        sum(n*n for n in I_ground_truth[:, 1])/len(I_ground_truth[:, 1]))
+    RMSE_imu_heading = sqrt(mean_squared_error(I_imu[:, 1], I_ground_truth[:, 1]))
+    RMSE_mlp_heading = sqrt(mean_squared_error(I_mlp[:, 1], I_ground_truth[:, 1]))
+    RMSE_point_mass_heading = sqrt(mean_squared_error(I_point_mass[:, 1], I_ground_truth[:, 1]))
+    RMS_heading = sqrt(sum(n*n for n in I_ground_truth[:, 1])/len(I_ground_truth[:, 1]))
 
     # plt.figure(figsize=(3,2))
     # plt.title("Heading")
@@ -437,8 +407,7 @@ def plot_Trajectory(T_ground_truth, I_imu, I_mlp, I_point_mass, pdf, txt):
 
     RMSE_imu_trajectory = sqrt(mean_squared_error(T_imu, T_ground_truth))
     RMSE_mlp_trajectory = sqrt(mean_squared_error(T_mlp, T_ground_truth))
-    RMSE_point_mass_trajectory = sqrt(
-        mean_squared_error(T_point_mass, T_ground_truth))
+    RMSE_point_mass_trajectory = sqrt(mean_squared_error(T_point_mass, T_ground_truth))
     txt.write("Trajectory RMSE of sensor:" + str(RMSE_imu_trajectory) +
               ", Error Rate:" + str(RMSE_imu_trajectory/Trajectory_length))
     txt.write("\n")

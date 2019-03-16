@@ -10,8 +10,8 @@ from fueling.control.features.filters import Filters
 from fueling.control.features.neural_network_tf import NeuralNetworkTF
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
-import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 import fueling.control.features.calibration_table_utils as calibration_table_utils
+import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
@@ -52,10 +52,9 @@ def generate_data(segments):
     for j in range(len(segments)):
         segment = segments[j]
         for k in range(1, segment.shape[0]):
-            if k > 0:
-                X[i, 0:2] = segment[k, [0, 2]]  # speed & cmd
-                Y[i, 0] = segment[k, 1]  # acc
-                i += 1
+            X[i, 0:2] = segment[k, [0, 2]]  # speed & cmd
+            Y[i, 0] = segment[k, 1]  # acc
+            i += 1
     return X, Y
 
 
@@ -69,10 +68,8 @@ def train_model(elem, layer, train_alpha):
     Y_test = elem[1][1]
 
     model = NeuralNetworkTF(layer)
-    params, train_cost, test_cost = model.train(X_train, Y_train,
-                                                X_test, Y_test,
-                                                alpha=train_alpha,
-                                                print_loss=True)
+    params, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
+                                                alpha=train_alpha, print_loss=True)
     glog.info(" model train cost: %f" % train_cost)
     glog.info(" model test cost: %f " % test_cost)
     return model
@@ -88,15 +85,11 @@ def write_table(elem,
     model = elem[1]
     calibration_table_pb = calibration_table_pb2.ControlCalibrationTable()
 
-    speed_array = np.linspace(
-        speed_min, speed_max, num=speed_segment_num)
-    cmd_array = np.linspace(
-        axis_cmd_min, axis_cmd_max, num=cmd_segment_num)
+    speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
+    cmd_array = np.linspace(axis_cmd_min, axis_cmd_max, num=cmd_segment_num)
 
     speed_array, cmd_array = np.meshgrid(speed_array, cmd_array)
-    grid_array = np.array([[s, c] for s, c in zip(
-        np.ravel(speed_array), np.ravel(cmd_array))])
-
+    grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
     acc_array = model.predict(grid_array).reshape(speed_array.shape)
 
     for cmd_index in range(cmd_segment_num):
@@ -108,8 +101,7 @@ def write_table(elem,
 
     path = elem[0]
 
-    calibration_table_utils.write_h5_cal_tab(
-        acc_array, path, table_filename)
+    calibration_table_utils.write_h5_cal_tab(acc_array, path, table_filename)
 
     with open(os.path.join(path, table_filename), 'w') as wf:
         wf.write(str(calibration_table_pb))

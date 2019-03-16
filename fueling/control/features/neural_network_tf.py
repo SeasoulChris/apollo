@@ -42,14 +42,10 @@ class NeuralNetworkTF(object):
         initialize weight and bias
         """
         xavier_initializer = tf.contrib.layers.xavier_initializer()
-        W1 = tf.get_variable(
-            'W1', [self.layer[0], self.layer[1]], initializer=xavier_initializer)
-        W2 = tf.get_variable(
-            'W2', [self.layer[1], self.layer[2]], initializer=xavier_initializer)
-        b1 = tf.get_variable('b1', [1, self.layer[1]],
-                             initializer=tf.zeros_initializer())
-        b2 = tf.get_variable('b2', [1, self.layer[2]],
-                             initializer=tf.zeros_initializer())
+        W1 = tf.get_variable('W1', [self.layer[0], self.layer[1]], initializer=xavier_initializer)
+        W2 = tf.get_variable('W2', [self.layer[1], self.layer[2]], initializer=xavier_initializer)
+        b1 = tf.get_variable('b1', [1, self.layer[1]], initializer=tf.zeros_initializer())
+        b2 = tf.get_variable('b2', [1, self.layer[2]], initializer=tf.zeros_initializer())
 
         params = {'W1': W1,
                   'W2': W2,
@@ -73,10 +69,8 @@ class NeuralNetworkTF(object):
 
         # loss function
         self.cost = tf.reduce_mean(tf.square((self.Y - self.Y_hat)))
-        tf.add_to_collection(
-            "losses", tf.contrib.layers.l2_regularizer(w_lambda)(params['W1']))
-        tf.add_to_collection(
-            "losses", tf.contrib.layers.l2_regularizer(w_lambda)(params['W2']))
+        tf.add_to_collection("losses", tf.contrib.layers.l2_regularizer(w_lambda)(params['W1']))
+        tf.add_to_collection("losses", tf.contrib.layers.l2_regularizer(w_lambda)(params['W2']))
         tf.add_to_collection("losses", self.cost)
         loss = tf.add_n(tf.get_collection("losses"))
         optimizer = tf.train.AdamOptimizer(learning_rate=alpha).minimize(loss)
@@ -84,8 +78,7 @@ class NeuralNetworkTF(object):
         self.session.run(tf.global_variables_initializer())
         for epoch in range(num_epoch):
             feed_dict = {self.X: X_train, self.Y: Y_train}
-            _, epoch_cost = self.session.run(
-                [optimizer, loss], feed_dict=feed_dict)
+            _, epoch_cost = self.session.run([optimizer, loss], feed_dict=feed_dict)
             if print_loss and epoch % 100 == 0:
                 print("loss after epoch %d: %f" % (epoch, epoch_cost))
             if epoch % 10 == 0:
@@ -97,11 +90,9 @@ class NeuralNetworkTF(object):
         # check accuracy
         train_cost, test_cost = 0.0, 0.0
         with self.session.as_default():
-            train_cost = self.cost.eval(
-                feed_dict={self.X: X_train, self.Y: Y_train})
+            train_cost = self.cost.eval(feed_dict={self.X: X_train, self.Y: Y_train})
             if X_test is not None and Y_test is not None:
-                test_cost = self.cost.eval(
-                    feed_dict={self.X: X_test, self.Y: Y_test})
+                test_cost = self.cost.eval(feed_dict={self.X: X_test, self.Y: Y_test})
 
         return params, train_cost, test_cost
 
@@ -111,8 +102,7 @@ class NeuralNetworkTF(object):
         """
         if Y_data is not None:
             with self.session.as_default():
-                test_cost = self.cost.eval(
-                    feed_dict={self.X: X_data, self.Y: Y_data})
+                test_cost = self.cost.eval(feed_dict={self.X: X_data, self.Y: Y_data})
                 return test_cost
         else:
             Y_pred = self.session.run(self.Y_hat, feed_dict={self.X: X_data})
