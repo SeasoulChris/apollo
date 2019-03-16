@@ -1,6 +1,5 @@
 """A simple demo PySpark job."""
 #!/usr/bin/env python
-
 import pprint
 import time
 
@@ -18,17 +17,17 @@ class DemoPipeline(BasePipeline):
     def run_test(self):
         # Spark cascade style programming.
         return (
-            self.get_spark_context()
-            # [record_path, ...]
-            .parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
-            # [message, ...]
+            # RDD(record_path)
+            self.get_spark_context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+            # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
-            # [topic:message, ...]
+            # PairRDD(topic, PyBagMessage)
             .keyBy(lambda msg: msg.topic)
-            # [topic:1, ...]
+            # PairRDD(topic, 1)
             .mapValues(lambda msg: 1)
-            # [topic:n, ...]
+            # PairRDD(topic, N), with unique keys.
             .reduceByKey(lambda a, b: a + b)
+            # PairRDD(topic, N), just sleep.
             .map(DemoPipeline.dummy_process))
 
     def run_prod(self):

@@ -62,7 +62,9 @@ class GenerateSmallRecords(BasePipeline):
         sc = self.get_spark_context()
         root_dir = '/apollo'
         records_rdd = sc.parallelize(['docs/demo_guide/demo_3.5.record'])
+        # RDD(dir_path)
         whitelist_dirs_rdd = sc.parallelize(['docs/demo_guide'])
+        # RDD(dir_path)
         blacklist_dirs_rdd = sc.parallelize([])
         origin_prefix = 'docs/demo_guide'
         target_prefix = 'data'
@@ -80,55 +82,65 @@ class GenerateSmallRecords(BasePipeline):
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         records_rdd = files.filter(record_utils.is_record_file)
-        # task_dir, which has a 'COMPLETE' file inside.
+
         whitelist_dirs_rdd = (
+            # RDD(COMPLETE_file_path)
             files.filter(lambda path: path.endswith('/COMPLETE'))
+            # RDD(task_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname))
-        # task_dir, whose mappinged target dir has not a 'COMPLETE' file inside.
+
         blacklist_dirs_rdd = (
+            # RDD(file_path), with the target_prefix.
             s3_utils.list_files(bucket, target_prefix)
+            # RDD(COMPLETE_file_path)
             .filter(lambda path: path.endswith('/COMPLETE'))
+            # RDD(target_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname)
+            # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
+
         self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
                  origin_prefix, target_prefix)
 
     def run(self, root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
-        # (task_dir, record)
-        todo_jobs = spark_op.filter_keys(records_rdd.keyBy(os.path.dirname), whitelist_dirs_rdd)
+        # PairRDD(task_dir, record), which is in the whitelist
+        todo_jobs = spark_op.filter_keys(
+            # PairRDD(task_dir, record)
+            records_rdd.keyBy(os.path.dirname),
+            whitelist_dirs_rdd)
         tasks_count = (
-            # -> (task_dir, record)
+            # PairRDD(task_dir, record), which is not in the blacklist
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
-            # -> (target_dir, record)
+            # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
-            # -> (target_dir, record), in absolute path style.
+            # PairRDD(target_dir, record), in absolute path style.
             .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
                                      os.path.join(root_dir, dir_record[1])))
-            # -> (target_dir, (record, header))
+            # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
-            # -> (target_dir, (record, header)), where header is valid
+            # PairRDD(target_dir, (record, header)), where header is valid
             .filter(spark_op.filter_value(lambda header_record: header_record[1] is not None))
-            # -> (target_file, (record, start_time, end_time))
+            # PairRDD(target_file, (record, start_time, end_time))
             .flatMap(GenerateSmallRecords.shard_to_files)
-            # -> (target_file, (record, start_time, end_time)s)
+            # PairRDD(target_file, (record, start_time, end_time)s)
             .groupByKey()
-            # -> (target_file, (record, start_time, end_time)s)
+            # PairRDD(target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
-            # -> target_file
+            # RDD(target_file)
             .map(GenerateSmallRecords.process_file)
-            # -> target_file
+            # RDD(target_file)
             .filter(bool)
-            # -> target_dir
+            # RDD(target_dir)
             .map(os.path.dirname)
-            # -> target_dir
+            # RDD(target_dir)
             .distinct()
-            # -> target_dir/COMPLETE
+            # RDD(target_dir/COMPLETE)
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
-            # Touch file.
+            # RDD(target_dir/COMPLETE), with the file created.
             .map(file_utils.touch)
-            # Trigger actions.
+            # Number of finished tasks.
             .count())
         glog.info('Processed {} tasks'.format(tasks_count))
 

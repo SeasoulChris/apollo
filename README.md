@@ -64,6 +64,27 @@ practices are:
    perfectly at local. And when it is submited to a cluster, the huge test files
    are efficiently ignored.
 
+1. Comment intensively and accurately. Every RDD should be well described with
+   the pattern.
+
+   ```python
+   # RDD(element_type), other comments if any.
+   # PairRDD(key_type, value_type), other comments if any.
+   ```
+
+1. Import only what you need in each file. And split them into sections in
+   order:
+
+   ```python
+   import standard_packages
+
+   import third_party_packages
+
+   import apollo_packages
+
+   import fueling_packages
+   ```
+
 And good coding practices are:
 
 1. Filter early, filter often.
