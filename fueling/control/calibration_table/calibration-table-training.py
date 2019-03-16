@@ -75,13 +75,15 @@ class CalibrationTableTraining(BasePipeline):
 
         # choose folder for wanted vehicle
         origin_prefix = os.path.join('modules/control/feature_extraction_hf5/2019/', WANTED_VEHICLE)
+        # TODO: The target_prefix is not used finally.
         target_prefix = 'modules/control/calibration_table/'
         root_dir = s3_utils.S3_MOUNT_PATH
-        dir_to_records = (
-            s3_utils.list_files(bucket, origin_prefix)
-            .filter(lambda path: path.endswith('.hdf5'))
+        # TODO: I have to change it like this to fit the followed pipeline. But it's not a good way
+        # to use S3 storage.
+        dir_to_h5s = (
+            self.get_spark_context().parallelize(['modules/control/feature_extraction_hf5/2019/'])
             .keyBy(os.path.dirname))
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        self.run(dir_to_h5s, origin_prefix, target_prefix, root_dir)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
@@ -89,6 +91,9 @@ class CalibrationTableTraining(BasePipeline):
         # -> (dir, record), in absolute path
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
                                                            os.path.join(root_dir, x[1]))).cache()
+        # TODO: Go through the whole logic carefully.
+        # 1. Choose better variable names. Many of them mismatched what they are.
+        # 2. Remove redundant items, for example, the dir_to_records[1] is never used.
         throttle_train_file_rdd = (
             # (dir, dir)
             dir_to_records
@@ -111,9 +116,12 @@ class CalibrationTableTraining(BasePipeline):
             # -> (dir, x_test_data, y_test_data)
             .mapValues(train_utils.generate_data))
 
+        # TODO: Use subfolders instead of concat string. It's easier if you want to parse it back.
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
 
         throttle_model_rdd = (
+            # TODO: Refine the comments to describe accrurately. It's
+            # (dir, (x_train_data, y_train_data)) here, not a 3-elements tuple.
             # (dir, x_train_data, y_train_data)
             throttle_train_file_rdd
             # -> (dir, x_train_data, y_train_data, x_test_data, y_test_data)
@@ -166,4 +174,4 @@ class CalibrationTableTraining(BasePipeline):
 
 
 if __name__ == '__main__':
-    CalibrationTableTraining().run_test()
+    CalibrationTableTraining().run_prod()

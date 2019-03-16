@@ -15,8 +15,11 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
+    # TODO: Not record_dir.
     record_dir = elem[0]
     hdf5_file = glob.glob(
+        # TODO: Please write detailed document under control/calibration_table, about the file tree
+        # structure. As the logic has really strict requirement on how the data is organized.
         '{}/{}/{}/{}/*.hdf5'.format(record_dir, vehicle_type, brake_or_throttle, train_or_test))
     return (elem[0], hdf5_file)
 
