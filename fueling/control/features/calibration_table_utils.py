@@ -5,6 +5,7 @@ import random
 
 import h5py
 import numpy as np
+import math
 
 from fueling.control.features.filters import Filters
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
@@ -31,7 +32,8 @@ train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 
 FILENAME_CONTROL_CONF = \
     '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+CONTROL_CONF = proto_utils.get_pb_from_text_file(
+    FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 
 THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
@@ -73,12 +75,16 @@ def feature_generate(elem):
     for i in range(len(elem)):
         chassis = elem[i][0]
         pose = elem[i][1].pose
+        heading_angle = pose.heading
+        acc_x = pose.linear_acceleration.x
+        acc_y = pose.linear_acceleration.y
+        acc = acc_x*math.cos(heading_angle)+acc_y*math.sin(heading_angle)
         feature_cmd = decide_cmd(
             chassis.throttle_percentage, chassis.brake_percentage)
         driving_mode = (chassis.driving_mode == wanted_driving_mode)
         res[i] = np.array([
-            pose.linear_velocity.x,  # 0: speed
-            pose.linear_acceleration.x,  # 1: acc
+            chassis.speed_mps,  # 0: speed
+            acc,  # 1: acc
             feature_cmd,                # 2: cmd
             chassis.steering_percentage,
             driving_mode
