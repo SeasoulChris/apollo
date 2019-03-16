@@ -7,11 +7,11 @@ import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
+import fueling.common.colored_glog as glog
+import fueling.common.s3_utils as s3_utils
 import fueling.control.dynamic_model.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.mlp_keras as mlp_keras
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.colored_glog import glog
-from fueling.common.s3_utils import s3_utils
 from fueling.control.features.parameters_training import dim
 
 # Constants
@@ -41,9 +41,9 @@ class DynamicModelTraining(BasePipeline):
             # file, which starts with the prefix.
             s3_utils.list_files(bucket, prefix)
             # -> file, which ends with 'hdf5'
-            .filter(lambda path: path.endswith('.hdf5')
+            .filter(lambda path: path.endswith('.hdf5'))
             # -> file, in absolute path style.
-            .map(s3_utils.abs_path)))
+            .map(s3_utils.abs_path))
         output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
         self.run(h5_rdd, output_dir)
 
@@ -52,9 +52,11 @@ class DynamicModelTraining(BasePipeline):
             # h5
             h5_rdd
             # -> segment
-            .map(lambda h5: self.generate_segment(h5))
+            .map(self.generate_segment)
+            # -> segment, which is valid
+            .filter(lambda segment: segment is not None)
             # -> ('mlp_data|lstm_data', (input, output))
-            .flatMap(lambda segment: self.load_data(segment))
+            .flatMap(self.load_data)
             # -> ('mlp_data|lstm_data', (input, output)), with unique keys.
             .reduceByKey(lambda value_1, value_2: (np.vstack((value_1[0], value_2[0])),
                                                    np.vstack((value_1[1], value_2[1]))))

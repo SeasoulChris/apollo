@@ -1,33 +1,18 @@
 #!/usr/bin/env python
 
 from datetime import datetime
-from random import choice
-from random import randint
 from random import shuffle
 from time import time
-import glob
 import os
 
-from keras.callbacks import ModelCheckpoint
-from keras.layers.normalization import BatchNormalization
-from keras.layers import Dense, Input
-from keras.layers import Activation
-from keras.layers import Dropout
+from keras.layers import Dense
 from keras.layers import LSTM
-from keras.metrics import mse
-from keras.models import Sequential, Model
-from keras.models import model_from_json
+from keras.models import Sequential
 from keras.regularizers import l1, l2
-from keras.utils import np_utils
-from scipy.signal import savgol_filter
-from sklearn.model_selection import train_test_split
-import google.protobuf.text_format as text_format
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.control.features.parameters_training import dim
-from fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -48,8 +33,7 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + \
-    dim["control"]  # accounts for mps
+DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
 DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
 INPUT_FEATURES = ["speed mps", "speed incremental",
                   "angular incremental", "throttle", "brake", "steering"]

@@ -1,25 +1,3 @@
 name: fuel-py36
 dependencies:
   - python = 3.6
-  - pyspark = 2.4.0
-
-  # Google infra
-  - gflags
-  - glog
-  - protobuf
-  - tensorflow
-
-  # Data science
-  - boto3
-  - h5py
-  - keras
-  - matplotlib
-  - numpy
-  - scikit-learn
-
-  # Other.
-  - termcolor
-
-  - pip:
-    - pylint
-    - pyspark-utils

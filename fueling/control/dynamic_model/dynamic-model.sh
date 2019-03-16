@@ -13,11 +13,11 @@ ENV="fuel-py27-cyber"
 ./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
 
 # Training.
-JOB="fueling/control/dynamic-model/dynamic-model-training.py"
+JOB="fueling/control/dynamic_model/dynamic-model-training.py"
 ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 2 --cpu 20 --memory 200g
 
 # Evaluation
-JOB="fueling/control/dynamic-model/dynamic-model-evaluation.py"
+JOB="fueling/control/dynamic_model/dynamic-model-evaluation.py"
 ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
