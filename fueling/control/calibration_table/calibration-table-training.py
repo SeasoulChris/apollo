@@ -21,7 +21,7 @@ import modules.control.proto.control_conf_pb2 as ControlConf
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
 
 
-WANTED_VEHICLE = 'Transit'
+
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
@@ -33,6 +33,7 @@ FILENAME_CONTROL_CONF = \
 CONTROL_CONF = proto_utils.get_pb_from_text_file(
     FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
+WANTED_VEHICLE = CALIBRATION_TABLE_CONF.vehicle_type
 
 brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
                      CALIBRATION_TABLE_CONF.brake_train_layer2,

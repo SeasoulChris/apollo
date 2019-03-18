@@ -13,8 +13,13 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.colored_glog as glog
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
+import common.proto_utils as proto_utils
 
-WANTED_VEHICLE = 'Transit'
+# WANTED_VEHICLE = 'Transit'
+
+WANTED_VEHICLE = calibration_table_utils.CALIBRATION_TABLE_CONF.vehicle_type
+print(WANTED_VEHICLE)
 MIN_MSG_PER_SEGMENT = 1
 
 
