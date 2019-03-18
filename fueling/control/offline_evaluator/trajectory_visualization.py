@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# TODO: No copyright in apollo-fuel.
 ###############################################################################
 # Copyright 2018 The Apollo Authors. All Rights Reserved.
 #
@@ -16,6 +17,7 @@
 # limitations under the License.
 ###############################################################################
 
+# TODO： Reorg headers per README.md.
 import os
 import glob
 import sys
@@ -82,6 +84,7 @@ def generate_mlp_data(segments, dirs, timestr):
         if k % 5 != 0 and k % 5 != 4:
             calibration_table[k/5, k % 5-1] = float(lines[k].split(':')[1])
 
+    # TODO: ALways use `with` statement.
     hf = h5py.File(dirs+'dynamic_model_output/mlp_model_norms_'+timestr+'.h5', 'r')
     mean_param_norm = np.array(hf.get('mean'))
     std_param_norm = np.array(hf.get('std'))
