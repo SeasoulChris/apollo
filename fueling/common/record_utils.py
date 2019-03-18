@@ -16,15 +16,15 @@ from modules.routing.proto.routing_pb2 import RoutingResponse
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
-HMI_STATUS_CHANNEL = '/apollo/hmi/status'
-CHASSIS_CHANNEL = '/apollo/canbus/chassis'
-LOCALIZATION_CHANNEL = '/apollo/localization/pose'
+CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
+HMI_STATUS_CHANNEL =               '/apollo/hmi/status'
+LOCALIZATION_CHANNEL =             '/apollo/localization/pose'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
-FRONT_6mm_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
-FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
-REAR_6mm_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
-LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
-RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
+FRONT_12mm_CHANNEL =               '/apollo/sensor/camera/front_12mm/image/compressed'
+FRONT_6mm_CHANNEL =                '/apollo/sensor/camera/front_6mm/image/compressed'
+LEFT_FISHEYE_CHANNEL =             '/apollo/sensor/camera/left_fisheye/image/compressed'
+REAR_6mm_CHANNEL =                 '/apollo/sensor/camera/rear_6mm/image/compressed'
+RIGHT_FISHEYE_CHANNEL =            '/apollo/sensor/camera/right_fisheye/image/compressed'
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,

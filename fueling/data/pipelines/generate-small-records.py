@@ -56,6 +56,10 @@ class GenerateSmallRecords(BasePipeline):
 
     def __init__(self):
         BasePipeline.__init__(self, 'generate-small-records')
+        sc = self.get_spark_context()
+        self.source_records_acc = sc.accumulator(0)
+        self.target_records_acc = sc.accumulator(0)
+        self.messages_acc = sc.accumulator(0)
 
     def run_test(self):
         """Run test."""
@@ -110,7 +114,8 @@ class GenerateSmallRecords(BasePipeline):
             # PairRDD(task_dir, record)
             records_rdd.keyBy(os.path.dirname),
             whitelist_dirs_rdd)
-        tasks_count = (
+
+        (
             # PairRDD(task_dir, record), which is not in the blacklist
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
@@ -123,13 +128,13 @@ class GenerateSmallRecords(BasePipeline):
             # PairRDD(target_dir, (record, header)), where header is valid
             .filter(spark_op.filter_value(lambda header_record: header_record[1] is not None))
             # PairRDD(target_file, (record, start_time, end_time))
-            .flatMap(GenerateSmallRecords.shard_to_files)
+            .flatMap(self.shard_to_files)
             # PairRDD(target_file, (record, start_time, end_time)s)
             .groupByKey()
             # PairRDD(target_file, (record, start_time, end_time)s)
             .mapValues(sorted)
             # RDD(target_file)
-            .map(GenerateSmallRecords.process_file)
+            .map(self.process_file)
             # RDD(target_file)
             .filter(bool)
             # RDD(target_dir)
@@ -138,14 +143,12 @@ class GenerateSmallRecords(BasePipeline):
             .distinct()
             # RDD(target_dir/COMPLETE)
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
-            # RDD(target_dir/COMPLETE), with the file created.
-            .map(file_utils.touch)
-            # Number of finished tasks.
-            .count())
-        glog.info('Processed {} tasks'.format(tasks_count))
+            # Make target_dir/COMPLETE files.
+            .foreach(file_utils.touch))
+        glog.info('Processed {} source records to {} target records, containing {} messages'.format(
+            self.source_records_acc.value, self.target_records_acc.value, self.messages_acc.value))
 
-    @staticmethod
-    def shard_to_files(input):
+    def shard_to_files(self, input):
         """(target_dir, (record, header)) -> (task_file, (record, start_time, end_time))"""
         # 1 minute as a record.
         RECORD_DURATION_NS = 60 * (10 ** 9)
@@ -157,12 +160,13 @@ class GenerateSmallRecords(BasePipeline):
         for begin_time in range(first_begin_time, last_begin_time + 1, RECORD_DURATION_NS):
             dt = time_utils.msg_time_to_datetime(begin_time)
             target_file = os.path.join(target_dir, dt.strftime(RECORD_FORMAT))
+            self.source_records_acc += 1
             yield (target_file, (record, begin_time, begin_time + RECORD_DURATION_NS))
 
-    @staticmethod
-    def process_file(input):
+    def process_file(self, input):
         """(target_file, (record, start_time, end_time)s) -> target_file"""
         target_file, records = input
+        self.target_records_acc += 1
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
         if os.path.exists(target_file):
@@ -187,6 +191,7 @@ class GenerateSmallRecords(BasePipeline):
                     writer.write_channel(msg.topic, msg.data_type, '')
                     topics.add(msg.topic)
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
+                self.messages_acc += 1
         writer.close()
         return target_file
 
