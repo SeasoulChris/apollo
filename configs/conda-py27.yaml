@@ -21,6 +21,5 @@ dependencies:
   - termcolor
 
   - pip:
-    - PyQt5
     - pylint
     - pyspark-utils
