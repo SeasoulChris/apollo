@@ -5,14 +5,11 @@
 from collections import Counter
 import operator
 import os
-import re
 import textwrap
 import time
 
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
-
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
@@ -97,12 +94,15 @@ def construct_frames(root_dir, frames):
 
     msg_map = Counter(msgs)
     glog.info('Total messages: {}'.format(sum(msg_map.itervalues())))
-    
-    src_records = list(streaming_utils.target_partition_to_records(root_dir, target_dir, SLICE_SIZE))
 
-    msgs_stream = populate_utils.DataStream(src_records, 
+    src_records = list(streaming_utils.target_partition_to_records(
+        root_dir, target_dir, SLICE_SIZE))
+
+    msgs_stream = populate_utils.DataStream(
+        src_records,
         lambda x: streaming_utils.load_messages(root_dir, x, WANTED_CHANNELS.values()))
-    pose_stream = populate_utils.DataStream(src_records, 
+    pose_stream = populate_utils.DataStream(
+        src_records,
         lambda x: streaming_utils.load_messages(root_dir, x, ['/apollo/localization/pose']))
     msgs_iterator = populate_utils.DataStreamIterator(msgs_stream)
     pose_iterator = populate_utils.DataStreamIterator(pose_stream)
@@ -133,7 +133,7 @@ def construct_frames(root_dir, frames):
             message_struct = populate_utils.MessageStruct(msg, None, None)
 
     glog.info('Done with target: {}'.format(target_dir))
-    
+
 def get_sql_query(sql_context, msgs_rdd):
     """Get SQL statements for performing the query."""
     lidar_df = create_dataframe(sql_context, msgs_rdd, ('lidar-128',))
@@ -165,8 +165,12 @@ def get_sql_query(sql_context, msgs_rdd):
 def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
     for task in todo_tasks:
-        task_path = os.path.join(root_dir, target_dir)
-        task_path = os.path.join(task_path, os.path.basename(task))
+        task_path = os.path.join(os.path.join(root_dir, target_dir),
+                                 os.path.basename(task))
+        if not os.path.exists(task_path):
+            glog.warn('no data generated for task: {}, \
+                check if there are qualified frames in there'.format(task_path))
+            continue
         streaming_utils.write_to_file(\
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
 
@@ -213,26 +217,28 @@ class PopulateFramesPipeline(BasePipeline):
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
         # Creating SQL query will fail and throw if input is empty, so check it here first
-        if todo_tasks is None or len(todo_tasks) == 0:
+        if todo_tasks is None or not todo_tasks:
             glog.warn('Labeling: no tasks to process, quit now')
             return
 
         glog.info('Load messages META data for query')
         spark_context = self.get_spark_context()
-        # -> (task_dir)
+        # -> RDD(task_dir), with absolute paths
         msgs_rdd = (spark_context.parallelize(todo_tasks).distinct()
-                    # -> (target_dir, task_dir)
+                    # PairRDD(target_dir, task_dir), target_dir is destination, task_dir is source
                     .keyBy(lambda task_dir: os.path.join(target_dir, os.path.basename(task_dir)))
-                    # -> (target_dir, record_files)
+                    # PairRDD(target_dir, record_files)
                     .flatMapValues(streaming_utils.list_records_for_task)
+                    # PairRDD(target_dir, record_files), remove unnecessary characters if any
                     .mapValues(lambda record: record.strip())
+                    # PairRDD(target_dir, record_files)
                     .filter(lambda record: are_all_channels_available(record, root_dir))
-                    # -> (target_partition, record_files)
+                    # PairRDD(target_partition, record_files), slice the task into partitions
                     .map(record_to_target_partition)
-                    # -> (target_partition, messages_metadata)
+                    # PairRDD(target_partition, messages_metadata), load messages for each record
                     .flatMapValues(lambda record: streaming_utils
-                        .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
-                    # -> (target_partition, timestamp, topic)
+                                   .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
+                    # RDD(target_partition, timestamp, topic)
                     .map(lambda (target, meta): (target, meta.timestamp, meta.topic))
                     .cache())
 
@@ -242,20 +248,18 @@ class PopulateFramesPipeline(BasePipeline):
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context
          .sql(sql_query)
-         # -> (target, lidar_topic, lidar_time, other_topic, MINIMAL_time)
+         # RDD(target, lidar_topic, lidar_time, other_topic, MINIMAL_time)
          .rdd
          .map(list)
-         # -> (target, (lidar_topic, lidar_time, other_topic, MINIMAL_time))
+         # PairRDD(target, (lidar_topic, lidar_time, other_topic, MINIMAL_time))
          .keyBy(operator.itemgetter(0))
-         # -> (target, (topic-time-pair))
+         # PairRDD(target, (topic-time-pair))
          .flatMapValues(lambda x: (('{}-{}'.format(x[1], x[2])), ('{}-{}'.format(x[3], x[4]))))
-         # -> (target, (topic-time-pair))
-         #.distinct()
-         # -> <target, {(topic-time-pair)}>
+         # PairRDD(target, (topic-time-pair)s)
          .groupByKey()
-         # -> process every partition, with all frames belonging to it
+         # PairRDD(target, (topic-time-pair)s), process every partition with frames belonging to it
          .map(lambda frames: construct_frames(root_dir, frames))
-         # -> simply trigger action
+         # Simply trigger action
          .count())
 
 if __name__ == '__main__':

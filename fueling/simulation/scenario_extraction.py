@@ -3,7 +3,6 @@
 This is a module to extraction logsim scenarios from records
 based on disengage info
 """
-import glob
 import os
 
 from cyber_py.record import RecordReader
@@ -15,7 +14,7 @@ import fueling.common.s3_utils as s3_utils
 
 def list_end_files(target_dir):
     """
-    List all end files recursively under the specified dir.  
+    List all end files recursively under the specified dir.
     This is for testing used by run_test() which simulates the production behavior
     """
     glog.info('target_dir: {}'.format(target_dir))
@@ -58,21 +57,21 @@ def execute_task(task):
     message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages() \
          if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
     if message is not None:
-        if record_utils.message_to_proto().map_version.startswith('sunnyvale'):
+        if record_utils.message_to_proto(message).map_version.startswith('sunnyvale'):
             map_dir = '/mnt/bos/modules/map/data/sunnyvale_with_two_offices'
 
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
     simulation_path = '/apollo/modules/simulation'
     return_code = os.system('cd {} && ./bin/logsim_generator_executable {} {} {} --alsologtostderr'
-                    .format(simulation_path,
-                        '--input_dir='+source_dir,
-                        '--output_dir='+dest_dir,
-                        '--scenario_map_dir='+map_dir))
+                            .format(simulation_path,
+                                    '--input_dir='+source_dir,
+                                    '--output_dir='+dest_dir,
+                                    '--scenario_map_dir='+map_dir))
     if return_code != 0:
         glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
-        # Print log here only, since rerunning will probably fail again.  
-        # Need people intervention instead 
+        # Print log here only, since rerunning will probably fail again.
+        # Need people intervention instead
         #return
 
     # Mark complete
@@ -95,6 +94,8 @@ class ScenarioExtractionPipeline(BasePipeline):
         target_prefix = 'modules/data/fuel/testdata/modules/simulation/logsim_scenarios'
 
         spark_context = self.get_spark_context()
+
+        # RDD(tasks), the tasks without root_dir as prefix
         todo_tasks = get_todo_tasks(original_prefix, \
                                     target_prefix, \
                                     lambda path: spark_context.parallelize( \
@@ -110,6 +111,7 @@ class ScenarioExtractionPipeline(BasePipeline):
         target_prefix = 'modules/simulation/logsim_scenarios/2019'
         bucket = 'apollo-platform'
 
+        # RDD(tasks), the tasks without root_dir as prefix
         todo_tasks = get_todo_tasks(original_prefix, \
                                     target_prefix, \
                                     lambda path: s3_utils.list_files(bucket, path))
@@ -120,11 +122,16 @@ class ScenarioExtractionPipeline(BasePipeline):
 
     def run(self, todo_tasks, root_dir, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
-        todo_tasks \
-            .map(lambda path: get_abs_path(root_dir, path)) \
-            .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1)) \
-            .map(execute_task) \
-            .count()
+        # RDD(tasks), the tasks without root_dir as prefix
+        (todo_tasks
+         # RDD(tasks), the tasks with absolute paths
+         .map(lambda path: get_abs_path(root_dir, path))
+         # PairRDD(target_dirs, tasks), the map of target dirs and source dirs
+         .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
+         # PairRDD(target_dirs, tasks), execute each task
+         .map(execute_task)
+         # Simply trigger action
+         .count())
 
 if __name__ == '__main__':
     ScenarioExtractionPipeline().run_test()

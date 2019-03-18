@@ -3,15 +3,15 @@
 """Utils classes and functions to support populating frames"""
 
 import gc
+import math
 import os
 import subprocess
-
-import math
-import numpy as np
-import yaml
-from google.protobuf.json_format import MessageToJson
-from pyquaternion import Quaternion as PyQuaternion
 from urllib import quote
+
+from google.protobuf.json_format import MessageToJson
+import numpy as np
+from pyquaternion import Quaternion as PyQuaternion
+import yaml
 
 from cyber_py import record
 from modules.data.proto import frame_pb2
@@ -20,7 +20,6 @@ from modules.common.proto.geometry_pb2 import PointENU
 from modules.common.proto.geometry_pb2 import Quaternion
 from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
-from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 import fueling.common.colored_glog as glog
@@ -430,7 +429,7 @@ class ImageSensor(Sensor):
         camera_image = frame_pb2.CameraImage()
         camera_image.timestamp = float(timestamp)/(10**9)
         dump_img_name(os.path.join(self._task_dir, 'images'),
-            timestamp, self.get_image_name())
+                      timestamp, self.get_image_name())
         camera_image.image_url = '{}/{}/images/pic-{}_{}.jpg'.format(
             SENSOR_PARAMS['image_url'],
             quote(os.path.basename(self._task_dir)),
@@ -452,7 +451,7 @@ class ImageSensor(Sensor):
         point.z = 0
         transform = get_world_coordinate(self.transform, pose)
         point_world = convert_to_world_coordinate(point, transform, stationary_pole)
-        camera_image.position.x = point_world.x 
+        camera_image.position.x = point_world.x
         camera_image.position.y = point_world.y
         camera_image.position.z = point_world.z
         rotation = get_rotation_from_tranform(transform)
@@ -568,7 +567,7 @@ class FramePopulator(object):
         create_dir_if_not_exist(frame_dir)
         lidar_msg = \
             next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
-                
+
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         max_diff = 30
         front6mm_msg = \
@@ -577,8 +576,8 @@ class FramePopulator(object):
         if diff > max_diff * (10**6):
             glog.warn('time diff between lidar and front6mm is too big: {}, skip this frame'.format(diff))
             return
-        lidar_pose = get_interp_pose(lidar_msg.message.timestamp, 
-                                     lidar_msg.pose_left, 
+        lidar_pose = get_interp_pose(lidar_msg.message.timestamp,
+                                     lidar_msg.pose_left,
                                      lidar_msg.pose_right)
         frame = frame_pb2.Frame()
         lidar_pose.process(frame)
@@ -593,8 +592,8 @@ class FramePopulator(object):
         for message_struct in message_structs:
             channel, timestamp, _, objpath = message_struct.message
             message_obj = streaming_utils.load_message_obj(objpath)
-            pose = get_interp_pose(message_struct.message.timestamp, 
-                                   message_struct.pose_left, 
+            pose = get_interp_pose(message_struct.message.timestamp,
+                                   message_struct.pose_left,
                                    message_struct.pose_right)
             if isinstance(CHANNEL_PROCESS_MAP[channel], ImageSensor):
                 CHANNEL_PROCESS_MAP[channel].frame_id = lidar_msg.message.timestamp
@@ -606,7 +605,7 @@ class FramePopulator(object):
         frame.timestamp = float(lidar_msg.message.timestamp)/(10**9)
         glog.info('converting proto object to json: {}'.format(file_name))
         json_obj = MessageToJson(frame, False, True)
-        glog.info('preparing to dump json to file: {}'.format(file_name))      
+        glog.info('preparing to dump json to file: {}'.format(file_name))
         with open(file_name, 'w') as outfile:
             outfile.write(json_obj)
         glog.info('dumped json: {}'.format(file_name))
@@ -706,9 +705,10 @@ class Builder(object):
 
     def complete(self, frame_populator):
         """Builder complete, and send messages to framepopulator in this case"""
-        messages = self._guide_lines.values()     
+        messages = self._guide_lines.values()
+        messages = sorted(messages, key=lambda message_struct: message_struct.message.topic)
         frame_populator.construct_frames(messages)
-        
+
 class BuilderManager(object):
     """Builder management pool."""
     def __init__(self, rules, frame_populator):

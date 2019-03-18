@@ -3,7 +3,6 @@
 """Utility functions for jobs that uses streaming"""
 
 from collections import namedtuple
-import errno
 import operator
 import os
 import pickle
@@ -13,7 +12,6 @@ import subprocess
 import stat
 
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 
 STREAMING_PATH = 'modules/streaming'
 STREAMING_RECORDS = 'records'
@@ -28,13 +26,13 @@ def get_todo_records(root_dir, target_dir=None):
     ---
     Parameters:
     1. root_dir, for example '/mnt/bos' for production, and '/apollo' for test
-    2. target_dir, the directory where results are generated, it's purely a setting that the application
-    defines by itself.  For example 'modules/perception/whatever/generated'.
+    2. target_dir, the directory where results are generated, it's purely a setting that
+    the application defines by itself.  For example 'modules/perception/whatever/generated'.
     After processing successfully we would want to put a COMPLETE file under the task to avoid it
     being processed again.
     ---
     Returns:
-    1. A list of record files with absolute paths, and 
+    1. A list of record files with absolute paths, and
     2. A list of tasks/dirs under which every single record has completed the serialization
     """
     todo_records = []
@@ -48,16 +46,16 @@ def get_todo_records(root_dir, target_dir=None):
         task_file_path = os.path.join(records_path, task_file)
         with open(task_file_path) as read_task_file:
             records = list(read_task_file.readlines())
-            if len(records) == 0:
+            if not records:
                 continue
-            todo_tasks.append(task_file_path)
             for record in records:
+                record = record.strip()
                 if not record_utils.is_record_file(record):
                     continue
-                if is_serialization_completed(root_dir, record.strip()):
-                    todo_records.append(record.strip())
-                elif task_file_path in todo_tasks:
-                    todo_tasks.remove(task_file_path)
+                if is_serialization_completed(root_dir, record):
+                    todo_records.append(record)
+                    if task_file_path not in todo_tasks:
+                        todo_tasks.append(task_file_path)
     return todo_records, todo_tasks
 
 def load_meta_data(root_dir, record_file, topics):
@@ -86,14 +84,16 @@ def load_topic(root_dir, record_file, topic):
 
 def load_messages(root_dir, record_file, topics):
     """
-    Load multiple topics, merge them together sorting by timestamp. 
+    Load multiple topics, merge them together sorting by timestamp.
     Message objs' path are included
     """
     messages = sorted(load_meta_data(root_dir, record_file, topics), key=operator.itemgetter(1))
     data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
     for idx in range(0, len(messages)):
-        messages[idx] = messages[idx]._replace(objpath=os.path.join(data_dir,
-            '{}-{}'.format(topic_to_file_name(messages[idx].topic), messages[idx].timestamp)))
+        messages[idx] = messages[idx]._replace(
+            objpath=os.path.join(
+                data_dir,
+                '{}-{}'.format(topic_to_file_name(messages[idx].topic), messages[idx].timestamp)))
     return messages
 
 def load_message_obj(message_file_path):
@@ -210,18 +210,19 @@ def upload_images(root_dir, record_dir, record_file):
     create_dir_if_not_exist(image_path)
     for message_name in os.listdir(record_dir):
         if message_name.find('compressed') != -1 and not message_name.endswith('compressed'):
-            shutil.copy2(os.path.join(record_dir, message_name),
+            shutil.copy2(
+                os.path.join(record_dir, message_name),
                 os.path.join(image_path, message_name))
 
 def build_meta_from_line(topic, line):
     """Parse the line in topic file and form a tuple"""
     timestamp = None
     fields = None
-    MessageMeta=namedtuple('MessageMeta', ['topic', 'timestamp', 'fields', 'objpath'])
-    reg_search = re.search(r'^(\d*)', line.strip(),  re.M|re.I)
+    message_meta = namedtuple('MessageMeta', ['topic', 'timestamp', 'fields', 'objpath'])
+    reg_search = re.search(r'^(\d*)', line.strip(), re.M|re.I)
     if reg_search is not None:
         timestamp = reg_search.group(1)
-    reg_search = re.search(r'^\d*, (\{.+\})$', line.strip(),  re.M|re.I)
+    reg_search = re.search(r'^\d*, (\{.+\})$', line.strip(), re.M|re.I)
     if reg_search is not None:
         fields = reg_search.group(1)
-    return MessageMeta(topic=topic, timestamp=timestamp, fields=fields, objpath=None)
+    return message_meta(topic=topic, timestamp=timestamp, fields=fields, objpath=None)

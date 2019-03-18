@@ -7,11 +7,10 @@ import os
 from pyspark.streaming import StreamingContext
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.streaming.streaming_listener import DriverStreamingListener
 import fueling.common.colored_glog as glog
-import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.streaming.serialize_utils as serialize_utils
+from fueling.streaming.streaming_listener import DriverStreamingListener
 import fueling.streaming.streaming_utils as streaming_utils
 
 class DeserializeRecordsPipeline(BasePipeline):
@@ -20,7 +19,7 @@ class DeserializeRecordsPipeline(BasePipeline):
     def __init__(self):
         BasePipeline.__init__(self, 'deserialize-records')
         # For working around "process_stream", which is not able to accept packed parameters
-        self._root_dir = '/apollo'  
+        self._root_dir = '/apollo'
 
     def run_test(self):
         """Run test."""
@@ -53,12 +52,12 @@ class DeserializeRecordsPipeline(BasePipeline):
 
         stream_context.start()
         stream_context.awaitTermination()
-    
+
     def process_stream(self, stime, records_rdd):
+        """Executor running"""
         glog.info('stream processing time: {}'.format(stime))
         glog.info('rdd partitions: {}'.format(records_rdd.getNumPartitions()))
         records_rdd.map(lambda record: serialize_utils.parse_record(record, self._root_dir)).count()
 
 if __name__ == '__main__':
     DeserializeRecordsPipeline().run_test()
-

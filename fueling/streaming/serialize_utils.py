@@ -3,7 +3,6 @@
 """Utility functions for the serialize job"""
 
 import os
-import pickle
 import time
 
 import yaml
@@ -54,6 +53,9 @@ def parse_record(record_file, root_dir):
                                                        streaming_utils.STREAMING_DATA)
     glog.info('Executor: record directory : {}'.format(record_dir))
     streaming_utils.create_dir_if_not_exist(record_dir)
+    if os.path.exists(os.path.join(record_dir, 'COMPLETE')):
+        glog.info('target has been generated, do nothing')
+        return
     topic_files = [os.path.join(record_dir, \
         streaming_utils.topic_to_file_name(x.get('topic'))) for x in settings]
     topic_file_handles = {}
