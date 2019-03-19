@@ -29,12 +29,7 @@ class CalTabFeatureExt(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/transit/1.record.00000',
-                   'modules/data/fuel/testdata/control/mkz7_s/20190222134935.record.00000',
-                   'modules/data/fuel/testdata/control/mkz7_s/20190222134935.record.00001',
-                   'modules/data/fuel/testdata/control/mkz7_s/20190222134935.record.00002',
-                   'modules/data/fuel/testdata/control/mkz7_s/20190222134935.record.00003',
-                   'modules/data/fuel/testdata/control/mkz7_s/20190222134935.record.00004']
+        records = ['modules/data/fuel/testdata/control/transit/1.record.00000']
 
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
