@@ -3,6 +3,7 @@
 """This script extracts sensor messages for labeling"""
 
 from collections import Counter
+from collections import namedtuple
 import operator
 import os
 import textwrap
@@ -13,6 +14,7 @@ from pyspark.sql import SQLContext
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
+import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.data.labeling.populate_utils as populate_utils
@@ -190,12 +192,25 @@ class PopulateFramesPipeline(BasePipeline):
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
 
+        # TODO: Just show case for email notification, to be updated as something more useful
+        notification = namedtuple('Notification', ['todo_tasks', 'root_dir', 'target_dir'])
+        message = [notification(todo_tasks=task, root_dir=root_dir, target_dir=target_dir)
+                   for task in todo_tasks]
+        email_utils.send_email_info('Frame Population Job Running',
+                                    message,
+                                    ['longtaolin@baidu.com'])
+
         self.run(todo_tasks, root_dir, target_dir)
 
         glog.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
 
         glog.info('Labeling: All Done, TEST.')
+
+        # TODO: Just show case for email notification, to be updated as something more useful
+        email_utils.send_email_info('Frame Population Job Completed',
+                                    {'Success': 100, 'Fail': 200},
+                                    ['longtaolin@baidu.com'])
 
     def run_prod(self):
         """Run prod."""
