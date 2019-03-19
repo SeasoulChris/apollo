@@ -9,4 +9,5 @@ message featureKey {
     optional double speed_max = 4;
     optional double throttle_max = 5;
     optional double brake_max = 6;
+    optional string vehicle_type = 7;
 }

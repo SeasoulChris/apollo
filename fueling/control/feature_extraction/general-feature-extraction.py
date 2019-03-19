@@ -16,10 +16,11 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
+import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-
-WANTED_VEHICLE = 'Transit'
+WANTED_VEHICLE = feature_extraction_utils.WANTED_VEHICLE
 MIN_MSG_PER_SEGMENT = 100
+
 
 class GeneralFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
@@ -34,10 +35,14 @@ class GeneralFeatureExtraction(BasePipeline):
             'modules/data/fuel/testdata/control/left_40_10/1.record.00000',
             'modules/data/fuel/testdata/control/transit/1.record.00000',
         ]
+
+        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(
+            records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
@@ -48,8 +53,10 @@ class GeneralFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
+        complete_dirs = files.filter(
+            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        dir_to_records = files.filter(
+            record_utils.is_record_file).keyBy(os.path.dirname)
         root_dir = s3_utils.S3_MOUNT_PATH
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
@@ -63,12 +70,14 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
             file_utils.makedirs(out_dir)
-            out_file_path = "{}/{}_{}.hdf5".format(out_dir, WANTED_VEHICLE, segment_id)
+            out_file_path = "{}/{}_{}.hdf5".format(
+                out_dir, WANTED_VEHICLE, segment_id)
             with h5py.File(out_file_path, "w") as out_file:
                 i = 0
                 for mini_dataset in self.build_training_dataset(chassis, pose):
                     name = "_segment_" + str(i).zfill(3)
-                    out_file.create_dataset(name, data=mini_dataset, dtype="float32")
+                    out_file.create_dataset(
+                        name, data=mini_dataset, dtype="float32")
                     i += 1
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
@@ -85,7 +94,8 @@ class GeneralFeatureExtraction(BasePipeline):
             # -> dir
             .keys())
 
-        channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
+        channels = {record_utils.CHASSIS_CHANNEL,
+                    record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
             spark_op.filter_keys(dir_to_records, selected_vehicles)
             # -> (dir, msg)
@@ -118,7 +128,7 @@ class GeneralFeatureExtraction(BasePipeline):
             # -> (dir_segment, (chassis_list, pose_list))
             .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
                                            proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            .map(_gen_hdf5)
+            .map(_gen_hdf5))
         glog.info('Generated %d h5 files!' % result.count())
 
     @staticmethod
@@ -128,13 +138,15 @@ class GeneralFeatureExtraction(BasePipeline):
         Convert RDD(dir, record) to RDD(dir, vehicle).
         """
         def _get_vehicle_from_records(records):
-            reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
+            reader = record_utils.read_record(
+                [record_utils.HMI_STATUS_CHANNEL])
             for record in records:
                 glog.info('Try getting vehicle name from {}'.format(record))
                 for msg in reader(record):
                     hmi_status = record_utils.message_to_proto(msg)
                     vehicle = hmi_status.current_vehicle
-                    glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
+                    glog.info('Get vehicle name "{}" from record {}'.format(
+                        vehicle, record))
                     return vehicle
             glog.info('Failed to get vehicle name')
             return ''
@@ -177,11 +189,12 @@ class GeneralFeatureExtraction(BasePipeline):
             limit = min(len(times_cs) - index[0], len(times_pose) - index[1])
 
             for seg_len in range(1, limit):
-                delta = abs(times_cs[index[0] + seg_len] - times_pose[index[1] + seg_len])
+                delta = abs(times_cs[index[0] + seg_len] -
+                            times_pose[index[1] + seg_len])
                 if delta > max_phase_delta or seg_len == limit - 1:
                     if seg_len >= min_segment_length or seg_len == limit - 1:
-                        yield GetDatapoints(pose[index[1] : index[1] + seg_len],
-                                            chassis[index[0] : index[0] + seg_len])
+                        yield GetDatapoints(pose[index[1]: index[1] + seg_len],
+                                            chassis[index[0]: index[0] + seg_len])
                         index[0] += seg_len
                         index[1] += seg_len
                         align()
@@ -190,4 +203,5 @@ class GeneralFeatureExtraction(BasePipeline):
 
 
 if __name__ == '__main__':
-    GeneralFeatureExtraction().run_prod()
+
+    GeneralFeatureExtraction().run_test()

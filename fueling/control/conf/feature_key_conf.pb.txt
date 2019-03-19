@@ -1,3 +1,4 @@
-  speed_slice: 5
-  acc_slice: 5
-  steer_slice: 20
+speed_slice: 5
+acc_slice: 5
+steer_slice: 20
+vehicle_type: "Transit"
