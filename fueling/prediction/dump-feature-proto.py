@@ -13,7 +13,7 @@ import fueling.common.s3_utils as s3_utils
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
     def __init__(self):
-        BasePipeline.__init__(self, 'dump-feature-proto')
+        BasePipeline.__init__(self, 'dump-feature-proto-san-mateo')
 
     def run_test(self):
         """Run test."""
@@ -21,7 +21,7 @@ class DumpFeatureProto(BasePipeline):
         root_dir = '/apollo'
         records_dir = sc.parallelize(['docs/demo_guide'])
         origin_prefix = 'docs/demo_guide'
-        target_prefix = 'data/prediction/dump_feature_proto'
+        target_prefix = 'data/prediction/labels-san-mateo'
         self.run(root_dir, records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -29,7 +29,7 @@ class DumpFeatureProto(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/'
-        target_prefix = 'modules/prediction/dump_feature_proto/'
+        target_prefix = 'modules/prediction/labels-san-mateo/'
 
         records_dir = (
             # file, start with origin_prefix
@@ -61,10 +61,12 @@ class DumpFeatureProto(BasePipeline):
     @staticmethod
     def process_dir(src_dir, target_dir):
         """Call prediction C++ code."""
+        # TODO(kechxu) use /apollo/hmi/status's current_map entry to match map info
+        map_dir = "san_mateo"
         command = (
             'cd /apollo && '
             'bash modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
-            '"{}" "{}"'.format(src_dir, target_dir))
+            '"{}" "{}" "{}"'.format(src_dir, target_dir, map_dir))
         if os.system(command) == 0:
             glog.info('Successfuly processed {} to {}'.format(src_dir, target_dir))
             return 1
