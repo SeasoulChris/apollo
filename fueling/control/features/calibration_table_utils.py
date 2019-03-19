@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # TODO: Fix order per README.md.
 import glob
+import math
 import os
 import random
 
 import h5py
 import numpy as np
-import math
 
-from fueling.control.features.filters import Filters
-from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 import common.proto_utils as proto_utils
-import fueling.common.colored_glog as glog
-import fueling.common.file_utils as file_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 
+from fueling.control.features.filters import Filters
+from fueling.control.proto.calibration_table_pb2 import calibrationTable
+import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
@@ -188,8 +188,7 @@ def feature_distribute(elem):
                     next_segment_speed = segment_speed_list[speed_index + 1]
                     if (speed > curr_segment_speed and speed < next_segment_speed):
                         # TODO: Allow 100 chars.
-                        grid_dict[curr_segment_cmd][curr_segment_speed].append(
-                            feature_index)
+                        grid_dict[curr_segment_cmd][curr_segment_speed].append(feature_index)
                         break
                 break
 

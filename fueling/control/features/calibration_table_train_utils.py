@@ -6,13 +6,13 @@ import os
 import h5py
 import numpy as np
 
+import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
+
 from fueling.control.features.filters import Filters
 from fueling.control.features.neural_network_tf import NeuralNetworkTF
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
-
 
 def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
     # TODO: Not record_dir.

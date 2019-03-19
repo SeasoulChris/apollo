@@ -40,8 +40,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
@@ -119,7 +118,7 @@ class SampleSetFeatureExtraction(BasePipeline):
             # -> ((dir, feature_key), list of (timestamp_sec, data_point))
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
                           feature_extraction_utils.extend)
-            # generate segment w.r.t feature keys
+            # -> ((dir, feature_key),segments)
             .mapValues(feature_extraction_utils.gen_segment)
             # write all segment into a hdf5 file
             .map(lambda elem: feature_extraction_utils.write_h5_with_key(

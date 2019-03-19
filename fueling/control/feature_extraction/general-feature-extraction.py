@@ -41,8 +41,7 @@ class GeneralFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
-            records).keyBy(os.path.dirname)
+        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
