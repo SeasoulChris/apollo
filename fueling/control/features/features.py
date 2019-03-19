@@ -1,34 +1,18 @@
 #!/usr/bin/env python
 
-###############################################################################
-# Copyright 2018 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
-
 import math
+import sys
 
 import numpy as np
 
-from parameters import dim
-
+from fueling.control.features.parameters import dim
+import fueling.common.colored_glog as glog
 
 def GetDatapoints(pose_slice, cs_slice):
-    # TODO: No assert. Filter bad data ahead in pipeline.
-    assert len(cs_slice) == len(pose_slice)
-    assert len(cs_slice) > 0
-    # TODO: Spaces around operator.
-    out = np.zeros([len(cs_slice), dim["pose"]+dim["chassis"]])
+    if len(cs_slice) == 0:
+        glog.info('Feature Extraction Error: Control Slice Empty')
+        sys.exit(1)
+    out = np.zeros([len(cs_slice), dim["pose"] + dim["chassis"]])
     ref_time = pose_slice[0].header.timestamp_sec
     ref_x = pose_slice[0].pose.position.x
     ref_y = pose_slice[0].pose.position.y

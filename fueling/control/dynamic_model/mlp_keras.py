@@ -20,6 +20,8 @@ import numpy as np
 from fueling.control.features.parameters_training import dim
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
+
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -115,20 +117,20 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model(model_name)
-    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=30, batch_size=32)
-
-    evaluation = model.evaluate(x_test, y_test)
-    glog.info("Model evaluation on test data: Loss={}, MSE={}".format(evaluation[0], evaluation[1]))
+    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=10, batch_size=32, verbose=2)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
-    model_bin = os.path.join(out_dir, 'mlp_model_' + timestr + '.bin')
+    bin_dir = os.path.join(out_dir, 'binary_model')
+    model_bin = os.path.join(bin_dir, 'mlp_model_' + timestr + '.bin')
     save_model(model, param_norm, model_bin)
 
-    # save norm_params to hdf5
-    norms_h5 = os.path.join(out_dir, 'mlp_model_norms_' + timestr + '.h5')
+   # save norm_params to hdf5
+    h5_dir = os.path.join(out_dir, 'h5_model/mlp')
+    model_dir = os.path.join(h5_dir, timestr)
+    file_utils.makedirs(model_dir)
+    norms_h5 = os.path.join(model_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
         h5_file.create_dataset('mean', data=param_norm[0])
         h5_file.create_dataset('std', data=param_norm[1])
-
-    weights_h5 = os.path.join(out_dir, 'mlp_model_weights_' + timestr + '.h5')
+    weights_h5 = os.path.join(model_dir, 'weights.h5')
     model.save(weights_h5)

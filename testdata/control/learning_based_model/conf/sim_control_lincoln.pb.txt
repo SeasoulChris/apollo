@@ -1,0 +1,6485 @@
+calibration {
+  speed: 0.0
+  command: -35.0
+  acceleration: -1.43
+}
+calibration {
+  speed: 0.0
+  command: -27.0
+  acceleration: -1.28
+}
+calibration {
+  speed: 0.0
+  command: -25.0
+  acceleration: -1.17
+}
+calibration {
+  speed: 0.0
+  command: -30.0
+  acceleration: -1.02
+}
+calibration {
+  speed: 0.0
+  command: -27.5
+  acceleration: -0.48
+}
+calibration {
+  speed: 0.0
+  command: -20.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 0.0
+  command: -15.0
+  acceleration: 0.32
+}
+calibration {
+  speed: 0.0
+  command: -17.0
+  acceleration: 0.35
+}
+calibration {
+  speed: 0.0
+  command: 17.0
+  acceleration: 0.37
+}
+calibration {
+  speed: 0.0
+  command: 15.0
+  acceleration: 0.39
+}
+calibration {
+  speed: 0.0
+  command: -13.0
+  acceleration: 0.41
+}
+calibration {
+  speed: 0.0
+  command: 20.0
+  acceleration: 0.72
+}
+calibration {
+  speed: 0.0
+  command: 22.0
+  acceleration: 0.97
+}
+calibration {
+  speed: 0.0
+  command: 25.0
+  acceleration: 1.4
+}
+calibration {
+  speed: 0.0
+  command: 27.0
+  acceleration: 1.43
+}
+calibration {
+  speed: 0.0
+  command: 30.0
+  acceleration: 1.53
+}
+calibration {
+  speed: 0.0
+  command: 35.0
+  acceleration: 1.65
+}
+calibration {
+  speed: 0.0
+  command: 40.0
+  acceleration: 1.79
+}
+calibration {
+  speed: 0.0
+  command: 45.0
+  acceleration: 1.89
+}
+calibration {
+  speed: 0.0
+  command: 50.0
+  acceleration: 1.94
+}
+calibration {
+  speed: 0.0
+  command: 55.0
+  acceleration: 2.03
+}
+calibration {
+  speed: 0.0
+  command: 65.0
+  acceleration: 2.08
+}
+calibration {
+  speed: 0.0
+  command: 60.0
+  acceleration: 2.11
+}
+calibration {
+  speed: 0.0
+  command: 80.0
+  acceleration: 2.3
+}
+calibration {
+  speed: 0.0
+  command: 70.0
+  acceleration: 2.33
+}
+calibration {
+  speed: 0.0
+  command: 75.0
+  acceleration: 2.34
+}
+calibration {
+  speed: 0.2
+  command: -35.0
+  acceleration: -1.87
+}
+calibration {
+  speed: 0.2
+  command: -27.0
+  acceleration: -1.41
+}
+calibration {
+  speed: 0.2
+  command: -30.0
+  acceleration: -1.25
+}
+calibration {
+  speed: 0.2
+  command: -25.0
+  acceleration: -1.22
+}
+calibration {
+  speed: 0.2
+  command: -33.0
+  acceleration: -0.87
+}
+calibration {
+  speed: 0.2
+  command: -22.0
+  acceleration: -0.48
+}
+calibration {
+  speed: 0.2
+  command: -20.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 0.2
+  command: -15.0
+  acceleration: 0.32
+}
+calibration {
+  speed: 0.2
+  command: -17.0
+  acceleration: 0.36
+}
+calibration {
+  speed: 0.2
+  command: 17.0
+  acceleration: 0.38
+}
+calibration {
+  speed: 0.2
+  command: 15.0
+  acceleration: 0.39
+}
+calibration {
+  speed: 0.2
+  command: -13.0
+  acceleration: 0.41
+}
+calibration {
+  speed: 0.2
+  command: 20.0
+  acceleration: 0.74
+}
+calibration {
+  speed: 0.2
+  command: 22.0
+  acceleration: 0.98
+}
+calibration {
+  speed: 0.2
+  command: 25.0
+  acceleration: 1.43
+}
+calibration {
+  speed: 0.2
+  command: 27.0
+  acceleration: 1.48
+}
+calibration {
+  speed: 0.2
+  command: 30.0
+  acceleration: 1.59
+}
+calibration {
+  speed: 0.2
+  command: 35.0
+  acceleration: 1.72
+}
+calibration {
+  speed: 0.2
+  command: 40.0
+  acceleration: 1.87
+}
+calibration {
+  speed: 0.2
+  command: 45.0
+  acceleration: 1.98
+}
+calibration {
+  speed: 0.2
+  command: 50.0
+  acceleration: 2.03
+}
+calibration {
+  speed: 0.2
+  command: 55.0
+  acceleration: 2.15
+}
+calibration {
+  speed: 0.2
+  command: 65.0
+  acceleration: 2.22
+}
+calibration {
+  speed: 0.2
+  command: 60.0
+  acceleration: 2.23
+}
+calibration {
+  speed: 0.2
+  command: 80.0
+  acceleration: 2.44
+}
+calibration {
+  speed: 0.2
+  command: 70.0
+  acceleration: 2.45
+}
+calibration {
+  speed: 0.2
+  command: 75.0
+  acceleration: 2.47
+}
+calibration {
+  speed: 0.4
+  command: -35.0
+  acceleration: -6.89
+}
+calibration {
+  speed: 0.4
+  command: -33.0
+  acceleration: -5.78
+}
+calibration {
+  speed: 0.4
+  command: -30.0
+  acceleration: -4.19
+}
+calibration {
+  speed: 0.4
+  command: -27.0
+  acceleration: -2.88
+}
+calibration {
+  speed: 0.4
+  command: -25.0
+  acceleration: -1.77
+}
+calibration {
+  speed: 0.4
+  command: -22.0
+  acceleration: -0.48
+}
+calibration {
+  speed: 0.4
+  command: -20.0
+  acceleration: 0.01
+}
+calibration {
+  speed: 0.4
+  command: -15.0
+  acceleration: 0.31
+}
+calibration {
+  speed: 0.4
+  command: 15.0
+  acceleration: 0.35
+}
+calibration {
+  speed: 0.4
+  command: -17.0
+  acceleration: 0.38
+}
+calibration {
+  speed: 0.4
+  command: -13.0
+  acceleration: 0.4
+}
+calibration {
+  speed: 0.4
+  command: 17.0
+  acceleration: 0.43
+}
+calibration {
+  speed: 0.4
+  command: 20.0
+  acceleration: 0.82
+}
+calibration {
+  speed: 0.4
+  command: 22.0
+  acceleration: 1.07
+}
+calibration {
+  speed: 0.4
+  command: 25.0
+  acceleration: 1.57
+}
+calibration {
+  speed: 0.4
+  command: 27.0
+  acceleration: 1.66
+}
+calibration {
+  speed: 0.4
+  command: 30.0
+  acceleration: 1.78
+}
+calibration {
+  speed: 0.4
+  command: 35.0
+  acceleration: 1.94
+}
+calibration {
+  speed: 0.4
+  command: 40.0
+  acceleration: 2.12
+}
+calibration {
+  speed: 0.4
+  command: 45.0
+  acceleration: 2.22
+}
+calibration {
+  speed: 0.4
+  command: 50.0
+  acceleration: 2.24
+}
+calibration {
+  speed: 0.4
+  command: 55.0
+  acceleration: 2.43
+}
+calibration {
+  speed: 0.4
+  command: 60.0
+  acceleration: 2.47
+}
+calibration {
+  speed: 0.4
+  command: 65.0
+  acceleration: 2.54
+}
+calibration {
+  speed: 0.4
+  command: 75.0
+  acceleration: 2.67
+}
+calibration {
+  speed: 0.4
+  command: 70.0
+  acceleration: 2.68
+}
+calibration {
+  speed: 0.4
+  command: 80.0
+  acceleration: 2.71
+}
+calibration {
+  speed: 0.6
+  command: -35.0
+  acceleration: -8.63
+}
+calibration {
+  speed: 0.6
+  command: -33.0
+  acceleration: -7.54
+}
+calibration {
+  speed: 0.6
+  command: -30.0
+  acceleration: -5.04
+}
+calibration {
+  speed: 0.6
+  command: -27.0
+  acceleration: -2.98
+}
+calibration {
+  speed: 0.6
+  command: -25.0
+  acceleration: -1.66
+}
+calibration {
+  speed: 0.6
+  command: -22.0
+  acceleration: -0.5
+}
+calibration {
+  speed: 0.6
+  command: -20.0
+  acceleration: 0.02
+}
+calibration {
+  speed: 0.6
+  command: -15.0
+  acceleration: 0.31
+}
+calibration {
+  speed: 0.6
+  command: -13.0
+  acceleration: 0.35
+}
+calibration {
+  speed: 0.6
+  command: 15.0
+  acceleration: 0.36
+}
+calibration {
+  speed: 0.6
+  command: -17.0
+  acceleration: 0.38
+}
+calibration {
+  speed: 0.6
+  command: 17.0
+  acceleration: 0.43
+}
+calibration {
+  speed: 0.6
+  command: 20.0
+  acceleration: 0.85
+}
+calibration {
+  speed: 0.6
+  command: 22.0
+  acceleration: 1.18
+}
+calibration {
+  speed: 0.6
+  command: 25.0
+  acceleration: 1.71
+}
+calibration {
+  speed: 0.6
+  command: 27.0
+  acceleration: 1.85
+}
+calibration {
+  speed: 0.6
+  command: 30.0
+  acceleration: 1.96
+}
+calibration {
+  speed: 0.6
+  command: 35.0
+  acceleration: 2.16
+}
+calibration {
+  speed: 0.6
+  command: 40.0
+  acceleration: 2.34
+}
+calibration {
+  speed: 0.6
+  command: 50.0
+  acceleration: 2.37
+}
+calibration {
+  speed: 0.6
+  command: 45.0
+  acceleration: 2.4
+}
+calibration {
+  speed: 0.6
+  command: 60.0
+  acceleration: 2.57
+}
+calibration {
+  speed: 0.6
+  command: 55.0
+  acceleration: 2.61
+}
+calibration {
+  speed: 0.6
+  command: 65.0
+  acceleration: 2.72
+}
+calibration {
+  speed: 0.6
+  command: 72.5
+  acceleration: 2.77
+}
+calibration {
+  speed: 0.6
+  command: 80.0
+  acceleration: 2.8
+}
+calibration {
+  speed: 0.8
+  command: -35.0
+  acceleration: -9.18
+}
+calibration {
+  speed: 0.8
+  command: -33.0
+  acceleration: -8.26
+}
+calibration {
+  speed: 0.8
+  command: -30.0
+  acceleration: -5.13
+}
+calibration {
+  speed: 0.8
+  command: -27.0
+  acceleration: -2.78
+}
+calibration {
+  speed: 0.8
+  command: -25.0
+  acceleration: -1.71
+}
+calibration {
+  speed: 0.8
+  command: -22.0
+  acceleration: -0.48
+}
+calibration {
+  speed: 0.8
+  command: -20.0
+  acceleration: 0.01
+}
+calibration {
+  speed: 0.8
+  command: -15.0
+  acceleration: 0.29
+}
+calibration {
+  speed: 0.8
+  command: 1.0
+  acceleration: 0.31
+}
+calibration {
+  speed: 0.8
+  command: -17.0
+  acceleration: 0.35
+}
+calibration {
+  speed: 0.8
+  command: 17.0
+  acceleration: 0.37
+}
+calibration {
+  speed: 0.8
+  command: 20.0
+  acceleration: 0.87
+}
+calibration {
+  speed: 0.8
+  command: 22.0
+  acceleration: 1.23
+}
+calibration {
+  speed: 0.8
+  command: 25.0
+  acceleration: 1.82
+}
+calibration {
+  speed: 0.8
+  command: 27.0
+  acceleration: 1.99
+}
+calibration {
+  speed: 0.8
+  command: 30.0
+  acceleration: 2.1
+}
+calibration {
+  speed: 0.8
+  command: 35.0
+  acceleration: 2.34
+}
+calibration {
+  speed: 0.8
+  command: 50.0
+  acceleration: 2.46
+}
+calibration {
+  speed: 0.8
+  command: 42.5
+  acceleration: 2.52
+}
+calibration {
+  speed: 0.8
+  command: 60.0
+  acceleration: 2.61
+}
+calibration {
+  speed: 0.8
+  command: 55.0
+  acceleration: 2.7
+}
+calibration {
+  speed: 0.8
+  command: 70.0
+  acceleration: 2.73
+}
+calibration {
+  speed: 0.8
+  command: 75.0
+  acceleration: 2.74
+}
+calibration {
+  speed: 0.8
+  command: 65.0
+  acceleration: 2.76
+}
+calibration {
+  speed: 0.8
+  command: 80.0
+  acceleration: 2.78
+}
+calibration {
+  speed: 1.0
+  command: -35.0
+  acceleration: -9.17
+}
+calibration {
+  speed: 1.0
+  command: -33.0
+  acceleration: -8.44
+}
+calibration {
+  speed: 1.0
+  command: -30.0
+  acceleration: -4.97
+}
+calibration {
+  speed: 1.0
+  command: -27.0
+  acceleration: -2.72
+}
+calibration {
+  speed: 1.0
+  command: -25.0
+  acceleration: -1.74
+}
+calibration {
+  speed: 1.0
+  command: -22.0
+  acceleration: -0.5
+}
+calibration {
+  speed: 1.0
+  command: -20.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 1.0
+  command: -15.0
+  acceleration: 0.21
+}
+calibration {
+  speed: 1.0
+  command: -13.0
+  acceleration: 0.27
+}
+calibration {
+  speed: 1.0
+  command: -1.0
+  acceleration: 0.28
+}
+calibration {
+  speed: 1.0
+  command: 17.0
+  acceleration: 0.32
+}
+calibration {
+  speed: 1.0
+  command: 20.0
+  acceleration: 0.89
+}
+calibration {
+  speed: 1.0
+  command: 22.0
+  acceleration: 1.25
+}
+calibration {
+  speed: 1.0
+  command: 25.0
+  acceleration: 1.89
+}
+calibration {
+  speed: 1.0
+  command: 27.0
+  acceleration: 2.09
+}
+calibration {
+  speed: 1.0
+  command: 30.0
+  acceleration: 2.2
+}
+calibration {
+  speed: 1.0
+  command: 35.0
+  acceleration: 2.49
+}
+calibration {
+  speed: 1.0
+  command: 50.0
+  acceleration: 2.56
+}
+calibration {
+  speed: 1.0
+  command: 45.0
+  acceleration: 2.62
+}
+calibration {
+  speed: 1.0
+  command: 40.0
+  acceleration: 2.66
+}
+calibration {
+  speed: 1.0
+  command: 60.0
+  acceleration: 2.67
+}
+calibration {
+  speed: 1.0
+  command: 70.0
+  acceleration: 2.7
+}
+calibration {
+  speed: 1.0
+  command: 75.0
+  acceleration: 2.73
+}
+calibration {
+  speed: 1.0
+  command: 66.6666666667
+  acceleration: 2.76
+}
+calibration {
+  speed: 1.2
+  command: -35.0
+  acceleration: -9.07
+}
+calibration {
+  speed: 1.2
+  command: -33.0
+  acceleration: -8.35
+}
+calibration {
+  speed: 1.2
+  command: -30.0
+  acceleration: -4.79
+}
+calibration {
+  speed: 1.2
+  command: -27.0
+  acceleration: -2.78
+}
+calibration {
+  speed: 1.2
+  command: -25.0
+  acceleration: -1.71
+}
+calibration {
+  speed: 1.2
+  command: -22.0
+  acceleration: -0.53
+}
+calibration {
+  speed: 1.2
+  command: -20.0
+  acceleration: -0.09
+}
+calibration {
+  speed: 1.2
+  command: -15.0
+  acceleration: 0.14
+}
+calibration {
+  speed: 1.2
+  command: 15.0
+  acceleration: 0.19
+}
+calibration {
+  speed: 1.2
+  command: -13.0
+  acceleration: 0.21
+}
+calibration {
+  speed: 1.2
+  command: -17.0
+  acceleration: 0.22
+}
+calibration {
+  speed: 1.2
+  command: 17.0
+  acceleration: 0.23
+}
+calibration {
+  speed: 1.2
+  command: 20.0
+  acceleration: 0.87
+}
+calibration {
+  speed: 1.2
+  command: 22.0
+  acceleration: 1.27
+}
+calibration {
+  speed: 1.2
+  command: 25.0
+  acceleration: 1.95
+}
+calibration {
+  speed: 1.2
+  command: 27.0
+  acceleration: 2.16
+}
+calibration {
+  speed: 1.2
+  command: 30.0
+  acceleration: 2.27
+}
+calibration {
+  speed: 1.2
+  command: 35.0
+  acceleration: 2.59
+}
+calibration {
+  speed: 1.2
+  command: 50.0
+  acceleration: 2.68
+}
+calibration {
+  speed: 1.2
+  command: 45.0
+  acceleration: 2.71
+}
+calibration {
+  speed: 1.2
+  command: 70.0
+  acceleration: 2.74
+}
+calibration {
+  speed: 1.2
+  command: 40.0
+  acceleration: 2.77
+}
+calibration {
+  speed: 1.2
+  command: 60.0
+  acceleration: 2.78
+}
+calibration {
+  speed: 1.2
+  command: 73.3333333333
+  acceleration: 2.8
+}
+calibration {
+  speed: 1.2
+  command: 55.0
+  acceleration: 2.82
+}
+calibration {
+  speed: 1.4
+  command: -35.0
+  acceleration: -8.98
+}
+calibration {
+  speed: 1.4
+  command: -33.0
+  acceleration: -8.12
+}
+calibration {
+  speed: 1.4
+  command: -30.0
+  acceleration: -4.67
+}
+calibration {
+  speed: 1.4
+  command: -27.0
+  acceleration: -2.82
+}
+calibration {
+  speed: 1.4
+  command: -25.0
+  acceleration: -1.69
+}
+calibration {
+  speed: 1.4
+  command: -22.0
+  acceleration: -0.54
+}
+calibration {
+  speed: 1.4
+  command: -20.0
+  acceleration: -0.14
+}
+calibration {
+  speed: 1.4
+  command: -15.0
+  acceleration: 0.11
+}
+calibration {
+  speed: 1.4
+  command: -17.0
+  acceleration: 0.14
+}
+calibration {
+  speed: 1.4
+  command: 1.0
+  acceleration: 0.15
+}
+calibration {
+  speed: 1.4
+  command: 17.0
+  acceleration: 0.18
+}
+calibration {
+  speed: 1.4
+  command: 20.0
+  acceleration: 0.87
+}
+calibration {
+  speed: 1.4
+  command: 22.0
+  acceleration: 1.3
+}
+calibration {
+  speed: 1.4
+  command: 25.0
+  acceleration: 1.99
+}
+calibration {
+  speed: 1.4
+  command: 27.0
+  acceleration: 2.23
+}
+calibration {
+  speed: 1.4
+  command: 30.0
+  acceleration: 2.35
+}
+calibration {
+  speed: 1.4
+  command: 35.0
+  acceleration: 2.68
+}
+calibration {
+  speed: 1.4
+  command: 50.0
+  acceleration: 2.77
+}
+calibration {
+  speed: 1.4
+  command: 45.0
+  acceleration: 2.8
+}
+calibration {
+  speed: 1.4
+  command: 70.0
+  acceleration: 2.82
+}
+calibration {
+  speed: 1.4
+  command: 40.0
+  acceleration: 2.84
+}
+calibration {
+  speed: 1.4
+  command: 60.0
+  acceleration: 2.87
+}
+calibration {
+  speed: 1.4
+  command: 72.5
+  acceleration: 2.88
+}
+calibration {
+  speed: 1.4
+  command: 65.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 1.6
+  command: -35.0
+  acceleration: -8.91
+}
+calibration {
+  speed: 1.6
+  command: -33.0
+  acceleration: -7.88
+}
+calibration {
+  speed: 1.6
+  command: -30.0
+  acceleration: -4.66
+}
+calibration {
+  speed: 1.6
+  command: -27.0
+  acceleration: -2.79
+}
+calibration {
+  speed: 1.6
+  command: -25.0
+  acceleration: -1.69
+}
+calibration {
+  speed: 1.6
+  command: -22.0
+  acceleration: -0.56
+}
+calibration {
+  speed: 1.6
+  command: -20.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 1.6
+  command: -15.0
+  acceleration: 0.04
+}
+calibration {
+  speed: 1.6
+  command: 15.0
+  acceleration: 0.05
+}
+calibration {
+  speed: 1.6
+  command: -17.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 1.6
+  command: -13.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 1.6
+  command: 17.0
+  acceleration: 0.13
+}
+calibration {
+  speed: 1.6
+  command: 20.0
+  acceleration: 0.8
+}
+calibration {
+  speed: 1.6
+  command: 22.0
+  acceleration: 1.29
+}
+calibration {
+  speed: 1.6
+  command: 25.0
+  acceleration: 2.03
+}
+calibration {
+  speed: 1.6
+  command: 27.0
+  acceleration: 2.29
+}
+calibration {
+  speed: 1.6
+  command: 30.0
+  acceleration: 2.41
+}
+calibration {
+  speed: 1.6
+  command: 35.0
+  acceleration: 2.74
+}
+calibration {
+  speed: 1.6
+  command: 47.5
+  acceleration: 2.85
+}
+calibration {
+  speed: 1.6
+  command: 70.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 1.6
+  command: 40.0
+  acceleration: 2.9
+}
+calibration {
+  speed: 1.6
+  command: 60.0
+  acceleration: 2.94
+}
+calibration {
+  speed: 1.6
+  command: 70.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 1.6
+  command: 75.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 1.8
+  command: -35.0
+  acceleration: -8.81
+}
+calibration {
+  speed: 1.8
+  command: -33.0
+  acceleration: -7.64
+}
+calibration {
+  speed: 1.8
+  command: -30.0
+  acceleration: -4.71
+}
+calibration {
+  speed: 1.8
+  command: -27.0
+  acceleration: -2.72
+}
+calibration {
+  speed: 1.8
+  command: -25.0
+  acceleration: -1.68
+}
+calibration {
+  speed: 1.8
+  command: -22.0
+  acceleration: -0.58
+}
+calibration {
+  speed: 1.8
+  command: -20.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 1.8
+  command: -15.0
+  acceleration: -0.02
+}
+calibration {
+  speed: 1.8
+  command: -1.0
+  acceleration: 0.02
+}
+calibration {
+  speed: 1.8
+  command: -13.0
+  acceleration: 0.03
+}
+calibration {
+  speed: 1.8
+  command: 17.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 1.8
+  command: 20.0
+  acceleration: 0.78
+}
+calibration {
+  speed: 1.8
+  command: 22.0
+  acceleration: 1.25
+}
+calibration {
+  speed: 1.8
+  command: 25.0
+  acceleration: 2.05
+}
+calibration {
+  speed: 1.8
+  command: 27.0
+  acceleration: 2.34
+}
+calibration {
+  speed: 1.8
+  command: 30.0
+  acceleration: 2.48
+}
+calibration {
+  speed: 1.8
+  command: 35.0
+  acceleration: 2.8
+}
+calibration {
+  speed: 1.8
+  command: 47.5
+  acceleration: 2.9
+}
+calibration {
+  speed: 1.8
+  command: 70.0
+  acceleration: 2.93
+}
+calibration {
+  speed: 1.8
+  command: 40.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 1.8
+  command: 80.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 1.8
+  command: 60.0
+  acceleration: 2.97
+}
+calibration {
+  speed: 1.8
+  command: 67.5
+  acceleration: 2.98
+}
+calibration {
+  speed: 2.0
+  command: -35.0
+  acceleration: -8.72
+}
+calibration {
+  speed: 2.0
+  command: -33.0
+  acceleration: -7.47
+}
+calibration {
+  speed: 2.0
+  command: -30.0
+  acceleration: -4.78
+}
+calibration {
+  speed: 2.0
+  command: -27.0
+  acceleration: -2.66
+}
+calibration {
+  speed: 2.0
+  command: -25.0
+  acceleration: -1.67
+}
+calibration {
+  speed: 2.0
+  command: -22.0
+  acceleration: -0.62
+}
+calibration {
+  speed: 2.0
+  command: -20.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 2.0
+  command: 15.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 2.0
+  command: -17.0
+  acceleration: -0.05
+}
+calibration {
+  speed: 2.0
+  command: -13.0
+  acceleration: -0.03
+}
+calibration {
+  speed: 2.0
+  command: -15.0
+  acceleration: -0.02
+}
+calibration {
+  speed: 2.0
+  command: 17.0
+  acceleration: 0.05
+}
+calibration {
+  speed: 2.0
+  command: 20.0
+  acceleration: 0.7
+}
+calibration {
+  speed: 2.0
+  command: 22.0
+  acceleration: 1.22
+}
+calibration {
+  speed: 2.0
+  command: 25.0
+  acceleration: 2.05
+}
+calibration {
+  speed: 2.0
+  command: 27.0
+  acceleration: 2.36
+}
+calibration {
+  speed: 2.0
+  command: 30.0
+  acceleration: 2.51
+}
+calibration {
+  speed: 2.0
+  command: 35.0
+  acceleration: 2.85
+}
+calibration {
+  speed: 2.0
+  command: 70.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 2.0
+  command: 58.3333333333
+  acceleration: 2.95
+}
+calibration {
+  speed: 2.0
+  command: 70.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 2.0
+  command: 55.0
+  acceleration: 2.98
+}
+calibration {
+  speed: 2.0
+  command: 40.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 2.0
+  command: 60.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 2.2
+  command: -35.0
+  acceleration: -8.65
+}
+calibration {
+  speed: 2.2
+  command: -33.0
+  acceleration: -7.37
+}
+calibration {
+  speed: 2.2
+  command: -30.0
+  acceleration: -4.84
+}
+calibration {
+  speed: 2.2
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 2.2
+  command: -25.0
+  acceleration: -1.66
+}
+calibration {
+  speed: 2.2
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 2.2
+  command: -20.0
+  acceleration: -0.32
+}
+calibration {
+  speed: 2.2
+  command: 1.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 2.2
+  command: -15.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 2.2
+  command: -17.0
+  acceleration: -0.09
+}
+calibration {
+  speed: 2.2
+  command: 17.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 2.2
+  command: 20.0
+  acceleration: 0.59
+}
+calibration {
+  speed: 2.2
+  command: 22.0
+  acceleration: 1.13
+}
+calibration {
+  speed: 2.2
+  command: 25.0
+  acceleration: 2.02
+}
+calibration {
+  speed: 2.2
+  command: 27.0
+  acceleration: 2.35
+}
+calibration {
+  speed: 2.2
+  command: 30.0
+  acceleration: 2.53
+}
+calibration {
+  speed: 2.2
+  command: 35.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 2.2
+  command: 70.0
+  acceleration: 2.9
+}
+calibration {
+  speed: 2.2
+  command: 65.0
+  acceleration: 2.93
+}
+calibration {
+  speed: 2.2
+  command: 80.0
+  acceleration: 2.94
+}
+calibration {
+  speed: 2.2
+  command: 75.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 2.2
+  command: 55.0
+  acceleration: 2.98
+}
+calibration {
+  speed: 2.2
+  command: 50.0
+  acceleration: 3.0
+}
+calibration {
+  speed: 2.2
+  command: 45.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 2.2
+  command: 50.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 2.4
+  command: -35.0
+  acceleration: -8.64
+}
+calibration {
+  speed: 2.4
+  command: -33.0
+  acceleration: -7.35
+}
+calibration {
+  speed: 2.4
+  command: -30.0
+  acceleration: -4.87
+}
+calibration {
+  speed: 2.4
+  command: -27.0
+  acceleration: -2.63
+}
+calibration {
+  speed: 2.4
+  command: -25.0
+  acceleration: -1.66
+}
+calibration {
+  speed: 2.4
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 2.4
+  command: -20.0
+  acceleration: -0.32
+}
+calibration {
+  speed: 2.4
+  command: -13.0
+  acceleration: -0.14
+}
+calibration {
+  speed: 2.4
+  command: 15.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 2.4
+  command: -15.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 2.4
+  command: -17.0
+  acceleration: -0.09
+}
+calibration {
+  speed: 2.4
+  command: 17.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 2.4
+  command: 20.0
+  acceleration: 0.5
+}
+calibration {
+  speed: 2.4
+  command: 22.0
+  acceleration: 1.03
+}
+calibration {
+  speed: 2.4
+  command: 25.0
+  acceleration: 1.96
+}
+calibration {
+  speed: 2.4
+  command: 27.0
+  acceleration: 2.32
+}
+calibration {
+  speed: 2.4
+  command: 30.0
+  acceleration: 2.54
+}
+calibration {
+  speed: 2.4
+  command: 70.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 2.4
+  command: 35.0
+  acceleration: 2.91
+}
+calibration {
+  speed: 2.4
+  command: 65.0
+  acceleration: 2.93
+}
+calibration {
+  speed: 2.4
+  command: 80.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 2.4
+  command: 75.0
+  acceleration: 2.97
+}
+calibration {
+  speed: 2.4
+  command: 55.0
+  acceleration: 3.0
+}
+calibration {
+  speed: 2.4
+  command: 50.0
+  acceleration: 3.05
+}
+calibration {
+  speed: 2.4
+  command: 60.0
+  acceleration: 3.06
+}
+calibration {
+  speed: 2.4
+  command: 45.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 2.4
+  command: 40.0
+  acceleration: 3.08
+}
+calibration {
+  speed: 2.6
+  command: -35.0
+  acceleration: -8.68
+}
+calibration {
+  speed: 2.6
+  command: -33.0
+  acceleration: -7.36
+}
+calibration {
+  speed: 2.6
+  command: -30.0
+  acceleration: -4.86
+}
+calibration {
+  speed: 2.6
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 2.6
+  command: -25.0
+  acceleration: -1.68
+}
+calibration {
+  speed: 2.6
+  command: -22.0
+  acceleration: -0.64
+}
+calibration {
+  speed: 2.6
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 2.6
+  command: 15.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 2.6
+  command: -14.0
+  acceleration: -0.12
+}
+calibration {
+  speed: 2.6
+  command: -17.0
+  acceleration: -0.11
+}
+calibration {
+  speed: 2.6
+  command: 17.0
+  acceleration: 0.06
+}
+calibration {
+  speed: 2.6
+  command: 20.0
+  acceleration: 0.4
+}
+calibration {
+  speed: 2.6
+  command: 22.0
+  acceleration: 0.92
+}
+calibration {
+  speed: 2.6
+  command: 25.0
+  acceleration: 1.9
+}
+calibration {
+  speed: 2.6
+  command: 27.0
+  acceleration: 2.28
+}
+calibration {
+  speed: 2.6
+  command: 30.0
+  acceleration: 2.55
+}
+calibration {
+  speed: 2.6
+  command: 70.0
+  acceleration: 2.91
+}
+calibration {
+  speed: 2.6
+  command: 35.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 2.6
+  command: 65.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 2.6
+  command: 80.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 2.6
+  command: 75.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 2.6
+  command: 55.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 2.6
+  command: 60.0
+  acceleration: 3.09
+}
+calibration {
+  speed: 2.6
+  command: 50.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 2.6
+  command: 42.5
+  acceleration: 3.12
+}
+calibration {
+  speed: 2.8
+  command: -35.0
+  acceleration: -8.76
+}
+calibration {
+  speed: 2.8
+  command: -33.0
+  acceleration: -7.41
+}
+calibration {
+  speed: 2.8
+  command: -30.0
+  acceleration: -4.84
+}
+calibration {
+  speed: 2.8
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 2.8
+  command: -25.0
+  acceleration: -1.7
+}
+calibration {
+  speed: 2.8
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 2.8
+  command: -20.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 2.8
+  command: -5.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 2.8
+  command: -15.0
+  acceleration: -0.11
+}
+calibration {
+  speed: 2.8
+  command: 17.0
+  acceleration: 0.06
+}
+calibration {
+  speed: 2.8
+  command: 20.0
+  acceleration: 0.35
+}
+calibration {
+  speed: 2.8
+  command: 22.0
+  acceleration: 0.84
+}
+calibration {
+  speed: 2.8
+  command: 25.0
+  acceleration: 1.82
+}
+calibration {
+  speed: 2.8
+  command: 27.0
+  acceleration: 2.24
+}
+calibration {
+  speed: 2.8
+  command: 30.0
+  acceleration: 2.57
+}
+calibration {
+  speed: 2.8
+  command: 35.0
+  acceleration: 2.93
+}
+calibration {
+  speed: 2.8
+  command: 70.0
+  acceleration: 2.94
+}
+calibration {
+  speed: 2.8
+  command: 65.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 2.8
+  command: 80.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 2.8
+  command: 75.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 2.8
+  command: 55.0
+  acceleration: 3.06
+}
+calibration {
+  speed: 2.8
+  command: 60.0
+  acceleration: 3.13
+}
+calibration {
+  speed: 2.8
+  command: 45.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 3.0
+  command: -35.0
+  acceleration: -8.84
+}
+calibration {
+  speed: 3.0
+  command: -33.0
+  acceleration: -7.48
+}
+calibration {
+  speed: 3.0
+  command: -30.0
+  acceleration: -4.82
+}
+calibration {
+  speed: 3.0
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 3.0
+  command: -25.0
+  acceleration: -1.73
+}
+calibration {
+  speed: 3.0
+  command: -22.0
+  acceleration: -0.63
+}
+calibration {
+  speed: 3.0
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 3.0
+  command: 0.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 3.0
+  command: -13.0
+  acceleration: -0.12
+}
+calibration {
+  speed: 3.0
+  command: -17.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 3.0
+  command: 17.0
+  acceleration: 0.03
+}
+calibration {
+  speed: 3.0
+  command: 20.0
+  acceleration: 0.31
+}
+calibration {
+  speed: 3.0
+  command: 22.0
+  acceleration: 0.76
+}
+calibration {
+  speed: 3.0
+  command: 25.0
+  acceleration: 1.72
+}
+calibration {
+  speed: 3.0
+  command: 27.0
+  acceleration: 2.2
+}
+calibration {
+  speed: 3.0
+  command: 30.0
+  acceleration: 2.58
+}
+calibration {
+  speed: 3.0
+  command: 35.0
+  acceleration: 2.94
+}
+calibration {
+  speed: 3.0
+  command: 70.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 3.0
+  command: 72.5
+  acceleration: 3.04
+}
+calibration {
+  speed: 3.0
+  command: 75.0
+  acceleration: 3.05
+}
+calibration {
+  speed: 3.0
+  command: 55.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 3.0
+  command: 60.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 3.0
+  command: 45.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 3.0
+  command: 40.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 3.0
+  command: 50.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 3.2
+  command: -35.0
+  acceleration: -8.93
+}
+calibration {
+  speed: 3.2
+  command: -33.0
+  acceleration: -7.55
+}
+calibration {
+  speed: 3.2
+  command: -30.0
+  acceleration: -4.8
+}
+calibration {
+  speed: 3.2
+  command: -27.0
+  acceleration: -2.63
+}
+calibration {
+  speed: 3.2
+  command: -25.0
+  acceleration: -1.74
+}
+calibration {
+  speed: 3.2
+  command: -22.0
+  acceleration: -0.63
+}
+calibration {
+  speed: 3.2
+  command: -20.0
+  acceleration: -0.29
+}
+calibration {
+  speed: 3.2
+  command: 15.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 3.2
+  command: -14.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 3.2
+  command: -17.0
+  acceleration: -0.12
+}
+calibration {
+  speed: 3.2
+  command: 17.0
+  acceleration: 0.04
+}
+calibration {
+  speed: 3.2
+  command: 20.0
+  acceleration: 0.27
+}
+calibration {
+  speed: 3.2
+  command: 22.0
+  acceleration: 0.7
+}
+calibration {
+  speed: 3.2
+  command: 25.0
+  acceleration: 1.65
+}
+calibration {
+  speed: 3.2
+  command: 27.0
+  acceleration: 2.12
+}
+calibration {
+  speed: 3.2
+  command: 30.0
+  acceleration: 2.57
+}
+calibration {
+  speed: 3.2
+  command: 35.0
+  acceleration: 2.93
+}
+calibration {
+  speed: 3.2
+  command: 70.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 3.2
+  command: 80.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 3.2
+  command: 70.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 3.2
+  command: 55.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 3.2
+  command: 45.0
+  acceleration: 3.13
+}
+calibration {
+  speed: 3.2
+  command: 60.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 3.2
+  command: 45.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 3.4
+  command: -35.0
+  acceleration: -9.0
+}
+calibration {
+  speed: 3.4
+  command: -33.0
+  acceleration: -7.6
+}
+calibration {
+  speed: 3.4
+  command: -30.0
+  acceleration: -4.79
+}
+calibration {
+  speed: 3.4
+  command: -27.0
+  acceleration: -2.61
+}
+calibration {
+  speed: 3.4
+  command: -25.0
+  acceleration: -1.74
+}
+calibration {
+  speed: 3.4
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 3.4
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 3.4
+  command: 15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 3.4
+  command: -13.0
+  acceleration: -0.14
+}
+calibration {
+  speed: 3.4
+  command: -17.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 3.4
+  command: -15.0
+  acceleration: -0.11
+}
+calibration {
+  speed: 3.4
+  command: 17.0
+  acceleration: 0.06
+}
+calibration {
+  speed: 3.4
+  command: 20.0
+  acceleration: 0.27
+}
+calibration {
+  speed: 3.4
+  command: 22.0
+  acceleration: 0.63
+}
+calibration {
+  speed: 3.4
+  command: 25.0
+  acceleration: 1.58
+}
+calibration {
+  speed: 3.4
+  command: 27.0
+  acceleration: 2.04
+}
+calibration {
+  speed: 3.4
+  command: 30.0
+  acceleration: 2.54
+}
+calibration {
+  speed: 3.4
+  command: 35.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 3.4
+  command: 70.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 3.4
+  command: 80.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 3.4
+  command: 70.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 3.4
+  command: 55.0
+  acceleration: 3.05
+}
+calibration {
+  speed: 3.4
+  command: 45.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 3.4
+  command: 60.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 3.4
+  command: 50.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 3.4
+  command: 40.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 3.6
+  command: -35.0
+  acceleration: -9.02
+}
+calibration {
+  speed: 3.6
+  command: -33.0
+  acceleration: -7.61
+}
+calibration {
+  speed: 3.6
+  command: -30.0
+  acceleration: -4.79
+}
+calibration {
+  speed: 3.6
+  command: -27.0
+  acceleration: -2.6
+}
+calibration {
+  speed: 3.6
+  command: -25.0
+  acceleration: -1.71
+}
+calibration {
+  speed: 3.6
+  command: -22.0
+  acceleration: -0.63
+}
+calibration {
+  speed: 3.6
+  command: -20.0
+  acceleration: -0.29
+}
+calibration {
+  speed: 3.6
+  command: -13.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 3.6
+  command: 15.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 3.6
+  command: -15.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 3.6
+  command: -17.0
+  acceleration: -0.11
+}
+calibration {
+  speed: 3.6
+  command: 20.0
+  acceleration: 0.29
+}
+calibration {
+  speed: 3.6
+  command: 22.0
+  acceleration: 0.58
+}
+calibration {
+  speed: 3.6
+  command: 25.0
+  acceleration: 1.51
+}
+calibration {
+  speed: 3.6
+  command: 27.0
+  acceleration: 1.99
+}
+calibration {
+  speed: 3.6
+  command: 30.0
+  acceleration: 2.5
+}
+calibration {
+  speed: 3.6
+  command: 35.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 3.6
+  command: 70.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 3.6
+  command: 80.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 3.6
+  command: 65.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 3.6
+  command: 55.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 3.6
+  command: 75.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 3.6
+  command: 45.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 3.6
+  command: 55.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 3.6
+  command: 40.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 3.8
+  command: -35.0
+  acceleration: -9.01
+}
+calibration {
+  speed: 3.8
+  command: -33.0
+  acceleration: -7.6
+}
+calibration {
+  speed: 3.8
+  command: -30.0
+  acceleration: -4.79
+}
+calibration {
+  speed: 3.8
+  command: -27.0
+  acceleration: -2.61
+}
+calibration {
+  speed: 3.8
+  command: -25.0
+  acceleration: -1.71
+}
+calibration {
+  speed: 3.8
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 3.8
+  command: -20.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 3.8
+  command: -15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 3.8
+  command: -1.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 3.8
+  command: -13.0
+  acceleration: -0.14
+}
+calibration {
+  speed: 3.8
+  command: 20.0
+  acceleration: 0.26
+}
+calibration {
+  speed: 3.8
+  command: 22.0
+  acceleration: 0.52
+}
+calibration {
+  speed: 3.8
+  command: 25.0
+  acceleration: 1.42
+}
+calibration {
+  speed: 3.8
+  command: 27.0
+  acceleration: 1.94
+}
+calibration {
+  speed: 3.8
+  command: 30.0
+  acceleration: 2.43
+}
+calibration {
+  speed: 3.8
+  command: 35.0
+  acceleration: 2.85
+}
+calibration {
+  speed: 3.8
+  command: 70.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 3.8
+  command: 55.0
+  acceleration: 3.0
+}
+calibration {
+  speed: 3.8
+  command: 72.5
+  acceleration: 3.04
+}
+calibration {
+  speed: 3.8
+  command: 75.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 3.8
+  command: 50.0
+  acceleration: 3.1
+}
+calibration {
+  speed: 3.8
+  command: 52.5
+  acceleration: 3.11
+}
+calibration {
+  speed: 3.8
+  command: 40.0
+  acceleration: 3.13
+}
+calibration {
+  speed: 4.0
+  command: -35.0
+  acceleration: -8.99
+}
+calibration {
+  speed: 4.0
+  command: -33.0
+  acceleration: -7.58
+}
+calibration {
+  speed: 4.0
+  command: -30.0
+  acceleration: -4.79
+}
+calibration {
+  speed: 4.0
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 4.0
+  command: -25.0
+  acceleration: -1.76
+}
+calibration {
+  speed: 4.0
+  command: -22.0
+  acceleration: -0.64
+}
+calibration {
+  speed: 4.0
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 4.0
+  command: 15.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 4.0
+  command: -15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 4.0
+  command: -15.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 4.0
+  command: 17.0
+  acceleration: -0.02
+}
+calibration {
+  speed: 4.0
+  command: 20.0
+  acceleration: 0.24
+}
+calibration {
+  speed: 4.0
+  command: 22.0
+  acceleration: 0.49
+}
+calibration {
+  speed: 4.0
+  command: 25.0
+  acceleration: 1.33
+}
+calibration {
+  speed: 4.0
+  command: 27.0
+  acceleration: 1.84
+}
+calibration {
+  speed: 4.0
+  command: 30.0
+  acceleration: 2.35
+}
+calibration {
+  speed: 4.0
+  command: 35.0
+  acceleration: 2.8
+}
+calibration {
+  speed: 4.0
+  command: 55.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 4.0
+  command: 70.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 4.0
+  command: 65.0
+  acceleration: 3.08
+}
+calibration {
+  speed: 4.0
+  command: 50.0
+  acceleration: 3.09
+}
+calibration {
+  speed: 4.0
+  command: 60.0
+  acceleration: 3.1
+}
+calibration {
+  speed: 4.0
+  command: 75.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 4.0
+  command: 52.5
+  acceleration: 3.12
+}
+calibration {
+  speed: 4.2
+  command: -35.0
+  acceleration: -8.98
+}
+calibration {
+  speed: 4.2
+  command: -33.0
+  acceleration: -7.53
+}
+calibration {
+  speed: 4.2
+  command: -30.0
+  acceleration: -4.78
+}
+calibration {
+  speed: 4.2
+  command: -27.0
+  acceleration: -2.67
+}
+calibration {
+  speed: 4.2
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 4.2
+  command: -22.0
+  acceleration: -0.6
+}
+calibration {
+  speed: 4.2
+  command: -20.0
+  acceleration: -0.28
+}
+calibration {
+  speed: 4.2
+  command: -15.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 4.2
+  command: 15.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 4.2
+  command: -13.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 4.2
+  command: -17.0
+  acceleration: -0.12
+}
+calibration {
+  speed: 4.2
+  command: 17.0
+  acceleration: -0.04
+}
+calibration {
+  speed: 4.2
+  command: 20.0
+  acceleration: 0.22
+}
+calibration {
+  speed: 4.2
+  command: 22.0
+  acceleration: 0.47
+}
+calibration {
+  speed: 4.2
+  command: 25.0
+  acceleration: 1.22
+}
+calibration {
+  speed: 4.2
+  command: 27.0
+  acceleration: 1.71
+}
+calibration {
+  speed: 4.2
+  command: 30.0
+  acceleration: 2.25
+}
+calibration {
+  speed: 4.2
+  command: 35.0
+  acceleration: 2.75
+}
+calibration {
+  speed: 4.2
+  command: 55.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 4.2
+  command: 55.0
+  acceleration: 3.06
+}
+calibration {
+  speed: 4.2
+  command: 50.0
+  acceleration: 3.1
+}
+calibration {
+  speed: 4.2
+  command: 65.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 4.2
+  command: 52.5
+  acceleration: 3.13
+}
+calibration {
+  speed: 4.2
+  command: 77.5
+  acceleration: 3.16
+}
+calibration {
+  speed: 4.4
+  command: -35.0
+  acceleration: -8.88
+}
+calibration {
+  speed: 4.4
+  command: -33.0
+  acceleration: -7.48
+}
+calibration {
+  speed: 4.4
+  command: -30.0
+  acceleration: -4.77
+}
+calibration {
+  speed: 4.4
+  command: -27.0
+  acceleration: -2.67
+}
+calibration {
+  speed: 4.4
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 4.4
+  command: -22.0
+  acceleration: -0.63
+}
+calibration {
+  speed: 4.4
+  command: -20.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 4.4
+  command: -15.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 4.4
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 4.4
+  command: 15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 4.4
+  command: -13.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 4.4
+  command: 17.0
+  acceleration: -0.03
+}
+calibration {
+  speed: 4.4
+  command: 20.0
+  acceleration: 0.2
+}
+calibration {
+  speed: 4.4
+  command: 22.0
+  acceleration: 0.43
+}
+calibration {
+  speed: 4.4
+  command: 25.0
+  acceleration: 1.14
+}
+calibration {
+  speed: 4.4
+  command: 27.0
+  acceleration: 1.59
+}
+calibration {
+  speed: 4.4
+  command: 30.0
+  acceleration: 2.15
+}
+calibration {
+  speed: 4.4
+  command: 35.0
+  acceleration: 2.68
+}
+calibration {
+  speed: 4.4
+  command: 40.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 4.4
+  command: 55.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 4.4
+  command: 70.0
+  acceleration: 3.08
+}
+calibration {
+  speed: 4.4
+  command: 50.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 4.4
+  command: 45.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 4.4
+  command: 62.5
+  acceleration: 3.16
+}
+calibration {
+  speed: 4.4
+  command: 80.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 4.4
+  command: 75.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 4.6
+  command: -35.0
+  acceleration: -8.79
+}
+calibration {
+  speed: 4.6
+  command: -33.0
+  acceleration: -7.43
+}
+calibration {
+  speed: 4.6
+  command: -30.0
+  acceleration: -4.76
+}
+calibration {
+  speed: 4.6
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 4.6
+  command: -25.0
+  acceleration: -1.77
+}
+calibration {
+  speed: 4.6
+  command: -22.0
+  acceleration: -0.62
+}
+calibration {
+  speed: 4.6
+  command: -20.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 4.6
+  command: 1.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 4.6
+  command: -15.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 4.6
+  command: -17.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 4.6
+  command: 17.0
+  acceleration: -0.01
+}
+calibration {
+  speed: 4.6
+  command: 20.0
+  acceleration: 0.15
+}
+calibration {
+  speed: 4.6
+  command: 22.0
+  acceleration: 0.39
+}
+calibration {
+  speed: 4.6
+  command: 25.0
+  acceleration: 1.04
+}
+calibration {
+  speed: 4.6
+  command: 27.0
+  acceleration: 1.49
+}
+calibration {
+  speed: 4.6
+  command: 30.0
+  acceleration: 2.04
+}
+calibration {
+  speed: 4.6
+  command: 35.0
+  acceleration: 2.62
+}
+calibration {
+  speed: 4.6
+  command: 40.0
+  acceleration: 2.97
+}
+calibration {
+  speed: 4.6
+  command: 45.0
+  acceleration: 3.08
+}
+calibration {
+  speed: 4.6
+  command: 55.0
+  acceleration: 3.1
+}
+calibration {
+  speed: 4.6
+  command: 60.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 4.6
+  command: 65.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 4.6
+  command: 60.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 4.6
+  command: 80.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 4.6
+  command: 75.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 4.8
+  command: -35.0
+  acceleration: -8.56
+}
+calibration {
+  speed: 4.8
+  command: -33.0
+  acceleration: -7.39
+}
+calibration {
+  speed: 4.8
+  command: -30.0
+  acceleration: -4.76
+}
+calibration {
+  speed: 4.8
+  command: -27.0
+  acceleration: -2.6
+}
+calibration {
+  speed: 4.8
+  command: -25.0
+  acceleration: -1.78
+}
+calibration {
+  speed: 4.8
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 4.8
+  command: -20.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 4.8
+  command: -15.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 4.8
+  command: 0.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 4.8
+  command: 17.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 4.8
+  command: 20.0
+  acceleration: 0.11
+}
+calibration {
+  speed: 4.8
+  command: 22.0
+  acceleration: 0.34
+}
+calibration {
+  speed: 4.8
+  command: 25.0
+  acceleration: 0.94
+}
+calibration {
+  speed: 4.8
+  command: 27.0
+  acceleration: 1.38
+}
+calibration {
+  speed: 4.8
+  command: 30.0
+  acceleration: 1.92
+}
+calibration {
+  speed: 4.8
+  command: 35.0
+  acceleration: 2.55
+}
+calibration {
+  speed: 4.8
+  command: 40.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 4.8
+  command: 45.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 4.8
+  command: 52.5
+  acceleration: 3.12
+}
+calibration {
+  speed: 4.8
+  command: 70.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 4.8
+  command: 65.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 4.8
+  command: 80.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 4.8
+  command: 67.5
+  acceleration: 3.22
+}
+calibration {
+  speed: 5.0
+  command: -35.0
+  acceleration: -8.57
+}
+calibration {
+  speed: 5.0
+  command: -33.0
+  acceleration: -7.36
+}
+calibration {
+  speed: 5.0
+  command: -30.0
+  acceleration: -4.76
+}
+calibration {
+  speed: 5.0
+  command: -27.0
+  acceleration: -2.6
+}
+calibration {
+  speed: 5.0
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 5.0
+  command: -22.0
+  acceleration: -0.63
+}
+calibration {
+  speed: 5.0
+  command: -20.0
+  acceleration: -0.33
+}
+calibration {
+  speed: 5.0
+  command: 15.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 5.0
+  command: -14.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 5.0
+  command: -17.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 5.0
+  command: 17.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 5.0
+  command: 20.0
+  acceleration: 0.11
+}
+calibration {
+  speed: 5.0
+  command: 22.0
+  acceleration: 0.34
+}
+calibration {
+  speed: 5.0
+  command: 25.0
+  acceleration: 0.86
+}
+calibration {
+  speed: 5.0
+  command: 27.0
+  acceleration: 1.27
+}
+calibration {
+  speed: 5.0
+  command: 30.0
+  acceleration: 1.8
+}
+calibration {
+  speed: 5.0
+  command: 35.0
+  acceleration: 2.46
+}
+calibration {
+  speed: 5.0
+  command: 40.0
+  acceleration: 2.87
+}
+calibration {
+  speed: 5.0
+  command: 45.0
+  acceleration: 2.97
+}
+calibration {
+  speed: 5.0
+  command: 50.0
+  acceleration: 3.1
+}
+calibration {
+  speed: 5.0
+  command: 55.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 5.0
+  command: 70.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 5.0
+  command: 80.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 5.0
+  command: 65.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 5.0
+  command: 75.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 5.0
+  command: 60.0
+  acceleration: 3.24
+}
+calibration {
+  speed: 5.2
+  command: -35.0
+  acceleration: -8.6
+}
+calibration {
+  speed: 5.2
+  command: -33.0
+  acceleration: -7.35
+}
+calibration {
+  speed: 5.2
+  command: -30.0
+  acceleration: -4.77
+}
+calibration {
+  speed: 5.2
+  command: -27.0
+  acceleration: -2.62
+}
+calibration {
+  speed: 5.2
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 5.2
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 5.2
+  command: -20.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 5.2
+  command: 15.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 5.2
+  command: -13.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 5.2
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 5.2
+  command: -15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 5.2
+  command: 17.0
+  acceleration: -0.09
+}
+calibration {
+  speed: 5.2
+  command: 20.0
+  acceleration: 0.1
+}
+calibration {
+  speed: 5.2
+  command: 22.0
+  acceleration: 0.3
+}
+calibration {
+  speed: 5.2
+  command: 25.0
+  acceleration: 0.79
+}
+calibration {
+  speed: 5.2
+  command: 27.0
+  acceleration: 1.19
+}
+calibration {
+  speed: 5.2
+  command: 30.0
+  acceleration: 1.71
+}
+calibration {
+  speed: 5.2
+  command: 35.0
+  acceleration: 2.38
+}
+calibration {
+  speed: 5.2
+  command: 40.0
+  acceleration: 2.83
+}
+calibration {
+  speed: 5.2
+  command: 45.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 5.2
+  command: 50.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 5.2
+  command: 67.5
+  acceleration: 3.15
+}
+calibration {
+  speed: 5.2
+  command: 70.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 5.2
+  command: 70.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 5.2
+  command: 60.0
+  acceleration: 3.25
+}
+calibration {
+  speed: 5.4
+  command: -35.0
+  acceleration: -8.6
+}
+calibration {
+  speed: 5.4
+  command: -33.0
+  acceleration: -7.35
+}
+calibration {
+  speed: 5.4
+  command: -30.0
+  acceleration: -4.78
+}
+calibration {
+  speed: 5.4
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 5.4
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 5.4
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 5.4
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 5.4
+  command: 15.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 5.4
+  command: -17.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 5.4
+  command: -13.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 5.4
+  command: -15.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 5.4
+  command: 17.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 5.4
+  command: 20.0
+  acceleration: 0.13
+}
+calibration {
+  speed: 5.4
+  command: 22.0
+  acceleration: 0.29
+}
+calibration {
+  speed: 5.4
+  command: 25.0
+  acceleration: 0.76
+}
+calibration {
+  speed: 5.4
+  command: 27.0
+  acceleration: 1.12
+}
+calibration {
+  speed: 5.4
+  command: 30.0
+  acceleration: 1.62
+}
+calibration {
+  speed: 5.4
+  command: 35.0
+  acceleration: 2.31
+}
+calibration {
+  speed: 5.4
+  command: 40.0
+  acceleration: 2.78
+}
+calibration {
+  speed: 5.4
+  command: 45.0
+  acceleration: 2.89
+}
+calibration {
+  speed: 5.4
+  command: 50.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 5.4
+  command: 68.3333333333
+  acceleration: 3.16
+}
+calibration {
+  speed: 5.4
+  command: 75.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 5.4
+  command: 65.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 5.4
+  command: 60.0
+  acceleration: 3.26
+}
+calibration {
+  speed: 5.6
+  command: -35.0
+  acceleration: -8.65
+}
+calibration {
+  speed: 5.6
+  command: -33.0
+  acceleration: -7.36
+}
+calibration {
+  speed: 5.6
+  command: -30.0
+  acceleration: -4.78
+}
+calibration {
+  speed: 5.6
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 5.6
+  command: -25.0
+  acceleration: -1.81
+}
+calibration {
+  speed: 5.6
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 5.6
+  command: -20.0
+  acceleration: -0.32
+}
+calibration {
+  speed: 5.6
+  command: 0.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 5.6
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 5.6
+  command: -13.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 5.6
+  command: 17.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 5.6
+  command: 20.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 5.6
+  command: 22.0
+  acceleration: 0.29
+}
+calibration {
+  speed: 5.6
+  command: 25.0
+  acceleration: 0.7
+}
+calibration {
+  speed: 5.6
+  command: 27.0
+  acceleration: 1.06
+}
+calibration {
+  speed: 5.6
+  command: 30.0
+  acceleration: 1.54
+}
+calibration {
+  speed: 5.6
+  command: 35.0
+  acceleration: 2.24
+}
+calibration {
+  speed: 5.6
+  command: 40.0
+  acceleration: 2.72
+}
+calibration {
+  speed: 5.6
+  command: 45.0
+  acceleration: 2.86
+}
+calibration {
+  speed: 5.6
+  command: 50.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 5.6
+  command: 70.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 5.6
+  command: 55.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 5.6
+  command: 80.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 5.6
+  command: 65.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 5.6
+  command: 75.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 5.6
+  command: 60.0
+  acceleration: 3.27
+}
+calibration {
+  speed: 5.8
+  command: -35.0
+  acceleration: -8.68
+}
+calibration {
+  speed: 5.8
+  command: -33.0
+  acceleration: -7.38
+}
+calibration {
+  speed: 5.8
+  command: -30.0
+  acceleration: -4.78
+}
+calibration {
+  speed: 5.8
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 5.8
+  command: -25.0
+  acceleration: -1.82
+}
+calibration {
+  speed: 5.8
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 5.8
+  command: -20.0
+  acceleration: -0.33
+}
+calibration {
+  speed: 5.8
+  command: 15.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 5.8
+  command: -13.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 5.8
+  command: -17.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 5.8
+  command: -15.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 5.8
+  command: 17.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 5.8
+  command: 20.0
+  acceleration: 0.07
+}
+calibration {
+  speed: 5.8
+  command: 22.0
+  acceleration: 0.29
+}
+calibration {
+  speed: 5.8
+  command: 25.0
+  acceleration: 0.69
+}
+calibration {
+  speed: 5.8
+  command: 27.0
+  acceleration: 1.01
+}
+calibration {
+  speed: 5.8
+  command: 30.0
+  acceleration: 1.47
+}
+calibration {
+  speed: 5.8
+  command: 35.0
+  acceleration: 2.18
+}
+calibration {
+  speed: 5.8
+  command: 40.0
+  acceleration: 2.66
+}
+calibration {
+  speed: 5.8
+  command: 45.0
+  acceleration: 2.83
+}
+calibration {
+  speed: 5.8
+  command: 50.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 5.8
+  command: 62.5
+  acceleration: 3.16
+}
+calibration {
+  speed: 5.8
+  command: 65.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 5.8
+  command: 77.5
+  acceleration: 3.2
+}
+calibration {
+  speed: 5.8
+  command: 60.0
+  acceleration: 3.27
+}
+calibration {
+  speed: 6.0
+  command: -35.0
+  acceleration: -8.86
+}
+calibration {
+  speed: 6.0
+  command: -33.0
+  acceleration: -7.41
+}
+calibration {
+  speed: 6.0
+  command: -30.0
+  acceleration: -4.76
+}
+calibration {
+  speed: 6.0
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 6.0
+  command: -25.0
+  acceleration: -1.81
+}
+calibration {
+  speed: 6.0
+  command: -22.0
+  acceleration: -0.66
+}
+calibration {
+  speed: 6.0
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 6.0
+  command: -13.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 6.0
+  command: 0.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 6.0
+  command: -17.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 6.0
+  command: 17.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 6.0
+  command: 20.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 6.0
+  command: 22.0
+  acceleration: 0.27
+}
+calibration {
+  speed: 6.0
+  command: 25.0
+  acceleration: 0.7
+}
+calibration {
+  speed: 6.0
+  command: 27.0
+  acceleration: 0.98
+}
+calibration {
+  speed: 6.0
+  command: 30.0
+  acceleration: 1.41
+}
+calibration {
+  speed: 6.0
+  command: 35.0
+  acceleration: 2.13
+}
+calibration {
+  speed: 6.0
+  command: 40.0
+  acceleration: 2.6
+}
+calibration {
+  speed: 6.0
+  command: 45.0
+  acceleration: 2.78
+}
+calibration {
+  speed: 6.0
+  command: 50.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 6.0
+  command: 55.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 6.0
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 6.0
+  command: 65.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 6.0
+  command: 80.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 6.0
+  command: 75.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 6.0
+  command: 60.0
+  acceleration: 3.28
+}
+calibration {
+  speed: 6.2
+  command: -35.0
+  acceleration: -8.91
+}
+calibration {
+  speed: 6.2
+  command: -33.0
+  acceleration: -7.42
+}
+calibration {
+  speed: 6.2
+  command: -30.0
+  acceleration: -4.74
+}
+calibration {
+  speed: 6.2
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 6.2
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 6.2
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 6.2
+  command: -20.0
+  acceleration: -0.34
+}
+calibration {
+  speed: 6.2
+  command: 0.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 6.2
+  command: -13.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 6.2
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 6.2
+  command: 17.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 6.2
+  command: 20.0
+  acceleration: 0.06
+}
+calibration {
+  speed: 6.2
+  command: 22.0
+  acceleration: 0.28
+}
+calibration {
+  speed: 6.2
+  command: 25.0
+  acceleration: 0.63
+}
+calibration {
+  speed: 6.2
+  command: 27.0
+  acceleration: 0.94
+}
+calibration {
+  speed: 6.2
+  command: 30.0
+  acceleration: 1.37
+}
+calibration {
+  speed: 6.2
+  command: 35.0
+  acceleration: 2.08
+}
+calibration {
+  speed: 6.2
+  command: 40.0
+  acceleration: 2.54
+}
+calibration {
+  speed: 6.2
+  command: 45.0
+  acceleration: 2.7
+}
+calibration {
+  speed: 6.2
+  command: 50.0
+  acceleration: 2.91
+}
+calibration {
+  speed: 6.2
+  command: 55.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 6.2
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 6.2
+  command: 73.3333333333
+  acceleration: 3.2
+}
+calibration {
+  speed: 6.2
+  command: 60.0
+  acceleration: 3.27
+}
+calibration {
+  speed: 6.4
+  command: -35.0
+  acceleration: -8.96
+}
+calibration {
+  speed: 6.4
+  command: -33.0
+  acceleration: -7.45
+}
+calibration {
+  speed: 6.4
+  command: -30.0
+  acceleration: -4.72
+}
+calibration {
+  speed: 6.4
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 6.4
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 6.4
+  command: -22.0
+  acceleration: -0.67
+}
+calibration {
+  speed: 6.4
+  command: -20.0
+  acceleration: -0.34
+}
+calibration {
+  speed: 6.4
+  command: 15.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 6.4
+  command: -15.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 6.4
+  command: -13.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 6.4
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 6.4
+  command: 17.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 6.4
+  command: 20.0
+  acceleration: 0.07
+}
+calibration {
+  speed: 6.4
+  command: 22.0
+  acceleration: 0.25
+}
+calibration {
+  speed: 6.4
+  command: 25.0
+  acceleration: 0.63
+}
+calibration {
+  speed: 6.4
+  command: 27.0
+  acceleration: 0.91
+}
+calibration {
+  speed: 6.4
+  command: 30.0
+  acceleration: 1.34
+}
+calibration {
+  speed: 6.4
+  command: 35.0
+  acceleration: 2.02
+}
+calibration {
+  speed: 6.4
+  command: 40.0
+  acceleration: 2.49
+}
+calibration {
+  speed: 6.4
+  command: 45.0
+  acceleration: 2.64
+}
+calibration {
+  speed: 6.4
+  command: 50.0
+  acceleration: 2.87
+}
+calibration {
+  speed: 6.4
+  command: 55.0
+  acceleration: 3.08
+}
+calibration {
+  speed: 6.4
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 6.4
+  command: 77.5
+  acceleration: 3.2
+}
+calibration {
+  speed: 6.4
+  command: 65.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 6.4
+  command: 60.0
+  acceleration: 3.26
+}
+calibration {
+  speed: 6.6
+  command: -35.0
+  acceleration: -8.98
+}
+calibration {
+  speed: 6.6
+  command: -33.0
+  acceleration: -7.48
+}
+calibration {
+  speed: 6.6
+  command: -30.0
+  acceleration: -4.7
+}
+calibration {
+  speed: 6.6
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 6.6
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 6.6
+  command: -22.0
+  acceleration: -0.66
+}
+calibration {
+  speed: 6.6
+  command: -20.0
+  acceleration: -0.32
+}
+calibration {
+  speed: 6.6
+  command: 15.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 6.6
+  command: -15.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 6.6
+  command: -13.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 6.6
+  command: -17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 6.6
+  command: 17.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 6.6
+  command: 20.0
+  acceleration: 0.07
+}
+calibration {
+  speed: 6.6
+  command: 22.0
+  acceleration: 0.23
+}
+calibration {
+  speed: 6.6
+  command: 25.0
+  acceleration: 0.62
+}
+calibration {
+  speed: 6.6
+  command: 27.0
+  acceleration: 0.89
+}
+calibration {
+  speed: 6.6
+  command: 30.0
+  acceleration: 1.29
+}
+calibration {
+  speed: 6.6
+  command: 35.0
+  acceleration: 1.97
+}
+calibration {
+  speed: 6.6
+  command: 40.0
+  acceleration: 2.43
+}
+calibration {
+  speed: 6.6
+  command: 45.0
+  acceleration: 2.6
+}
+calibration {
+  speed: 6.6
+  command: 50.0
+  acceleration: 2.83
+}
+calibration {
+  speed: 6.6
+  command: 55.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 6.6
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 6.6
+  command: 80.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 6.6
+  command: 75.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 6.6
+  command: 65.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 6.6
+  command: 60.0
+  acceleration: 3.25
+}
+calibration {
+  speed: 6.8
+  command: -35.0
+  acceleration: -9.02
+}
+calibration {
+  speed: 6.8
+  command: -33.0
+  acceleration: -7.49
+}
+calibration {
+  speed: 6.8
+  command: -30.0
+  acceleration: -4.69
+}
+calibration {
+  speed: 6.8
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 6.8
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 6.8
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 6.8
+  command: -20.0
+  acceleration: -0.33
+}
+calibration {
+  speed: 6.8
+  command: 1.0
+  acceleration: -0.22
+}
+calibration {
+  speed: 6.8
+  command: -17.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 6.8
+  command: -15.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 6.8
+  command: 17.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 6.8
+  command: 20.0
+  acceleration: 0.03
+}
+calibration {
+  speed: 6.8
+  command: 22.0
+  acceleration: 0.21
+}
+calibration {
+  speed: 6.8
+  command: 25.0
+  acceleration: 0.59
+}
+calibration {
+  speed: 6.8
+  command: 27.0
+  acceleration: 0.85
+}
+calibration {
+  speed: 6.8
+  command: 30.0
+  acceleration: 1.25
+}
+calibration {
+  speed: 6.8
+  command: 35.0
+  acceleration: 1.92
+}
+calibration {
+  speed: 6.8
+  command: 40.0
+  acceleration: 2.38
+}
+calibration {
+  speed: 6.8
+  command: 45.0
+  acceleration: 2.56
+}
+calibration {
+  speed: 6.8
+  command: 50.0
+  acceleration: 2.79
+}
+calibration {
+  speed: 6.8
+  command: 55.0
+  acceleration: 3.01
+}
+calibration {
+  speed: 6.8
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 6.8
+  command: 80.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 6.8
+  command: 70.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 6.8
+  command: 60.0
+  acceleration: 3.24
+}
+calibration {
+  speed: 7.0
+  command: -35.0
+  acceleration: -9.01
+}
+calibration {
+  speed: 7.0
+  command: -33.0
+  acceleration: -7.51
+}
+calibration {
+  speed: 7.0
+  command: -30.0
+  acceleration: -4.7
+}
+calibration {
+  speed: 7.0
+  command: -27.0
+  acceleration: -2.63
+}
+calibration {
+  speed: 7.0
+  command: -25.0
+  acceleration: -1.78
+}
+calibration {
+  speed: 7.0
+  command: -22.0
+  acceleration: -0.71
+}
+calibration {
+  speed: 7.0
+  command: -20.0
+  acceleration: -0.33
+}
+calibration {
+  speed: 7.0
+  command: -13.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 7.0
+  command: -17.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 7.0
+  command: 0.0
+  acceleration: -0.22
+}
+calibration {
+  speed: 7.0
+  command: 17.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 7.0
+  command: 20.0
+  acceleration: 0.06
+}
+calibration {
+  speed: 7.0
+  command: 22.0
+  acceleration: 0.22
+}
+calibration {
+  speed: 7.0
+  command: 25.0
+  acceleration: 0.55
+}
+calibration {
+  speed: 7.0
+  command: 27.0
+  acceleration: 0.83
+}
+calibration {
+  speed: 7.0
+  command: 30.0
+  acceleration: 1.21
+}
+calibration {
+  speed: 7.0
+  command: 35.0
+  acceleration: 1.88
+}
+calibration {
+  speed: 7.0
+  command: 40.0
+  acceleration: 2.34
+}
+calibration {
+  speed: 7.0
+  command: 45.0
+  acceleration: 2.51
+}
+calibration {
+  speed: 7.0
+  command: 50.0
+  acceleration: 2.75
+}
+calibration {
+  speed: 7.0
+  command: 55.0
+  acceleration: 2.98
+}
+calibration {
+  speed: 7.0
+  command: 70.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 7.0
+  command: 80.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 7.0
+  command: 65.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 7.0
+  command: 60.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 7.0
+  command: 75.0
+  acceleration: 3.24
+}
+calibration {
+  speed: 7.2
+  command: -35.0
+  acceleration: -9.0
+}
+calibration {
+  speed: 7.2
+  command: -33.0
+  acceleration: -7.51
+}
+calibration {
+  speed: 7.2
+  command: -30.0
+  acceleration: -4.71
+}
+calibration {
+  speed: 7.2
+  command: -27.0
+  acceleration: -2.63
+}
+calibration {
+  speed: 7.2
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 7.2
+  command: -22.0
+  acceleration: -0.7
+}
+calibration {
+  speed: 7.2
+  command: -20.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 7.2
+  command: 15.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 7.2
+  command: -17.0
+  acceleration: -0.22
+}
+calibration {
+  speed: 7.2
+  command: -15.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 7.2
+  command: -13.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 7.2
+  command: 17.0
+  acceleration: -0.11
+}
+calibration {
+  speed: 7.2
+  command: 20.0
+  acceleration: 0.07
+}
+calibration {
+  speed: 7.2
+  command: 22.0
+  acceleration: 0.19
+}
+calibration {
+  speed: 7.2
+  command: 25.0
+  acceleration: 0.55
+}
+calibration {
+  speed: 7.2
+  command: 27.0
+  acceleration: 0.78
+}
+calibration {
+  speed: 7.2
+  command: 30.0
+  acceleration: 1.16
+}
+calibration {
+  speed: 7.2
+  command: 35.0
+  acceleration: 1.83
+}
+calibration {
+  speed: 7.2
+  command: 40.0
+  acceleration: 2.3
+}
+calibration {
+  speed: 7.2
+  command: 45.0
+  acceleration: 2.45
+}
+calibration {
+  speed: 7.2
+  command: 50.0
+  acceleration: 2.7
+}
+calibration {
+  speed: 7.2
+  command: 55.0
+  acceleration: 2.95
+}
+calibration {
+  speed: 7.2
+  command: 70.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 7.2
+  command: 70.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 7.2
+  command: 65.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 7.2
+  command: 75.0
+  acceleration: 3.25
+}
+calibration {
+  speed: 7.4
+  command: -35.0
+  acceleration: -9.0
+}
+calibration {
+  speed: 7.4
+  command: -33.0
+  acceleration: -7.51
+}
+calibration {
+  speed: 7.4
+  command: -30.0
+  acceleration: -4.72
+}
+calibration {
+  speed: 7.4
+  command: -27.0
+  acceleration: -2.62
+}
+calibration {
+  speed: 7.4
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 7.4
+  command: -22.0
+  acceleration: -0.65
+}
+calibration {
+  speed: 7.4
+  command: -20.0
+  acceleration: -0.32
+}
+calibration {
+  speed: 7.4
+  command: 15.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 7.4
+  command: -15.0
+  acceleration: -0.22
+}
+calibration {
+  speed: 7.4
+  command: -17.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 7.4
+  command: -13.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 7.4
+  command: 17.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 7.4
+  command: 20.0
+  acceleration: 0.02
+}
+calibration {
+  speed: 7.4
+  command: 22.0
+  acceleration: 0.21
+}
+calibration {
+  speed: 7.4
+  command: 25.0
+  acceleration: 0.53
+}
+calibration {
+  speed: 7.4
+  command: 27.0
+  acceleration: 0.78
+}
+calibration {
+  speed: 7.4
+  command: 30.0
+  acceleration: 1.15
+}
+calibration {
+  speed: 7.4
+  command: 35.0
+  acceleration: 1.79
+}
+calibration {
+  speed: 7.4
+  command: 40.0
+  acceleration: 2.26
+}
+calibration {
+  speed: 7.4
+  command: 45.0
+  acceleration: 2.38
+}
+calibration {
+  speed: 7.4
+  command: 50.0
+  acceleration: 2.64
+}
+calibration {
+  speed: 7.4
+  command: 55.0
+  acceleration: 2.92
+}
+calibration {
+  speed: 7.4
+  command: 65.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 7.4
+  command: 65.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 7.4
+  command: 80.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 7.4
+  command: 75.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 7.6
+  command: -35.0
+  acceleration: -8.99
+}
+calibration {
+  speed: 7.6
+  command: -33.0
+  acceleration: -7.5
+}
+calibration {
+  speed: 7.6
+  command: -30.0
+  acceleration: -4.72
+}
+calibration {
+  speed: 7.6
+  command: -27.0
+  acceleration: -2.64
+}
+calibration {
+  speed: 7.6
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 7.6
+  command: -22.0
+  acceleration: -0.71
+}
+calibration {
+  speed: 7.6
+  command: -20.0
+  acceleration: -0.36
+}
+calibration {
+  speed: 7.6
+  command: -15.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 7.6
+  command: 15.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 7.6
+  command: -17.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 7.6
+  command: -13.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 7.6
+  command: 17.0
+  acceleration: -0.14
+}
+calibration {
+  speed: 7.6
+  command: 20.0
+  acceleration: 0.02
+}
+calibration {
+  speed: 7.6
+  command: 22.0
+  acceleration: 0.16
+}
+calibration {
+  speed: 7.6
+  command: 25.0
+  acceleration: 0.52
+}
+calibration {
+  speed: 7.6
+  command: 27.0
+  acceleration: 0.75
+}
+calibration {
+  speed: 7.6
+  command: 30.0
+  acceleration: 1.12
+}
+calibration {
+  speed: 7.6
+  command: 35.0
+  acceleration: 1.76
+}
+calibration {
+  speed: 7.6
+  command: 40.0
+  acceleration: 2.2
+}
+calibration {
+  speed: 7.6
+  command: 45.0
+  acceleration: 2.32
+}
+calibration {
+  speed: 7.6
+  command: 50.0
+  acceleration: 2.58
+}
+calibration {
+  speed: 7.6
+  command: 55.0
+  acceleration: 2.88
+}
+calibration {
+  speed: 7.6
+  command: 60.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 7.6
+  command: 67.5
+  acceleration: 3.19
+}
+calibration {
+  speed: 7.6
+  command: 75.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 7.6
+  command: 80.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 7.8
+  command: -35.0
+  acceleration: -8.99
+}
+calibration {
+  speed: 7.8
+  command: -33.0
+  acceleration: -7.49
+}
+calibration {
+  speed: 7.8
+  command: -30.0
+  acceleration: -4.71
+}
+calibration {
+  speed: 7.8
+  command: -27.0
+  acceleration: -2.66
+}
+calibration {
+  speed: 7.8
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 7.8
+  command: -22.0
+  acceleration: -0.72
+}
+calibration {
+  speed: 7.8
+  command: -20.0
+  acceleration: -0.38
+}
+calibration {
+  speed: 7.8
+  command: 15.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 7.8
+  command: -15.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 7.8
+  command: -15.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 7.8
+  command: 17.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 7.8
+  command: 20.0
+  acceleration: 0.03
+}
+calibration {
+  speed: 7.8
+  command: 22.0
+  acceleration: 0.16
+}
+calibration {
+  speed: 7.8
+  command: 25.0
+  acceleration: 0.51
+}
+calibration {
+  speed: 7.8
+  command: 27.0
+  acceleration: 0.71
+}
+calibration {
+  speed: 7.8
+  command: 30.0
+  acceleration: 1.08
+}
+calibration {
+  speed: 7.8
+  command: 35.0
+  acceleration: 1.73
+}
+calibration {
+  speed: 7.8
+  command: 40.0
+  acceleration: 2.15
+}
+calibration {
+  speed: 7.8
+  command: 45.0
+  acceleration: 2.28
+}
+calibration {
+  speed: 7.8
+  command: 50.0
+  acceleration: 2.52
+}
+calibration {
+  speed: 7.8
+  command: 55.0
+  acceleration: 2.83
+}
+calibration {
+  speed: 7.8
+  command: 60.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 7.8
+  command: 70.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 7.8
+  command: 65.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 7.8
+  command: 75.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 7.8
+  command: 80.0
+  acceleration: 3.24
+}
+calibration {
+  speed: 8.0
+  command: -35.0
+  acceleration: -9.0
+}
+calibration {
+  speed: 8.0
+  command: -33.0
+  acceleration: -7.48
+}
+calibration {
+  speed: 8.0
+  command: -30.0
+  acceleration: -4.7
+}
+calibration {
+  speed: 8.0
+  command: -27.0
+  acceleration: -2.68
+}
+calibration {
+  speed: 8.0
+  command: -25.0
+  acceleration: -1.81
+}
+calibration {
+  speed: 8.0
+  command: -22.0
+  acceleration: -0.71
+}
+calibration {
+  speed: 8.0
+  command: -20.0
+  acceleration: -0.35
+}
+calibration {
+  speed: 8.0
+  command: 15.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 8.0
+  command: -14.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 8.0
+  command: -17.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 8.0
+  command: 17.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 8.0
+  command: 20.0
+  acceleration: -0.02
+}
+calibration {
+  speed: 8.0
+  command: 22.0
+  acceleration: 0.16
+}
+calibration {
+  speed: 8.0
+  command: 25.0
+  acceleration: 0.48
+}
+calibration {
+  speed: 8.0
+  command: 27.0
+  acceleration: 0.69
+}
+calibration {
+  speed: 8.0
+  command: 30.0
+  acceleration: 1.05
+}
+calibration {
+  speed: 8.0
+  command: 35.0
+  acceleration: 1.69
+}
+calibration {
+  speed: 8.0
+  command: 40.0
+  acceleration: 2.11
+}
+calibration {
+  speed: 8.0
+  command: 45.0
+  acceleration: 2.25
+}
+calibration {
+  speed: 8.0
+  command: 50.0
+  acceleration: 2.48
+}
+calibration {
+  speed: 8.0
+  command: 55.0
+  acceleration: 2.79
+}
+calibration {
+  speed: 8.0
+  command: 60.0
+  acceleration: 3.11
+}
+calibration {
+  speed: 8.0
+  command: 70.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 8.0
+  command: 65.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 8.0
+  command: 75.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 8.0
+  command: 80.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 8.2
+  command: -35.0
+  acceleration: -9.03
+}
+calibration {
+  speed: 8.2
+  command: -33.0
+  acceleration: -7.48
+}
+calibration {
+  speed: 8.2
+  command: -30.0
+  acceleration: -4.69
+}
+calibration {
+  speed: 8.2
+  command: -27.0
+  acceleration: -2.68
+}
+calibration {
+  speed: 8.2
+  command: -25.0
+  acceleration: -1.84
+}
+calibration {
+  speed: 8.2
+  command: -22.0
+  acceleration: -0.68
+}
+calibration {
+  speed: 8.2
+  command: -20.0
+  acceleration: -0.37
+}
+calibration {
+  speed: 8.2
+  command: -15.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 8.2
+  command: -13.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 8.2
+  command: 15.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 8.2
+  command: -17.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 8.2
+  command: 17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 8.2
+  command: 20.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 8.2
+  command: 22.0
+  acceleration: 0.14
+}
+calibration {
+  speed: 8.2
+  command: 25.0
+  acceleration: 0.47
+}
+calibration {
+  speed: 8.2
+  command: 27.0
+  acceleration: 0.67
+}
+calibration {
+  speed: 8.2
+  command: 30.0
+  acceleration: 1.01
+}
+calibration {
+  speed: 8.2
+  command: 35.0
+  acceleration: 1.66
+}
+calibration {
+  speed: 8.2
+  command: 40.0
+  acceleration: 2.07
+}
+calibration {
+  speed: 8.2
+  command: 45.0
+  acceleration: 2.23
+}
+calibration {
+  speed: 8.2
+  command: 50.0
+  acceleration: 2.46
+}
+calibration {
+  speed: 8.2
+  command: 55.0
+  acceleration: 2.77
+}
+calibration {
+  speed: 8.2
+  command: 60.0
+  acceleration: 3.09
+}
+calibration {
+  speed: 8.2
+  command: 70.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 8.2
+  command: 80.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 8.2
+  command: 65.0
+  acceleration: 3.22
+}
+calibration {
+  speed: 8.2
+  command: 75.0
+  acceleration: 3.24
+}
+calibration {
+  speed: 8.4
+  command: -35.0
+  acceleration: -9.08
+}
+calibration {
+  speed: 8.4
+  command: -33.0
+  acceleration: -7.49
+}
+calibration {
+  speed: 8.4
+  command: -30.0
+  acceleration: -4.68
+}
+calibration {
+  speed: 8.4
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 8.4
+  command: -25.0
+  acceleration: -1.83
+}
+calibration {
+  speed: 8.4
+  command: -22.0
+  acceleration: -0.69
+}
+calibration {
+  speed: 8.4
+  command: -20.0
+  acceleration: -0.37
+}
+calibration {
+  speed: 8.4
+  command: -15.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 8.4
+  command: -17.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 8.4
+  command: 1.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 8.4
+  command: 17.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 8.4
+  command: 20.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 8.4
+  command: 22.0
+  acceleration: 0.15
+}
+calibration {
+  speed: 8.4
+  command: 25.0
+  acceleration: 0.43
+}
+calibration {
+  speed: 8.4
+  command: 27.0
+  acceleration: 0.63
+}
+calibration {
+  speed: 8.4
+  command: 30.0
+  acceleration: 0.99
+}
+calibration {
+  speed: 8.4
+  command: 35.0
+  acceleration: 1.61
+}
+calibration {
+  speed: 8.4
+  command: 40.0
+  acceleration: 2.03
+}
+calibration {
+  speed: 8.4
+  command: 45.0
+  acceleration: 2.19
+}
+calibration {
+  speed: 8.4
+  command: 50.0
+  acceleration: 2.43
+}
+calibration {
+  speed: 8.4
+  command: 55.0
+  acceleration: 2.77
+}
+calibration {
+  speed: 8.4
+  command: 60.0
+  acceleration: 3.07
+}
+calibration {
+  speed: 8.4
+  command: 70.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 8.4
+  command: 80.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 8.4
+  command: 65.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 8.4
+  command: 75.0
+  acceleration: 3.26
+}
+calibration {
+  speed: 8.6
+  command: -35.0
+  acceleration: -9.15
+}
+calibration {
+  speed: 8.6
+  command: -33.0
+  acceleration: -7.5
+}
+calibration {
+  speed: 8.6
+  command: -30.0
+  acceleration: -4.69
+}
+calibration {
+  speed: 8.6
+  command: -27.0
+  acceleration: -2.6
+}
+calibration {
+  speed: 8.6
+  command: -25.0
+  acceleration: -1.79
+}
+calibration {
+  speed: 8.6
+  command: -22.0
+  acceleration: -0.68
+}
+calibration {
+  speed: 8.6
+  command: -20.0
+  acceleration: -0.39
+}
+calibration {
+  speed: 8.6
+  command: 15.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 8.6
+  command: -13.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 8.6
+  command: -17.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 8.6
+  command: -15.0
+  acceleration: -0.23
+}
+calibration {
+  speed: 8.6
+  command: 17.0
+  acceleration: -0.18
+}
+calibration {
+  speed: 8.6
+  command: 20.0
+  acceleration: -0.06
+}
+calibration {
+  speed: 8.6
+  command: 22.0
+  acceleration: 0.1
+}
+calibration {
+  speed: 8.6
+  command: 25.0
+  acceleration: 0.42
+}
+calibration {
+  speed: 8.6
+  command: 27.0
+  acceleration: 0.62
+}
+calibration {
+  speed: 8.6
+  command: 30.0
+  acceleration: 0.96
+}
+calibration {
+  speed: 8.6
+  command: 35.0
+  acceleration: 1.56
+}
+calibration {
+  speed: 8.6
+  command: 40.0
+  acceleration: 1.99
+}
+calibration {
+  speed: 8.6
+  command: 45.0
+  acceleration: 2.15
+}
+calibration {
+  speed: 8.6
+  command: 50.0
+  acceleration: 2.4
+}
+calibration {
+  speed: 8.6
+  command: 55.0
+  acceleration: 2.77
+}
+calibration {
+  speed: 8.6
+  command: 60.0
+  acceleration: 3.06
+}
+calibration {
+  speed: 8.6
+  command: 70.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 8.6
+  command: 80.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 8.6
+  command: 65.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 8.6
+  command: 75.0
+  acceleration: 3.27
+}
+calibration {
+  speed: 8.8
+  command: -35.0
+  acceleration: -9.22
+}
+calibration {
+  speed: 8.8
+  command: -33.0
+  acceleration: -7.55
+}
+calibration {
+  speed: 8.8
+  command: -30.0
+  acceleration: -4.7
+}
+calibration {
+  speed: 8.8
+  command: -27.0
+  acceleration: -2.57
+}
+calibration {
+  speed: 8.8
+  command: -25.0
+  acceleration: -1.77
+}
+calibration {
+  speed: 8.8
+  command: -22.0
+  acceleration: -0.71
+}
+calibration {
+  speed: 8.8
+  command: -20.0
+  acceleration: -0.34
+}
+calibration {
+  speed: 8.8
+  command: -13.0
+  acceleration: -0.3
+}
+calibration {
+  speed: 8.8
+  command: 15.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 8.8
+  command: -17.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 8.8
+  command: -15.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 8.8
+  command: 17.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 8.8
+  command: 20.0
+  acceleration: -0.05
+}
+calibration {
+  speed: 8.8
+  command: 22.0
+  acceleration: 0.12
+}
+calibration {
+  speed: 8.8
+  command: 25.0
+  acceleration: 0.4
+}
+calibration {
+  speed: 8.8
+  command: 27.0
+  acceleration: 0.61
+}
+calibration {
+  speed: 8.8
+  command: 30.0
+  acceleration: 0.93
+}
+calibration {
+  speed: 8.8
+  command: 35.0
+  acceleration: 1.51
+}
+calibration {
+  speed: 8.8
+  command: 40.0
+  acceleration: 1.95
+}
+calibration {
+  speed: 8.8
+  command: 45.0
+  acceleration: 2.1
+}
+calibration {
+  speed: 8.8
+  command: 50.0
+  acceleration: 2.37
+}
+calibration {
+  speed: 8.8
+  command: 55.0
+  acceleration: 2.75
+}
+calibration {
+  speed: 8.8
+  command: 60.0
+  acceleration: 3.04
+}
+calibration {
+  speed: 8.8
+  command: 80.0
+  acceleration: 3.12
+}
+calibration {
+  speed: 8.8
+  command: 70.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 8.8
+  command: 65.0
+  acceleration: 3.23
+}
+calibration {
+  speed: 8.8
+  command: 75.0
+  acceleration: 3.25
+}
+calibration {
+  speed: 9.0
+  command: -35.0
+  acceleration: -9.27
+}
+calibration {
+  speed: 9.0
+  command: -33.0
+  acceleration: -7.6
+}
+calibration {
+  speed: 9.0
+  command: -30.0
+  acceleration: -4.71
+}
+calibration {
+  speed: 9.0
+  command: -27.0
+  acceleration: -2.57
+}
+calibration {
+  speed: 9.0
+  command: -25.0
+  acceleration: -1.8
+}
+calibration {
+  speed: 9.0
+  command: -22.0
+  acceleration: -0.74
+}
+calibration {
+  speed: 9.0
+  command: -20.0
+  acceleration: -0.41
+}
+calibration {
+  speed: 9.0
+  command: -15.0
+  acceleration: -0.29
+}
+calibration {
+  speed: 9.0
+  command: -13.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 9.0
+  command: 15.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 9.0
+  command: 17.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 9.0
+  command: -17.0
+  acceleration: -0.19
+}
+calibration {
+  speed: 9.0
+  command: 20.0
+  acceleration: -0.15
+}
+calibration {
+  speed: 9.0
+  command: 22.0
+  acceleration: 0.12
+}
+calibration {
+  speed: 9.0
+  command: 25.0
+  acceleration: 0.38
+}
+calibration {
+  speed: 9.0
+  command: 27.0
+  acceleration: 0.57
+}
+calibration {
+  speed: 9.0
+  command: 30.0
+  acceleration: 0.88
+}
+calibration {
+  speed: 9.0
+  command: 35.0
+  acceleration: 1.47
+}
+calibration {
+  speed: 9.0
+  command: 40.0
+  acceleration: 1.91
+}
+calibration {
+  speed: 9.0
+  command: 45.0
+  acceleration: 2.07
+}
+calibration {
+  speed: 9.0
+  command: 50.0
+  acceleration: 2.33
+}
+calibration {
+  speed: 9.0
+  command: 55.0
+  acceleration: 2.71
+}
+calibration {
+  speed: 9.0
+  command: 60.0
+  acceleration: 3.03
+}
+calibration {
+  speed: 9.0
+  command: 80.0
+  acceleration: 3.09
+}
+calibration {
+  speed: 9.0
+  command: 70.0
+  acceleration: 3.16
+}
+calibration {
+  speed: 9.0
+  command: 70.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 9.2
+  command: -35.0
+  acceleration: -9.34
+}
+calibration {
+  speed: 9.2
+  command: -33.0
+  acceleration: -7.67
+}
+calibration {
+  speed: 9.2
+  command: -30.0
+  acceleration: -4.69
+}
+calibration {
+  speed: 9.2
+  command: -27.0
+  acceleration: -2.61
+}
+calibration {
+  speed: 9.2
+  command: -25.0
+  acceleration: -1.85
+}
+calibration {
+  speed: 9.2
+  command: -22.0
+  acceleration: -0.71
+}
+calibration {
+  speed: 9.2
+  command: -20.0
+  acceleration: -0.39
+}
+calibration {
+  speed: 9.2
+  command: -15.0
+  acceleration: -0.28
+}
+calibration {
+  speed: 9.2
+  command: 15.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 9.2
+  command: -17.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 9.2
+  command: -13.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 9.2
+  command: 17.0
+  acceleration: -0.17
+}
+calibration {
+  speed: 9.2
+  command: 20.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 9.2
+  command: 22.0
+  acceleration: 0.1
+}
+calibration {
+  speed: 9.2
+  command: 25.0
+  acceleration: 0.34
+}
+calibration {
+  speed: 9.2
+  command: 27.0
+  acceleration: 0.56
+}
+calibration {
+  speed: 9.2
+  command: 30.0
+  acceleration: 0.87
+}
+calibration {
+  speed: 9.2
+  command: 35.0
+  acceleration: 1.44
+}
+calibration {
+  speed: 9.2
+  command: 40.0
+  acceleration: 1.86
+}
+calibration {
+  speed: 9.2
+  command: 45.0
+  acceleration: 2.05
+}
+calibration {
+  speed: 9.2
+  command: 50.0
+  acceleration: 2.3
+}
+calibration {
+  speed: 9.2
+  command: 55.0
+  acceleration: 2.65
+}
+calibration {
+  speed: 9.2
+  command: 60.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 9.2
+  command: 80.0
+  acceleration: 3.05
+}
+calibration {
+  speed: 9.2
+  command: 75.0
+  acceleration: 3.17
+}
+calibration {
+  speed: 9.2
+  command: 70.0
+  acceleration: 3.18
+}
+calibration {
+  speed: 9.2
+  command: 65.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 9.4
+  command: -35.0
+  acceleration: -9.37
+}
+calibration {
+  speed: 9.4
+  command: -33.0
+  acceleration: -7.76
+}
+calibration {
+  speed: 9.4
+  command: -30.0
+  acceleration: -4.65
+}
+calibration {
+  speed: 9.4
+  command: -27.0
+  acceleration: -2.66
+}
+calibration {
+  speed: 9.4
+  command: -25.0
+  acceleration: -1.87
+}
+calibration {
+  speed: 9.4
+  command: -22.0
+  acceleration: -0.73
+}
+calibration {
+  speed: 9.4
+  command: -20.0
+  acceleration: -0.37
+}
+calibration {
+  speed: 9.4
+  command: 15.0
+  acceleration: -0.31
+}
+calibration {
+  speed: 9.4
+  command: -15.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 9.4
+  command: -15.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 9.4
+  command: 17.0
+  acceleration: -0.16
+}
+calibration {
+  speed: 9.4
+  command: 20.0
+  acceleration: -0.1
+}
+calibration {
+  speed: 9.4
+  command: 22.0
+  acceleration: 0.1
+}
+calibration {
+  speed: 9.4
+  command: 25.0
+  acceleration: 0.38
+}
+calibration {
+  speed: 9.4
+  command: 27.0
+  acceleration: 0.53
+}
+calibration {
+  speed: 9.4
+  command: 30.0
+  acceleration: 0.8
+}
+calibration {
+  speed: 9.4
+  command: 35.0
+  acceleration: 1.38
+}
+calibration {
+  speed: 9.4
+  command: 40.0
+  acceleration: 1.82
+}
+calibration {
+  speed: 9.4
+  command: 45.0
+  acceleration: 2.04
+}
+calibration {
+  speed: 9.4
+  command: 50.0
+  acceleration: 2.28
+}
+calibration {
+  speed: 9.4
+  command: 55.0
+  acceleration: 2.6
+}
+calibration {
+  speed: 9.4
+  command: 60.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 9.4
+  command: 80.0
+  acceleration: 3.02
+}
+calibration {
+  speed: 9.4
+  command: 75.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 9.4
+  command: 70.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 9.4
+  command: 65.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 9.6
+  command: -35.0
+  acceleration: -9.36
+}
+calibration {
+  speed: 9.6
+  command: -33.0
+  acceleration: -7.87
+}
+calibration {
+  speed: 9.6
+  command: -30.0
+  acceleration: -4.56
+}
+calibration {
+  speed: 9.6
+  command: -27.0
+  acceleration: -2.68
+}
+calibration {
+  speed: 9.6
+  command: -25.0
+  acceleration: -1.88
+}
+calibration {
+  speed: 9.6
+  command: -22.0
+  acceleration: -0.73
+}
+calibration {
+  speed: 9.6
+  command: -20.0
+  acceleration: -0.38
+}
+calibration {
+  speed: 9.6
+  command: 15.0
+  acceleration: -0.29
+}
+calibration {
+  speed: 9.6
+  command: -15.0
+  acceleration: -0.28
+}
+calibration {
+  speed: 9.6
+  command: -13.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 9.6
+  command: -17.0
+  acceleration: -0.26
+}
+calibration {
+  speed: 9.6
+  command: 17.0
+  acceleration: -0.2
+}
+calibration {
+  speed: 9.6
+  command: 20.0
+  acceleration: -0.07
+}
+calibration {
+  speed: 9.6
+  command: 22.0
+  acceleration: 0.09
+}
+calibration {
+  speed: 9.6
+  command: 25.0
+  acceleration: 0.34
+}
+calibration {
+  speed: 9.6
+  command: 27.0
+  acceleration: 0.53
+}
+calibration {
+  speed: 9.6
+  command: 30.0
+  acceleration: 0.8
+}
+calibration {
+  speed: 9.6
+  command: 35.0
+  acceleration: 1.36
+}
+calibration {
+  speed: 9.6
+  command: 40.0
+  acceleration: 1.79
+}
+calibration {
+  speed: 9.6
+  command: 45.0
+  acceleration: 2.01
+}
+calibration {
+  speed: 9.6
+  command: 50.0
+  acceleration: 2.25
+}
+calibration {
+  speed: 9.6
+  command: 55.0
+  acceleration: 2.57
+}
+calibration {
+  speed: 9.6
+  command: 60.0
+  acceleration: 2.98
+}
+calibration {
+  speed: 9.6
+  command: 80.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 9.6
+  command: 75.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 9.6
+  command: 70.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 9.6
+  command: 65.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 9.8
+  command: -35.0
+  acceleration: -9.31
+}
+calibration {
+  speed: 9.8
+  command: -33.0
+  acceleration: -7.97
+}
+calibration {
+  speed: 9.8
+  command: -30.0
+  acceleration: -4.51
+}
+calibration {
+  speed: 9.8
+  command: -27.0
+  acceleration: -2.67
+}
+calibration {
+  speed: 9.8
+  command: -25.0
+  acceleration: -1.9
+}
+calibration {
+  speed: 9.8
+  command: -22.0
+  acceleration: -0.73
+}
+calibration {
+  speed: 9.8
+  command: -20.0
+  acceleration: -0.39
+}
+calibration {
+  speed: 9.8
+  command: -14.0
+  acceleration: -0.28
+}
+calibration {
+  speed: 9.8
+  command: -17.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 9.8
+  command: 15.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 9.8
+  command: 17.0
+  acceleration: -0.22
+}
+calibration {
+  speed: 9.8
+  command: 20.0
+  acceleration: -0.13
+}
+calibration {
+  speed: 9.8
+  command: 22.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 9.8
+  command: 25.0
+  acceleration: 0.34
+}
+calibration {
+  speed: 9.8
+  command: 27.0
+  acceleration: 0.5
+}
+calibration {
+  speed: 9.8
+  command: 30.0
+  acceleration: 0.78
+}
+calibration {
+  speed: 9.8
+  command: 35.0
+  acceleration: 1.35
+}
+calibration {
+  speed: 9.8
+  command: 40.0
+  acceleration: 1.76
+}
+calibration {
+  speed: 9.8
+  command: 45.0
+  acceleration: 1.97
+}
+calibration {
+  speed: 9.8
+  command: 50.0
+  acceleration: 2.21
+}
+calibration {
+  speed: 9.8
+  command: 55.0
+  acceleration: 2.55
+}
+calibration {
+  speed: 9.8
+  command: 60.0
+  acceleration: 2.96
+}
+calibration {
+  speed: 9.8
+  command: 80.0
+  acceleration: 2.98
+}
+calibration {
+  speed: 9.8
+  command: 75.0
+  acceleration: 3.15
+}
+calibration {
+  speed: 9.8
+  command: 70.0
+  acceleration: 3.2
+}
+calibration {
+  speed: 9.8
+  command: 65.0
+  acceleration: 3.21
+}
+calibration {
+  speed: 10.0
+  command: -35.0
+  acceleration: -9.18
+}
+calibration {
+  speed: 10.0
+  command: -33.0
+  acceleration: -8.04
+}
+calibration {
+  speed: 10.0
+  command: -30.0
+  acceleration: -4.75
+}
+calibration {
+  speed: 10.0
+  command: -27.0
+  acceleration: -2.65
+}
+calibration {
+  speed: 10.0
+  command: -25.0
+  acceleration: -1.92
+}
+calibration {
+  speed: 10.0
+  command: -22.0
+  acceleration: -0.75
+}
+calibration {
+  speed: 10.0
+  command: -20.0
+  acceleration: -0.36
+}
+calibration {
+  speed: 10.0
+  command: -13.0
+  acceleration: -0.29
+}
+calibration {
+  speed: 10.0
+  command: -15.0
+  acceleration: -0.27
+}
+calibration {
+  speed: 10.0
+  command: 15.0
+  acceleration: -0.25
+}
+calibration {
+  speed: 10.0
+  command: -17.0
+  acceleration: -0.24
+}
+calibration {
+  speed: 10.0
+  command: 17.0
+  acceleration: -0.21
+}
+calibration {
+  speed: 10.0
+  command: 20.0
+  acceleration: -0.08
+}
+calibration {
+  speed: 10.0
+  command: 22.0
+  acceleration: 0.08
+}
+calibration {
+  speed: 10.0
+  command: 25.0
+  acceleration: 0.32
+}
+calibration {
+  speed: 10.0
+  command: 27.0
+  acceleration: 0.49
+}
+calibration {
+  speed: 10.0
+  command: 30.0
+  acceleration: 0.75
+}
+calibration {
+  speed: 10.0
+  command: 35.0
+  acceleration: 1.3
+}
+calibration {
+  speed: 10.0
+  command: 40.0
+  acceleration: 1.71
+}
+calibration {
+  speed: 10.0
+  command: 45.0
+  acceleration: 1.92
+}
+calibration {
+  speed: 10.0
+  command: 50.0
+  acceleration: 2.17
+}
+calibration {
+  speed: 10.0
+  command: 55.0
+  acceleration: 2.53
+}
+calibration {
+  speed: 10.0
+  command: 60.0
+  acceleration: 2.94
+}
+calibration {
+  speed: 10.0
+  command: 80.0
+  acceleration: 2.99
+}
+calibration {
+  speed: 10.0
+  command: 75.0
+  acceleration: 3.14
+}
+calibration {
+  speed: 10.0
+  command: 70.0
+  acceleration: 3.19
+}
+calibration {
+  speed: 10.0
+  command: 65.0
+  acceleration: 3.21
+}

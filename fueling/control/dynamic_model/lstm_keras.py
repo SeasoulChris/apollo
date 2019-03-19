@@ -13,6 +13,9 @@ import h5py
 import numpy as np
 
 from fueling.control.features.parameters_training import dim
+import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
+
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
@@ -71,15 +74,17 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
     model = setup_model(model_name)
     training_history = model.fit(lstm_input_split[0], lstm_output_split[0],
                                  validation_data=(lstm_input_split[1], lstm_output_split[1]),
-                                 epochs=EPOCHS, batch_size=64, verbose=1, shuffle=True)
+                                 epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    # save norm_params to hdf5
-    norms_h5 = os.path.join(out_dir, 'lstm_model_norms_' + timestr + '.h5')
+   # save norm_params to hdf5
+    h5_dir = os.path.join(out_dir, 'h5_model/lstm')
+    model_dir = os.path.join(h5_dir, timestr)
+    file_utils.makedirs(model_dir)
+    norms_h5 = os.path.join(model_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
         h5_file.create_dataset('mean', data=param_norm[0])
         h5_file.create_dataset('std', data=param_norm[1])
-
-    weights_h5 = os.path.join(out_dir, 'lstm_model_weights_' + timestr + '.h5')
+    weights_h5 = os.path.join(model_dir, 'weights.h5')
     model.save(weights_h5)

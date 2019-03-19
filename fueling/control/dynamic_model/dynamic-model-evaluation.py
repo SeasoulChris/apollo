@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 import glob
+import os
 
 import h5py
 import numpy as np
 
-import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
-
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.s3_utils as s3_utils
+import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
 
 
 class DynamicModelEvaluation(BasePipeline):
@@ -15,61 +16,72 @@ class DynamicModelEvaluation(BasePipeline):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
-        # TODO: It's not "dirs".
-        dirs = '/apollo/modules/data/fuel/fueling/control/data/'
-        files = glob.glob(
-            '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/*.h5')
-        h5s = glob.glob('/apollo/modules/data/fuel/fueling/control/data/hdf5_evaluation/*.hdf5')
-        self.model_evalution(files, h5s, dirs)
+        platform_path = '/apollo/modules/data/fuel/testdata/control/learning_based_model/'
+        mlp_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp/*')
+        lstm_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm/*')
+
+        mlp_model_rdd = (
+            # RDD(folder_path) for mlp models
+            self.get_spark_context().parallelize(glob.glob(mlp_model_path))
+            # PairRDD(model_name, folder_path)
+            .keyBy(lambda _: 'mlp'))
+
+        lstm_model_rdd = (
+            # RDD(folder_path) for lstm models
+            self.get_spark_context().parallelize(glob.glob(lstm_model_path))
+            # PairRDD(model_name, folder_path)
+            .keyBy(lambda _: 'lstm'))
+
+        evaluation_dataset = [os.path.join(platform_path, 'hdf5_evaluation/evaluation.hdf5')]
+        # RDD(file_path) for evaluation dataset
+        evaluation_dataset_rdd = self.get_spark_context().parallelize(evaluation_dataset)
+
+        self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
-        dirs = '/mnt/bos/modules/control/'
-        # TODO: Instead of glob, for S3 stroage it's more efficient to list_files and then filter()
-        # by pattern or extension. Check examples in other pipelines.
-        files = glob.glob('/mnt/bos/modules/control/dynamic_model_output/*_model_*.h5')
-        h5s = glob.glob('/mnt/bos/modules/control/feature_extraction_hf5/hdf5_evaluation/*.hdf5')
-        self.model_evalution(files, h5s, dirs)
+        platform_path = '/mnt/bos/modules/control/'
+        bucket = 'apollo-platform'
+        mlp_model_prefix = 'modules/control/dynamic_model_output/h5_model/mlp'
+        lstm_model_prefix = 'modules/control/dynamic_model_output/h5_model/lstm'
+        data_predix = 'modules/control/feature_extraction_hf5/hdf5_evaluation'
 
-    def load_model(self, files, sub_module):
-        return (
-            self.get_spark_context().parallelize(files)  # All the model files
-            .filter(lambda x: sub_module in x)  # Model weights files
-            # TODO: Over length.
-            # TODO: Try to avoid string concatenation and split. Use more sub-folders and
-            # os.path.join which is clearer and safer.
-            .map(lambda x: (self.extract_file_id(x, 'dynamic_model_output/', '_model_' + sub_module + '_'),
-                            self.extract_file_id(x, '_model_' + sub_module + '_', '.h5')))
-            .distinct())
+        mlp_model_rdd = (
+            # RDD(folder_path) for mlp models
+            s3_utils.list_dirs(bucket, mlp_model_prefix)
+            # RDD(absolute_folder_path)
+            .map(s3_utils.abs_path)
+            # PairRDD(model_name, absolute_folder_path)
+            .keyBy(lambda _: 'mlp'))
 
-    def extract_file_id(self, file_name, start_position, end_position):
-        return file_name.split(start_position)[1].split(end_position)[0]
+        lstm_model_rdd = (
+            # RDD(folder_path) for lstm models
+            s3_utils.list_dirs(bucket, lstm_model_prefix)
+            # RDD(absolute_folder_path)
+            .map(s3_utils.abs_path)
+            # PairRDD(model_name, absolute_folder_path)
+            .keyBy(lambda _: 'lstm'))
 
-    def generate_segments(self, h5_file):
-        segments = []
-        # TODO: Use glog.
-        print 'Loading {}'.format(h5_file)
-        with h5py.File(h5_file, 'r+') as fin:
-            segments = [np.array(segment) for segment in fin.values()]
-        print 'Segments count: ', len(segments)
-        return segments
+        evaluation_dataset_rdd = (
+            # RDD(file_path) for evaluation dataset, which starts with data_predix
+            s3_utils.list_files(bucket, data_predix)
+            # RDD(file_path) for evaluation dataset, which ends with 'hdf5'
+            .filter(lambda path: path.endswith('.hdf5'))
+            # RDD(absolute_file_path)
+            .map(s3_utils.abs_path))
 
-    def model_evalution(self, files, h5s, dirs):
-        print ("Files: %s" % files)
-        model_weights = self.load_model(files, 'weights')
-        model_norms = self.load_model(files, 'norms')
+        self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
-        records = (
-            self.get_spark_context().parallelize(h5s)  # All the records for evaluation
-            .map(lambda h5: (self.extract_file_id(h5, '/hdf5_evaluation/', '.hdf5'),
-                             self.generate_segments(h5)))
-            .cache())
-        print('Get {} records'.format(records.count()))
-
-        models = (
-            model_weights
-            .intersection(model_norms)
-            .cartesian(records)
-            .foreach(lambda pairs: trajectory_visualization.evaluate(pairs[0], pairs[1], dirs)))
+    def model_evalution(self, model_rdd, evaluation_dataset_rdd, platform_path):
+        results = (
+            # PairRDD(dynamic_model_name, dynamic_model_path)
+            model_rdd
+            # PairRDD((dynamic_model_name, dynamic_model_path), evaluation_dataset_path)
+            .cartesian(evaluation_dataset_rdd)
+            # Action: call evaluation functions
+            .foreach(lambda model_and_dataset: trajectory_visualization.evaluate(
+                model_and_dataset[0], model_and_dataset[1], platform_path)))
 
 
 if __name__ == '__main__':

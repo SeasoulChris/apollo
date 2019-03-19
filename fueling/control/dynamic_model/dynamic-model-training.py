@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 
 import glob
+import os
 
 from scipy.signal import savgol_filter
 import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
+from fueling.common.base_pipeline import BasePipeline
+from fueling.control.features.parameters_training import dim
 import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
 import fueling.control.dynamic_model.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.mlp_keras as mlp_keras
-from fueling.common.base_pipeline import BasePipeline
-from fueling.control.features.parameters_training import dim
+
 
 # Constants
 DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
@@ -29,42 +31,45 @@ class DynamicModelTraining(BasePipeline):
         BasePipeline.__init__(self, 'dynamic_model')
 
     def run_test(self):
-        h5_rdd = self.get_spark_context().parallelize(
-            glob.glob('/apollo/modules/data/fuel/fueling/control/data/hdf5/*/*/*.hdf5'))
-        output_dir = '/apollo/modules/data/fuel/fueling/control/data/dynamic_model_output/'
-        self.run(h5_rdd, output_dir)
+        data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
+        output_dir = os.path.join(data_dir, 'dynamic_model_output')
+        training_dataset = [os.path.join(data_dir, 'hdf5/training.hdf5')]
+        # RDD(file_path) for training dataset
+        training_dataset_rdd = self.get_spark_context().parallelize(training_dataset)
+        self.run(training_dataset_rdd, output_dir)
 
     def run_prod(self):
         bucket = 'apollo-platform'
         prefix = 'modules/control/feature_extraction_hf5/hdf5_training/transit_2019'
-        h5_rdd = (
-            # file, which starts with the prefix.
+        training_dataset_rdd = (
+            # RDD(file_path) for training dataset, which starts with the prefix.
             s3_utils.list_files(bucket, prefix)
-            # -> file, which ends with 'hdf5'
+            # RDD(file_path) for training dataset, which ends with 'hdf5'
             .filter(lambda path: path.endswith('.hdf5'))
-            # -> file, in absolute path style.
+            # RDD(absolute_file_path)
             .map(s3_utils.abs_path))
         output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
-        self.run(h5_rdd, output_dir)
+        self.run(training_dataset_rdd, output_dir)
 
-    def run(self, h5_rdd, output_dir):
+    def run(self, training_dataset_rdd, output_dir):
         data = (
-            # h5
-            h5_rdd
-            # -> segment
+            # RDD(absolute_file_path)
+            training_dataset_rdd
+            # RDD(training_data_segment)
             .map(self.generate_segment)
-            # -> segment, which is valid
+            # RDD(training_data_segment), which is valid
             .filter(lambda segment: segment is not None)
-            # -> ('mlp_data|lstm_data', (input, output))
+            # RDD('mlp_data|lstm_data', (input, output))
             .flatMap(self.load_data)
-            # -> ('mlp_data|lstm_data', (input, output)), with unique keys.
-            .reduceByKey(lambda value_1, value_2: (np.vstack((value_1[0], value_2[0])),
-                                                   np.vstack((value_1[1], value_2[1]))))
+            # RDD('mlp_data|lstm_data', (input, output)), with unique keys.
+            .reduceByKey(lambda data_1, data_2: (np.vstack((data_1[0], data_2[0])),
+                                                   np.vstack((data_1[1], data_2[1]))))
             .cache())
 
         param_norm = (
+            # RDD('mlp_data', (input, output))
             data.filter(lambda key_value: key_value[0] == 'mlp_data')
-            # -> (mlp_data, param_norm)
+            # RDD('mlp_data', param_norm)
             .mapValues(lambda input_output: self.get_param_norm(input_output[0]))
             # param_norm
             .values()
@@ -145,6 +150,7 @@ class DynamicModelTraining(BasePipeline):
             ("lstm_data", (lstm_input_data, lstm_output_data))
         ]
         return training_data
+
 
 if __name__ == '__main__':
     DynamicModelTraining().run_prod()
