@@ -40,6 +40,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
+        # PairRDD(record_dir, record_files)
         dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -53,74 +54,78 @@ class SampleSetFeatureExtraction(BasePipeline):
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         complete_dirs = files.filter(
             lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
+        # PairRDD(record_dir, record_files)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         root_dir = s3_utils.S3_MOUNT_PATH
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
-        # -> (dir, record), in absolute path
+        
         dir_to_records = (
+            # PairRDD(dir, record)
             dir_to_records_rdd
+            # PairRDD(aboslute_dir, aboslute_path_record)
             .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
             .cache())
 
         selected_vehicles = (
-            # -> (dir, vehicle)
+            # PairRDD(aboslute_dir, vehicle_type)
             feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
-            # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
+            # PairRDD(aboslute_dir, wanted_vehicle_type)
             .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # -> dir
+            # RDD(aboslute_dir) which include records of the wanted vehicle
             .keys())
 
         channels = {record_utils.CHASSIS_CHANNEL,
                     record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
+            # PairRDD(aboslute_path_dir, aboslute_path_record)
+            # which include records of the wanted vehicle
             spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # -> (dir, msg)
+            # PairRDD(dir, msg)
             .flatMapValues(record_utils.read_record(channels))
-            # -> (dir_segment, msg)
+            # PairRDD(dir_segment, msg)
             .map(feature_extraction_utils.gen_pre_segment)
             .cache())
 
         valid_segments = (
             dir_to_msgs
-            # -> (dir_segment, topic_counter)
+            # PairRDD(dir_segment, topic_counter)
             .mapValues(lambda msg: Counter([msg.topic]))
-            # -> (dir_segment, topic_counter)
+            # PairRDD(dir_segment, topic_counter)
             .reduceByKey(operator.add)
-            # -> (dir_segment, topic_counter)
+            # PairRDD(dir_segment, topic_counter)
             .filter(spark_op.filter_value(
                 lambda counter:
                     counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
                     counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
-            # -> dir_segment
+            # RDD(dir_segment)
             .keys())
 
         data_segment_rdd = (
-            # -> ((dir, timestamp_per_min), msg)
+            # PairRDD((dir, timestamp_per_min), msg)
             spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # -> ((dir, timestamp_per_min), msgs)
+            # PairRDD ((dir, timestamp_per_min), msgs)
             .groupByKey()
-            # -> ((dir, timestamp_per_min), proto_dict)
+            # PairRDD((dir, timestamp_per_min), proto_dict)
             .mapValues(record_utils.messages_to_proto_dict())
-            # -> (key, (chassis_list, pose_list))
+            # PairRDD((dir, timestamp_per_min), (chassis_list, pose_list))
             .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
                                            proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            # ->(key,  (paired_pose_chassis))
+            # PairRDD(dir,  (paired_pose_chassis))
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
-            # ->((dir, timestamp_sec), data_point)
+            # PairRDD((dir, timestamp_sec), data_point)
             .map(feature_extraction_utils.get_data_point)
-            # -> ((dir, feature_key), (timestamp_sec, data_point))
+            # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             .map(feature_extraction_utils.feature_key_value)
-            # -> ((dir, feature_key), list of (timestamp_sec, data_point))
+            # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
                           feature_extraction_utils.extend)
-            # -> ((dir, feature_key),segments)
+            # PairRDD((dir, feature_key), segments)
             .mapValues(feature_extraction_utils.gen_segment)
-            # write all segment into a hdf5 file
+            # RDD(dir, feature_key), write all segment into a hdf5 file
             .map(lambda elem: feature_extraction_utils.write_h5_with_key(
                 elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
         glog.info('Finished %d data_segment_rdd!' % data_segment_rdd.count())

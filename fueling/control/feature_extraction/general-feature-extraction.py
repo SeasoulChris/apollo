@@ -41,6 +41,7 @@ class GeneralFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control'
         target_prefix = 'modules/data/fuel/testdata/control/generated'
         root_dir = '/apollo'
+        # PairRDD(record_dir, record_files)
         dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
@@ -52,10 +53,9 @@ class GeneralFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
-        dir_to_records = files.filter(
-            record_utils.is_record_file).keyBy(os.path.dirname)
+        complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        # PairRDD(record_dir, record_files)
+        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         root_dir = s3_utils.S3_MOUNT_PATH
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
@@ -69,8 +69,7 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
             file_utils.makedirs(out_dir)
-            out_file_path = "{}/{}_{}.hdf5".format(
-                out_dir, WANTED_VEHICLE, segment_id)
+            out_file_path = "{}/{}_{}.hdf5".format(out_dir, WANTED_VEHICLE, segment_id)
             with h5py.File(out_file_path, "w") as out_file:
                 i = 0
                 for mini_dataset in self.build_training_dataset(chassis, pose):
@@ -81,52 +80,58 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 
-        # -> (dir, record), in absolute path
-        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1]))).cache()
+        dir_to_records = (
+            # PairRDD(dir, record)
+            dir_to_records_rdd
+            # PairRDD(aboslute_dir, aboslute_path_record)
+            .map(lambda x: (os.path.join(root_dir, x[0]),os.path.join(root_dir, x[1])))
+            .cache())
 
         selected_vehicles = (
-            # -> (dir, vehicle)
+            # PairRDD(aboslute_dir, vehicle_type)
             self.get_vehicle_of_dirs(dir_to_records)
-            # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
+            # PairRDD(aboslute_dir, wanted_vehicle_type)
             .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # -> dir
+            # RDD(aboslute_dir) which include records of the wanted vehicle
             .keys())
 
         channels = {record_utils.CHASSIS_CHANNEL,
                     record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
+            # PairRDD(aboslute_path_dir, aboslute_path_record)
+            # which include records of the wanted vehicle
             spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # -> (dir, msg)
+            # PairRDD(dir, msg)
             .flatMapValues(record_utils.read_record(channels))
-            # -> (dir_segment, msg)
+            # PairRDD((dir_segment, segment_id), msg)
             .map(self.gen_segment)
             .cache())
 
         valid_segments = (
             dir_to_msgs
-            # -> (dir_segment, topic_counter)
+            # PairRDD((dir_segment, segment_id), topic_counter)
             .mapValues(lambda msg: Counter([msg.topic]))
-            # -> (dir_segment, topic_counter)
+            # PairRDD((dir_segment, segment_id), topic_counter)
             .reduceByKey(operator.add)
-            # -> (dir_segment, topic_counter)
+            # PairRDD((dir_segment, segment_id),topic_counter)
             .filter(spark_op.filter_value(
                 lambda counter:
                     counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
                     counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
-            # -> dir_segment
+            # RDD(dir_segment, segment_id)
             .keys())
 
         result = (
-            # -> (dir_segment, msg)
+            # PairRDD((dir_segment, segment_id), msg) to valid segments
             spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # -> (dir_segment, msgs)
+            # PairRDD((dir_segment, segment_id), msgs)
             .groupByKey()
-            # -> (dir_segment, proto_dict)
+            # PairRDD((dir_segment, segment_id), proto_dict)
             .mapValues(record_utils.messages_to_proto_dict())
-            # -> (dir_segment, (chassis_list, pose_list))
+            # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
             .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
                                            proto_dict[record_utils.LOCALIZATION_CHANNEL]))
+            # RDD((dir_segment, segment_id), (chassis_list, pose_list)), write all segment into a hdf5 file
             .map(_gen_hdf5))
         glog.info('Generated %d h5 files!' % result.count())
 

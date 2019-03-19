@@ -14,21 +14,21 @@ import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
-def choose_data_file(elem, vehicle_type, brake_or_throttle, train_or_test):
+def choose_data_file(hdf5_folder, vehicle_type, brake_or_throttle, train_or_test):
     # TODO: Not record_dir.
-    record_dir = elem[0]
+    hdf5_dir = hdf5_folder[0]
     hdf5_file = glob.glob(
         # TODO: Please write detailed document under control/calibration_table, about the file tree
         # structure. As the logic has really strict requirement on how the data is organized.
-        '{}/{}/{}/{}/*.hdf5'.format(record_dir, vehicle_type, brake_or_throttle, train_or_test))
-    return (elem[0], hdf5_file)
+        '{}/{}/{}/{}/*.hdf5'.format(hdf5_dir, vehicle_type, brake_or_throttle, train_or_test))
+    return (hdf5_folder[0], hdf5_file)
 
 
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
         # TODO: Use glog.
-        print('Loading {}'.format(h5))
+        glog.info('Loading %s' % str(h5))
         # TODO: Avoid single-char variable name.
         with h5py.File(h5, 'r+') as f:
             # TODO: Simplify the logic: segments = [np.array(segment) for segment in f.itervalues()]

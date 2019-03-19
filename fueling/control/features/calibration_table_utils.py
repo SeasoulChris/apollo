@@ -12,7 +12,7 @@ import common.proto_utils as proto_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 
 from fueling.control.features.filters import Filters
-from fueling.control.proto.calibration_table_pb2 import calibrationTable
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
