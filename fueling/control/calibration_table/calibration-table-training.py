@@ -62,10 +62,10 @@ class CalibrationTableTraining(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/']
+        records = ['modules/data/fuel/testdata/control/calibration_table']
 
-        origin_prefix = 'modules/data/fuel/testdata/control'
-        target_prefix = 'modules/data/fuel/testdata/control/generated'
+        origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
+        target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
         root_dir = '/apollo'
         dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)

@@ -19,8 +19,7 @@ class CalTabFeatureExtPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        folder_path = ["/apollo/modules/data/fuel/testdata/control/transient_1",
-                       '/apollo/modules/data/fuel/testdata/control/mkz7_s/']
+        folder_path = ["/apollo/modules/data/fuel/testdata/control/transient_1"]
 
         spark_context = self.get_spark_context()
         records_rdd = spark_context.parallelize(folder_path)

@@ -29,10 +29,10 @@ class CalTabFeatureExt(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/transit/1.record.00000']
+        records = ['modules/data/fuel/testdata/control/calibration_table/transit/1.record.00000']
 
-        origin_prefix = 'modules/data/fuel/testdata/control'
-        target_prefix = 'modules/data/fuel/testdata/control/generated'
+        origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
+        target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
         root_dir = '/apollo'
         dir_to_records = self.get_spark_context().parallelize(
             records).keyBy(os.path.dirname)
