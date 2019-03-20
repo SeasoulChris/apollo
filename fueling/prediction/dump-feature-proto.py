@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import glob
 import operator
 import os
 
@@ -61,8 +62,8 @@ class DumpFeatureProto(BasePipeline):
     @staticmethod
     def process_dir(src_dir, target_dir):
         """Call prediction C++ code."""
-        # TODO(kechxu) use /apollo/hmi/status's current_map entry to match map info
-        map_dir = "san_mateo"
+        # use /apollo/hmi/status's current_map entry to match map info
+        map_dir = get_map_name_from_records(src_dir)
         command = (
             'cd /apollo && '
             'bash modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
@@ -74,6 +75,22 @@ class DumpFeatureProto(BasePipeline):
             glog.error('Failed to process {} to {}'.format(src_dir, target_dir))
         return 0
 
+
+def get_map_name_from_records(records_dir):
+    """Get the map_name from a records_dir by /apollo/hmi/status channel"""
+    map_list = os.listdir('/apollo/modules/map/data/')
+    # get the map_dict mapping follow the hmi Titlecase. E.g.: "Hello World" -> "hello_world".
+    map_dict = {map_name.replace('_', ' ').title(): map_name for map_name in map_list}
+    reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
+    glog.info('Try getting map name from {}'.format(records_dir))
+    records = glob.glob(os.path.join(records_dir,'*.record*'))
+    for record in records:
+        for msg in reader(record):
+            hmi_status = record_utils.message_to_proto(msg)
+            map_name = map_dict[str(hmi_status.current_map)]
+            glog.info('Get map name "{}" from record {}'.format(map_name, record))
+            return map_name
+    glog.error('Failed to get map_name')
 
 if __name__ == '__main__':
     DumpFeatureProto().run_prod()
