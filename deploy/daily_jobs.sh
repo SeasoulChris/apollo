@@ -6,6 +6,8 @@ function Run() {
   # Fail on first error.
   set -e
 
+  git pull
+
   # 1. Generate small records.
   JOB="fueling/data/pipelines/generate-small-records.py"
   ENV="fuel-py27-cyber"
