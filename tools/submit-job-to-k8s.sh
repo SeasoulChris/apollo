@@ -101,5 +101,6 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
+    --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD=apollo-k8s-secret:email-passwd \
 \
     "${REMOTE_JOB_FILE}"
