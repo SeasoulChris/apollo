@@ -7,20 +7,19 @@ import os
 
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
-import fueling.common.colored_glog as glog
-import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-import fueling.control.features.calibration_table_utils as calibration_table_utils
-from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 import common.proto_utils as proto_utils
 
-# WANTED_VEHICLE = 'Transit'
+from fueling.common.base_pipeline import BasePipeline
+import fueling.common.colored_glog as glog
+import fueling.common.record_utils as record_utils
+import fueling.common.s3_utils as s3_utils
+import fueling.control.features.calibration_table_utils as calibration_table_utils
+import fueling.control.features.feature_extraction_utils as feature_extraction_utils
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 
+# WANTED_VEHICLE = 'Transit'
 WANTED_VEHICLE = calibration_table_utils.CALIBRATION_TABLE_CONF.vehicle_type
 MIN_MSG_PER_SEGMENT = 1
-
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -30,10 +29,10 @@ class CalibrationTableFeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         records = ['modules/data/fuel/testdata/control/calibration_table/transit/1.record.00000']
-
         origin_prefix = 'modules/data/fuel/testdata/control/calibration_table/'
         target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
         root_dir = '/apollo'
+        # PairRDD(record_dir, record_files)
         dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
@@ -44,34 +43,40 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'small-records/2019/'
         target_prefix = 'modules/control/feature_extraction_hf5/2019/'
         root_dir = s3_utils.S3_MOUNT_PATH
-
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        # PairRDD(record_dir, record_files)
         dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
-        # -> (dir, record), in absolute path
-        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1]))).cache()
+        # PairRDD(dir, record), in absolute path
+        dir_to_records = (
+            # PairRDD(dir, record)
+            dir_to_records_rdd
+            # PairRDD(aboslute_dir, aboslute_path_record)
+            .map(lambda x: (os.path.join(root_dir, x[0]),os.path.join(root_dir, x[1])))
+            .cache())
 
         selected_vehicles = (
-            # -> (dir, vehicle)
+            # PairRDD(aboslute_dir, vehicle_type)
             feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
-            # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
+            # PairRDD(aboslute_dir, wanted_vehicle_type)
             .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # -> dir
+            # RDD(aboslute_dir) which include records of the wanted vehicle
             .keys())
 
         channels = {record_utils.CHASSIS_CHANNEL,
                     record_utils.LOCALIZATION_CHANNEL}
         dir_to_msgs = (
+            # PairRDD(aboslute_path_dir, aboslute_path_record)
+            # which include records of the wanted vehicle
             spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # -> (dir, msg)
+            # PairRDD(dir, msg)
             .flatMapValues(record_utils.read_record(channels))
-            # -> (dir_segment, msg)
+            # PairRDD(dir_segment, msg)
             .map(feature_extraction_utils.gen_pre_segment)
             .cache())
 

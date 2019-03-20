@@ -12,11 +12,13 @@ import glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
+channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 MIN_MSG_PER_SEGMENT = 100
 
@@ -63,58 +65,14 @@ class SampleSetFeatureExtraction(BasePipeline):
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
         
-        dir_to_records = (
-            # PairRDD(dir, record)
-            dir_to_records_rdd
-            # PairRDD(aboslute_dir, aboslute_path_record)
-            .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1])))
-            .cache())
-
-        selected_vehicles = (
-            # PairRDD(aboslute_dir, vehicle_type)
-            feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
-            # PairRDD(aboslute_dir, wanted_vehicle_type)
-            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # RDD(aboslute_dir) which include records of the wanted vehicle
-            .keys())
-
-        channels = {record_utils.CHASSIS_CHANNEL,
-                    record_utils.LOCALIZATION_CHANNEL}
-        dir_to_msgs = (
-            # PairRDD(aboslute_path_dir, aboslute_path_record)
-            # which include records of the wanted vehicle
-            spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # PairRDD(dir, msg)
-            .flatMapValues(record_utils.read_record(channels))
-            # PairRDD(dir_segment, msg)
-            .map(feature_extraction_utils.gen_pre_segment)
-            .cache())
-
-        valid_segments = (
-            dir_to_msgs
-            # PairRDD(dir_segment, topic_counter)
-            .mapValues(lambda msg: Counter([msg.topic]))
-            # PairRDD(dir_segment, topic_counter)
-            .reduceByKey(operator.add)
-            # PairRDD(dir_segment, topic_counter)
-            .filter(spark_op.filter_value(
-                lambda counter:
-                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
-                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
-            # RDD(dir_segment)
-            .keys())
+        # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
+        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
+                                          channels, MIN_MSG_PER_SEGMENT)
 
         data_segment_rdd = (
-            # PairRDD((dir, timestamp_per_min), msg)
-            spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # PairRDD ((dir, timestamp_per_min), msgs)
-            .groupByKey()
-            # PairRDD((dir, timestamp_per_min), proto_dict)
-            .mapValues(record_utils.messages_to_proto_dict())
-            # PairRDD((dir, timestamp_per_min), (chassis_list, pose_list))
-            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
-                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            # PairRDD(dir,  (paired_pose_chassis))
+            # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
+            parsed_msgs
+            # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # PairRDD((dir, timestamp_sec), data_point)
             .map(feature_extraction_utils.get_data_point)
