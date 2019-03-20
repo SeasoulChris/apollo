@@ -42,11 +42,10 @@ def send_email(title, title_color, content, receivers=None):
     4. receivers, recepients of the notification. Default should be a group account, but can also
        be specified explicitly.
     """
-    host = 'email.baidu.com'
-    port = 25
+    host = 'smtp.office365.com'
+    port = 587
     subject = 'Apollo data pipeline job status'
-    # TODO: Change to usa-data@baidu.com once get the service account approval
-    from_addr = 'apollo-uploading@baidu.com'
+    from_addr = 'apollo-data-pipeline@outlook.com'
     mail_passwd = os.environ.get('APOLLO_EMAIL_PASSWD')
     if mail_passwd is None:
         glog.error('No credential provided to send emails.')
@@ -61,7 +60,6 @@ def send_email(title, title_color, content, receivers=None):
         glog.error('accessing email server failed with error: {}'.format(str(ex)))
         return
 
-    # TODO: create and apply this group account
     to_addrs = receivers if receivers is not None else 'apollo-data-pipeline@baidu.com'
     message = MIMEMultipart('alternative')
     html_page = MIMEText(get_html_content(title, title_color, content), 'html')
