@@ -130,3 +130,20 @@ def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
                 result[topic] = sorted(protos, key=lambda proto: proto.header.timestamp_sec)
         return result
     return converter_func
+
+def get_map_name_from_records(records_dir):
+    """Get the map_name from a records_dir by /apollo/hmi/status channel"""
+    map_list = os.listdir('/apollo/modules/map/data/')
+    # get the map_dict mapping follow the hmi Titlecase. E.g.: "Hello World" -> "hello_world".
+    map_dict = {map_name.replace('_', ' ').title(): map_name for map_name in map_list}
+    reader = read_record([HMI_STATUS_CHANNEL])
+    glog.info('Try getting map name from {}'.format(records_dir))
+    records = [os.path.join(records_dir, filename) for filename in os.listdir(records_dir)
+                                                   if is_record_file(filename)]
+    for record in records:
+        for msg in reader(record):
+            hmi_status = message_to_proto(msg)
+            map_name = map_dict[str(hmi_status.current_map)]
+            glog.info('Get map name "{}" from record {}'.format(map_name, record))
+            return map_name
+    glog.error('Failed to get map_name')
