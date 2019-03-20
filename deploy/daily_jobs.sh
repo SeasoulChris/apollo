@@ -15,10 +15,9 @@ function Run() {
 }
 
 function Help() {
-  # Note that the server is in UTC time.
   echo "Add this to 'crontab -e':"
   #     m h
-  echo "0 10 * * * $(realpath "${BASH_SOURCE[0]}") run"
+  echo "0 3 * * * $(realpath "${BASH_SOURCE[0]}") run"
 }
 
 if [ "$1" = "run" ]; then
