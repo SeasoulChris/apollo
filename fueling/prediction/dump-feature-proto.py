@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import glob
 import operator
 import os
 
@@ -34,7 +33,7 @@ class DumpFeatureProto(BasePipeline):
         target_prefix = 'modules/prediction/labels-san-mateo/'
 
         records_dir = (
-            # file, start with origin_prefix
+            # RDD(file), start with origin_prefix
             s3_utils.list_files(bucket, origin_prefix)
             # RDD(record_file)
             .filter(record_utils.is_record_file)
