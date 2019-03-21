@@ -6,6 +6,8 @@ import os
 
 import pyspark_utils.op as spark_op
 
+from prediction.data_pipelines.common.online_to_offline import LabelGenerator
+
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
@@ -13,7 +15,7 @@ import fueling.common.s3_utils as s3_utils
 
 
 class GenerateLabels(BasePipeline):
-    """Records to DataForLearning proto pipeline."""
+    """Records to GenerateLabels proto pipeline."""
     def __init__(self):
         BasePipeline.__init__(self, 'generate-labels')
 
@@ -56,14 +58,13 @@ class GenerateLabels(BasePipeline):
     @staticmethod
     def process_file(src_file):
         """Call prediction python code to generate labels."""
-        command = (
-            'cd /apollo && '
-            'bash modules/tools/prediction/data_pipelines/scripts/generate_labels.sh '
-            '"{}"'.format(src_file))
-        if os.system(command) == 0:
-            glog.info('Successfuly processed {}'.format(src_file))
+        label_gen = LabelGenerator()
+        try:
+            label_gen.LoadFeaturePBAndSaveLabelFiles(src_file)
+            label_gen.Label()
+            glog.info('Successfuly labeled {}'.format(src_file))
             return 1
-        else:
+        except:
             glog.error('Failed to process {}'.format(src_file))
         return 0
 
