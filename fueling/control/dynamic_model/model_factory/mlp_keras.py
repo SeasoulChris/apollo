@@ -17,7 +17,7 @@ import google.protobuf.text_format as text_format
 import h5py
 import numpy as np
 
-from fueling.control.features.parameters_training import dim
+from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
@@ -42,11 +42,9 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = dim["pose"] + dim["incremental"] + dim["control"]  # accounts for mps
-DIM_OUTPUT = dim["incremental"]  # the speed mps is also output
-INPUT_FEATURES = ["speed mps", "speed incremental",
-                  "angular incremental", "throttle", "brake", "steering"]
-TIME_STEPS = 3
+DIM_INPUT = feature_config["input_dim"]
+DIM_OUTPUT = feature_config["output_dim"]
+EPOCHS = mlp_model_config["epochs"]
 
 
 def setup_model(model_name):
@@ -106,10 +104,10 @@ def save_model(model, param_norm, filename):
 
 
 def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
-    x_data = (x_data - param_norm[0]) / param_norm[1]
-    x_data = x_data[:, [0, 1, 3, 4, 5]]
-    y_data[:, 0] = (y_data[:, 0] - param_norm[0][1]) / param_norm[1][1]
-    y_data[:, 1] = (y_data[:, 1] - param_norm[0][2]) / param_norm[1][2]
+    in_param_norm = param_norm[0]
+    out_param_norm = param_norm[1]
+    x_data = (x_data - in_param_norm[0]) / in_param_norm[1]
+    y_data = (y_data - out_param_norm[0]) / out_param_norm[1]
     glog.info("x shape = {}, y shape = {}".format(x_data.shape, y_data.shape))
 
     x_train, x_test, y_train, y_test = train_test_split(x_data, y_data,
@@ -117,20 +115,27 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model(model_name)
-    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=10, batch_size=32, verbose=2)
+    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS, batch_size=32, verbose=2)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    '''
     bin_dir = os.path.join(out_dir, 'binary_model')
     model_bin = os.path.join(bin_dir, 'mlp_model_' + timestr + '.bin')
     save_model(model, param_norm, model_bin)
+    '''
 
-   # save norm_params to hdf5
+   # save norm_params and model_weights to hdf5
     h5_dir = os.path.join(out_dir, 'h5_model/mlp')
     model_dir = os.path.join(h5_dir, timestr)
     file_utils.makedirs(model_dir)
+
     norms_h5 = os.path.join(model_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
-        h5_file.create_dataset('mean', data=param_norm[0])
-        h5_file.create_dataset('std', data=param_norm[1])
+        h5_file.create_dataset('input_mean', data=in_param_norm[0])
+        h5_file.create_dataset('input_std', data=in_param_norm[1])
+        h5_file.create_dataset('output_mean', data=out_param_norm[0])
+        h5_file.create_dataset('output_std', data=out_param_norm[1])
+
     weights_h5 = os.path.join(model_dir, 'weights.h5')
     model.save(weights_h5)

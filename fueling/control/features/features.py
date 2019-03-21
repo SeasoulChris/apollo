@@ -21,7 +21,8 @@ def GetDatapoints(pose_slice, cs_slice):
         pose = pose_slice[i].pose
         chassis = cs_slice[i]
         out[i] = np.array([
-            pose.heading - 0.11,  # 0
+            # TODO: need to load IMU compensation from file
+            pose.heading,  # 0
             pose.orientation.qx,  # 1
             pose.orientation.qy,  # 2
             pose.orientation.qz,  # 3

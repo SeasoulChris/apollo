@@ -8,7 +8,7 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.s3_utils as s3_utils
-import fueling.control.offline_evaluator.trajectory_visualization as trajectory_visualization
+import fueling.control.dynamic_model.offline_evaluator.model_evaluator as evaluator
 
 
 class DynamicModelEvaluation(BasePipeline):
@@ -80,7 +80,7 @@ class DynamicModelEvaluation(BasePipeline):
             # PairRDD((dynamic_model_name, dynamic_model_path), evaluation_dataset_path)
             .cartesian(evaluation_dataset_rdd)
             # Action: call evaluation functions
-            .foreach(lambda model_and_dataset: trajectory_visualization.evaluate(
+            .foreach(lambda model_and_dataset: evaluator.evaluate(
                 model_and_dataset[0], model_and_dataset[1], platform_path)))
 
 
