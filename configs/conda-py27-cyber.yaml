@@ -15,6 +15,7 @@ dependencies:
   - pymongo
 
   # Other.
+  - opencv
   - termcolor
 
   - pip:
