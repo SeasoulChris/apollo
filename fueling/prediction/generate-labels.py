@@ -15,22 +15,22 @@ import fueling.common.s3_utils as s3_utils
 class GenerateLabels(BasePipeline):
     """Records to DataForLearning proto pipeline."""
     def __init__(self):
-        BasePipeline.__init__(self, 'generate-labels-san-mateo')
+        BasePipeline.__init__(self, 'generate-labels')
 
     def run_test(self):
         """Run test."""
         sc = self.get_spark_context()
         root_dir = '/apollo'
         # RDD(bin_files)
-        bin_files = sc.parallelize(glob.glob('/apollo/data/prediction/labels-san-mateo/*'))
-        source_prefix = 'data/prediction/labels-san-mateo/'
+        bin_files = sc.parallelize(glob.glob('/apollo/data/prediction/labels/*/*'))
+        source_prefix = 'data/prediction/labels/'
         self.run(root_dir, bin_files)
 
     def run_prod(self):
         """Run prod."""
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
-        source_prefix = 'modules/prediction/labels-san-mateo/'
+        source_prefix = 'modules/prediction/labels/'
 
         bin_files  = (
             # RDD(file), start with source_prefix

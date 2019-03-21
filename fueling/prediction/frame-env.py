@@ -13,7 +13,7 @@ import fueling.common.s3_utils as s3_utils
 class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
     def __init__(self):
-        BasePipeline.__init__(self, 'frame-env-san-mateo')
+        BasePipeline.__init__(self, 'frame-env')
 
     def run_test(self):
         """Run test."""
@@ -22,7 +22,7 @@ class FrameEnv(BasePipeline):
         # RDD(dir_path)
         records_dir = sc.parallelize(['docs/demo_guide'])
         origin_prefix = 'docs/demo_guide'
-        target_prefix = 'data/prediction/features-san-mateo'
+        target_prefix = 'data/prediction/features'
         self.run(root_dir, records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -30,7 +30,7 @@ class FrameEnv(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/'
-        target_prefix = 'modules/prediction/features-san-mateo/'
+        target_prefix = 'modules/prediction/features/'
 
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -64,6 +64,7 @@ class FrameEnv(BasePipeline):
         """Call prediction C++ code to get frame-environments."""
         # use /apollo/hmi/status's current_map entry to match map info
         map_dir = record_utils.get_map_name_from_records(src_dir)
+        target_dir = os.path.join(target_dir, map_dir)
         command = (
             'cd /apollo && '
             'bash modules/tools/prediction/data_pipelines/scripts/records_to_frame_env.sh '
