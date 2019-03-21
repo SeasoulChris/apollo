@@ -11,6 +11,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
+from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -18,6 +19,7 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
+channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.WANTED_VEHICLE
 MIN_MSG_PER_SEGMENT = 100
 
@@ -80,59 +82,14 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 
-        dir_to_records = (
-            # PairRDD(dir, record)
-            dir_to_records_rdd
-            # PairRDD(aboslute_dir, aboslute_path_record)
-            .map(lambda x: (os.path.join(root_dir, x[0]),os.path.join(root_dir, x[1])))
-            .cache())
-
-        selected_vehicles = (
-            # PairRDD(aboslute_dir, vehicle_type)
-            self.get_vehicle_of_dirs(dir_to_records)
-            # PairRDD(aboslute_dir, wanted_vehicle_type)
-            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # RDD(aboslute_dir) which include records of the wanted vehicle
-            .keys())
-
-        channels = {record_utils.CHASSIS_CHANNEL,
-                    record_utils.LOCALIZATION_CHANNEL}
-        dir_to_msgs = (
-            # PairRDD(aboslute_path_dir, aboslute_path_record)
-            # which include records of the wanted vehicle
-            spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # PairRDD(dir, msg)
-            .flatMapValues(record_utils.read_record(channels))
-            # PairRDD((dir_segment, segment_id), msg)
-            .map(self.gen_segment)
-            .cache())
-
-        valid_segments = (
-            dir_to_msgs
-            # PairRDD((dir_segment, segment_id), topic_counter)
-            .mapValues(lambda msg: Counter([msg.topic]))
-            # PairRDD((dir_segment, segment_id), topic_counter)
-            .reduceByKey(operator.add)
-            # PairRDD((dir_segment, segment_id),topic_counter)
-            .filter(spark_op.filter_value(
-                lambda counter:
-                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
-                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
-            # RDD(dir_segment, segment_id)
-            .keys())
-
+        # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))    
+        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
+                                          channels, MIN_MSG_PER_SEGMENT)
         result = (
-            # PairRDD((dir_segment, segment_id), msg) to valid segments
-            spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # PairRDD((dir_segment, segment_id), msgs)
-            .groupByKey()
-            # PairRDD((dir_segment, segment_id), proto_dict)
-            .mapValues(record_utils.messages_to_proto_dict())
-            # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
-                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            # RDD((dir_segment, segment_id), (chassis_list, pose_list)), write all segment into a hdf5 file
-            .map(_gen_hdf5))
+             parsed_msgs
+             # RDD((dir_segment, segment_id), (chassis_list, pose_list))
+             # write all segment into a hdf5 file
+             .map(_gen_hdf5))
         glog.info('Generated %d h5 files!' % result.count())
 
     @staticmethod
@@ -156,13 +113,13 @@ class GeneralFeatureExtraction(BasePipeline):
             return ''
         return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
 
-    @staticmethod
-    def gen_segment(dir_to_msg):
-        """Generate new key which contains a segment id part."""
-        task_dir, msg = dir_to_msg
-        dt = time_utils.msg_time_to_datetime(msg.timestamp)
-        segment_id = dt.strftime('%Y%m%d-%H%M')
-        return ((task_dir, segment_id), msg)
+    # @staticmethod
+    # def gen_segment(dir_to_msg):
+    #     """Generate new key which contains a segment id part."""
+    #     task_dir, msg = dir_to_msg
+    #     dt = time_utils.msg_time_to_datetime(msg.timestamp)
+    #     segment_id = dt.strftime('%Y%m%d-%H%M')
+    #     return ((task_dir, segment_id), msg)
 
     @staticmethod
     def build_training_dataset(chassis, pose):
