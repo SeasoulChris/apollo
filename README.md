@@ -7,8 +7,9 @@
    ```text
    - workspace
               | - apollo
-              | - apollo-fuel
+              | - apollo-fuel      # Mounted as /apollo/modules/data/fuel
               | - apollo-internal
+              | - apollo-prophet   # Mounted as /apollo/modules/data/prophet
               | - apollo-spark (If you will run pipeline in cloud by yourself)
               | - replay-engine
    ```

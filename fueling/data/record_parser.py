@@ -1,24 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
-###############################################################################
-# Copyright 2018 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
 """
 Parse Cyber record into apollo.data.Record.
 
-Use as command tool: parse_record.py <record>
+Use as command tool: record_parser.py <record>
 Use as util lib:     RecordParser.Parse(<record>)
 """
 
@@ -36,22 +21,19 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.data.proto.record_pb2 import Record
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+import fueling.common.colored_glog as glog
+import fueling.common.record_utils as record_utils
+
+
 gflags.DEFINE_float('pos_sample_min_duration', 2, 'In seconds.')
 gflags.DEFINE_float('pos_sample_min_distance', 3, 'In meters.')
 gflags.DEFINE_integer('utm_zone_id', 10, 'UTM zone id.')
 gflags.DEFINE_string('utm_zone_letter', 'S', 'UTM zone letter.')
 
-kChassisChannel = '/apollo/canbus/chassis'
-kDriveEventChannel = '/apollo/drive_event'
-kHMIStatusChannel = '/apollo/hmi/status'
-kLocalizationChannel = '/apollo/localization/pose'
 
-
-def utm_distance_meters(pos0, pos1):
+def utm_distance_m(pos0, pos1):
     """Return distance of pos0 and pos1 in meters."""
-    return math.sqrt((pos0.x - pos1.x) ** 2 +
-                     (pos0.y - pos1.y) ** 2 +
-                     (pos0.z - pos1.z) ** 2)
+    return math.sqrt((pos0.x - pos1.x) ** 2 + (pos0.y - pos1.y) ** 2 + (pos0.z - pos1.z) ** 2)
 
 
 class RecordParser(object):
@@ -94,15 +76,15 @@ class RecordParser(object):
 
     def ParseMessages(self):
         """Process all messages."""
+        PROCESSORS = {
+            record_utils.CHASSIS_CHANNEL: self.ProcessChassis,
+            record_utils.DRIVE_EVENT_CHANNEL: self.ProcessDriveEvent,
+            record_utils.HMI_STATUS_CHANNEL: self.ProcessHMIStatus,
+            record_utils.LOCALIZATION_CHANNEL: self.ProcessLocalization,
+        }
         for channel, msg, _type, timestamp in self._reader.read_messages():
-            if channel == kHMIStatusChannel:
-                self.ProcessHMIStatus(msg)
-            elif channel == kDriveEventChannel:
-                self.ProcessDriveEvent(msg)
-            elif channel == kChassisChannel:
-                self.ProcessChassis(msg)
-            elif channel == kLocalizationChannel:
-                self.ProcessLocalization(msg)
+            processor = PROCESSORS.get(channel)
+            processor(msg) if processor else None
 
     def ProcessHMIStatus(self, msg):
         """Save HMIStatus."""
@@ -128,10 +110,8 @@ class RecordParser(object):
             glog.info('Disengagement found at', timestamp)
             disengagement = self.record.disengagements.add(time=timestamp)
             if self._last_position is not None:
-                lat, lon = utm.to_latlon(self._last_position.x,
-                                         self._last_position.y,
-                                         gflags.FLAGS.utm_zone_id,
-                                         gflags.FLAGS.utm_zone_letter)
+                lat, lon = utm.to_latlon(self._last_position.x, self._last_position.y,
+                                         gflags.FLAGS.utm_zone_id, gflags.FLAGS.utm_zone_letter)
                 disengagement.location.lat = lat
                 disengagement.location.lon = lon
         # Update DrivingMode.
@@ -145,10 +125,9 @@ class RecordParser(object):
         cur_pos = localization.pose.position
 
         # Stat mileages.
-        if (self._last_position is not None and
-            self._current_driving_mode is not None):
+        if self._last_position is not None and self._current_driving_mode is not None:
             driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
-            meters = utm_distance_meters(self._last_position, cur_pos)
+            meters = utm_distance_m(self._last_position, cur_pos)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
             else:
@@ -157,14 +136,11 @@ class RecordParser(object):
         # Sample driving path.
         G = gflags.FLAGS
         if (self._last_position_sampled is None or
-            (timestamp - self._last_position_sampled_time >
-                 G.pos_sample_min_duration and
-             utm_distance_meters(self._last_position_sampled, cur_pos) >
-                 G.pos_sample_min_distance)):
+            (timestamp - self._last_position_sampled_time > G.pos_sample_min_duration and
+             utm_distance_m(self._last_position_sampled, cur_pos) > G.pos_sample_min_distance)):
             self._last_position_sampled = cur_pos
             self._last_position_sampled_time = timestamp
-            lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y,
-                                     G.utm_zone_id, G.utm_zone_letter)
+            lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, G.utm_zone_id, G.utm_zone_letter)
             self.record.stat.driving_path.add(lat=lat, lon=lon)
         # Update position.
         self._last_position = cur_pos
@@ -173,4 +149,4 @@ class RecordParser(object):
 if __name__ == '__main__':
     gflags.FLAGS(sys.argv)
     if len(sys.argv) > 0:
-        print RecordParser.Parse(sys.argv[-1])
+        print(RecordParser.Parse(sys.argv[-1]))

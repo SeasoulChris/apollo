@@ -15,6 +15,7 @@ dependencies:
   - keras
   - matplotlib
   - numpy
+  - pymongo
   - scikit-learn
 
   # Other.
@@ -23,3 +24,4 @@ dependencies:
   - pip:
     - pylint
     - pyspark-utils
+    - utm

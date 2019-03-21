@@ -17,6 +17,7 @@ import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
 CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
+DRIVE_EVENT_CHANNEL =              '/apollo/drive_event'
 HMI_STATUS_CHANNEL =               '/apollo/hmi/status'
 LOCALIZATION_CHANNEL =             '/apollo/localization/pose'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
