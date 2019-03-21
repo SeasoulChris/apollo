@@ -65,6 +65,7 @@ class GenerateSmallRecords(BasePipeline):
         """Run test."""
         sc = self.get_spark_context()
         root_dir = '/apollo'
+        # RDD(record_path)
         records_rdd = sc.parallelize(['docs/demo_guide/demo_3.5.record'])
         # RDD(dir_path)
         whitelist_dirs_rdd = sc.parallelize(['docs/demo_guide'])

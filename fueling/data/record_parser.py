@@ -12,15 +12,13 @@ import os
 import sys
 
 import gflags
-import glog
 import utm
 
-from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
-from modules.data.proto.record_pb2 import Record
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 
@@ -51,7 +49,7 @@ class RecordParser(object):
     def __init__(self, record_file):
         """Init input reader and output record."""
         record_file = os.path.abspath(record_file)
-        self.record = Record(path=record_file, dir=os.path.dirname(record_file))
+        self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
 
         self._reader = RecordReader(record_file)
         # State during processing messages.
