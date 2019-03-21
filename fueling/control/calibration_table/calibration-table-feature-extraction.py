@@ -10,6 +10,7 @@ import pyspark_utils.op as spark_op
 import common.proto_utils as proto_utils
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
@@ -17,6 +18,7 @@ import fueling.control.features.calibration_table_utils as calibration_table_uti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 
+channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
 # WANTED_VEHICLE = 'Transit'
 WANTED_VEHICLE = calibration_table_utils.CALIBRATION_TABLE_CONF.vehicle_type
 MIN_MSG_PER_SEGMENT = 1
@@ -52,77 +54,27 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
-        # PairRDD(dir, record), in absolute path
-        dir_to_records = (
-            # PairRDD(dir, record)
-            dir_to_records_rdd
-            # PairRDD(aboslute_dir, aboslute_path_record)
-            .map(lambda x: (os.path.join(root_dir, x[0]),os.path.join(root_dir, x[1])))
-            .cache())
-
-        selected_vehicles = (
-            # PairRDD(aboslute_dir, vehicle_type)
-            feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
-            # PairRDD(aboslute_dir, wanted_vehicle_type)
-            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
-            # RDD(aboslute_dir) which include records of the wanted vehicle
-            .keys())
-
-        channels = {record_utils.CHASSIS_CHANNEL,
-                    record_utils.LOCALIZATION_CHANNEL}
-        dir_to_msgs = (
-            # PairRDD(aboslute_path_dir, aboslute_path_record)
-            # which include records of the wanted vehicle
-            spark_op.filter_keys(dir_to_records, selected_vehicles)
-            # PairRDD(dir, msg)
-            .flatMapValues(record_utils.read_record(channels))
-            # PairRDD(dir_segment, msg)
-            .map(feature_extraction_utils.gen_pre_segment)
-            .cache())
-
-        valid_segments = (
-            dir_to_msgs
-            # -> (dir_segment, topic_counter)
-            .mapValues(lambda msg: Counter([msg.topic]))
-            # -> (dir_segment, topic_counter)
-            .reduceByKey(operator.add)
-            # -> (dir_segment, topic_counter)
-            .filter(spark_op.filter_value(
-                lambda counter:
-                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
-                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
-            # -> dir_segment
-            .keys())
-
-        data_rdd = (
-            # (dir_segment, msg)
-            spark_op.filter_keys(dir_to_msgs, valid_segments)
-            # -> (dir_segment, msgs)
-            .groupByKey()
-            # -> (dir_segment, proto_dict)
-            .mapValues(record_utils.messages_to_proto_dict())
-            # -> (dir_segment, (chassis_list, pose_list))
-            .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
-                                           proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            # -> (dir_segment, (chassis, pose))
-            .mapValues(feature_extraction_utils.pair_cs_pose))
-
         target_prefix = os.path.join(root_dir, target_prefix)
 
+        # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
+        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
+                                          channels, MIN_MSG_PER_SEGMENT)
         calibration_table_rdd = (
-            # ((folder, time/min), feature_matrix)
-            data_rdd
-            # -> ((folder, time/min), features)
+            # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
+            parsed_msgs
+            # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
+            .mapValues(feature_extraction_utils.pair_cs_pose)
+            # PairRDD((dir_segment, segment_id), features)
             .mapValues(calibration_table_utils.feature_generate)
-            # -> ((folder, time/min), filtered_features)
+            # PairRDD ((dir_segment, segment_id), filtered_features)
             .mapValues(calibration_table_utils.feature_filter)
-            # -> ((folder, time/min), cutted_features)
+            # PairRDD ((dir_segment, segment_id), cutted_features)
             .mapValues(calibration_table_utils.feature_cut)
-            # -> ((folder, time/min), (grid_dict,cutted_features))
+            # PairRDD ((dir_segment, segment_id), (grid_dict,cutted_features))
             .mapValues(calibration_table_utils.feature_distribute)
-            # -> ((folder, time/min), one_matrix)
+            # PairRDD ((dir_segment, segment_id), one_matrix)
             .mapValues(calibration_table_utils.feature_store)
-            # -> number
+            # RDD(feature_numbers)
             .map(lambda elem: calibration_table_utils.write_h5_train_test
                  (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
@@ -130,4 +82,4 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
 
 if __name__ == '__main__':
-    CalibrationTableFeatureExtraction().run_prod()
+    CalibrationTableFeatureExtraction().run_test()
