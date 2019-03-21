@@ -66,8 +66,8 @@ class PredictionResult(BasePipeline):
         map_dir = record_utils.get_map_name_from_records(src_dir)
         target_dir = os.path.join(target_dir, map_dir)
         command = (
-            'cd /apollo && '
-            'bash modules/tools/prediction/data_pipelines/scripts/records_to_prediction_result.sh '
+            'cd /apollo && sudo bash '
+            'modules/tools/prediction/data_pipelines/scripts/records_to_prediction_result.sh '
             '"{}" "{}" "{}"'.format(src_dir, target_dir, map_dir))
         if os.system(command) == 0:
             glog.info('Successfuly processed {} to {}'.format(src_dir, target_dir))
