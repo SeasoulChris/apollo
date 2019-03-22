@@ -69,9 +69,11 @@ class GeneralFeatureExtraction(BasePipeline):
             # glog.info("Processing data in folder:" % str(elem[0][0]))
             (folder_path, segment_id), (chassis, pose) = elem
             glog.info("Processing data in folder: %s" % folder_path)
-            out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
-            file_utils.makedirs(out_dir)
-            out_file_path = "{}/{}_{}.hdf5".format(out_dir, WANTED_VEHICLE, segment_id)
+            # out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
+            out_dir = os.path.join(root_dir, target_prefix, WANTED_VEHICLE, "general_set")
+            file_utils.makedirs(out_dir)            
+            
+            out_file_path = "{}/{}.hdf5".format(out_dir, segment_id)
             with h5py.File(out_file_path, "w") as out_file:
                 i = 0
                 for mini_dataset in self.build_training_dataset(chassis, pose):
