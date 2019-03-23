@@ -13,7 +13,7 @@ import fueling.common.s3_utils as s3_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels we need to decode
-IMAGE_CHANNELS = {
+VIDEO_CHANNELS = {
     'front-6mm':'/apollo/sensor/camera/front_6mm/image/compressed',
     'front-12mm':'/apollo/sensor/camera/front_12mm/image/compressed',
     'rear-6mm':'/apollo/sensor/camera/rear_6mm/image/compressed',
@@ -58,9 +58,8 @@ def decode_videos(message_meta):
     target_dir, topic = target_topic
     streaming_utils.create_dir_if_not_exist(target_dir)
     topic = streaming_utils.topic_to_file_name(topic)
-    cur_group = '{}-{}'.format(topic, meta_list[0][0])
-    video_name = '{}.h265'.format(cur_group)
-    h265_video_file_path = os.path.join(target_dir, video_name)
+    current_group = '{}-{}'.format(topic, meta_list[0][0])
+    h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(current_group))
     glog.info('current video file path: {}'.format(h265_video_file_path))
     with open(h265_video_file_path, 'wb') as h265_video_file:
         for _, _, video_frame_bin_path in meta_list:
@@ -69,7 +68,7 @@ def decode_videos(message_meta):
     # Invoke video2jpg binary executable
     video_decoder_executable_path = '/apollo/modules/perception/decoder'
     image_output_pattern = '%05d.jpg'
-    image_output_path = os.path.join(target_dir, cur_group)
+    image_output_path = os.path.join(target_dir, current_group)
     streaming_utils.create_dir_if_not_exist(image_output_path)
     return_code = os.system('cd {} && ./bin/video2jpg.sh {} {}'
                             .format(video_decoder_executable_path,
@@ -77,16 +76,16 @@ def decode_videos(message_meta):
                                     '--output='+os.path.join(image_output_path,
                                                              image_output_pattern)))
     if return_code != 0:
-        raise ValueError('Failed to execute video2jpg for video {}'.format(video_name))
+        raise ValueError('Failed to execute video2jpg for video {}'.format(h265_video_file_path))
     generated_images = sorted(list(os.listdir(image_output_path)))
     if len(generated_images) != len(meta_list):
         raise ValueError('Mismatch between original frames and generated images for video {}'
-                         .format(video_name))
+                         .format(h265_video_file_path))
     # Rename the generated images to match the original frame name
     for idx in range(0, len(generated_images)):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
                   os.path.join(image_output_path, '{}-{}'.format(topic, meta_list[idx][0])))
-    glog.info('done with group {}, image path: {}'.format(cur_group, image_output_path))
+    glog.info('done with group {}, image path: {}'.format(current_group, image_output_path))
 
 def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
@@ -155,7 +154,7 @@ class DecodeVideoPipeline(BasePipeline):
          .flatMapValues(streaming_utils.list_records_for_task)
          # PairRDD(target_dir, MessageMetaData(topic, timestamp, fields, src_path))
          .flatMapValues(lambda record: streaming_utils.load_meta_data(
-             root_dir, record, IMAGE_CHANNELS.values()))
+             root_dir, record, VIDEO_CHANNELS.values()))
          # PairRDD((target_dir, topic), (timestamp, fields, src_path))
          .map(lambda (target, (topic, time, fields, src_path)):
               ((target, topic), (time, fields, src_path)))
