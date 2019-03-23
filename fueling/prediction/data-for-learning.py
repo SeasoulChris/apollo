@@ -48,32 +48,32 @@ class DataForLearning(BasePipeline):
         result = (
             # RDD(record_dir)
             records_dir_rdd
-            # PairRDD(record_dir, target_dir)
-            .map(lambda record_dir: (record_dir,
-                                     record_dir.replace(origin_prefix, target_prefix, 1)))
-            # PairRDD(record_dir, target_dir), in absolute path
-            .map(lambda src_dst: (os.path.join(root_dir, src_dst[0]),
-                                  os.path.join(root_dir, src_dst[1])))
+            # RDD(record_dir), in absolute path
+            .map(lambda record_dir: os.path.join(root_dir, record_dir))
+            # PairRDD(record_dir, (origin_prefix, target_prefix))
+            .map(lambda record_dir: (record_dir, (origin_prefix, target_prefix)))
             # RDD(0/1), 1 for success
-            .map(spark_op.do_tuple(self.process_dir))
+            .map(self.process_dir)
             .cache())
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
-    def process_dir(src_dir, target_dir):
-        """Call prediction C++ code to get data-for-learning."""
+    def process_dir(input):
+        """Call prediction C++ code."""
+        record_dir, (origin_prefix, target_prefix) = input
         # use /apollo/hmi/status's current_map entry to match map info
-        map_dir = record_utils.get_map_name_from_records(src_dir)
-        target_dir = os.path.join(target_dir, map_dir)
+        map_dir = record_utils.get_map_name_from_records(record_dir)
+        target_dir = record_dir.replace(os.path.join(origin_prefix),
+                                        os.path.join(target_prefix, map_dir))
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_data_for_learning.sh '
-            '"{}" "{}" "{}"'.format(src_dir, target_dir, map_dir))
+            '"{}" "{}" "{}"'.format(record_dir, target_dir, map_dir))
         if os.system(command) == 0:
-            glog.info('Successfuly processed {} to {}'.format(src_dir, target_dir))
+            glog.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
             return 1
         else:
-            glog.error('Failed to process {} to {}'.format(src_dir, target_dir))
+            glog.error('Failed to process {} to {}'.format(record_dir, target_dir))
         return 0
 
 
