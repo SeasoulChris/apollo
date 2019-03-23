@@ -70,7 +70,7 @@ def load_meta_data(root_dir, record_file, topics):
     for topic in topics:
         lines = load_topic(root_dir, record_file, topic)
         for line in lines:
-            tuples_list.append(build_meta_from_line(topic, line))
+            tuples_list.append(build_meta_from_line(root_dir, record_file, topic, line))
     return tuples_list
 
 def load_topic(root_dir, record_file, topic):
@@ -136,7 +136,7 @@ def list_records_for_task(task_path):
     """List all records for a specific task"""
     with open(task_path) as read_task_file:
         records = read_task_file.readlines()
-    return list(records)
+    return [record.strip() for record in records]
 
 def target_partition_to_records(root_dir, target_partition, slice_size):
     """Revert a partition to original record file paths"""
@@ -214,7 +214,7 @@ def upload_images(root_dir, record_dir, record_file):
                 os.path.join(record_dir, message_name),
                 os.path.join(image_path, message_name))
 
-def build_meta_from_line(topic, line):
+def build_meta_from_line(root_dir, record_file, topic, line):
     """Parse the line in topic file and form a tuple"""
     timestamp = None
     fields = None
@@ -222,7 +222,9 @@ def build_meta_from_line(topic, line):
     reg_search = re.search(r'^(\d*)', line.strip(), re.M|re.I)
     if reg_search is not None:
         timestamp = reg_search.group(1)
-    reg_search = re.search(r'^\d*, (\{.+\})$', line.strip(), re.M|re.I)
+    reg_search = re.search(r'^\d*,(\{.+\})$', line.strip(), re.M|re.I)
     if reg_search is not None:
         fields = reg_search.group(1)
-    return message_meta(topic=topic, timestamp=timestamp, fields=fields, objpath=None)
+    data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
+    objpath = os.path.join(data_dir, '{}-{}'.format(topic_to_file_name(topic), timestamp))
+    return message_meta(topic=topic, timestamp=timestamp, fields=fields, objpath=objpath)

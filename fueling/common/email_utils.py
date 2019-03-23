@@ -60,7 +60,7 @@ def send_email(title, title_color, content, receivers=None):
         glog.error('accessing email server failed with error: {}'.format(str(ex)))
         return
 
-    to_addrs = receivers if receivers is not None else 'apollo-data-pipeline@baidu.com'
+    to_addrs = receivers if receivers is not None else 'apollo-data-pipeline01@baidu.com'
     message = MIMEMultipart('alternative')
     html_page = MIMEText(get_html_content(title, title_color, content), 'html')
     message.attach(html_page)

@@ -29,7 +29,7 @@ def build_line_with_fields(line, fields, message):
         value = proto
         for part in field_parts:
             value = getattr(value, part)
-        field_suffix += '{}:{}'.format(field, value)
+        field_suffix += '"{}":"{}"'.format(field, value)
     field_suffix += '}'
     return '{},{}'.format(line, field_suffix)
 

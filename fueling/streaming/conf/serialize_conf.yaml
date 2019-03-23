@@ -5,22 +5,32 @@
 ---
   name: 'front-6mm'
   topic: '/apollo/sensor/camera/front_6mm/image/compressed'
+  fields:
+    - format
 
 ---
   name: 'front-12mm'
   topic: '/apollo/sensor/camera/front_12mm/image/compressed'
+  fields:
+    - format
 
 ---
   name: 'rear-6mm'
   topic: '/apollo/sensor/camera/rear_6mm/image/compressed'
+  fields:
+    - format
 
 ---
   name: 'left-fisheye'
   topic: '/apollo/sensor/camera/left_fisheye/image/compressed'
+  fields:
+    - format
 
 ---
   name: 'right-fisheye'
   topic: '/apollo/sensor/camera/right_fisheye/image/compressed'
+  fields:
+    - format
 
 ---
   name: 'front-radar'
