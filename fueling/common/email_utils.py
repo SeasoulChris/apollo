@@ -47,7 +47,7 @@ def send_email(title, title_color, content, receivers=None):
     subject = 'Apollo data pipeline job status'
     from_addr = 'apollo-data-pipeline@outlook.com'
     mail_passwd = os.environ.get('APOLLO_EMAIL_PASSWD')
-    if mail_passwd is None:
+    if not mail_passwd:
         glog.error('No credential provided to send emails.')
         return
 
@@ -60,7 +60,7 @@ def send_email(title, title_color, content, receivers=None):
         glog.error('accessing email server failed with error: {}'.format(str(ex)))
         return
 
-    to_addrs = receivers if receivers is not None else 'apollo-data-pipeline01@baidu.com'
+    to_addrs = receivers or 'apollo-data-pipeline01@baidu.com'
     message = MIMEMultipart('alternative')
     html_page = MIMEText(get_html_content(title, title_color, content), 'html')
     message.attach(html_page)
@@ -117,6 +117,6 @@ def get_html_content(title, title_color, content):
         ''' % {
             'title_color': title_color,
             'title': title,
-            'header': header if header is not None else '',
+            'header': header or '',
             'html_content': html_content
         }

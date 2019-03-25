@@ -14,11 +14,11 @@ import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels we need to decode
 VIDEO_CHANNELS = {
-    'front-6mm':'/apollo/sensor/camera/front_6mm/image/compressed',
-    'front-12mm':'/apollo/sensor/camera/front_12mm/image/compressed',
-    'rear-6mm':'/apollo/sensor/camera/rear_6mm/image/compressed',
-    'left-fisheye':'/apollo/sensor/camera/left_fisheye/image/compressed',
-    'right-fisheye':'/apollo/sensor/camera/right_fisheye/image/compressed'
+    'front-6mm': '/apollo/sensor/camera/front_6mm/image/compressed',
+    'front-12mm': '/apollo/sensor/camera/front_12mm/image/compressed',
+    'rear-6mm': '/apollo/sensor/camera/rear_6mm/image/compressed',
+    'left-fisheye': '/apollo/sensor/camera/left_fisheye/image/compressed',
+    'right-fisheye': '/apollo/sensor/camera/right_fisheye/image/compressed'
 }
 
 # Helper functions
@@ -33,7 +33,7 @@ def group_video_frames(message_meta):
     for idx, (timestamp, fields, src_path) in enumerate(meta_list):
         # TODO: pending on video compression driver
         frame_type = ast.literal_eval(fields).get('frame_type', None)
-        if frame_type is None:
+        if not frame_type:
             raise ValueError('Invalid frame type for {}'.format(target_topic))
         if frame_type == 'I' or idx == len(meta_list)-1:
             if frames_group and frames_group[0][1] == 'I':
@@ -50,7 +50,7 @@ def decode_videos(message_meta):
     Then call execuable to convert them into images
     """
     target_topic, meta_values = message_meta
-    meta_list = sorted(list(meta_values))
+    meta_list = sorted(list(meta_values), key=operator.itemgetter(0))
     glog.info('decoding task {} with {} frames:{}'.format(target_topic, len(meta_list), meta_list))
     if not meta_list:
         glog.error('no video frames for target dir and topic {}'.format(target_topic))
