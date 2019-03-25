@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import glob
-import numpy as np
 import operator
 import os
 
+import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -75,15 +75,12 @@ def merge_dicts(dirpath, dict_name='future_status'):
     Merge all dictionaries directly under a directory
     '''
     list_of_files = os.listdir(dirpath)
-    dict_merged = None
-    for file in list_of_files:
-        full_path = os.path.join(dirpath, file)
-        if file.split('.')[-1] == 'npy' and file.split('.')[-2] == dict_name:
+    dict_merged = dict()
+    for filename in list_of_files:
+        full_path = os.path.join(dirpath, filename)
+        if filename.endswith(dict_name + '.npy'):
             dict_curr = np.load(full_path).item()
-            if dict_merged is None:
-                dict_merged = dict_curr.copy()
-            else:
-                dict_merged.update(dict_curr)
+            dict_merged.update(dict_curr)
     np.save(os.path.join(dirpath, dict_name + '.npy'), dict_merged)
     return dict_merged
 

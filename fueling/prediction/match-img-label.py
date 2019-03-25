@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import fnmatch
 import glob
-import numpy as np
 import operator
 import os
 
+import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -58,7 +58,9 @@ class MatchImgLabel(BasePipeline):
         """Call prediction python code to generate labels."""
         try:
             key = os.path.basename(src_file).replace(".png","")
-            junction_label_dict = np.load(os.path.join(os.path.dirname(src_file).replace("junction_img","labels"),'junction_label.npy')).item()
+            junction_label_dict = np.load(os.path.join(
+                os.path.dirname(src_file).replace("junction_img", "labels"),
+                'junction_label.npy')).item()
             sample_label = junction_label_dict[key]
             if len(sample_label) == 24:
                 glog.info("Keeping image: " + src_file)
