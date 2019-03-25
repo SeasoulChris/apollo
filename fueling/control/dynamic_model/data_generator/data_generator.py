@@ -56,27 +56,30 @@ def generate_segment(h5_file):
                 segment = np.array(ds)
             else:
                 segment = np.concatenate((segment, np.array(ds)), axis=0)
-    
-    segment = feature_preprocessing(segment, WINDOW_SIZE, POLYNOMINAL_ORDER)
     return segment
 
 
-def feature_preprocessing(segment, window_size, polynomial_order):
+def feature_preprocessing(segment):
     """
     smooth noisy raw data from IMU by savgol_filter
     """
-    # smooth IMU acceleration data
-    segment[:, segment_index["a_x"]] = savgol_filter(
-        segment[:, segment_index["a_x"]], window_size, polynomial_order)
-    segment[:, segment_index["a_y"]] = savgol_filter(
-        segment[:, segment_index["a_y"]], window_size, polynomial_order)
-    return segment
+    # discard the segments that are too short
+    if segment.shape[0] < WINDOW_SIZE:
+        return None
+    else:
+        # smooth IMU acceleration data
+        segment[:, segment_index["a_x"]] = savgol_filter(
+            segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["a_y"]] = savgol_filter(
+            segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        return segment
 
 
 def get_param_norm(input_feature, output_feature):
     """
     normalize the samples and save normalized parameters
     """
+    glog.info("Start to calculate parameter norms")
     input_fea_mean = np.mean(input_feature, axis=0)
     input_fea_std = np.std(input_feature, axis=0) + STD_EPSILON
     output_fea_mean = np.mean(output_feature, axis=0)
@@ -91,47 +94,52 @@ def generate_training_data(segment):
     """
     extract usable features from the numpy array for model training
     """
-    total_len = segment.shape[0] - DIM_DELAY_STEPS
-    total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
-    glog.info('Total length: {}'.format(total_len))
-    mlp_input_data = np.zeros([total_len, DIM_INPUT])
-    mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
+    # discard the segments that are too short
+    if segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
+        return None
+    else: 
+        total_len = segment.shape[0] - DIM_DELAY_STEPS
+        total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
+        glog.info('Total length: {}'.format(total_len))
+        mlp_input_data = np.zeros([total_len, DIM_INPUT])
+        mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
 
-    for k in range(segment.shape[0] - DIM_DELAY_STEPS):
-        # speed mps
-        mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]] 
-        # acceleration
-        mlp_input_data[k, input_index["acceleration"]] = \
+        for k in range(segment.shape[0] - DIM_DELAY_STEPS):
+            # speed mps
+            mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]] 
+            # acceleration
+            mlp_input_data[k, input_index["acceleration"]] = \
                 segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
                 segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]])
-        # throttle control from chassis
-        mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
-        # brake control from chassis
-        mlp_input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
-        # steering control from chassis
-        mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
-        
-        # acceleration next
-        mlp_output_data[k, output_index["acceleration"]] = \
-            segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
-                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
-            segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
-                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) 
-        # angular speed next
-        mlp_output_data[k, output_index["w_z"]] = segment[k + DIM_DELAY_STEPS, segment_index["w_z"]] 
+            # throttle control from chassis
+            mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
+            # brake control from chassis
+            mlp_input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
+            # steering control from chassis
+            mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
+            
+            # acceleration next
+            mlp_output_data[k, output_index["acceleration"]] = \
+                segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
+                    np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
+                segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
+                    np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) 
+            # angular speed next
+            mlp_output_data[k, output_index["w_z"]] = \
+                segment[k + DIM_DELAY_STEPS, segment_index["w_z"]] 
 
-    lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH])
-    lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
+        lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH])
+        lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
 
-    for k in range(0, mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
-        lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
-        lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
+        for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
+            lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
+            lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
 
-    feature = [
-        ("mlp_data", (mlp_input_data, mlp_output_data)),
-        ("lstm_data", (lstm_input_data, lstm_output_data))
-    ]
-    return feature
+        feature = [
+            ("mlp_data", (mlp_input_data, mlp_output_data)),
+            ("lstm_data", (lstm_input_data, lstm_output_data))
+        ]
+        return feature
 
 
 def generate_evaluation_data(dataset_path, model_folder, model_name):
@@ -165,7 +173,7 @@ def generate_imu_output(segment):
 
 def load_calibration_table():
     table_length = len(CALIBRATION_TABLE.calibration)
-    glog.info("calibration_table_length: {}".format(table_length))
+    glog.info("Calibration Table Length: {}".format(table_length))
     calibration_table = np.zeros([table_length, CALIBRATION_DIMENSION])
     for i, calibration in enumerate(CALIBRATION_TABLE.calibration):
          calibration_table[i, 0] = calibration.speed
@@ -242,7 +250,8 @@ def generate_network_output(segment, model_folder, model_name):
 
             if model_name == 'lstm':
                 input_data_array = np.reshape(np.transpose(
-                    input_data[(k - DIM_SEQUENCE_LENGTH) : k, :]), (1, DIM_INPUT, DIM_SEQUENCE_LENGTH))
+                        input_data[(k - DIM_SEQUENCE_LENGTH) : k, :]), 
+                        (1, DIM_INPUT, DIM_SEQUENCE_LENGTH))
                 output_fnn[k, :] = model.predict(input_data_array)
         
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
@@ -252,10 +261,13 @@ def generate_network_output(segment, model_folder, model_name):
         velocity_fnn += acceleration_fnn * DELTA_T
 
         input_data[k, input_index["speed"]] = velocity_fnn  # speed mps
-        input_data[k, input_index["acceleration"]] = acceleration_fnn
-        input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]  # throttle control from chassis
-        input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]  # brake control from chassis
-        input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]  # steering control from chassis
+        input_data[k, input_index["acceleration"]] = acceleration_fnn  # acceleration
+        # throttle control from chassis
+        input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
+        # brake control from chassis  
+        input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
+        # steering control from chassis
+        input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]] 
         input_data[k, :] = (input_data[k, :] - input_mean) / input_std
 
     return output_fnn

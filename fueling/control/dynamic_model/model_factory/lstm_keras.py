@@ -59,6 +59,7 @@ def setup_model(model_name):
 
 
 def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_name='lstm_two_layer'):
+    glog.info("Start to train LSTM model")
     in_param_norm = param_norm[0]
     out_param_norm = param_norm[1]
     for i in range(DIM_LSTM_LENGTH):

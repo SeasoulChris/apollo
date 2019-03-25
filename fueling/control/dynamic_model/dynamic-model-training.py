@@ -22,7 +22,7 @@ class DynamicModelTraining(BasePipeline):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
         training_dataset = [os.path.join(data_dir, 'hdf5/training.hdf5')]
-        # RDD(file_path) for training dataset
+        # RDD(file_path) for training dataset.
         training_dataset_rdd = self.get_spark_context().parallelize(training_dataset)
         self.run(training_dataset_rdd, output_dir)
 
@@ -32,7 +32,7 @@ class DynamicModelTraining(BasePipeline):
         training_dataset_rdd = (
             # RDD(file_path) for training dataset, which starts with the prefix.
             s3_utils.list_files(bucket, prefix)
-            # RDD(file_path) for training dataset, which ends with 'hdf5'
+            # RDD(file_path) for training dataset, which ends with 'hdf5'.
             .filter(lambda path: path.endswith('.hdf5'))
             # RDD(absolute_file_path)
             .map(s3_utils.abs_path))
@@ -45,10 +45,16 @@ class DynamicModelTraining(BasePipeline):
             training_dataset_rdd
             # RDD(training_data_segment)
             .map(data_generator.generate_segment)
-            # RDD(training_data_segment), which is valid
+            # RDD(training_data_segment), which is valid.
             .filter(lambda segment: segment is not None)
-            # RDD('mlp_data|lstm_data', (input, output))
+            # RDD(training_data_segment), smoothing input features.
+            .map(data_generator.feature_preprocessing)
+            # RDD(training_data_segment), which is valid after feature_preprocessing.
+            .filter(lambda segment: segment is not None)
+            # RDD('mlp_data|lstm_data', (input, output)).
             .flatMap(data_generator.generate_training_data)
+            # RDD('mlp_data|lstm_data', (input, output)), which is valid.
+            .filter(lambda data: data is not None)
             # RDD('mlp_data|lstm_data', (input, output)), with unique keys.
             .reduceByKey(lambda data_1, data_2: (np.vstack((data_1[0], data_2[0])),
                                                    np.vstack((data_1[1], data_2[1]))))

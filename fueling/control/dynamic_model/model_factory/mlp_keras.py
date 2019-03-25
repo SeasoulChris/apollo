@@ -104,6 +104,7 @@ def save_model(model, param_norm, filename):
 
 
 def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
+    glog.info("Start to train MLP model")
     in_param_norm = param_norm[0]
     out_param_norm = param_norm[1]
     x_data = (x_data - in_param_norm[0]) / in_param_norm[1]
