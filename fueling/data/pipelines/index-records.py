@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 
 import gflags
 
@@ -23,6 +24,10 @@ class IndexRecords(BasePipeline):
         BasePipeline.__init__(self, 'index-records')
         self.mongo_collection = None
 
+        sc = self.get_spark_context()
+        self.indexed_records_acc = sc.accumulator(0)
+        self.connecting_mongo_acc = sc.accumulator(0)
+
     def run_test(self):
         """Run test."""
         self.process(
@@ -37,8 +42,8 @@ class IndexRecords(BasePipeline):
         ]
         self.process(
             # RDD(file_path)
-            self.get_spark_context().union(*[
-                s3_utils.list_files(bucket, prefix) for prefix in prefixes])
+            self.get_spark_context().union(
+                *[s3_utils.list_files(bucket, prefix) for prefix in prefixes])
             # RDD(record_path)
             .filter(record_utils.is_record_file)
             # RDD(record_path), with absolute path.
@@ -50,7 +55,7 @@ class IndexRecords(BasePipeline):
         imported_records = [doc['path'] for doc in docs]
         glog.info('Found {} imported records'.format(len(imported_records)))
 
-        result = (records_rdd
+        (records_rdd
             # RDD(record_path), which is not imported before.
             .subtract(self.get_spark_context().parallelize(imported_records))
             # RDD(RecordMeta)
@@ -60,21 +65,22 @@ class IndexRecords(BasePipeline):
             # RDD(RecordMeta_doc)
             .map(Mongo.pb_to_doc)
             # RDD(None)
-            .map(self.import_record)
-            # Count.
-            .count())
-        glog.info('Imported {} records'.format(result))
+            .foreach(self.import_record))
+        glog.info('Imported {} records'.format(self.indexed_records_acc.value))
+        glog.info('Connecting to MongoDB {} times'.format(self.connecting_mongo_acc.value))
 
     def import_record(self, record_meta_doc):
         """Import a record doc to Mongo."""
-        self._get_mongo_collection().replace_one({'path': record_meta_doc['path']},
-                                                 record_meta_doc, upsert=True)
+        path = record_meta_doc['path']
+        self._get_mongo_collection().replace_one({'path': path}, record_meta_doc, upsert=True)
         glog.info('Imported record {}'.format(path))
+        self.indexed_records_acc += 1
 
     def _get_mongo_collection(self):
         """Get a connected Mongo collection."""
         if self.mongo_collection is None:
             self.mongo_collection = Mongo.collection(gflags.FLAGS.mongo_collection_name)
+            self.connecting_mongo_acc += 1
         return self.mongo_collection
 
 

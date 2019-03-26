@@ -15,7 +15,7 @@ else
     NAMESPACE=default
   fi
 
-  SERVICES=$(kubectl get svc | grep "${PORT}/" | awk '{print $1}')
+  SERVICES=$(kubectl get svc -n "${NAMESPACE}" | grep "${PORT}/" | awk '{print $1}')
   if [ -z "${SERVICES}" ]; then
     echo "Cannot found any service with port ${PORT}"
   else
