@@ -9,7 +9,7 @@
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=16
-EXECUTOR_CORES=3
+EXECUTOR_CORES=2
 EXECUTOR_MEMORY=20g
 
 while [ $# -gt 0 ]; do
@@ -101,6 +101,8 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
     --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
-    --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD=apollo-k8s-secret:email-passwd \
+    --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD="apollo-k8s-secret:email-passwd" \
+    --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
+    --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
     "${REMOTE_JOB_FILE}"

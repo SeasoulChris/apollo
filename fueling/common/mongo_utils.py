@@ -8,36 +8,25 @@ Requirements: pymongo 3.x
 import os
 import sys
 
-import gflags
 import google.protobuf.json_format as json_format
 import pymongo
 
 
-gflags.DEFINE_string('mongo_host', '127.0.0.1', 'MongoDB host ip.')
-gflags.DEFINE_integer('mongo_port', 27017, 'MongoDB port.')
-gflags.DEFINE_string('mongo_db_name', 'apollo', 'MongoDB db name.')
-gflags.DEFINE_string('mongo_user', None, 'MongoDB user (optional).')
-gflags.DEFINE_string('mongo_pass', None, 'MongoDB password (optional).')
-
-
 class Mongo(object):
     """MongoDB util"""
+    URL='mongodb://bJVmYB0.mongodb.bj.baidubce.com:27017,bJVmYB1.mongodb.bj.baidubce.com:27017'
+    DB='apollo'
 
     @staticmethod
     def db():
         """Connect to MongoDB instance."""
-        # Try to read config from environ, and the flags.
-        G = gflags.FLAGS
-        host = os.environ.get('MONGO_HOST', G.mongo_host)
-        port = int(os.environ.get('MONGO_PORT', G.mongo_port))
-        user = os.environ.get('MONGO_USER', G.mongo_user)
-        passwd = os.environ.get('MONGO_PASS', G.mongo_pass)
-
-        client = pymongo.MongoClient(host, port)
-        db = client[G.mongo_db_name]
-        if user and passwd:
-            db.authenticate(user, passwd)
-        return db
+        user, passwd = os.environ.get('MONGO_USER'), os.environ.get('MONGO_PASSWD')
+        if not user or not passwd:
+            glog.fatal('No credential found for MongoDB authentication.')
+            return None
+        db_connection = pymongo.MongoClient(Mongo.URL)[Mongo.DB]
+        db_connection.authenticate(user, passwd)
+        return db_connection
 
     @staticmethod
     def collection(collection_name):
@@ -45,7 +34,8 @@ class Mongo(object):
         Get collection handler. To use it, please refer
         https://api.mongodb.com/python/current/api/pymongo/collection.html
         """
-        return Mongo.db()[collection_name]
+        db_connection = Mongo.db()
+        return db_connection[collection_name] if db_connection else None
 
     @staticmethod
     def pb_to_doc(pb):
@@ -63,5 +53,4 @@ class Mongo(object):
 
 
 if __name__ == '__main__':
-    gflags.FLAGS(sys.argv)
     print Mongo.db().collection_names()
