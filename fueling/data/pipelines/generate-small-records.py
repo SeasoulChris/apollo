@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import collections
 import os
 
 import pyspark_utils.op as spark_op
@@ -7,6 +8,7 @@ from cyber_py.record import RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
@@ -104,11 +106,12 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
 
+        summary_receivers = ['apollo_internal@baidu.com']
         self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
-                 origin_prefix, target_prefix)
+                 origin_prefix, target_prefix, summary_receivers)
 
     def run(self, root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
-            origin_prefix, target_prefix):
+            origin_prefix, target_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         # PairRDD(task_dir, record), which is in the whitelist
         todo_jobs = spark_op.filter_keys(
@@ -116,13 +119,13 @@ class GenerateSmallRecords(BasePipeline):
             records_rdd.keyBy(os.path.dirname),
             whitelist_dirs_rdd)
 
-        # PairRDD(task_dir, record), which is not in the blacklist
-        (spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
+        target_dirs = (
+            # PairRDD(task_dir, record), which is not in the blacklist
+            spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, record), in absolute path style.
-            .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
-                                     os.path.join(root_dir, dir_record[1])))
+            .map(spark_op.do_elems(lambda path: os.path.join(root_dir, path)))
             # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # PairRDD(target_dir, (record, header)), where header is valid
@@ -141,12 +144,18 @@ class GenerateSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(target_dir)
             .distinct()
+            .cache())
+
+        (target_dirs
             # RDD(target_dir/COMPLETE)
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
+
         glog.info('Processed {} source records to {} target records, containing {} messages'.format(
             self.source_records_acc.value, self.target_records_acc.value, self.messages_acc.value))
+        if summary_receivers:
+            self.send_summary(target_dirs.collect(), summary_receivers)
 
     def shard_to_files(self, input):
         """(target_dir, (record, header)) -> (task_file, (record, start_time, end_time))"""
@@ -194,6 +203,18 @@ class GenerateSmallRecords(BasePipeline):
                 self.messages_acc += 1
         writer.close()
         return target_file
+
+    def send_summary(self, target_dirs, receivers):
+        """Send summary."""
+        if len(target_dirs) == 0:
+            glog.info('No need to send summary for empty result')
+            return
+        summary_row = collections.namedtuple('Summary', ['Origin', 'Target'])
+        message = [summary_row(Origin=target_dir.replace(target_prefix, origin_prefix, 1),
+                               Target=target_dir)
+                   for target_dir in target_dirs]
+        email_utils.send_email_info('Generated small records for {} tasks'.format(len(target_dirs)),
+                                    message, receivers)
 
 
 if __name__ == '__main__':
