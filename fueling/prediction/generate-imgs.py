@@ -43,7 +43,7 @@ class GenerateImgs(BasePipeline):
             # RDD(file), start with origin_prefix
             s3_utils.list_files(bucket, origin_prefix)
             # RDD(bin_files)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, 'frame_env.*.bin'))
+            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*frame_env.*.bin'))
             # RDD(bin_files), which is unique
             .distinct())
         self.run(root_dir, bin_file, origin_prefix, target_prefix)

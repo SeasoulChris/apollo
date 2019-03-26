@@ -37,7 +37,7 @@ class GenerateLabels(BasePipeline):
             # RDD(file), start with source_prefix
             s3_utils.list_files(bucket, source_prefix)
             # RDD(bin_file)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, 'feature.*.bin'))
+            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*feature.*.bin'))
             # RDD(record_dir), which is unique
             .distinct())
         self.run(root_dir, bin_files)
