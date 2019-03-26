@@ -110,12 +110,18 @@ tools/submit-job-to-local.sh /path/to/spark/job.py
 ### Run pipeline in cluster
 
 If you are pretty familliar with the infra, please:
-1. Loop the data team in to have your job well reviewed.
+1. Loop the data team in to have your job well reviewed and setup local k8s
+   client.
 1. Clone `apollo-spark` repo and run `apollo/0_build-spark.sh`
 1. Then run:
 
    ```bash
-   tools/submit-job-to-k8s.sh /path/to/spark/job.py
+   tools/submit-job-to-k8s.sh \
+       --env <python_env> \
+       --worker <workers_count>  \
+       --cpu <worker_cpu_count>  \
+       --memory <worker_memory>  \
+       /path/to/spark/job.py
    ```
 
 Please request resources carefully, as it may block other teammates' work.
