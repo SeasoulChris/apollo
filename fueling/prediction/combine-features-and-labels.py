@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import fnmatch
 import glob
-import numpy as np
 import operator
 import os
 
+import numpy as np
 import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
@@ -20,15 +20,13 @@ class FeaturesAndLabelsCombine(BasePipeline):
     def __init__(self):
         BasePipeline.__init__(self, 'combine-features-and-labels')
 
-
     def run_test(self):
         """Run test."""
         sc = self.get_spark_context()
         root_dir = '/apollo'
-        datalearn_files = sc.parallelize(glob.glob(['docs/demo_guide/*/datalearn.*.bin']))
+        datalearn_files = sc.parallelize(glob.glob(['docs/demo_guide/']))
         origin_prefix = 'docs/demo_guide'
         self.run(root_dir, datalearn_files, origin_prefix)
-
 
     def run_prod(self):
         """Run prod."""
@@ -46,7 +44,6 @@ class FeaturesAndLabelsCombine(BasePipeline):
 
         self.run(root_dir, datalearn_file_rdd, origin_prefix)
 
-
     def run(self, root_dir, datalearn_file_rdd, origin_prefix):
         """Run the pipeline with given arguments."""
         result = (
@@ -57,9 +54,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
             # RDD(0/1), 1 for success
             .map(self.process_dir)
             .cache())
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add),
-                                                 result.count()))
-
+        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_dir(source_file):
@@ -102,8 +97,7 @@ def CombineFeaturesAndLabels(feature_path, label_path, dict_name='future_status'
             if len(dict_labels[key]) < future_status_label_dim:
                 continue
             labels = dict_labels[key][:future_status_label_dim]
-            list_curr = [len(features_for_learning)] + \
-                        features_for_learning + labels
+            list_curr = [len(features_for_learning)] + features_for_learning + labels
 
         output_np_array.append(list_curr)
 
