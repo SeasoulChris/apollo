@@ -4,6 +4,8 @@
 import errno
 import os
 
+import fueling.common.colored_glog as glog
+
 def makedirs(dir_path):
     """Make directories recursively."""
     if os.path.exists(dir_path):
@@ -12,9 +14,16 @@ def makedirs(dir_path):
         os.makedirs(dir_path)
     except OSError as error:
         if error.errno != errno.EEXIST:
+            glog.error('Failed to makedir ' + dir_path)
             raise
+    return dir_path
 
 def touch(file_path):
     """Touch file."""
-    if not os.path.exists(file_path):
-        os.mknod(file_path)
+    try:
+        if not os.path.exists(file_path):
+            os.mknod(file_path)
+    except:
+        glog.error('Failed to touch file ' + file_path)
+        raise
+    return file_path
