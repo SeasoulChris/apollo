@@ -1,4 +1,7 @@
-speed_slice: 5
-acc_slice: 5
-steer_slice: 20
+speed_step: 5
+acc_step: 5
+steer_step: 20
+speed_max: 25
+throttle_max: 45
+brake_max: 40
 vehicle_type: "Transit"

@@ -5,7 +5,6 @@ common functions for feature extractin
 import os
 import glob
 
-import glog
 import h5py
 import numpy as np
 
@@ -15,31 +14,33 @@ from modules.data.fuel.fueling.control.proto.feature_key_pb2 import featureKey
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 import common.proto_utils as proto_utils
+
+import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
+
 
 
 # FILENAME = "/mnt/bos/modules/control/common/feature_key_conf.pb.txt"
 FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, featureKey())
 
-FILENAME_CONTROL_CONF = "/mnt/bos/modules/control/common/control_conf.pb.txt"
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf())
+FILENAME_CONTROL_CONF = \
+    '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf())
 
-# TODO change based on vehicle model
-THROTTLE_DEADZONE = 5.0  # CONTROL_CONF.lon_controller_conf.throttle_deadzone
+THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
 THROTTLE_MAX = FEATURE_KEY.throttle_max
 
-BRAKE_DEADZONE = 7.0  # CONTROL_CONF.lon_controller_conf.brake_deadzone
+BRAKE_DEADZONE = CONTROL_CONF.lon_controller_conf.brake_deadzone
 BRAKE_MAX = FEATURE_KEY.brake_max
 
-SPEED_SLICE = FEATURE_KEY.speed_slice
+SPEED_STEP = FEATURE_KEY.speed_step
 SPEED_MAX = FEATURE_KEY.speed_max
 
-ACC_SLICE = FEATURE_KEY.acc_slice  # percentage
-STEER_SLICE = FEATURE_KEY.steer_slice  # percentage
+ACC_STEP = FEATURE_KEY.acc_step  # percentage
+STEER_STEP = FEATURE_KEY.steer_step  # percentage
 
 WANTED_VEHICLE = FEATURE_KEY.vehicle_type
 
@@ -77,7 +78,7 @@ def gen_pre_segment(dir_to_msg):
 
 def gen_key(elem):
     """ generate a key contians both folder path and time stamp """
-    return ((elem[0], (int)(elem[1].header.timestamp_sec/60)), elem[1])
+    return ((elem[0], (int)(elem[1].header.timestamp_sec / 60)), elem[1])
 
 
 def process_seg(elem):
@@ -170,21 +171,23 @@ def get_data_point(elem):
 def feature_key_value(elem):
     """ generate key for each data segment """
     speed = elem[1][14]
-    throttle = max(elem[1][15]*100 - THROTTLE_DEADZONE, 0)  # 0 or positive
-    brake = max(elem[1][16]*100-BRAKE_DEADZONE, 0)  # 0 or positive
-    steering = elem[1][17]*100+100  # compensation for negative value
+    throttle = max(elem[1][15] * 100 - THROTTLE_DEADZONE, 0)  # 0 or positive
+    brake = max(elem[1][16] * 100 - BRAKE_DEADZONE, 0)  # 0 or positive
+    steering = elem[1][17] * 100 + 100  # compensation for negative value
 
-    # speed key 1 ~ 4
-    speed_key = int(min(speed, SPEED_MAX)/SPEED_SLICE+1)
+    # speed key staring from 1; less than 5 m/s is 1
+    speed_key = int(min(speed, SPEED_MAX) / SPEED_STEP + 1)
 
-    # steering key 0 ~ 9
-    steering_key = int(steering/STEER_SLICE)  # -100% ~ 0
+    # steering key 0 ~ 9: -100% is 0; 100% is 9
+    steering_key = int(steering / STEER_STEP)  # -100% ~ 0
 
-    throttle_key = int(min(throttle, THROTTLE_MAX)/ACC_SLICE)
-    brake_key = int(min(brake, BRAKE_MAX)/ACC_SLICE)
+    # deadzone~first step is 0; 
+    throttle_key = int(min(throttle, THROTTLE_MAX) / ACC_STEP)
+    brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
 
-    elem_key = int(speed_key*1000+steering_key *
-                   100 + throttle_key*10+brake_key)
+    # speed-steering-throttle-brake
+    elem_key = int(speed_key * 1000 + steering_key *
+                   100 + throttle_key * 10 + brake_key)
     # ((folder_path,feature_key),(time_stamp,paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
@@ -195,7 +198,7 @@ def gen_segment(elem):
     pre_time = elem[0][0]
     data_set = np.array(elem[0][1])
     for i in range(1, len(elem)):
-        if (elem[i][0] - pre_time) <= 2 * MAX_PHASE_DELTA:
+        if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA:
             data_set = np.vstack([data_set, elem[i][1]])
         else:
             if i > MIN_SEGMENT_LENGTH:
@@ -210,9 +213,7 @@ def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file, use feature key as file name"""
     key = str(elem[0][1])
     folder_path = str(elem[0][0])
-    # target_prefix/.../vehicle_type/sample_set/
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
-    folder_path = os.path.join(folder_path, vehicle_type, "sample_set")
     file_name = key
     h5_utils.write_h5(elem[1], folder_path, file_name)
     return elem[0]

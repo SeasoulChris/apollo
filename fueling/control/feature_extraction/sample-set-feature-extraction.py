@@ -8,7 +8,6 @@ import operator
 import os
 
 import glob
-import glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -16,12 +15,13 @@ from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
+import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 MIN_MSG_PER_SEGMENT = 100
-
+MARKER = 'CompleteSampleSet'
 
 class SampleSetFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
@@ -32,43 +32,56 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = [
-            "modules/data/fuel/testdata/control/left_40_10/1.record.00000",
-            "modules/data/fuel/testdata/control/transit/1.record.00000",
-        ]
-
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
 
         origin_prefix = 'modules/data/fuel/testdata/control'
-        target_prefix = 'modules/data/fuel/testdata/control/generated'
+        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
+                                      WANTED_VEHICLE, 'SampleSet')
         root_dir = '/apollo'
+
+        # complete file is writtern in original folder
+        # RDD(record_dir)
+        todo_tasks = 
+            dir_utils.get_todo_tasks(origin_prefix, target_prefix, 
+            lambda path: self.get_spark_context().parallelize(dir_utils.
+            list_end_files(os.path.join(root_dir, path))), '', '/' + MARKER)
+
         # PairRDD(record_dir, record_files)
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        dir_to_records = todo_tasks.flatMap(dir_utils.list_end_files).keyBy(os.path.dirname)
+
+        glog.info('todo_files: {}'.format(dir_to_records.collect()))
+       
+        self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
-        target_prefix = 'modules/control/feature_extraction_hf5/2019/'
+        target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
+                                     WANTED_VEHICLE, 'SampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
 
-        files = s3_utils.list_files(bucket, origin_prefix).cache()
-        complete_dirs = files.filter(
-            lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
+        # RDD(record_dir)
+        todo_tasks = (dir_utils.get_todo_tasks(origin_prefix, target_prefix
+                                              lambda path: s3_utils.list_files(bucket, path),
+                                              '/COMPLETE', '/' + MARKER)
+                      # RDD(record_files)
+                      .map(os.listdir)
+                      # RDD(absolute_record_files)
+                      .map(lambda record_dir: os.path.join(root_dir, record_dir)))
+
         # PairRDD(record_dir, record_files)
-        dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
-        root_dir = s3_utils.S3_MOUNT_PATH
-        self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
-                 origin_prefix, target_prefix, root_dir)
+        dir_to_records = todo_tasks.filter(record_utils.is_record_file).keyBy(os.path.dirname)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
+        self.run(dir_to_records, origin_prefix, target_prefix)
+
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
-        
+    
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
-                                          channels, MIN_MSG_PER_SEGMENT)
-
+        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, WANTED_VEHICLE, 
+                                         channels, MIN_MSG_PER_SEGMENT, MARKER)
+   
         data_segment_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             parsed_msgs
@@ -85,7 +98,8 @@ class SampleSetFeatureExtraction(BasePipeline):
             .mapValues(feature_extraction_utils.gen_segment)
             # RDD(dir, feature_key), write all segment into a hdf5 file
             .map(lambda elem: feature_extraction_utils.write_h5_with_key(
-                elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
+                 elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
+
         glog.info('Finished %d data_segment_rdd!' % data_segment_rdd.count())
 
 

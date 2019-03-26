@@ -4,29 +4,38 @@ import os
 
 import pyspark_utils.op as spark_op
 
+import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-def record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
-                       channels, MIN_MSG_PER_SEGMENT):
+def record_to_msgs_rdd(dir_to_records, WANTED_VEHICLE, 
+                       channels, MIN_MSG_PER_SEGMENT, MARKER):
     # PairRDD(absolute_dir, absolute_path_record)
-    dir_to_records = absolute_path_rdd(dir_to_records_rdd, root_dir).cache()
+#     dir_to_records = absolute_path_rdd(dir_to_records_rdd, root_dir).cache()
     # RDD(aboslute_dir) which include records of the wanted vehicle
     selected_vehicles = wanted_vehicle_rdd(dir_to_records, WANTED_VEHICLE)
+
     # PairRDD((dir, timestamp_per_min), msg)
     dir_to_msgs = msg_rdd(dir_to_records, selected_vehicles, channels).cache()
+
     # RDD(dir, timestamp_per_min)
     valid_segments = chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT)
+ 
+    # PairRDD((dir_segment, segment_id), msg) 
+    valid_msg = valid_msg_rdd(dir_to_msgs, valid_segments).cache()
     # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-    parsed_msgs = chassis_localization_parsed_msg_rdd(dir_to_msgs, valid_segments)
+    parsed_msgs = chassis_localization_parsed_msg_rdd(valid_msg)
+    # RDD (dir_segment)
+    completed_dir = mark_complete(valid_msg, MARKER).count()
     return parsed_msgs
 
-def absolute_path_rdd(dir_to_records_rdd,root_dir):
-    return (
-        # PairRDD(dir, record)
-        dir_to_records_rdd
-        # PairRDD(absolute_dir, absolute_path_record)
-        .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1]))))
+# def absolute_path_rdd(dir_to_records_rdd,root_dir):
+#     return (
+#         # PairRDD(dir, record)
+#         dir_to_records_rdd
+#         # PairRDD(absolute_dir, absolute_path_record)
+#         .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1]))))
 
 def wanted_vehicle_rdd(dir_to_records, WANTED_VEHICLE):
     return (
@@ -63,10 +72,14 @@ def chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT):
         # RDD((dir, timestamp_per_min))
         .keys())
 
-def chassis_localization_parsed_msg_rdd(dir_to_msgs, valid_segments):
+def valid_msg_rdd(dir_to_msgs, valid_segments):
+    # PairRDD((dir_segment, segment_id), msg) 
+    return spark_op.filter_keys(dir_to_msgs, valid_segments)
+
+def chassis_localization_parsed_msg_rdd(valid_dir_to_msgs):
     return (
         # PairRDD((dir_segment, segment_id), msg) to valid segments
-        spark_op.filter_keys(dir_to_msgs, valid_segments)
+        valid_dir_to_msgs
         # PairRDD((dir_segment, segment_id), msgs)
         .groupByKey()
         # PairRDD((dir_segment, segment_id), proto_dict)
@@ -74,3 +87,17 @@ def chassis_localization_parsed_msg_rdd(dir_to_msgs, valid_segments):
         # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
         .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
                                        proto_dict[record_utils.LOCALIZATION_CHANNEL])))
+
+def mark_complete(valid_dir_to_msgs, MARKER):
+      result_rdd = (valid_dir_to_msgs
+        .map(lambda msg_key: msg_key[0][0])
+        .distinct()
+        .map(lambda target_dir: os.path.join(target_dir, MARKER)))
+      result_rdd.foreach(file_utils.touch)
+      return result_rdd
+#     return (
+#         valid_dir_to_msgs
+#         .map(lambda msg_key: msg_key[0][0])
+#         .distinct()
+#         .map(lambda target_dir: os.path.join(target_dir, MARKER))
+#         .foreach(file_utils.touch))
