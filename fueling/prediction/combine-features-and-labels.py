@@ -24,7 +24,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
         """Run test."""
         sc = self.get_spark_context()
         root_dir = '/apollo'
-        datalearn_files = sc.parallelize(glob.glob(['docs/demo_guide/']))
+        datalearn_files = sc.parallelize(glob.glob('docs/demo_guide/*/datalearn.*.bin'))
         origin_prefix = 'docs/demo_guide'
         self.run(root_dir, datalearn_files, origin_prefix)
 
