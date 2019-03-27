@@ -51,8 +51,6 @@ fi
 K8S="https://180.76.98.43:6443"
 IMAGE="hub.baidubce.com/apollo/spark:latest"
 DRIVER_MEMORY=2g
-AWS_KEY="<INPUT>"
-AWS_SEC="<INPUT>"
 APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
 BOS_FSTOOL_EXECUTABLE="$( dirname "${BASH_SOURCE[0]}" )/../apps/static/bos_fstool"
 # End of config.
@@ -94,16 +92,16 @@ sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
-    --conf spark.executorEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
-    --conf spark.executorEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
-    --conf spark.kubernetes.driverEnv.AWS_ACCESS_KEY_ID="${AWS_KEY}" \
-    --conf spark.kubernetes.driverEnv.AWS_SECRET_ACCESS_KEY="${AWS_SEC}" \
     --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD="apollo-k8s-secret:email-passwd" \
+    --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="s3-secret:access-key" \
+    --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="s3-secret:secret-key" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+    --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="s3-secret:access-key" \
+    --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="s3-secret:secret-key" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
