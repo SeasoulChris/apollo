@@ -34,23 +34,33 @@ class SampleSetFeatureExtraction(BasePipeline):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
 
-        origin_prefix = 'modules/data/fuel/testdata/control'
+        origin_prefix = 'modules/data/fuel/testdata/control/sourceData'
         target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
                                       WANTED_VEHICLE, 'SampleSet')
         root_dir = '/apollo'
 
         # complete file is writtern in original folder
         # RDD(record_dir)
-        todo_tasks = 
-            dir_utils.get_todo_tasks(origin_prefix, target_prefix, 
+        todo_tasks = \
+            (dir_utils.get_todo_tasks(origin_prefix, target_prefix, 
             lambda path: self.get_spark_context().parallelize(dir_utils.
-            list_end_files(os.path.join(root_dir, path))), '', '/' + MARKER)
+            list_end_files(os.path.join(root_dir, path))), '', '/' + MARKER))
+        
+        glog.info('todo_files: {}'.format(todo_tasks.collect()))
+        # return 
 
-        # PairRDD(record_dir, record_files)
-        dir_to_records = todo_tasks.flatMap(dir_utils.list_end_files).keyBy(os.path.dirname)
+                         # PairRDD(record_dir, record_dir)
+        dir_to_records = (todo_tasks
+                         # PairRDD(record_dir, all_files)
+                         .flatMap(dir_utils.list_end_files)
+                         # PairRDD(record_dir, record_files)
+                         .filter(record_utils.is_record_file)
+                         # PairRDD(record_dir, record_files)
+                         .keyBy(os.path.dirname))
 
         glog.info('todo_files: {}'.format(dir_to_records.collect()))
        
+        
         self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -62,11 +72,11 @@ class SampleSetFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
 
         # RDD(record_dir)
-        todo_tasks = (dir_utils.get_todo_tasks(origin_prefix, target_prefix
+        todo_tasks = (dir_utils.get_todo_tasks(origin_prefix, target_prefix,
                                               lambda path: s3_utils.list_files(bucket, path),
                                               '/COMPLETE', '/' + MARKER)
                       # RDD(record_files)
-                      .map(os.listdir)
+                      .flatMap(os.listdir)
                       # RDD(absolute_record_files)
                       .map(lambda record_dir: os.path.join(root_dir, record_dir)))
 
@@ -79,8 +89,8 @@ class SampleSetFeatureExtraction(BasePipeline):
         """ processing RDD """
     
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, WANTED_VEHICLE, 
-                                         channels, MIN_MSG_PER_SEGMENT, MARKER)
+        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, origin_prefix, target_prefix, 
+                                         WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
    
         data_segment_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
