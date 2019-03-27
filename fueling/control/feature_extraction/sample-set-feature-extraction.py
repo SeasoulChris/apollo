@@ -11,11 +11,11 @@ import glob
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
+import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
@@ -39,15 +39,13 @@ class SampleSetFeatureExtraction(BasePipeline):
                                       WANTED_VEHICLE, 'SampleSet')
         root_dir = '/apollo'
 
-        # complete file is writtern in original folder
+        list_func = (lambda path: self.get_spark_context().parallelize(
+            dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
-        todo_tasks = \
-            (dir_utils.get_todo_tasks(origin_prefix, target_prefix, 
-            lambda path: self.get_spark_context().parallelize(dir_utils.
-            list_end_files(os.path.join(root_dir, path))), '', '/' + MARKER))
+        todo_tasks = (dir_utils
+            .get_todo_tasks(origin_prefix, target_prefix, list_func, '', '/' + MARKER))
         
-        glog.info('todo_files: {}'.format(todo_tasks.collect()))
-        # return 
+        glog.info('todo_folders: {}'.format(todo_tasks.collect()))
 
                          # PairRDD(record_dir, record_dir)
         dir_to_records = (todo_tasks
@@ -60,7 +58,6 @@ class SampleSetFeatureExtraction(BasePipeline):
 
         glog.info('todo_files: {}'.format(dir_to_records.collect()))
        
-        
         self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -70,16 +67,19 @@ class SampleSetFeatureExtraction(BasePipeline):
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'SampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
-
+        list_func = (lambda path: self.get_spark_context().parallelize(
+            dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
-        todo_tasks = (dir_utils.get_todo_tasks(origin_prefix, target_prefix,
-                                              lambda path: s3_utils.list_files(bucket, path),
-                                              '/COMPLETE', '/' + MARKER)
-                      # RDD(record_files)
-                      .flatMap(os.listdir)
-                      # RDD(absolute_record_files)
-                      .map(lambda record_dir: os.path.join(root_dir, record_dir)))
+        todo_tasks_dir = (dir_utils.get_todo_tasks(
+            origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
 
+                     # RDD(record_dir)
+        todo_tasks = (todo_tasks_dir
+                     # RDD(record_files)
+                     .flatMap(os.listdir)
+                     # RDD(absolute_record_files)
+                     .map(lambda record_dir: os.path.join(root_dir, record_dir)))
+                     
         # PairRDD(record_dir, record_files)
         dir_to_records = todo_tasks.filter(record_utils.is_record_file).keyBy(os.path.dirname)
 
@@ -89,9 +89,14 @@ class SampleSetFeatureExtraction(BasePipeline):
         """ processing RDD """
     
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, origin_prefix, target_prefix, 
-                                         WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
-   
+        valid_msgs = (
+            feature_extraction_rdd_utils.record_to_msgs_rdd(dir_to_records_rdd, 
+                WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
+            .cache())
+
+        # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
+        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
+
         data_segment_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             parsed_msgs
@@ -112,6 +117,9 @@ class SampleSetFeatureExtraction(BasePipeline):
 
         glog.info('Finished %d data_segment_rdd!' % data_segment_rdd.count())
 
+        # RDD (dir_segment)
+        (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix, target_prefix, MARKER)
+        .count())
 
 if __name__ == '__main__':
     SampleSetFeatureExtraction().run_test()

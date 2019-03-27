@@ -9,8 +9,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-def record_to_msgs_rdd(dir_to_records, origin_prefix, target_prefix, WANTED_VEHICLE, 
-                       channels, MIN_MSG_PER_SEGMENT, MARKER):
+def record_to_msgs_rdd(dir_to_records, WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER):
     # RDD(aboslute_dir) which include records of the wanted vehicle
     selected_vehicles = wanted_vehicle_rdd(dir_to_records, WANTED_VEHICLE)
 
@@ -21,19 +20,8 @@ def record_to_msgs_rdd(dir_to_records, origin_prefix, target_prefix, WANTED_VEHI
     valid_segments = chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT)
  
     # PairRDD((dir_segment, segment_id), msg) 
-    valid_msg = valid_msg_rdd(dir_to_msgs, valid_segments).cache()
-    # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-    parsed_msgs = chassis_localization_parsed_msg_rdd(valid_msg)
-    # RDD (dir_segment)
-    completed_dir = mark_complete(valid_msg, origin_prefix, target_prefix, MARKER).count()
-    return parsed_msgs
-
-# def absolute_path_rdd(dir_to_records_rdd,root_dir):
-#     return (
-#         # PairRDD(dir, record)
-#         dir_to_records_rdd
-#         # PairRDD(absolute_dir, absolute_path_record)
-#         .map(lambda x: (os.path.join(root_dir, x[0]), os.path.join(root_dir, x[1]))))
+    valid_msg = valid_msg_rdd(dir_to_msgs, valid_segments)
+    return valid_msg
 
 def wanted_vehicle_rdd(dir_to_records, WANTED_VEHICLE):
     return (
@@ -87,10 +75,16 @@ def chassis_localization_parsed_msg_rdd(valid_dir_to_msgs):
                                        proto_dict[record_utils.LOCALIZATION_CHANNEL])))
 
 def mark_complete(valid_dir_to_msgs, origin_prefix, target_prefix, MARKER):
-      result_rdd = (valid_dir_to_msgs
+    # PairRDD((dir_segment, segment_id), msg) 
+    result_rdd = (valid_dir_to_msgs
+        # RDD(dir_segment) 
         .map(lambda msg_key: msg_key[0][0])
+        # RDD(dir_segment) unique dir
         .distinct()
+        # RDD(dir_segment with target_prefix) 
         .map(lambda path: path.replace(origin_prefix, target_prefix, 1))
-        .map(lambda target_dir: os.path.join(target_dir, MARKER)))
-      result_rdd.foreach(file_utils.touch)
-      return result_rdd
+        # RDD(MARKER files) 
+        .map(lambda path: os.path.join(path, MARKER)))
+    # RDD(dir_MArKER)
+    result_rdd.foreach(file_utils.touch)
+    return result_rdd
