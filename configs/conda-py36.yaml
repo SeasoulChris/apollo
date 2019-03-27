@@ -1,3 +1,21 @@
 name: fuel-py36
 dependencies:
   - python = 3.6
+
+  # Google infra
+  - gflags
+  - glog
+  - protobuf
+
+  # Data science
+  - h5py
+  - matplotlib
+  - numpy
+  - scikit-learn
+
+  # Pytorch
+  - pytorch
+  - torchvision
+
+  # Other.
+  - opencv
