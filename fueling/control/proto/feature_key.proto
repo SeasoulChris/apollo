@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package apollo_fuel.fueling.control.proto.feature_key;
 
-message featureKey {
+message FeatureKey {
     optional double speed_step = 1;
     optional double acc_step = 2;
     optional double steer_step = 3;

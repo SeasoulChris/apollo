@@ -12,14 +12,14 @@ import common.proto_utils as proto_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 
 from fueling.control.features.filters import Filters
-from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CALIBRATION_TABLE_CONF, calibrationTable())
+    FILENAME_CALIBRATION_TABLE_CONF, CalibrationTable())
 
 # calibration table constant
 steer_condition = CALIBRATION_TABLE_CONF.steer_condition

@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package apollo_fuel.fueling.control.proto.calibration_table;
 
-message calibrationTable {
+message CalibrationTable {
 
     optional double speed_min_condition = 1;
     optional double speed_max_condition = 2;

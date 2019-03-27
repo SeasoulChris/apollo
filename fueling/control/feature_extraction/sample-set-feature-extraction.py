@@ -60,13 +60,13 @@ class SampleSetFeatureExtraction(BasePipeline):
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'SampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
-        list_func = (lambda path: self.get_spark_context().parallelize(
-            dir_utils.list_end_files(os.path.join(root_dir, path))))
+
+        list_func = (lambda path: s3_utils.list_files(bucket, path))
+
         # RDD(record_dir)
         todo_tasks_dir = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
-
-                     
+         
         todo_tasks = (
             # RDD(record_dir)
             todo_tasks_dir

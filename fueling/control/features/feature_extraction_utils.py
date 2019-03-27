@@ -10,21 +10,18 @@ import numpy as np
 
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.control.proto.control_conf_pb2 import ControlConf
-from modules.data.fuel.fueling.control.proto.feature_key_pb2 import featureKey
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 import common.proto_utils as proto_utils
 
+from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
 import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 
-
-
-# FILENAME = "/mnt/bos/modules/control/common/feature_key_conf.pb.txt"
 FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
-FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, featureKey())
+FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, FeatureKey())
 
 FILENAME_CONTROL_CONF = \
     '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
