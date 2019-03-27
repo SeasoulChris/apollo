@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 """Extraction features from records with folder path as part of the key"""
-
-from collections import Counter
-import operator
 import os
 
 import h5py
 import numpy as np
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
@@ -15,12 +11,11 @@ import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.time_utils as time_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
+channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.WANTED_VEHICLE
 MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteGeneralSet'
@@ -38,7 +33,7 @@ class GeneralFeatureExtraction(BasePipeline):
 
         origin_prefix = 'modules/data/fuel/testdata/control/sourceData'
         target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
-                                      WANTED_VEHICLE, 'GeneralSet')
+                                     WANTED_VEHICLE, 'GeneralSet')
         root_dir = '/apollo'
 
         list_func = (lambda path: self.get_spark_context().parallelize(
@@ -46,20 +41,19 @@ class GeneralFeatureExtraction(BasePipeline):
         # RDD(record_dir)
         todo_tasks = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '', '/' + MARKER))
-        
         glog.info('todo_folders: {}'.format(todo_tasks.collect()))
 
-                         # PairRDD(record_dir, record_dir)
-        dir_to_records = (todo_tasks
-                         # PairRDD(record_dir, all_files)
-                         .flatMap(dir_utils.list_end_files)
-                         # PairRDD(record_dir, record_files)
-                         .filter(record_utils.is_record_file)
-                         # PairRDD(record_dir, record_files)
-                         .keyBy(os.path.dirname))
+        dir_to_records = (
+            # PairRDD(record_dir, record_dir)
+            todo_tasks
+            # PairRDD(record_dir, all_files)
+            .flatMap(dir_utils.list_end_files)
+            # PairRDD(record_dir, record_files)
+            .filter(record_utils.is_record_file)
+            # PairRDD(record_dir, record_files)
+            .keyBy(os.path.dirname))
 
         glog.info('todo_files: {}'.format(dir_to_records.collect()))
-       
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 
     def run_prod(self):
@@ -75,12 +69,13 @@ class GeneralFeatureExtraction(BasePipeline):
         todo_tasks_dir = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
 
-                     # RDD(record_dir)
-        todo_tasks = (todo_tasks_dir
-                     # RDD(record_files)
-                     .flatMap(os.listdir)
-                     # RDD(absolute_record_files)
-                     .map(lambda record_dir: os.path.join(root_dir, record_dir)))
+        todo_tasks = (
+            # RDD(record_dir)
+            todo_tasks_dir
+            # RDD(record_files)
+            .flatMap(os.listdir)
+            # RDD(absolute_record_files)
+            .map(lambda record_dir: os.path.join(root_dir, record_dir)))
 
         # PairRDD(record_dir, record_files)
         dir_to_records = todo_tasks.filter(record_utils.is_record_file).keyBy(os.path.dirname)
@@ -96,8 +91,7 @@ class GeneralFeatureExtraction(BasePipeline):
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
             out_dir = os.path.join(root_dir, out_dir)
-            file_utils.makedirs(out_dir)            
-            
+            file_utils.makedirs(out_dir)
             out_file_path = "{}/{}.hdf5".format(out_dir, segment_id)
             with h5py.File(out_file_path, "w") as out_file:
                 i = 0
@@ -110,25 +104,25 @@ class GeneralFeatureExtraction(BasePipeline):
             return elem
 
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        valid_msgs = (
-            feature_extraction_rdd_utils.record_to_msgs_rdd(dir_to_records_rdd, 
-                WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
-            .cache())
+        valid_msgs = (feature_extraction_rdd_utils
+                      .record_to_msgs_rdd(dir_to_records_rdd,
+                                          WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
+                      .cache())
 
         # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
         parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
 
         result = (
-             parsed_msgs
-             # RDD((dir_segment, segment_id), (chassis_list, pose_list))
-             # write all segment into a hdf5 file
-             .map(_gen_hdf5))
+            parsed_msgs
+            # RDD((dir_segment, segment_id), (chassis_list, pose_list))
+            # write all segment into a hdf5 file
+            .map(_gen_hdf5))
         glog.info('Generated %d h5 files!' % result.count())
-    
         # mark completed folders
         # RDD (dir_segment)
-        (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix, target_prefix, MARKER)
-        .count())
+        (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,
+                                                    target_prefix, MARKER)
+         .count())
 
     @staticmethod
     def get_vehicle_of_dirs(dir_to_records_rdd):
