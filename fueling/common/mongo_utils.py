@@ -11,6 +11,8 @@ import sys
 import google.protobuf.json_format as json_format
 import pymongo
 
+import fueling.common.colored_glog as glog
+
 
 class Mongo(object):
     """MongoDB util"""

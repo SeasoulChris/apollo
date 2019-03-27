@@ -2,31 +2,21 @@
 import os
 import sys
 
-import gflags
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 from fueling.data.record_parser import RecordParser
 import fueling.common.colored_glog as glog
-import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.time_utils as time_utils
-
-
-gflags.DEFINE_string('mongo_collection_name', 'records', 'MongoDB collection name.')
 
 
 class IndexRecords(BasePipeline):
     """IndexRecords pipeline."""
+    COLLECTION_NAME = 'records'
 
     def __init__(self):
         BasePipeline.__init__(self, 'index-records')
-        self.mongo_collection = None
-
-        sc = self.get_spark_context()
-        self.indexed_records_acc = sc.accumulator(0)
-        self.connecting_mongo_acc = sc.accumulator(0)
+        self.indexed_records_acc = self.get_spark_context().accumulator(0)
 
     def run_test(self):
         """Run test."""
@@ -51,7 +41,8 @@ class IndexRecords(BasePipeline):
 
     def process(self, records_rdd):
         """Run the pipeline with given arguments."""
-        docs = self._get_mongo_collection().find({}, {'path': 1})
+        collection = Mongo.collection(self.COLLECTION_NAME)
+        docs = collection.find({}, {'path': 1})
         imported_records = [doc['path'] for doc in docs]
         glog.info('Found {} imported records'.format(len(imported_records)))
 
@@ -64,26 +55,21 @@ class IndexRecords(BasePipeline):
             .filter(lambda record_meta: record_meta is not None)
             # RDD(RecordMeta_doc)
             .map(Mongo.pb_to_doc)
-            # RDD(None)
-            .foreach(self.import_record))
+            # RDD(imported_path)
+            .mapPartitions(self.import_record))
         glog.info('Imported {} records'.format(self.indexed_records_acc.value))
-        glog.info('Connecting to MongoDB {} times'.format(self.connecting_mongo_acc.value))
 
-    def import_record(self, record_meta_doc):
-        """Import a record doc to Mongo."""
-        path = record_meta_doc['path']
-        self._get_mongo_collection().replace_one({'path': path}, record_meta_doc, upsert=True)
-        glog.info('Imported record {}'.format(path))
-        self.indexed_records_acc += 1
-
-    def _get_mongo_collection(self):
-        """Get a connected Mongo collection."""
-        if self.mongo_collection is None:
-            self.mongo_collection = Mongo.collection(gflags.FLAGS.mongo_collection_name)
-            self.connecting_mongo_acc += 1
-        return self.mongo_collection
+    def import_record(self, record_meta_docs):
+        """Import record docs to Mongo."""
+        collection = Mongo.collection(self.COLLECTION_NAME)
+        newly_imported = []
+        for doc in record_meta_docs:
+            collection.replace_one({'path': doc['path']}, doc, upsert=True)
+            newly_imported.append(doc['path'])
+            self.indexed_records_acc += 1
+            glog.info('Imported record {}'.format(doc['path']))
+        return newly_imported
 
 
 if __name__ == '__main__':
-    gflags.FLAGS(sys.argv)
-    IndexRecords().run_test()
+    IndexRecords().run_prod()
