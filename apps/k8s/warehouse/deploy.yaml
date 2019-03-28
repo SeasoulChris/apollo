@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: warehouse-deployment
+  labels:
+    app: warehouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: warehouse
+  template:
+    metadata:
+      labels:
+        app: warehouse
+    spec:
+      imagePullSecrets:
+      - name: baidubce
+      containers:
+      - name: warehouse
+        image: hub.baidubce.com/apollo/warehouse:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: MONGO_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-passwd
+        - name: APOLLO_EMAIL_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: apollo-k8s-secret
+              key: email-passwd
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: warehouse-service
+spec:
+  selector:
+    app: warehouse
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
