@@ -41,12 +41,14 @@ def list_images(target_dir, task):
 
 def pickup_frames(task):
     """Pick up frames based on varies of rules"""
-    frames = sorted(list(os.listdir(os.path.join(task, 'frames'))))
+    frames_dir = os.path.join(task, 'frames')
+    frames = sorted([os.path.join(frames_dir, frame) for frame in os.listdir(frames_dir)
+                    if frame.startswith('frame-') and frame.endswith('.json')])
     glog.info('original frames: {}: {}'.format(len(frames), frames))
     rules.form_chains()
     filtered_frames = rules.RulesChain.do_filter(frames)
     glog.info('filtered frames: {}: {}'.format(len(filtered_frames), filtered_frames))
-    return filtered_frames
+    return [os.path.basename(frame) for frame in filtered_frames]
 
 def upload_frames(task, frames, s3_client):
     """Upload frames to AWS"""
