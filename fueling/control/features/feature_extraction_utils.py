@@ -19,6 +19,7 @@ import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
+import fueling.control.dynamic_model.conf.model_config as model_config
 
 FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, FeatureKey())
@@ -188,29 +189,44 @@ def feature_key_value(elem):
     # ((folder_path,feature_key),(time_stamp,paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
-
 def gen_segment(elem):
     """ generate segment w.r.t time """
     segments = []
     pre_time = elem[0][0]
     data_set = np.array(elem[0][1])
+    counter = 1 # count segment length first element
     for i in range(1, len(elem)):
         if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA:
             data_set = np.vstack([data_set, elem[i][1]])
+            counter += 1 
         else:
-            if i > MIN_SEGMENT_LENGTH:
-                segments.append(data_set)
+            if counter > model_config.feature_config['sequence_length']:
+                segments.append((segment_id(pre_time), data_set))
             data_set = np.array([elem[i][1]])
+            counter = 0 
         pre_time = elem[i][0]
-    segments.append(data_set)
+    if counter > model_config.feature_config['sequence_length']:
+        segments.append((segment_id(pre_time), data_set))
     return segments
 
+def segment_id(timestamp):
+    return int(timestamp * 100) % 1000000
 
-def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
+# def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
+#     """write to h5 file, use feature key as file name"""
+#     key = str(elem[0][1])
+#     folder_path = str(elem[0][0])
+#     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
+#     file_name = key
+#     h5_utils.write_h5(elem[1], folder_path, file_name)
+#     return elem[0]
+
+
+def write_segment_with_key(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file, use feature key as file name"""
-    key = str(elem[0][1])
-    folder_path = str(elem[0][0])
+    ((folder_path, key), (segmentID, data_set)) = elem
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
-    file_name = key
-    h5_utils.write_h5(elem[1], folder_path, file_name)
-    return elem[0]
+    data_size = data_set.shape[0] # row, number of data points
+    file_name = str(key) + '_' + str(segmentID) + '_' + str(data_size)
+    h5_utils.write_h5_single_segment(data_set, folder_path, file_name)
+    return (folder_path, key)

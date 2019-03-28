@@ -18,7 +18,7 @@ MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteSampleSet'
 
 class SampleSetFeatureExtraction(BasePipeline):
-    """ Generate general feature extraction hdf5 files from records """
+    """ Generate sample set feature extraction hdf5 files from records """
 
     def __init__(self):
         """ initialize """
@@ -103,13 +103,17 @@ class SampleSetFeatureExtraction(BasePipeline):
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
                           feature_extraction_utils.extend)
-            # PairRDD((dir, feature_key), segments)
-            .mapValues(feature_extraction_utils.gen_segment)
+            # PairRDD((dir, feature_key), one segment)
+            .flatMapValues(feature_extraction_utils.gen_segment))
+
+        h5_result = (
+            # PairRDD((dir, feature_key), one segment)
+            data_segment_rdd    
             # RDD(dir, feature_key), write all segment into a hdf5 file
-            .map(lambda elem: feature_extraction_utils.write_h5_with_key(
+            .map(lambda elem: feature_extraction_utils.write_segment_with_key(
                 elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
-        glog.info('Finished %d data_segment_rdd!' % data_segment_rdd.count())
+        glog.info('Finished %d h5_result_rdd!' % h5_result.count())
 
         # RDD (dir_segment)
         (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,
