@@ -1,25 +1,9 @@
 #!/usr/bin/env python
-###############################################################################
-# Copyright 2017 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
 """Serve data imported in MongoDB."""
 
 import collections
 import datetime
 import os
-import pickle
 import sys
 
 import flask
@@ -27,11 +11,11 @@ import gflags
 import gunicorn.app.base
 import pymongo
 
-import add_pythonpath
+from fueling.common.mongo_utils import Mongo
+from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+
 import display_util
 import records_util
-from modules.data.proto.record_pb2 import Record
-from mongo_util import Mongo
 
 
 gflags.DEFINE_string('host', '0.0.0.0', 'Web host IP.')
@@ -40,8 +24,7 @@ gflags.DEFINE_integer('workers', 5, 'Web host workers.')
 gflags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 gflags.DEFINE_integer('page_size', 20, 'Search results per page.')
 
-gflags.DEFINE_string('mongo_collection_name', 'records',
-                     'MongoDB collection name.')
+gflags.DEFINE_string('mongo_collection_name', 'records', 'MongoDB collection name.')
 
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
@@ -77,13 +60,11 @@ def tasks_hdl(page_idx=1):
     }
     task_records = collections.defaultdict(list)
     for doc in mongo_col.find(query, kFields):
-        task_records[doc['dir']].append(Mongo.doc_to_pb(doc, Record()))
-    tasks = [records_util.CombineRecords(records)
-             for records in task_records.values()]
+        task_records[doc['dir']].append(Mongo.doc_to_pb(doc, RecordMeta()))
+    tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
-    return flask.render_template('records.tpl', page_count=page_count,
-                                 current_page=page_idx, records=tasks,
-                                 is_tasks=True)
+    return flask.render_template(
+        'records.tpl', page_count=page_count, current_page=page_idx, records=tasks, is_tasks=True)
 
 @app.route('/task/<path:task_path>')
 def task_hdl(task_path):
@@ -118,8 +99,8 @@ def records_hdl(page_idx=1):
     offset = G.page_size * (page_idx - 1)
     records = [Mongo.doc_to_pb(doc, Record())
                for doc in docs.sort(kSort).skip(offset).limit(G.page_size)]
-    return flask.render_template('records.tpl', page_count=page_count,
-                                 current_page=page_idx, records=records)
+    return flask.render_template(
+        'records.tpl', page_count=page_count, current_page=page_idx, records=records)
 
 
 @app.route('/record/<path:record_path>')

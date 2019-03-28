@@ -1,20 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
-###############################################################################
-# Copyright 2017 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
 """Utils for displaying."""
 
 import datetime
@@ -22,17 +7,15 @@ import math
 import pytz
 import sys
 
-import gflags
-
 from modules.common.proto.drive_event_pb2 import DriveEvent
 
-gflags.DEFINE_string('timezone', 'America/Los_Angeles', 'Timezone.')
+TIMEZONE = 'America/Los_Angeles'
 
 
 def timestamp_to_time(timestamp):
     """Convert Unix epoch timestamp to readable time."""
     dt = datetime.datetime.fromtimestamp(timestamp, pytz.utc)
-    local_tz = pytz.timezone(gflags.FLAGS.timezone)
+    local_tz = pytz.timezone(TIMEZONE)
     return dt.astimezone(local_tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -64,14 +47,12 @@ def draw_path_on_gmap(driving_path, canvas_id):
 
     result = 'var gmap = LoadGoogleMap("{}", {}, {}, {});\n'.format(
         canvas_id, center_lat, center_lng, zoom)
-    latlng_list = ['[{},{}]'.format(point.lat, point.lon)
-                   for point in driving_path]
+    latlng_list = ['[{},{}]'.format(point.lat, point.lon) for point in driving_path]
     result += 'var latlng_list = [{}];\n'.format(','.join(latlng_list))
     result += 'DrawPolyline(gmap, latlng_list, "blue", 2);\n'
 
     start, end = driving_path[0], driving_path[-1]
-    result += 'DrawCircle(gmap, {}, {}, 20, "green");\n'.format(
-        start.lat, start.lon)
+    result += 'DrawCircle(gmap, {}, {}, 20, "green");\n'.format(start.lat, start.lon)
     result += 'DrawCircle(gmap, {}, {}, 20, "red");\n'.format(end.lat, end.lon)
 
     return result
@@ -81,8 +62,7 @@ def draw_disengagements_on_gmap(record):
     """Draw disengagements on Google map."""
     result = ''
     for dis in record.disengagements:
-        info = 'disengage at %.1fs' % (
-            dis.time - record.header.begin_time / 1e9)
+        info = 'disengage at %.1fs' % (dis.time - record.header.begin_time / 1e9)
         result += 'DrawInfoWindow(gmap, {}, {}, "{}");\n'.format(
             dis.location.lat, dis.location.lon, info)
     return result

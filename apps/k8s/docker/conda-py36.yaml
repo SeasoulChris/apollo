@@ -1,0 +1,20 @@
+name: fuel-py36
+dependencies:
+  - python = 3.6
+
+  # Google infra
+  - protobuf
+
+  # Web
+  - flask
+  - gunicorn
+  - pymongo
+
+  # Other
+  - pytz
+  - termcolor
+
+  - pip:
+    - glog
+    - python-gflags
+

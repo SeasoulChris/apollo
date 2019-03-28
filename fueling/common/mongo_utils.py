@@ -55,4 +55,4 @@ class Mongo(object):
 
 
 if __name__ == '__main__':
-    print Mongo.db().collection_names()
+    print(Mongo.db().collection_names())
