@@ -87,14 +87,7 @@ def load_messages(root_dir, record_file, topics):
     Load multiple topics, merge them together sorting by timestamp.
     Message objs' path are included
     """
-    messages = sorted(load_meta_data(root_dir, record_file, topics), key=operator.itemgetter(1))
-    data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
-    for idx in range(0, len(messages)):
-        messages[idx] = messages[idx]._replace(
-            objpath=os.path.join(
-                data_dir,
-                '{}-{}'.format(topic_to_file_name(messages[idx].topic), messages[idx].timestamp)))
-    return messages
+    return sorted(load_meta_data(root_dir, record_file, topics), key=operator.itemgetter(1))
 
 def load_message_obj(message_file_path):
     """Load the message objects that stored previously in file system"""
@@ -159,6 +152,13 @@ def get_streaming_records(root_dir):
     """Get streaming record path which the streaming process monitors"""
     return os.path.join(root_dir, os.path.join(STREAMING_PATH, STREAMING_RECORDS))
 
+def get_message_id(timestamp, topic):
+    """
+    Form a message ID by using timestamp and topic name, 
+    which combined together should be able to represent an unique message
+    """
+    return '{}{}'.format(timestamp, topic_to_file_name(topic))
+
 def topic_to_file_name(topic):
     """Convert / in topic to - to make it compatible with file system"""
     return topic.replace('/', '_')
@@ -176,7 +176,7 @@ def write_to_file(file_path, mode, message):
 
 def write_message_obj(record_dir, renamed_topic, py_message):
     """Write message object in binary to file system"""
-    message_file_name = '{}-{}'.format(renamed_topic, py_message.timestamp)
+    message_file_name = get_message_id(py_message.timestamp, renamed_topic)
     with open(os.path.join(record_dir, message_file_name), 'wb') as message_file:
         # For compressed camera messages, write binary data instead of message objects
         if renamed_topic.endswith('compressed'):
@@ -209,7 +209,7 @@ def upload_images(root_dir, record_dir, record_file):
     image_path = record_to_stream_path(record_file, root_dir, STREAMING_IMAGE)
     create_dir_if_not_exist(image_path)
     for message_name in os.listdir(record_dir):
-        if message_name.find('compressed') != -1 and not message_name.endswith('compressed'):
+        if message_name.find('compressed') != -1:
             shutil.copy2(
                 os.path.join(record_dir, message_name),
                 os.path.join(image_path, message_name))
@@ -226,5 +226,5 @@ def build_meta_from_line(root_dir, record_file, topic, line):
     if reg_search is not None:
         fields = reg_search.group(1)
     data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
-    objpath = os.path.join(data_dir, '{}-{}'.format(topic_to_file_name(topic), timestamp))
+    objpath = os.path.join(data_dir, get_message_id(timestamp, topic))
     return message_meta(topic=topic, timestamp=timestamp, fields=fields, objpath=objpath)

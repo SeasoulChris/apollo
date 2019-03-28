@@ -6,7 +6,6 @@ import gc
 import math
 import os
 import subprocess
-from urllib import quote
 
 from google.protobuf.json_format import MessageToJson
 import numpy as np
@@ -87,7 +86,7 @@ SENSOR_PARAMS = {
     'modules/calibration/mkz6/radar_params/radar_rear_extrinsics.yaml',
 
     'image_url':
-    'https://s3-us-west-1.amazonaws.com/scale-labeling'
+    'https://s3-us-west-1.amazonaws.com/scale-labeling/images'
 }
 
 def load_yaml_settings(yaml_file_name):
@@ -98,18 +97,12 @@ def load_yaml_settings(yaml_file_name):
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 
-def dump_img_bin(data, output_dir, frame_id, channel):
-    """Dump image bytes to binary file."""
-    create_dir_if_not_exist(output_dir)
-    with open('{}/image_bin-{}_{}'.format(output_dir, frame_id, channel), 'wb') as bin_file:
-        bin_file.write(data)
-
-def dump_img_name(output_dir, timestamp, topic):
+def dump_img_name(output_dir, image_name):
     """Write image file name only"""
     create_dir_if_not_exist(output_dir)
-    image_file_name = os.path.join(output_dir, 'image-{}_{}'.format(timestamp, topic))
-    if not os.path.exists(image_file_name):
-        os.mknod(image_file_name)
+    image_file_path = os.path.join(output_dir, image_name)
+    if not os.path.exists(image_file_path):
+        os.mknod(image_file_path)
 
 def point3d_to_matrix(point):
     """Convert a 3-items array to 4*1 matrix."""
@@ -361,10 +354,6 @@ class PointCloudSensor(Sensor):
         frame.device_position.z = point_world.z
         rotation = get_rotation_from_tranform(transform)
         qtn = rotation_to_quaternion(rotation)
-        frame.device_heading.x = qtn.qx
-        frame.device_heading.y = qtn.qy
-        frame.device_heading.z = qtn.qz
-        frame.device_heading.w = qtn.qw
 
 class RadarSensor(Sensor):
     """Radar sensor that hold radar data."""
@@ -428,13 +417,9 @@ class ImageSensor(Sensor):
         """Processing image message."""
         camera_image = frame_pb2.CameraImage()
         camera_image.timestamp = float(timestamp)/(10**9)
-        dump_img_name(os.path.join(self._task_dir, 'images'),
-                      timestamp, self.get_image_name())
-        camera_image.image_url = '{}/{}/images/pic-{}_{}.jpg'.format(
-            SENSOR_PARAMS['image_url'],
-            quote(os.path.basename(self._task_dir)),
-            timestamp,
-            self.get_image_name())
+        image_name = streaming_utils.get_message_id(timestamp, self._channel)
+        dump_img_name(os.path.join(self._task_dir, 'images'), image_name)
+        camera_image.image_url = '{}/{}.jpg'.format(SENSOR_PARAMS['image_url'], image_name)
         camera_image.k1 = self._intrinsics['D'][0]
         camera_image.k2 = self._intrinsics['D'][1]
         camera_image.k3 = self._intrinsics['D'][4]
@@ -463,13 +448,6 @@ class ImageSensor(Sensor):
         camera_image.channel = self._channel
         image_frame = frame.images.add()
         image_frame.CopyFrom(camera_image)
-
-    def get_image_name(self):
-        """A nasty way to get image name from map."""
-        for name in SENSOR_PARAMS:
-            if SENSOR_PARAMS[name] == self._channel:
-                return name
-        return None
 
 class GpsSensor(object):
     """GPS sensor that hold pose data."""

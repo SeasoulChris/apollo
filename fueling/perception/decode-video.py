@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""This script extracts sensor messages for labeling"""
+"""This script generates video files from records and decode them into images"""
 
 import ast
 import operator
@@ -57,9 +57,9 @@ def decode_videos(message_meta):
         return
     target_dir, topic = target_topic
     streaming_utils.create_dir_if_not_exist(target_dir)
-    topic = streaming_utils.topic_to_file_name(topic)
-    current_group = '{}-{}'.format(topic, meta_list[0][0])
-    h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(current_group))
+    # Use the first message name in the group as the current group name
+    cur_group_name = streaming_utils.get_message_id(meta_list[0][0], topic)
+    h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(cur_group_name))
     glog.info('current video file path: {}'.format(h265_video_file_path))
     with open(h265_video_file_path, 'wb') as h265_video_file:
         for _, _, video_frame_bin_path in meta_list:
@@ -68,7 +68,7 @@ def decode_videos(message_meta):
     # Invoke video2jpg binary executable
     video_decoder_executable_path = '/apollo/modules/perception/decoder'
     image_output_pattern = '%05d.jpg'
-    image_output_path = os.path.join(target_dir, current_group)
+    image_output_path = os.path.join(target_dir, cur_group_name)
     streaming_utils.create_dir_if_not_exist(image_output_path)
     return_code = os.system('cd {} && ./bin/video2jpg.sh {} {}'
                             .format(video_decoder_executable_path,
@@ -84,7 +84,7 @@ def decode_videos(message_meta):
     # Rename the generated images to match the original frame name
     for idx in range(0, len(generated_images)):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
-                  os.path.join(image_output_path, '{}-{}'.format(topic, meta_list[idx][0])))
+                  os.path.join(image_output_path, streaming_utils.get_message_id(meta_list[idx][0], topic)))
     glog.info('done with group {}, image path: {}'.format(current_group, image_output_path))
 
 def mark_complete(todo_tasks, target_dir, root_dir):
