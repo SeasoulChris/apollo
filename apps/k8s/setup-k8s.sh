@@ -22,5 +22,5 @@ kubectl create secret docker-registry "baidubce" \
     --docker-password="${DOCKER_PASSWORD}" \
     --docker-email="xiaoxiangquan@baidu.com"
 
-SECRET_YAML_FILE="$( dirname "${BASH_SOURCE[0]}" )/../apps/k8s/secrets.yaml"
-kubectl apply -f "${SECRET_YAML_FILE}" 
+# Add secrets.
+kubectl apply -f secrets.yaml
