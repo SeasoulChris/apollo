@@ -226,7 +226,6 @@ def write_segment_with_key(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file, use feature key as file name"""
     ((folder_path, key), (segmentID, data_set)) = elem
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
-    data_size = data_set.shape[0] # row, number of data points
-    file_name = str(key) + '_' + str(segmentID) + '_' + str(data_size)
+    file_name = str(key) + '_' + str(segmentID)
     h5_utils.write_h5_single_segment(data_set, folder_path, file_name)
     return (folder_path, key)
