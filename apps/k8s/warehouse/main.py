@@ -38,7 +38,7 @@ def tasks_hdl(page_idx=1):
     G = gflags.FLAGS
     mongo_col = Mongo.collection(G.mongo_collection_name)
     task_dirs = {doc['dir'] for doc in mongo_col.find({}, {'dir': 1})}
-    page_count = (len(task_dirs) + G.page_size - 1) / G.page_size
+    page_count = (len(task_dirs) + G.page_size - 1) // G.page_size
     if page_idx > page_count:
         flask.flash('Page index out of bound')
         return flask.render_template('base.tpl')
@@ -95,7 +95,7 @@ def records_hdl(page_idx=1):
     kSort = [('header.begin_time', pymongo.DESCENDING)]
 
     docs = Mongo.collection(G.mongo_collection_name).find({}, kFields)
-    page_count = (docs.count() + G.page_size - 1) / G.page_size
+    page_count = (docs.count() + G.page_size - 1) // G.page_size
     offset = G.page_size * (page_idx - 1)
     records = [Mongo.doc_to_pb(doc, Record())
                for doc in docs.sort(kSort).skip(offset).limit(G.page_size)]

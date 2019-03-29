@@ -14,7 +14,7 @@ def CombineRecords(records):
     for record in records:
         virtual_record.header.size += record.header.size
         channels = virtual_record.channels
-        for channel, count in record.channels.iteritems():
+        for channel, count in record.channels.items():
             channels[channel] = (channels.get(channel) or 0) + count
 
         if record.hmi_status.current_mode:
@@ -23,7 +23,7 @@ def CombineRecords(records):
         virtual_record.disengagements.extend(record.disengagements)
         virtual_record.drive_events.extend(record.drive_events)
         mileages = virtual_record.stat.mileages
-        for driving_mode, miles in record.stat.mileages.iteritems():
+        for driving_mode, miles in record.stat.mileages.items():
             mileages[driving_mode] = (mileages.get(driving_mode) or 0) + miles
         virtual_record.stat.driving_path.extend(record.stat.driving_path)
     return virtual_record
