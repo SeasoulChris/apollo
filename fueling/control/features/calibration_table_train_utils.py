@@ -27,17 +27,15 @@ def choose_data_file(hdf5_folder, vehicle_type, brake_or_throttle, train_or_test
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
-        # TODO: Use glog.
         glog.info('Loading %s' % str(h5))
-        # TODO: Avoid single-char variable name.
-        with h5py.File(h5, 'r+') as f:
+        with h5py.File(h5, 'r+') as fin:
             # TODO: Simplify the logic: segments = [np.array(segment) for segment in f.itervalues()]
-            names = [n for n in f.keys()]
-            print('f.keys', f.keys())
+            names = [n for n in fin.keys()]
+            print('f.keys', fin.keys())
             if len(names) < 1:
                 continue
             for i in range(len(names)):
-                ds = np.array(f[names[i]])
+                ds = np.array(fin[names[i]])
                 segments.append(ds)
     # shuffle(segments)
     print('Segments count: ', len(segments))
@@ -48,16 +46,15 @@ def generate_data(segments):
     """ combine data from each segments """
     total_len = 0
     # TODO: Looping a "range(len(segments))" equals looping segments directly.
-    for i in range(len(segments)):
-        total_len += segments[i].shape[0]
+    for segment in segments:
+        total_len += segment.shape[0]
     print("total_len = ", total_len)
     dim_input = 2
     dim_output = 1
     X = np.zeros([total_len, dim_input])
     Y = np.zeros([total_len, dim_output])
     i = 0
-    for j in range(len(segments)):
-        segment = segments[j]
+    for segment in segments:
         for k in range(1, segment.shape[0]):
             X[i, 0:2] = segment[k, [0, 2]]  # speed & cmd
             Y[i, 0] = segment[k, 1]  # acc

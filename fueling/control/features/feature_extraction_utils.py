@@ -96,7 +96,7 @@ def to_list(elem):
 
 
 def append(orig_elem, app_elem):
-    """append another element to the revious element"""
+    """append another element to the previous element"""
     orig_elem.append((app_elem))
     return orig_elem
 
