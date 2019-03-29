@@ -22,11 +22,13 @@ DIM_OUTPUT = feature_config["output_dim"]
 DIM_SEQUENCE_LENGTH = feature_config["sequence_length"]
 DIM_DELAY_STEPS = feature_config["delay_steps"]
 DELTA_T = feature_config["delta_t"]
+MAXIMUM_SEGMENT_LENGTH = feature_config["maximum_segment_length"]
 WINDOW_SIZE = feature_config["window_size"]
 POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 CALIBRATION_DIMENSION = point_mass_config["calibration_dimension"]
 VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
+
 
 FILENAME_VEHICLE_PARAM_CONF = \
     '/apollo/modules/common/data/vehicle_param.pb.txt'
@@ -66,6 +68,10 @@ def feature_preprocessing(segment):
     # discard the segments that are too short
     if segment.shape[0] < WINDOW_SIZE:
         return None
+    # discard the segments that are too short
+    elif segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH \
+                or segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
+        return None
     else:
         # smooth IMU acceleration data
         segment[:, segment_index["a_x"]] = savgol_filter(
@@ -79,67 +85,70 @@ def get_param_norm(input_feature, output_feature):
     """
     normalize the samples and save normalized parameters
     """
+    glog.info("Input Feature Dimension {}".format(input_feature.shape))
+    glog.info("Output Feature Dimension {}".format(output_feature.shape))
     glog.info("Start to calculate parameter norms")
     input_fea_mean = np.mean(input_feature, axis=0)
     input_fea_std = np.std(input_feature, axis=0) + STD_EPSILON
     output_fea_mean = np.mean(output_feature, axis=0)
     output_fea_std = np.std(output_feature, axis=0) + STD_EPSILON
-    return [
+    return (
         (input_fea_mean, input_fea_std),
         (output_fea_mean, output_fea_std)
-    ]
+    )
 
 
 def generate_training_data(segment):
     """
     extract usable features from the numpy array for model training
     """
-    # discard the segments that are too short
-    if segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
-        return None
-    else: 
-        total_len = segment.shape[0] - DIM_DELAY_STEPS
-        total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
-        glog.info('Total length: {}'.format(total_len))
-        mlp_input_data = np.zeros([total_len, DIM_INPUT])
-        mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
+    total_len = segment.shape[0] - DIM_DELAY_STEPS
+    total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
+    glog.info('Total length: {}'.format(total_len))
+    mlp_input_data = np.zeros([total_len, DIM_INPUT])
+    mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
 
-        for k in range(segment.shape[0] - DIM_DELAY_STEPS):
-            # speed mps
-            mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]] 
-            # acceleration
-            mlp_input_data[k, input_index["acceleration"]] = \
-                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
-                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]])
-            # throttle control from chassis
-            mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
-            # brake control from chassis
-            mlp_input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
-            # steering control from chassis
-            mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
-            
-            # acceleration next
-            mlp_output_data[k, output_index["acceleration"]] = \
-                segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
-                    np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
-                segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
-                    np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) 
-            # angular speed next
-            mlp_output_data[k, output_index["w_z"]] = \
-                segment[k + DIM_DELAY_STEPS, segment_index["w_z"]] 
+    for k in range(segment.shape[0] - DIM_DELAY_STEPS):
+        # speed mps
+        mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
+        # acceleration
+        mlp_input_data[k, input_index["acceleration"]] = \
+            segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
+            segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]])
+        # throttle control from chassis
+        mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
+        # brake control from chassis
+        mlp_input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
+        # steering control from chassis
+        mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
+        # acceleration next
+        mlp_output_data[k, output_index["acceleration"]] = \
+            segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
+                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
+            segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
+                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
+        # angular speed next
+        mlp_output_data[k, output_index["w_z"]] = \
+            segment[k + DIM_DELAY_STEPS, segment_index["w_z"]]
 
-        lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH])
-        lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
+    lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH])
+    lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
 
-        for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
-            lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
-            lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
+    for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
+        lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
+        lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
 
-        feature = [
-            ("mlp_data", (mlp_input_data, mlp_output_data)),
-            ("lstm_data", (lstm_input_data, lstm_output_data))
-        ]
-        return feature
+
+    glog.info('mlp_input_data shape: {}'.format(mlp_input_data.shape))
+    glog.info('mlp_output_data shape: {}'.format(mlp_output_data.shape))
+    glog.info('lstm_input_data shape: {}'.format(lstm_input_data.shape))
+    glog.info('lstm_output_data shape: {}'.format(lstm_output_data.shape))
+
+    feature = [
+        ("mlp_data", (mlp_input_data, mlp_output_data)),
+        ("lstm_data", (lstm_input_data, lstm_output_data))
+    ]
+    return feature
 
 
 def generate_evaluation_data(dataset_path, model_folder, model_name):

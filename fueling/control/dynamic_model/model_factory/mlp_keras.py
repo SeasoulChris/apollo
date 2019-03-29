@@ -105,10 +105,9 @@ def save_model(model, param_norm, filename):
 
 def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     glog.info("Start to train MLP model")
-    in_param_norm = param_norm[0]
-    out_param_norm = param_norm[1]
-    x_data = (x_data - in_param_norm[0]) / in_param_norm[1]
-    y_data = (y_data - out_param_norm[0]) / out_param_norm[1]
+    (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
+    x_data = (x_data - input_fea_mean) / input_fea_std
+    y_data = (y_data - output_fea_mean) / output_fea_std
     glog.info("x shape = {}, y shape = {}".format(x_data.shape, y_data.shape))
 
     x_train, x_test, y_train, y_test = train_test_split(x_data, y_data,
@@ -133,10 +132,10 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
 
     norms_h5 = os.path.join(model_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
-        h5_file.create_dataset('input_mean', data=in_param_norm[0])
-        h5_file.create_dataset('input_std', data=in_param_norm[1])
-        h5_file.create_dataset('output_mean', data=out_param_norm[0])
-        h5_file.create_dataset('output_std', data=out_param_norm[1])
+        h5_file.create_dataset('input_mean', data=input_fea_mean)
+        h5_file.create_dataset('input_std', data=input_fea_std)
+        h5_file.create_dataset('output_mean', data=output_fea_mean)
+        h5_file.create_dataset('output_std', data=output_fea_std)
 
     weights_h5 = os.path.join(model_dir, 'weights.h5')
     model.save(weights_h5)

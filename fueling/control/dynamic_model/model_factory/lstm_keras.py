@@ -60,11 +60,10 @@ def setup_model(model_name):
 
 def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_name='lstm_two_layer'):
     glog.info("Start to train LSTM model")
-    in_param_norm = param_norm[0]
-    out_param_norm = param_norm[1]
+    (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     for i in range(DIM_LSTM_LENGTH):
-        lstm_input_data[:, :, i] = (lstm_input_data[:, :, i] - in_param_norm[0]) / in_param_norm[1]
-    lstm_output_data = (lstm_output_data - out_param_norm[0]) / out_param_norm[1]
+        lstm_input_data[:, :, i] = (lstm_input_data[:, :, i] - input_fea_mean) / input_fea_std
+    lstm_output_data = (lstm_output_data - output_fea_mean) / output_fea_std
 
     split_idx = int(lstm_input_data.shape[0] * 0.8 + 1)
     lstm_input_split = np.split(lstm_input_data, [split_idx])
@@ -84,10 +83,10 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
 
     norms_h5 = os.path.join(model_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
-        h5_file.create_dataset('input_mean', data=in_param_norm[0])
-        h5_file.create_dataset('input_std', data=in_param_norm[1])
-        h5_file.create_dataset('output_mean', data=out_param_norm[0])
-        h5_file.create_dataset('output_std', data=out_param_norm[1])
+        h5_file.create_dataset('input_mean', data=input_fea_mean)
+        h5_file.create_dataset('input_std', data=input_fea_std)
+        h5_file.create_dataset('output_mean', data=output_fea_mean)
+        h5_file.create_dataset('output_std', data=output_fea_std)
 
     weights_h5 = os.path.join(model_dir, 'weights.h5')
     model.save(weights_h5)
