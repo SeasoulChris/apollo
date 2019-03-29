@@ -78,9 +78,18 @@ class EvenDistributedFeatureExtraction(BasePipeline):
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'EvenlyDistributedSampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
-        list_func = (lambda path: s3_utils.list_files(bucket, path))
 
-    
+        path = os.path.join(root_dir, origin_prefix)
+        target_dir = os.path.join(root_dir, target_prefix)
+
+        todo_tasks = (
+            #RDD(all files)
+            self.get_spark_context().parallelize(lambda path: s3_utils.list_files(bucket, path))
+            #RDD(.hdf5 files)
+            .filter(lambda path: path.endswith('.hdf5')))
+
+        self.run(todo_tasks, target_dir)
+
     def run(self, todo_tasks, target_prefix):
         categorized_segments = (
             # RDD(.hdf5 files with absolute path)
