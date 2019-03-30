@@ -1,0 +1,38 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.control.proto.control_profiling;
+
+message ControlMetrics {
+    optional double acceleration_harsh_limit = 1;
+    optional double curvature_harsh_limit = 2;
+
+    optional double speed_still = 3;
+    optional double heading_still = 4;
+    optional double curvature_still = 5;
+
+    optional double station_error_thold = 6;
+    optional double speed_error_thold = 7;
+    optional double lateral_error_thold = 8;
+    optional double lateral_error_rate_thold = 9;
+    optional double heading_error_thold = 10;
+    optional double heading_error_rate_thold = 11;
+
+    optional double lon_acceleration_thold = 12;
+    optional double lon_jerk_thold = 13;
+    optional double lat_acceleration_thold = 14;
+    optional double lat_jerk_thold = 15;
+    optional double heading_acceleration_thold = 16;
+    optional double heading_jerk_thold = 17;
+}
+
+message ControlProfiling {
+    optional string vehicle_type = 1;
+    optional string controller_type = 2;
+
+    optional ControlMetrics control_metrics = 3;
+
+    optional double control_period = 4;
+    optional double control_frame_num = 5;
+    optional double control_command_pct = 6;
+    optional double min_sample_size = 7;
+}

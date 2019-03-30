@@ -8,6 +8,7 @@ import os
 from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
+from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
@@ -17,6 +18,7 @@ import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
 CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
+CONTROL_CHANNEL =                  '/apollo/control'
 DRIVE_EVENT_CHANNEL =              '/apollo/drive_event'
 HMI_STATUS_CHANNEL =               '/apollo/hmi/status'
 LOCALIZATION_CHANNEL =             '/apollo/localization/pose'
@@ -29,6 +31,7 @@ RIGHT_FISHEYE_CHANNEL =            '/apollo/sensor/camera/right_fisheye/image/co
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,
+    CONTROL_CHANNEL: ControlCommand,
     HMI_STATUS_CHANNEL: HMIStatus,
     LOCALIZATION_CHANNEL: LocalizationEstimate,
     ROUTING_RESPONSE_HISTORY_CHANNEL: RoutingResponse,
