@@ -36,8 +36,8 @@ class GenerateImgs(BasePipeline):
         """Run prod."""
         root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
-        origin_prefix = 'data/prediction/features'
-        target_prefix = 'data/prediction/img_features'
+        origin_prefix = 'modules/prediction/features'
+        target_prefix = 'modules/prediction/img_features'
 
         bin_file = (
             # RDD(file), start with origin_prefix
@@ -86,7 +86,7 @@ class GenerateImgs(BasePipeline):
         region = target_dir.split('/')[target_dir.split('/').index('img_features') + 1]
         try:
             obstacle_mapping = ObstacleMapping(region, frame_env)
-            glog.info(len(frame_env.obstacles_history))
+            glog.debug("obstacles_history length is: " + str(len(frame_env.obstacles_history)))
             for history in frame_env.obstacles_history:
                 if not history.is_trainable:
                     continue
