@@ -21,17 +21,13 @@ import modules.control.proto.control_conf_pb2 as ControlConf
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
 
 
-
-
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            calibrationTable.calibrationTable())
 
-FILENAME_CONTROL_CONF = \
-    '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
+CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 WANTED_VEHICLE = CALIBRATION_TABLE_CONF.vehicle_type
 

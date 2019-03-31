@@ -30,14 +30,12 @@ VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
 
 
-FILENAME_VEHICLE_PARAM_CONF = \
-    '/apollo/modules/common/data/vehicle_param.pb.txt'
+FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                             vehicle_config_pb2.VehicleConfig()).vehicle_param
 
 FILENAME_CALIBRATION_TABLE_CONF = os.path.join(
-    '/mnt/bos/code/apollo-internal/modules_data/calibration/data/' + \
-     VEHICLE_MODEL + '/control_conf.pb.txt')
+    '/apollo/modules/calibration/data', VEHICLE_MODEL, 'control_conf.pb.txt')
 CONTROL_CONF = proto_utils.get_pb_from_text_file(
     FILENAME_CALIBRATION_TABLE_CONF, ControlConf.ControlConf())
 

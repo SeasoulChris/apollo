@@ -31,8 +31,7 @@ acc_max_condition = CALIBRATION_TABLE_CONF.acc_max
 train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 
 
-FILENAME_CONTROL_CONF = \
-    '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
+FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 

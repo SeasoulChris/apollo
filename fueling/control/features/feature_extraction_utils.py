@@ -24,8 +24,7 @@ import fueling.control.dynamic_model.conf.model_config as model_config
 FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, FeatureKey())
 
-FILENAME_CONTROL_CONF = \
-    '/mnt/bos/code/apollo-internal/modules_data/calibration/data/transit/control_conf.pb.txt'
+FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf())
 
 THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
