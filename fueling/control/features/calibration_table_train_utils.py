@@ -30,12 +30,11 @@ def generate_segments(h5s):
         glog.info('Loading %s' % str(h5))
         with h5py.File(h5, 'r+') as fin:
             # TODO: Simplify the logic: segments = [np.array(segment) for segment in f.itervalues()]
-            names = [n for n in fin.keys()]
-            print('f.keys', fin.keys())
+            names = list(fin.keys())
             if len(names) < 1:
                 continue
-            for i in range(len(names)):
-                ds = np.array(fin[names[i]])
+            for name in names:
+                ds = np.array(fin[name])
                 segments.append(ds)
     # shuffle(segments)
     print('Segments count: ', len(segments))

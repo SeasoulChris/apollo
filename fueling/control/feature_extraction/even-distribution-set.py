@@ -2,8 +2,9 @@
 """ extracting even distributed sample set """
 import os
 
-import fueling.common.colored_glog as glog
+
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
@@ -17,7 +18,8 @@ sample_size = 10
 
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
-    segmentID, file_type = pre_segmentID.split('.')
+    # segmentID, file_type = pre_segmentID.split('.')
+    segmentID = os.path.splitext(pre_segmentID)[0]
     return key, segmentID
 
 def pick_sample(list_of_segment):
@@ -37,7 +39,7 @@ def pick_sample(list_of_segment):
 def write_to_file(target_prefix, elem):
     key, list_of_segment = elem
     total_number = len(list_of_segment)
-    file_dir = os.path.join(target_prefix,key)
+    file_dir = os.path.join(target_prefix, key)
     counter = 1
     for data in list_of_segment:
         file_name = str(counter).zfill(4) + "_of_" + str(total_number).zfill(4)
@@ -45,10 +47,10 @@ def write_to_file(target_prefix, elem):
         counter += 1
     return total_number
             
-class EvenDistributedFeatureExtraction(BasePipeline):
+class EvenDistributionSet(BasePipeline):
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'even_distributed_feature_extraction')
+        BasePipeline.__init__(self, 'even_distribution_set')
 
     def run_test(self):
         """Run test."""
@@ -96,7 +98,7 @@ class EvenDistributedFeatureExtraction(BasePipeline):
             todo_tasks
             # PairedRDD(file_path, file_name)
             .map(lambda file_dir: (file_dir, os.path.basename(file_dir)))
-            # PairedRDD(file_path, key,segmentID)
+            # PairedRDD(file_path, (key, segmentID))
             .mapValues(get_key)
             # PairedRDD(key, file_path)
             .map(lambda elem: (elem[1][0], elem[0]))
@@ -119,4 +121,4 @@ class EvenDistributedFeatureExtraction(BasePipeline):
         glog.info('Generated %d categories', sampled_segments.count())
 
 if __name__ == '__main__':
-    EvenDistributedFeatureExtraction().run_test()
+    EvenDistributionSet().run_test()
