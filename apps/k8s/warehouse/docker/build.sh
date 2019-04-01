@@ -22,7 +22,10 @@ docker tag ${IMAGE} ${IMAGE_ALIAS}
 DOCKER_REGISTRY="hub.baidubce.com"
 DOCKER_USER="apollo"
 DOCKER_PASSWORD=""
-docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+# Please provide password if you want to login automatically.
+if [ ! -z "${DOCKER_PASSWORD}" ]; then
+  docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+fi
 
 if [ "$1" = "push" ]; then
   docker push ${IMAGE}
