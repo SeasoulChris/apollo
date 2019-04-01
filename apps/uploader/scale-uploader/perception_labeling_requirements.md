@@ -1,5 +1,11 @@
 # Raw Data Frame Filtering Rules For Data Labeling
 
+## 04/01/2019
+
+### Special Requirements for Scale
+**(Added)** Add pedestrian face filter requirement to 'Special Requirements for Scale'
+- Filter out those frames with front 6mm images showing clearly any pedestrian's face that is recognizable. after the "1 meter relative movement" rule. 
+
 ## 2019-03-28
 
 ### General
