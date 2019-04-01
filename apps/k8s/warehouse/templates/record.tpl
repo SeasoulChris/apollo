@@ -161,7 +161,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for channel, msg_count in record.channels.iteritems() %}
+        {% for channel, msg_count in record.channels.items() %}
           <tr>
             <td>{{ channel }}</td>
             <td>{{ msg_count }}</td>

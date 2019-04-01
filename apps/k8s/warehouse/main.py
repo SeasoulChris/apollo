@@ -71,7 +71,7 @@ def task_hdl(task_path):
     """Handler of the task detail page."""
     mongo_col = Mongo.collection(gflags.FLAGS.mongo_collection_name)
     docs = mongo_col.find({'dir': os.path.join('/', task_path)})
-    records = [Mongo.doc_to_pb(doc, Record()) for doc in docs]
+    records = [Mongo.doc_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
     return flask.render_template('record.tpl', record=task, sub_records=records)
 
@@ -97,7 +97,7 @@ def records_hdl(page_idx=1):
     docs = Mongo.collection(G.mongo_collection_name).find({}, kFields)
     page_count = (docs.count() + G.page_size - 1) // G.page_size
     offset = G.page_size * (page_idx - 1)
-    records = [Mongo.doc_to_pb(doc, Record())
+    records = [Mongo.doc_to_pb(doc, RecordMeta())
                for doc in docs.sort(kSort).skip(offset).limit(G.page_size)]
     return flask.render_template(
         'records.tpl', page_count=page_count, current_page=page_idx, records=records)
@@ -108,7 +108,7 @@ def record_hdl(record_path):
     """Handler of the record detail page."""
     mongo_col = Mongo.collection(gflags.FLAGS.mongo_collection_name)
     doc = mongo_col.find_one({'path': os.path.join('/', record_path)})
-    record = Mongo.doc_to_pb(doc, Record())
+    record = Mongo.doc_to_pb(doc, RecordMeta())
     return flask.render_template('record.tpl', record=record)
 
 

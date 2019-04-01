@@ -22,9 +22,7 @@ else
     echo "Available services:"
     while read -r service; do
       echo ""
-      echo "*    http://localhost:8001/api/v1/namespaces/${NAMESPACE}/services/http:${service}:${PORT}/proxy/"
+      echo "*    http://usa-data.baidu.com:8001/api/v1/namespaces/${NAMESPACE}/services/http:${service}:${PORT}/proxy/"
     done <<< "${SERVICES}"
-    echo ""
-    kubectl proxy
   fi
 fi
