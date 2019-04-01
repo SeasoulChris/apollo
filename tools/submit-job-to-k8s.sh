@@ -76,7 +76,7 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
 popd
 
 # Submit job with fueling package.
-sudo "${APOLLO_SPARK_REPO}/bin/spark-submit" \
+"${APOLLO_SPARK_REPO}/bin/spark-submit" \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
     --conf spark.default.parallelism="${EXECUTORS}" \

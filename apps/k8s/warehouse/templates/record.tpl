@@ -2,7 +2,7 @@
 
 {% block head %}
 
-<title>Apollo Data - Record - {{ record.path }}</title>
+<title>Apollo Fuel - Record - {{ record.path }}</title>
 
 <style>
 .green {color: green;}

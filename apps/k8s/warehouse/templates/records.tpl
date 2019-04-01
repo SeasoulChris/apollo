@@ -2,7 +2,7 @@
 
 {% block head %}
 
-<title>Apollo Data</title>
+<title>Apollo Fuel - Warehouse</title>
 
 <style>
 .topic_options {
