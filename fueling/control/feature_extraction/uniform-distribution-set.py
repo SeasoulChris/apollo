@@ -47,10 +47,10 @@ def write_to_file(target_prefix, elem):
         counter += 1
     return total_number
             
-class EvenDistributionSet(BasePipeline):
+class UniformDistributionSet(BasePipeline):
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'even_distribution_set')
+        BasePipeline.__init__(self, 'uniform_distribution_set')
 
     def run_test(self):
         """Run test."""
@@ -121,4 +121,4 @@ class EvenDistributionSet(BasePipeline):
         glog.info('Generated %d categories', sampled_segments.count())
 
 if __name__ == '__main__':
-    EvenDistributionSet().run_test()
+    UniformDistributionSet().run_test()

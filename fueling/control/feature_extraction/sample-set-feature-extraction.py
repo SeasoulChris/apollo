@@ -2,6 +2,7 @@
 """ extracting sample set """
 # pylint: disable = fixme
 # pylint: disable = no-member
+import glob
 import os
 
 from fueling.common.base_pipeline import BasePipeline
@@ -64,21 +65,22 @@ class SampleSetFeatureExtraction(BasePipeline):
         list_func = (lambda path: s3_utils.list_files(bucket, path))
 
         # RDD(record_dir)
-        todo_tasks_dir = (dir_utils.get_todo_tasks(
+        todo_task_dirs = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
+        glog.info('todo_task_dirs : {}'.format(todo_task_dirs.collect()))
          
         todo_tasks = (
             # RDD(record_dir)
-            todo_tasks_dir
-            # RDD(record_files)
-            .flatMap(os.listdir)
-            # RDD(absolute_record_files)
-            .map(lambda record_dir: os.path.join(root_dir, record_dir)))
-
-        # PairRDD(record_dir, record_files)
-        dir_to_records = todo_tasks.filter(record_utils.is_record_file).keyBy(os.path.dirname)
-
-        self.run(dir_to_records, origin_prefix, target_prefix)
+            todo_task_dirs
+            # RDD(abs_record_dir)
+            .map(lambda record_dir: os.path.join(root_dir, record_dir))
+            # PairRDD(record_dir, record_dir)
+            .keyBy(lambda record_dir: record_dir)
+            # RDD(record_dir, record_files)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
+        glog.info('todo_files: {}'.format(todo_tasks.collect()))
+            
+        self.run(todo_tasks, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
