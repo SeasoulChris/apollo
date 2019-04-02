@@ -41,6 +41,7 @@ output_index = {
 feature_config = {
     "input_dim": 5, # input feature dimension
     "output_dim": 2, # output feature dimension
+    "maximum_segment_length": 20000, # maximum segment length
     "sequence_length": 20, # consider historical sequences for RNN models
     "delta_t": 0.01, # update delta t for dynamic models
     "delay_steps": 1, # consider model delays between input and output

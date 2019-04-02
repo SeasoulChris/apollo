@@ -15,7 +15,7 @@ ENV="fuel-py27-cyber"
 # Training.
 JOB="fueling/control/dynamic_model/dynamic-model-training.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 2 --cpu 20 --memory 200g
+./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 2 --cpu 20 --memory 100g
 
 # Evaluation
 JOB="fueling/control/dynamic_model/dynamic-model-evaluation.py"

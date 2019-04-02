@@ -64,11 +64,10 @@ def feature_preprocessing(segment):
     smooth noisy raw data from IMU by savgol_filter
     """
     # discard the segments that are too short
-    if segment.shape[0] < WINDOW_SIZE:
+    if segment.shape[0] < WINDOW_SIZE or segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
         return None
-    # discard the segments that are too short
-    elif segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH \
-                or segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
+    # discard the segments that are too long
+    elif segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
         return None
     else:
         # smooth IMU acceleration data
@@ -103,8 +102,8 @@ def generate_training_data(segment):
     total_len = segment.shape[0] - DIM_DELAY_STEPS
     total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
     glog.info('Total length: {}'.format(total_len))
-    mlp_input_data = np.zeros([total_len, DIM_INPUT])
-    mlp_output_data = np.zeros([total_len, DIM_OUTPUT])
+    mlp_input_data = np.zeros([total_len, DIM_INPUT], order='C')
+    mlp_output_data = np.zeros([total_len, DIM_OUTPUT], order='C')
 
     for k in range(segment.shape[0] - DIM_DELAY_STEPS):
         # speed mps
@@ -129,8 +128,8 @@ def generate_training_data(segment):
         mlp_output_data[k, output_index["w_z"]] = \
             segment[k + DIM_DELAY_STEPS, segment_index["w_z"]]
 
-    lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH])
-    lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT])
+    lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH], order='C')
+    lstm_output_data = np.zeros([total_sequence_num, DIM_OUTPUT], order='C')
 
     for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
         lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])

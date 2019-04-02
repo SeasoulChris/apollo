@@ -56,8 +56,8 @@ class DynamicModelTraining(BasePipeline):
             # RDD('mlp_data|lstm_data', (input, output)), which is valid.
             .filter(lambda data: data is not None)
             # RDD('mlp_data|lstm_data', (input, output)), with unique keys.
-            .reduceByKey(lambda data_1, data_2: (np.vstack((data_1[0], data_2[0])),
-                                                   np.vstack((data_1[1], data_2[1]))))
+            .reduceByKey(lambda data_1, data_2: (np.concatenate((data_1[0], data_2[0]), axis=0),
+                                                   np.concatenate((data_1[1], data_2[1]), axis=0)))
             .cache())
 
         param_norm = (
