@@ -236,22 +236,8 @@ def feature_store(elem):
                 counter += 1
     return segment_feature[0:counter, :]
 
-
-# def write_h5_whole(elem):
-#     """write to h5 file, use feature key as file name"""
-#     key = str(elem[0][1])
-#     folder_path = str(elem[0][0])
-#     out_file = h5py.File(
-#         "{}/training_dataset_{}.hdf5".format(folder_path, key), "w")
-#     out_file.create_dataset("segment", data=elem[1], dtype="float32")
-#     out_file.close()
-#     return elem[0]
-
-
 def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file"""
-    # key = elem[0][1]
-    # feature = elem[1]
     (file_dir, key), features = elem
     feature_num = features.shape[0] # row
     throttle_train_feature_num, throttle_test_feature_num = 0, 0
@@ -285,33 +271,34 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     # throttle train file
     throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
     throttle_train_file_dir = file_dir.replace(origin_prefix, throttle_train_target_prefix, 1)
-    glog.info('Writing hdf5 file to %s' % throttle_train_file_dir )
+    glog.info('Writing throttle_train hdf5 file to %s' % throttle_train_file_dir )
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
     h5_utils.write_h5_single_segment(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
-    # throttle_test_file_dir = "{}/{}/throttle/test".format(folder_path, vehicle_type)
-    # throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
-    # h5_utils.write_h5_single_segment(throttle_test_data, throttle_test_file_dir, key)
+    throttle_test_target_prefix = os.path.join(target_prefix, 'throttle', 'test')
+    throttle_test_file_dir = file_dir.replace(origin_prefix, throttle_test_target_prefix, 1)
+    glog.info('Writing throttle_test hdf5 file to %s' % throttle_test_file_dir )
+    throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
+    h5_utils.write_h5_single_segment(throttle_test_data, throttle_test_file_dir, key)
 
-    # # brake train file
-    # brake_train_file_dir = "{}/{}/brake/train".format(folder_path, vehicle_type)
-    # glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
+    # brake train file
+    brake_train_target_prefix = os.path.join(target_prefix, 'brake', 'train')
+    brake_train_file_dir = file_dir.replace(origin_prefix, brake_train_target_prefix, 1)
+    glog.info('Writing brake_train hdf5 file to %s' % brake_train_file_dir)
+    brake_train_data = brake_train[0:brake_train_feature_num, :]
+    h5_utils.write_h5_single_segment(brake_train_data, brake_train_file_dir, key)
 
-    # brake_train_data = brake_train[0:brake_train_feature_num, :]
-    # h5_utils.write_h5_single_segment(brake_train_data, brake_train_file_dir, key)
-
-    # # brake test file
-    # brake_test_file_dir = "{}/brake/test".format(file_dir)
-    # glog.info('Writing hdf5 file to %s' % brake_test_file_dir)
-
-    # brake_test_data = brake_test[0:brake_test_feature_num, :]
-    # h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
+    # brake test file
+    brake_test_target_prefix = os.path.join(target_prefix, 'brake', 'test')
+    brake_test_file_dir = file_dir.replace(origin_prefix, brake_test_target_prefix, 1)
+    glog.info('Writing brake_tes hdf5 file to %s' % brake_test_file_dir)
+    brake_test_data = brake_test[0:brake_test_feature_num, :]
+    h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
 
     return feature_num
 
-
-def write_h5_cal_tab(data, file_dir, file_name):
-    file_utils.makedirs(file_dir)
-    with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
-        h5_file.create_dataset("segment", data=data, dtype="float32")
+# def write_h5_cal_tab(data, file_dir, file_name):
+#     file_utils.makedirs(file_dir)
+#     with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
+#         h5_file.create_dataset("segment", data=data, dtype="float32")
