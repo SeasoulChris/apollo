@@ -11,7 +11,6 @@ import math
 import os
 import sys
 
-import gflags
 import utm
 
 from cyber_py.record import RecordReader
@@ -22,11 +21,11 @@ from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 
-
-gflags.DEFINE_float('pos_sample_min_duration', 2, 'In seconds.')
-gflags.DEFINE_float('pos_sample_min_distance', 3, 'In meters.')
-gflags.DEFINE_integer('utm_zone_id', 10, 'UTM zone id.')
-gflags.DEFINE_string('utm_zone_letter', 'S', 'UTM zone letter.')
+# Configs
+POS_SAMPLE_MIN_DURATION_SEC = 2
+POS_SAMPLE_MIN_DISTANCE_METER = 3
+UTM_ZONE_ID = 10
+UTM_ZONE_LETTER = 'S'
 
 
 def utm_distance_m(pos0, pos1):
@@ -109,7 +108,7 @@ class RecordParser(object):
             disengagement = self.record.disengagements.add(time=timestamp)
             if self._last_position is not None:
                 lat, lon = utm.to_latlon(self._last_position.x, self._last_position.y,
-                                         gflags.FLAGS.utm_zone_id, gflags.FLAGS.utm_zone_letter)
+                                         UTM_ZONE_ID, UTM_ZONE_LETTER)
                 disengagement.location.lat = lat
                 disengagement.location.lon = lon
         # Update DrivingMode.
@@ -132,19 +131,17 @@ class RecordParser(object):
                 self.record.stat.mileages[driving_mode] = meters
 
         # Sample driving path.
-        G = gflags.FLAGS
         if (self._last_position_sampled is None or
-            (timestamp - self._last_position_sampled_time > G.pos_sample_min_duration and
-             utm_distance_m(self._last_position_sampled, cur_pos) > G.pos_sample_min_distance)):
+            (timestamp - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
+             utm_distance_m(self._last_position_sampled, cur_pos) > POS_SAMPLE_MIN_DISTANCE_METER)):
             self._last_position_sampled = cur_pos
             self._last_position_sampled_time = timestamp
-            lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, G.utm_zone_id, G.utm_zone_letter)
+            lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
             self.record.stat.driving_path.add(lat=lat, lon=lon)
         # Update position.
         self._last_position = cur_pos
 
 
 if __name__ == '__main__':
-    gflags.FLAGS(sys.argv)
     if len(sys.argv) > 0:
         print(RecordParser.Parse(sys.argv[-1]))

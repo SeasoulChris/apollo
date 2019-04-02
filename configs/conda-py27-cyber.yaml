@@ -4,7 +4,7 @@ dependencies:
   - pyspark = 2.4.0
 
   # Google infra
-  - gflags = 2.2.0  # Known bug for higher versions.
+  # - gflags = 2.2.0  # Known bug for higher versions.
   - glog = 0.3.5  # Known bug for higher versions.
   - protobuf
 
