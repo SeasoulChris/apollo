@@ -209,9 +209,9 @@ class GenerateSmallRecords(BasePipeline):
         if len(target_dirs) == 0:
             glog.info('No need to send summary for empty result')
             return
-        summary_row = collections.namedtuple('Summary', ['Origin', 'Target'])
-        message = [summary_row(Origin=target_dir.replace(target_prefix, origin_prefix, 1),
-                               Target=target_dir)
+        SummaryTuple = collections.namedtuple('Summary', ['Origin', 'Target'])
+        message = [SummaryTuple(Origin=target_dir.replace(target_prefix, origin_prefix, 1),
+                                Target=target_dir)
                    for target_dir in target_dirs]
         email_utils.send_email_info('Generated small records for {} tasks'.format(len(target_dirs)),
                                     message, receivers)

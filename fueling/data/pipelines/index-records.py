@@ -1,6 +1,9 @@
 #!/usr/bin/env python
+import collections
 import os
 import sys
+
+import gflags
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
@@ -26,27 +29,26 @@ class IndexRecords(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
+        summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
         bucket = 'apollo-platform'
-        prefixes = [
-            'small-records/2018/2018-04-02/',
-        ]
-        self.process(
+        prefix = 'public-test/'
+        records_rdd = (
             # RDD(file_path)
-            self.get_spark_context().union(
-                *[s3_utils.list_files(bucket, prefix) for prefix in prefixes])
+            s3_utils.list_files(bucket, prefix)
             # RDD(record_path)
             .filter(record_utils.is_record_file)
             # RDD(record_path), with absolute path.
             .map(lambda record_path: os.path.join(s3_utils.S3_MOUNT_PATH, record_path)))
+        self.process(records_rdd, summary_receivers)
 
-    def process(self, records_rdd):
+    def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
         collection = Mongo.collection(self.COLLECTION_NAME)
         docs = collection.find({}, {'path': 1})
         imported_records = [doc['path'] for doc in docs]
         glog.info('Found {} imported records'.format(len(imported_records)))
 
-        (records_rdd
+        imported_records = (records_rdd
             # RDD(record_path), which is not imported before.
             .subtract(self.get_spark_context().parallelize(imported_records))
             # RDD(RecordMeta)
@@ -57,19 +59,45 @@ class IndexRecords(BasePipeline):
             .map(Mongo.pb_to_doc)
             # RDD(imported_path)
             .mapPartitions(self.import_record))
-        glog.info('Imported {} records'.format(self.indexed_records_acc.value))
 
-    def import_record(self, record_meta_docs):
+        glog.info('Imported {} records'.format(imported_records.count()))
+        if summary_receivers:
+            self.send_summary(imported_records, summary_receivers)
+
+    @staticmethod
+    def import_record(record_meta_docs):
         """Import record docs to Mongo."""
-        collection = Mongo.collection(self.COLLECTION_NAME)
+        collection = Mongo.collection(IndexRecords.COLLECTION_NAME)
         newly_imported = []
         for doc in record_meta_docs:
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             newly_imported.append(doc['path'])
-            self.indexed_records_acc += 1
             glog.info('Imported record {}'.format(doc['path']))
         return newly_imported
 
+    @staticmethod
+    def send_summary(imported_records_rdd, receivers):
+        """Send summary."""
+        SummaryTuple = collections.namedtuple('Summary', ['Path', 'URL'])
+
+        proxy = 'http://usa-data.baidu.com:8001'
+        service = 'http:warehouse-service:8000'
+        url_prefix = '{}/api/v1/namespaces/default/services/{}/proxy/task'.format(proxy, service)
+
+        message = (imported_records_rdd
+            # RDD(imported_task_dir)
+            .map(os.path.dirname)
+            # RDD(imported_task_dir), which is unique
+            .distinct()
+            # RDD(SummaryTuple)
+            .map(lambda task_dir: SummaryTuple(Path=task_dir, URL=url_prefix + task_dir))
+            .collect())
+        task_count = len(message)
+        if task_count > 0:
+            subject = 'Imported {} tasks into Apollo Fuel Warehouse'.format(task_count)
+            email_utils.send_email_info(subject, message, receivers)
+
 
 if __name__ == '__main__':
+    gflags.FLAGS(sys.argv)
     IndexRecords().run_prod()
