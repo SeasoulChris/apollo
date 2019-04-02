@@ -11,17 +11,20 @@ import common.proto_utils as proto_utils
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
+import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
+import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import calibrationTable
 
 channels = {record_utils.CHASSIS_CHANNEL,record_utils.LOCALIZATION_CHANNEL}
 # WANTED_VEHICLE = 'Transit'
 WANTED_VEHICLE = calibration_table_utils.CALIBRATION_TABLE_CONF.vehicle_type
 MIN_MSG_PER_SEGMENT = 1
+MARKER = 'CompleteCalibrationTable'
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -30,20 +33,37 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/calibration_table/transit/1.record.00000']
-        origin_prefix = 'modules/data/fuel/testdata/control/calibration_table/'
-        target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
+        origin_prefix = 'modules/data/fuel/testdata/control/sourceData'
+        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
+                                     WANTED_VEHICLE, 'CalibrationTable')
         root_dir = '/apollo'
-        # PairRDD(record_dir, record_files)
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
 
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        list_func = (lambda path: self.get_spark_context().parallelize(
+            dir_utils.list_end_files(os.path.join(root_dir, path))))
+        # RDD(record_dir)
+        todo_tasks = (dir_utils
+                      .get_todo_tasks(origin_prefix, target_prefix, list_func, '', '/' + MARKER))
+        glog.info('todo_folders: {}'.format(todo_tasks.collect()))
+                
+        dir_to_records = (
+            # PairRDD(record_dir, record_dir)
+            todo_tasks
+            # PairRDD(record_dir, all_files)
+            .flatMap(dir_utils.list_end_files)
+            # PairRDD(record_dir, record_files)
+            .filter(record_utils.is_record_file)
+            # PairRDD(record_dir, record_files)
+            .keyBy(os.path.dirname))
+
+        glog.info('todo_files: {}'.format(dir_to_records.collect()))
+        
+        self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
-        target_prefix = 'modules/control/feature_extraction_hf5/2019/'
+        target_prefix = 'modules/control/CalibrationTable/'
         root_dir = s3_utils.S3_MOUNT_PATH
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
@@ -52,13 +72,22 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
                  origin_prefix, target_prefix, root_dir)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
-        target_prefix = os.path.join(root_dir, target_prefix)
+
+        # # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
+        # parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
+        #                                   channels, MIN_MSG_PER_SEGMENT)
 
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        parsed_msgs = record_to_msgs_rdd(dir_to_records_rdd, root_dir, WANTED_VEHICLE, 
-                                          channels, MIN_MSG_PER_SEGMENT)
+        valid_msgs = (feature_extraction_rdd_utils
+                      .record_to_msgs_rdd(dir_to_records_rdd,
+                                          WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
+                      .cache())
+
+        # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
+        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
+
         calibration_table_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             parsed_msgs
@@ -79,6 +108,11 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                  (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
         glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
+
+                # RDD (dir_segment)
+        (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,
+                                                    target_prefix, MARKER)
+         .count())
 
 
 if __name__ == '__main__':

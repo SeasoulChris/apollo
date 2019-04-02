@@ -11,10 +11,12 @@ import numpy as np
 import common.proto_utils as proto_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 
+
 from fueling.control.features.filters import Filters
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.colored_glog as glog
+import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 
 FILENAME_CALIBRATION_TABLE_CONF = \
@@ -248,67 +250,63 @@ def feature_store(elem):
 
 def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     """write to h5 file"""
-    key = elem[0][1]
-    feature = elem[1]
-    feature_num = elem[1].shape[0]
+    # key = elem[0][1]
+    # feature = elem[1]
+    (file_dir, key), features = elem
+    feature_num = features.shape[0] # row
     throttle_train_feature_num, throttle_test_feature_num = 0, 0
     brake_train_feature_num, brake_test_feature_num = 0, 0
 
-    throttle_train = np.zeros(feature.shape)
-    throttle_test = np.zeros(feature.shape)
+    throttle_train = np.zeros(features.shape)
+    throttle_test = np.zeros(features.shape)
 
-    brake_train = np.zeros(feature.shape)
-    brake_test = np.zeros(feature.shape)
-
-    for i in range(feature_num):
-        if feature[i][2] > 0.0:
+    brake_train = np.zeros(features.shape)
+    brake_test = np.zeros(features.shape)
+# TODO: feature in features
+    for feature in features:
+        if feature[2] > 0.0:
             if random.random() < train_percetage:
-                throttle_train[throttle_train_feature_num] = feature[i]
+                throttle_train[throttle_train_feature_num] = feature
                 throttle_train_feature_num += 1
             else:
-                throttle_test[throttle_test_feature_num] = feature[i]
+                throttle_test[throttle_test_feature_num] = feature
                 throttle_test_feature_num += 1
-        elif feature[i][2] < 0.0:
+        elif feature[2] < 0.0:
             if random.random() < train_percetage:
-                brake_train[brake_train_feature_num] = feature[i]
+                brake_train[brake_train_feature_num] = feature
                 brake_train_feature_num += 1
             else:
-                brake_test[brake_test_feature_num] = feature[i]
+                brake_test[brake_test_feature_num] = feature
                 brake_test_feature_num += 1
 
     # throttle train file
     glog.info('throttle file size: %d' % throttle_train.shape[0])
-    glog.info('throttle train file size: %d' % throttle_train_feature_num)
-
-    folder_path = target_prefix
-
+    
     # throttle train file
-    throttle_train_file_dir = "{}/{}/throttle/train".format(folder_path, vehicle_type)
-    glog.info('Writing hdf5 file to %s' % throttle_train_file_dir)
-
+    throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
+    throttle_train_file_dir = file_dir.replace(origin_prefix, throttle_train_target_prefix, 1)
+    glog.info('Writing hdf5 file to %s' % throttle_train_file_dir )
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
-    write_h5_cal_tab(throttle_train_data, throttle_train_file_dir, key)
+    h5_utils.write_h5_single_segment(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
-    throttle_test_file_dir = "{}/{}/throttle/test".format(folder_path, vehicle_type)
-    glog.info('Writing hdf5 file to %s' % throttle_test_file_dir)
+    # throttle_test_file_dir = "{}/{}/throttle/test".format(folder_path, vehicle_type)
+    # throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
+    # h5_utils.write_h5_single_segment(throttle_test_data, throttle_test_file_dir, key)
 
-    throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
-    write_h5_cal_tab(throttle_test_data, throttle_test_file_dir, key)
+    # # brake train file
+    # brake_train_file_dir = "{}/{}/brake/train".format(folder_path, vehicle_type)
+    # glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
 
-    # brake train file
-    brake_train_file_dir = "{}/{}/brake/train".format(folder_path, vehicle_type)
-    glog.info('Writing hdf5 file to %s' % brake_train_file_dir)
+    # brake_train_data = brake_train[0:brake_train_feature_num, :]
+    # h5_utils.write_h5_single_segment(brake_train_data, brake_train_file_dir, key)
 
-    brake_train_data = brake_train[0:brake_train_feature_num, :]
-    write_h5_cal_tab(brake_train_data, brake_train_file_dir, key)
+    # # brake test file
+    # brake_test_file_dir = "{}/brake/test".format(file_dir)
+    # glog.info('Writing hdf5 file to %s' % brake_test_file_dir)
 
-    # brake test file
-    brake_test_file_dir = "{}/{}/brake/test".format(folder_path, vehicle_type)
-    glog.info('Writing hdf5 file to %s' % brake_test_file_dir)
-
-    brake_test_data = brake_test[0:brake_test_feature_num, :]
-    write_h5_cal_tab(brake_test_data, brake_test_file_dir, key)
+    # brake_test_data = brake_test[0:brake_test_feature_num, :]
+    # h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
 
     return feature_num
 

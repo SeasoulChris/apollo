@@ -61,8 +61,6 @@ class CalibrationTableTraining(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/calibration_table']
-
         origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
         target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
         root_dir = '/apollo'
