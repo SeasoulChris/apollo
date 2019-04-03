@@ -1,0 +1,31 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.control.proto.dynamic_model_evaluation;
+
+message EvaluationResults {
+    optional IMUSensorError sensor_error = 1;
+    optional EvaluationMetrics point_mass_result = 2;
+    optional EvaluationMetrics learning_based_result = 3;
+}
+
+message IMUSensorError {
+    optional double speed_error = 1;
+    optional double speed_error_rate = 2;
+    optional double heading_error = 3;
+    optional double heading_error_rate = 4;
+    optional double trajectory_error = 5;
+    optional double trajectory_error_rate = 6;
+}
+
+message EvaluationMetrics {
+    optional double acceleration_error = 1;
+    optional double acceleration_error_rate = 2;
+    optional double angular_speed_error = 3;
+    optional double angular_speed_error_rate = 4;
+    optional double speed_error = 5;
+    optional double speed_error_rate = 6;
+    optional double heading_error = 7;
+    optional double heading_error_rate = 8;
+    optional double trajectory_error = 9;
+    optional double trajectory_error_rate = 10;
+}
