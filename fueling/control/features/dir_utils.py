@@ -1,8 +1,9 @@
 """ get to do tasks"""
+import glob
 import os
 
 import fueling.common.colored_glog as glog
-
+import fueling.common.s3_utils as s3_utils
 
 def list_end_files(origin_dir):
     """
@@ -37,3 +38,19 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     glog.info('processed_dirs: {}, ...'.format(origin_dirs.first()))
     # RDD(dir_of_to_do_files)
     return origin_dirs.subtract(processed_dirs)
+
+def get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket, MARKER):
+    list_func = (lambda path: s3_utils.list_files(bucket, path))
+    # RDD(record_dir)
+    todo_task_dirs = (get_todo_tasks(
+        origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
+    todo_tasks = (
+        # RDD(record_dir)
+        todo_task_dirs
+        # RDD(abs_record_dir)
+        .map(lambda record_dir: os.path.join(root_dir, record_dir))
+        # PairRDD(record_dir, record_dir)
+        .keyBy(lambda record_dir: record_dir)
+        # PairRDD(record_dir, record_files)
+        .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
+    return todo_tasks

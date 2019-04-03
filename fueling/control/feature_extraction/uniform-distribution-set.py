@@ -14,12 +14,12 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
-sample_size = 100
-
+sample_size = 2000
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
     segmentID = os.path.splitext(pre_segmentID)[0]
     return key, segmentID
+
 
 def pick_sample(list_of_segment):
     counter = 0
@@ -27,15 +27,15 @@ def pick_sample(list_of_segment):
     for segment in list_of_segment:
         add_size = segment.shape[0]
         if counter + add_size < sample_size:
-            counter += segment.shape[0] # row, data points
+            counter += segment.shape[0]  # row, data points
             sample_list.append(segment)
             counter += add_size
         elif counter < sample_size:
-            to_add_size = sample_size - counter
+            to_add_size = sample_size-counter+1
             sample_list.append(segment[0:to_add_size, :])
-            counter = sample_size
-            return (sample_list, counter)
-    return (sample_list, counter)
+            return sample_list
+    return sample_list
+
 
 def write_to_file(target_prefix, elem):
     key, list_of_segment = elem
@@ -47,7 +47,8 @@ def write_to_file(target_prefix, elem):
         h5_utils.write_h5_single_segment(data, file_dir, file_name)
         counter += 1
     return total_number
-            
+
+
 class UniformDistributionSet(BasePipeline):
     def __init__(self):
         """ initialize """
@@ -56,22 +57,21 @@ class UniformDistributionSet(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = os.path.join('modules/data/fuel/testdata/control/generated', 
+        origin_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'EvenlyDitributed')
         root_dir = '/apollo'
         files_dir = os.path.join(root_dir, origin_prefix)
         target_dir = os.path.join(root_dir, target_prefix)
-        glog.info(files_dir)
         todo_tasks = (
-            #RDD(all files)
+            # RDD(all files)
             self.get_spark_context().parallelize(dir_utils.list_end_files(files_dir))
             #RDD(.hdf5 files)
             .filter(lambda path: path.endswith('.hdf5'))).cache()
         glog.info('NUMBER of TODO TASK: %d', todo_tasks.count())
         self.run(todo_tasks, target_dir)
-    
+
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
