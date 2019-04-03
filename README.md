@@ -27,14 +27,14 @@
 1. Install env and activate.
 
    ```bash
-   conda env update -f configs/conda-py27-cyber.yaml
+   conda env update -f fueling/conda/py27-cyber.yaml
    source activate fuel-py27-cyber
    ```
 
    Available envs are:
-   * `fuel-py27-cyber` configs/conda-py27-cyber.yaml
-   * `fuel-py27` configs/conda-py27.yaml
-   * `fuel-py36` configs/conda-py36.yaml
+   * `fuel-py27-cyber` fueling/conda/py27-cyber.yaml
+   * `fuel-py27` fueling/conda/py27.yaml
+   * `fuel-py36` fueling/conda/py36.yaml
 
    Use the Cyber compatible env if you need to read, write Cyber records, or
    call Cyber functions. Otherwise, please use the standard envs.
