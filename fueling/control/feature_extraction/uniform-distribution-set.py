@@ -2,6 +2,7 @@
 """ extracting even distributed sample set """
 import os
 
+import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
@@ -12,13 +13,11 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
-training_size = 1 # configurable
 counter = 0
-sample_size = 10
+sample_size = 2000
 
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
-    # segmentID, file_type = pre_segmentID.split('.')
     segmentID = os.path.splitext(pre_segmentID)[0]
     return key, segmentID
 
@@ -30,11 +29,13 @@ def pick_sample(list_of_segment):
         if counter + add_size < sample_size:
             counter += segment.shape[0] # row, data points
             sample_list.append(segment)
+            counter += add_size
         elif counter < sample_size:
-            to_add_size = sample_size-counter+1
-            sample_list.append(segment[0:to_add_size,:])
-            return sample_list
-    return sample_list
+            to_add_size = sample_size - counter
+            sample_list.append(segment[0:to_add_size, :])
+            counter = sample_size
+            return (sample_list, counter)
+    return (sample_list, counter)
 
 def write_to_file(target_prefix, elem):
     key, list_of_segment = elem
@@ -67,8 +68,8 @@ class UniformDistributionSet(BasePipeline):
             #RDD(all files)
             self.get_spark_context().parallelize(dir_utils.list_end_files(files_dir))
             #RDD(.hdf5 files)
-            .filter(lambda path: path.endswith('.hdf5')))
-        glog.info('NUMBER of TODO TASK: %d', todo_tasks.first())
+            .filter(lambda path: path.endswith('.hdf5'))).cache()
+        glog.info('NUMBER of TODO TASK: %d', todo_tasks.count())
         self.run(todo_tasks, target_dir)
     
     def run_prod(self):
@@ -86,7 +87,7 @@ class UniformDistributionSet(BasePipeline):
 
         todo_tasks = (
             #RDD(all files)
-            self.get_spark_context().parallelize(lambda path: s3_utils.list_files(bucket, path))
+            s3_utils.list_files(bucket, path)
             #RDD(.hdf5 files)
             .filter(lambda path: path.endswith('.hdf5')))
 
@@ -112,11 +113,15 @@ class UniformDistributionSet(BasePipeline):
         sampled_segments = (
             # PairedRDD(key, list of segments)
             categorized_segments
-            # PairedRDD(key, sampled segments)
+            # PairedRDD(key, (sampled segments, counter))
             .mapValues(pick_sample)
+            # PairedRDD(key, (sampled segments, counter=sample_size))
+            .filter(spark_op.filter_value(lambda segment_counter: segment_counter[1] == sample_size))
+            # PairedRDD(key, sampled segments)
+            .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
             .map(lambda elem: write_to_file(target_prefix, elem))
-        )
+        ) 
 
         glog.info('Generated %d categories', sampled_segments.count())
 
