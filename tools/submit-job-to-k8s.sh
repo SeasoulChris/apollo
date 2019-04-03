@@ -11,6 +11,10 @@ CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=16
 EXECUTOR_CORES=2
 EXECUTOR_MEMORY=20g
+MEMORY_OVERHEAD_FACTOR=0
+# NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
+# Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
+# information.
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -29,6 +33,10 @@ while [ $# -gt 0 ]; do
     --memory|-m)
       shift
       EXECUTOR_MEMORY=$1
+      ;;
+    --memory-overhead)
+      shift
+      MEMORY_OVERHEAD_FACTOR=$1
       ;;
     *)
       if [ -f "$1" ]; then
@@ -83,6 +91,7 @@ popd
     --conf spark.driver.memory="${DRIVER_MEMORY}" \
     --conf spark.executor.instances="${EXECUTORS}" \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
+    --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
