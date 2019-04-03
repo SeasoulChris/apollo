@@ -125,11 +125,12 @@ class GenerateSmallRecords(BasePipeline):
             # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, record), in absolute path style.
-            .map(spark_op.do_elems(lambda path: os.path.join(root_dir, path)))
+            .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
+                                     os.path.join(root_dir, dir_record[1])))
             # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # PairRDD(target_dir, (record, header)), where header is valid
-            .filter(spark_op.filter_value(lambda header_record: header_record[1] is not None))
+            .filter(spark_op.filter_value(lambda record_header: record_header[1] is not None))
             # PairRDD(target_file, (record, start_time, end_time))
             .flatMap(self.shard_to_files)
             # PairRDD(target_file, (record, start_time, end_time)s)
@@ -182,8 +183,6 @@ class GenerateSmallRecords(BasePipeline):
             glog.info('Skip generating exist record {}'.format(target_file))
             return target_file
         file_utils.makedirs(os.path.dirname(target_file))
-        _, start_time, end_time = records[0]
-        reader = record_utils.read_record(GenerateSmallRecords.CHANNELS, start_time, end_time)
         writer = RecordWriter(0, 0)
         try:
             writer.open(target_file)
@@ -192,15 +191,28 @@ class GenerateSmallRecords(BasePipeline):
             writer.close()
             return None
 
-        topics = set()
-        for record, _, _ in records:
-            for msg in reader(record):
-                if msg.topic not in topics:
-                    # As a generated record, we ignored the proto desc.
-                    writer.write_channel(msg.topic, msg.data_type, '')
-                    topics.add(msg.topic)
-                writer.write_message(msg.topic, msg.message, msg.timestamp)
-                self.messages_acc += 1
+        known_topics = set()
+        for record, start_time, end_time in records:
+            glog.debug('Read record {}'.format(record))
+            try:
+                reader = RecordReader(record)
+                channel_set = GenerateSmallRecords.CHANNELS.intersection({
+                    channel for channel in reader.get_channellist()
+                    if reader.get_messagenumber(channel) > 0})
+                if not channel_set:
+                    continue
+                for msg in reader.read_messages():
+                    ts = msg.timestamp
+                    if msg.topic not in channel_set or ts < start_time or ts >= end_time:
+                        continue
+                    if msg.topic not in known_topics:
+                        desc = reader.get_protodesc(msg.topic)
+                        writer.write_channel(msg.topic, msg.data_type, desc)
+                        known_topics.add(msg.topic)
+                    writer.write_message(msg.topic, msg.message, ts)
+                    self.messages_acc += 1
+            except Exception as err:
+                glog.error('Failed to read record {}: {}'.format(record_path, err))
         writer.close()
         return target_file
 

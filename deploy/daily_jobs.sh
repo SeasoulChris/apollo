@@ -6,7 +6,8 @@ function Run() {
   # Fail on first error.
   set -e
 
-  git pull
+  git remote update
+  git reset --hard origin/master
 
   # 1. Generate small records.
   JOB="fueling/data/pipelines/generate-small-records.py"
