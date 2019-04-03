@@ -3,6 +3,7 @@ import os
 
 import fueling.common.colored_glog as glog
 
+
 def list_end_files(origin_dir):
     """
     List all end files recursively under the specified dir.
@@ -13,6 +14,7 @@ def list_end_files(origin_dir):
         end_files.extend([os.path.join(dirpath, file_name)
                           for file_name in filenames])
     return end_files
+
 
 def list_completed_dirs(prefix, list_func, marker):
     """List directories that contains COMPLETE mark up files"""
@@ -32,6 +34,6 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     processed_dirs = (list_completed_dirs(target_prefix, list_func, marker_processed)
                       # RDD(dir_of_file_end_with_marker_processed, in orgin_prefix)
                       .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-    glog.info('processed_dirs: {}'.format(origin_dirs.collect()))
+    glog.info('processed_dirs: {}, ...'.format(origin_dirs.first()))
     # RDD(dir_of_to_do_files)
     return origin_dirs.subtract(processed_dirs)

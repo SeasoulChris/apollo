@@ -25,7 +25,8 @@ FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.t
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, FeatureKey())
 
 FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf())
+CONTROL_CONF = proto_utils.get_pb_from_text_file(
+    FILENAME_CONTROL_CONF, ControlConf())
 
 THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
 THROTTLE_MAX = FEATURE_KEY.throttle_max
@@ -178,7 +179,7 @@ def feature_key_value(elem):
     # steering key 0 ~ 9: -100% is 0; 100% is 9
     steering_key = int(steering / STEER_STEP)  # -100% ~ 0
 
-    # deadzone~first step is 0; 
+    # deadzone~first step is 0;
     throttle_key = int(min(throttle, THROTTLE_MAX) / ACC_STEP)
     brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
 
@@ -188,25 +189,27 @@ def feature_key_value(elem):
     # ((folder_path,feature_key),(time_stamp,paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
+
 def gen_segment(elem):
     """ generate segment w.r.t time """
     segments = []
     pre_time = elem[0][0]
     data_set = np.array(elem[0][1])
-    counter = 1 # count segment length first element
+    counter = 1  # count segment length first element
     for i in range(1, len(elem)):
         if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA:
             data_set = np.vstack([data_set, elem[i][1]])
-            counter += 1 
+            counter += 1
         else:
             if counter > model_config.feature_config['sequence_length']:
                 segments.append((segment_id(pre_time), data_set))
             data_set = np.array([elem[i][1]])
-            counter = 0 
+            counter = 0
         pre_time = elem[i][0]
     if counter > model_config.feature_config['sequence_length']:
         segments.append((segment_id(pre_time), data_set))
     return segments
+
 
 def segment_id(timestamp):
     return int(timestamp * 100) % 1000000
@@ -221,7 +224,7 @@ def segment_id(timestamp):
 #     return elem[0]
 
 
-def write_segment_with_key(elem, origin_prefix, target_prefix, vehicle_type):
+def write_segment_with_key(elem, origin_prefix, target_prefix):
     """write to h5 file, use feature key as file name"""
     ((folder_path, key), (segmentID, data_set)) = elem
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)

@@ -7,6 +7,7 @@ import os
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
@@ -17,6 +18,7 @@ channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteSampleSet'
+
 
 class SampleSetFeatureExtraction(BasePipeline):
     """ Generate sample set feature extraction hdf5 files from records """
@@ -40,7 +42,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         todo_tasks = (dir_utils
                       .get_todo_tasks(origin_prefix, target_prefix, list_func, '', '/' + MARKER))
         glog.info('todo_folders: {}'.format(todo_tasks.collect()))
-                
+
         dir_to_records = (
             # PairRDD(record_dir, record_dir)
             todo_tasks
@@ -67,8 +69,6 @@ class SampleSetFeatureExtraction(BasePipeline):
         # RDD(record_dir)
         todo_task_dirs = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
-        glog.info('todo_task_dirs : {}'.format(todo_task_dirs.collect()))
-         
         todo_tasks = (
             # RDD(record_dir)
             todo_task_dirs
@@ -76,10 +76,8 @@ class SampleSetFeatureExtraction(BasePipeline):
             .map(lambda record_dir: os.path.join(root_dir, record_dir))
             # PairRDD(record_dir, record_dir)
             .keyBy(lambda record_dir: record_dir)
-            # RDD(record_dir, record_files)
+            # PairRDD(record_dir, record_files)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
-        glog.info('todo_files: {}'.format(todo_tasks.collect()))
-            
         self.run(todo_tasks, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
@@ -91,7 +89,8 @@ class SampleSetFeatureExtraction(BasePipeline):
                       .cache())
 
         # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
+        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
+            valid_msgs)
 
         data_segment_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
@@ -108,19 +107,25 @@ class SampleSetFeatureExtraction(BasePipeline):
             # PairRDD((dir, feature_key), one segment)
             .flatMapValues(feature_extraction_utils.gen_segment))
 
-        h5_result = (
+        result = (
             # PairRDD((dir, feature_key), one segment)
-            data_segment_rdd    
-            # RDD(dir, feature_key), write all segment into a hdf5 file
+            data_segment_rdd
+            # PairRDD(dir, feature_key), write all segment into a hdf5 file
             .map(lambda elem: feature_extraction_utils.write_segment_with_key(
-                elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
+                elem, origin_prefix, target_prefix))
+            # RDD(dir)
+            .keys()
+            # RDD(dir), which is unique
+            .distinct()
+            # RDD(MARKER files)
+            .map(lambda path: os.path.join(path, MARKER))
+            # RDD(MARKER files)
+            .map(file_utils.touch)
+            # Trigger actions.
+            .count())
 
-        glog.info('Finished %d h5_result_rdd!' % h5_result.count())
+        glog.info('Finished %d h5_result_rdd!' % result)
 
-        # RDD (dir_segment)
-        (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,
-                                                    target_prefix, MARKER)
-         .count())
 
 if __name__ == '__main__':
     SampleSetFeatureExtraction().run_prod()
