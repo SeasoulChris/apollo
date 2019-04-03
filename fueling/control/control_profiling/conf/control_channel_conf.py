@@ -1,5 +1,6 @@
-""" Configs to store the necessary dict or list """
 #!/usr/bin/env python
+
+"""Configs to store the necessary dict or list"""
 
 FEATURE_INDEX = {
     "station_reference": 0,
@@ -20,9 +21,3 @@ FEATURE_INDEX = {
     "linear_velocity": 15,
     "heading angle": 16,
 }
-
-FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference",
-                 "heading_reference", "curvature_reference", "station_error",
-                 "speed_error", "lateral_error", "lateral_error_rate",
-                 "heading_error", "heading_error_rate", "throttle_cmd", "brake_cmd", 
-                 "acceleration_cmd", "steering_cmd", "linear_velocity", "heading angle"]

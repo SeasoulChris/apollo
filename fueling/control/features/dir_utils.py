@@ -23,7 +23,8 @@ def list_completed_dirs(prefix, list_func, marker):
             # RDD(dirs_of_file_end_with_marker)
             .map(os.path.dirname))
 
-def get_todo_tasks(origin_prefix, target_prefix, list_func, marker_origin, marker_processed):
+def get_todo_tasks(origin_prefix, target_prefix, list_func, 
+                   marker_origin='COMPLETED', marker_processed='COMPLETED'):
     """Get to be processed files in rdd format."""
     # RDD(dir_of_file_end_with_marker_origin)
     origin_dirs = list_completed_dirs(origin_prefix, list_func, marker_origin)
