@@ -14,6 +14,7 @@ from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 import common.proto_utils as proto_utils
 
+from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
 import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
@@ -21,17 +22,23 @@ import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.dynamic_model.conf.model_config as model_config
 
-FILENAME = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
-FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME, FeatureKey())
+FILENAME_FEATURE_KEY_CONF = \
+                "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
+FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
 
 FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(
     FILENAME_CONTROL_CONF, ControlConf())
 
-THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+# vehicle param constant
+FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
+                                            vehicle_config_pb2.VehicleConfig())
+
+THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
 THROTTLE_MAX = FEATURE_KEY.throttle_max
 
-BRAKE_DEADZONE = CONTROL_CONF.lon_controller_conf.brake_deadzone
+BRAKE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
 BRAKE_MAX = FEATURE_KEY.brake_max
 
 SPEED_STEP = FEATURE_KEY.speed_step

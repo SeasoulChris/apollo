@@ -32,17 +32,18 @@ STD_EPSILON = 1e-6
 
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
-                                            vehicle_config_pb2.VehicleConfig()).vehicle_param
-
+                                            vehicle_config_pb2.VehicleConfig())
 FILENAME_CALIBRATION_TABLE_CONF = os.path.join(
     '/apollo/modules/calibration/data', VEHICLE_MODEL, 'control_conf.pb.txt')
 CONTROL_CONF = proto_utils.get_pb_from_text_file(
     FILENAME_CALIBRATION_TABLE_CONF, ControlConf.ControlConf())
 
 CALIBRATION_TABLE = CONTROL_CONF.lon_controller_conf.calibration_table
-THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
-BRAKE_DEADZONE = CONTROL_CONF.lon_controller_conf.brake_deadzone
-
+THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
+BRAKE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
+MAX_STEER_ANGLE = VEHICLE_PARAM_CONF.vehicle_param.max_steer_angle
+STEER_RATIO = VEHICLE_PARAM_CONF.vehicle_param.steer_ratio
+WHEEL_BASE = VEHICLE_PARAM_CONF.vehicle_param.wheel_base
 
 def generate_segment(h5_file):
     """
@@ -214,8 +215,7 @@ def generate_point_mass_output(segment):
         output_point_mass[k, output_index["acceleration"]] = acceleration_point_mass 
         # angular speed by point_mass given by linear bicycle model
         output_point_mass[k, output_index["w_z"]] = segment[k, segment_index["steering"]] * \
-            VEHICLE_PARAM_CONF.max_steer_angle / VEHICLE_PARAM_CONF.steer_ratio * \
-                velocity_point_mass / VEHICLE_PARAM_CONF.wheel_base
+            MAX_STEER_ANGLE / STEER_RATIO * velocity_point_mass / WHEEL_BASE
     return output_point_mass
 
 

@@ -9,6 +9,7 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from modules.common.configs.proto import vehicle_config_pb2
 import common.proto_utils as proto_utils
 import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
@@ -25,9 +26,11 @@ FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            calibrationTable.calibrationTable())
-
 FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
+                                            vehicle_config_pb2.VehicleConfig())
 
 WANTED_VEHICLE = CALIBRATION_TABLE_CONF.vehicle_type
 
@@ -39,14 +42,14 @@ throttle_train_layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
                         CALIBRATION_TABLE_CONF.throttle_train_layer3]
 train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
-brake_axis_cmd_min = -1*CALIBRATION_TABLE_CONF.brake_max
-brake_axis_cmd_max = -1*CONTROL_CONF.lon_controller_conf.brake_deadzone
+brake_axis_cmd_min = -1 * CALIBRATION_TABLE_CONF.brake_max
+brake_axis_cmd_max = -1 * VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
 
 speed_min = CALIBRATION_TABLE_CONF.train_speed_min
 speed_max = CALIBRATION_TABLE_CONF.train_speed_max
 speed_segment_num = CALIBRATION_TABLE_CONF.train_speed_segment
 
-throttle_axis_cmd_min = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+throttle_axis_cmd_min = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
 throttle_axis_cmd_max = CALIBRATION_TABLE_CONF.throttle_max
 cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
 

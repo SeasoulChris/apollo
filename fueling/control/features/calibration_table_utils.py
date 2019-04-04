@@ -12,6 +12,7 @@ import common.proto_utils as proto_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
 
 from fueling.control.features.filters import Filters
+from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
@@ -30,19 +31,21 @@ acc_min_condition = CALIBRATION_TABLE_CONF.acc_min
 acc_max_condition = CALIBRATION_TABLE_CONF.acc_max
 train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 
-
+# vehicle param constant
+FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
+                                            vehicle_config_pb2.VehicleConfig())
 FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
-
-THROTTLE_DEADZONE = CONTROL_CONF.lon_controller_conf.throttle_deadzone
+THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
 THROTTLE_MAX = CALIBRATION_TABLE_CONF.throttle_max
 
-BRAKE_DEADZONE = -1*CONTROL_CONF.lon_controller_conf.brake_deadzone
-BRAKE_MAX = -1*CALIBRATION_TABLE_CONF.brake_max
+BRAKE_DEADZONE = -1 * VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
+BRAKE_MAX = -1 * CALIBRATION_TABLE_CONF.brake_max
 
 
-# # transient
+# transient
 segment_brake_list = np.linspace(
     BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
 segment_throttle_list = np.linspace(
