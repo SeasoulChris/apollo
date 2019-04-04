@@ -1,5 +1,6 @@
 """Fueling base pipeline."""
 #!/usr/bin/env python
+import os
 
 import pyspark_utils.helper as spark_helper
 
