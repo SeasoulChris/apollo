@@ -77,24 +77,24 @@ class SampleSetFeatureExtraction(BasePipeline):
             # PairRDD(record_dir, record_dir)
             .keyBy(lambda record_dir: record_dir)
             # PairRDD(record_dir, record_files)
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
+            .cache())
+
+        task_count = todo_tasks.count()
+        glog.info("Get {} TODO tasks: [{}, ...]".format(
+            task_count, todo_tasks.first() if task_count > 0 else 'None'))
+
         self.run(todo_tasks, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        valid_msgs = (feature_extraction_rdd_utils
-                      .record_to_msgs_rdd(dir_to_records_rdd,
-                                          WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
-                      .cache())
-
-        # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
-            valid_msgs)
+        valid_msgs = feature_extraction_rdd_utils.record_to_msgs_rdd(
+            dir_to_records_rdd, WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
 
         data_segment_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-            parsed_msgs
+            feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
             # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # PairRDD((dir, timestamp_sec), data_point)
@@ -105,7 +105,13 @@ class SampleSetFeatureExtraction(BasePipeline):
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
                           feature_extraction_utils.extend)
             # PairRDD((dir, feature_key), one segment)
-            .flatMapValues(feature_extraction_utils.gen_segment))
+            .flatMapValues(feature_extraction_utils.gen_segment)
+            .cache())
+
+        segment_count = data_segment_rdd.count()
+        glog.info("Get {} segments: [{}, ...]".format(
+            segment_count,
+            data_segment_rdd.keys().first() if segment_count > 0 else 'None'))
 
         result = (
             # PairRDD((dir, feature_key), one segment)
