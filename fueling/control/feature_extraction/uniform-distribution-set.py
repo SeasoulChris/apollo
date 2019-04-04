@@ -86,9 +86,9 @@ class UniformDistributionSet(BasePipeline):
         target_dir = os.path.join(root_dir, target_prefix)
 
         todo_tasks = (
-            #RDD(all files)
+            # RDD(file)
             s3_utils.list_files(bucket, path)
-            #RDD(.hdf5 files)
+            # RDD(.hdf5 file)
             .filter(lambda path: path.endswith('.hdf5')))
 
         self.run(todo_tasks, target_dir)
@@ -97,13 +97,13 @@ class UniformDistributionSet(BasePipeline):
         categorized_segments = (
             # RDD(.hdf5 files with absolute path)
             todo_tasks
-            # PairedRDD(file_path, file_name)
+            # PairRDD(file_path, file_name)
             .map(lambda file_dir: (file_dir, os.path.basename(file_dir)))
-            # PairedRDD(file_path, (key, segmentID))
+            # PairRDD(file_path, (key, segmentID))
             .mapValues(get_key)
-            # PairedRDD(key, file_path)
+            # PairRDD(key, file_path)
             .map(lambda elem: (elem[1][0], elem[0]))
-            # PairedRDD(key, segments)
+            # PairRDD(key, segments)
             .mapValues(h5_utils.read_h5)
             # PairedRDD(key, list of segments)
             .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
@@ -115,9 +115,9 @@ class UniformDistributionSet(BasePipeline):
             categorized_segments
             # PairedRDD(key, (sampled segments, counter))
             .mapValues(pick_sample)
-            # PairedRDD(key, (sampled segments, counter=sample_size))
+            # PairRDD(key, (sampled segments, counter=sample_size))
             .filter(spark_op.filter_value(lambda segment_counter: segment_counter[1] == sample_size))
-            # PairedRDD(key, sampled segments)
+            # PairRDD(key, sampled segments)
             .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
             .map(lambda elem: write_to_file(target_prefix, elem))

@@ -96,8 +96,7 @@ class GeneralFeatureExtraction(BasePipeline):
                 i = 0
                 for mini_dataset in self.build_training_dataset(chassis, pose):
                     name = "_segment_" + str(i).zfill(3)
-                    out_file.create_dataset(
-                        name, data=mini_dataset, dtype="float32")
+                    out_file.create_dataset(name, data=mini_dataset, dtype="float32")
                     i += 1
             glog.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
@@ -108,11 +107,9 @@ class GeneralFeatureExtraction(BasePipeline):
                                           WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
                       .cache())
 
-        # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
-
         result = (
-            parsed_msgs
+            # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
+            feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
             # RDD((dir_segment, segment_id), (chassis_list, pose_list))
             # write all segment into a hdf5 file
             .map(_gen_hdf5))
