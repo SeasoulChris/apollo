@@ -4,7 +4,7 @@ import os
 
 import pyspark_utils.op as spark_op
 
-from cyber_py.record import RecordWriter
+from cyber_py.record import RecordReader, RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.colored_glog as glog
@@ -106,7 +106,7 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
 
-        summary_receivers = ['apollo_internal@baidu.com']
+        summary_receivers = ['usa-data@baidu.com']
         self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
                  origin_prefix, target_prefix, summary_receivers)
 
@@ -156,7 +156,8 @@ class GenerateSmallRecords(BasePipeline):
         glog.info('Processed {} source records to {} target records, containing {} messages'.format(
             self.source_records_acc.value, self.target_records_acc.value, self.messages_acc.value))
         if summary_receivers:
-            self.send_summary(target_dirs.collect(), summary_receivers)
+            GenerateSmallRecords.send_summary(target_dirs.collect(), summary_receivers,
+                                              origin_prefix, target_prefix)
 
     def shard_to_files(self, input):
         """(target_dir, (record, header)) -> (task_file, (record, start_time, end_time))"""
@@ -196,27 +197,23 @@ class GenerateSmallRecords(BasePipeline):
             glog.debug('Read record {}'.format(record))
             try:
                 reader = RecordReader(record)
-                channel_set = GenerateSmallRecords.CHANNELS.intersection({
-                    channel for channel in reader.get_channellist()
-                    if reader.get_messagenumber(channel) > 0})
-                if not channel_set:
-                    continue
                 for msg in reader.read_messages():
-                    ts = msg.timestamp
-                    if msg.topic not in channel_set or ts < start_time or ts >= end_time:
+                    if (msg.topic not in GenerateSmallRecords.CHANNELS or
+                        msg.timestamp < start_time or msg.timestamp >= end_time):
                         continue
                     if msg.topic not in known_topics:
                         desc = reader.get_protodesc(msg.topic)
                         writer.write_channel(msg.topic, msg.data_type, desc)
                         known_topics.add(msg.topic)
-                    writer.write_message(msg.topic, msg.message, ts)
+                    writer.write_message(msg.topic, msg.message, msg.timestamp)
                     self.messages_acc += 1
             except Exception as err:
-                glog.error('Failed to read record {}: {}'.format(record_path, err))
+                glog.error('Failed to read record {}: {}'.format(record, err))
         writer.close()
         return target_file
 
-    def send_summary(self, target_dirs, receivers):
+    @staticmethod
+    def send_summary(target_dirs, receivers, origin_prefix, target_prefix):
         """Send summary."""
         if len(target_dirs) == 0:
             glog.info('No need to send summary for empty result')

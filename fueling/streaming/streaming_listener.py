@@ -2,8 +2,10 @@
 
 """Streaming listener class that monitors each of streaming status"""
 
-import glog
 import pyspark.streaming as streaming
+
+import fueling.common.colored_glog as glog
+
 
 class DriverStreamingListener(streaming.StreamingListener):
     """Driver streaming listener"""
