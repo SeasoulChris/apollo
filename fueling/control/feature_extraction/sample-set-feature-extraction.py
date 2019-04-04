@@ -60,18 +60,17 @@ class SampleSetFeatureExtraction(BasePipeline):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
-        target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
-                                     WANTED_VEHICLE, 'SampleSet')
+        target_prefix = os.path.join(
+            'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
 
         list_func = (lambda path: s3_utils.list_files(bucket, path))
 
         # RDD(record_dir)
-        todo_task_dirs = (dir_utils.get_todo_tasks(
-            origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
         todo_tasks = (
             # RDD(record_dir)
-            todo_task_dirs
+            dir_utils.get_todo_tasks(
+                origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
             # RDD(abs_record_dir)
             .map(lambda record_dir: os.path.join(root_dir, record_dir))
             # PairRDD(record_dir, record_dir)
