@@ -5,7 +5,6 @@
 import glob
 import os
 
-import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -66,7 +65,7 @@ class ControlProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, record_file), filter out unqualified files
          .filter(spark_op.filter_value(record_utils.is_record_file))
          # PairRDD(target_dir, message), control message only
-         .flatMapValues(record_utils.read_record(record_utils.CONTROL_CHANNEL))
+         .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL]))
          # PairRDD(target_dir, (message)s)
          .groupByKey()
          # PairRDD(target_dir, (message)s), divide messages into groups
@@ -83,9 +82,11 @@ class ControlProfilingMetrics(BasePipeline):
 def partition_data(target_msgs):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
+    glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
     msgs = sorted(msgs, key=lambda msg: msg.timestamp)
-    msgs_groups = np.array_split(msgs, grading_utils.MSG_PER_SEGMENT)
+    msgs_groups = [msgs[idx: idx + grading_utils.MSG_PER_SEGMENT]
+                   for idx in range(0, len(msgs), grading_utils.MSG_PER_SEGMENT)]
     return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
 
 if __name__ == '__main__':
-    ControlProfilingMetrics().run_test()
+    ControlProfilingMetrics().main()
