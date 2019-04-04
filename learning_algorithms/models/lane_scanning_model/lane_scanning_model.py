@@ -14,7 +14,6 @@
 # limitations under the License.
 ###############################################################################
 
-import cv2 as cv
 import math
 import numpy as np
 import os
@@ -28,10 +27,11 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-sys.path.append('../../utilities')
+sys.path.append('../../../../utilities')
 
 from helper_utils import *
 from IO_utils import *
+from loss_utils import *
 from network_utils import *
 
 
@@ -65,7 +65,6 @@ class LaneScanningDataset(Dataset):
                     continue
                 if (feature_len-135) % 400 != 0:
                     if verbose:
-                        print (feature_len-135)
                         print ('Skipped this one because dimension isn\'t correct.')
                     continue
 
@@ -114,7 +113,6 @@ def collate_with_padding(batch):
     # Sort in descending order of available number of lanes
     idx_new = np.argsort(-num_lanes).tolist()
     obs_features = obs_features[idx_new]
-    obs_features = obs_features[:,:45]
     lane_features_padded = lane_features_padded[idx_new]
     num_lanes = num_lanes[idx_new]
     traj_labels = traj_labels[idx_new]
@@ -132,11 +130,12 @@ def collate_with_padding(batch):
 class lane_scanning_model(torch.nn.Module):
     def __init__(self,\
                  dim_cnn=[4, 10, 16, 25],\
-                 hidden_size = 34,\
-                 dim_lane_fc = [34*8, 110, 56],\
-                 dim_obs_fc = [45, 35, 23],\
-                 dim_traj_fc = [79, 46, 20]):
+                 hidden_size = 128,\
+                 dim_lane_fc = [128*8, 700, 456, 230],\
+                 dim_obs_fc = [45, 38, 32],\
+                 dim_traj_fc = [262, 120, 40]):
         super(lane_scanning_model, self).__init__()
+        self.dim_obs_fc = dim_obs_fc
 
         self.single_lane_cnn = torch.nn.Sequential(
             # L=100
@@ -150,11 +149,8 @@ class lane_scanning_model(torch.nn.Module):
             nn.ReLU(),
             # L=8
         )
-        self.single_lane_maxpool = nn.MaxPool1d(4)
+        self.single_lane_maxpool = nn.MaxPool1d(1)
         self.single_lane_dropout = nn.Dropout(0.0)
-
-        self.input_embedding = generate_mlp(\
-            [80, 256], dropout=0.0)
 
         h0 = torch.zeros(2, 1, hidden_size)
         c0 = torch.zeros(2, 1, hidden_size)
@@ -165,7 +161,7 @@ class lane_scanning_model(torch.nn.Module):
 
         # TODO(jiacheng): add attention mechanisms to focus on some lanes.
         self.multi_lane_rnn = nn.LSTM(
-            input_size=dim_cnn[3] * 2,
+            input_size=dim_cnn[-1] * 8 + dim_obs_fc[-1],
             hidden_size=hidden_size,
             bidirectional=True,
             batch_first=True)
@@ -188,23 +184,34 @@ class lane_scanning_model(torch.nn.Module):
         # N x max_num_laneseq x 400
         lane_fea = lane_fea.view(N * max_num_laneseq, 100, 4)
         lane_fea = lane_fea.transpose(1, 2).float()
+        lane_fea_original = lane_fea
         # (N * max_num_laneseq) x 4 x 100
         lane_fea = self.single_lane_cnn(lane_fea)
         # (N * max_num_laneseq) x 25 x 8
         lane_fea = self.single_lane_maxpool(lane_fea)
-        # (N * max_num_laneseq) x 25 x 2
+        # (N * max_num_laneseq) x 25 x 8
         lane_fea = lane_fea.view(lane_fea.size(0), -1)
         lane_fea = self.single_lane_dropout(lane_fea)
         embed_dim = lane_fea.size(1)
-        # (N * max_num_laneseq) x 50
+        # (N * max_num_laneseq) x 200
         lane_fea = lane_fea.view(N, max_num_laneseq, embed_dim)
+        # N x max_num_laneseq x 200
+        lane_fea = lane_fea + lane_fea_original[:,:2,:].view(N, max_num_laneseq, 200)
+
+        obs_fea_original = obs_fea
+        obs_fea = self.obs_feature_fc(obs_fea.float())
+        # N x 32
+        obs_fea = obs_fea.view(N, 1, self.dim_obs_fc[-1]).repeat(1, max_num_laneseq, 1)
+        # N x max_num_laneseq x 32
+
+        static_fea = torch.cat((lane_fea, obs_fea), 2)
 
         # Process each obstacle's lane-sequences with RNN
-        static_fea = pack_padded_sequence(lane_fea, num_laneseq, batch_first=True)
+        static_fea = pack_padded_sequence(static_fea, num_laneseq, batch_first=True)
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
         static_fea_states, _ = self.multi_lane_rnn(static_fea, (h0, c0))
         static_fea, _ = pad_packed_sequence(static_fea_states, batch_first=True)
-        # N x max_num_laneseq x 68
+        # N x max_num_laneseq x 256
         min_val = torch.min(static_fea)
         static_fea_maxpool, _ = pad_packed_sequence(
             static_fea_states, batch_first=True, padding_value=min_val.item()-0.1)
@@ -216,17 +223,18 @@ class lane_scanning_model(torch.nn.Module):
         static_fea_back = static_fea[idx_1, idx_2]
         static_fea_all = torch.cat((static_fea_maxpool, static_fea_avgpool, \
             static_fea_front, static_fea_back), 1)
-        # N x (68 * 4) = N x 272
+        # N x (256 * 4) = N x 1024
 
         static_fea_final = self.multi_lane_fc(static_fea_all)
-        obs_fea_final = self.obs_feature_fc(obs_fea.float())
+        obs_fea_final = self.obs_feature_fc(obs_fea_original.float())
         fea_all = torch.cat((obs_fea_final, static_fea_final), 1)
         # N x 79
 
         # TODO(jiacheng): use RNN decoder to output traj
         # TODO(jiacheng): multi-modal prediction
         traj = self.traj_fc(fea_all)
-        # N x 30
+        traj = traj.view(N, 2, 20)
+        # N x 2 x 20
 
         return traj
 
@@ -237,65 +245,13 @@ class lane_scanning_model(torch.nn.Module):
 class lane_scanning_loss:
     def loss_fn(self, y_pred, y_true):
         #TODO(jiacheng): elaborate on this (e.g. consider final displacement error, etc.)
-        loss_func = nn.MSELoss()
-        return loss_func(y_pred, y_true.float())
+        y_true = y_true.float()
+        return multi_modal_loss(y_pred, y_true)
+
+    def loss_helper(self, y_pred, y_true):
+        loss_func = nn.MSELoss(reduction='none')
+        loss_result = loss_func(y_pred, y_true)
+        loss_result = torch.mean(loss_result,dim=1)
 
     def loss_info(self, y_pred, y_true):
-        return
-
-
-#########################################################
-# Analyzer
-#########################################################
-class lane_scanning_analyzer:
-    def __init__(self, top=40.0, bottom=10.0, left=20.0, right=20.0,\
-                 resolution=0.1):
-        self.top = top
-        self.bottom = bottom
-        self.left = left
-        self.right = right
-        self.resolution = resolution
-
-        self.W = int((left+right)/resolution)
-        self.H = int((top+bottom)/resolution)
-
-        self.base_img = np.zeros([self.W, self.H, 3], dtype=np.uint8)
-
-    def process(self, X, y, pred):
-        # Convert data from cuda-torch to numpy format
-        obs_features, lane_features, num_lane_seq = X
-        # N x 45
-        obs_features = obs_features.cpu().numpy()
-        # N x max_num_lane_seq x 400
-        lane_features = lane_features.cpu().numpy()
-        # N x 1
-        num_lane_seq = num_lane_seq.cpu().numpy()
-        y = y.cpu().numpy()
-        pred = pred.cpu().numpy()
-
-        N = obs_features.shape[0]
-        for idx in range(N):
-            img = self.base_img
-            # Based on X, plot the lane-graph ahead
-            for lane_idx in range(num_lane_seq[idx]):
-                curr_lane = lane_features[idx, lane_idx, :]
-
-                for point_idx in range(99):
-                    cv.line(img, point_to_idx(curr_lane[point_idx*4], curr_lane[point_idx*4+1]), \
-                        point_to_idx(curr_lane[point_idx*4+4], curr_lane[point_idx*4+5]), \
-                        color=[0, 0, 128], thickness=4)
-            # Based on X, plot obstacle historic trajectory
-            # TODO(jiacheng)
-
-            # Based on y, plot the ground truth trajectory
-            # TODO(jiacheng)
-
-            # Based on pred, plot the predicted trajectory
-            # TODO(jiacheng)
-            cv.imwrite('img{}'.format(N), img)
-
-        return
-
-    def point_to_idx(self, point_x, point_y):
-        return (int((point_x + self.left)/self.resolution),\
-                int((point_y + self.bottom)/self.resolution))
+        return None
