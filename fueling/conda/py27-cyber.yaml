@@ -19,6 +19,7 @@ dependencies:
   - termcolor
 
   - pip:
+    - colored-glog
     - pylint
     - pyquaternion
     - pyspark-utils

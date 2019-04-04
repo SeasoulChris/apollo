@@ -19,3 +19,9 @@ dependencies:
   # Other.
   - opencv
   - pytz
+
+  - pip:
+    - colored-glog
+    - pylint
+    - pyspark-utils
+    - utm
