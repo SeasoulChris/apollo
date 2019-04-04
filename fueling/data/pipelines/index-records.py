@@ -99,5 +99,4 @@ class IndexRecords(BasePipeline):
 
 
 if __name__ == '__main__':
-    gflags.FLAGS(sys.argv)
-    IndexRecords().run_prod()
+    IndexRecords().main()

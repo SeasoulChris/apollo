@@ -3,6 +3,8 @@
 
 import pyspark_utils.helper as spark_helper
 
+import fueling.common.colored_glog as glog
+
 
 class BasePipeline(object):
     """Fueling base pipeline."""
@@ -22,3 +24,12 @@ class BasePipeline(object):
     def run_prod(self):
         """Run the pipeline in production mode."""
         raise Exception('{}::RunProd not implemented!'.format(self.name))
+
+    def main(self):
+        """Run the pipeline."""
+        if os.environ.get('APOLLO_FUEL_MODE') == 'TEST':
+            glog.info('Running {} pipeline in TEST mode'.format(self.name))
+            self.run_test()
+        else:
+            glog.info('Running {} pipeline in PROD mode'.format(self.name))
+            self.run_prod()

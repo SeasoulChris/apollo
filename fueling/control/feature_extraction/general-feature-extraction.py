@@ -187,5 +187,4 @@ class GeneralFeatureExtraction(BasePipeline):
 
 
 if __name__ == '__main__':
-
-    GeneralFeatureExtraction().run_test()
+    GeneralFeatureExtraction().main()

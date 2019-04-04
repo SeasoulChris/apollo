@@ -230,4 +230,4 @@ class GenerateSmallRecords(BasePipeline):
 
 
 if __name__ == '__main__':
-    GenerateSmallRecords().run_prod()
+    GenerateSmallRecords().main()

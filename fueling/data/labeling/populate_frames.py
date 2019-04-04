@@ -277,5 +277,6 @@ class PopulateFramesPipeline(BasePipeline):
          # Simply trigger action
          .count())
 
+
 if __name__ == '__main__':
-    PopulateFramesPipeline().run_test()
+    PopulateFramesPipeline().main()

@@ -125,5 +125,6 @@ class UniformDistributionSet(BasePipeline):
 
         glog.info('Generated %d categories', sampled_segments.count())
 
+
 if __name__ == '__main__':
-    UniformDistributionSet().run_test()
+    UniformDistributionSet().main()

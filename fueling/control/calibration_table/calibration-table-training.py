@@ -171,4 +171,4 @@ class CalibrationTableTraining(BasePipeline):
 
 
 if __name__ == '__main__':
-    CalibrationTableTraining().run_test()
+    CalibrationTableTraining().main()
