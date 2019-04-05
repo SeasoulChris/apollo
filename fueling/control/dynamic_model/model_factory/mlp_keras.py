@@ -66,9 +66,12 @@ def save_model(model, param_norm, filename):
     """
     save the trained model parameters into protobuf binary format file
     """
+    (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     net_params = FnnModel()
-    net_params.samples_mean.columns.extend(param_norm[0].reshape(-1).tolist())
-    net_params.samples_std.columns.extend(param_norm[1].reshape(-1).tolist())
+    net_params.input_feature_mean.columns.extend(input_fea_mean.reshape(-1).tolist())
+    net_params.input_feature_std.columns.extend(input_fea_std.reshape(-1).tolist())
+    net_params.output_feature_mean.columns.extend(output_fea_mean.reshape(-1).tolist())
+    net_params.output_feature_std.columns.extend(output_fea_std.reshape(-1).tolist())
     net_params.num_layer = 0
     previous_dim = 0
     for layer in model.layers:
