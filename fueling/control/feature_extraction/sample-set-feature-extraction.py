@@ -100,9 +100,10 @@ class SampleSetFeatureExtraction(BasePipeline):
             .map(feature_extraction_utils.get_data_point)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             .map(feature_extraction_utils.feature_key_value)
+            # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
+            .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
-            .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
-                          feature_extraction_utils.extend)
+            .mapValues(list)
             # PairRDD((dir, feature_key), one segment)
             .flatMapValues(feature_extraction_utils.gen_segment)
             .cache())

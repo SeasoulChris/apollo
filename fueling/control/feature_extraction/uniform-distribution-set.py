@@ -14,7 +14,7 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
-sample_size = 2000
+sample_size = 100
 
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
@@ -105,15 +105,16 @@ class UniformDistributionSet(BasePipeline):
             .map(lambda elem: (elem[1][0], elem[0]))
             # PairRDD(key, segments)
             .mapValues(h5_utils.read_h5)
-            # PairedRDD(key, list of segments)
-            .combineByKey(feature_extraction_utils.to_list, feature_extraction_utils.append,
-                          feature_extraction_utils.extend)
+            # PairRDD(key, segments RDD)
+            .groupByKey()
+            # PairRDD(key, list of segments)
+            .mapValues(list)
         )
 
         sampled_segments = (
-            # PairedRDD(key, list of segments)
+            # PairRDD(key, list of segments)
             categorized_segments
-            # PairedRDD(key, (sampled segments, counter))
+            # PairRDD(key, (sampled segments, counter))
             .mapValues(pick_sample)
             # PairRDD(key, (sampled segments, counter=sample_size))
             .filter(spark_op.filter_value(lambda segment_counter: segment_counter[1] == sample_size))
