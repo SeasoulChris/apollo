@@ -21,7 +21,6 @@ import fueling.control.features.feature_extraction_rdd_utils as feature_extracti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
-# WANTED_VEHICLE = 'Transit'
 WANTED_VEHICLE = calibration_table_utils.CALIBRATION_TABLE_CONF.vehicle_type
 MIN_MSG_PER_SEGMENT = 1
 MARKER = 'CompleteCalibrationTable'

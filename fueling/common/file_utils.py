@@ -20,6 +20,7 @@ def makedirs(dir_path):
 
 def touch(file_path):
     """Touch file."""
+    makedirs(os.path.dirname(file_path))
     try:
         if not os.path.exists(file_path):
             glog.info('Touch file: {}'.format(file_path))

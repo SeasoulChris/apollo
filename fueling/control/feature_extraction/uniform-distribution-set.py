@@ -14,7 +14,7 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
-sample_size = 2000
+sample_size = 100
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
     segmentID = os.path.splitext(pre_segmentID)[0]
@@ -33,8 +33,8 @@ def pick_sample(list_of_segment):
         elif counter < sample_size:
             to_add_size = sample_size-counter+1
             sample_list.append(segment[0:to_add_size, :])
-            return sample_list
-    return sample_list
+            return (sample_list, sample_size)
+    return (sample_list, counter)
 
 
 def write_to_file(target_prefix, elem):
