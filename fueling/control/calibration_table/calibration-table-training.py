@@ -86,48 +86,46 @@ class CalibrationTableTraining(BasePipeline):
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
         """ processing RDD """
 
-        # -> (dir, record), in absolute path
+        # PairRDD(dir, record), in absolute path
         dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
                                                            os.path.join(root_dir, x[1]))).cache()
         # TODO: Go through the whole logic carefully.
         # 1. Choose better variable names. Many of them mismatched what they are.
         # 2. Remove redundant items, for example, the dir_to_records[1] is never used.
         throttle_train_file_rdd = (
-            # (dir, dir)
+            # PairRDD(dir, dir)
             dir_to_records
-            # -> (dir, hdf5_files)
+            # PairRDD(dir, hdf5_files)
             .map(lambda elem:
                  train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
-            # -> (dir, segments)
+            # PairRDD(dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir, x_train_data, y_train_data)
+            # PairRDD(dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
         throttle_test_file_rdd = (
-            # (dir, dir)
+            # PairRDD(dir, dir)
             dir_to_records
-            # -> (dir, hdf5_files)
+            # PairRDD(dir, hdf5_files)
             .map(lambda elem:
                  train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
-            # -> (dir, segments)
+            # PairRDD(dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir, x_test_data, y_test_data)
+            # PairRDD(dir, (x_test_data, y_test_data))
             .mapValues(train_utils.generate_data))
 
         # TODO: Use subfolders instead of concat string. It's easier if you want to parse it back.
         throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
 
         throttle_model_rdd = (
-            # TODO: Refine the comments to describe accrurately. It's
-            # (dir, (x_train_data, y_train_data)) here, not a 3-elements tuple.
-            # (dir, x_train_data, y_train_data)
+            # PairRDD (dir, (x_train_data, y_train_data))
             throttle_train_file_rdd
-            # -> (dir, x_train_data, y_train_data, x_test_data, y_test_data)
+            # PairRDD(dir, (x_train_data, y_train_data, x_test_data, y_test_data))
             .join(throttle_test_file_rdd)
-            # -> (dir, result_array)
+            # PairRDD(dir, result_array)
             .mapValues(lambda elem:
                        train_utils.train_model(elem, throttle_train_layer, train_alpha))
-            # -> (a number)
+            # RDD(a number)
             .map(lambda elem:
                  train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
                                          throttle_axis_cmd_min, throttle_axis_cmd_max,
@@ -137,21 +135,21 @@ class CalibrationTableTraining(BasePipeline):
         brake_train_file_rdd = (
             # (dir, dir)
             dir_to_records
-            # -> (dir, hdf5_files)
+            # PairRDD (dir, hdf5_files)
             .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'train'))
-            # -> (dir, segments)
+            # PairRDD (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir, x_train_data, y_train_data)
+            # PairRDD (dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
         brake_test_file_rdd = (
             # (dir, dir)
             dir_to_records
-            # -> (dir, hdf5_files)
+            # PairRDD (dir, hdf5_files)
             .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'test'))
-            # -> (dir, segments)
+            # PairRDD (dir, segments)
             .mapValues(train_utils.generate_segments)
-            # -> (dir, x_train_data, y_train_data)
+            # PairRDD (dir, x_train_data, y_train_data)
             .mapValues(train_utils.generate_data))
 
         brake_table_filename = WANTED_VEHICLE + '_brake_calibration_table.pb.txt'
@@ -159,11 +157,11 @@ class CalibrationTableTraining(BasePipeline):
         brake_model_rdd = (
             # (dir, x_train_data, y_train_data)
             brake_train_file_rdd
-            # -> (dir, x_train_data, y_train_data, x_test_data, y_test_data)
+            # PairRDD (dir, x_train_data, y_train_data, x_test_data, y_test_data)
             .join(brake_test_file_rdd)
-            # -> (dir, result_array)
+            # PairRDD (dir, result_array)
             .mapValues(lambda elem: train_utils.train_model(elem, brake_train_layer, train_alpha))
-            # -> (a number)
+            # PairRDD (a number)
             .map(lambda elem:
                  train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
                                          brake_axis_cmd_min, brake_axis_cmd_max, cmd_segment_num,
