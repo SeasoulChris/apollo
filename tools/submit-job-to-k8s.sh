@@ -105,12 +105,12 @@ popd
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD="apollo-k8s-secret:email-passwd" \
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="s3-secret:access-key" \
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="s3-secret:secret-key" \
+    --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
+    --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="s3-secret:access-key" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="s3-secret:secret-key" \
+    --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
+    --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
