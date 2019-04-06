@@ -18,7 +18,6 @@ class IndexRecords(BasePipeline):
 
     def __init__(self):
         BasePipeline.__init__(self, 'index-records')
-        self.indexed_records_acc = self.get_spark_context().accumulator(0)
 
     def run_test(self):
         """Run test."""
@@ -47,7 +46,8 @@ class IndexRecords(BasePipeline):
         imported_records = [doc['path'] for doc in docs]
         glog.info('Found {} imported records'.format(len(imported_records)))
 
-        imported_records = (records_rdd
+        newly_imported_records = spark_op.log_rdd(
+            records_rdd
             # RDD(record_path), which is not imported before.
             .subtract(self.get_spark_context().parallelize(imported_records))
             # RDD(RecordMeta)
@@ -57,11 +57,10 @@ class IndexRecords(BasePipeline):
             # RDD(RecordMeta_doc)
             .map(Mongo.pb_to_doc)
             # RDD(imported_path)
-            .mapPartitions(self.import_record))
-
-        glog.info('Imported {} records'.format(imported_records.count()))
+            .mapPartitions(self.import_record),
+            "NewlyImportedRecords", glog.info)
         if summary_receivers:
-            self.send_summary(imported_records, summary_receivers)
+            self.send_summary(newly_imported_records, summary_receivers)
 
     @staticmethod
     def import_record(record_meta_docs):
@@ -83,18 +82,20 @@ class IndexRecords(BasePipeline):
         service = 'http:warehouse-service:8000'
         url_prefix = '{}/api/v1/namespaces/default/services/{}/proxy/task'.format(proxy, service)
 
-        message = (imported_records_rdd
+        msgs = (imported_records_rdd
             # RDD(imported_task_dir)
             .map(os.path.dirname)
             # RDD(imported_task_dir), which is unique
             .distinct()
             # RDD(SummaryTuple)
             .map(lambda task_dir: SummaryTuple(Path=task_dir, URL=url_prefix + task_dir))
-            .collect())
-        task_count = len(message)
-        if task_count > 0:
-            subject = 'Imported {} tasks into Apollo Fuel Warehouse'.format(task_count)
-            email_utils.send_email_info(subject, message, receivers)
+            .cache())
+        msg_count = msgs.count()
+        if msg_count == 0:
+            glog.error('No record was imported')
+        else:
+            title = 'Imported {} tasks into Apollo Fuel Warehouse'.format(msg_count)
+            email_utils.send_email_info(title, msgs.collect(), receivers)
 
 
 if __name__ == '__main__':

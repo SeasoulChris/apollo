@@ -58,10 +58,6 @@ class GenerateSmallRecords(BasePipeline):
 
     def __init__(self):
         BasePipeline.__init__(self, 'generate-small-records')
-        sc = self.get_spark_context()
-        self.source_records_acc = sc.accumulator(0)
-        self.target_records_acc = sc.accumulator(0)
-        self.messages_acc = sc.accumulator(0)
 
     def run_test(self):
         """Run test."""
@@ -93,8 +89,6 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(task_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname))
 
-        blacklist_dirs_rdd = self.get_spark_context().parallelize([])
-        """
         blacklist_dirs_rdd = (
             # RDD(file_path), with the target_prefix.
             s3_utils.list_files(bucket, target_prefix)
@@ -104,7 +98,6 @@ class GenerateSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-        """
 
         summary_receivers = ['usa-data@baidu.com']
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
@@ -119,7 +112,7 @@ class GenerateSmallRecords(BasePipeline):
             records_rdd.keyBy(os.path.dirname),
             whitelist_dirs_rdd)
 
-        target_dirs = (
+        input_records = spark_op.log_rdd(
             # PairRDD(task_dir, record), which is not in the blacklist
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
@@ -127,13 +120,23 @@ class GenerateSmallRecords(BasePipeline):
             # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # PairRDD(target_dir, (record, header)), where header is valid
-            .filter(spark_op.filter_value(lambda record_header: record_header[1] is not None))
+            .filter(spark_op.filter_value(lambda record_header: record_header[1] is not None)),
+            "InputRecords", glog.info)
+
+        output_records = spark_op.log_rdd(
+            # PairRDD(target_dir, (record, header))
+            input_records
             # PairRDD(target_file, (record, start_time, end_time))
             .flatMap(self.shard_to_files)
             # PairRDD(target_file, (record, start_time, end_time)s)
             .groupByKey()
             # PairRDD(target_file, (record, start_time, end_time)s)
-            .mapValues(sorted)
+            .mapValues(sorted),
+            "OutputRecords", glog.info)
+
+        finished_tasks = spark_op.log_rdd(
+            # PairRDD(target_file, (record, start_time, end_time)s)
+            output_records
             # RDD(target_file)
             .map(self.process_file)
             # RDD(target_file)
@@ -141,22 +144,20 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(target_dir)
             .map(os.path.dirname)
             # RDD(target_dir)
-            .distinct()
-            .cache())
+            .distinct(),
+            "FinishedTasks", glog.info)
 
-        (target_dirs
+        (finished_tasks
             # RDD(target_dir/COMPLETE)
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
 
-        glog.info('Processed {} source records to {} target records, containing {} messages'.format(
-            self.source_records_acc.value, self.target_records_acc.value, self.messages_acc.value))
         if summary_receivers:
-            GenerateSmallRecords.send_summary(target_dirs.collect(), summary_receivers,
-                                              origin_prefix, target_prefix)
+            GenerateSmallRecords.send_summary(finished_tasks.collect(), summary_receivers)
 
-    def shard_to_files(self, input):
+    @staticmethod
+    def shard_to_files(input):
         """(target_dir, (record, header)) -> (task_file, (record, start_time, end_time))"""
         # 1 minute as a record.
         RECORD_DURATION_NS = 60 * (10 ** 9)
@@ -168,20 +169,17 @@ class GenerateSmallRecords(BasePipeline):
         for begin_time in range(first_begin_time, last_begin_time + 1, RECORD_DURATION_NS):
             dt = time_utils.msg_time_to_datetime(begin_time)
             target_file = os.path.join(target_dir, dt.strftime(RECORD_FORMAT))
-            self.source_records_acc += 1
             yield (target_file, (record, begin_time, begin_time + RECORD_DURATION_NS))
 
-    def process_file(self, input):
+    @staticmethod
+    def process_file(input):
         """(target_file, (record, start_time, end_time)s) -> target_file"""
         target_file, records = input
-        self.target_records_acc += 1
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
         target_file = s3_utils.rw_path(target_file)
         if os.path.exists(target_file):
-            os.remove(target_file)
             glog.info('Skip generating exist record {}'.format(target_file))
-        return target_file
         file_utils.makedirs(os.path.dirname(target_file))
         writer = RecordWriter(0, 0)
         try:
@@ -205,24 +203,21 @@ class GenerateSmallRecords(BasePipeline):
                         writer.write_channel(msg.topic, msg.data_type, desc)
                         known_topics.add(msg.topic)
                     writer.write_message(msg.topic, msg.message, msg.timestamp)
-                    self.messages_acc += 1
             except Exception as err:
                 glog.error('Failed to read record {}: {}'.format(record, err))
         writer.close()
         return target_file
 
     @staticmethod
-    def send_summary(target_dirs, receivers, origin_prefix, target_prefix):
+    def send_summary(task_dirs, receivers):
         """Send summary."""
-        if len(target_dirs) == 0:
+        if len(task_dirs) == 0:
             glog.info('No need to send summary for empty result')
             return
-        SummaryTuple = collections.namedtuple('Summary', ['Origin', 'Target'])
-        message = [SummaryTuple(Origin=target_dir.replace(target_prefix, origin_prefix, 1),
-                                Target=target_dir)
-                   for target_dir in target_dirs]
-        email_utils.send_email_info('Generated small records for {} tasks'.format(len(target_dirs)),
-                                    message, receivers)
+        SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
+        title = 'Generated small records for {} tasks'.format(len(task_dirs))
+        message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in task_dirs]
+        email_utils.send_email_info(title, message, receivers)
 
 
 if __name__ == '__main__':
