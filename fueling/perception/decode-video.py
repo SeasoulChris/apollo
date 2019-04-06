@@ -26,8 +26,7 @@ def group_video_frames(message_meta):
     """Divide the video frames into groups, one group is a frame I leading multiple frames P"""
     target_topic, meta_values = message_meta
     meta_list = sorted(list(meta_values), key=operator.itemgetter(0))
-    glog.info('grouping target and topic: {}, with {} messages'.
-              format(target_topic, len(meta_list)))
+    glog.info('Grouping target and topic: {} with {} messages'.format(target_topic, len(meta_list)))
     groups = list()
     frames_group = list()
     for idx, (timestamp, fields, src_path) in enumerate(meta_list):
@@ -70,11 +69,9 @@ def decode_videos(message_meta):
     image_output_pattern = '%05d.jpg'
     image_output_path = os.path.join(target_dir, cur_group_name)
     streaming_utils.create_dir_if_not_exist(image_output_path)
-    return_code = os.system('cd {} && ./bin/video2jpg.sh {} {}'
-                            .format(video_decoder_executable_path,
-                                    '--file='+h265_video_file_path,
-                                    '--output='+os.path.join(image_output_path,
-                                                             image_output_pattern)))
+    return_code = os.system('cd {} && ./bin/video2jpg.sh --file={} --output={}'.format(
+        video_decoder_executable_path, h265_video_file_path,
+        os.path.join(image_output_path, image_output_pattern)))
     if return_code != 0:
         raise ValueError('Failed to execute video2jpg for video {}'.format(h265_video_file_path))
     generated_images = sorted(list(os.listdir(image_output_path)))
@@ -90,13 +87,12 @@ def decode_videos(message_meta):
 def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
     for task in todo_tasks:
-        task_path = os.path.join(os.path.join(root_dir, target_dir),
-                                 os.path.basename(task))
+        task_path = os.path.join(root_dir, target_dir, os.path.basename(task))
         if not os.path.exists(task_path):
             glog.warn('no data generated for task: {}, \
                 check if there are qualified frames in there'.format(task_path))
             continue
-        streaming_utils.write_to_file(\
+        streaming_utils.write_to_file(
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
 
 class DecodeVideoPipeline(BasePipeline):
@@ -148,8 +144,7 @@ class DecodeVideoPipeline(BasePipeline):
          # RDD(task_dir), distinct paths
          .distinct()
          # PairRDD(target_dir, task)
-         .map(lambda task: (os.path.join(os.path.join(root_dir, target_dir),
-                                         os.path.basename(task)), task))
+         .map(lambda task: (os.path.join(root_dir, target_dir, os.path.basename(task)), task))
          # PairRDD(target_dir, record)
          .flatMapValues(streaming_utils.list_records_for_task)
          # PairRDD(target_dir, MessageMetaData(topic, timestamp, fields, src_path))
@@ -165,8 +160,7 @@ class DecodeVideoPipeline(BasePipeline):
          # PairRDD((target_dir, topic), (timestamp, fields, src_path)s), actually decoding
          .map(decode_videos)
          # Trigger actions
-         .count()
-        )
+         .count())
 
 if __name__ == '__main__':
     DecodeVideoPipeline().run_test()

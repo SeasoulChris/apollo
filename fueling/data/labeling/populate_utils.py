@@ -334,8 +334,7 @@ class PointCloudSensor(Sensor):
         point_cloud.ParseFromString(message)
         transform = get_world_coordinate(self.transform, pose)
         for point in point_cloud.point:
-            point_world = \
-                convert_to_world_coordinate(point, transform, stationary_pole)
+            point_world = convert_to_world_coordinate(point, transform, stationary_pole)
             vector4 = frame_pb2.Vector4()
             vector4.x = point_world.x
             vector4.y = point_world.y
@@ -380,8 +379,7 @@ class RadarSensor(Sensor):
             point3d.x = point.longitude_dist
             point3d.y = point.lateral_dist
             point3d.z = 0
-            point_world = \
-                convert_to_world_coordinate(point3d, transform, stationary_pole)
+            point_world = convert_to_world_coordinate(point3d, transform, stationary_pole)
             radar_point = frame_pb2.RadarPoint()
             radar_point.type = self._radar_type
             radar_point.position.x = point_world.x
@@ -485,59 +483,43 @@ class FramePopulator(object):
         self._slice_size = slice_size
         create_dir_if_not_exist(self._task_dir)
 
-        pointcloud_128 = PointCloudSensor(
-            channel=SENSOR_PARAMS['lidar_channel'],
-            intrinsics=None,
-            extrinsics=SENSOR_PARAMS['lidar_extrinsics'])
-        image_front_6mm = ImageSensor(
-            channel=SENSOR_PARAMS['front6mm_channel'],
-            intrinsics=SENSOR_PARAMS['front6mm_intrinsics'],
-            extrinsics=SENSOR_PARAMS['front6mm_extrinsics'])
-        image_front_6mm.set_camera_properties(
-            self._task_dir,
-            [pointcloud_128.transform])
-        image_front_12mm = ImageSensor(
-            channel=SENSOR_PARAMS['front12mm_channel'],
-            intrinsics=SENSOR_PARAMS['front12mm_intrinsics'],
-            extrinsics=SENSOR_PARAMS['front12mm_extrinsics'])
-        image_front_12mm.set_camera_properties(
-            self._task_dir,
-            [pointcloud_128.transform])
-        image_left_fisheye = ImageSensor(
-            channel=SENSOR_PARAMS['left_fisheye_channel'],
-            intrinsics=SENSOR_PARAMS['left_fisheye_intrinsics'],
-            extrinsics=SENSOR_PARAMS['left_fisheye_extrinsics'])
-        image_left_fisheye.set_camera_properties(
-            self._task_dir,
-            [pointcloud_128.transform])
-        image_right_fisheye = ImageSensor(
-            channel=SENSOR_PARAMS['right_fisheye_channel'],
-            intrinsics=SENSOR_PARAMS['right_fisheye_intrinsics'],
-            extrinsics=SENSOR_PARAMS['right_fisheye_extrinsics'])
-        image_right_fisheye.set_camera_properties(
-            self._task_dir,
-            [pointcloud_128.transform])
-        image_rear = ImageSensor(
-            channel=SENSOR_PARAMS['rear6mm_channel'],
-            intrinsics=SENSOR_PARAMS['rear6mm_intrinsics'],
-            extrinsics=SENSOR_PARAMS['rear6mm_extrinsics'])
-        image_rear.set_camera_properties(
-            self._task_dir,
-            [pointcloud_128.transform])
-        radar_front = RadarSensor(
-            channel=SENSOR_PARAMS['radar_front_channel'],
-            intrinsics=None,
-            extrinsics=SENSOR_PARAMS['radar_front_extrinsics'])
-        radar_front.set_radar_properties(
-            frame_pb2.RadarPoint.FRONT,
-            [pointcloud_128.transform])
-        radar_rear = RadarSensor(
-            channel=SENSOR_PARAMS['radar_rear_channel'],
-            intrinsics=None,
-            extrinsics=SENSOR_PARAMS['radar_rear_extrinsics'])
-        radar_rear.set_radar_properties(
-            frame_pb2.RadarPoint.REAR,
-            [pointcloud_128.transform])
+        pointcloud_128 = PointCloudSensor(channel=SENSOR_PARAMS['lidar_channel'],
+                                          intrinsics=None,
+                                          extrinsics=SENSOR_PARAMS['lidar_extrinsics'])
+        image_front_6mm = ImageSensor(channel=SENSOR_PARAMS['front6mm_channel'],
+                                      intrinsics=SENSOR_PARAMS['front6mm_intrinsics'],
+                                      extrinsics=SENSOR_PARAMS['front6mm_extrinsics'])
+        image_front_6mm.set_camera_properties(self._task_dir, [pointcloud_128.transform])
+
+        image_front_12mm = ImageSensor(channel=SENSOR_PARAMS['front12mm_channel'],
+                                       intrinsics=SENSOR_PARAMS['front12mm_intrinsics'],
+                                       extrinsics=SENSOR_PARAMS['front12mm_extrinsics'])
+        image_front_12mm.set_camera_properties(self._task_dir, [pointcloud_128.transform])
+
+        image_left_fisheye = ImageSensor(channel=SENSOR_PARAMS['left_fisheye_channel'],
+                                         intrinsics=SENSOR_PARAMS['left_fisheye_intrinsics'],
+                                         extrinsics=SENSOR_PARAMS['left_fisheye_extrinsics'])
+        image_left_fisheye.set_camera_properties(self._task_dir, [pointcloud_128.transform])
+
+        image_right_fisheye = ImageSensor(channel=SENSOR_PARAMS['right_fisheye_channel'],
+                                          intrinsics=SENSOR_PARAMS['right_fisheye_intrinsics'],
+                                          extrinsics=SENSOR_PARAMS['right_fisheye_extrinsics'])
+        image_right_fisheye.set_camera_properties(self._task_dir, [pointcloud_128.transform])
+
+        image_rear = ImageSensor(channel=SENSOR_PARAMS['rear6mm_channel'],
+                                 intrinsics=SENSOR_PARAMS['rear6mm_intrinsics'],
+                                 extrinsics=SENSOR_PARAMS['rear6mm_extrinsics'])
+        image_rear.set_camera_properties(self._task_dir, [pointcloud_128.transform])
+
+        radar_front = RadarSensor(channel=SENSOR_PARAMS['radar_front_channel'],
+                                  intrinsics=None,
+                                  extrinsics=SENSOR_PARAMS['radar_front_extrinsics'])
+        radar_front.set_radar_properties(frame_pb2.RadarPoint.FRONT, [pointcloud_128.transform])
+
+        radar_rear = RadarSensor(channel=SENSOR_PARAMS['radar_rear_channel'],
+                                 intrinsics=None,
+                                 extrinsics=SENSOR_PARAMS['radar_rear_extrinsics'])
+        radar_rear.set_radar_properties(frame_pb2.RadarPoint.REAR, [pointcloud_128.transform])
 
     def construct_frames(self, message_structs):
         """Construct the frames by using given messages."""

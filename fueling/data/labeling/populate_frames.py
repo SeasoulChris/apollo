@@ -167,13 +167,12 @@ def get_sql_query(sql_context, msgs_rdd):
 def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
     for task in todo_tasks:
-        task_path = os.path.join(os.path.join(root_dir, target_dir),
-                                 os.path.basename(task))
+        task_path = os.path.join(root_dir, target_dir, os.path.basename(task))
         if not os.path.exists(task_path):
-            glog.warn('no data generated for task: {}, \
-                check if there are qualified frames in there'.format(task_path))
+            glog.warn('No data generated for task: {}, check if there are qualified frames'.format(
+                task_path))
             continue
-        streaming_utils.write_to_file(\
+        streaming_utils.write_to_file(
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
 
 class PopulateFramesPipeline(BasePipeline):
@@ -261,8 +260,7 @@ class PopulateFramesPipeline(BasePipeline):
         glog.info('SQL query to search closest sensor messages')
         sql_context = SQLContext(spark_context)
         sql_query = get_sql_query(sql_context, msgs_rdd)
-        (sql_context
-         .sql(sql_query)
+        (sql_context.sql(sql_query)
          # RDD(target, lidar_topic, lidar_time, other_topic, MINIMAL_time)
          .rdd
          .map(list)
