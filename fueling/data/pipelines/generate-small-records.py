@@ -106,15 +106,10 @@ class GenerateSmallRecords(BasePipeline):
     def run(self, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        # PairRDD(task_dir, record), which is in the whitelist
-        todo_jobs = spark_op.filter_keys(
-            # PairRDD(task_dir, record)
-            records_rdd.keyBy(os.path.dirname),
-            whitelist_dirs_rdd)
-
         input_records = spark_op.log_rdd(
-            # PairRDD(task_dir, record), which is not in the blacklist
-            spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
+            # PairRDD(task_dir, record), which is in the whitelist and not in the blacklist
+            spark_op.filter_keys(records_rdd.keyBy(os.path.dirname),
+                                 whitelist_dirs_rdd, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, (record, header))
@@ -180,6 +175,7 @@ class GenerateSmallRecords(BasePipeline):
         target_file = s3_utils.rw_path(target_file)
         if os.path.exists(target_file):
             glog.info('Skip generating exist record {}'.format(target_file))
+            return target_file
         file_utils.makedirs(os.path.dirname(target_file))
         writer = RecordWriter(0, 0)
         try:
@@ -191,7 +187,7 @@ class GenerateSmallRecords(BasePipeline):
 
         known_topics = set()
         for record, start_time, end_time in records:
-            glog.debug('Read record {}'.format(record))
+            glog.info('Read record {}'.format(record))
             try:
                 reader = RecordReader(s3_utils.ro_path(record))
                 for msg in reader.read_messages():
