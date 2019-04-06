@@ -20,6 +20,7 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
+import fueling.common.s3_utils as s3_utils
 
 
 # Configs
@@ -48,10 +49,9 @@ class RecordParser(object):
 
     def __init__(self, record_file):
         """Init input reader and output record."""
-        record_file = os.path.abspath(record_file)
         self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
 
-        self._reader = RecordReader(record_file)
+        self._reader = RecordReader(s3_utils.ro_path(record_file))
         # State during processing messages.
         self._current_driving_mode = None
         self._last_position = None

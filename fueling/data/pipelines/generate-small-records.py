@@ -124,9 +124,6 @@ class GenerateSmallRecords(BasePipeline):
             spark_op.substract_keys(todo_jobs, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
-            # PairRDD(target_dir, record), in absolute path style.
-            .map(lambda dir_record: (s3_utils.abs_path(dir_record[0]),
-                                     s3_utils.read_only_path(dir_record[1])))
             # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # PairRDD(target_dir, (record, header)), where header is valid
@@ -180,6 +177,7 @@ class GenerateSmallRecords(BasePipeline):
         self.target_records_acc += 1
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
+        target_file = s3_utils.rw_path(target_file)
         if os.path.exists(target_file):
             os.remove(target_file)
             glog.info('Skip generating exist record {}'.format(target_file))
@@ -197,7 +195,7 @@ class GenerateSmallRecords(BasePipeline):
         for record, start_time, end_time in records:
             glog.debug('Read record {}'.format(record))
             try:
-                reader = RecordReader(record)
+                reader = RecordReader(s3_utils.ro_path(record))
                 for msg in reader.read_messages():
                     if (msg.topic not in GenerateSmallRecords.CHANNELS or
                         msg.timestamp < start_time or msg.timestamp >= end_time):

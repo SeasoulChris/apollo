@@ -28,11 +28,13 @@ def s3_client(aws_ak=None, aws_sk=None):
                         aws_access_key_id=aws_ak,
                         aws_secret_access_key=aws_sk)
 
-def abs_path(object_key_or_abs_path):
+def rw_path(object_key_or_abs_path):
     """Get absolute mounted path of an S3 object."""
+    if object_key_or_abs_path.startswith(BOS_PVC_MOUNT_PATH):
+        return object_key_or_abs_path.replace(BOS_PVC_MOUNT_PATH, S3_MOUNT_PATH, 1)
     return os.path.join(S3_MOUNT_PATH, object_key_or_abs_path)
 
-def read_only_path(object_key_or_abs_path):
+def ro_path(object_key_or_abs_path):
     """Get absolute PVC mounted path of an S3 object."""
     if object_key_or_abs_path.startswith(S3_MOUNT_PATH):
         return object_key_or_abs_path.replace(S3_MOUNT_PATH, BOS_PVC_MOUNT_PATH, 1)
