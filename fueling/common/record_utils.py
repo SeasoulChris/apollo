@@ -51,7 +51,7 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
     """record_path -> [PyBagMessage, ...] or [] if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
-        glog.debug('Read record {}'.format(record_path))
+        glog.info('Read record {}'.format(record_path))
         try:
             reader = RecordReader(record_path)
             channel_set = {channel for channel in reader.get_channellist()
@@ -72,7 +72,7 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
 
 def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
-    glog.debug('Read record header {}'.format(record_path))
+    glog.info('Read record header {}'.format(record_path))
     try:
         reader = RecordReader(record_path)
         header = Header()
@@ -94,7 +94,7 @@ def write_record(path_to_messages):
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
     file_utils.makedirs(os.path.dirname(path))
-    glog.debug('Write record {}'.format(path))
+    glog.info('Write record {}'.format(path))
     writer = RecordWriter(0, 0)
     writer.open(path)
     topics = set()

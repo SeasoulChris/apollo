@@ -67,20 +67,21 @@ set -x
 set -e
 
 # Upload local files to remote.
-BOS_MOUNT_POINT="/mnt/bos"
+BOS_MOUNT_PATH="/mnt/bos"
+BOS_PVC_MOUNT_PATH="/mnt/bos-ro"
 REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
 REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
 "${BOS_FSTOOL_EXECUTABLE}" -s "${JOB_FILE}" -d "${REMOTE_JOB_FILE}"
-REMOTE_JOB_FILE="${BOS_MOUNT_POINT}/${REMOTE_JOB_FILE}"
+REMOTE_JOB_FILE="${BOS_MOUNT_PATH}/${REMOTE_JOB_FILE}"
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}"
   zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
   "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
-  REMOTE_FUELING_PKG="${BOS_MOUNT_POINT}/${REMOTE_FUELING_PKG}"
+  REMOTE_FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 popd
 
 # Submit job with fueling package.
@@ -101,6 +102,7 @@ popd
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
+    --conf spark.executorEnv.BOS_PVC_MOUNT_PATH="${BOS_PVC_MOUNT_PATH}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \

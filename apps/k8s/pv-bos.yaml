@@ -13,6 +13,7 @@ spec:
     volumeHandle: "apollo-platform"
     nodePublishSecretRef:
       name: "bos-secret"
+      namespace: default
   persistentVolumeReclaimPolicy: Retain
 
 ---
