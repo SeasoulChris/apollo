@@ -5,10 +5,10 @@
 import glob
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
@@ -16,6 +16,7 @@ import fueling.control.control_profiling.feature_extraction.control_feature_extr
        as feature_utils 
 import fueling.control.control_profiling.grading_evaluation.control_performance_grading_utils \
        as grading_utils
+
 
 class ControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """

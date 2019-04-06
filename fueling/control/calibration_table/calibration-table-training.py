@@ -5,13 +5,13 @@ import h5py
 import operator
 import os
 
+import colored_glog as glog
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from modules.common.configs.proto import vehicle_config_pb2
 import common.proto_utils as proto_utils
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.calibration_table_train_utils as train_utils

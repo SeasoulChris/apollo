@@ -5,9 +5,9 @@
 import os
 
 from pyspark.streaming import StreamingContext
+import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
 import fueling.streaming.serialize_utils as serialize_utils
 from fueling.streaming.streaming_listener import DriverStreamingListener

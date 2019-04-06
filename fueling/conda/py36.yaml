@@ -3,7 +3,6 @@ dependencies:
   - python = 3.6
 
   # Google infra
-  - glog
   - protobuf
 
   # Data science

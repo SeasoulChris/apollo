@@ -11,6 +11,7 @@ import math
 import os
 import sys
 
+import colored_glog as glog
 import utm
 
 from cyber_py.record import RecordReader
@@ -18,8 +19,8 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
+
 
 # Configs
 POS_SAMPLE_MIN_DURATION_SEC = 2

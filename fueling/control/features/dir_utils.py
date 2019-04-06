@@ -2,8 +2,10 @@
 import glob
 import os
 
-import fueling.common.colored_glog as glog
+import colored_glog as glog
+
 import fueling.common.s3_utils as s3_utils
+
 
 def list_end_files(origin_dir):
     """

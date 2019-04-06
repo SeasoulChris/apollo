@@ -7,9 +7,8 @@ import string
 import boto3
 import botocore.client
 import botocore.exceptions
+import colored_glog as glog
 import pyspark_utils.helper as spark_helper
-
-import fueling.common.colored_glog as glog
 
 
 S3_MOUNT_PATH = '/mnt/bos'

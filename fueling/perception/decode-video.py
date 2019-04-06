@@ -7,8 +7,9 @@ import operator
 import os
 import time
 
+import colored_glog as glog
+
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
 import fueling.streaming.streaming_utils as streaming_utils
 

@@ -5,9 +5,9 @@
 from collections import namedtuple
 import os
 
+import colored_glog as glog
 import numpy as np
 
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
 from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_INDEX \
@@ -15,8 +15,10 @@ from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_
 import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
        as feature_utils 
 
+
 # Message number in each segment
 MSG_PER_SEGMENT = 1000
+
 
 def compute_h5_and_gradings(target_groups):
     """Do computing against one group"""

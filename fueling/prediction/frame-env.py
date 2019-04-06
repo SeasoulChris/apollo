@@ -2,10 +2,10 @@
 import operator
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 

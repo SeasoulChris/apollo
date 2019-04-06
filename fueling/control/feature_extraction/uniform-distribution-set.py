@@ -2,14 +2,15 @@
 """ extracting even distributed sample set """
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
+
 
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type

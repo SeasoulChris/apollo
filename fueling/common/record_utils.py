@@ -5,6 +5,8 @@ import collections
 import fnmatch
 import os
 
+import colored_glog as glog
+
 from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader, RecordWriter
 from modules.canbus.proto.chassis_pb2 import Chassis
@@ -14,8 +16,8 @@ from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
+
 
 CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
 CONTROL_CHANNEL =                  '/apollo/control'

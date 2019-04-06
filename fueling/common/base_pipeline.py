@@ -2,9 +2,8 @@
 #!/usr/bin/env python
 import os
 
+import colored_glog as glog
 import pyspark_utils.helper as spark_helper
-
-import fueling.common.colored_glog as glog
 
 
 class BasePipeline(object):

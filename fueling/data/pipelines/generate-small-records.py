@@ -2,12 +2,12 @@
 import collections
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from cyber_py.record import RecordReader, RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -93,6 +93,8 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(task_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname))
 
+        blacklist_dirs_rdd = self.get_spark_context().parallelize([])
+        """
         blacklist_dirs_rdd = (
             # RDD(file_path), with the target_prefix.
             s3_utils.list_files(bucket, target_prefix)
@@ -102,6 +104,7 @@ class GenerateSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
+        """
 
         summary_receivers = ['usa-data@baidu.com']
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
@@ -178,8 +181,9 @@ class GenerateSmallRecords(BasePipeline):
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
         if os.path.exists(target_file):
+            os.remove(target_file)
             glog.info('Skip generating exist record {}'.format(target_file))
-            return target_file
+        return target_file
         file_utils.makedirs(os.path.dirname(target_file))
         writer = RecordWriter(0, 0)
         try:

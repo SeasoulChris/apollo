@@ -9,11 +9,11 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
 from keras.regularizers import l1, l2
+import colored_glog as glog
 import h5py
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, lstm_model_config
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
 

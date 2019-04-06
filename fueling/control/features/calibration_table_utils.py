@@ -5,6 +5,7 @@ import math
 import os
 import random
 
+import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -15,7 +16,6 @@ import modules.control.proto.control_conf_pb2 as ControlConf
 from fueling.control.features.filters import Filters
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
-import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 

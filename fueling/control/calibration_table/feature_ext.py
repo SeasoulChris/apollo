@@ -9,14 +9,15 @@ from collections import Counter
 import operator
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.colored_glog as glog
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
+
 
 WANTED_VEHICLE = 'Transit'
 MIN_MSG_PER_SEGMENT = 1

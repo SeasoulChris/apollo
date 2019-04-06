@@ -5,6 +5,7 @@ common functions for feature extractin
 import os
 import glob
 
+import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -16,11 +17,11 @@ import common.proto_utils as proto_utils
 
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
-import fueling.common.colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.dynamic_model.conf.model_config as model_config
+
 
 FILENAME_FEATURE_KEY_CONF = \
                 "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"

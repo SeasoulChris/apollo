@@ -13,13 +13,13 @@ from keras.metrics import mse
 from keras.models import Sequential, Model
 from scipy.signal import savgol_filter
 from sklearn.model_selection import train_test_split
+import colored_glog as glog
 import google.protobuf.text_format as text_format
 import h5py
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 
 

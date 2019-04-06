@@ -4,6 +4,7 @@ import glob
 import operator
 import os
 
+import colored_glog as glog
 import cv2 as cv
 import pyspark_utils.op as spark_op
 
@@ -11,7 +12,6 @@ from map_feature.obstacle_mapping import ObstacleMapping
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils

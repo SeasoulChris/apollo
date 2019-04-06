@@ -3,10 +3,11 @@
 import math
 import sys
 
+import colored_glog as glog
 import numpy as np
 
 from fueling.control.features.parameters import dim
-import fueling.common.colored_glog as glog
+
 
 def GetDatapoints(pose_slice, cs_slice):
     if len(cs_slice) == 0:

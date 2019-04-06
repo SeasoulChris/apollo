@@ -2,12 +2,13 @@ from collections import Counter
 import operator
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
-import fueling.common.colored_glog as glog
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
+
 
 def record_to_msgs_rdd(dir_to_records, WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER):
     # RDD(aboslute_dir) which include records of the wanted vehicle

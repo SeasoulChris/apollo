@@ -6,7 +6,8 @@ from email.mime.text import MIMEText
 import os
 import smtplib
 
-import fueling.common.colored_glog as glog
+import colored_glog as glog
+
 
 def send_email_info(title, content, receivers=None):
     """Send email with normal information"""

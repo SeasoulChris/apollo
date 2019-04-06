@@ -3,12 +3,11 @@ import collections
 import os
 import sys
 
-import gflags
+import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 from fueling.data.record_parser import RecordParser
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 

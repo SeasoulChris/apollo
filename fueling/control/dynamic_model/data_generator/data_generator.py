@@ -6,6 +6,7 @@ import sys
 from keras.models import load_model
 from scipy import interpolate
 from scipy.signal import savgol_filter
+import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -13,10 +14,10 @@ from modules.common.configs.proto import vehicle_config_pb2
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 import common.proto_utils as proto_utils
-import fueling.common.colored_glog as glog
 import modules.control.proto.control_conf_pb2 as ControlConf
 
-#Constants
+
+# Constants
 DIM_INPUT = feature_config["input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 DIM_SEQUENCE_LENGTH = feature_config["sequence_length"]

@@ -2,12 +2,12 @@
 
 import os
 
+import colored_glog as glog
 import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
 import fueling.control.dynamic_model.data_generator.data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras

@@ -8,8 +8,9 @@ import os
 import subprocess
 
 from google.protobuf.json_format import MessageToJson
-import numpy as np
 from pyquaternion import Quaternion as PyQuaternion
+import colored_glog as glog
+import numpy as np
 import yaml
 
 from cyber_py import record
@@ -21,9 +22,9 @@ from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
-import fueling.common.colored_glog as glog
 import fueling.common.s3_utils as s3_utils
 import fueling.streaming.streaming_utils as streaming_utils
+
 
 # Map channels to processing functions
 CHANNEL_PROCESS_MAP = {}

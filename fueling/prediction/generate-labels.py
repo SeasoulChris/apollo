@@ -4,12 +4,12 @@ import glob
 import operator
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from prediction.data_pipelines.common.online_to_offline import LabelGenerator
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 

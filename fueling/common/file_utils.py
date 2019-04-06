@@ -4,7 +4,8 @@
 import errno
 import os
 
-import fueling.common.colored_glog as glog
+import colored_glog as glog
+
 
 def makedirs(dir_path):
     """Make directories recursively."""

@@ -5,6 +5,7 @@ from collections import Counter
 import operator
 import os
 
+import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 import common.proto_utils as proto_utils
@@ -12,7 +13,6 @@ import common.proto_utils as proto_utils
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_rdd_utils import record_to_msgs_rdd
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils

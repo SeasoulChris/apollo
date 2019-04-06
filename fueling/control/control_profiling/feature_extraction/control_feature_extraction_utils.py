@@ -4,13 +4,14 @@
 
 import os
 
+import colored_glog as glog
 import numpy as np
 
 import common.proto_utils as proto_utils
 
-import fueling.common.colored_glog as glog
-import fueling.common.record_utils as record_utils
 from modules.data.fuel.fueling.control.proto.control_profiling_pb2 import ControlProfiling
+import fueling.common.record_utils as record_utils
+
 
 def verify_vehicle_controller(task):
     """Verify if the task has any record file whose controller/vehicle types match config"""

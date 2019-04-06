@@ -9,11 +9,11 @@ import os
 import textwrap
 import time
 
+import colored_glog as glog
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.colored_glog as glog
 import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils

@@ -8,11 +8,11 @@ import time
 
 from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
+import colored_glog as glog
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
-import fueling.common.colored_glog as glog
 import fueling.control.dynamic_model.data_generator.data_generator as data_generator
 
 # System setup

@@ -5,13 +5,14 @@
 import os
 import time
 
+import colored_glog as glog
 import yaml
 
 from cyber_py import record
 
-import fueling.common.colored_glog as glog
 import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
+
 
 def build_file_handles(topic_file_paths):
     """Build a map between topic file and its handle"""
