@@ -248,7 +248,6 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
 
     brake_train = np.zeros(features.shape)
     brake_test = np.zeros(features.shape)
-# TODO: feature in features
     for feature in features:
         if feature[2] > 0.0:
             if random.random() < train_percetage:
@@ -292,13 +291,13 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
     # brake test file
     brake_test_target_prefix = os.path.join(target_prefix, 'brake', 'test')
     brake_test_file_dir = file_dir.replace(origin_prefix, brake_test_target_prefix, 1)
-    glog.info('Writing brake_tes hdf5 file to %s' % brake_test_file_dir)
+    glog.info('Writing brake_test hdf5 file to %s' % brake_test_file_dir)
     brake_test_data = brake_test[0:brake_test_feature_num, :]
     h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
 
     return feature_num
 
-# def write_h5_cal_tab(data, file_dir, file_name):
-#     file_utils.makedirs(file_dir)
-#     with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
-#         h5_file.create_dataset("segment", data=data, dtype="float32")
+def write_h5_cal_tab(data, file_dir, file_name):
+    file_utils.makedirs(file_dir)
+    with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
+        h5_file.create_dataset("segment", data=data, dtype="float32")
