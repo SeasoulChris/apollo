@@ -23,16 +23,14 @@ class FeaturesAndLabelsCombine(BasePipeline):
     def run_test(self):
         """Run test."""
         sc = self.get_spark_context()
-        root_dir = '/apollo'
-        datalearn_files = sc.parallelize(glob.glob('docs/demo_guide/*/datalearn.*.bin'))
-        origin_prefix = 'docs/demo_guide'
-        self.run(root_dir, datalearn_files, origin_prefix)
+        datalearn_files = sc.parallelize(glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))
+        origin_prefix = '/apollo/docs/demo_guide'
+        self.run(datalearn_files, origin_prefix)
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
-        origin_prefix = 'modules/prediction/features-san-mateo/'
+        origin_prefix = 'modules/prediction/features-san-mateo'
 
         datalearn_file_rdd = (
             # RDD(file), start with origin_prefix
@@ -42,19 +40,13 @@ class FeaturesAndLabelsCombine(BasePipeline):
             # RDD(record_dir), which is unique
             .distinct())
 
-        self.run(root_dir, datalearn_file_rdd, origin_prefix)
+        self.run(datalearn_file_rdd, origin_prefix)
 
-    def run(self, root_dir, datalearn_file_rdd, origin_prefix):
+    def run(self, datalearn_file_rdd, origin_prefix):
         """Run the pipeline with given arguments."""
-        result = (
-            # RDD(record_dir)
-            datalearn_file_rdd
-            # RDD(record_dir), in absolute path
-            .map(lambda data_dir: os.path.join(root_dir, data_dir))
-            # RDD(0/1), 1 for success
-            .map(self.process_dir)
-            .cache())
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        # RDD(0/1), 1 for success
+        result = datalearn_file_rdd.map(self.process_dir).count()
+        glog.info('Processed {} tasks'.format(result))
 
     @staticmethod
     def process_dir(source_file):
@@ -62,7 +54,8 @@ class FeaturesAndLabelsCombine(BasePipeline):
         source_dir = os.path.dirname(source_file)
         labels_dir = source_dir.replace('features-san-mateo', 'labels-san-mateo')
         label_file = os.path.join(labels_dir, 'junction_label.npy')
-        CombineFeaturesAndLabels(source_file, label_file, 'junction')
+        CombineFeaturesAndLabels(s3_utils.ro_path(source_file),
+                                 s3_utils.rw_path(label_file), 'junction')
         return 0
 
 

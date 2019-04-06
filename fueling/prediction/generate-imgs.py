@@ -24,17 +24,15 @@ class GenerateImgs(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.get_spark_context()
-        root_dir = '/apollo'
         # RDD(dir_path)
-        records_dir = sc.parallelize(glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
-        origin_prefix = 'data/prediction/features'
-        target_prefix = 'data/prediction/img_features'
-        self.run(root_dir, records_dir, origin_prefix, target_prefix)
+        records_dir = self.get_spark_context().parallelize(
+            glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
+        origin_prefix = '/apollo/data/prediction/features'
+        target_prefix = '/apollo/data/prediction/img_features'
+        self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features'
         target_prefix = 'modules/prediction/img_features'
@@ -46,35 +44,29 @@ class GenerateImgs(BasePipeline):
             .filter(lambda src_file: fnmatch.fnmatch(src_file, '*frame_env.*.bin'))
             # RDD(bin_files), which is unique
             .distinct())
-        self.run(root_dir, bin_file, origin_prefix, target_prefix)
+        self.run(bin_file, origin_prefix, target_prefix)
 
-    def run(self, root_dir, bin_file_rdd, origin_prefix, target_prefix):
+    def run(self, bin_file_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
         file_list_rdd = (
             # RDD(bin_file)
             bin_file_rdd
             # PairRDD(target_dir, bin_file)
-            .map(lambda bin_file: (os.path.dirname(bin_file).replace(origin_prefix, target_prefix, 1),
-                                   bin_file))
-            # PairRDD(target_dir, bin_file), in absolute path
-            .map(lambda src_dst: (os.path.join(root_dir, src_dst[0]),
-                                  os.path.join(root_dir, src_dst[1]))))
-        (
-            # PairRDD(target_dir, bin_file), in absolute path
-            file_list_rdd
-            # RDD(target_dir), in absolute path
-            .keys()
-            # RDD(target_dir)
-            .distinct()
-            # makedirs for all target_dir
-            .foreach(file_utils.makedirs))
+            .keyBy(lambda bin_file:
+                   os.path.dirname(bin_file).replace(origin_prefix, target_prefix, 1))
+            # PairRDD(target_dir, bin_file), in proper absolute path.
+            .map(lambda target_src: (s3_utils.rw_path(target_src[0]),
+                                     s3_utils.ro_path(target_src[1])))
+            .cache())
+
+        # Create all target_dir.
+        file_list_rdd.keys().distinct().foreach(file_utils.makedirs)
+
         result = (
             # PairRDD(target_dir, bin_file), in absolute path
             file_list_rdd
-            # PairRDD(target_dir, frame_env_list), in absolute path
-            .mapValues(lambda bin_file: read_frame_env(bin_file))
-            # PairRDD(target_dir, frame_env), in absolute path
-            .flatMapValues(lambda frame_env: frame_env)
+            # PairRDD(target_dir, frame_env)
+            .flatMapValues(read_frame_env)
             # RDD(0/1), 1 for success
             .map(spark_op.do_tuple(self.process_frame_env))
             .cache())
@@ -83,7 +75,8 @@ class GenerateImgs(BasePipeline):
     @staticmethod
     def process_frame_env(target_dir, frame_env):
         """Call prediction python code to draw images."""
-        region = target_dir.split('/')[target_dir.split('/').index('img_features') + 1]
+        target_dir_parts = target_dir.split('/')
+        region = target_dir_parts[target_dir_parts.index('img_features') + 1]
         try:
             obstacle_mapping = ObstacleMapping(region, frame_env)
             glog.debug("obstacles_history length is: " + str(len(frame_env.obstacles_history)))
