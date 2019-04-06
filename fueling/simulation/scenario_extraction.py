@@ -35,8 +35,8 @@ def list_completed_dirs(prefix, list_func):
 def get_todo_tasks(original_prefix, target_prefix, list_func):
     """Get todo tasks in rdd format."""
     original_dirs = list_completed_dirs(original_prefix, list_func)
-    processed_dirs = list_completed_dirs(target_prefix, list_func) \
-                        .map(lambda path: path.replace(target_prefix, original_prefix, 1))
+    processed_dirs = list_completed_dirs(target_prefix, list_func).map(
+        lambda path: path.replace(target_prefix, original_prefix, 1))
     return original_dirs.subtract(processed_dirs)
 
 def get_abs_path(root_dir, path):
@@ -55,7 +55,7 @@ def execute_task(task):
         glog.warn('No records file found in {}'.format(source_dir))
         return
     map_dir = '/mnt/bos/modules/map/data/san_mateo'
-    message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages() \
+    message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages()
          if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
     if message is not None:
         if record_utils.message_to_proto(message).map_version.startswith('sunnyvale'):
@@ -64,11 +64,10 @@ def execute_task(task):
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
     simulation_path = '/apollo/modules/simulation'
-    return_code = os.system('cd {} && ./bin/logsim_generator_executable {} {} {} --alsologtostderr'
-                            .format(simulation_path,
-                                    '--input_dir='+source_dir,
-                                    '--output_dir='+dest_dir,
-                                    '--scenario_map_dir='+map_dir))
+    return_code = os.system(
+        'cd {} && ./bin/logsim_generator_executable --alsologtostderr '
+        '--input_dir={} --output_dir={} --scenario_map_dir={}'.format(
+            simulation_path, source_dir, dest_dir, map_dir))
     if return_code != 0:
         glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
         # Print log here only, since rerunning will probably fail again.
@@ -97,10 +96,9 @@ class ScenarioExtractionPipeline(BasePipeline):
         spark_context = self.get_spark_context()
 
         # RDD(tasks), the tasks without root_dir as prefix
-        todo_tasks = get_todo_tasks(original_prefix, \
-                                    target_prefix, \
-                                    lambda path: spark_context.parallelize( \
-                                        list_end_files(os.path.join(root_dir, path))))
+        todo_tasks = get_todo_tasks(
+            original_prefix, target_prefix,
+            lambda path: spark_context.parallelize(list_end_files(os.path.join(root_dir, path))))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, root_dir, original_prefix, target_prefix)
@@ -113,8 +111,7 @@ class ScenarioExtractionPipeline(BasePipeline):
         bucket = 'apollo-platform'
 
         # RDD(tasks), the tasks without root_dir as prefix
-        todo_tasks = get_todo_tasks(original_prefix, \
-                                    target_prefix, \
+        todo_tasks = get_todo_tasks(original_prefix, target_prefix,
                                     lambda path: s3_utils.list_files(bucket, path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
@@ -129,10 +126,8 @@ class ScenarioExtractionPipeline(BasePipeline):
          .map(lambda path: get_abs_path(root_dir, path))
          # PairRDD(target_dirs, tasks), the map of target dirs and source dirs
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
-         # PairRDD(target_dirs, tasks), execute each task
-         .map(execute_task)
-         # Simply trigger action
-         .count())
+         # Execute each task
+         .foreach(execute_task))
 
 if __name__ == '__main__':
     ScenarioExtractionPipeline().run_test()
