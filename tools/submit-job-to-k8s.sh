@@ -99,6 +99,9 @@ popd
     --conf spark.kubernetes.container.image.pullPolicy="Always" \
     --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
+    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.mount.path="${BOS_PVC_MOUNT_PATH}" \
+    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.mount.readOnly="true" \
+    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.options.claimName="bos-pvc" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \

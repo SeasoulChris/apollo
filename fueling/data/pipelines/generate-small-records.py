@@ -66,21 +66,18 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         sc = self.get_spark_context()
-        root_dir = '/apollo'
         # RDD(record_path)
-        records_rdd = sc.parallelize(['docs/demo_guide/demo_3.5.record'])
+        records_rdd = sc.parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
         # RDD(dir_path)
-        whitelist_dirs_rdd = sc.parallelize(['docs/demo_guide'])
+        whitelist_dirs_rdd = sc.parallelize(['/apollo/docs/demo_guide'])
         # RDD(dir_path)
         blacklist_dirs_rdd = sc.parallelize([])
         origin_prefix = 'docs/demo_guide'
         target_prefix = 'data'
-        self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
-                 origin_prefix, target_prefix)
+        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         # Original records are public-test/path/to/*.record, sharded to M.
         origin_prefix = 'public-test/2019/'
@@ -107,10 +104,10 @@ class GenerateSmallRecords(BasePipeline):
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
 
         summary_receivers = ['usa-data@baidu.com']
-        self.run(root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
+        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
                  origin_prefix, target_prefix, summary_receivers)
 
-    def run(self, root_dir, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
+    def run(self, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
             origin_prefix, target_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         # PairRDD(task_dir, record), which is in the whitelist
@@ -125,8 +122,8 @@ class GenerateSmallRecords(BasePipeline):
             # PairRDD(target_dir, record)
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, record), in absolute path style.
-            .map(lambda dir_record: (os.path.join(root_dir, dir_record[0]),
-                                     os.path.join(root_dir, dir_record[1])))
+            .map(lambda dir_record: (s3_utils.abs_path(dir_record[0]),
+                                     s3_utils.read_only_path(dir_record[1])))
             # PairRDD(target_dir, (record, header))
             .mapValues(lambda record: (record, record_utils.read_record_header(record)))
             # PairRDD(target_dir, (record, header)), where header is valid
