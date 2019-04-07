@@ -50,7 +50,7 @@ class DynamicModelEvaluation(BasePipeline):
             # RDD(folder_path) for mlp models
             s3_utils.list_dirs(bucket, mlp_model_prefix)
             # RDD(absolute_folder_path)
-            .map(s3_utils.rw_path)
+            .map(s3_utils.abs_path)
             # PairRDD(model_name, absolute_folder_path)
             .keyBy(lambda _: 'mlp'))
 
@@ -58,7 +58,7 @@ class DynamicModelEvaluation(BasePipeline):
             # RDD(folder_path) for lstm models
             s3_utils.list_dirs(bucket, lstm_model_prefix)
             # RDD(absolute_folder_path)
-            .map(s3_utils.rw_path)
+            .map(s3_utils.abs_path)
             # PairRDD(model_name, absolute_folder_path)
             .keyBy(lambda _: 'lstm'))
 
@@ -68,7 +68,7 @@ class DynamicModelEvaluation(BasePipeline):
             # RDD(file_path) for evaluation dataset, which ends with 'hdf5'
             .filter(lambda path: path.endswith('.hdf5'))
             # RDD(absolute_file_path)
-            .map(s3_utils.rw_path))
+            .map(s3_utils.abs_path))
 
         self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)

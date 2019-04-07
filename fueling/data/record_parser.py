@@ -51,7 +51,7 @@ class RecordParser(object):
         """Init input reader and output record."""
         self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
 
-        self._reader = RecordReader(s3_utils.ro_path(record_file))
+        self._reader = RecordReader(s3_utils.abs_path(record_file))
         # State during processing messages.
         self._current_driving_mode = None
         self._last_position = None

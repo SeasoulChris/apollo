@@ -60,8 +60,8 @@ class DataForLearning(BasePipeline):
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_data_for_learning.sh '
-            '"{}" "{}" "{}"'.format(s3_utils.ro_path(record_dir),
-                                    s3_utils.rw_path(target_dir), map_name))
+            '"{}" "{}" "{}"'.format(s3_utils.abs_path(record_dir),
+                                    s3_utils.abs_path(target_dir), map_name))
         if os.system(command) == 0:
             glog.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
             return 1

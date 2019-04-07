@@ -56,7 +56,7 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
         """Wrapper function."""
         glog.info('Read record {}'.format(record_path))
         try:
-            reader = RecordReader(s3_utils.ro_path(record_path))
+            reader = RecordReader(s3_utils.abs_path(record_path))
             channel_set = {channel for channel in reader.get_channellist()
                            if reader.get_messagenumber(channel) > 0}
             if channels:
@@ -77,7 +77,7 @@ def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
     glog.info('Read record header {}'.format(record_path))
     try:
-        reader = RecordReader(s3_utils.ro_path(record_path))
+        reader = RecordReader(s3_utils.abs_path(record_path))
         header = Header()
         header.ParseFromString(reader.get_headerstring())
         if header.message_number > 0:
@@ -97,7 +97,7 @@ def write_record(path_to_messages):
     # Prepare the input data and output dir.
     path, py_bag_messages = path_to_messages
     glog.info('Write record {}'.format(path))
-    path = s3_utils.rw_path(path)
+    path = s3_utils.abs_path(path)
     file_utils.makedirs(os.path.dirname(path))
     writer = RecordWriter(0, 0)
     writer.open(path)
@@ -146,7 +146,7 @@ def get_map_name_from_records(records_dir):
     map_dict = {map_name.replace('_', ' ').title(): map_name for map_name in map_list}
     reader = read_record([HMI_STATUS_CHANNEL])
     glog.info('Try getting map name from {}'.format(records_dir))
-    records_dir = s3_utils.ro_path(records_dir)
+    records_dir = s3_utils.abs_path(records_dir)
     records = [os.path.join(records_dir, filename) for filename in os.listdir(records_dir)
                                                    if is_record_file(filename)]
     for record in records:

@@ -8,7 +8,7 @@
 # Default value for configurable arguments.
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
-EXECUTORS=16
+EXECUTORS=20
 EXECUTOR_CORES=2
 EXECUTOR_MEMORY=20g
 MEMORY_OVERHEAD_FACTOR=0
@@ -68,7 +68,6 @@ set -e
 
 # Upload local files to remote.
 BOS_MOUNT_PATH="/mnt/bos"
-BOS_PVC_MOUNT_PATH="/mnt/bos-ro"
 REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
 REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
@@ -99,13 +98,9 @@ popd
     --conf spark.kubernetes.container.image.pullPolicy="Always" \
     --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
-    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.mount.path="${BOS_PVC_MOUNT_PATH}" \
-    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.mount.readOnly="true" \
-    --conf spark.kubernetes.executor.volumes.persistentVolumeClaim.bos-pvc.options.claimName="bos-pvc" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
-    --conf spark.executorEnv.BOS_PVC_MOUNT_PATH="${BOS_PVC_MOUNT_PATH}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \

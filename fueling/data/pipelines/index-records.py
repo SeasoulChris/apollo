@@ -36,7 +36,7 @@ class IndexRecords(BasePipeline):
             # RDD(record_path)
             .filter(record_utils.is_record_file)
             # RDD(record_path), with absolute path.
-            .map(s3_utils.rw_path))
+            .map(s3_utils.abs_path))
         self.process(records_rdd, summary_receivers)
 
     def process(self, records_rdd, summary_receivers=None):

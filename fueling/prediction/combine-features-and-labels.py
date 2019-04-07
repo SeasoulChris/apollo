@@ -54,8 +54,8 @@ class FeaturesAndLabelsCombine(BasePipeline):
         source_dir = os.path.dirname(source_file)
         labels_dir = source_dir.replace('features-san-mateo', 'labels-san-mateo')
         label_file = os.path.join(labels_dir, 'junction_label.npy')
-        CombineFeaturesAndLabels(s3_utils.ro_path(source_file),
-                                 s3_utils.rw_path(label_file), 'junction')
+        CombineFeaturesAndLabels(s3_utils.abs_path(source_file),
+                                 s3_utils.abs_path(label_file), 'junction')
         return 0
 
 

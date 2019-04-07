@@ -55,8 +55,8 @@ class GenerateImgs(BasePipeline):
             .keyBy(lambda bin_file:
                    os.path.dirname(bin_file).replace(origin_prefix, target_prefix, 1))
             # PairRDD(target_dir, bin_file), in proper absolute path.
-            .map(lambda target_src: (s3_utils.rw_path(target_src[0]),
-                                     s3_utils.ro_path(target_src[1])))
+            .map(lambda target_src: (s3_utils.abs_path(target_src[0]),
+                                     s3_utils.abs_path(target_src[1])))
             .cache())
 
         # Create all target_dir.

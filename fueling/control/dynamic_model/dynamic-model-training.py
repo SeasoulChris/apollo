@@ -35,8 +35,8 @@ class DynamicModelTraining(BasePipeline):
             # RDD(file_path) for training dataset, which ends with 'hdf5'.
             .filter(lambda path: path.endswith('.hdf5'))
             # RDD(absolute_file_path)
-            .map(s3_utils.rw_path))
-        output_dir = s3_utils.rw_path('modules/control/dynamic_model_output/')
+            .map(s3_utils.abs_path))
+        output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 
     def run(self, training_dataset_rdd, output_dir):
