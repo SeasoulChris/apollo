@@ -12,7 +12,6 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.time_utils as time_utils
 
 
 class GenerateSmallRecords(BasePipeline):
@@ -87,8 +86,6 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(task_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname))
 
-        blacklist_dirs_rdd = self.get_spark_context().parallelize([])
-        """
         blacklist_dirs_rdd = (
             # RDD(file_path), with the target_prefix.
             s3_utils.list_files(bucket, target_prefix)
@@ -98,7 +95,6 @@ class GenerateSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-        """
 
         summary_receivers = ['xiaoxiangquan@baidu.com']
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
@@ -171,8 +167,9 @@ class GenerateSmallRecords(BasePipeline):
                     continue
                 if msg.topic not in known_topics:
                     desc = reader.get_protodesc(msg.topic)
-                    writer.write_channel(msg.topic, msg.data_type, desc)
-                    known_topics.add(msg.topic)
+                    if desc:
+                        writer.write_channel(msg.topic, msg.data_type, desc)
+                        known_topics.add(msg.topic)
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
         except Exception as err:
             glog.error('Failed to read record {}: {}'.format(record, err))
