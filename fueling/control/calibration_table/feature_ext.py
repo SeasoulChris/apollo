@@ -66,7 +66,7 @@ class CalTabFeatureExt(BasePipeline):
             # -> (dir, vehicle)
             feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
             # -> (dir, vehicle), where vehicle is WANTED_VEHICLE
-            .filter(spark_op.filter_value(lambda vehicle: vehicle == WANTED_VEHICLE))
+            .filter(lambda (_, vehicle): vehicle == WANTED_VEHICLE)
             # -> dir
             .keys())
 
@@ -91,10 +91,9 @@ class CalTabFeatureExt(BasePipeline):
             # -> (dir_segment, topic_counter)
             .reduceByKey(operator.add)
             # -> (dir_segment, topic_counter)
-            .filter(spark_op.filter_value(
-                    lambda counter:
-                    counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
-                    counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
+            .filter(lambda (_, counter):
+                        counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT and
+                        counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT))
             # -> dir_segment
             .keys())
 

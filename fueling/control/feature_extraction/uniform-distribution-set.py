@@ -118,7 +118,7 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, (sampled segments, counter))
             .mapValues(pick_sample)
             # PairRDD(key, (sampled segments, counter=sample_size))
-            .filter(spark_op.filter_value(lambda segment_counter: segment_counter[1] == sample_size))
+            .filter(lambda (_, segment_counter): segment_counter[1] == sample_size)
             # PairRDD(key, sampled segments)
             .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
