@@ -53,7 +53,12 @@ class TaskProcessor(object):
             if self.process_record(record):
                 processed_records += 1
         self._reset_writer()
-        return self.target_dir if processed_records > 0 else None
+        if processed_records > 0:
+            glog.info('Processed {} records for task {}'.format(processed_records, self.target_dir))
+            file_utils.touch(os.path.join(self.target_dir, 'COMPLETE'))
+            return self.target_dir
+        glog.error('No records processed for task {}'.format(self.target_dir))
+        return None
 
     def process_record(self, record):
         """Process 1 record."""
@@ -159,12 +164,6 @@ class ReorgSmallRecords(BasePipeline):
             # RDD(target_dir), which is valid.
             .filter(bool),
             "FinishedTasks", glog.info)
-
-        (finished_tasks
-            # RDD(target_dir/COMPLETE)
-            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
-            # Make target_dir/COMPLETE files.
-            .foreach(file_utils.touch))
 
         if summary_receivers:
             GenerateSmallRecords.send_summary(finished_tasks.collect(), summary_receivers)

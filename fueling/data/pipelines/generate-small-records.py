@@ -113,14 +113,11 @@ class GenerateSmallRecords(BasePipeline):
             .keyBy(lambda path: path.replace(origin_prefix, target_prefix, 1)),
             "InputRecords", glog.info)
 
-        partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
         output_records = spark_op.log_rdd(
             # PairRDD(target_record, src_record)
             input_records
             # PairRDD(src_record, target_record), in absolute style
             .map(lambda (target, source): (s3_utils.abs_path(source), s3_utils.abs_path(target)))
-            # PairRDD(src_record, target_record)
-            .repartition(partitions)
             # RDD(target_file)
             .map(lambda (source, target): self.process_file(source, target))
             # RDD(target_file)
