@@ -53,7 +53,7 @@ class TaskProcessor(object):
             if self.process_record(record):
                 processed_records += 1
         self._reset_writer()
-        return target_dir if processed_records > 0 else None
+        return self.target_dir if processed_records > 0 else None
 
     def process_record(self, record):
         """Process 1 record."""
@@ -136,7 +136,7 @@ class ReorgSmallRecords(BasePipeline):
             spark_op.filter_keys(records_rdd.keyBy(os.path.dirname),
                                  whitelist_dirs_rdd, blacklist_dirs_rdd)
             # PairRDD(target_dir, record)
-            .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1))),
+            .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, record), in absolute style
             .map(lambda (target_dir, record): (s3_utils.abs_path(target_dir),
                                                s3_utils.abs_path(record))),
@@ -182,4 +182,4 @@ class ReorgSmallRecords(BasePipeline):
 
 
 if __name__ == '__main__':
-    GenerateSmallRecords().main()
+    ReorgSmallRecords().main()
