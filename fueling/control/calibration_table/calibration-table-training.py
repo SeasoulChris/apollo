@@ -30,7 +30,7 @@ FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.p
 CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
-                                            vehicle_config_pb2.VehicleConfig())
+                                                       vehicle_config_pb2.VehicleConfig())
 
 WANTED_VEHICLE = CALIBRATION_TABLE_CONF.vehicle_type
 

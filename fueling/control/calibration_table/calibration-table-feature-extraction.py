@@ -71,8 +71,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         root_dir = s3_utils.S3_MOUNT_PATH
         
         # PairRDD(record_dir, record_files)
-        todo_records = (
-            dir_utils.get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket, MARKER))
+        todo_records = dir_utils.get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket,
+                                                     MARKER)
         self.run(todo_records, origin_prefix, target_prefix, throttle_train_target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, throttle_train_target_prefix):
@@ -84,8 +84,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                       .cache())
 
         # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
-        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
-            valid_msgs)
+        parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
 
         calibration_table_rdd = (
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
@@ -106,8 +105,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .map(lambda elem: calibration_table_utils.write_h5_train_test
                  (elem, origin_prefix, target_prefix, WANTED_VEHICLE)))
 
-        glog.info('Finished %d calibration_table_rdd!' %
-                  calibration_table_rdd.count())
+        glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
 
         # RDD (dir_segment)
         (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,

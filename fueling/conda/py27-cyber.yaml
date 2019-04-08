@@ -16,7 +16,7 @@ dependencies:
   - opencv
 
   - pip:
-    - colored-glog
+    - colored-glog >= 1.1
     - pylint
     - pyquaternion
     - pyspark-utils

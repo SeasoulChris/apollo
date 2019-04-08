@@ -20,7 +20,7 @@ dependencies:
   - pytz
 
   - pip:
-    - colored-glog
+    - colored-glog >= 1.1
     - pylint
     - pyspark-utils
     - utm
