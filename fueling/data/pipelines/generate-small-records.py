@@ -74,8 +74,8 @@ class GenerateSmallRecords(BasePipeline):
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        origin_prefix = 'public-test/2018/'
-        target_prefix = 'modules/data/public-test-small/2018/'
+        origin_prefix = 'public-test/2019/'
+        target_prefix = 'modules/data/public-test-small/2019/'
 
         files = s3_utils.list_files(bucket, origin_prefix).cache()
         records_rdd = files.filter(record_utils.is_record_file)
