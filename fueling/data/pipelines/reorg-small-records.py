@@ -15,74 +15,6 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 
 
-class TaskProcessor(object):
-    """Process a task."""
-    TAGRTE_RECORD_FORMAT = '%Y%m%d%H%M00.record'
-
-    def __init__(self, records, target_dir):
-        self.records = records
-        self.target_dir = target_dir
-        glog.info('Processing {} records to {}'.format(len(records), target_dir))
-        self.writer = None
-        self.current_target_file = None
-        self.current_known_topics = set()
-
-    def _reset_writer(self, output_record=None):
-        try:
-            if self.writer is not None:
-                self.writer.close()
-                self.writer = None
-            if output_record is not None:
-                self.writer = RecordWriter(0, 0)
-                self.writer.open(output_record)
-        except Exception as error:
-            glog.error('Failed to reset writer to {}: {}'.format(output_record, error))
-            self.writer.close()
-            self.writer = None
-            self.current_target_file = None
-            return False
-        self.current_target_file = output_record
-        self.current_known_topics = set()
-        return True
-
-    def process_task(self):
-        """Process 1 task."""
-        file_utils.makedirs(self.target_dir)
-        processed_records = 0
-        for record in self.records:
-            if self.process_record(record):
-                processed_records += 1
-        self._reset_writer()
-        if processed_records > 0:
-            glog.info('Processed {} records for task {}'.format(processed_records, self.target_dir))
-            file_utils.touch(os.path.join(self.target_dir, 'COMPLETE'))
-            return self.target_dir
-        glog.error('No records processed for task {}'.format(self.target_dir))
-        return None
-
-    def process_record(self, record):
-        """Process 1 record."""
-        glog.info('Read record {}'.format(record))
-        try:
-            reader = RecordReader(record)
-            for msg in reader.read_messages():
-                dt = time_utils.msg_time_to_datetime(msg.timestamp)
-                target_file = os.path.join(self.target_dir, dt.strftime(self.TAGRTE_RECORD_FORMAT))
-                if self.current_target_file != target_file:
-                    if not self._reset_writer(target_file):
-                        return False
-                if msg.topic not in self.current_known_topics:
-                    desc = reader.get_protodesc(msg.topic)
-                    if desc:
-                        self.writer.write_channel(msg.topic, msg.data_type, desc)
-                        self.current_known_topics.add(msg.topic)
-                self.writer.write_message(msg.topic, msg.message, msg.timestamp)
-        except Exception as error:
-            glog.error('Failed to read record {}: {}'.format(record, error))
-            return False
-        return True
-
-
 class ReorgSmallRecords(BasePipeline):
     """ReorgSmallRecords pipeline."""
     def __init__(self):
@@ -116,8 +48,6 @@ class ReorgSmallRecords(BasePipeline):
             # RDD(task_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname))
 
-        blacklist_dirs_rdd = self.get_spark_context().parallelize([])
-        """
         blacklist_dirs_rdd = (
             # RDD(file_path), with the target_prefix.
             s3_utils.list_files(bucket, target_prefix)
@@ -127,7 +57,6 @@ class ReorgSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
             .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-        """
 
         summary_receivers = ['xiaoxiangquan@baidu.com']
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
@@ -144,29 +73,96 @@ class ReorgSmallRecords(BasePipeline):
             .map(spark_op.do_key(lambda path: path.replace(origin_prefix, target_prefix, 1)))
             # PairRDD(target_dir, record), in absolute style
             .map(lambda (target_dir, record): (s3_utils.abs_path(target_dir),
-                                               s3_utils.abs_path(record))),
+                                               s3_utils.abs_path(record)))
+            # PairRDD(target_dir, (record, header))
+            .mapValues(lambda record: (record, record_utils.read_record_header(record)))
+            # PairRDD(target_dir, (record, header)), where header is valid
+            .filter(lambda (_, (_r, header)): header is not None),
             "InputRecords", glog.info)
 
-        output_dirs = spark_op.log_rdd(
-            # PairRDD(target_dir, record)
+        output_records = spark_op.log_rdd(
+            # PairRDD(target_dir, (record, header))
             input_records
-            # PairRDD(target_dir, records)
+            # PairRDD(target_file, (record, start_time, end_time))
+            .flatMap(self.shard_to_files)
+            # PairRDD(target_file, (record, start_time, end_time)s)
             .groupByKey()
-            # PairRDD(target_dir, records)
+            # PairRDD(target_file, (record, start_time, end_time)s)
             .mapValues(sorted),
-            "OutputDirs", glog.info)
+            "OutputRecords", glog.info)
 
         finished_tasks = spark_op.log_rdd(
-            # PairRDD(target_dir, records)
-            output_dirs
-            # RDD(target_dir), or None if the task is a failure.
-            .map(lambda (target_dir, records): TaskProcessor(records, target_dir).process_task())
-            # RDD(target_dir), which is valid.
-            .filter(bool),
+            # PairRDD(target_file, (record, start_time, end_time)s)
+            output_records
+            # RDD(target_file)
+            .map(self.process_file)
+            # RDD(target_file)
+            .filter(bool)
+            # RDD(target_dir)
+            .map(os.path.dirname)
+            # RDD(target_dir)
+            .distinct(),
             "FinishedTasks", glog.info)
+
+        (finished_tasks
+            # RDD(target_dir/COMPLETE)
+            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
+            # Make target_dir/COMPLETE files.
+            .foreach(file_utils.touch))
 
         if summary_receivers:
             GenerateSmallRecords.send_summary(finished_tasks.collect(), summary_receivers)
+
+    @staticmethod
+    def shard_to_files(input):
+        """(target_dir, (record, header)) -> (task_file, (record, start_time, end_time))"""
+        # 1 minute as a record.
+        RECORD_DURATION_NS = 60 * (10 ** 9)
+        RECORD_FORMAT = '%Y%m%d%H%M00.record'
+
+        target_dir, (record, header) = input
+        first_begin_time = (header.begin_time // RECORD_DURATION_NS) * RECORD_DURATION_NS
+        last_begin_time = (header.end_time // RECORD_DURATION_NS) * RECORD_DURATION_NS
+        for begin_time in range(first_begin_time, last_begin_time + 1, RECORD_DURATION_NS):
+            dt = time_utils.msg_time_to_datetime(begin_time)
+            target_file = os.path.join(target_dir, dt.strftime(RECORD_FORMAT))
+            yield (target_file, (record, begin_time, begin_time + RECORD_DURATION_NS))
+
+    @staticmethod
+    def process_file(input):
+        """(target_file, (record, start_time, end_time)s) -> target_file"""
+        target_file, records = input
+        glog.info('Processing {} records to {}'.format(len(records), target_file))
+
+        if os.path.exists(target_file):
+            glog.info('Skip generating exist record {}'.format(target_file))
+            return target_file
+        file_utils.makedirs(os.path.dirname(target_file))
+        writer = RecordWriter(0, 0)
+        try:
+            writer.open(target_file)
+        except Exception as e:
+            glog.error('Failed to write to target file {}: {}'.format(target_file, e))
+            writer.close()
+            return None
+
+        known_topics = set()
+        for record, start_time, end_time in records:
+            glog.info('Read record {}'.format(record))
+            try:
+                reader = RecordReader(record)
+                for msg in reader.read_messages():
+                    if msg.timestamp < start_time or msg.timestamp >= end_time:
+                        continue
+                    if msg.topic not in known_topics:
+                        desc = reader.get_protodesc(msg.topic)
+                        writer.write_channel(msg.topic, msg.data_type, desc)
+                        known_topics.add(msg.topic)
+                    writer.write_message(msg.topic, msg.message, msg.timestamp)
+            except Exception as err:
+                glog.error('Failed to read record {}: {}'.format(record, err))
+        writer.close()
+        return target_file
 
     @staticmethod
     def send_summary(task_dirs, receivers):
