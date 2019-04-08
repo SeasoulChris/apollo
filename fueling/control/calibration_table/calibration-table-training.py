@@ -1,33 +1,32 @@
 #!/usr/bin/env python
 from collections import Counter
 import glob
-import h5py
 import operator
 import os
 
 import colored_glog as glog
+import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline import BasePipeline
 from modules.common.configs.proto import vehicle_config_pb2
 import common.proto_utils as proto_utils
+import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
+
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
+import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
-import modules.control.proto.control_conf_pb2 as ControlConf
-import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as calibrationTable
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
-                                                           calibrationTable.calibrationTable())
-FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
+                                                           CalibrationTable.CalibrationTable())
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                                        vehicle_config_pb2.VehicleConfig())
@@ -54,6 +53,48 @@ throttle_axis_cmd_max = CALIBRATION_TABLE_CONF.throttle_max
 cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
 
 
+def get_feature_hdf5_files(feature_dir, root_dir, throttle_or_brake, train_or_test):
+    return (
+        # RDD(feature folder)
+        feature_dir
+        # RDD(throttle/brake train/test feature folder)
+        .map(lambda feature_dir: 
+            os.path.join(root_dir, feature_dir, throttle_or_brake, train_or_test))
+        # RDD(all files in throttle train feature folder)
+        .flatMap(dir_utils.list_end_files)
+        # RDD(hdf5 files)
+        .filter(lambda path: path.endswith('.hdf5'))
+        # PairRDD('throttle or brake', hdf5 files)
+        .keyBy(lambda _: throttle_or_brake)
+        # PairRDD('throttle or brake', hdf5 files RDD)
+        .groupByKey()
+        # PairRDD('throttle or brake', list of hdf5 files)
+        .mapValues(list))
+
+def get_feature_hdf5_files_prod(bucket, feature_prefix, root_dir, throttle_or_brake):
+    return (
+        # RDD(throttle feature folder)
+        s3_utils.list_files(bucket, feature_prefix)
+        # RDD(absolute feature folder)
+        .map(lambda feature_prefix: os.path.join(root_dir, feature_prefix))
+        # RDD(hdf5 files)
+        .filter(lambda path: path.endswith('.hdf5'))
+        # PairRDD('throttle or brake', hdf5 files)
+        .keyBy(lambda _: throttle_or_brake)
+        # PairRDD('throttle or brake', hdf5 files RDD)
+        .groupByKey()
+        # PairRDD('throttle or brake', list of hdf5 files)
+        .mapValues(list))
+    
+def get_data_from_hdf5(hdf5_rdd):
+    return (
+        # PairRDD('throttle or brake', list of hdf5 files)
+        hdf5_rdd
+        # PairRDD('throttle or brake', segments)
+        .mapValues(train_utils.generate_segments)
+        # PairRDD('throttle or brake', data)
+        .mapValues(train_utils.generate_data))
+    
 class CalibrationTableTraining(BasePipeline):
     def __init__(self):
         """ initialize """
@@ -61,113 +102,132 @@ class CalibrationTableTraining(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
-        target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
+        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+        origin_prefix = os.path.join('modules/data/fuel/testdata/control/generated', 
+                            WANTED_VEHICLE, 'CalibrationTable')
+        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated', 
+                            WANTED_VEHICLE, 'conf')
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(records).keyBy(os.path.dirname)
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        target_dir = os.path.join(root_dir, target_prefix)
+        # RDD(origin_prefix)
+        feature_dir = self.get_spark_context().parallelize([origin_prefix])
+        list_func = dir_utils.list_end_files
+
+        throttle_train_files = (
+            # RDD('throttle', list of hdf5 files)
+            get_feature_hdf5_files(feature_dir, root_dir, 'throttle', 'train'))
+        throttle_test_files = (
+            # RDD('throttle', list of hdf5 files)
+            get_feature_hdf5_files(feature_dir, root_dir, 'throttle', 'test'))
+
+        brake_train_files = (
+            # RDD('brake', list of hdf5 files)
+            get_feature_hdf5_files(feature_dir, root_dir, 'brake', 'train'))
+        brake_test_files = (
+            # RDD('brake', list of hdf5 files)
+            get_feature_hdf5_files(feature_dir, root_dir, 'brake', 'test'))
+
+        feature_dir_rdds = \
+            (throttle_train_files, throttle_test_files, brake_train_files, brake_test_files)
+
+        self.run(feature_dir_rdds, target_dir)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-
-        # choose folder for wanted vehicle
-        origin_prefix = os.path.join('modules/control/feature_extraction_hf5/2019/', WANTED_VEHICLE)
-        # TODO: The target_prefix is not used finally.
-        target_prefix = 'modules/control/calibration_table/'
+        origin_prefix = os.path.join('modules/control/CalibrationTable/Features', WANTED_VEHICLE)
+        target_prefix = os.path.join('modules/control/CalibrationTable/Conf', WANTED_VEHICLE)
         root_dir = s3_utils.S3_MOUNT_PATH
-        # TODO: I have to change it like this to fit the followed pipeline. But it's not a good way
-        # to use S3 storage.
-        dir_to_h5s = (
-            self.get_spark_context().parallelize(['modules/control/feature_extraction_hf5/2019/'])
-            .keyBy(os.path.dirname))
-        self.run(dir_to_h5s, origin_prefix, target_prefix, root_dir)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
+        target_dir = os.path.join(root_dir, target_prefix)
+
+        throttle_train_prefix = os.path.join(origin_prefix, 'throttle', 'train')
+        throttle_train_files = (
+            # RDD('throttle', list of hdf5 files)
+            get_feature_hdf5_files_prod(bucket, throttle_train_prefix, root_dir, 'throttle'))
+
+        throttle_test_prefix = os.path.join(origin_prefix, 'throttle', 'test')
+        throttle_test_files = (
+            # RDD('throttle', list of hdf5 files)
+            get_feature_hdf5_files_prod(bucket, throttle_test_prefix, root_dir, 'throttle'))
+
+        brake_train_prefix = os.path.join(origin_prefix, 'brake', 'train')
+        brake_train_files = (
+            # RDD('brake', list of hdf5 files)
+            get_feature_hdf5_files_prod(bucket, brake_train_prefix, root_dir, 'brake'))
+
+        brake_test_prefix = os.path.join(origin_prefix, 'brake', 'test')
+        brake_test_files = (
+            # RDD('brake', list of hdf5 files)
+            get_feature_hdf5_files_prod(bucket, brake_test_prefix, root_dir, 'brake'))
+
+        feature_dir_rdds = \
+            (throttle_train_files, throttle_test_files, brake_train_files, brake_test_files)
+        self.run(feature_dir_rdds, target_dir)
+
+
+    def run(self, feature_dir_rdds, target_dir):
         """ processing RDD """
+        # RDD('throttle', list of train hdf5 files), RDD ('throttle', list of test hdf5 files),
+        # RDD('brake', list of train hdf5 files), RDD ('brake', list of test hdf5 files)
+        throttle_train_files, throttle_test_files, brake_train_files, brake_test_files =  \
+            feature_dir_rdds
 
-        # PairRDD(dir, record), in absolute path
-        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1]))).cache()
-        # TODO: Go through the whole logic carefully.
-        # 1. Choose better variable names. Many of them mismatched what they are.
-        # 2. Remove redundant items, for example, the dir_to_records[1] is never used.
-        throttle_train_file_rdd = (
-            # PairRDD(dir, dir)
-            dir_to_records
-            # PairRDD(dir, hdf5_files)
-            .map(lambda elem:
-                 train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'train'))
-            # PairRDD(dir, segments)
-            .mapValues(train_utils.generate_segments)
-            # PairRDD(dir, x_train_data, y_train_data)
-            .mapValues(train_utils.generate_data))
+        glog.info("throttle train file ONE: %s", throttle_train_files.first())
+        glog.info("throttle test file ONE: %s", throttle_test_files.first())
 
-        throttle_test_file_rdd = (
-            # PairRDD(dir, dir)
-            dir_to_records
-            # PairRDD(dir, hdf5_files)
-            .map(lambda elem:
-                 train_utils.choose_data_file(elem, WANTED_VEHICLE, 'throttle', 'test'))
-            # PairRDD(dir, segments)
-            .mapValues(train_utils.generate_segments)
-            # PairRDD(dir, (x_test_data, y_test_data))
-            .mapValues(train_utils.generate_data))
+        # PairRDD('throttle', train data)
+        throttle_train_data = get_data_from_hdf5(throttle_train_files).cache()
+        # PairRDD('throttle', test data)
+        throttle_test_data = get_data_from_hdf5(throttle_test_files).cache()
+            
+        glog.info("throttle train data segment numbers: %d", throttle_train_data.count())
+        glog.info("throttle test data segment numbers: %d", throttle_test_data.count())
 
-        # TODO: Use subfolders instead of concat string. It's easier if you want to parse it back.
-        throttle_table_filename = WANTED_VEHICLE + '_throttle_calibration_table.pb.txt'
-
+        throttle_table_filename = 'throttle_calibration_table.pb.txt'
         throttle_model_rdd = (
-            # PairRDD (dir, (x_train_data, y_train_data))
-            throttle_train_file_rdd
+            # PairRDD(dir, (x_train_data, y_train_data))
+            throttle_train_data
             # PairRDD(dir, (x_train_data, y_train_data, x_test_data, y_test_data))
-            .join(throttle_test_file_rdd)
+            .join(throttle_test_data)
             # PairRDD(dir, result_array)
             .mapValues(lambda elem:
                        train_utils.train_model(elem, throttle_train_layer, train_alpha))
             # RDD(a number)
             .map(lambda elem:
-                 train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
+                 train_utils.write_table(elem, target_dir, speed_min, speed_max, speed_segment_num,
                                          throttle_axis_cmd_min, throttle_axis_cmd_max,
                                          cmd_segment_num, throttle_table_filename))
             .count())
 
-        brake_train_file_rdd = (
-            # (dir, dir)
-            dir_to_records
-            # PairRDD (dir, hdf5_files)
-            .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'train'))
-            # PairRDD (dir, segments)
-            .mapValues(train_utils.generate_segments)
-            # PairRDD (dir, x_train_data, y_train_data)
-            .mapValues(train_utils.generate_data))
+        glog.info("brake train file ONE: %s", brake_train_files.first())
+        glog.info("brake test file ONE: %s", brake_test_files.first())
 
-        brake_test_file_rdd = (
-            # (dir, dir)
-            dir_to_records
-            # PairRDD (dir, hdf5_files)
-            .map(lambda elem: train_utils.choose_data_file(elem, WANTED_VEHICLE, 'brake', 'test'))
-            # PairRDD (dir, segments)
-            .mapValues(train_utils.generate_segments)
-            # PairRDD (dir, x_train_data, y_train_data)
-            .mapValues(train_utils.generate_data))
+        # PairRDD('brake', train data)
+        brake_train_data = get_data_from_hdf5(brake_train_files).cache()
+        # PairRDD('brake', test data)
+        brake_test_data = get_data_from_hdf5(brake_test_files).cache()
+            
+        glog.info("brake train data numbers: %d", brake_train_data.count())
+        glog.info("brake test data numbers: %d", brake_test_data.count())
 
-        brake_table_filename = WANTED_VEHICLE + '_brake_calibration_table.pb.txt'
-
+        brake_table_filename = 'brake_calibration_table.pb.txt'
         brake_model_rdd = (
-            # (dir, x_train_data, y_train_data)
-            brake_train_file_rdd
-            # PairRDD (dir, x_train_data, y_train_data, x_test_data, y_test_data)
-            .join(brake_test_file_rdd)
-            # PairRDD (dir, result_array)
-            .mapValues(lambda elem: train_utils.train_model(elem, brake_train_layer, train_alpha))
-            # PairRDD (a number)
+            # PairRDD(dir, (x_train_data, y_train_data))
+            brake_train_data
+            # PairRDD(dir, ((x_train_data, y_train_data), (x_test_data, y_test_data))
+            .join(brake_test_data)
+            # PairRDD(dir, result_array)
+            .mapValues(lambda elem:
+                       train_utils.train_model(elem, brake_train_layer, train_alpha))
+            # RDD(a number)
             .map(lambda elem:
-                 train_utils.write_table(elem, speed_min, speed_max, speed_segment_num,
-                                         brake_axis_cmd_min, brake_axis_cmd_max, cmd_segment_num,
-                                         brake_table_filename))
+                 train_utils.write_table(elem, target_dir, speed_min, speed_max, speed_segment_num,
+                                         brake_axis_cmd_min, brake_axis_cmd_max,
+                                         cmd_segment_num, brake_table_filename))
             .count())
 
 
+        
 if __name__ == '__main__':
     CalibrationTableTraining().main()

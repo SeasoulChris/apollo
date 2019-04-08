@@ -14,33 +14,11 @@ from fueling.control.features.neural_network_tf import NeuralNetworkTF
 import fueling.common.file_utils as file_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
-# def choose_data_file(hdf5_folder, brake_or_throttle, train_or_test):
-#     hdf5_dir = hdf5_folder[0]
-#     hdf5_file = glob.glob(
-#         # TODO: Please write detailed document under control/calibration_table, about the file tree
-#         # structure. As the logic has really strict requirement on how the data is organized.
-#         '{}/{}/{}/*.hdf5'.format(hdf5_dir, brake_or_throttle, train_or_test))
-        
-#     return (hdf5_folder[0], hdf5_file)
-
-
-
-# def choose_data_file(feature_dir, brake_or_throttle, train_or_test):
-#     hdf5_dirs = os.path.join(feature_dir, brake_or_throttle, train_or_test)
-#     hdf5_files = (feature_dir
-#         # RDD(all files)
-#         .faltMap(dir_utils.list_end_files(hdf5_dirs))
-#         #RDD(.hdf5 files)
-#         .filter(lambda path: path.endswith('.hdf5')))
-
-#     return hdf5_files
-
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
         glog.info('Loading %s' % str(h5))
         with h5py.File(h5, 'r+') as fin:
-            # TODO: Simplify the logic: segments = [np.array(segment) for segment in f.itervalues()]
             names = list(fin.keys())
             if len(names) < 1:
                 continue
@@ -70,12 +48,12 @@ def generate_data(segments):
             i += 1
     return X, Y
 
-# TODO: Avoid naming like "elem" which has no information. Describe what it is.
-def train_model(elem, layer, train_alpha):
+
+def train_model(data_sets, layer, train_alpha):
     """
     train model
     """
-    (X_train, Y_train), (X_test, Y_test) = elem
+    (X_train, Y_train), (X_test, Y_test) = data_sets
 
     model = NeuralNetworkTF(layer)
     params, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
@@ -85,7 +63,7 @@ def train_model(elem, layer, train_alpha):
     return model
 
 
-def write_table(elem, target_dir, 
+def write_table(elem, target_dir,
                 speed_min, speed_max, speed_segment_num,
                 axis_cmd_min, axis_cmd_max, cmd_segment_num,
                 table_filename):

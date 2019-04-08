@@ -10,7 +10,6 @@ import h5py
 import numpy as np
 
 import common.proto_utils as proto_utils
-import modules.control.proto.control_conf_pb2 as ControlConf
 
 
 from fueling.control.features.filters import Filters
@@ -37,8 +36,6 @@ train_percetage = CALIBRATION_TABLE_CONF.train_percentage
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                             vehicle_config_pb2.VehicleConfig())
-FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(FILENAME_CONTROL_CONF, ControlConf.ControlConf())
 
 THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
 THROTTLE_MAX = CALIBRATION_TABLE_CONF.throttle_max
@@ -49,7 +46,7 @@ BRAKE_MAX = -1 * CALIBRATION_TABLE_CONF.brake_max
 
 # transient
 segment_brake_list = np.linspace(
-    BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
+    BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.brake_segment).tolist()
 segment_throttle_list = np.linspace(
     THROTTLE_DEADZONE, THROTTLE_MAX, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
 
@@ -299,5 +296,7 @@ def write_h5_train_test(elem, origin_prefix, target_prefix, vehicle_type):
 
 def write_h5_cal_tab(data, file_dir, file_name):
     file_utils.makedirs(file_dir)
-    with h5py.File("{}/{}.hdf5".format(file_dir, file_name), "w") as h5_file:
-        h5_file.create_dataset("segment", data=data, dtype="float32")
+    file_name = file_name + '.hdf5'
+    file_path = os.path.join(file_dir, file_name)
+    with h5py.File(file_path, 'w') as h5_file:
+        h5_file.create_dataset('segment', data=data, dtype='float32')
