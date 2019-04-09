@@ -12,6 +12,11 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
+# Config.
+SKIP_INDEXED_RECORD = True
+# End of configs.
+
+
 class IndexRecords(BasePipeline):
     """IndexRecords pipeline."""
     COLLECTION_NAME = 'records'
@@ -41,15 +46,16 @@ class IndexRecords(BasePipeline):
 
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        collection = Mongo.collection(self.COLLECTION_NAME)
-        docs = collection.find({}, {'path': 1})
-        imported_records = [doc['path'] for doc in docs]
-        glog.info('Found {} imported records'.format(len(imported_records)))
+        if SKIP_INDEXED_RECORD:
+            docs = Mongo.collection(self.COLLECTION_NAME).find({}, {'path': 1})
+            indexed_records = [doc['path'] for doc in docs]
+            glog.info('Found {} imported records'.format(len(indexed_records)))
+            # RDD(record_path), which is not indexed before.
+            records_rdd = records_rdd.subtract(
+                self.get_spark_context().parallelize(indexed_records))
 
-        newly_imported_records = spark_op.log_rdd(
+        new_indexed_records = spark_op.log_rdd(
             records_rdd
-            # RDD(record_path), which is not imported before.
-            .subtract(self.get_spark_context().parallelize(imported_records))
             # RDD(RecordMeta)
             .map(RecordParser.Parse)
             # RDD(RecordMeta), which is valid.
@@ -60,7 +66,7 @@ class IndexRecords(BasePipeline):
             .mapPartitions(self.import_record),
             "NewlyImportedRecords", glog.info)
         if summary_receivers:
-            self.send_summary(newly_imported_records, summary_receivers)
+            self.send_summary(new_indexed_records, summary_receivers)
 
     @staticmethod
     def import_record(record_meta_docs):
@@ -74,7 +80,7 @@ class IndexRecords(BasePipeline):
         return newly_imported
 
     @staticmethod
-    def send_summary(imported_records_rdd, receivers):
+    def send_summary(new_indexed_records, receivers):
         """Send summary."""
         SummaryTuple = collections.namedtuple('Summary', ['Path', 'URL'])
 
@@ -82,7 +88,7 @@ class IndexRecords(BasePipeline):
         service = 'http:warehouse-service:8000'
         url_prefix = '{}/api/v1/namespaces/default/services/{}/proxy/task'.format(proxy, service)
 
-        msgs = (imported_records_rdd
+        msgs = (new_indexed_records
             # RDD(imported_task_dir)
             .map(os.path.dirname)
             # RDD(imported_task_dir), which is unique
