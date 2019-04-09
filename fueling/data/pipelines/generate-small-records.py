@@ -183,13 +183,16 @@ class GenerateSmallRecords(BasePipeline):
     @staticmethod
     def send_summary(task_dirs, receivers):
         """Send summary."""
-        if len(task_dirs) == 0:
+        if not task_dirs:
             glog.info('No need to send summary for empty result')
             return
         SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
         title = 'Generated small records for {} tasks'.format(len(task_dirs))
         message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in task_dirs]
-        email_utils.send_email_info(title, message, receivers)
+        try:
+            email_utils.send_email_info(title, message, receivers)
+        except Exception as error:
+            glog.error('Failed to send summary: {}'.format(error))
 
 
 if __name__ == '__main__':
