@@ -7,7 +7,7 @@ message ControlMetrics {
     optional double curvature_harsh_limit = 2;
 
     optional double speed_still = 3;
-    optional double heading_still = 4;
+    optional double heading_error_still = 4;
     optional double curvature_still = 5;
 
     optional double station_error_thold = 6;
@@ -17,8 +17,8 @@ message ControlMetrics {
     optional double heading_error_thold = 10;
     optional double heading_error_rate_thold = 11;
 
-    optional double lon_acceleration_thold = 12;
-    optional double lon_jerk_thold = 13;
+    optional double acceleration_thold = 12;
+    optional double jerk_thold = 13;
     optional double lat_acceleration_thold = 14;
     optional double lat_jerk_thold = 15;
     optional double heading_acceleration_thold = 16;
@@ -28,11 +28,12 @@ message ControlMetrics {
 message ControlProfiling {
     optional string vehicle_type = 1;
     optional string controller_type = 2;
+    optional double vehicle_wheelbase = 3;
 
-    optional ControlMetrics control_metrics = 3;
+    optional ControlMetrics control_metrics = 4;
 
-    optional double control_period = 4;
-    optional double control_frame_num = 5;
-    optional double control_command_pct = 6;
-    optional double min_sample_size = 7;
+    optional double control_period = 5;
+    optional double control_frame_num = 6;
+    optional double control_command_pct = 7;
+    optional double min_sample_size = 8;
 }

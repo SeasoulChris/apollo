@@ -1,23 +1,24 @@
 vehicle_type: "Transit"
 controller_type: "Lon_Lat_Controller"
+vehicle_wheelbase: 3.06
 control_metrics{
   acceleration_harsh_limit: 1           # unit: m/sec^2
   curvature_harsh_limit: 0.05           # unit: 1/m
   speed_still: 0.03                     # unit: m/s
-  heading_still: 0.05236                # unit: radian
-  curvature_still: 0.05                 # unit: 1/m
+  heading_error_still: 0.05236          # unit: radian
+  curvature_still: 0.01711              # unit: 1/m
   station_error_thold: 1                # unit: m
-  speed_error_thold: 1.5                # unit: m/sec
+  speed_error_thold: 0.5                # unit: m/sec
   lateral_error_thold: 0.5              # unit: m
   lateral_error_rate_thold: 0.5         # unit: m/sec
-  heading_error_thold: 0.31416          # unit: radian
-  heading_error_rate_thold: 0.03491     # unit: radian/sec
-  lon_acceleration_thold: 4             # unit: m/sec^2
-  lon_jerk_thold: 4                     # unit: m/sec^3
+  heading_error_thold: 0.5236           # unit: radian
+  heading_error_rate_thold: 0.5236      # unit: radian/sec
+  acceleration_thold: 4                 # unit: m/sec^2
+  jerk_thold: 2                         # unit: m/sec^3
   lat_acceleration_thold: 4             # unit: m/sec^2
-  lat_jerk_thold: 4                     # unit: m/sec^3
-  heading_acceleration_thold: 3.14      # unit: radian/sec^2
-  heading_jerk_thold: 3.14              # unit: radian/sec^3
+  lat_jerk_thold: 2                     # unit: m/sec^3
+  heading_acceleration_thold: 3.1416    # unit: radian/sec^2
+  heading_jerk_thold: 1.5708            # unit: radian/sec^3
 }
 control_period: 0.01                    # unit: sec
 control_frame_num: 100                  # unit: frame
