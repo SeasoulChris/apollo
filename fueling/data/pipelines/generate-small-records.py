@@ -149,31 +149,35 @@ class GenerateSmallRecords(BasePipeline):
         if os.path.exists(output_record):
             glog.warn('Skip generating exist record {}'.format(output_record))
             return output_record
-        file_utils.makedirs(os.path.dirname(output_record))
 
+        # Read messages and channel information.
+        msgs = []
+        topic_descs = {}
+        try:
+            reader = RecordReader(input_record)
+            msgs = [msg for msg in reader.read_messages()
+                    if msg.topic in GenerateSmallRecords.CHANNELS]
+            for msg in msgs:
+                if msg.topic not in topic_descs:
+                    topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
+        except Exception as err:
+            glog.error('Failed to read record {}: {}'.format(record, err))
+            return None
+
+        # Write to record.
+        file_utils.makedirs(os.path.dirname(output_record))
         writer = RecordWriter(0, 0)
         try:
             writer.open(output_record)
+            for topic, (data_type, desc) in topic_descs.items():
+                writer.write_channel(topic, data_type, desc)
+            for msg in msgs:
+                writer.write_message(msg.topic, msg.message, msg.timestamp)
         except Exception as e:
             glog.error('Failed to write to target file {}: {}'.format(output_record, e))
-            writer.close()
             return None
-
-        known_topics = set()
-        try:
-            reader = RecordReader(input_record)
-            for msg in reader.read_messages():
-                if msg.topic not in GenerateSmallRecords.CHANNELS:
-                    continue
-                if msg.topic not in known_topics:
-                    desc = reader.get_protodesc(msg.topic)
-                    if desc:
-                        writer.write_channel(msg.topic, msg.data_type, desc)
-                        known_topics.add(msg.topic)
-                writer.write_message(msg.topic, msg.message, msg.timestamp)
-        except Exception as err:
-            glog.error('Failed to read record {}: {}'.format(record, err))
-        writer.close()
+        finally:
+            writer.close()
         return output_record
 
     @staticmethod
