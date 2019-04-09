@@ -15,6 +15,12 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 
 
+# Config.
+RESPECT_TARGET_COMPLETE_MARKER = True
+SKIP_EXISTING_TARGET_RECORD = True
+# End of configs.
+
+
 class ReorgSmallRecords(BasePipeline):
     """ReorgSmallRecords pipeline."""
     def __init__(self):
@@ -56,7 +62,8 @@ class ReorgSmallRecords(BasePipeline):
             # RDD(target_dir), which has a 'COMPLETE' file inside.
             .map(os.path.dirname)
             # RDD(task_dir), corresponded to the COMPLETE target_dir.
-            .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
+            .map(lambda path: path.replace(target_prefix, origin_prefix, 1))
+        ) if RESPECT_TARGET_COMPLETE_MARKER else self.get_spark_context().emptyRDD()
 
         summary_receivers = ['xiaoxiangquan@baidu.com']
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
@@ -134,7 +141,7 @@ class ReorgSmallRecords(BasePipeline):
         target_file, records = input
         glog.info('Processing {} records to {}'.format(len(records), target_file))
 
-        if os.path.exists(target_file):
+        if SKIP_EXISTING_TARGET_RECORD and os.path.exists(target_file):
             glog.info('Skip generating exist record {}'.format(target_file))
             return target_file
         file_utils.makedirs(os.path.dirname(target_file))

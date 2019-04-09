@@ -14,47 +14,50 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
+# Config.
+CHANNELS = {
+    '/apollo/canbus/chassis',
+    '/apollo/canbus/chassis_detail',
+    '/apollo/control',
+    '/apollo/control/pad',
+    '/apollo/drive_event',
+    '/apollo/guardian',
+    '/apollo/localization/pose',
+    '/apollo/localization/msf_gnss',
+    '/apollo/localization/msf_lidar',
+    '/apollo/localization/msf_status',
+    '/apollo/hmi/status',
+    '/apollo/monitor',
+    '/apollo/monitor/system_status',
+    '/apollo/navigation',
+    '/apollo/perception/obstacles',
+    '/apollo/perception/traffic_light',
+    '/apollo/planning',
+    '/apollo/prediction',
+    '/apollo/relative_map',
+    '/apollo/routing_request',
+    '/apollo/routing_response',
+    '/apollo/routing_response_history',
+    '/apollo/sensor/conti_radar',
+    '/apollo/sensor/delphi_esr',
+    '/apollo/sensor/gnss/best_pose',
+    '/apollo/sensor/gnss/corrected_imu',
+    '/apollo/sensor/gnss/gnss_status',
+    '/apollo/sensor/gnss/imu',
+    '/apollo/sensor/gnss/ins_stat',
+    '/apollo/sensor/gnss/odometry',
+    '/apollo/sensor/gnss/raw_data',
+    '/apollo/sensor/gnss/rtk_eph',
+    '/apollo/sensor/gnss/rtk_obs',
+    '/apollo/sensor/mobileye',
+    '/tf',
+    '/tf_static',
+}
+# End of configs.
+
+
 class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
-    CHANNELS = {
-        '/apollo/canbus/chassis',
-        '/apollo/canbus/chassis_detail',
-        '/apollo/control',
-        '/apollo/control/pad',
-        '/apollo/drive_event',
-        '/apollo/guardian',
-        '/apollo/localization/pose',
-        '/apollo/localization/msf_gnss',
-        '/apollo/localization/msf_lidar',
-        '/apollo/localization/msf_status',
-        '/apollo/hmi/status',
-        '/apollo/monitor',
-        '/apollo/monitor/system_status',
-        '/apollo/navigation',
-        '/apollo/perception/obstacles',
-        '/apollo/perception/traffic_light',
-        '/apollo/planning',
-        '/apollo/prediction',
-        '/apollo/relative_map',
-        '/apollo/routing_request',
-        '/apollo/routing_response',
-        '/apollo/routing_response_history',
-        '/apollo/sensor/conti_radar',
-        '/apollo/sensor/delphi_esr',
-        '/apollo/sensor/gnss/best_pose',
-        '/apollo/sensor/gnss/corrected_imu',
-        '/apollo/sensor/gnss/gnss_status',
-        '/apollo/sensor/gnss/imu',
-        '/apollo/sensor/gnss/ins_stat',
-        '/apollo/sensor/gnss/odometry',
-        '/apollo/sensor/gnss/raw_data',
-        '/apollo/sensor/gnss/rtk_eph',
-        '/apollo/sensor/gnss/rtk_obs',
-        '/apollo/sensor/mobileye',
-        '/tf',
-        '/tf_static',
-    }
-
     def __init__(self):
         BasePipeline.__init__(self, 'generate-small-records')
 
@@ -66,7 +69,7 @@ class GenerateSmallRecords(BasePipeline):
         # RDD(dir_path)
         whitelist_dirs_rdd = sc.parallelize(['/apollo/docs/demo_guide'])
         # RDD(dir_path)
-        blacklist_dirs_rdd = sc.parallelize([])
+        blacklist_dirs_rdd = sc.emptyRDD()
         origin_prefix = 'docs/demo_guide'
         target_prefix = 'data'
         self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
@@ -155,8 +158,7 @@ class GenerateSmallRecords(BasePipeline):
         topic_descs = {}
         try:
             reader = RecordReader(input_record)
-            msgs = [msg for msg in reader.read_messages()
-                    if msg.topic in GenerateSmallRecords.CHANNELS]
+            msgs = [msg for msg in reader.read_messages() if msg.topic in CHANNELS]
             for msg in msgs:
                 if msg.topic not in topic_descs:
                     topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
