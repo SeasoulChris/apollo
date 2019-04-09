@@ -53,7 +53,7 @@ CHANNELS = {
     '/tf',
     '/tf_static',
 }
-SKIP_EXISTING_DEST_RECORDS = True
+SKIP_EXISTING_DST_RECORDS = True
 # End of configs.
 
 
@@ -64,9 +64,10 @@ class GenerateSmallRecords(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.get_spark_context()
         # RDD(record_path)
-        src_records = sc.parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+        src_records = self.get_spark_context().parallelize([
+            '/apollo/docs/demo_guide/demo_3.5.record'
+        ])
         src_prefix = 'docs/demo_guide'
         dst_prefix = 'data'
         self.run(src_records, src_prefix, dst_prefix)
@@ -79,69 +80,59 @@ class GenerateSmallRecords(BasePipeline):
 
         # RDD(src_file)
         src_files = s3_utils.list_files(bucket, src_prefix).cache()
-        # RDD(dst_file)
-        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
-        # RDD(src_record)
-        src_records = src_files.filter(record_utils.is_record_file)
-        if SKIP_EXISTING_DEST_RECORDS:
-            src_dst = (dst_files
+        # Only process those COMPLETE folders.
+        # RDD(todo_src_record)
+        src_records = (
+            # PairRDD(src_dir, src_record)
+            spark_op.filter_keys(
+                # PairRDD(src_dir, src_record)
+                src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
+                # RDD(src_dir), which has COMPLETE marker.
+                src_files.filter(lambda path: path.endswith('/COMPLETE').map(os.path.dirname)))
+            # RDD(todo_src_record)
+            .values()
+            .cache())
+
+        spark_op.log_rdd(
+            src_records.substract(
+                # RDD(dst_file)
+                s3_utils.list_files(bucket, dst_prefix)
                 # RDD(dst_record)
                 .filter(record_utils.is_record_file)
-                # PairRDD(mapped_src_record, _)
-                .keyBy(lambda path: path.replace(dst_prefix, src_prefix, 1)))
-            # RDD(src_record), whose dst_record doesn't exist.
-            src_records = src_records.subtractByKey(src_dst)
+                # RDD(mapped_src_record)
+                .map(lambda path: path.replace(dst_prefix, src_prefix, 1))),
+            "TodoRecords", glog.info)
 
-        is_complete_marker = lambda path: path.endswith('/COMPLETE')
-        # RDD(src_dir), whose dst_dir has COMPLETE marker.
-        done_src_dirs = (
-            # RDD(dst_COMPLETE)
-            dst_files.filter(is_complete_marker)
-            # RDD(dst_dir)
-            .map(os.path.dirname)
-            # RDD(src_dir), which has a dst_dir with COMPLETE marker.
-            .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
-        # RDD(src_dir)
-        todo_src_dirs = (
-            # RDD(src_COMPLETE)
-            src_files.filter(is_complete_marker)
-            # RDD(src_dir), which has COMPLETE marker.
-            .map(os.path.dirname)
-            # RDD(src_dir)
-            .subtract(done_src_dirs))
-
-        # RDD(todo_src_record)
-        src_records = spark_op.filter_keys(src_records.keyBy(os.path.dirname), todo_src_dirs)
         summary_receivers = ['xiaoxiangquan@baidu.com']
         self.run(src_records, src_prefix, dst_prefix, summary_receivers)
 
-    def run(self, records_rdd, src_prefix, dst_prefix, summary_receivers=None):
+    def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        input_records = spark_op.log_rdd(records_rdd, "InputRecords", glog.info)
-
         output_records = spark_op.log_rdd(
-            # PairRDD(target_record, src_record)
-            input_records.keyBy(lambda path: path.replace(src_prefix, dst_prefix, 1))
-            # PairRDD(src_record, target_record), in absolute style
-            .map(lambda (target, source): (s3_utils.abs_path(source), s3_utils.abs_path(target)))
-            # RDD(target_file)
-            .map(lambda (source, target): self.process_file(source, target))
-            # RDD(target_file)
+            # RDD(todo_src_record)
+            src_records
+            # PairRDD(src_record, dst_record)
+            .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
+            # PairRDD(src_record, dst_record), in absolute style
+            .map(spark_op.do_tuple_elems(s3_utils.abs_path))
+            # RDD(dst_record)
+            .map(spark_op.do_tuple(self.process_file))
+            # RDD(dst_record)
             .filter(bool),
             "OutputRecords", glog.info)
 
         finished_tasks = spark_op.log_rdd(
             output_records
-            # RDD(target_dir)
+            # RDD(dst_dir)
             .map(os.path.dirname)
-            # RDD(target_dir)
+            # RDD(dst_dir)
             .distinct(),
             "FinishedTasks", glog.info)
 
         (finished_tasks
-            # RDD(target_dir/COMPLETE)
+            # RDD(dst_COMPLETE)
             .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
-            # Make target_dir/COMPLETE files.
+            # Create dst_COMPLETE files.
             .foreach(file_utils.touch))
 
         if summary_receivers:
@@ -152,7 +143,7 @@ class GenerateSmallRecords(BasePipeline):
     def process_file(input_record, output_record):
         """Process input_record to output_record."""
         glog.info('Processing {} to {}'.format(input_record, output_record))
-        if SKIP_EXISTING_DEST_RECORDS and os.path.exists(output_record):
+        if SKIP_EXISTING_DST_RECORDS and os.path.exists(output_record):
             glog.warn('Skip generating exist record {}'.format(output_record))
             return output_record
 
