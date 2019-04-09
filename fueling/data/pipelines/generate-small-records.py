@@ -53,6 +53,7 @@ CHANNELS = {
     '/tf',
     '/tf_static',
 }
+SKIP_EXISTING_DEST_RECORDS = True
 # End of configs.
 
 
@@ -65,60 +66,62 @@ class GenerateSmallRecords(BasePipeline):
         """Run test."""
         sc = self.get_spark_context()
         # RDD(record_path)
-        records_rdd = sc.parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
-        # RDD(dir_path)
-        whitelist_dirs_rdd = sc.parallelize(['/apollo/docs/demo_guide'])
-        # RDD(dir_path)
-        blacklist_dirs_rdd = sc.emptyRDD()
-        origin_prefix = 'docs/demo_guide'
-        target_prefix = 'data'
-        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd, origin_prefix, target_prefix)
+        src_records = sc.parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+        src_prefix = 'docs/demo_guide'
+        dst_prefix = 'data'
+        self.run(src_records, src_prefix, dst_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        origin_prefix = 'public-test/2019/'
-        target_prefix = 'modules/data/public-test-small/2019/'
+        src_prefix = 'public-test/2019/'
+        dst_prefix = 'modules/data/public-test-small/2019/'
 
-        files = s3_utils.list_files(bucket, origin_prefix).cache()
-        records_rdd = files.filter(record_utils.is_record_file)
+        # RDD(src_file)
+        src_files = s3_utils.list_files(bucket, src_prefix).cache()
+        # RDD(dst_file)
+        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
+        # RDD(src_record)
+        src_records = src_files.filter(record_utils.is_record_file)
+        if SKIP_EXISTING_DEST_RECORDS:
+            src_dst = (dst_files
+                # RDD(dst_record)
+                .filter(record_utils.is_record_file)
+                # PairRDD(mapped_src_record, _)
+                .keyBy(lambda path: path.replace(dst_prefix, src_prefix, 1)))
+            # RDD(src_record), whose dst_record doesn't exist.
+            src_records = src_records.subtractByKey(src_dst)
 
-        whitelist_dirs_rdd = (
-            # RDD(COMPLETE_file_path)
-            files.filter(lambda path: path.endswith('/COMPLETE'))
-            # RDD(task_dir), which has a 'COMPLETE' file inside.
-            .map(os.path.dirname))
-
-        blacklist_dirs_rdd = (
-            # RDD(file_path), with the target_prefix.
-            s3_utils.list_files(bucket, target_prefix)
-            # RDD(COMPLETE_file_path)
-            .filter(lambda path: path.endswith('/COMPLETE'))
-            # RDD(target_dir), which has a 'COMPLETE' file inside.
+        is_complete_marker = lambda path: path.endswith('/COMPLETE')
+        # RDD(src_dir), whose dst_dir has COMPLETE marker.
+        done_src_dirs = (
+            # RDD(dst_COMPLETE)
+            dst_files.filter(is_complete_marker)
+            # RDD(dst_dir)
             .map(os.path.dirname)
-            # RDD(task_dir), corresponded to the COMPLETE target_dir.
-            .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
+            # RDD(src_dir), which has a dst_dir with COMPLETE marker.
+            .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
+        # RDD(src_dir)
+        todo_src_dirs = (
+            # RDD(src_COMPLETE)
+            src_files.filter(is_complete_marker)
+            # RDD(src_dir), which has COMPLETE marker.
+            .map(os.path.dirname)
+            # RDD(src_dir)
+            .subtract(done_src_dirs))
 
+        # RDD(todo_src_record)
+        src_records = spark_op.filter_keys(src_records.keyBy(os.path.dirname), todo_src_dirs)
         summary_receivers = ['xiaoxiangquan@baidu.com']
-        self.run(records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
-                 origin_prefix, target_prefix, summary_receivers)
+        self.run(src_records, src_prefix, dst_prefix, summary_receivers)
 
-    def run(self, records_rdd, whitelist_dirs_rdd, blacklist_dirs_rdd,
-            origin_prefix, target_prefix, summary_receivers=None):
+    def run(self, records_rdd, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        input_records = spark_op.log_rdd(
-            # PairRDD(task_dir, record), which is in the whitelist and not in the blacklist
-            spark_op.filter_keys(records_rdd.keyBy(os.path.dirname),
-                                 whitelist_dirs_rdd, blacklist_dirs_rdd)
-            # RDD(record)
-            .values()
-            # PairRDD(target_record, src_record)
-            .keyBy(lambda path: path.replace(origin_prefix, target_prefix, 1)),
-            "InputRecords", glog.info)
+        input_records = spark_op.log_rdd(records_rdd, "InputRecords", glog.info)
 
         output_records = spark_op.log_rdd(
             # PairRDD(target_record, src_record)
-            input_records
+            input_records.keyBy(lambda path: path.replace(src_prefix, dst_prefix, 1))
             # PairRDD(src_record, target_record), in absolute style
             .map(lambda (target, source): (s3_utils.abs_path(source), s3_utils.abs_path(target)))
             # RDD(target_file)
@@ -149,7 +152,7 @@ class GenerateSmallRecords(BasePipeline):
     def process_file(input_record, output_record):
         """Process input_record to output_record."""
         glog.info('Processing {} to {}'.format(input_record, output_record))
-        if os.path.exists(output_record):
+        if SKIP_EXISTING_DEST_RECORDS and os.path.exists(output_record):
             glog.warn('Skip generating exist record {}'.format(output_record))
             return output_record
 
