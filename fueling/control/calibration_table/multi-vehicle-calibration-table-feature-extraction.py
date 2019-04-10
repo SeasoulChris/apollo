@@ -7,8 +7,8 @@ import os
 import colored_glog as glog
 import pyspark_utils.op as spark_op
 
-from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 import common.proto_utils as proto_utils
+import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import gen_pre_segment
@@ -31,49 +31,19 @@ def get_single_vehicle_type(data_folder):
         vehicle_types.append(one_folder.rsplit('/'))
     return vehicle_types
 
-def get_vehicle_param(folder_dir, vehicle_type):
+def get_vehicle_param(folder_dir):
     vehicle_para_conf_filename = 'vehicle_param.pb.txt'
-    conf_file = os.path.join(folder_dir, vehicle_type, vehicle_para_conf_filename)
-    VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
-    return VEHICLE_PARAM_CONF
+    conf_file = os.path.join(folder_dir, vehicle_para_conf_filename)
+    VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, vehicle_config_pb2.VehicleConfig())
+    return VEHICLE_PARAM_CONF.vehicle_param
 
 def gen_target_prefix(root_dir, vehicle_type):
     return  vehicle_type, os.path.join(root_dir, 'modules/data/fuel/testdata/control/generated',
                          vehicle_type, 'CalibrationTable')
 
-def gen_throttle_train_target_prefix(vehicle_type):
-    return os.path.join('modules/data/fuel/testdata/control/generated',
-                        vehicle_type, 'CalibrationTable', 'throttle', 'train')
-
-def re_org_dir(elem):
-    (vehicle_type, (origin_dir, target_dir)), vehicle_conf = elem
-    return ((vehicle_type, vehicle_conf), (origin_dir, target_dir)) 
-
-    
-# def list_to_do_tasts(vehicle_dir, origin_dir, target_dir):
-#     throttle_train_target_dir = os.path.join(target_dir, 'throttle', 'train')
-#     return dir_utils.list_end_files(vehicle_dir)
-
-#     list_func = (lambda path: self.get_spark_context().parallelize(
-#             dir_utils.list_end_files(origin_dir)))
-#     # RDD(record_dir)
-#         todo_tasks = (
-#             dir_utils.get_todo_tasks(
-#                 origin_prefix, throttle_train_target_prefix, list_func, '', '/' + MARKER))
-
-#         glog.info('todo_folders: {}'.format(todo_tasks.collect()))
-
-#         dir_to_records = (
-#             # PairRDD(record_dir, record_dir)
-#             todo_tasks
-#             # PairRDD(record_dir, all_files)
-#             .flatMap(dir_utils.list_end_files)
-#             # PairRDD(record_dir, record_files)
-#             .filter(record_utils.is_record_file)
-#             # PairRDD(record_dir, record_files)
-#             .keyBy(os.path.dirname))
-
-#         glog.info('todo_files: {}'.format(dir_to_records.collect()))
+# def gen_throttle_train_target_prefix(vehicle_type):
+#     return os.path.join('modules/data/fuel/testdata/control/generated',
+#                         vehicle_type, 'CalibrationTable', 'throttle', 'train')
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -95,30 +65,60 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                    # PairRDD(vehicle_type, path_to_vehicle_type)
                    .mapValues(lambda vehicle_type: os.path.join(origin_dir,vehicle_type[0]))
                    .cache())
+        print(origin_dir_rdd.collect())
 
-        target_prefix_rdd = (
+
+        target_dir_rdd = (
             # PairRDD(vehicle_type, path_to_vehicle_type)
             origin_dir_rdd
             # PairRDD(vehicle_type, target_prefix)
             .map(lambda vehicleType_folder: gen_target_prefix(root_dir, vehicleType_folder[0]))
             .cache())
+        # PairRDD(vehicle_type, (target_prefix, origin_prefix))
+        target_origin_dirs= target_dir_rdd.join(origin_dir_rdd)
+        print(target_origin_dirs.collect())
+
+        # skipped the processed folders
+        # PairRDD(vehicle, dir)
+        origin_dirs = (
+            origin_dir_rdd
+            .flatMapValues(dir_utils.list_end_files)
+            .mapValues(os.path.dirname)
+            .cache())
         
-        # PairRDD(vehicle_type, (origin_prefix, target_prefix))
-        origin_target_dir_rdd = origin_dir_rdd.join(target_prefix_rdd)
+        processed_dirs = (
+            # PairRDD(vehicle_type, (target_prefix, origin_prefix))
+            target_origin_dirs
+            # PairRDD((vehicle_type, origin_prefix), target_prefix)
+            .map(lambda vehicle_target_origin:
+                 (vehicle_target_origin,vehicle_target_origin[1][0]))
+            # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
+            .flatMapValues(dir_utils.list_end_files)
+            # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
+            .filter(lambda key_path: key_path[1].endswith(MARKER))
+            # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
+            .map(lambda key_path:
+                (key_path[0][0], key_path[1].replace(key_path[0][1][0], key_path[0][1][1])))
+            # PairRDD(vehicle_type, dir_include_MARKER_with_origin_prefix)
+            .mapValues(os.path.dirname))
 
-        print(origin_target_dir_rdd.collect())
+        # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
+        todo_dirs= origin_dirs.subtract(processed_dirs)
+        print(origin_dirs.collect())
+        print(processed_dirs.collect())
+        print(todo_dirs.collect())
 
-        with_conf_file = (
-            # PairRDD(vehicle_type, (origin_prefix, target_prefix))
-            origin_target_dir_rdd
-             # PairRDD((vehicle_type, (origin_prefix, target_prefix)), vehicle_conf)
-            .map(lambda elem:(elem, get_vehicle_param(elem[0], elem[1][0])))
-            .map(re_org_dir)
-            )
+        vehicle_param_conf = (
+            # PairRDD(vehicle, dir_of_vehicle)
+            origin_dir_rdd
+             # PairRDD(vehicle_type, vehicle_conf)
+            .mapValues(get_vehicle_param))
+        print(vehicle_param_conf.collect())
 
-        print(with_conf_file.first())
-
-
+        todo_dir_with_conf = (todo_dirs.join(vehicle_param_conf)
+            .map(lambda vehicle_path_conf: 
+                 ((vehicle_path_conf[0], vehicle_path_conf[1][1]), vehicle_path_conf[1][0])))
+        print(todo_dir_with_conf.collect())
 
 
 if __name__ == '__main__':

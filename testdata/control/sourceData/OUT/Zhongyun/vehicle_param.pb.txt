@@ -1,3 +1,4 @@
+vehicle_param {
   front_edge_to_center: 0.29
   back_edge_to_center: 1.36
   left_edge_to_center: 0.46
@@ -18,3 +19,4 @@
   max_abs_speed_when_stopped: 0.2
   throttle_deadzone: 0.01
   brake_deadzone: 0.01
+}
