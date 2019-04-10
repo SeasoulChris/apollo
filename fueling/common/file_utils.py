@@ -6,9 +6,12 @@ import os
 
 import colored_glog as glog
 
+import fueling.common.s3_utils as s3_utils
+
 
 def makedirs(dir_path):
     """Make directories recursively."""
+    dir_path = s3_utils.abs_path(dir_path)
     if os.path.exists(dir_path):
         return
     try:
@@ -21,6 +24,7 @@ def makedirs(dir_path):
 
 def touch(file_path):
     """Touch file."""
+    file_path = s3_utils.abs_path(file_path)
     makedirs(os.path.dirname(file_path))
     try:
         if not os.path.exists(file_path):

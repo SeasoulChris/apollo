@@ -75,7 +75,7 @@ def file_exists(bucket, remote_path, aws_ak, aws_sk):
         raise ex
     return True
 
-def upload_file(bucket, local_path, remote_path, aws_keys, meta_data=None):
+def upload_file(bucket, local_path, remote_path, aws_keys, meta_data={'User': 'apollo-user'}):
     """Upload a file from local to BOS"""
     aws_ak, aws_sk = aws_keys
     # arguments validation
@@ -111,16 +111,9 @@ def upload_file(bucket, local_path, remote_path, aws_keys, meta_data=None):
         not any(remote_path.startswith(x) for x in overwrite_whitelist):
         raise ValueError('Destination already exists')
 
-    # Set default MetaData if it's not specified
-    if meta_data is None:
-        meta_data = {'User': 'apollo-user'}
-
     # Actually upload
-    s3_client(aws_ak, aws_sk)\
-        .upload_file(local_path,
-                     bucket,
-                     remote_path,
-                     ExtraArgs={"Metadata": meta_data})
+    s3_client(aws_ak, aws_sk).upload_file(local_path, bucket, remote_path,
+                                          ExtraArgs={"Metadata": meta_data})
 
 def download_file(bucket, remote_path, local_path, aws_keys):
     """Download a file from BOS to local"""
@@ -132,9 +125,7 @@ def download_file(bucket, remote_path, local_path, aws_keys):
             # aws_skip the folder itself
             if remote_file == remote_path or remote_file == remote_path+'/':
                 continue
-            s3_client(aws_ak, aws_sk)\
-                .download_file(bucket,
-                               remote_file,
-                               os.path.join(local_path, os.path.basename(remote_file)))
+            local_file = os.path.join(local_path, os.path.basename(remote_file))
+            s3_client(aws_ak, aws_sk).download_file(bucket, remote_file, local_file)
     else:
         s3_client(aws_ak, aws_sk).download_file(bucket, remote_path, local_path)
