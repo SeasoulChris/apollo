@@ -75,10 +75,15 @@ class ReorgSmallRecords(BasePipeline):
 
     def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
+        partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
+        glog.info('Repartition to: {}'.format(partitions))
+
         input_records = spark_op.log_rdd(
             src_records
             # RDD(src_record), in absolute path style.
             .map(s3_utils.abs_path)
+            # RDD(src_record)
+            .repartition(partitions)
             # PairRDD(src_record, record_header)
             .map(spark_op.value_by(record_utils.read_record_header))
             # PairRDD(src_record, record_header), where header is valid.
@@ -144,31 +149,43 @@ class ReorgSmallRecords(BasePipeline):
         if SKIP_EXISTING_DEST_RECORD and os.path.exists(target_file):
             glog.info('Skip generating exist record {}'.format(target_file))
             return target_file
-        file_utils.makedirs(os.path.dirname(target_file))
-        writer = RecordWriter(0, 0)
-        try:
-            writer.open(target_file)
-        except Exception as e:
-            glog.error('Failed to write to target file {}: {}'.format(target_file, e))
-            writer.close()
-            return None
 
-        known_topics = set()
+        # Read messages and channel information.
+        msgs = []
+        topic_descs = {}
         for record, start_time, end_time in records:
             glog.info('Read record {}'.format(record))
             try:
                 reader = RecordReader(record)
-                for msg in reader.read_messages():
-                    if msg.timestamp < start_time or msg.timestamp >= end_time:
-                        continue
-                    if msg.topic not in known_topics:
-                        desc = reader.get_protodesc(msg.topic)
-                        writer.write_channel(msg.topic, msg.data_type, desc)
-                        known_topics.add(msg.topic)
-                    writer.write_message(msg.topic, msg.message, msg.timestamp)
+                msgs.extend([msg for msg in reader.read_messages()
+                             if start_time <= msg.timestamp < end_time])
+                for msg in msgs:
+                    if msg.topic not in topic_descs:
+                        topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
+                else:
+                    glog.error('Failed to read any message from {}'.format(input_record))
+                    return target_file
             except Exception as err:
                 glog.error('Failed to read record {}: {}'.format(record, err))
-        writer.close()
+
+        # Check once again to avoid duplicate work after reading.
+        if SKIP_EXISTING_DEST_RECORD and os.path.exists(target_file):
+            glog.info('Skip generating exist record {}'.format(target_file))
+            return target_file
+        # Write to record.
+        file_utils.makedirs(os.path.dirname(target_file))
+        writer = RecordWriter(0, 0)
+        try:
+            writer.open(target_file)
+            for topic, (data_type, desc) in topic_descs.items():
+                writer.write_channel(topic, data_type, desc)
+            for msg in msgs:
+                writer.write_message(msg.topic, msg.message, msg.timestamp)
+        except Exception as e:
+            glog.error('Failed to write to target file {}: {}'.format(target_file, e))
+            return None
+        finally:
+            writer.close()
         return target_file
 
     @staticmethod
