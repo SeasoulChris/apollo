@@ -54,6 +54,7 @@ CHANNELS = {
     '/tf_static',
 }
 SKIP_EXISTING_DST_RECORDS = True
+MARKER = 'COMPLETE'
 # End of configs.
 
 
@@ -88,7 +89,7 @@ class GenerateSmallRecords(BasePipeline):
                 # PairRDD(src_dir, src_record)
                 src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
                 # RDD(src_dir), which has COMPLETE marker.
-                src_files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname))
+                src_files.filter(lambda path: path.endswith(MARKER)).map(os.path.dirname))
             # RDD(todo_src_record)
             .values()
             .cache())
@@ -134,7 +135,7 @@ class GenerateSmallRecords(BasePipeline):
 
         (finished_tasks
             # RDD(dst_COMPLETE)
-            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
+            .map(lambda target_dir: os.path.join(target_dir, MARKER))
             # Create dst_COMPLETE files.
             .foreach(file_utils.touch))
 

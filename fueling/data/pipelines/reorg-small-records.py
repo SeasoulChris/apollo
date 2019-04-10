@@ -18,6 +18,7 @@ import fueling.common.time_utils as time_utils
 # Config.
 RESPECT_DEST_COMPLETE_MARKER = True
 SKIP_EXISTING_DEST_RECORD = True
+MARKER = 'COMPLETE'
 # End of configs.
 
 
@@ -47,7 +48,7 @@ class ReorgSmallRecords(BasePipeline):
         # RDD(dst_file)
         dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
 
-        is_complete_marker = lambda path: path.endswith('/COMPLETE')
+        is_complete_marker = lambda path: path.endswith(MARKER)
         # RDD(src_dir)
         todo_src_dirs = src_files.filter(is_complete_marker).map(os.path.dirname)
 
@@ -112,7 +113,7 @@ class ReorgSmallRecords(BasePipeline):
 
         (finished_tasks
             # RDD(target_dir/COMPLETE)
-            .map(lambda target_dir: os.path.join(target_dir, 'COMPLETE'))
+            .map(lambda target_dir: os.path.join(target_dir, MARKER))
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
 
