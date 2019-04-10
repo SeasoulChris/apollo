@@ -88,20 +88,23 @@ class GenerateSmallRecords(BasePipeline):
                 # PairRDD(src_dir, src_record)
                 src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
                 # RDD(src_dir), which has COMPLETE marker.
-                src_files.filter(lambda path: path.endswith('/COMPLETE').map(os.path.dirname)))
+                src_files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname))
             # RDD(todo_src_record)
             .values()
             .cache())
 
-        spark_op.log_rdd(
-            src_records.substract(
-                # RDD(dst_file)
-                s3_utils.list_files(bucket, dst_prefix)
-                # RDD(dst_record)
-                .filter(record_utils.is_record_file)
-                # RDD(mapped_src_record)
-                .map(lambda path: path.replace(dst_prefix, src_prefix, 1))),
-            "TodoRecords", glog.info)
+        if SKIP_EXISTING_DST_RECORDS:
+            spark_op.log_rdd(
+                src_records.subtract(
+                    # RDD(dst_file)
+                    s3_utils.list_files(bucket, dst_prefix)
+                    # RDD(dst_record)
+                    .filter(record_utils.is_record_file)
+                    # RDD(mapped_src_record)
+                    .map(lambda path: path.replace(dst_prefix, src_prefix, 1))),
+                "TodoRecords", glog.info)
+        else:
+            spark_op.log_rdd(src_records, "TodoRecords", glog.info)
 
         summary_receivers = ['xiaoxiangquan@baidu.com']
         self.run(src_records, src_prefix, dst_prefix, summary_receivers)
