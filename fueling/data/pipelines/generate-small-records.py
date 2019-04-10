@@ -160,6 +160,10 @@ class GenerateSmallRecords(BasePipeline):
             glog.error('Failed to read record {}: {}'.format(record, err))
             return None
 
+        # Check once again to avoid duplicate work after reading.
+        if SKIP_EXISTING_DST_RECORDS and os.path.exists(output_record):
+            glog.warn('Skip generating exist record {}'.format(output_record))
+            return output_record
         # Write to record.
         file_utils.makedirs(os.path.dirname(output_record))
         writer = RecordWriter(0, 0)
