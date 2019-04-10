@@ -75,6 +75,8 @@ REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 "${BOS_FSTOOL_EXECUTABLE}" -s "${JOB_FILE}" -d "${REMOTE_JOB_FILE}"
 REMOTE_JOB_FILE="${BOS_MOUNT_PATH}/${REMOTE_JOB_FILE}"
 
+EVENTS_LOG_PATH=${BOS_MOUNT_PATH}/modules/data/spark/spark-events
+
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   LOCAL_FUELING_PKG=".fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}"
@@ -89,6 +91,8 @@ popd
     --deploy-mode cluster \
     --conf spark.default.parallelism="${EXECUTORS}" \
     --conf spark.driver.memory="${DRIVER_MEMORY}" \
+    --conf spark.eventLog.enabled=true \
+    --conf spark.eventLog.dir=file:${EVENTS_LOG_PATH} \
     --conf spark.executor.instances="${EXECUTORS}" \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
     --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
