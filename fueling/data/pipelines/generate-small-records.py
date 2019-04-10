@@ -81,24 +81,24 @@ class GenerateSmallRecords(BasePipeline):
 
         # RDD(src_file)
         src_files = s3_utils.list_files(bucket, src_prefix).cache()
+        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
         # Only process those COMPLETE folders.
 
+        is_marker = lambda path: path.endswith(MARKER)
         # PairRDD(src_dir, src_record)
         src_dir_and_records = spark_op.filter_keys(
             # PairRDD(src_dir, src_record)
             src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
             # RDD(src_dir), which has COMPLETE marker.
-            src_files.filter(lambda path: path.endswith(MARKER)).map(os.path.dirname)
+            src_files.filter(is_marker).map(os.path.dirname)
         ).cache()
         # RDD(todo_record)
         todo_records = src_dir_and_records.values()
 
         if SKIP_EXISTING_DST_RECORDS:
             todo_records = todo_records.subtract(
-                # RDD(dst_file)
-                s3_utils.list_files(bucket, dst_prefix)
                 # RDD(dst_record)
-                .filter(record_utils.is_record_file)
+                dst_files.filter(record_utils.is_record_file)
                 # RDD(mapped_src_record)
                 .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
 
@@ -118,6 +118,8 @@ class GenerateSmallRecords(BasePipeline):
                 .map(lambda path: path.replace(src_prefix, dst_prefix, 1))
                 # RDD(dst_MARKER)
                 .map(lambda path: os.path.join(path, MARKER))
+                # RDD(dst_MARKER), which doesn't exist.
+                .subtract(dst_files.filter(is_marker))
                 # RDD(dst_MARKER), which is touched.
                 .map(file_utils.touch),
                 'SupplementMarkers', glog.info)
