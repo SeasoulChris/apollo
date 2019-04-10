@@ -66,12 +66,12 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        src_records = self.get_spark_context().parallelize([
+        todo_records = self.get_spark_context().parallelize([
             '/apollo/docs/demo_guide/demo_3.5.record'
         ])
         src_prefix = 'docs/demo_guide'
         dst_prefix = 'data'
-        self.run(src_records, src_prefix, dst_prefix)
+        self.run(todo_records, src_prefix, dst_prefix)
 
     def run_prod(self):
         """Run prod."""
@@ -82,39 +82,55 @@ class GenerateSmallRecords(BasePipeline):
         # RDD(src_file)
         src_files = s3_utils.list_files(bucket, src_prefix).cache()
         # Only process those COMPLETE folders.
-        # RDD(todo_src_record)
-        src_records = (
+
+        # PairRDD(src_dir, src_record)
+        src_dir_and_records = spark_op.filter_keys(
             # PairRDD(src_dir, src_record)
-            spark_op.filter_keys(
-                # PairRDD(src_dir, src_record)
-                src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
-                # RDD(src_dir), which has COMPLETE marker.
-                src_files.filter(lambda path: path.endswith(MARKER)).map(os.path.dirname))
-            # RDD(todo_src_record)
-            .values()
-            .cache())
+            src_files.filter(record_utils.is_record_file).keyBy(os.path.dirname),
+            # RDD(src_dir), which has COMPLETE marker.
+            src_files.filter(lambda path: path.endswith(MARKER)).map(os.path.dirname)
+        ).cache()
+        # RDD(todo_record)
+        todo_records = src_dir_and_records.values()
 
         if SKIP_EXISTING_DST_RECORDS:
+            todo_records = todo_records.subtract(
+                # RDD(dst_file)
+                s3_utils.list_files(bucket, dst_prefix)
+                # RDD(dst_record)
+                .filter(record_utils.is_record_file)
+                # RDD(mapped_src_record)
+                .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
+
+            partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
+            glog.info('Repartition to: {}'.format(partitions))
+            todo_records = todo_records.repartition(partitions).cache()
+
+            # Mark dst_dirs which have finished.
             spark_op.log_rdd(
-                src_records.subtract(
-                    # RDD(dst_file)
-                    s3_utils.list_files(bucket, dst_prefix)
-                    # RDD(dst_record)
-                    .filter(record_utils.is_record_file)
-                    # RDD(mapped_src_record)
-                    .map(lambda path: path.replace(dst_prefix, src_prefix, 1))),
-                "TodoRecords", glog.info)
-        else:
-            spark_op.log_rdd(src_records, "TodoRecords", glog.info)
+                # RDD(src_dir)
+                src_dir_and_records.keys()
+                # RDD(src_dir), which is unique.
+                .distinct()
+                # RDD(src_dir), which in src_dirs but not in todo_dirs.
+                .subtract(todo_records.map(os.path.dirname).distinct())
+                # RDD(dst_dir)
+                .map(lambda path: path.replace(src_prefix, dst_prefix, 1))
+                # RDD(dst_MARKER)
+                .map(lambda path: os.path.join(path, MARKER))
+                # RDD(dst_MARKER), which is touched.
+                .map(file_utils.touch),
+                'SupplementMarkers', glog.info)
 
+        spark_op.log_rdd(todo_records, 'TodoRecords', glog.info)
         summary_receivers = ['xiaoxiangquan@baidu.com']
-        self.run(src_records, src_prefix, dst_prefix, summary_receivers)
+        self.run(todo_records, src_prefix, dst_prefix, summary_receivers)
 
-    def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
+    def run(self, todo_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         output_records = spark_op.log_rdd(
             # RDD(todo_src_record)
-            src_records
+            todo_records
             # PairRDD(src_record, dst_record)
             .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
             # PairRDD(src_record, dst_record), in absolute style
