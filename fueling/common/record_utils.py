@@ -87,31 +87,6 @@ def read_record_header(record_path):
         glog.error('Failed to read record header {}: {}'.format(record_path, e))
     return None
 
-def write_record(path_to_messages):
-    """
-    Write a list of messages to the record path. Note that this is just a Spark
-    transformation which needs to be flushed by an action, such as 'count()'.
-
-    PyBagMessage = namedtuple(topic, message, data_type, timestamp)
-    """
-    # Prepare the input data and output dir.
-    path, py_bag_messages = path_to_messages
-    glog.info('Write record {}'.format(path))
-    path = s3_utils.abs_path(path)
-    file_utils.makedirs(os.path.dirname(path))
-    writer = RecordWriter(0, 0)
-    writer.open(path)
-    topics = set()
-    for msg in py_bag_messages:
-        if msg.topic not in topics:
-            # As a generated record, we ignored the proto desc.
-            writer.write_channel(msg.topic, msg.data_type, '')
-            topics.add(msg.topic)
-        writer.write_message(msg.topic, msg.message, msg.timestamp)
-    writer.close()
-    # Dummy map result.
-    return path
-
 def message_to_proto(py_bag_message):
     """Convert an Apollo py_bag_message to proto."""
     proto_type = CHANNEL_TO_TYPE.get(py_bag_message.topic)

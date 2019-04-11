@@ -10,6 +10,8 @@ import botocore.exceptions
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 
+from fueling.common.base_pipeline import BasePipeline
+
 
 S3_MOUNT_PATH = '/mnt/bos'
 
@@ -54,7 +56,7 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
 # TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
 def list_files(bucket, prefix, to_abs_path=False):
     """Get a RDD of files."""
-    files = (spark_helper.get_context()
+    files = (BasePipeline.context()
         # RDD(obj_dict)
         .parallelize(list_objects(bucket, prefix))
         # RDD(file_obj_dict)
@@ -67,7 +69,7 @@ def list_files(bucket, prefix, to_abs_path=False):
 # TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
 def list_dirs(bucket, prefix, to_abs_path=False):
     """Get a RDD of dirs."""
-    dirs = (spark_helper.get_context()
+    dirs = (BasePipeline.context()
         # RDD(obj_dict)
         .parallelize(list_objects(bucket, prefix))
         # RDD(dir_obj_dict)

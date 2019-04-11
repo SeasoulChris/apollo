@@ -8,17 +8,21 @@ import pyspark
 
 class BasePipeline(object):
     """Fueling base pipeline."""
-    SPARK_CONF = None
+    SPARK_CONTEXT = None
 
     def __init__(self, name):
         """Pipeline constructor."""
         self.name = name
+        BasePipeline.SPARK_CONTEXT = pyspark.SparkContext.getOrCreate(
+            pyspark.SparkConf().setAppName(self.name))
 
-    def context(self):
+    @classmethod
+    def context(cls):
         """Get the SparkContext."""
-        if self.SPARK_CONF is None:
-            self.SPARK_CONF = pyspark.SparkConf().setAppName(self.name)
-        return pyspark.SparkContext.getOrCreate(self.SPARK_CONF)
+        if cls.SPARK_CONTEXT is None:
+            cls.SPARK_CONTEXT = pyspark.SparkContext.getOrCreate(
+            pyspark.SparkConf().setAppName('BasePipeline'))
+        return cls.SPARK_CONTEXT
 
     def run_test(self):
         """Run the pipeline in test mode."""
