@@ -15,7 +15,7 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
-sample_size = 100
+sample_size = 10
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
     segmentID = os.path.splitext(pre_segmentID)[0]
@@ -80,15 +80,16 @@ class UniformDistributionSet(BasePipeline):
         origin_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'SampleSet')
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
-                                     WANTED_VEHICLE, 'EvenlyDistributedSampleSet')
+                                     WANTED_VEHICLE, 'UniformDistributedSampleSet')
         root_dir = s3_utils.S3_MOUNT_PATH
+        to_abs_path = False
 
         path = os.path.join(root_dir, origin_prefix)
         target_dir = os.path.join(root_dir, target_prefix)
 
         todo_tasks = (
             # RDD(file)
-            s3_utils.list_files(bucket, path)
+            s3_utils.list_files(bucket, path, to_abs_path)
             # RDD(.hdf5 file)
             .filter(lambda path: path.endswith('.hdf5')))
 
