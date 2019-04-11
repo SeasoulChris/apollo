@@ -19,5 +19,5 @@ dependencies:
     - colored-glog >= 1.1
     - pylint
     - pyquaternion
-    - pyspark-utils
+    - pyspark-utils >= 1.7
     - utm

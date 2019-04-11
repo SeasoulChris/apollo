@@ -22,5 +22,5 @@ dependencies:
   - pip:
     - colored-glog >= 1.1
     - pylint
-    - pyspark-utils
+    - pyspark-utils >= 1.7
     - utm

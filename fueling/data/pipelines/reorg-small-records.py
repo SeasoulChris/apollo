@@ -30,9 +30,7 @@ class ReorgSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(src_record)
-        src_records = self.context().parallelize([
-            '/apollo/docs/demo_guide/demo_3.5.record'
-        ])
+        src_records = self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
         src_prefix = '/apollo/docs/demo_guide'
         dst_prefix = '/apollo/data'
         self.run(src_records, src_prefix, dst_prefix)

@@ -27,7 +27,7 @@
 1. Install env and activate.
 
    ```bash
-   conda env update -f fueling/conda/py27-cyber.yaml
+   conda env update --prune -f fueling/conda/py27-cyber.yaml
    source activate fuel-py27-cyber
    ```
 

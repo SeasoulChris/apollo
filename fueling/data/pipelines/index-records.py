@@ -26,9 +26,8 @@ class IndexRecords(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        self.process(
-            # RDD(record_path)
-            self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record']))
+        # RDD(record_path)
+        self.process(self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record']))
 
     def run_prod(self):
         """Run prod."""
