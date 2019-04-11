@@ -10,7 +10,6 @@ import h5py
 import numpy as np
 
 from modules.canbus.proto.chassis_pb2 import Chassis
-from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 import common.proto_utils as proto_utils
@@ -27,12 +26,9 @@ FILENAME_FEATURE_KEY_CONF = \
                 "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
 
-FILENAME_CONTROL_CONF = '/apollo/modules/calibration/data/transit/control_conf.pb.txt'
-CONTROL_CONF = proto_utils.get_pb_from_text_file(
-    FILENAME_CONTROL_CONF, ControlConf())
-
 # vehicle param constant
-FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+FILENAME_VEHICLE_PARAM_CONF = \
+    '/apollo/modules/data/fuel/fueling/control/conf/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                             vehicle_config_pb2.VehicleConfig())
 
@@ -49,8 +45,9 @@ ACC_STEP = FEATURE_KEY.acc_step  # percentage
 STEER_STEP = FEATURE_KEY.steer_step  # percentage
 
 WANTED_VEHICLE = FEATURE_KEY.vehicle_type
+print(WANTED_VEHICLE)
 
-MAX_PHASE_DELTA = 0.01
+MAX_PHASE_DELTA = 0.015
 MIN_SEGMENT_LENGTH = 10
 
 
