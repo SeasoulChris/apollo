@@ -14,12 +14,10 @@ train_cmd_segment = 10
 
 
 # speed
-speed_array = np.linspace(
-    train_speed_min, train_speed_max, num=train_speed_segment)
+speed_array = np.linspace(train_speed_min, train_speed_max, num=train_speed_segment)
 
 # cmd
-cmd_array = np.linspace(
-    brake_axis_cmd_min, brake_axis_cmd_max, num=train_cmd_segment)
+cmd_array = np.linspace(brake_axis_cmd_min, brake_axis_cmd_max, num=train_cmd_segment)
 
 speed_array_brake, cmd_array_brake = np.meshgrid(speed_array, cmd_array)
 grid_array_brake = np.array([[s, c] for s, c in zip(
@@ -35,8 +33,8 @@ for i in range(len(names)):
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-ax.plot_surface(speed_array_brake, cmd_array_brake, acc_array_brake, alpha=1, rstride=1, cstride=1,
-                linewidth=0.5, antialiased=True)
+ax.plot_surface(speed_array_brake, cmd_array_brake, acc_array_brake,
+                alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
 ax.set_xlabel('$speed$')
 ax.set_ylabel('$brake$')
 ax.set_zlabel('$acceleration$')
@@ -61,13 +59,12 @@ names_throttle = [n for n in f_throttle.keys()]
 for i in range(len(names_throttle)):
     acc_array_throttle = np.array(f_throttle[names_throttle[i]])
 
-speed_array_throttle, cmd_array_throttle = np.meshgrid(
-    speed_array, cmd_array_throttle)
+speed_array_throttle, cmd_array_throttle = np.meshgrid(speed_array, cmd_array_throttle)
 grid_array_throttle = np.array([[s, c] for s, c in zip(
     np.ravel(speed_array), np.ravel(cmd_array_throttle))])
 
-ax_throttle.plot_surface(speed_array_throttle, cmd_array_throttle, acc_array_throttle, alpha=1, rstride=1, cstride=1,
-                         linewidth=0.5, antialiased=True)
+ax_throttle.plot_surface(speed_array_throttle, cmd_array_throttle, acc_array_throttle,
+                         alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
 ax_throttle.set_xlabel('$speed$')
 ax_throttle.set_ylabel('$throttle$')
 ax_throttle.set_zlabel('$acceleration$')

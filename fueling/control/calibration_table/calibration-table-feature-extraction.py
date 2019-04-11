@@ -59,9 +59,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         list_func = (lambda path: self.context().parallelize(
             dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
-        todo_tasks = (
-            dir_utils.get_todo_tasks(
-                origin_prefix, throttle_train_target_prefix, list_func, '', '/' + MARKER))
+        todo_tasks = dir_utils.get_todo_tasks(
+            origin_prefix, throttle_train_target_prefix, list_func, '', '/' + MARKER)
 
         glog.info('todo_folders: {}'.format(todo_tasks.collect()))
 
@@ -128,14 +127,14 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(
                 lambda feature: calibration_table_utils.feature_cut(feature, VEHICLE_PARAM_CONF))
             # PairRDD ((dir_segment, segment_id), (grid_dict,cutted_features))
-            .mapValues(
-                lambda feature: calibration_table_utils.feature_distribute(feature, VEHICLE_PARAM_CONF))
+            .mapValues(lambda feature:
+                       calibration_table_utils.feature_distribute(feature, VEHICLE_PARAM_CONF))
             # PairRDD ((dir_segment, segment_id), one_matrix)
             .mapValues(
                 lambda feature: calibration_table_utils.feature_store(feature, VEHICLE_PARAM_CONF))
             # RDD(feature_numbers)
-            .map(lambda elem: calibration_table_utils.write_h5_train_test
-                 (elem, origin_prefix, target_prefix)))
+            .map(lambda elem:
+                 calibration_table_utils.write_h5_train_test(elem, origin_prefix, target_prefix)))
 
         glog.info('Finished %d calibration_table_rdd!' % calibration_table_rdd.count())
 

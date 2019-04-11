@@ -95,4 +95,4 @@ class CalTabFeatureExtPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    CalTabFeatureExtPipeline().run_test()
+    CalTabFeatureExtPipeline().main()
