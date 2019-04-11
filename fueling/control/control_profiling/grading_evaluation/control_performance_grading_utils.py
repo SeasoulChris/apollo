@@ -292,7 +292,7 @@ def compute_std(grading_mtx, arg):
 def compute_peak(grading_mtx, arg):
     """Compute the peak value"""
     elem_num, _ = grading_mtx.shape
-    return (np.max(abs(grading_mtx[:, feature_idx[arg.peak_feature_name]])) / arg.peak_threshold,
+    return (np.max(np.fabs(grading_mtx[:, feature_idx[arg.peak_feature_name]])) / arg.peak_threshold,
             elem_num)
 
 def compute_usage(grading_mtx, arg):
@@ -338,17 +338,17 @@ def combine_gradings(grading_x, grading_y):
         val_x, num_x = grading_x[idx]
         val_y, num_y = grading_y[idx]
         # Standard deviation and usage values
-        if grading_x._fields[idx].find('_std') or grading_x._fields[idx].find('_usage') :
+        if grading_x._fields[idx].find('std') >= 0 or grading_x._fields[idx].find('usage') >= 0:
             if num_x + num_y != 0:
                 grading_item_value = ((val_x ** 2 * (num_x - 1) + val_y ** 2 * (num_y - 1))
                                       / (num_x + num_y -1)) ** 0.5
             else:
                 grading_item_value = 0.0
         # Peak values
-        elif grading_x._fields[idx].find('_peak'):
+        elif grading_x._fields[idx].find('peak') >= 0:
             grading_item_value = max(val_x, val_y)
         # Beyond values
-        elif grading_x._fields[idx].find('_sensation'):
+        elif grading_x._fields[idx].find('sensation') >= 0:
             if num_x + num_y != 0:
                 grading_item_value = (val_x * num_x + val_y * num_y) / (num_x + num_y)
             else:
