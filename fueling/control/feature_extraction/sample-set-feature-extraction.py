@@ -7,6 +7,7 @@ import glob
 import os
 
 import colored_glog as glog
+import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
@@ -34,7 +35,6 @@ class SampleSetFeatureExtraction(BasePipeline):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
 
-
         origin_prefix = 'modules/data/fuel/testdata/control/sourceData/SAMPLE_SET'
         target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
@@ -43,8 +43,8 @@ class SampleSetFeatureExtraction(BasePipeline):
         list_func = (lambda path: self.context().parallelize(
             dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
-        todo_tasks = (dir_utils
-                      .get_todo_tasks(origin_prefix, target_prefix, list_func, '', '/' + MARKER))
+        todo_tasks = dir_utils.get_todo_tasks(
+            origin_prefix, target_prefix, list_func, '', '/' + MARKER)
         glog.info('todo_folders: {}'.format(todo_tasks.collect()))
 
         dir_to_records = (
@@ -66,28 +66,20 @@ class SampleSetFeatureExtraction(BasePipeline):
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join(
             'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet')
-        root_dir = s3_utils.S3_MOUNT_PATH
         to_abs_path = False
-
         list_func = (lambda path: s3_utils.list_files(bucket, path, to_abs_path))
 
         # RDD(record_dir)
-        todo_tasks = (
+        todo_tasks = spark_helper.cache_and_log('TodoTasks',
             # RDD(record_dir)
             dir_utils.get_todo_tasks(
                 origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
             # RDD(abs_record_dir)
-            .map(lambda record_dir: os.path.join(root_dir, record_dir))
+            .map(s3_utils.abs_path)
             # PairRDD(record_dir, record_dir)
             .keyBy(lambda record_dir: record_dir)
             # PairRDD(record_dir, record_files)
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
-            .cache())
-
-        task_count = todo_tasks.count()
-        glog.info("Get {} TODO tasks: [{}, ...]".format(
-            task_count, todo_tasks.first() if task_count > 0 else 'None'))
-
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
         self.run(todo_tasks, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
@@ -96,7 +88,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         valid_msgs = feature_extraction_rdd_utils.record_to_msgs_rdd(
             dir_to_records_rdd, WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
 
-        data_segment_rdd = (
+        data_segment_rdd = spark_helper.cache_and_log('DataSegments',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
 
@@ -111,15 +103,9 @@ class SampleSetFeatureExtraction(BasePipeline):
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
             .mapValues(list)
             # # PairRDD((dir, feature_key), one segment)
-            .flatMapValues(feature_extraction_utils.gen_segment)
-            .cache())
-        
-        segment_count = data_segment_rdd.count()
-        glog.info("Get {} segments: [{}, ...]".format(
-            segment_count,
-            data_segment_rdd.keys().first() if segment_count > 0 else 'None'))
+            .flatMapValues(feature_extraction_utils.gen_segment))
 
-        result = (
+        spark_helper.cache_and_log('H5ResultMarkers',
             # PairRDD((dir, feature_key), one segment)
             data_segment_rdd
             # PairRDD(dir, feature_key), write all segment into a hdf5 file
@@ -132,11 +118,7 @@ class SampleSetFeatureExtraction(BasePipeline):
             # RDD(MARKER files)
             .map(lambda path: os.path.join(path, MARKER))
             # RDD(MARKER files)
-            .map(file_utils.touch)
-            # Trigger actions.
-            .count())
-
-        glog.info('Finished %d h5_result_rdd!' % result)
+            .map(file_utils.touch))
 
 
 if __name__ == '__main__':
