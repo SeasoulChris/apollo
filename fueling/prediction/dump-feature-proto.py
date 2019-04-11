@@ -9,6 +9,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
+SKIP_EXISTING_DST_FILE = True
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
@@ -20,14 +21,14 @@ class DumpFeatureProto(BasePipeline):
         # RDD(dir_path)
         records_dir = self.context().parallelize(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/labels'
+        target_prefix = '/apollo/data/prediction/ground_truth'
         self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'small-records'
-        target_prefix = 'modules/prediction/labels'
+        target_prefix = 'modules/prediction/ground_truth'
 
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -56,6 +57,11 @@ class DumpFeatureProto(BasePipeline):
         # use /apollo/hmi/status's current_map entry to match map info
         map_name = record_utils.get_map_name_from_records(record_dir)
         target_dir = record_dir.replace(origin_prefix, os.path.join(target_prefix, map_name))
+        first_target_file = os.path.join(target_dir, 'feature.0.bin')
+        if SKIP_EXISTING_DST_FILE and os.path.exists(first_target_file):
+            glog.info('The folder {} has been processed'.format(target_dir))
+            return 1
+
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
