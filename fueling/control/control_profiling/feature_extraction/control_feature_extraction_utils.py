@@ -21,15 +21,21 @@ def verify_vehicle_controller(task):
         glog.warn('no valid record file found in task: {}'.format(task))
         return False
     # Read two topics together to avoid looping all messages in the record file twice
+    glog.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)
     glog.info('{} messages for record file {}'.format(len(messages), record_file))
-    vehicle_type = record_utils.message_to_proto(
-        get_message_by_topic(messages, record_utils.HMI_STATUS_CHANNEL)).current_vehicle
-    controller_type = record_utils.message_to_proto(
-        get_message_by_topic(messages, record_utils.CONTROL_CHANNEL))
-    return data_matches_config(vehicle_type, controller_type)
+    vehicle_message = get_message_by_topic(messages, record_utils.HMI_STATUS_CHANNEL)
+    if not vehicle_message:
+        glog.error('no vehicle messages found in task {} record {}'.format(task, record_file))
+        return False
+    control_message = get_message_by_topic(messages, record_utils.CONTROL_CHANNEL)
+    if not control_message:
+        glog.error('no control messages found in task {} record {}'.format(task, record_file))
+        return False
+    return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle, 
+			       record_utils.message_to_proto(control_message))
 
 def data_matches_config(vehicle_type, controller_type):
     """Compare the data retrieved in record file and configured value and see if matches"""

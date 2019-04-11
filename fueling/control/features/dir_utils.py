@@ -2,10 +2,7 @@
 import glob
 import os
 
-import colored_glog as glog
-
 import fueling.common.s3_utils as s3_utils
-
 
 def list_end_files(origin_dir):
     """
@@ -29,7 +26,7 @@ def list_completed_dirs(prefix, list_func, marker):
             .map(os.path.dirname))
 
 def get_todo_tasks(origin_prefix, target_prefix, list_func, 
-                   marker_origin='COMPLETED', marker_processed='COMPLETED'):
+                   marker_origin='COMPLETE', marker_processed='COMPLETE'):
     """Get to be processed files in rdd format."""
     # RDD(dir_of_file_end_with_marker_origin)
     origin_dirs = list_completed_dirs(origin_prefix, list_func, marker_origin)
@@ -37,7 +34,6 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     processed_dirs = (list_completed_dirs(target_prefix, list_func, marker_processed)
                       # RDD(dir_of_file_end_with_marker_processed, in orgin_prefix)
                       .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
-    glog.info('processed_dirs: {}, ...'.format(origin_dirs.first()))
     # RDD(dir_of_to_do_files)
     return origin_dirs.subtract(processed_dirs)
 
