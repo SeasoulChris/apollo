@@ -13,7 +13,13 @@ import matplotlib.pyplot as plt
 
 # Need to add the local path into the sys.path if running in the local computer
 # sys.path.append('/home/yuwang01/Documents/Apollo_Local/apollo-fuel/')
-from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_NAMES
+# from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_NAMES
+
+FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
+                 "curvature_reference", "station_error", "speed_error", "lateral_error", "lateral_error_rate", "heading_error",
+                 "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station", "speed",
+                 "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",
+                 "heading_acceleration", "heading_jerk"]
 
 
 def generate_segments(h5s):

@@ -13,7 +13,7 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
-       as feature_utils 
+       as feature_utils
 import fueling.control.control_profiling.grading_evaluation.control_performance_grading_utils \
        as grading_utils
 
@@ -43,10 +43,11 @@ class ControlProfilingMetrics(BasePipeline):
         original_prefix = 'small-records/2019'
         target_prefix = 'modules/control/control_profiling_hf5'
         bucket = 'apollo-platform'
+        to_abs_path = False
         # RDD(tasks), the task dirs
         todo_tasks = dir_utils.get_todo_tasks(original_prefix,
                                               target_prefix,
-                                              lambda path: s3_utils.list_files(bucket, path))
+                                              lambda path: s3_utils.list_files(bucket, path, to_abs_path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
         self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)
         glog.info('Control Profiling: All Done, PROD')

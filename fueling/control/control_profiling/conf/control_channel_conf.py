@@ -26,7 +26,7 @@ FEATURE_INDEX = {
     "lateral_acceleration": 20,
     "lateral_jerk": 21,
     "heading_angle": 22,
-    "heading_rate": 230,
+    "heading_rate": 23,
     "heading_acceleration": 24,
     "heading_jerk": 25,
 }
