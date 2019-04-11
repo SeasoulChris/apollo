@@ -36,13 +36,12 @@ class IndexRecords(BasePipeline):
         summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
         bucket = 'apollo-platform'
         prefix = 'public-test/'
+        to_abs_path = True
         records_rdd = (
             # RDD(file_path)
-            s3_utils.list_files(bucket, prefix)
+            s3_utils.list_files(bucket, prefix, to_abs_path)
             # RDD(record_path)
-            .filter(record_utils.is_record_file)
-            # RDD(record_path), with absolute path.
-            .map(s3_utils.abs_path))
+            .filter(record_utils.is_record_file))
         self.process(records_rdd, summary_receivers)
 
     def process(self, records_rdd, summary_receivers=None):
@@ -52,8 +51,7 @@ class IndexRecords(BasePipeline):
             indexed_records = [doc['path'] for doc in docs]
             glog.info('Found {} imported records'.format(len(indexed_records)))
             # RDD(record_path), which is not indexed before.
-            records_rdd = records_rdd.subtract(
-                self.context().parallelize(indexed_records))
+            records_rdd = records_rdd.subtract(self.context().parallelize(indexed_records))
 
         new_indexed_records = spark_helper.cache_and_log('NewlyImportedRecords',
             records_rdd

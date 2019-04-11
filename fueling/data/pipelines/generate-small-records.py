@@ -79,8 +79,9 @@ class GenerateSmallRecords(BasePipeline):
         dst_prefix = 'modules/data/public-test-small/2019/'
 
         # RDD(src_file)
-        src_files = s3_utils.list_files(bucket, src_prefix).cache()
-        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
+        to_abs_path = True
+        src_files = s3_utils.list_files(bucket, src_prefix, to_abs_path).cache()
+        dst_files = s3_utils.list_files(bucket, dst_prefix, to_abs_path).cache()
         # Only process those COMPLETE folders.
 
         is_marker = lambda path: path.endswith(MARKER)
@@ -133,73 +134,62 @@ class GenerateSmallRecords(BasePipeline):
             todo_records
             # PairRDD(src_record, dst_record)
             .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
-            # PairRDD(src_record, dst_record), in absolute style
-            .map(spark_op.do_tuple_elems(s3_utils.abs_path))
             # RDD(dst_record)
             .map(spark_op.do_tuple(self.process_file))
             # RDD(dst_record)
             .filter(bool))
 
-        finished_tasks = spark_helper.cache_and_log('FinishedTasks',
-            output_records
-            # RDD(dst_dir)
-            .map(os.path.dirname)
-            # RDD(dst_dir)
-            .distinct())
-
-        (finished_tasks
-            # RDD(dst_COMPLETE)
-            .map(lambda target_dir: os.path.join(target_dir, MARKER))
-            # Create dst_COMPLETE files.
-            .foreach(file_utils.touch))
-
+        # RDD(dst_dir)
+        finished_dirs = spark_helper.cache_and_log('FinishedDirs',
+                                                   output_records.map(os.path.dirname).distinct())
+        # Touch dst_dir/COMPLETE
+        finished_dirs.foreach(lambda dst_dir: file_utils.touch(os.path.join(dst_dir, MARKER)))
         if summary_receivers:
-            GenerateSmallRecords.send_summary(finished_tasks.collect(), summary_receivers)
-
+            GenerateSmallRecords.send_summary(finished_dirs.collect(), summary_receivers)
 
     @staticmethod
-    def process_file(input_record, output_record):
-        """Process input_record to output_record."""
-        glog.info('Processing {} to {}'.format(input_record, output_record))
-        if SKIP_EXISTING_DST_RECORDS and os.path.exists(output_record):
-            glog.warn('Skip generating exist record {}'.format(output_record))
-            return output_record
+    def process_file(src_record, dst_record):
+        """Process src_record to dst_record."""
+        glog.info('Processing {} to {}'.format(src_record, dst_record))
+        if SKIP_EXISTING_DST_RECORDS and os.path.exists(dst_record):
+            glog.warn('Skip generating exist record {}'.format(dst_record))
+            return dst_record
 
         # Read messages and channel information.
         msgs = []
         topic_descs = {}
         try:
-            reader = RecordReader(input_record)
+            reader = RecordReader(src_record)
             msgs = [msg for msg in reader.read_messages() if msg.topic in CHANNELS]
             for msg in msgs:
                 if msg.topic not in topic_descs:
                     topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
             else:
-                glog.error('Failed to read any message from {}'.format(input_record))
-                return output_record
+                glog.error('Failed to read any message from {}'.format(src_record))
+                return dst_record
         except Exception as err:
             glog.error('Failed to read record {}: {}'.format(record, err))
             return None
 
         # Check once again to avoid duplicate work after reading.
-        if SKIP_EXISTING_DST_RECORDS and os.path.exists(output_record):
-            glog.warn('Skip generating exist record {}'.format(output_record))
-            return output_record
+        if SKIP_EXISTING_DST_RECORDS and os.path.exists(dst_record):
+            glog.warn('Skip generating exist record {}'.format(dst_record))
+            return dst_record
         # Write to record.
-        file_utils.makedirs(os.path.dirname(output_record))
+        file_utils.makedirs(os.path.dirname(dst_record))
         writer = RecordWriter(0, 0)
         try:
-            writer.open(output_record)
+            writer.open(dst_record)
             for topic, (data_type, desc) in topic_descs.items():
                 writer.write_channel(topic, data_type, desc)
             for msg in msgs:
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
         except Exception as e:
-            glog.error('Failed to write to target file {}: {}'.format(output_record, e))
+            glog.error('Failed to write to target file {}: {}'.format(dst_record, e))
             return None
         finally:
             writer.close()
-        return output_record
+        return dst_record
 
     @staticmethod
     def send_summary(task_dirs, receivers):

@@ -42,10 +42,11 @@ class ReorgSmallRecords(BasePipeline):
         src_prefix = 'modules/data/public-test-small/2019/'
         dst_prefix = 'small-records/2019/'
 
+        to_abs_path = True
         # RDD(src_file)
-        src_files = s3_utils.list_files(bucket, src_prefix).cache()
+        src_files = s3_utils.list_files(bucket, src_prefix, to_abs_path).cache()
         # RDD(dst_file)
-        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
+        dst_files = s3_utils.list_files(bucket, dst_prefix, to_abs_path).cache()
 
         is_complete_marker = lambda path: path.endswith(MARKER)
         # RDD(src_dir)
@@ -79,8 +80,6 @@ class ReorgSmallRecords(BasePipeline):
 
         input_records = spark_helper.cache_and_log('InputRecords',
             src_records
-            # RDD(src_record), in absolute path style.
-            .map(s3_utils.abs_path)
             # RDD(src_record)
             .repartition(partitions)
             # PairRDD(src_record, record_header)

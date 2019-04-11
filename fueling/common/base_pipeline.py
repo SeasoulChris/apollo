@@ -2,8 +2,8 @@
 #!/usr/bin/env python
 import os
 
+from pyspark import SparkConf, SparkContext
 import colored_glog as glog
-import pyspark
 
 
 class BasePipeline(object):
@@ -13,15 +13,13 @@ class BasePipeline(object):
     def __init__(self, name):
         """Pipeline constructor."""
         self.name = name
-        BasePipeline.SPARK_CONTEXT = pyspark.SparkContext.getOrCreate(
-            pyspark.SparkConf().setAppName(self.name))
+        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName(self.name))
 
     @classmethod
     def context(cls):
         """Get the SparkContext."""
         if cls.SPARK_CONTEXT is None:
-            cls.SPARK_CONTEXT = pyspark.SparkContext.getOrCreate(
-            pyspark.SparkConf().setAppName('BasePipeline'))
+            cls.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName('BasePipeline'))
         return cls.SPARK_CONTEXT
 
     def run_test(self):
