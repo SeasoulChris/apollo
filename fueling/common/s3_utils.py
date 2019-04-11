@@ -51,7 +51,8 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
         for obj in page.get('Contents', []):
             yield obj
 
-def list_files(bucket, prefix, to_abs_path=True):
+# TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
+def list_files(bucket, prefix, to_abs_path=False):
     """Get a RDD of files."""
     files = (spark_helper.get_context()
         # RDD(obj_dict)
@@ -63,7 +64,8 @@ def list_files(bucket, prefix, to_abs_path=True):
     # RDD(file_path), relative or absolute according to argument.
     return files.map(abs_path) if to_abs_path else files
 
-def list_dirs(bucket, prefix, to_abs_path=True):
+# TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
+def list_dirs(bucket, prefix, to_abs_path=False):
     """Get a RDD of dirs."""
     dirs = (spark_helper.get_context()
         # RDD(obj_dict)
