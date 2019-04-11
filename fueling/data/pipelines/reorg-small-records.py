@@ -3,6 +3,7 @@ import collections
 import os
 
 import colored_glog as glog
+import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from cyber_py.record import RecordReader, RecordWriter
@@ -76,7 +77,7 @@ class ReorgSmallRecords(BasePipeline):
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
         glog.info('Repartition to: {}'.format(partitions))
 
-        input_records = spark_op.log_rdd(
+        input_records = spark_helper.cache_and_log('InputRecords',
             src_records
             # RDD(src_record), in absolute path style.
             .map(s3_utils.abs_path)
@@ -87,10 +88,9 @@ class ReorgSmallRecords(BasePipeline):
             # PairRDD(src_record, record_header), where header is valid.
             .filter(lambda (_, header): header is not None)
             # PairRDD(dst_dir, (src_record, record_header))
-            .keyBy(lambda (record, _): os.path.dirname(record).replace(src_prefix, dst_prefix, 1)),
-            "InputRecords", glog.info)
+            .keyBy(lambda (record, _): os.path.dirname(record).replace(src_prefix, dst_prefix, 1)))
 
-        output_records = spark_op.log_rdd(
+        output_records = spark_helper.cache_and_log('OutputRecords',
             # PairRDD(target_dir, (record, header))
             input_records
             # PairRDD(target_file, (record, start_time, end_time))
@@ -98,10 +98,9 @@ class ReorgSmallRecords(BasePipeline):
             # PairRDD(target_file, (record, start_time, end_time)s)
             .groupByKey()
             # PairRDD(target_file, (record, start_time, end_time)s)
-            .mapValues(sorted),
-            "OutputRecords", glog.info)
+            .mapValues(sorted))
 
-        finished_tasks = spark_op.log_rdd(
+        finished_tasks = spark_helper.cache_and_log('FinishedTasks',
             # PairRDD(target_file, (record, start_time, end_time)s)
             output_records
             # RDD(target_file)
@@ -111,8 +110,7 @@ class ReorgSmallRecords(BasePipeline):
             # RDD(target_dir)
             .map(os.path.dirname)
             # RDD(target_dir)
-            .distinct(),
-            "FinishedTasks", glog.info)
+            .distinct())
 
         (finished_tasks
             # RDD(target_dir/COMPLETE)

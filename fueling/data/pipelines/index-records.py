@@ -4,6 +4,8 @@ import os
 import sys
 
 import colored_glog as glog
+import pyspark_utils.helper as spark_helper
+import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
@@ -53,22 +55,21 @@ class IndexRecords(BasePipeline):
             records_rdd = records_rdd.subtract(
                 self.context().parallelize(indexed_records))
 
-        new_indexed_records = spark_op.log_rdd(
+        new_indexed_records = spark_helper.cache_and_log('NewlyImportedRecords',
             records_rdd
             # RDD(RecordMeta)
             .map(RecordParser.Parse)
             # RDD(RecordMeta), which is valid.
-            .filter(lambda record_meta: record_meta is not None)
+            .filter(spark_op.not_none)
             # RDD(RecordMeta_doc)
             .map(Mongo.pb_to_doc)
             # RDD(imported_path)
-            .mapPartitions(self.import_record),
-            "NewlyImportedRecords", glog.info)
+            .mapPartitions(self.import_records))
         if summary_receivers:
             self.send_summary(new_indexed_records, summary_receivers)
 
     @staticmethod
-    def import_record(record_meta_docs):
+    def import_records(record_meta_docs):
         """Import record docs to Mongo."""
         collection = Mongo.collection(IndexRecords.COLLECTION_NAME)
         newly_imported = []
