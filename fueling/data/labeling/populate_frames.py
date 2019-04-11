@@ -236,9 +236,8 @@ class PopulateFramesPipeline(BasePipeline):
             return
 
         glog.info('Load messages META data for query')
-        spark_context = self.context()
         # -> RDD(task_dir), with absolute paths
-        msgs_rdd = (spark_context.parallelize(todo_tasks).distinct()
+        msgs_rdd = (self.context().parallelize(todo_tasks).distinct()
                     # PairRDD(target_dir, task_dir), target_dir is destination, task_dir is source
                     .keyBy(lambda task_dir: os.path.join(target_dir, os.path.basename(task_dir)))
                     # PairRDD(target_dir, record_files)
@@ -258,7 +257,7 @@ class PopulateFramesPipeline(BasePipeline):
 
         # Transform RDD to DataFrame, run SQL and tranform back when done
         glog.info('SQL query to search closest sensor messages')
-        sql_context = SQLContext(spark_context)
+        sql_context = SQLContext(self.context())
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context.sql(sql_query)
          # RDD(target, lidar_topic, lidar_time, other_topic, MINIMAL_time)

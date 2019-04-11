@@ -35,8 +35,7 @@ class DeserializeRecordsPipeline(BasePipeline):
 
     def run(self):
         """Run streaming process"""
-        spark_context = self.context()
-        stream_context = StreamingContext(spark_context, 30)
+        stream_context = StreamingContext(self.context(), 30)
         stream_context.addStreamingListener(DriverStreamingListener())
 
         record_path = streaming_utils.get_streaming_records(self._root_dir)

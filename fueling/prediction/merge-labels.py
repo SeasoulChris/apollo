@@ -20,10 +20,10 @@ class MergeLabels(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.context()
         root_dir = '/apollo'
         # RDD(npy_file)
-        npy_file_rdd = sc.parallelize(glob.glob('/apollo/data/prediction/labels/*/*.npy'))
+        npy_file_rdd = self.context().parallelize(
+            glob.glob('/apollo/data/prediction/labels/*/*.npy'))
         self.run(root_dir, npy_file_rdd)
 
     def run_prod(self):

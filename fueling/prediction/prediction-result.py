@@ -17,10 +17,9 @@ class PredictionResult(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.context()
         root_dir = '/apollo'
         # RDD(dir_path)
-        records_dir = sc.parallelize(['docs/demo_guide'])
+        records_dir = self.context().parallelize(['docs/demo_guide'])
         origin_prefix = 'docs/demo_guide'
         target_prefix = 'data/prediction/results'
         self.run(root_dir, records_dir, origin_prefix, target_prefix)

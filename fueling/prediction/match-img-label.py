@@ -20,10 +20,10 @@ class MatchImgLabel(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.context()
         root_dir = '/apollo'
         # RDD(png_img)
-        png_img_rdd = sc.parallelize(glob.glob('/apollo/data/prediction/junction_img/*/*.png'))
+        png_img_rdd = self.context().parallelize(
+            glob.glob('/apollo/data/prediction/junction_img/*/*.png'))
         self.run(root_dir, png_img_rdd)
 
     def run_prod(self):
