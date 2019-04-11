@@ -99,6 +99,8 @@ practices are:
    failed unexpectedly, the pipeline have no idea about how to recover.
 1. Reading record header is much faster than reading record, if you can do
    significatnt filtering on records according to its header, do it.
+1. To learn more about PySpark APIs, please go to
+   [Spark Docs](https://spark.apache.org/docs/latest/api/python/pyspark.html).
 
 ### Test your pipeline at local
 

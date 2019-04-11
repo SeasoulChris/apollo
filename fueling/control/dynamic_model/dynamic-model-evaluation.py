@@ -22,19 +22,19 @@ class DynamicModelEvaluation(BasePipeline):
 
         mlp_model_rdd = (
             # RDD(folder_path) for mlp models
-            self.get_spark_context().parallelize(glob.glob(mlp_model_path))
+            self.context().parallelize(glob.glob(mlp_model_path))
             # PairRDD(model_name, folder_path)
             .keyBy(lambda _: 'mlp'))
 
         lstm_model_rdd = (
             # RDD(folder_path) for lstm models
-            self.get_spark_context().parallelize(glob.glob(lstm_model_path))
+            self.context().parallelize(glob.glob(lstm_model_path))
             # PairRDD(model_name, folder_path)
             .keyBy(lambda _: 'lstm'))
 
         evaluation_dataset = [os.path.join(platform_path, 'hdf5_evaluation/evaluation.hdf5')]
         # RDD(file_path) for evaluation dataset
-        evaluation_dataset_rdd = self.get_spark_context().parallelize(evaluation_dataset)
+        evaluation_dataset_rdd = self.context().parallelize(evaluation_dataset)
 
         self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)

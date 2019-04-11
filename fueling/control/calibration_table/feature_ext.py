@@ -35,7 +35,7 @@ class CalTabFeatureExt(BasePipeline):
         origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
         target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
         root_dir = '/apollo'
-        dir_to_records = self.get_spark_context().parallelize(
+        dir_to_records = self.context().parallelize(
             records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)

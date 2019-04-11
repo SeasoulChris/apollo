@@ -3,19 +3,22 @@
 import os
 
 import colored_glog as glog
-import pyspark_utils.helper as spark_helper
+import pyspark
 
 
 class BasePipeline(object):
     """Fueling base pipeline."""
+    SPARK_CONF = None
 
     def __init__(self, name):
         """Pipeline constructor."""
         self.name = name
 
-    def get_spark_context(self):
+    def context(self):
         """Get the SparkContext."""
-        return spark_helper.get_context(self.name)
+        if self.SPARK_CONF is None:
+            self.SPARK_CONF = pyspark.SparkConf().setAppName(self.name)
+        return pyspark.SparkContext.getOrCreate(self.SPARK_CONF)
 
     def run_test(self):
         """Run the pipeline in test mode."""

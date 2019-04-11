@@ -138,7 +138,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
-        spark_context = self.get_spark_context()
+        spark_context = self.context()
         (spark_context
          # RDD(task_dir), with absolute paths
          .parallelize(todo_tasks)

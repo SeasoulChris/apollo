@@ -25,7 +25,7 @@ class GenerateImgs(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(dir_path)
-        records_dir = self.get_spark_context().parallelize(
+        records_dir = self.context().parallelize(
             glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
         origin_prefix = '/apollo/data/prediction/features'
         target_prefix = '/apollo/data/prediction/img_features'

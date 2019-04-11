@@ -36,7 +36,7 @@ class GeneralFeatureExtraction(BasePipeline):
                                      WANTED_VEHICLE, 'GeneralSet')
         root_dir = '/apollo'
 
-        list_func = (lambda path: self.get_spark_context().parallelize(
+        list_func = (lambda path: self.context().parallelize(
             dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
         todo_tasks = (dir_utils.get_todo_tasks(

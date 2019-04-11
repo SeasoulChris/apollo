@@ -39,7 +39,7 @@ class SampleSetFeatureExtraction(BasePipeline):
                                      WANTED_VEHICLE, 'SampleSet')
         root_dir = '/apollo'
 
-        list_func = (lambda path: self.get_spark_context().parallelize(
+        list_func = (lambda path: self.context().parallelize(
             dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
         todo_tasks = (dir_utils

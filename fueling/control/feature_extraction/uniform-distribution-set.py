@@ -67,7 +67,7 @@ class UniformDistributionSet(BasePipeline):
         target_dir = os.path.join(root_dir, target_prefix)
         todo_tasks = (
             # RDD(all files)
-            self.get_spark_context().parallelize(dir_utils.list_end_files(files_dir))
+            self.context().parallelize(dir_utils.list_end_files(files_dir))
             #RDD(.hdf5 files)
             .filter(lambda path: path.endswith('.hdf5'))).cache()
         glog.info('NUMBER of TODO TASK: %d', todo_tasks.count())

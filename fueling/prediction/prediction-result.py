@@ -17,7 +17,7 @@ class PredictionResult(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.get_spark_context()
+        sc = self.context()
         root_dir = '/apollo'
         # RDD(dir_path)
         records_dir = sc.parallelize(['docs/demo_guide'])

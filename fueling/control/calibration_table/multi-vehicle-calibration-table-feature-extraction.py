@@ -91,7 +91,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         origin_dir = os.path.join(root_dir,origin_prefix)
 
         # RDD(origin_dir)
-        origin_dir_rdd = (self.get_spark_context().parallelize([origin_dir])
+        origin_dir_rdd = (self.context().parallelize([origin_dir])
                     # RDD([vehicle_type])
                    .flatMap(get_single_vehicle_type)
                     # PairRDD(vehicle_type, [vehicle_type])

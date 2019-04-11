@@ -18,7 +18,7 @@ class DemoPipeline(BasePipeline):
         # Spark cascade style programming.
         return (
             # RDD(record_path)
-            self.get_spark_context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+            self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
             # PairRDD(topic, PyBagMessage)

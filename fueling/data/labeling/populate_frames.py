@@ -236,7 +236,7 @@ class PopulateFramesPipeline(BasePipeline):
             return
 
         glog.info('Load messages META data for query')
-        spark_context = self.get_spark_context()
+        spark_context = self.context()
         # -> RDD(task_dir), with absolute paths
         msgs_rdd = (spark_context.parallelize(todo_tasks).distinct()
                     # PairRDD(target_dir, task_dir), target_dir is destination, task_dir is source

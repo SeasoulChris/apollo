@@ -56,7 +56,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                 
         throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
     
-        list_func = (lambda path: self.get_spark_context().parallelize(
+        list_func = (lambda path: self.context().parallelize(
             dir_utils.list_end_files(os.path.join(root_dir, path))))
         # RDD(record_dir)
         todo_tasks = (

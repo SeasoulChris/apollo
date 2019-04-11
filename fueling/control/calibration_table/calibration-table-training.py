@@ -110,7 +110,7 @@ class CalibrationTableTraining(BasePipeline):
         root_dir = '/apollo'
         target_dir = os.path.join(root_dir, target_prefix)
         # RDD(origin_prefix)
-        feature_dir = self.get_spark_context().parallelize([origin_prefix])
+        feature_dir = self.context().parallelize([origin_prefix])
         list_func = dir_utils.list_end_files
 
         throttle_train_files = (

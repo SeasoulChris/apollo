@@ -21,7 +21,7 @@ class GenerateLabels(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        sc = self.get_spark_context()
+        sc = self.context()
         root_dir = '/apollo'
         # RDD(bin_files)
         bin_files = sc.parallelize(glob.glob('/apollo/data/prediction/labels/*/feature.*.bin'))

@@ -93,7 +93,7 @@ class ScenarioExtractionPipeline(BasePipeline):
         original_prefix = 'data'
         target_prefix = 'modules/data/fuel/testdata/modules/simulation/logsim_scenarios'
 
-        spark_context = self.get_spark_context()
+        spark_context = self.context()
 
         # RDD(tasks), the tasks without root_dir as prefix
         todo_tasks = get_todo_tasks(

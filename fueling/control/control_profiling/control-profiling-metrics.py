@@ -31,7 +31,7 @@ class ControlProfilingMetrics(BasePipeline):
         target_prefix = 'modules/data/fuel/testdata/control/control_profiling/generated'
         root_dir = '/apollo'
         # RDD(tasks), the task dirs
-        todo_tasks = self.get_spark_context().parallelize([
+        todo_tasks = self.context().parallelize([
             os.path.join(origin_prefix, 'Transit_Auto'),
             os.path.join(origin_prefix, 'Transit_Auto2')
         ])

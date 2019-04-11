@@ -28,7 +28,7 @@ class IndexRecords(BasePipeline):
         """Run test."""
         self.process(
             # RDD(record_path)
-            self.get_spark_context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record']))
+            self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record']))
 
     def run_prod(self):
         """Run prod."""
@@ -52,7 +52,7 @@ class IndexRecords(BasePipeline):
             glog.info('Found {} imported records'.format(len(indexed_records)))
             # RDD(record_path), which is not indexed before.
             records_rdd = records_rdd.subtract(
-                self.get_spark_context().parallelize(indexed_records))
+                self.context().parallelize(indexed_records))
 
         new_indexed_records = spark_op.log_rdd(
             records_rdd
