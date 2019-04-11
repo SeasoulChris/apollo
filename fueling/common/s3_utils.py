@@ -36,7 +36,7 @@ def abs_path(object_key):
     """
     return os.path.join(S3_MOUNT_PATH, object_key)
 
-def list_objects(bucket, prefix='', aws_ak=None, aws_sk=None):
+def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
     """
     Get a list of objects in format:
     {u'Key': '/path/to/file',
@@ -51,19 +51,29 @@ def list_objects(bucket, prefix='', aws_ak=None, aws_sk=None):
         for obj in page.get('Contents', []):
             yield obj
 
-def list_files(bucket, prefix=''):
+def list_files(bucket, prefix, to_abs_path=True):
     """Get a RDD of files."""
-    return spark_helper.get_context() \
-        .parallelize(list_objects(bucket, prefix)) \
-        .filter(lambda obj: not obj['Key'].endswith('/')) \
-        .map(lambda obj: obj['Key'])
+    files = (spark_helper.get_context()
+        # RDD(obj_dict)
+        .parallelize(list_objects(bucket, prefix))
+        # RDD(file_obj_dict)
+        .filter(lambda obj: not obj['Key'].endswith('/'))
+        # RDD(file_key)
+        .map(lambda obj: obj['Key']))
+    # RDD(file_path), relative or absolute according to argument.
+    return files.map(abs_path) if to_abs_path else files
 
-def list_dirs(bucket, prefix=''):
+def list_dirs(bucket, prefix, to_abs_path=True):
     """Get a RDD of dirs."""
-    return spark_helper.get_context() \
-        .parallelize(list_objects(bucket, prefix)) \
-        .filter(lambda obj: obj['Key'].endswith('/')) \
-        .map(lambda obj: obj['Key'][:-1])  # Remove the trailing slash.
+    dirs = (spark_helper.get_context()
+        # RDD(obj_dict)
+        .parallelize(list_objects(bucket, prefix))
+        # RDD(dir_obj_dict)
+        .filter(lambda obj: obj['Key'].endswith('/'))
+        # RDD(dir_key), without the trailing slash.
+        .map(lambda obj: obj['Key'][:-1]))
+    # RDD(dir_path), relative or absolute according to argument.
+    return dirs.map(abs_path) if to_abs_path else dirs
 
 def file_exists(bucket, remote_path, aws_ak, aws_sk):
     """Check if specified file is existing"""
@@ -94,21 +104,21 @@ def upload_file(bucket, local_path, remote_path, aws_keys, meta_data={'User': 'a
         raise ValueError('Do not support uploading a folder')
 
     sub_paths = remote_path.split('/')
-    if remote_path.startswith('/') or not file_exists(bucket, sub_paths[0]+'/', aws_ak, aws_sk):
+    if remote_path.startswith('/') or not file_exists(bucket, sub_paths[0] + '/', aws_ak, aws_sk):
         raise ValueError('Creating folders or files under root is not allowed')
 
     minimal_path_depth = 2
     maximal_path_depth = 10
     minimal_sub_path_len = 1
     maximal_sub_path_len = 256
-    if len(sub_paths) < minimal_path_depth or \
-        len(sub_paths) > maximal_path_depth or \
-        any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths):
+    if (len(sub_paths) < minimal_path_depth or
+        len(sub_paths) > maximal_path_depth or
+        any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths)):
         raise ValueError('Destination path is either too short or too long')
 
     overwrite_whitelist = ('modules/control/control_conf/mkz7/',)
-    if file_exists(bucket, remote_path, aws_ak, aws_sk) and \
-        not any(remote_path.startswith(x) for x in overwrite_whitelist):
+    if (file_exists(bucket, remote_path, aws_ak, aws_sk) and
+        not any(remote_path.startswith(x) for x in overwrite_whitelist)):
         raise ValueError('Destination already exists')
 
     # Actually upload
@@ -123,7 +133,7 @@ def download_file(bucket, remote_path, local_path, aws_keys):
         for obj in list_objects(bucket, remote_path, aws_ak, aws_sk):
             remote_file = obj['Key']
             # aws_skip the folder itself
-            if remote_file == remote_path or remote_file == remote_path+'/':
+            if remote_file == remote_path or remote_file == remote_path + '/':
                 continue
             local_file = os.path.join(local_path, os.path.basename(remote_file))
             s3_client(aws_ak, aws_sk).download_file(bucket, remote_file, local_file)
