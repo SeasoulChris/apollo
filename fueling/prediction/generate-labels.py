@@ -28,7 +28,7 @@ class GenerateLabels(BasePipeline):
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        source_prefix = 'modules/prediction/labels/'
+        source_prefix = 'modules/prediction/ground_truth'
         to_abs_path = True
 
         bin_files  = (

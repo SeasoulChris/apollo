@@ -53,7 +53,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
         source_dir = os.path.dirname(source_file)
         labels_dir = source_dir.replace('features-san-mateo', 'labels-san-mateo')
         label_file = os.path.join(labels_dir, 'junction_label.npy')
-        CombineFeaturesAndLabels(source_file, label_file, 'junction')
+        CombineFeaturesAndLabels(source_file, label_file, 'junction_label')
         return 0
 
 
