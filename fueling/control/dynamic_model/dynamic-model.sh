@@ -21,3 +21,8 @@ ENV="fuel-py27"
 JOB="fueling/control/dynamic_model/dynamic-model-evaluation.py"
 ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
+
+# Matplotlib Test
+JOB="fueling/control/dynamic_model/matplotlib_test.py"
+ENV="fuel-py27"
+./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
