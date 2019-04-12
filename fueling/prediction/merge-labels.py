@@ -9,7 +9,6 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
@@ -20,34 +19,29 @@ class MergeLabels(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/apollo'
         # RDD(npy_file)
         npy_file_rdd = self.context().parallelize(
             glob.glob('/apollo/data/prediction/labels/*/*.npy'))
-        self.run(root_dir, npy_file_rdd)
+        self.run(npy_file_rdd)
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
         bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/labels/'
+        to_abs_path = True
 
         npy_file_rdd  = (
             # RDD(file), start with source_prefix
-            s3_utils.list_files(bucket, source_prefix)
+            s3_utils.list_files(bucket, source_prefix, to_abs_path)
             # RDD(npy_file)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*.npy'))
-            # RDD(npy_file), which is unique
-            .distinct())
-        self.run(root_dir, npy_file_rdd)
+            .filter(spark_op.filter_path(['*.npy'])))
+        self.run(npy_file_rdd)
 
-    def run(self, root_dir, npy_file_rdd):
+    def run(self, npy_file_rdd):
         """Run the pipeline with given arguments."""
         result = (
             # RDD(npy_file)
             npy_file_rdd
-            # RDD(npy_file_rdd), in absolute path
-            .map(lambda src_file: os.path.join(root_dir, src_file))
             # RDD(target_dir), in absolute path
             .map(os.path.dirname)
             # RDD(target_dir), in absolute path and unique

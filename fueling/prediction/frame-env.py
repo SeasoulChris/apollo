@@ -28,10 +28,11 @@ class FrameEnv(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'small-records'
         target_prefix = 'modules/prediction/features'
+        to_abs_path = True
 
         records_dir = (
             # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix)
+            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside
@@ -59,8 +60,7 @@ class FrameEnv(BasePipeline):
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_frame_env.sh '
-            '"{}" "{}" "{}"'.format(s3_utils.abs_path(record_dir),
-                                    s3_utils.abs_path(target_dir), map_name))
+            '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
         if os.system(command) == 0:
             glog.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
             return 1

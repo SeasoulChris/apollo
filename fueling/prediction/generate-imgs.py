@@ -36,10 +36,11 @@ class GenerateImgs(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features'
         target_prefix = 'modules/prediction/img_features'
+        to_abs_path = True
 
         bin_file = (
             # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix)
+            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
             # RDD(bin_files)
             .filter(lambda src_file: fnmatch.fnmatch(src_file, '*frame_env.*.bin'))
             # RDD(bin_files), which is unique
@@ -54,16 +55,13 @@ class GenerateImgs(BasePipeline):
             # PairRDD(target_dir, bin_file)
             .keyBy(lambda bin_file:
                    os.path.dirname(bin_file).replace(origin_prefix, target_prefix, 1))
-            # PairRDD(target_dir, bin_file), in proper absolute path.
-            .map(lambda target_src: (s3_utils.abs_path(target_src[0]),
-                                     s3_utils.abs_path(target_src[1])))
             .cache())
 
         # Create all target_dir.
         file_list_rdd.keys().distinct().foreach(file_utils.makedirs)
 
         result = (
-            # PairRDD(target_dir, bin_file), in absolute path
+            # PairRDD(target_dir, bin_file)
             file_list_rdd
             # PairRDD(target_dir, frame_env)
             .flatMapValues(read_frame_env)
