@@ -4,9 +4,10 @@ vehicle_wheelbase: 3.06
 control_metrics{
   acceleration_harsh_limit: 1           # unit: m/sec^2
   curvature_harsh_limit: 0.05           # unit: 1/m
-  speed_still: 0.03                     # unit: m/s
+  speed_stop: 0.03                      # unit: m/sec
+  speed_still: 1.00                     # unit: m/sec
   heading_error_still: 0.05236          # unit: radian
-  curvature_still: 0.01711              # unit: 1/m
+  curvature_still: 0.02852              # unit: 1/m
   station_error_thold: 1                # unit: m
   speed_error_thold: 0.5                # unit: m/sec
   lateral_error_thold: 0.5              # unit: m

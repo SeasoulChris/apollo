@@ -85,7 +85,7 @@ def compute_h5_and_gradings(target_groups):
     grading_group_result = grading_results(
         station_err_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name='speed_reference',
-            std_filter_value=profiling_conf.control_metrics.speed_still,
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='station_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
@@ -100,8 +100,8 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
         )),
         speed_err_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name='',
-            std_filter_value='',
+            std_filter_name='speed_reference',
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='speed_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
@@ -117,7 +117,7 @@ def compute_h5_and_gradings(target_groups):
         )),
         lateral_err_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name='speed_reference',
-            std_filter_value=profiling_conf.control_metrics.speed_still,
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='lateral_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
@@ -136,8 +136,8 @@ def compute_h5_and_gradings(target_groups):
                               * profiling_conf.vehicle_wheelbase
         )),
         lateral_err_rate_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name='',
-            std_filter_value='',
+            std_filter_name='speed_reference',
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='lateral_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
@@ -155,7 +155,7 @@ def compute_h5_and_gradings(target_groups):
         )),
         heading_err_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name='speed_reference',
-            std_filter_value=profiling_conf.control_metrics.speed_still,
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
@@ -172,8 +172,8 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
         )),
         heading_err_rate_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name='',
-            std_filter_value='',
+            std_filter_name='speed_reference',
+            std_filter_value=profiling_conf.control_metrics.speed_stop,
             std_norm_name='heading_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
