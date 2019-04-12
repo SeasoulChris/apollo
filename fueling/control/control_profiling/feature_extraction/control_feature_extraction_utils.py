@@ -35,7 +35,7 @@ def verify_vehicle_controller(task):
         glog.error('no control messages found in task {} record {}'.format(task, record_file))
         return False
     return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle, 
-			       record_utils.message_to_proto(control_message))
+        record_utils.message_to_proto(control_message))
 
 def data_matches_config(vehicle_type, controller_type):
     """Compare the data retrieved in record file and configured value and see if matches"""
