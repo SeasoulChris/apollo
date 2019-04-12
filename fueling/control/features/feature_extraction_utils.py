@@ -51,6 +51,7 @@ MAX_PHASE_DELTA = 0.015
 MIN_SEGMENT_LENGTH = 10
 
 
+
 def get_vehicle_of_dirs(dir_to_records_rdd):
     """
     Extract HMIStatus.current_vehicle from each dir.
@@ -159,9 +160,9 @@ def get_data_point(elem):
         pose.angular_velocity.x,  # 11
         pose.angular_velocity.y,  # 12
         pose.angular_velocity.z,  # 13
-        chassis.speed_mps,  # 14
-        chassis.throttle_percentage/100,  # 15
-        chassis.brake_percentage/100,  # 16
+        chassis.speed_mps,  # 14 speed
+        chassis.throttle_percentage/100,  # 15 throttle
+        chassis.brake_percentage/100,  # 16 brake
         chassis.steering_percentage/100,  # 17
         chassis.driving_mode,  # 18
         pose.position.x,  # 19
@@ -177,21 +178,24 @@ def feature_key_value(elem):
     throttle = max(elem[1][15] * 100 - THROTTLE_DEADZONE, 0)  # 0 or positive
     brake = max(elem[1][16] * 100 - BRAKE_DEADZONE, 0)  # 0 or positive
     steering = elem[1][17] * 100 + 100  # compensation for negative value
+    
+    if(speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped):
+        elem_key = int(9000)
+    else:
+        # speed key staring from 1; less than 5 m/s is 1
+        speed_key = int(min(speed, SPEED_MAX) / SPEED_STEP + 1)
 
-    # speed key staring from 1; less than 5 m/s is 1
-    speed_key = int(min(speed, SPEED_MAX) / SPEED_STEP + 1)
+        # steering key 0 ~ 9: -100% is 0; 100% is 9
+        steering_key = int(steering / STEER_STEP)  # -100% ~ 0
 
-    # steering key 0 ~ 9: -100% is 0; 100% is 9
-    steering_key = int(steering / STEER_STEP)  # -100% ~ 0
+        # deadzone~first step is 0;
+        throttle_key = int(min(throttle, THROTTLE_MAX) / ACC_STEP)
+        brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
 
-    # deadzone~first step is 0;
-    throttle_key = int(min(throttle, THROTTLE_MAX) / ACC_STEP)
-    brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
-
-    # speed-steering-throttle-brake
-    elem_key = int(speed_key * 1000 + steering_key *
-                   100 + throttle_key * 10 + brake_key)
-    # ((folder_path,feature_key),(time_stamp,paired_data))
+        # speed-steering-throttle-brake
+        elem_key = int(speed_key * 1000 + steering_key *
+                        100 + throttle_key * 10 + brake_key)
+    # ((folder_path, feature_key),(time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
 
