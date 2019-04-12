@@ -99,7 +99,7 @@ class ScenarioExtractionPipeline(BasePipeline):
             lambda path: self.context().parallelize(list_end_files(os.path.join(root_dir, path))))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, root_dir, original_prefix, target_prefix)
+        self.run(todo_tasks, original_prefix, target_prefix)
         glog.info('Simulation: All Done, TEST')
 
     def run_prod(self):
@@ -108,20 +108,19 @@ class ScenarioExtractionPipeline(BasePipeline):
         target_prefix = 'modules/simulation/logsim_scenarios/2019'
         bucket = 'apollo-platform'
 
-        # RDD(tasks), the tasks without root_dir as prefix
+        # RDD(tasks)
+        to_abs = True
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,
-                                    lambda path: s3_utils.list_files(bucket, path))
+                                    lambda path: s3_utils.list_files(bucket, path, to_abs))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)
         glog.info('Simulation: All Done, PROD')
 
-    def run(self, todo_tasks, root_dir, original_prefix, target_prefix):
+    def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
-        # RDD(tasks), the tasks without root_dir as prefix
+        # RDD(tasks)
         (todo_tasks
-         # RDD(tasks), the tasks with absolute paths
-         .map(lambda path: get_abs_path(root_dir, path))
          # PairRDD(target_dirs, tasks), the map of target dirs and source dirs
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # Execute each task

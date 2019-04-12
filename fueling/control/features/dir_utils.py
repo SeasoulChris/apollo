@@ -38,18 +38,13 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     return origin_dirs.subtract(processed_dirs)
 
 def get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket, MARKER):
-    list_func = (lambda path: s3_utils.list_files(bucket, path))
-    # RDD(record_dir)
-    todo_task_dirs = (get_todo_tasks(
-        origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER))
+    to_abs = True
+    list_func = (lambda path: s3_utils.list_files(bucket, path, to_abs))
     todo_tasks = (
         # RDD(record_dir)
-        todo_task_dirs
-        # RDD(abs_record_dir)
-        .map(lambda record_dir: os.path.join(root_dir, record_dir))
+        get_todo_tasks(origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
         # PairRDD(record_dir, record_dir)
         .keyBy(lambda record_dir: record_dir)
         # PairRDD(record_dir, record_files)
         .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*'))))
     return todo_tasks
-    

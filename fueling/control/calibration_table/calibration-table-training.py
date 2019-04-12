@@ -53,13 +53,12 @@ throttle_axis_cmd_max = CALIBRATION_TABLE_CONF.throttle_max
 cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
 
 
-def get_feature_hdf5_files(feature_dir, root_dir, throttle_or_brake, train_or_test):
+def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
     return (
         # RDD(feature folder)
         feature_dir
         # RDD(throttle/brake train/test feature folder)
-        .map(lambda feature_dir: 
-            os.path.join(root_dir, feature_dir, throttle_or_brake, train_or_test))
+        .map(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
         # RDD(all files in throttle train feature folder)
         .flatMap(dir_utils.list_end_files)
         # RDD(hdf5 files)
@@ -71,12 +70,11 @@ def get_feature_hdf5_files(feature_dir, root_dir, throttle_or_brake, train_or_te
         # PairRDD('throttle or brake', list of hdf5 files)
         .mapValues(list))
 
-def get_feature_hdf5_files_prod(bucket, feature_prefix, root_dir, throttle_or_brake):
+def get_feature_hdf5_files_prod(bucket, feature_prefix, throttle_or_brake):
+    to_abs = True
     return (
         # RDD(throttle feature folder)
-        s3_utils.list_files(bucket, feature_prefix)
-        # RDD(absolute feature folder)
-        .map(lambda feature_prefix: os.path.join(root_dir, feature_prefix))
+        s3_utils.list_files(bucket, feature_prefix, to_abs)
         # RDD(hdf5 files)
         .filter(lambda path: path.endswith('.hdf5'))
         # PairRDD('throttle or brake', hdf5 files)
@@ -103,25 +101,23 @@ class CalibrationTableTraining(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = os.path.join('modules/data/fuel/testdata/control/generated', 
+        origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated', 
                                      WANTED_VEHICLE, 'CalibrationTable')
-        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated', 
+        target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated', 
                                      WANTED_VEHICLE, 'conf')
-        root_dir = '/apollo'
-        target_dir = os.path.join(root_dir, target_prefix)
         # RDD(origin_prefix)
         feature_dir = self.context().parallelize([origin_prefix])
         list_func = dir_utils.list_end_files
 
         # RDD('throttle', list of hdf5 files)
-        throttle_train_files = get_feature_hdf5_files(feature_dir, root_dir, 'throttle', 'train')
+        throttle_train_files = get_feature_hdf5_files(feature_dir, 'throttle', 'train')
         # RDD('throttle', list of hdf5 files)
-        throttle_test_files = get_feature_hdf5_files(feature_dir, root_dir, 'throttle', 'test')
+        throttle_test_files = get_feature_hdf5_files(feature_dir, 'throttle', 'test')
 
         # RDD('brake', list of hdf5 files)
-        brake_train_files = get_feature_hdf5_files(feature_dir, root_dir, 'brake', 'train')
+        brake_train_files = get_feature_hdf5_files(feature_dir, 'brake', 'train')
         # RDD('brake', list of hdf5 files)
-        brake_test_files = get_feature_hdf5_files(feature_dir, root_dir, 'brake', 'test')
+        brake_test_files = get_feature_hdf5_files(feature_dir, 'brake', 'test')
 
         feature_dir_rdds = (throttle_train_files, throttle_test_files,
                             brake_train_files, brake_test_files)
@@ -132,28 +128,21 @@ class CalibrationTableTraining(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = os.path.join('modules/control/CalibrationTable/Features', WANTED_VEHICLE)
         target_prefix = os.path.join('modules/control/CalibrationTable/Conf', WANTED_VEHICLE)
-        root_dir = s3_utils.S3_MOUNT_PATH
-
-        target_dir = os.path.join(root_dir, target_prefix)
-
         throttle_train_prefix = os.path.join(origin_prefix, 'throttle', 'train')
         # RDD('throttle', list of hdf5 files)
-        throttle_train_files = get_feature_hdf5_files_prod(bucket, throttle_train_prefix, root_dir,
-                                                           'throttle')
+        throttle_train_files = get_feature_hdf5_files_prod(bucket, throttle_train_prefix, 'throttle')
 
         throttle_test_prefix = os.path.join(origin_prefix, 'throttle', 'test')
         # RDD('throttle', list of hdf5 files)
-        throttle_test_files = get_feature_hdf5_files_prod(bucket, throttle_test_prefix, root_dir,
-                                                          'throttle')
+        throttle_test_files = get_feature_hdf5_files_prod(bucket, throttle_test_prefix, 'throttle')
 
         brake_train_prefix = os.path.join(origin_prefix, 'brake', 'train')
         # RDD('brake', list of hdf5 files)
-        brake_train_files = get_feature_hdf5_files_prod(bucket, brake_train_prefix, root_dir,
-                                                        'brake')
+        brake_train_files = get_feature_hdf5_files_prod(bucket, brake_train_prefix, 'brake')
 
         brake_test_prefix = os.path.join(origin_prefix, 'brake', 'test')
         # RDD('brake', list of hdf5 files)
-        brake_test_files = get_feature_hdf5_files_prod(bucket, brake_test_prefix, root_dir, 'brake')
+        brake_test_files = get_feature_hdf5_files_prod(bucket, brake_test_prefix, 'brake')
 
         feature_dir_rdds = (throttle_train_files, throttle_test_files,
                             brake_train_files, brake_test_files)

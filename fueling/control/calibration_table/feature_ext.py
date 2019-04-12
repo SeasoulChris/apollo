@@ -30,11 +30,11 @@ class CalTabFeatureExt(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        records = ['modules/data/fuel/testdata/control/calibration_table/transit/1.record.00000']
-
-        origin_prefix = 'modules/data/fuel/testdata/control/calibration_table'
-        target_prefix = 'modules/data/fuel/testdata/control/calibration_table/generated'
-        root_dir = '/apollo'
+        records = [
+            '/apollo/modules/data/fuel/testdata/control/calibration_table/transit/1.record.00000',
+        ]
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/calibration_table'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/calibration_table/generated'
         dir_to_records = self.context().parallelize(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
@@ -44,21 +44,15 @@ class CalTabFeatureExt(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
         target_prefix = 'modules/control/feature_extraction_hf5/2019/'
-        root_dir = s3_utils.S3_MOUNT_PATH
 
-        files = s3_utils.list_files(bucket, origin_prefix).cache()
+        to_abs = True
+        files = s3_utils.list_files(bucket, origin_prefix, to_abs).cache()
         complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
         dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
-        root_dir = s3_utils.S3_MOUNT_PATH
-        self.run(spark_op.filter_keys(dir_to_records, complete_dirs),
-                 origin_prefix, target_prefix, root_dir)
+        self.run(spark_op.filter_keys(dir_to_records, complete_dirs), origin_prefix, target_prefix)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
+    def run(self, dir_to_records, origin_prefix, target_prefix):
         """ processing RDD """
-        # -> (dir, record), in absolute path
-        dir_to_records = dir_to_records_rdd.map(lambda x: (os.path.join(root_dir, x[0]),
-                                                           os.path.join(root_dir, x[1])))
-
         selected_vehicles = (
             # -> (dir, vehicle)
             feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
