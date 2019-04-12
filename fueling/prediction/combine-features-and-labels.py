@@ -11,7 +11,6 @@ import pyspark_utils.op as spark_op
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
@@ -24,25 +23,25 @@ class FeaturesAndLabelsCombine(BasePipeline):
         """Run test."""
         datalearn_files = self.context().parallelize(
             glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))
-        origin_prefix = '/apollo/docs/demo_guide'
-        self.run(datalearn_files, origin_prefix)
+        self.run(datalearn_files)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features-san-mateo'
 
+        to_abs_path = True
         datalearn_file_rdd = (
             # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix)
+            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
             # RDD(datalearn_file)
             .filter(lambda src_file: fnmatch.fnmatch(src_file, '*datalearn.*.bin'))
             # RDD(record_dir), which is unique
             .distinct())
 
-        self.run(datalearn_file_rdd, origin_prefix)
+        self.run(datalearn_file_rdd)
 
-    def run(self, datalearn_file_rdd, origin_prefix):
+    def run(self, datalearn_file_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = datalearn_file_rdd.map(self.process_dir).count()
@@ -54,8 +53,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
         source_dir = os.path.dirname(source_file)
         labels_dir = source_dir.replace('features-san-mateo', 'labels-san-mateo')
         label_file = os.path.join(labels_dir, 'junction_label.npy')
-        CombineFeaturesAndLabels(s3_utils.abs_path(source_file),
-                                 s3_utils.abs_path(label_file), 'junction')
+        CombineFeaturesAndLabels(source_file, label_file, 'junction')
         return 0
 
 

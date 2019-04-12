@@ -7,6 +7,7 @@
 
 # Default value for configurable arguments.
 JOB_FILE=""
+IMAGE="hub.baidubce.com/apollo/spark:latest"
 CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=20
 EXECUTOR_CORES=2
@@ -18,6 +19,10 @@ MEMORY_OVERHEAD_FACTOR=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --image|-i)
+      shift
+      IMAGE=$1
+      ;;
     --env|-e)
       shift
       CONDA_ENV=$1
@@ -57,7 +62,6 @@ fi
 
 # Generally fixed config.
 K8S="https://180.76.98.43:6443"
-IMAGE="hub.baidubce.com/apollo/spark:latest"
 DRIVER_MEMORY=2g
 APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
 BOS_FSTOOL_EXECUTABLE="$( dirname "${BASH_SOURCE[0]}" )/../apps/static/bos_fstool"
