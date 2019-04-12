@@ -179,7 +179,7 @@ def feature_key_value(elem):
     brake = max(elem[1][16] * 100 - BRAKE_DEADZONE, 0)  # 0 or positive
     steering = elem[1][17] * 100 + 100  # compensation for negative value
     
-    if(speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped):
+    if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
         # speed key staring from 1; less than 5 m/s is 1
@@ -193,8 +193,8 @@ def feature_key_value(elem):
         brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
 
         # speed-steering-throttle-brake
-        elem_key = int(speed_key * 1000 + steering_key *
-                        100 + throttle_key * 10 + brake_key)
+        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
+        
     # ((folder_path, feature_key),(time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
