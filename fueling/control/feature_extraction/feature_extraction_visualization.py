@@ -3,6 +3,9 @@ import os
 import glob
 import time
 
+import matplotlib
+matplotlib.use('Agg')
+
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import matplotlib.pyplot as plt

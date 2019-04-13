@@ -2,14 +2,17 @@
 """ Plot the extracted control features in histogram figures """
 
 import glob
-import h5py
-import numpy as np
 import os
 import sys
 import time
 
+import matplotlib
+matplotlib.use('Agg')
+
 from matplotlib.backends.backend_pdf import PdfPages
+import h5py
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Need to add the local path into the sys.path if running in the local computer
 # sys.path.append('/home/yuwang01/Documents/Apollo_Local/apollo-fuel/')

@@ -1,7 +1,12 @@
-import matplotlib.pyplot as plt
+#!/usr/bin/env python
+""" Plot the extracted control features in histogram figures """
+import matplotlib
+matplotlib.use('Agg')
+
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 import h5py
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 brake_axis_cmd_min = -30.0  # brake_max

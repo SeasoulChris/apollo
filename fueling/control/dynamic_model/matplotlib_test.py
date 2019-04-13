@@ -4,6 +4,9 @@ import os
 import glob
 import time
 
+import matplotlib
+matplotlib.use('Agg')
+
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,9 +21,8 @@ class MatplotlibTest(BasePipeline):
 
     def run_test(self):
         timestr = time.strftime("%Y%m%d-%H%M%S") 
-        pdf_file = \
-            '/apollo/modules/data/fuel/testdata/control/learning_based_model/evaluation_result\
-            Dataset_Distribution_%s.pdf' % timestr
+        pdf_file = ('/apollo/modules/data/fuel/testdata/control/learning_based_model/'
+                    'evaluation_result/Dataset_Distribution_%s.pdf' % timestr)
         self.run(pdf_file)
 
     def run_prod(self):
@@ -33,9 +35,8 @@ class MatplotlibTest(BasePipeline):
         fearure = np.linspace(0, 10, 100)
         with PdfPages(pdf_file) as pdf:
             plt.figure(figsize=(4,3))
-            plt.hist(fearure, fearure, bins ='auto', label='linear')
+            plt.hist(fearure, bins ='auto', label='linear')
             plt.title ("Histogram of the Feature Input")
-            plt.show()
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
 

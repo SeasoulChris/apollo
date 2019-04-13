@@ -6,7 +6,6 @@ import os
 import sys
 import time
 
-from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
 import colored_glog as glog
 import numpy as np
