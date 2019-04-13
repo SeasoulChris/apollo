@@ -8,16 +8,13 @@ import os
 import colored_glog as glog
 
 from cyber.proto.record_pb2 import Header
-from cyber_py.record import RecordReader, RecordWriter
+from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.routing.proto.routing_pb2 import RoutingResponse
-
-import fueling.common.file_utils as file_utils
-import fueling.common.s3_utils as s3_utils
 
 
 CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
@@ -56,7 +53,7 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
         """Wrapper function."""
         glog.info('Read record {}'.format(record_path))
         try:
-            reader = RecordReader(s3_utils.abs_path(record_path))
+            reader = RecordReader(record_path)
             channel_set = {channel for channel in reader.get_channellist()
                            if reader.get_messagenumber(channel) > 0}
             if channels:
@@ -77,7 +74,7 @@ def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
     glog.info('Read record header {}'.format(record_path))
     try:
-        reader = RecordReader(s3_utils.abs_path(record_path))
+        reader = RecordReader(record_path)
         header = Header()
         header.ParseFromString(reader.get_headerstring())
         if header.message_number > 0:
@@ -121,7 +118,6 @@ def get_map_name_from_records(records_dir):
     map_dict = {map_name.replace('_', ' ').title(): map_name for map_name in map_list}
     reader = read_record([HMI_STATUS_CHANNEL])
     glog.info('Try getting map name from {}'.format(records_dir))
-    records_dir = s3_utils.abs_path(records_dir)
     records = [os.path.join(records_dir, filename) for filename in os.listdir(records_dir)
                                                    if is_record_file(filename)]
     for record in records:

@@ -54,7 +54,7 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
             yield obj
 
 def list_files(bucket, prefix, suffix='', to_abs_path=True):
-    """Get a RDD of files."""
+    """Get a RDD of files with given prefix and suffix."""
     files = (BasePipeline.context()
         # RDD(obj_dict)
         .parallelize(list_objects(bucket, prefix))
@@ -72,7 +72,7 @@ def list_files(bucket, prefix, suffix='', to_abs_path=True):
     return files
 
 def list_dirs(bucket, prefix, to_abs_path=True):
-    """Get a RDD of dirs."""
+    """Get a RDD of dirs with given prefix."""
     dirs = (BasePipeline.context()
         # RDD(obj_dict)
         .parallelize(list_objects(bucket, prefix))
