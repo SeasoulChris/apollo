@@ -1,7 +1,12 @@
 name: fuel-py27
 dependencies:
+  # Core
   - python = 2.7
   - pyspark = 2.4.0
+
+  # Language tools
+  - pip
+  - pylint
 
   # Google infra
   - protobuf
@@ -16,11 +21,10 @@ dependencies:
   - pymongo
   - scikit-learn
 
-  # Other.
+  # Other
   - opencv
 
   - pip:
-    - colored-glog >= 1.1
-    - pylint
-    - pyspark-utils >= 1.7
+    - colored-glog
+    - pyspark-utils
     - utm
