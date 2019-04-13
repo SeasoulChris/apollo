@@ -21,7 +21,7 @@
    If it's already installed, update it to the latest.
 
    ```bash
-   sudo /usr/local/miniconda2/bin/conda update -n base -c defaults conda
+   sudo /usr/local/miniconda/bin/conda update -n base -c defaults conda
    ```
 
 1. Install env and activate.
