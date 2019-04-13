@@ -19,9 +19,9 @@ def list_end_files(origin_dir):
 def list_completed_dirs(prefix, list_func, marker):
     """List directories that contains COMPLETE mark up files"""
     # RDD(files in prefix folders)
-    return (list_func(prefix) \
+    return (list_func(prefix)
             # RDD(files_end_with_marker)
-            .filter(lambda path: path.endswith(marker)) \
+            .filter(lambda path: path.endswith(marker))
             # RDD(dirs_of_file_end_with_marker)
             .map(os.path.dirname))
 
@@ -38,8 +38,7 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     return origin_dirs.subtract(processed_dirs)
 
 def get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket, MARKER):
-    to_abs = True
-    list_func = (lambda path: s3_utils.list_files(bucket, path, to_abs))
+    list_func = (lambda path: s3_utils.list_files(bucket, path))
     todo_tasks = (
         # RDD(record_dir)
         get_todo_tasks(origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)

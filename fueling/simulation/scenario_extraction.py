@@ -39,12 +39,6 @@ def get_todo_tasks(original_prefix, target_prefix, list_func):
         lambda path: path.replace(target_prefix, original_prefix, 1))
     return original_dirs.subtract(processed_dirs)
 
-def get_abs_path(root_dir, path):
-    """Get absolute path of given file path"""
-    if path.startswith(root_dir) or path.startswith('/'):
-        return path
-    return os.path.join(root_dir, path)
-
 def execute_task(task):
     """Execute task by task"""
     dest_dir, source_dir = task
@@ -109,9 +103,8 @@ class ScenarioExtractionPipeline(BasePipeline):
         bucket = 'apollo-platform'
 
         # RDD(tasks)
-        to_abs = True
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,
-                                    lambda path: s3_utils.list_files(bucket, path, to_abs))
+                                    lambda path: s3_utils.list_files(bucket, path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)

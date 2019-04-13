@@ -31,13 +31,10 @@ class GeneralFeatureExtraction(BasePipeline):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
 
-        origin_prefix = 'modules/data/fuel/testdata/control/sourceData'
-        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData'
+        target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'GeneralSet')
-        root_dir = '/apollo'
-
-        list_func = (lambda path: self.context().parallelize(
-            dir_utils.list_end_files(os.path.join(root_dir, path))))
+        list_func = lambda path: self.context().parallelize(dir_utils.list_end_files(path))
         # RDD(record_dir)
         todo_tasks = (dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '', '/' + MARKER))
@@ -54,7 +51,7 @@ class GeneralFeatureExtraction(BasePipeline):
             .keyBy(os.path.dirname))
 
         glog.info('todo_files: {}'.format(dir_to_records.collect()))
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        self.run(dir_to_records, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
@@ -62,9 +59,7 @@ class GeneralFeatureExtraction(BasePipeline):
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'GeneralSet')
-        root_dir = s3_utils.S3_MOUNT_PATH
-        to_abs = True
-        list_func = (lambda path: s3_utils.list_files(bucket, path, to_abs))
+        list_func = (lambda path: s3_utils.list_files(bucket, path))
         dir_to_records = (
             # RDD(record_dir)
             dir_utils.get_todo_tasks(origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
@@ -74,9 +69,9 @@ class GeneralFeatureExtraction(BasePipeline):
             .filter(record_utils.is_record_file)
             # PairRDD(record_dir, record_file)
             .keyBy(os.path.dirname))
-        self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
+        self.run(dir_to_records, origin_prefix, target_prefix)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, root_dir):
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         def _gen_hdf5(elem):
             """ write data segment to hdf5 file """
@@ -84,7 +79,6 @@ class GeneralFeatureExtraction(BasePipeline):
             (folder_path, segment_id), (chassis, pose) = elem
             glog.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
-            out_dir = os.path.join(root_dir, out_dir)
             file_utils.makedirs(out_dir)
             out_file_path = "{}/{}.hdf5".format(out_dir, segment_id)
             with h5py.File(out_file_path, "w") as out_file:

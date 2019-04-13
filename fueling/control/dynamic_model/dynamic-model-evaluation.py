@@ -46,15 +46,13 @@ class DynamicModelEvaluation(BasePipeline):
         lstm_model_prefix = 'modules/control/dynamic_model_output/h5_model/lstm'
         data_predix = 'modules/control/feature_extraction_hf5/hdf5_evaluation'
 
-        to_abs = True
         # PairRDD('mlp', folder_path)
-        mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix, to_abs).keyBy(lambda _: 'mlp')
+        mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
-        lstm_model_rdd = s3_utils.list_dirs(bucket, lstm_model_prefix, to_abs).keyBy(
-            lambda _: 'lstm')
+        lstm_model_rdd = s3_utils.list_dirs(bucket, lstm_model_prefix).keyBy(lambda _: 'lstm')
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset, which starts with data_predix
-            s3_utils.list_files(bucket, data_predix, to_abs)
+            s3_utils.list_files(bucket, data_predix)
             # RDD(file_path) for evaluation dataset, which ends with 'hdf5'
             .filter(lambda path: path.endswith('.hdf5')))
 

@@ -42,11 +42,10 @@ class ReorgSmallRecords(BasePipeline):
         src_prefix = 'modules/data/public-test-small/2019/'
         dst_prefix = 'small-records/2019/'
 
-        to_abs_path = True
         # RDD(src_file)
-        src_files = s3_utils.list_files(bucket, src_prefix, to_abs_path).cache()
+        src_files = s3_utils.list_files(bucket, src_prefix).cache()
         # RDD(dst_file)
-        dst_files = s3_utils.list_files(bucket, dst_prefix, to_abs_path).cache()
+        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
 
         is_complete_marker = lambda path: path.endswith(MARKER)
         # RDD(src_dir)

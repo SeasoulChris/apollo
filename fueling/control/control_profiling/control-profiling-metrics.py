@@ -27,15 +27,14 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = 'modules/data/fuel/testdata/control/control_profiling'
-        target_prefix = 'modules/data/fuel/testdata/control/control_profiling/generated'
-        root_dir = '/apollo'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
         # RDD(tasks), the task dirs
         todo_tasks = self.context().parallelize([
             os.path.join(origin_prefix, 'Transit_Auto'),
             os.path.join(origin_prefix, 'Transit_Auto2')
         ])
-        self.run(todo_tasks, root_dir, origin_prefix, target_prefix)
+        self.run(todo_tasks, origin_prefix, target_prefix)
         glog.info('Control Profiling: All Done, TEST')
 
     def run_prod(self):
@@ -43,21 +42,17 @@ class ControlProfilingMetrics(BasePipeline):
         original_prefix = 'small-records/2019'
         target_prefix = 'modules/control/control_profiling_hf5'
         bucket = 'apollo-platform'
-        to_abs_path = False
         # RDD(tasks), the task dirs
-        todo_tasks = dir_utils.get_todo_tasks(original_prefix,
-                                              target_prefix,
-                                              lambda path: s3_utils.list_files(bucket, path, to_abs_path))
+        todo_tasks = dir_utils.get_todo_tasks(original_prefix, target_prefix,
+                                              lambda path: s3_utils.list_files(bucket, path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
         self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)
         glog.info('Control Profiling: All Done, PROD')
 
-    def run(self, todo_tasks, root_dir, original_prefix, target_prefix):
+    def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with relative paths
         (todo_tasks
-         # RDD(tasks), with absolute paths
-         .map(lambda task: os.path.join(root_dir, task))
          # RDD(tasks), filter the tasks that have configured values
          .filter(feature_utils.verify_vehicle_controller)
          # PairRDD(target_dir, task), the map of target dirs and source dirs

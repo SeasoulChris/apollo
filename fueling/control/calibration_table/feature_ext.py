@@ -45,8 +45,7 @@ class CalTabFeatureExt(BasePipeline):
         origin_prefix = 'small-records/2019/'
         target_prefix = 'modules/control/feature_extraction_hf5/2019/'
 
-        to_abs = True
-        files = s3_utils.list_files(bucket, origin_prefix, to_abs).cache()
+        files = s3_utils.list_files(bucket, origin_prefix).cache()
         complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
         dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs), origin_prefix, target_prefix)

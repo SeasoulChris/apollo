@@ -35,13 +35,10 @@ class SampleSetFeatureExtraction(BasePipeline):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
 
-        origin_prefix = 'modules/data/fuel/testdata/control/sourceData/SAMPLE_SET'
-        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/SAMPLE_SET'
+        target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
-        root_dir = '/apollo'
-
-        list_func = (lambda path: self.context().parallelize(
-            dir_utils.list_end_files(os.path.join(root_dir, path))))
+        list_func = lambda path: self.context().parallelize(dir_utils.list_end_files(path))
         # RDD(record_dir)
         todo_tasks = dir_utils.get_todo_tasks(
             origin_prefix, target_prefix, list_func, '', '/' + MARKER)
@@ -66,16 +63,13 @@ class SampleSetFeatureExtraction(BasePipeline):
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join(
             'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet')
-        to_abs_path = False
-        list_func = (lambda path: s3_utils.list_files(bucket, path, to_abs_path))
+        list_func = lambda path: s3_utils.list_files(bucket, path)
 
         # RDD(record_dir)
         todo_tasks = spark_helper.cache_and_log('TodoTasks',
             # RDD(record_dir)
             dir_utils.get_todo_tasks(
                 origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
-            # RDD(abs_record_dir)
-            .map(s3_utils.abs_path)
             # PairRDD(record_dir, record_dir)
             .keyBy(lambda record_dir: record_dir)
             # PairRDD(record_dir, record_files)

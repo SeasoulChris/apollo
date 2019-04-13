@@ -30,14 +30,9 @@ class FeaturesAndLabelsCombine(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features-san-mateo'
 
-        to_abs_path = True
-        datalearn_file_rdd = (
-            # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
-            # RDD(datalearn_file)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*datalearn.*.bin'))
-            # RDD(record_dir), which is unique
-            .distinct())
+        # RDD(datalearn_file)
+        datalearn_file_rdd = s3_utils.list_files(bucket, origin_prefix).filter(
+            spark_op.filter_path(['*datalearn.*.bin']))
 
         self.run(datalearn_file_rdd)
 

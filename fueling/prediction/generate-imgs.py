@@ -36,15 +36,9 @@ class GenerateImgs(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features'
         target_prefix = 'modules/prediction/img_features'
-        to_abs_path = True
-
-        bin_file = (
-            # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
-            # RDD(bin_files)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*frame_env.*.bin'))
-            # RDD(bin_files), which is unique
-            .distinct())
+        # RDD(bin_file)
+        bin_file = s3_utils.list_files(bucket, origin_prefix).filter(
+            spark_op.filter_path(['*frame_env.*.bin']))
         self.run(bin_file, origin_prefix, target_prefix)
 
     def run(self, bin_file_rdd, origin_prefix, target_prefix):

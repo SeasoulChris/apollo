@@ -53,8 +53,7 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
         for obj in page.get('Contents', []):
             yield obj
 
-# TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
-def list_files(bucket, prefix, to_abs_path=False):
+def list_files(bucket, prefix, to_abs_path=True):
     """Get a RDD of files."""
     files = (BasePipeline.context()
         # RDD(obj_dict)
@@ -66,8 +65,7 @@ def list_files(bucket, prefix, to_abs_path=False):
     # RDD(file_path), relative or absolute according to argument.
     return files.map(abs_path) if to_abs_path else files
 
-# TODO(xiaoxq): We'll change default to_abs_path to True as it's more convenient.
-def list_dirs(bucket, prefix, to_abs_path=False):
+def list_dirs(bucket, prefix, to_abs_path=True):
     """Get a RDD of dirs."""
     dirs = (BasePipeline.context()
         # RDD(obj_dict)

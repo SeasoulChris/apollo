@@ -28,15 +28,9 @@ class MatchImgLabel(BasePipeline):
         """Run prod."""
         bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/junction_img/'
-        to_abs_path = True
-
-        png_img_rdd  = (
-            # RDD(file), start with source_prefix
-            s3_utils.list_files(bucket, source_prefix, to_abs_path)
-            # RDD(png_img)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*.png'))
-            # RDD(png_img), which is unique
-            .distinct())
+        # RDD(png_img)
+        png_img_rdd = s3_utils.list_files(bucket, source_prefix).filter(
+            spark_op.filter_path(['*.png']))
         self.run(png_img_rdd)
 
     def run(self, png_img_rdd):

@@ -79,9 +79,8 @@ class GenerateSmallRecords(BasePipeline):
         dst_prefix = 'modules/data/public-test-small/2019/'
 
         # RDD(src_file)
-        to_abs_path = True
-        src_files = s3_utils.list_files(bucket, src_prefix, to_abs_path).cache()
-        dst_files = s3_utils.list_files(bucket, dst_prefix, to_abs_path).cache()
+        src_files = s3_utils.list_files(bucket, src_prefix).cache()
+        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
         # Only process those COMPLETE folders.
 
         is_marker = lambda path: path.endswith(MARKER)

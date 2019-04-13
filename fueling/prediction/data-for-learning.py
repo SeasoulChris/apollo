@@ -28,11 +28,10 @@ class DataForLearning(BasePipeline):
         bucket = 'apollo-platform'
         origin_prefix = 'small-records'
         target_prefix = 'modules/prediction/features'
-        to_abs_path = True
 
         records_dir = (
             # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix, to_abs_path)
+            s3_utils.list_files(bucket, origin_prefix)
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside

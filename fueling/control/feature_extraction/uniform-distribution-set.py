@@ -58,13 +58,10 @@ class UniformDistributionSet(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
+        origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
-        target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
-                                     WANTED_VEHICLE, 'EvenlyDitributed')
-        root_dir = '/apollo'
-        files_dir = os.path.join(root_dir, origin_prefix)
-        target_dir = os.path.join(root_dir, target_prefix)
+        target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+                                   WANTED_VEHICLE, 'EvenlyDitributed')
         todo_tasks = (
             # RDD(all files)
             self.context().parallelize(dir_utils.list_end_files(files_dir))
@@ -81,18 +78,11 @@ class UniformDistributionSet(BasePipeline):
                                      WANTED_VEHICLE, 'SampleSet')
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'UniformDistributedSampleSet')
-        root_dir = s3_utils.S3_MOUNT_PATH
-        to_abs_path = False
+        target_dir = s3_utils.abs_path(target_prefix)
 
-        path = os.path.join(root_dir, origin_prefix)
-        target_dir = os.path.join(root_dir, target_prefix)
-
-        todo_tasks = (
-            # RDD(file)
-            s3_utils.list_files(bucket, path, to_abs_path)
-            # RDD(.hdf5 file)
-            .filter(lambda path: path.endswith('.hdf5')))
-
+        # RDD(.hdf5 file)
+        todo_tasks = s3_utils.list_files(bucket, origin_prefix).filter(
+            lambda path: path.endswith('.hdf5'))
         self.run(todo_tasks, target_dir)
 
     def run(self, todo_tasks, target_prefix):

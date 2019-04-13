@@ -29,15 +29,10 @@ class GenerateLabels(BasePipeline):
         """Run prod."""
         bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/ground_truth'
-        to_abs_path = True
 
-        bin_files  = (
-            # RDD(file), start with source_prefix
-            s3_utils.list_files(bucket, source_prefix, to_abs_path)
-            # RDD(bin_file)
-            .filter(lambda src_file: fnmatch.fnmatch(src_file, '*feature.*.bin'))
-            # RDD(record_dir), which is unique
-            .distinct())
+        # RDD(bin_file)
+        bin_files  = s3_utils.list_files(bucket, source_prefix).filter(
+            spark_op.filter_path(['*feature.*.bin']))
         self.run(bin_files)
 
     def run(self, bin_files_rdd):

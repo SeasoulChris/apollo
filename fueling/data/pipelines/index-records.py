@@ -36,12 +36,8 @@ class IndexRecords(BasePipeline):
         summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
         bucket = 'apollo-platform'
         prefix = 'public-test/'
-        to_abs_path = True
-        records_rdd = (
-            # RDD(file_path)
-            s3_utils.list_files(bucket, prefix, to_abs_path)
-            # RDD(record_path)
-            .filter(record_utils.is_record_file))
+        # RDD(record_path)
+        records_rdd = s3_utils.list_files(bucket, prefix).filter(record_utils.is_record_file)
         self.process(records_rdd, summary_receivers)
 
     def process(self, records_rdd, summary_receivers=None):

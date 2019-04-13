@@ -87,6 +87,10 @@ practices are:
      statements.
    * Each section should be in alphabetical order.
 
+1. Always try to use **absolute file paths**, as apollo-fuel integrates multiple
+   upstream environments which have their own well-known working directories,
+   such as `/apollo`, `/mnt/bos`, `/opt/spark/work-dir`, etc. To avoid relative
+   path mistakes, we enforce providing absolute file paths whenever possible.
 1. File and folder name convention: **lower_case_with_underscores** if it's
    importable, otherwise **lower-case-with-dash**. So all main pipeline jobs
    should be **dash** style.
