@@ -38,7 +38,7 @@ def get_todo_tasks(origin_prefix, target_prefix, list_func,
     return origin_dirs.subtract(processed_dirs)
 
 def get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket, MARKER):
-    list_func = (lambda path: s3_utils.list_files(bucket, path))
+    list_func = lambda path: s3_utils.list_files(bucket, path)
     todo_tasks = (
         # RDD(record_dir)
         get_todo_tasks(origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)

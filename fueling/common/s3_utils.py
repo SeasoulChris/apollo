@@ -53,7 +53,7 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
         for obj in page.get('Contents', []):
             yield obj
 
-def list_files(bucket, prefix, to_abs_path=True):
+def list_files(bucket, prefix, suffix='', to_abs_path=True):
     """Get a RDD of files."""
     files = (BasePipeline.context()
         # RDD(obj_dict)
@@ -62,8 +62,14 @@ def list_files(bucket, prefix, to_abs_path=True):
         .filter(lambda obj: not obj['Key'].endswith('/'))
         # RDD(file_key)
         .map(lambda obj: obj['Key']))
-    # RDD(file_path), relative or absolute according to argument.
-    return files.map(abs_path) if to_abs_path else files
+    if suffix:
+        # RDD(file_path), ends with given suffix.
+        files = files.filter(lambda path: path.endswith(suffix))
+    if to_abs_path:
+        # RDD(file_path), in absolute style.
+        files = files.map(abs_path)
+    # RDD(file_path)
+    return files
 
 def list_dirs(bucket, prefix, to_abs_path=True):
     """Get a RDD of dirs."""

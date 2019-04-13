@@ -73,9 +73,7 @@ def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
 def get_feature_hdf5_files_prod(bucket, feature_prefix, throttle_or_brake):
     return (
         # RDD(throttle feature folder)
-        s3_utils.list_files(bucket, feature_prefix)
-        # RDD(hdf5 files)
-        .filter(lambda path: path.endswith('.hdf5'))
+        s3_utils.list_files(bucket, feature_prefix, '.hdf5')
         # PairRDD('throttle or brake', hdf5 files)
         .keyBy(lambda _: throttle_or_brake)
         # PairRDD('throttle or brake', hdf5 files RDD)

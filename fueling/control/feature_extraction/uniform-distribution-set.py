@@ -81,8 +81,7 @@ class UniformDistributionSet(BasePipeline):
         target_dir = s3_utils.abs_path(target_prefix)
 
         # RDD(.hdf5 file)
-        todo_tasks = s3_utils.list_files(bucket, origin_prefix).filter(
-            lambda path: path.endswith('.hdf5'))
+        todo_tasks = s3_utils.list_files(bucket, origin_prefix, '.hdf5')
         self.run(todo_tasks, target_dir)
 
     def run(self, todo_tasks, target_prefix):

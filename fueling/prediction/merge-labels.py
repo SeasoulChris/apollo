@@ -29,8 +29,7 @@ class MergeLabels(BasePipeline):
         bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/ground_truth'
         # RDD(npy_file)
-        npy_file_rdd = s3_utils.list_files(bucket, source_prefix).filter(
-            spark_op.filter_path(['*.npy']))
+        npy_file_rdd = s3_utils.list_files(bucket, source_prefix, '.npy')
         self.run(npy_file_rdd)
 
     def run(self, npy_file_rdd):

@@ -29,8 +29,7 @@ class MatchImgLabel(BasePipeline):
         bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/junction_img/'
         # RDD(png_img)
-        png_img_rdd = s3_utils.list_files(bucket, source_prefix).filter(
-            spark_op.filter_path(['*.png']))
+        png_img_rdd = s3_utils.list_files(bucket, source_prefix, '.png')
         self.run(png_img_rdd)
 
     def run(self, png_img_rdd):

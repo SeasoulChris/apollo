@@ -50,11 +50,8 @@ class DynamicModelEvaluation(BasePipeline):
         mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
         lstm_model_rdd = s3_utils.list_dirs(bucket, lstm_model_prefix).keyBy(lambda _: 'lstm')
-        evaluation_dataset_rdd = (
-            # RDD(file_path) for evaluation dataset, which starts with data_predix
-            s3_utils.list_files(bucket, data_predix)
-            # RDD(file_path) for evaluation dataset, which ends with 'hdf5'
-            .filter(lambda path: path.endswith('.hdf5')))
+        # RDD(file_path) for evaluation dataset
+        evaluation_dataset_rdd = s3_utils.list_files(bucket, data_predix, '.hdf5')
 
         self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)

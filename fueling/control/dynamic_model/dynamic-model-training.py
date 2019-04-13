@@ -29,11 +29,8 @@ class DynamicModelTraining(BasePipeline):
     def run_prod(self):
         bucket = 'apollo-platform'
         prefix = 'modules/control/feature_extraction_hf5/hdf5_training/Transit'
-        training_dataset_rdd = (
-            # RDD(file_path) for training dataset, which starts with the prefix.
-            s3_utils.list_files(bucket, prefix)
-            # RDD(file_path) for training dataset, which ends with 'hdf5'.
-            .filter(lambda path: path.endswith('.hdf5')))
+        # RDD(file_path) for training dataset
+        training_dataset_rdd = s3_utils.list_files(bucket, prefix, '.hdf5')
         output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 
