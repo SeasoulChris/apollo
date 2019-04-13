@@ -24,17 +24,23 @@ class BasePipeline(object):
 
     def run_test(self):
         """Run the pipeline in test mode."""
-        raise Exception('{}::RunTest not implemented!'.format(self.name))
+        raise Exception('{}::run_test not implemented!'.format(self.name))
 
     def run_prod(self):
         """Run the pipeline in production mode."""
-        raise Exception('{}::RunProd not implemented!'.format(self.name))
+        raise Exception('{}::run_prod not implemented!'.format(self.name))
+
+    def run_grpc(self):
+        """Run the pipeline in GRPC mode."""
+        raise Exception('{}::run_grpc not implemented!'.format(self.name))
 
     def main(self):
         """Run the pipeline."""
-        if os.environ.get('APOLLO_FUEL_MODE') == 'TEST':
-            glog.info('Running {} pipeline in TEST mode'.format(self.name))
+        RUNNING_MODE = os.environ.get('APOLLO_FUEL_MODE', 'PROD')
+        glog.info('Running {} pipeline in {} mode'.format(self.name, RUNNING_MODE))
+        if RUNNING_MODE == 'TEST':
             self.run_test()
+        elif RUNNING_MODE == 'GRPC':
+            self.run_grpc()
         else:
-            glog.info('Running {} pipeline in PROD mode'.format(self.name))
             self.run_prod()
