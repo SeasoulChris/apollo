@@ -18,7 +18,6 @@ import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
@@ -60,9 +59,7 @@ def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
         # RDD(throttle/brake train/test feature folder)
         .map(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
         # RDD(all files in throttle train feature folder)
-        .flatMap(dir_utils.list_end_files)
-        # RDD(hdf5 files)
-        .filter(lambda path: path.endswith('.hdf5'))
+        .flatMap(lambda path: glob.glob(os.path.join(path, '*.hdf5')))
         # PairRDD('throttle or brake', hdf5 files)
         .keyBy(lambda _: throttle_or_brake)
         # PairRDD('throttle or brake', hdf5 files RDD)
@@ -104,7 +101,6 @@ class CalibrationTableTraining(BasePipeline):
                                   WANTED_VEHICLE, 'conf')
         # RDD(origin_dir)
         feature_dir = self.context().parallelize([origin_dir])
-        list_func = dir_utils.list_end_files
 
         # RDD('throttle', list of hdf5 files)
         throttle_train_files = get_feature_hdf5_files(feature_dir, 'throttle', 'train')

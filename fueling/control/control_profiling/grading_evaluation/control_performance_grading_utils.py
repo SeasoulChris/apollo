@@ -378,4 +378,3 @@ def output_gradings(target_grading):
                                .format(name, value[0], value[1]))
         grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
         grading_file.write('{}\n\n'.format(profiling_conf))
-    file_utils.touch(os.path.join(target_dir, 'COMPLETE'))

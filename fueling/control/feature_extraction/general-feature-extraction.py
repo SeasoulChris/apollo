@@ -5,6 +5,7 @@ import os
 import colored_glog as glog
 import h5py
 import numpy as np
+import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
@@ -30,46 +31,27 @@ class GeneralFeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData'
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'GeneralSet')
-        list_func = lambda path: self.context().parallelize(dir_utils.list_end_files(path))
-        # RDD(record_dir)
-        todo_tasks = (dir_utils.get_todo_tasks(
-            origin_prefix, target_prefix, list_func, '', '/' + MARKER))
-        glog.info('todo_folders: {}'.format(todo_tasks.collect()))
-
-        dir_to_records = (
-            # PairRDD(record_dir, record_dir)
-            todo_tasks
-            # PairRDD(record_dir, all_files)
-            .flatMap(dir_utils.list_end_files)
-            # PairRDD(record_dir, record_files)
-            .filter(record_utils.is_record_file)
-            # PairRDD(record_dir, record_files)
-            .keyBy(os.path.dirname))
-
-        glog.info('todo_files: {}'.format(dir_to_records.collect()))
-        self.run(dir_to_records, origin_prefix, target_prefix)
+        # RDD(record_dirs)
+        todo_tasks = self.context().parallelize([origin_prefix])
+        # PairRDD(record_dirs, record_files)
+        todo_records = spark_helper.cache_and_log('todo_records',
+            dir_utils.get_todo_records(todo_tasks))
+        self.run(todo_records, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'GeneralSet')
-        list_func = (lambda path: s3_utils.list_files(bucket, path))
-        dir_to_records = (
-            # RDD(record_dir)
-            dir_utils.get_todo_tasks(origin_prefix, target_prefix, list_func, '/COMPLETE', '/' + MARKER)
-            # RDD(file)
-            .flatMap(os.listdir)
-            # RDD(record_file)
-            .filter(record_utils.is_record_file)
-            # PairRDD(record_dir, record_file)
-            .keyBy(os.path.dirname))
-        self.run(dir_to_records, origin_prefix, target_prefix)
+        # RDD(record_dirs)
+        todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
+        # PairRDD(record_dirs, record_files)
+        todo_records = spark_helper.cache_and_log('todo_records',
+            dir_utils.get_todo_records(todo_tasks))
+        self.run(todo_records, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """

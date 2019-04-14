@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """ extracting even distributed sample set """
+import glob
 import os
 
 import colored_glog as glog
+import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -62,13 +64,10 @@ class UniformDistributionSet(BasePipeline):
                                      WANTED_VEHICLE, 'SampleSet')
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                    WANTED_VEHICLE, 'EvenlyDitributed')
-        todo_tasks = (
-            # RDD(all files)
-            self.context().parallelize(dir_utils.list_end_files(files_dir))
-            #RDD(.hdf5 files)
-            .filter(lambda path: path.endswith('.hdf5'))).cache()
-        glog.info('NUMBER of TODO TASK: %d', todo_tasks.count())
-        self.run(todo_tasks, target_dir)
+        # RDD(hdf5 files)
+        hdf5_files = spark_helper.cache_and_log('hdf5 files',
+            self.context().parallelize(glob.glob(os.path.join(origin_prefix, '*hdf5'))))
+        self.run(hdf5_files, target_dir)
 
     def run_prod(self):
         """Run prod."""

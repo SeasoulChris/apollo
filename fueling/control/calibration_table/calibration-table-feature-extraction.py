@@ -45,51 +45,30 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/apollo'
-        origin_prefix = 'modules/data/fuel/testdata/control/sourceData/OUT'
-        origin_dir = os.path.join(root_dir,origin_prefix)
-        WANTED_VEHICLE = get_single_vehicle_type(origin_dir)
-        VEHICLE_PARAM_CONF = get_vehicle_param(origin_dir, WANTED_VEHICLE)
-      
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
+        WANTED_VEHICLE = get_single_vehicle_type(origin_prefix)
+        VEHICLE_PARAM_CONF = get_vehicle_param(origin_prefix, WANTED_VEHICLE)
         target_prefix = os.path.join('modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'CalibrationTable')
-                
         throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
-    
-        list_func = (lambda path: self.context().parallelize(
-            dir_utils.list_end_files(os.path.join(root_dir, path))))
-        # RDD(record_dir)
-        todo_tasks = dir_utils.get_todo_tasks(
-            origin_prefix, throttle_train_target_prefix, list_func, '', '/' + MARKER)
-
-        glog.info('todo_folders: {}'.format(todo_tasks.collect()))
-
-        dir_to_records = (
-            # PairRDD(record_dir, record_dir)
-            todo_tasks
-            # PairRDD(record_dir, all_files)
-            .flatMap(dir_utils.list_end_files)
-            # PairRDD(record_dir, record_files)
-            .filter(record_utils.is_record_file)
-            # PairRDD(record_dir, record_files)
-            .keyBy(os.path.dirname))
-
-        glog.info('todo_files: {}'.format(dir_to_records.collect()))
-
-        self.run(dir_to_records, origin_prefix, target_prefix, 
+        # RDD(record_dirs)
+        todo_tasks = self.context().parallelize([origin_prefix])
+        # PairRDD(record_dirs, record_files)
+        todo_records = spark_helper.cache_and_log('todo_records',
+            dir_utils.get_todo_records(todo_tasks))
+        self.run(todo_records, origin_prefix, target_prefix, 
             throttle_train_target_prefix, VEHICLE_PARAM_CONF)
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join('modules/control/CalibrationTable/', WANTED_VEHICLE)
         throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
-        root_dir = s3_utils.S3_MOUNT_PATH
-        
+        # RDD(record_dirs)
+        todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dir, record_files)
-        todo_records = dir_utils.get_todo_tasks_prod(origin_prefix, target_prefix, root_dir, bucket,
-                                                     MARKER)
+        todo_records = spark_helper.cache_and_log('todo_records',
+            dir_utils.get_todo_records(todo_tasks))
         self.run(todo_records, origin_prefix, target_prefix, throttle_train_target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix, 

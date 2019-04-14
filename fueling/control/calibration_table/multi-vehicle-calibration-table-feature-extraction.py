@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ extract features for multiple vehicles """
 from collections import Counter
+import glob
 import operator
 import os
 
@@ -87,17 +88,16 @@ class CalibrationTableFeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         root_dir = '/apollo'
-        origin_prefix = 'modules/data/fuel/testdata/control/sourceData/OUT'
-        origin_dir = os.path.join(root_dir,origin_prefix)
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
 
         # RDD(origin_dir)
-        origin_dir_rdd = (self.context().parallelize([origin_dir])
+        origin_dir_rdd = (self.context().parallelize([origin_prefix])
                     # RDD([vehicle_type])
                    .flatMap(get_single_vehicle_type)
                     # PairRDD(vehicle_type, [vehicle_type])
                    .keyBy(lambda vehicle_type: vehicle_type[0])
                    # PairRDD(vehicle_type, path_to_vehicle_type)
-                   .mapValues(lambda vehicle_type: os.path.join(origin_dir,vehicle_type[0]))
+                   .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0]))
                    .cache())
 
         target_dir_rdd = (
@@ -112,9 +112,11 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
         # skipped the processed folders
         # PairRDD(vehicle, dir)
+        # TODO(JiangShu): just replace list_end_files here since it's removed from dir_utils,
+        # need more refactors
         origin_dirs = (
             origin_dir_rdd
-            .flatMapValues(dir_utils.list_end_files)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
             .mapValues(os.path.dirname)
             .cache())
         
@@ -124,7 +126,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle_type, origin_prefix), target_prefix)
             .map(lambda vehicle_target_origin: (vehicle_target_origin,vehicle_target_origin[1][0]))
             # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
-            .flatMapValues(dir_utils.list_end_files)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
             # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
@@ -150,10 +152,12 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
 
     def run(self, todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd):
+        # TODO(JiangShu): just replace list_end_files here since it's removed from dir_utils,
+        # need more refactors
         # records
         records = (todo_dirs
             # PairRDD(vehicle, files)
-            .flatMapValues(dir_utils.list_end_files)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
             # PairRDD(vehicle, records)
             .filter(lambda elem: record_utils.is_record_file(elem[1]))
             # PairRDD(vehicle, (dir, records))
