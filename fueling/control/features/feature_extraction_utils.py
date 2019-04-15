@@ -28,7 +28,7 @@ FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, Featu
 
 # vehicle param constant
 FILENAME_VEHICLE_PARAM_CONF = \
-    '/apollo/modules/data/fuel/fueling/control/conf/vehicle_param.pb.txt'
+    '/apollo/modules/calibration/data/transit/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                             vehicle_config_pb2.VehicleConfig())
 
