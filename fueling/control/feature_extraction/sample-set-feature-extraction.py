@@ -48,7 +48,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         """Run prod."""
         origin_prefix = 'small-records/2019/'
         target_prefix = os.path.join(
-            'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet')
+            'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet/')
         # RDD(record_dirs)
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
