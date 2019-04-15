@@ -91,7 +91,11 @@ def message_to_proto(py_bag_message):
         glog.error('Parser for {} is not implemented!'.format(py_bag_message.topic))
         return None
     proto = proto_type()
-    proto.ParseFromString(py_bag_message.message)
+    try:
+        proto.ParseFromString(py_bag_message.message)
+    except Exception as e:
+        glog.error('Failed to parse message from {}: {}'.format(py_bag_message.topic, e))
+        return None
     return proto
 
 def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
@@ -127,3 +131,18 @@ def get_map_name_from_records(records_dir):
             glog.info('Get map name "{}" from record {}'.format(map_name, record))
             return map_name
     glog.error('Failed to get map_name')
+
+def get_vehicle_id_from_records(records, default_id='Unknown'):
+    """Get vehicle ID from records."""
+    reader = read_record([HMI_STATUS_CHANNEL])
+    for record in records:
+        for msg in reader(record):
+            hmi_status = message_to_proto(msg)
+            if hmi_status is None:
+                continue
+            vehicle_id = hmi_status.current_vehicle
+            if vehicle_id:
+                glog.info('Got vehicle ID "{}" from record {}'.format(vehicle_id, record))
+                return vehicle_id
+    glog.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
+    return default_id
