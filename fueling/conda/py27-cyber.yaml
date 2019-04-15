@@ -23,5 +23,5 @@ dependencies:
   - pip:
     - colored-glog
     - pyquaternion
-    - pyspark-utils
+    - pyspark-utils >= 1.7.1
     - utm
