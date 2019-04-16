@@ -7,7 +7,7 @@ import pyspark_utils.op as spark_op
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
-def get_todo_tasks(origin_prefix, target_prefix, 
+def get_todo_tasks(origin_prefix, target_prefix,
                    marker_origin='COMPLETE', marker_processed='COMPLETE'):
     """Get to be processed tasks/folders in rdd format."""
     # RDD(dir_of_file_end_with_marker_origin)

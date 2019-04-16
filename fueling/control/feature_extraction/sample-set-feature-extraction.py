@@ -33,12 +33,13 @@ class SampleSetFeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/SAMPLE_SET'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/records'
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         # RDD(record_dirs)
         todo_tasks = (self.context().parallelize([origin_prefix])
-            .flatMap(lambda path: glob.glob(os.path.join(path, '*/*'))))
+            .flatMap(lambda path: glob.glob(os.path.join(path, '*'))))
+        print(todo_tasks.first())
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
             dir_utils.get_todo_records(todo_tasks))
@@ -47,9 +48,10 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        origin_prefix = 'small-records/2019'
+        # origin_prefix = 'small-records/2019'
+        origin_prefix = 'modules/control/learning_based_model/raw_data_collection'
         target_prefix = os.path.join(
-            'modules/control/feature_extraction_hf5/hdf5_training', WANTED_VEHICLE, 'SampleSet')
+            'modules/control/learning_based_model/hdf5_training', WANTED_VEHICLE, 'SampleSet')
         # RDD(record_dirs)
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
@@ -86,6 +88,9 @@ class SampleSetFeatureExtraction(BasePipeline):
             .map(feature_extraction_utils.get_data_point)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             .map(feature_extraction_utils.feature_key_value)
+            # PairRDD((dir, feature_key), (timestamp_sec, data_point))
+            # remove the standstill data
+            .filter(lambda ((_0,feature_key),_): feature_key != 9000)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
             .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))

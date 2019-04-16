@@ -1,7 +1,7 @@
-speed_step: 5
+speed_step: 10
 acc_step: 5
-steer_step: 20
-speed_max: 25
-throttle_max: 45
+steer_step: 30
+speed_max: 30
+throttle_max: 40
 brake_max: 40
-vehicle_type: "Transit"
+vehicle_type: "Mkz7"
