@@ -12,11 +12,7 @@ from fueling.common.mongo_utils import Mongo
 from fueling.data.record_parser import RecordParser
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-
-
-# Config.
-SKIP_INDEXED_RECORD = True
-# End of configs.
+import fueling.common.db_backed_utils as db_backed_utils
 
 
 class IndexRecords(BasePipeline):
@@ -35,43 +31,51 @@ class IndexRecords(BasePipeline):
         """Run prod."""
         summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
         bucket = 'apollo-platform'
-        prefix = 'public-test/'
+        prefixes = [
+            'public-test/',
+            'small-records/',
+        ]
         # RDD(record_path)
-        records_rdd = s3_utils.list_files(bucket, prefix).filter(record_utils.is_record_file)
+        records_rdd = self.context().union([
+            s3_utils.list_files(bucket, prefix).filter(record_utils.is_record_file)
+            for prefix in prefixes])
         self.process(records_rdd, summary_receivers)
 
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        if SKIP_INDEXED_RECORD:
-            docs = Mongo.collection(self.COLLECTION_NAME).find({}, {'path': 1})
-            indexed_records = [doc['path'] for doc in docs]
-            glog.info('Found {} imported records'.format(len(indexed_records)))
-            # RDD(record_path), which is not indexed before.
-            records_rdd = records_rdd.subtract(self.context().parallelize(indexed_records))
-
-        new_indexed_records = spark_helper.cache_and_log('NewlyImportedRecords',
-            records_rdd
-            # RDD(RecordMeta)
-            .map(RecordParser.Parse)
-            # RDD(RecordMeta), which is valid.
-            .filter(spark_op.not_none)
-            # RDD(RecordMeta_doc)
-            .map(Mongo.pb_to_doc)
-            # RDD(imported_path)
-            .mapPartitions(self.import_records))
+        docs = Mongo.collection(self.COLLECTION_NAME).find({}, {'path': 1})
+        # RDD(record_path), which is indexed before.
+        indexed_records = spark_helper.cache_and_log(
+            'IndexedRecords', self.context().parallelize([doc['path'] for doc in docs]))
+        # RDD(record_path), which is not indexed.
+        records_rdd = spark_helper.cache_and_log(
+            'RecordsToIndex', records_rdd.subtract(indexed_records))
+        # RDD(record_path), which is newly indexed.
+        new_indexed_records = spark_helper.cache_and_log(
+            'NewlyIndexedRecords', records_rdd.mapPartitions(self.index_records))
         if summary_receivers:
             self.send_summary(new_indexed_records, summary_receivers)
 
     @staticmethod
-    def import_records(record_meta_docs):
+    def index_records(records):
         """Import record docs to Mongo."""
-        collection = Mongo.collection(IndexRecords.COLLECTION_NAME)
-        newly_imported = []
-        for doc in record_meta_docs:
+        records = list(records)
+        collection = Mongo.collection(self.COLLECTION_NAME)
+        indexed_records = set(db_backed_utils.lookup_existing_records(records, collection))
+        new_indexed = []
+        for record in records:
+            if record in indexed_records:
+                new_indexed.append(record)
+                glog.info('Skip record indexed in current batch: {}'.format(record))
+                continue
+            record_meta = RecordParser.Parse(record)
+            if record_meta is None:
+                continue
+            doc = Mongo.pb_to_doc(record_meta)
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
-            newly_imported.append(doc['path'])
-            glog.info('Imported record {}'.format(doc['path']))
-        return newly_imported
+            new_indexed.append(record)
+            glog.info('Indexed record {}'.format(record))
+        return new_indexed
 
     @staticmethod
     def send_summary(new_indexed_records, receivers):

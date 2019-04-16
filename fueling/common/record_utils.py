@@ -16,9 +16,6 @@ from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
-from fueling.common.mongo_utils import Mongo
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
-
 
 CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
 CONTROL_CHANNEL =                  '/apollo/control'
@@ -135,28 +132,6 @@ def get_map_name_from_records(records_dir):
             return map_name
     glog.error('Failed to get map_name')
 
-def lookup_map_for_dirs(record_dirs, default_map='Unknown', collection='records'):
-    """
-    [record_dir] -> [(record_dir, map_name)], by looking up the MongoDB.
-    This util only works in cluster.
-    """
-    dirs = list(record_dirs)
-    lookup_condition = {'dir': {'$in': dirs}}
-    lookup_field = {'dir': 1, 'hmi_status.current_map': 1}
-    docs = Mongo.collection(collection).find(lookup_condition, lookup_field)
-
-    dir_to_map = {}
-    for doc in docs:
-        # Map name already found.
-        if doc['dir'] in dir_to_map:
-            continue
-        record_meta = Mongo.doc_to_pb(doc, RecordMeta())
-        map_name = record_meta.hmi_status.current_map
-        if map_name:
-            glog.info('Found map "{}" for task {}'.format(map_name, record_meta.dir))
-            dir_to_map[record_meta.dir] = map_name
-    return [(record_dir, dir_to_map.get(record_dir, default_map)) for record_dir in dirs]
-
 def get_vehicle_id_from_records(records, default_id='Unknown'):
     """Get vehicle ID from records."""
     reader = read_record([HMI_STATUS_CHANNEL])
@@ -171,28 +146,6 @@ def get_vehicle_id_from_records(records, default_id='Unknown'):
                 return vehicle_id
     glog.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
     return default_id
-
-def lookup_vehicle_for_dirs(record_dirs, default_vehicle='Unknown', collection='records'):
-    """
-    [record_dir] -> [(record_dir, vehicle_id)], by looking up the MongoDB.
-    This util only works in cluster.
-    """
-    dirs = list(record_dirs)
-    lookup_condition = {'dir': {'$in': dirs}}
-    lookup_field = {'dir': 1, 'hmi_status.current_vehicle': 1}
-    docs = Mongo.collection(collection).find(lookup_condition, lookup_field)
-
-    dir_to_vehicle = {}
-    for doc in docs:
-        # Vehicle ID already found.
-        if doc['dir'] in dir_to_vehicle:
-            continue
-        record_meta = Mongo.doc_to_pb(doc, RecordMeta())
-        vehicle = record_meta.hmi_status.current_vehicle
-        if vehicle:
-            glog.info('Found vehicle "{}" for task {}'.format(vehicle, record_meta.dir))
-            dir_to_vehicle[record_meta.dir] = vehicle
-    return [(record_dir, dir_to_vehicle.get(record_dir, default_vehicle)) for record_dir in dirs]
 
 def guess_map_name_from_record_meta(record_meta):
     """Get the map_name from record_meta"""
