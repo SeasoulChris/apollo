@@ -17,10 +17,9 @@ import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
-
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
-MIN_MSG_PER_SEGMENT = 10
+MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteSampleSet'
 
 
@@ -38,10 +37,12 @@ class SampleSetFeatureExtraction(BasePipeline):
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         # RDD(record_dirs)
-        todo_tasks = self.context().parallelize([origin_prefix])
+        todo_tasks = (self.context().parallelize([origin_prefix])
+            .flatMap(lambda path: glob.glob(os.path.join(path, '*/*'))))
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
             dir_utils.get_todo_records(todo_tasks))
+
         self.run(todo_records, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -58,9 +59,22 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
-        # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-        valid_msgs = feature_extraction_rdd_utils.record_to_msgs_rdd(
-            dir_to_records_rdd, WANTED_VEHICLE, channels, MIN_MSG_PER_SEGMENT, MARKER)
+        # RDD(aboslute_dir) which include records of the wanted vehicle
+        selected_vehicles = spark_helper.cache_and_log('SelectedVehicles',
+            feature_extraction_rdd_utils.wanted_vehicle_rdd(dir_to_records_rdd, WANTED_VEHICLE))
+
+        # PairRDD((dir, timestamp_per_min), msg)
+        dir_to_msgs = spark_helper.cache_and_log('DirToMsgs',
+            feature_extraction_rdd_utils.msg_rdd(dir_to_records_rdd, selected_vehicles, channels))
+
+        # RDD(dir, timestamp_per_min)
+        valid_segments = spark_helper.cache_and_log('ValidSegments',
+            feature_extraction_rdd_utils.
+            chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT))
+
+        # PairRDD((dir_segment, segment_id), msg)
+        valid_msgs = spark_helper.cache_and_log('ValidMsg',
+            feature_extraction_rdd_utils. valid_msg_rdd(dir_to_msgs, valid_segments))
 
         data_segment_rdd = spark_helper.cache_and_log('DataSegments',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))

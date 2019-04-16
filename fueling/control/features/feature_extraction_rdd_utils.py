@@ -19,8 +19,8 @@ def record_to_msgs_rdd(dir_to_records, WANTED_VEHICLE, channels, MIN_MSG_PER_SEG
 
     # RDD(dir, timestamp_per_min)
     valid_segments = chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT)
- 
-    # PairRDD((dir_segment, segment_id), msg) 
+
+    # PairRDD((dir_segment, segment_id), msg)
     valid_msg = valid_msg_rdd(dir_to_msgs, valid_segments)
     return valid_msg
 
