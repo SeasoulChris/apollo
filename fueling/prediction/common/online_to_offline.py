@@ -25,7 +25,6 @@ class LabelGenerator(object):
         '''
         self.feature_dict = dict()
 
-
         '''
         observation_dict contains the important observations of the subsequent
         Features for each obstacle at every timestamp:
@@ -60,36 +59,13 @@ class LabelGenerator(object):
         generate_cruise_label.py
         '''
         self.filepath = input_filepath
-        feature_sequences = self.LoadPBFeatures(input_filepath)
-        self.OrganizeFeatures(feature_sequences)
-        del feature_sequences # Try to free up some memory
-        self.ObserveAllFeatureSequences()
-
-
-    '''
-    @brief: parse the pb file of Feature of all obstacles at all times.
-    @input filepath: the path of the pb file that contains all the features of
-                     every obstacle at every timestamp.
-    @output: python readable format of the same content.
-    '''
-    def LoadPBFeatures(self, filepath):
-        self.filepath = filepath
         offline_features = offline_features_pb2.Features()
         with open(filepath, 'rb') as file_in:
             offline_features.ParseFromString(file_in.read())
-        return offline_features.feature
-
-
-    '''
-    @brief: save the feature_sequences to an output protobuf file.
-    @input filepath: the path of the output pb file.
-    @input feature_sequences: the content to be saved.
-    '''
-    @staticmethod
-    def SaveOutputPB(filepath, pb_message):
-        with open(filepath, 'wb') as file:
-            serializedMessage = pb_message.SerializeToString()
-            file.write(serializedMessage)
+        feature_sequences = offline_features.feature
+        self.OrganizeFeatures(feature_sequences)
+        del feature_sequences # Try to free up some memory
+        self.ObserveAllFeatureSequences()
 
 
     '''
@@ -128,6 +104,7 @@ class LabelGenerator(object):
                     continue
                 self.ObserveFeatureSequence(feature_sequence, idx)
         np.save(self.filepath + '.npy', self.observation_dict)
+
 
     '''
     @brief: Observe the sequence of Features following the Feature at
@@ -393,10 +370,6 @@ class LabelGenerator(object):
         #             traj_point.path_point.velocity_heading = point[2]
         #             traj_point.timestamp = point[3]
 
-        #         output_features.feature.add().CopyFrom(feature)
-
-        # self.SaveOutputPB(self.filepath + '.future_status.label', output_features)
-
 
     def LabelJunctionExit(self):
         '''
@@ -463,8 +436,6 @@ class LabelGenerator(object):
         #         if fea.HasField('junction_feature') and \
         #            len(fea.junction_feature.junction_mlp_label) > 0:
         #             output_features.feature.add().CopyFrom(fea)
-
-        # self.SaveOutputPB(self.filepath + '.junction.label', output_features)
 
 
     def Label(self):
