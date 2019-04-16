@@ -20,14 +20,14 @@ class FrameEnv(BasePipeline):
         # RDD(dir_path)
         records_dir = self.context().parallelize(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/features'
+        target_prefix = '/apollo/data/prediction/frame_env'
         self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'small-records'
-        target_prefix = 'modules/prediction/features'
+        target_prefix = 'modules/prediction/frame_env'
         records_dir = (
             # RDD(file), start with origin_prefix
             s3_utils.list_files(bucket, origin_prefix)

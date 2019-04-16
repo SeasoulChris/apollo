@@ -27,14 +27,14 @@ class GenerateImgs(BasePipeline):
         # RDD(dir_path)
         records_dir = self.context().parallelize(
             glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
-        origin_prefix = '/apollo/data/prediction/features'
+        origin_prefix = '/apollo/data/prediction/frame_env'
         target_prefix = '/apollo/data/prediction/img_features'
         self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        origin_prefix = 'modules/prediction/features'
+        origin_prefix = 'modules/prediction/frame_env'
         target_prefix = 'modules/prediction/img_features'
         # RDD(bin_file)
         bin_file = s3_utils.list_files(bucket, origin_prefix).filter(
