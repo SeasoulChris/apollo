@@ -63,7 +63,7 @@
     <a class="btn btn-default page_button" role="button"
       {% if page_idx != current_page %}
         {% if is_tasks %}
-          href="{{ url_for('tasks_hdl', page_idx=page_idx) }}"
+          href="{{ url_for('tasks_hdl', prefix=prefix, page_idx=page_idx) }}"
         {% else %}
           href="{{ url_for('records_hdl', page_idx=page_idx) }}"
         {% endif %}

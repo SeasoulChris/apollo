@@ -32,12 +32,13 @@ app.jinja_env.filters.update(display_util.utils)
 
 
 @app.route('/')
-@app.route('/tasks/<int:page_idx>')
-def tasks_hdl(page_idx=1):
+@app.route('/tasks/<string:prefix>/<int:page_idx>')
+def tasks_hdl(prefix='small-records', page_idx=1):
     """Handler of the task list page."""
     G = gflags.FLAGS
     mongo_col = Mongo.collection(G.mongo_collection_name)
-    task_dirs = {doc['dir'] for doc in mongo_col.find({}, {'dir': 1})}
+    query = {'dir': {'$regex': '^' + prefix}}
+    task_dirs = {doc['dir'] for doc in mongo_col.find(query, {'dir': 1})}
     page_count = (len(task_dirs) + G.page_size - 1) // G.page_size
     if page_idx > page_count:
         flask.flash('Page index out of bound')
@@ -64,7 +65,8 @@ def tasks_hdl(page_idx=1):
     tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
-        'records.tpl', page_count=page_count, current_page=page_idx, records=tasks, is_tasks=True)
+        'records.tpl', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
+        is_tasks=True)
 
 @app.route('/task/<path:task_path>')
 def task_hdl(task_path):
