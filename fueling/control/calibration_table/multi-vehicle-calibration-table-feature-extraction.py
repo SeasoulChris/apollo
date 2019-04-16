@@ -6,6 +6,7 @@ import operator
 import os
 
 import colored_glog as glog
+import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 import common.proto_utils as proto_utils
@@ -97,31 +98,29 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
         # RDD(origin_dir)
-        origin_dir_rdd = (self.context().parallelize([origin_prefix])
-                    # RDD([vehicle_type])
-                   .flatMap(get_single_vehicle_type)
-                    # PairRDD(vehicle_type, [vehicle_type])
-                   .keyBy(lambda vehicle_type: vehicle_type[0])
-                   # PairRDD(vehicle_type, path_to_vehicle_type)
-                   .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0]))
-                   .cache())
+        origin_dir_rdd = spark_helper.cache_and_log('OriginDir',
+            self.context().parallelize([origin_prefix])
+                # RDD([vehicle_type])
+                .flatMap(get_single_vehicle_type)
+                # PairRDD(vehicle_type, [vehicle_type])
+                .keyBy(lambda vehicle_type: vehicle_type[0])
+                # PairRDD(vehicle_type, path_to_vehicle_type)
+                .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])), 3)
 
-        target_dir_rdd = (
+        target_dir_rdd = spark_helper.cache_and_log('TargetDir',
             # PairRDD(vehicle_type, path_to_vehicle_type)
             origin_dir_rdd
             # PairRDD(vehicle_type, target_prefix)
-            .map(lambda vehicleType_folder: gen_target_prefix(target_prefix, vehicleType_folder[0]))
-            .cache())
+            .map(lambda vehicleType_folder: gen_target_prefix(target_prefix, vehicleType_folder[0])))
+
         # PairRDD(vehicle_type, (target_prefix, origin_prefix))
         target_origin_dirs= target_dir_rdd.join(origin_dir_rdd)
 
         # skipped the processed folders
         # PairRDD(vehicle, dir)
-        # TODO(JiangShu): just replace list_end_files here since it's removed from dir_utils,
-        # need more refactors
         origin_dirs = (
             origin_dir_rdd
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
+            .flatMapValues(list_end_files)
             .mapValues(os.path.dirname)
             .cache())
         processed_dirs = (
@@ -130,7 +129,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle_type, origin_prefix), target_prefix)
             .map(lambda vehicle_target_origin: (vehicle_target_origin,vehicle_target_origin[1][0]))
             # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
+            .flatMapValues(list_end_files)
             # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
@@ -155,6 +154,9 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
     def run_prod(self):
+        origin_prefix = 'modules/control/data/records'
+        target_prefix = 'modules/control/Calibration'
+
         # RDD(origin_dir)
         origin_dir_rdd = (self.context().parallelize([origin_prefix])
                     # RDD([vehicle_type])
@@ -252,4 +254,5 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .count())
 
 if __name__ == '__main__':
-    CalibrationTableFeatureExtraction().main()
+    # CalibrationTableFeatureExtraction().main()
+    CalibrationTableFeatureExtraction().run_test()
