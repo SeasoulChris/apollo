@@ -7,9 +7,8 @@ import os
 import colored_glog as glog
 import pyspark_utils.op as spark_op
 
-from prediction.data_pipelines.common.online_to_offline import LabelGenerator
-
 from fueling.common.base_pipeline import BasePipeline
+from fueling.prediction.common.online_to_offline import LabelGenerator
 import fueling.common.s3_utils as s3_utils
 
 
