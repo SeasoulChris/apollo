@@ -90,7 +90,7 @@ class SampleSetFeatureExtraction(BasePipeline):
             .map(feature_extraction_utils.feature_key_value)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             # remove the standstill data
-            .filter(lambda ((_0,feature_key),_): feature_key != 9000)
+            .filter(lambda ((_0, feature_key), _): feature_key != 9000)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
             .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
