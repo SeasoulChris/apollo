@@ -2,7 +2,6 @@
 
 REPO="hub.baidubce.com/apollo/warehouse"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
-IMAGE_ALIAS="${REPO}:latest"
 
 echo "Building image: ${IMAGE}"
 # Go to apollo-fuel root.
@@ -16,7 +15,6 @@ bash ../apollo/apollo_docker.sh build_py
 cp -r ../apollo/py_proto ./
 
 docker build -t ${IMAGE} --network host -f apps/k8s/warehouse/docker/Dockerfile .
-docker tag ${IMAGE} ${IMAGE_ALIAS}
 
 # Login.
 DOCKER_REGISTRY="hub.baidubce.com"
@@ -29,10 +27,8 @@ fi
 
 if [ "$1" = "push" ]; then
   docker push ${IMAGE}
-  docker push ${IMAGE_ALIAS}
 else
   echo "Now you can push the images with:
       docker push ${IMAGE}
-      docker push ${IMAGE_ALIAS}
   "
 fi

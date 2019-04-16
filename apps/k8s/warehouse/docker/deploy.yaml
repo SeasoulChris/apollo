@@ -18,8 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: warehouse
-        image: hub.baidubce.com/apollo/warehouse:latest
-        imagePullPolicy: Always
+        image: hub.baidubce.com/apollo/warehouse:20190415_1925
         ports:
         - containerPort: 8000
         env:
