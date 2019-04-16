@@ -6,25 +6,27 @@ CONDA_ENV="fuel-py27-cyber"
 EXECUTOR_CORES=4
 
 while [ $# -gt 0 ]; do
-    case "$1" in
+  case "$1" in
     --env|-e)
-        shift
-        CONDA_ENV=$1
-        ;;
+      shift
+      CONDA_ENV=$1
+      ;;
     --cpu|-c)
-        shift
-        EXECUTOR_CORES=$1
-        ;;
+      shift
+      EXECUTOR_CORES=$1
+      ;;
     *)
-        if [ -f "$1" ]; then
-          JOB_FILE=$1
-        else
-          echo -e "$1: Unknown option or file not exists."
-          exit 1
-        fi
-        ;;
-    esac
-    shift
+      if [ -f "$1" ]; then
+        JOB_FILE=$1
+        shift
+        break
+      else
+        echo -e "$1: Unknown option or file not exists."
+        exit 1
+      fi
+      ;;
+  esac
+  shift
 done
 
 if [ -z "${JOB_FILE}" ]; then
@@ -35,4 +37,4 @@ fi
 source /usr/local/miniconda2/bin/activate ${CONDA_ENV}
 source /apollo/scripts/apollo_base.sh
 
-APOLLO_FUEL_MODE=TEST spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}"
+APOLLO_FUEL_MODE=TEST spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" $@

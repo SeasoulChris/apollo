@@ -46,6 +46,8 @@ while [ $# -gt 0 ]; do
     *)
       if [ -f "$1" ]; then
         JOB_FILE=$1
+        shift
+        break
       else
         echo -e "$1: Unknown option or file not exists."
         exit 1
@@ -122,4 +124,4 @@ popd
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    "${REMOTE_JOB_FILE}"
+    "${REMOTE_JOB_FILE}" $@

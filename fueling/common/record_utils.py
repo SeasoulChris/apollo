@@ -160,5 +160,8 @@ def guess_map_name_from_point(point):
 def guess_map_name_from_driving_path(driving_path):
     """Get the map_name from record_meta.stat.driving_path"""
     map_vote = collections.Counter([guess_map_name_from_point(point) for point in driving_path])
-    top_vote = map_vote.most_common(1)
-    return top_vote[0][0] if len(top_vote) > 0 else None
+    # Add one guardian element.
+    map_vote.update([None])
+    guessed_map = map_vote.most_common(1)[0][0]
+    glog.info('Guessed map from driving_path as {}'.format(guessed_map))
+    return guessed_map
