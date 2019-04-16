@@ -193,3 +193,26 @@ def lookup_vehicle_for_dirs(record_dirs, default_vehicle='Unknown', collection='
             glog.info('Found vehicle "{}" for task {}'.format(vehicle, record_meta.dir))
             dir_to_vehicle[record_meta.dir] = vehicle
     return [(record_dir, dir_to_vehicle.get(record_dir, default_vehicle)) for record_dir in dirs]
+
+def guess_map_name_from_record_meta(record_meta):
+    """Get the map_name from record_meta"""
+    points = record_meta.stat.driving_path
+    prob_san_mateo = np.sum([PointLLH_in_san_mateo(point) for point in points]) / len(points)
+    prob_sunnyvale = np.sum([PointLLH_in_sunnyvale(point) for point in points]) / len(points)
+    if prob_san_mateo > 0.9:
+        return "san_mateo"
+    if prob_sunnyvale > 0.9:
+        return "sunnvale_with_two_offices"
+    return None
+
+def PointLLH_in_san_mateo(PointLLH):
+    """start_point = [559082, 4156881],
+       end_point = [559948, 4158061]"""
+    return(PointLLH.lon > 37.557051039639084 and PointLLH.lat > -122.33107117188919 and
+           PointLLH.lon < 37.56763034989782, and PointLLH.lat < -122.32117041547312)
+
+def PointLLH_in_sunnyvale(PointLLH):
+    """start_point = [585975, 4140016],
+       end_point = [588537, 4141748]"""    
+    return(PointLLH.lon > 37.40293945243735, and PointLLH.lat > -122.0285911265343 and
+           PointLLH.lon < 37.41830762016944, and PointLLH.lat < -121.9994401268334)
