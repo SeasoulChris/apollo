@@ -1,6 +1,5 @@
 """Fueling base pipeline."""
 #!/usr/bin/env python
-import os
 import sys
 
 from absl import app, flags
@@ -9,6 +8,7 @@ import colored_glog as glog
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
+flags.DEFINE_integer('executors', 0, 'Pipeline executor count. 0 means unknown')
 
 
 class BasePipeline(object):

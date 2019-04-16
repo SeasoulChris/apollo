@@ -112,7 +112,6 @@ popd
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${REMOTE_FUELING_PKG}" \
     --conf spark.kubernetes.driver.secretKeyRef.APOLLO_EMAIL_PASSWD="apollo-k8s-secret:email-passwd" \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
@@ -124,4 +123,7 @@ popd
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    "${REMOTE_JOB_FILE}" --running_mode=PROD $@
+    "${REMOTE_JOB_FILE}" \
+      --running_mode=PROD \
+      --executors=${EXECUTORS} \
+      $@

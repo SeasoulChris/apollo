@@ -2,6 +2,7 @@
 import collections
 import os
 
+from absl import flags
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
@@ -101,7 +102,7 @@ class GenerateSmallRecords(BasePipeline):
                 # RDD(mapped_src_record)
                 .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
 
-            partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
+            partitions = flags.FLAGS.executors or 4
             glog.info('Repartition to: {}'.format(partitions))
             todo_records = todo_records.repartition(partitions).cache()
 

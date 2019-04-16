@@ -2,8 +2,7 @@
 
 """This script deserialize records to lists of messages and meta data when they arrive"""
 
-import os
-
+from absl import flags
 from pyspark.streaming import StreamingContext
 import colored_glog as glog
 
@@ -41,7 +40,7 @@ class DeserializeRecordsPipeline(BasePipeline):
         record_path = streaming_utils.get_streaming_records(self._root_dir)
         glog.info('Streaming monitors at {}'.format(record_path))
 
-        partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
+        partitions = flags.FLAGS.executors or 4
         glog.info('partition number: {}'.format(partitions))
 
         records = stream_context.textFileStream(record_path).repartition(partitions)

@@ -2,6 +2,7 @@
 import collections
 import os
 
+from absl import flags
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
@@ -74,7 +75,7 @@ class ReorgSmallRecords(BasePipeline):
 
     def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
+        partitions = flags.FLAGS.executors or 4
         glog.info('Repartition to: {}'.format(partitions))
 
         input_records = spark_helper.cache_and_log('InputRecords',
