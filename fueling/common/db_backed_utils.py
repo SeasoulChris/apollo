@@ -19,7 +19,7 @@ def lookup_existing_records(records, collection=None):
 
 def lookup_hmi_status_for_dirs(record_dirs):
     """[record_dir] -> {record_dir: hmi_status}"""
-    query = {'dir': {'$in': list(record_dirs)}}
+    query = {'dir': {'$in': record_dirs}}
     fields = {'dir': 1, 'hmi_status': 1}
     docs = Mongo.collection(COLLECTION_NAME).find(query, fields)
 

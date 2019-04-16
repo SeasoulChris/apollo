@@ -105,7 +105,7 @@ class RecordParser(object):
         # Save disengagement.
         if (self._current_driving_mode == Chassis.COMPLETE_AUTO_DRIVE and
             chassis.driving_mode == Chassis.EMERGENCY_MODE):
-            glog.info('Disengagement found at', timestamp)
+            glog.info('Disengagement found at {}'.format(timestamp))
             disengagement = self.record.disengagements.add(time=timestamp)
             if self._last_position is not None:
                 lat, lon = utm.to_latlon(self._last_position.x, self._last_position.y,
