@@ -153,19 +153,17 @@ def guess_map_name_from_record_meta(record_meta):
     prob_san_mateo = np.sum([PointLLH_in_san_mateo(point) for point in points]) / len(points)
     prob_sunnyvale = np.sum([PointLLH_in_sunnyvale(point) for point in points]) / len(points)
     if prob_san_mateo > 0.9:
-        return "san_mateo"
+        return "San Mateo"
     if prob_sunnyvale > 0.9:
-        return "sunnvale_with_two_offices"
+        return "Sunnvale With Two Offices"
     return None
 
 def PointLLH_in_san_mateo(PointLLH):
-    """start_point = [559082, 4156881],
-       end_point = [559948, 4158061]"""
-    return(PointLLH.lon > 37.557051039639084 and PointLLH.lat > -122.33107117188919 and
-           PointLLH.lon < 37.56763034989782 and PointLLH.lat < -122.32117041547312)
+    """start_point = [559082, 4156881], end_point = [559948, 4158061]"""
+    return (PointLLH.lon > 37.557051039639084 and PointLLH.lat > -122.33107117188919 and
+            PointLLH.lon < 37.56763034989782 and PointLLH.lat < -122.32117041547312)
 
 def PointLLH_in_sunnyvale(PointLLH):
-    """start_point = [585975, 4140016],
-       end_point = [588537, 4141748]"""    
-    return(PointLLH.lon > 37.40293945243735 and PointLLH.lat > -122.0285911265343 and
-           PointLLH.lon < 37.41830762016944 and PointLLH.lat < -121.9994401268334)
+    """start_point = [585975, 4140016], end_point = [588537, 4141748]"""    
+    return (PointLLH.lon > 37.40293945243735 and PointLLH.lat > -122.0285911265343 and
+            PointLLH.lon < 37.41830762016944 and PointLLH.lat < -121.9994401268334)

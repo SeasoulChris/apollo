@@ -17,8 +17,14 @@ def CombineRecords(records):
         for channel, count in record.channels.items():
             channels[channel] = (channels.get(channel) or 0) + count
 
-        if record.hmi_status.current_mode:
-            virtual_record.hmi_status.CopyFrom(record.hmi_status)
+        # Set HMIStatus.
+        if not virtual_record.hmi_status.current_mode:
+            if record.hmi_status.current_mode:
+                # A whole copy of hmi_status.
+                virtual_record.hmi_status.CopyFrom(record.hmi_status)
+            elif record.hmi_status.current_map:
+                # This is likely a guessed map.
+                virtual_record.hmi_status.current_map = record.hmi_status.current_map
 
         virtual_record.disengagements.extend(record.disengagements)
         virtual_record.drive_events.extend(record.drive_events)

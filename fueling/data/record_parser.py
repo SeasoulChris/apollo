@@ -45,7 +45,13 @@ class RecordParser(object):
         if not parser.ParseMeta():
             return None
         parser.ParseMessages()
-        return parser.record
+
+        record_meta = parser.record
+        if not record_meta.hmi_status.current_map:
+            guessed_map = record_utils.guess_map_name_from_record_meta(record_meta)
+            if guessed_map:
+                record_meta.hmi_status.current_map = guessed_map
+        return record_meta
 
     def __init__(self, record_file):
         """Init input reader and output record."""
