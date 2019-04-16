@@ -147,23 +147,18 @@ def get_vehicle_id_from_records(records, default_id='Unknown'):
     glog.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
     return default_id
 
-def guess_map_name_from_record_meta(record_meta):
-    """Get the map_name from record_meta"""
-    points = record_meta.stat.driving_path
-    prob_san_mateo = np.sum([PointLLH_in_san_mateo(point) for point in points]) / len(points)
-    prob_sunnyvale = np.sum([PointLLH_in_sunnyvale(point) for point in points]) / len(points)
-    if prob_san_mateo > 0.9:
-        return "San Mateo"
-    if prob_sunnyvale > 0.9:
-        return "Sunnvale With Two Offices"
+def guess_map_name_from_point(point):
+    """start_point = [559082, 4156881], end_point = [559948, 4158061]"""
+    if (37.557051039639084 < point.lon < 37.56763034989782 and
+        -122.33107117188919 < point.lat < -122.32117041547312):
+        return 'San Mateo'
+    if (37.40293945243735 < point.lon < 37.41830762016944 and
+        -122.0285911265343 < point.lat < -121.9994401268334):
+        return 'Sunnvale With Two Offices'
     return None
 
-def PointLLH_in_san_mateo(PointLLH):
-    """start_point = [559082, 4156881], end_point = [559948, 4158061]"""
-    return (PointLLH.lon > 37.557051039639084 and PointLLH.lat > -122.33107117188919 and
-            PointLLH.lon < 37.56763034989782 and PointLLH.lat < -122.32117041547312)
-
-def PointLLH_in_sunnyvale(PointLLH):
-    """start_point = [585975, 4140016], end_point = [588537, 4141748]"""    
-    return (PointLLH.lon > 37.40293945243735 and PointLLH.lat > -122.0285911265343 and
-            PointLLH.lon < 37.41830762016944 and PointLLH.lat < -121.9994401268334)
+def guess_map_name_from_driving_path(driving_path):
+    """Get the map_name from record_meta.stat.driving_path"""
+    map_vote = collections.Counter([guess_map_name_from_point(point) for point in driving_path])
+    top_vote = map_vote.most_common(1)
+    return top_vote[0][0] if len(top_vote) > 0 else None

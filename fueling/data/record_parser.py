@@ -48,7 +48,8 @@ class RecordParser(object):
 
         record_meta = parser.record
         if not record_meta.hmi_status.current_map:
-            guessed_map = record_utils.guess_map_name_from_record_meta(record_meta)
+            guessed_map = record_utils.guess_map_name_from_driving_path(
+                record_meta.stat.driving_path)
             if guessed_map:
                 record_meta.hmi_status.current_map = guessed_map
         return record_meta
