@@ -37,8 +37,8 @@ def get_vehicle_param(folder_dir):
     VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, vehicle_config_pb2.VehicleConfig())
     return VEHICLE_PARAM_CONF.vehicle_param
 
-def gen_target_prefix(root_dir, vehicle_type):
-    return vehicle_type, os.path.join(root_dir, 'modules/data/fuel/testdata/control/generated',
+def gen_target_prefix(target_prefix, vehicle_type):
+    return vehicle_type, os.path.join(target_prefix,
                                       vehicle_type, 'CalibrationTable')
 
 def gen_pre_segment(dir_to_msg):
@@ -79,6 +79,12 @@ def write_h5(elem):
     elem = ((dir_segment, segment_id), one_matrix)
     return calibration_table_utils.write_h5_train_test(elem, origin_prefix, target_prefix)
 
+def list_end_files(origin_dir):
+    end_files = list()
+    for (dirpath, _, filenames) in os.walk(origin_dir):
+        end_files.extend([os.path.join(dirpath, file_name)
+                          for file_name in filenames])
+    return end_files
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -87,8 +93,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/apollo'
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
         # RDD(origin_dir)
         origin_dir_rdd = (self.context().parallelize([origin_prefix])
@@ -104,9 +110,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, path_to_vehicle_type)
             origin_dir_rdd
             # PairRDD(vehicle_type, target_prefix)
-            .map(lambda vehicleType_folder: gen_target_prefix(root_dir, vehicleType_folder[0]))
+            .map(lambda vehicleType_folder: gen_target_prefix(target_prefix, vehicleType_folder[0]))
             .cache())
-        
         # PairRDD(vehicle_type, (target_prefix, origin_prefix))
         target_origin_dirs= target_dir_rdd.join(origin_dir_rdd)
 
@@ -119,7 +124,6 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
             .mapValues(os.path.dirname)
             .cache())
-        
         processed_dirs = (
             # PairRDD(vehicle_type, (target_prefix, origin_prefix))
             target_origin_dirs
@@ -146,9 +150,29 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
         todo_dir_with_conf = (todo_dirs
             .join(vehicle_param_conf)
-            .map(lambda vehicle_path_conf: 
+            .map(lambda vehicle_path_conf:
                  ((vehicle_path_conf[0], vehicle_path_conf[1][1]), vehicle_path_conf[1][0])))
 
+        self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
+    def run_prod(self):
+        # RDD(origin_dir)
+        origin_dir_rdd = (self.context().parallelize([origin_prefix])
+                    # RDD([vehicle_type])
+                   .flatMap(get_single_vehicle_type)
+                    # PairRDD(vehicle_type, [vehicle_type])
+                   .keyBy(lambda vehicle_type: vehicle_type[0])
+                   # PairRDD(vehicle_type, path_to_vehicle_type)
+                   .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0]))
+                   .cache())
+
+        target_dir_rdd = (
+            # PairRDD(vehicle_type, path_to_vehicle_type)
+            origin_dir_rdd
+            # PairRDD(vehicle_type, target_prefix)
+            .map(lambda vehicleType_folder: gen_target_prefix(root_dir, vehicleType_folder[0]))
+            .cache())
+        # (vehicle_path, record_rdd)
+        # process(vehicle_path)
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
 
     def run(self, todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd):
@@ -163,7 +187,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, (dir, records))
             .mapValues(lambda records: (os.path.dirname(records), records))
             # PairRDD((vehicle, dir), records)
-            .map(lambda vehicle_dir_file: 
+            .map(lambda vehicle_dir_file:
                 ((vehicle_dir_file[0], vehicle_dir_file[1][0]), vehicle_dir_file[1][1])))
 
         msgs = (records
@@ -176,7 +200,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         # PairRDD(vehicle, task_dir, timestamp_per_min)
         valid_segments = feature_extraction_rdd_utils.chassis_localization_segment_rdd(
             msgs, MIN_MSG_PER_SEGMENT)
-        # PairRDD((vehicle, dir_segment, segment_id), msg) 
+        # PairRDD((vehicle, dir_segment, segment_id), msg)
         valid_msgs = feature_extraction_rdd_utils.valid_msg_rdd(msgs, valid_segments)
 
         # PairRDD((vehicle, dir_segment, segment_id), (chassis_list, pose_list))
@@ -199,7 +223,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .map(re_org_elem))
 
         data_rdd = (
-            # PairRDD((vehicle, dir_segment, segment_id), 
+            # PairRDD((vehicle, dir_segment, segment_id),
             #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
             msgs_with_conf
             # PairRDD((vehicle, dir_segment, segment_id), (features, vehicle_param_conf))
@@ -208,7 +232,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(feature_filter)
             # PairRDD((vehicle, dir_segment, segment_id), (features, vehicle_param_conf))
             .mapValues(feature_cut)
-            # PairRDD((vehicle, dir_segment, segment_id), 
+            # PairRDD((vehicle, dir_segment, segment_id),
             #         ((grid_dict, features), vehicle_param_conf))
             .mapValues(feature_distribute)
             # PairRDD((vehicle, dir_segment, segment_id), one_matrix)
