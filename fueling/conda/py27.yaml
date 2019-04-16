@@ -9,6 +9,7 @@ dependencies:
   - pylint
 
   # Google infra
+  - absl-py
   - protobuf
   - tensorflow
 
