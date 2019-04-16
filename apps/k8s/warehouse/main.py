@@ -4,7 +4,6 @@
 import collections
 import datetime
 import os
-import re
 import sys
 
 import flask
@@ -38,8 +37,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     """Handler of the task list page."""
     G = gflags.FLAGS
     mongo_col = Mongo.collection(G.mongo_collection_name)
-    regex = re.compile('^' + prefix)
-    query = {'dir': {'$regex': regex}}
+    query = {'dir': {'$regex': '^/mnt/bos/' + prefix}}
     task_dirs = {doc['dir'] for doc in mongo_col.find(query, {'dir': 1})}
     page_count = (len(task_dirs) + G.page_size - 1) // G.page_size
     if page_idx > page_count:

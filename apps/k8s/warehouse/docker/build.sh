@@ -28,7 +28,5 @@ fi
 if [ "$1" = "push" ]; then
   docker push ${IMAGE}
 else
-  echo "Now you can push the images with:
-      docker push ${IMAGE}
-  "
+  echo "Now you can push the images with: docker push ${IMAGE}"
 fi
