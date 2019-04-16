@@ -15,5 +15,5 @@ dependencies:
   - termcolor
 
   - pip:
-    - glog
+    - colored-glog
     - python-gflags
