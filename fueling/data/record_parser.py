@@ -107,11 +107,14 @@ class RecordParser(object):
             chassis.driving_mode == Chassis.EMERGENCY_MODE):
             glog.info('Disengagement found at {}'.format(timestamp))
             disengagement = self.record.disengagements.add(time=timestamp)
-            if self._last_position is not None:
-                lat, lon = utm.to_latlon(self._last_position.x, self._last_position.y,
-                                         UTM_ZONE_ID, UTM_ZONE_LETTER)
-                disengagement.location.lat = lat
-                disengagement.location.lon = lon
+            pos = self._last_position
+            if pos is not None:
+                try:
+                    lat, lon = utm.to_latlon(pos.x, pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
+                    disengagement.location.lat = lat
+                    disengagement.location.lon = lon
+                except Exception as e:
+                    glog.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update DrivingMode.
         self._current_driving_mode = chassis.driving_mode
 
@@ -135,10 +138,13 @@ class RecordParser(object):
         if (self._last_position_sampled is None or
             (timestamp - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
              utm_distance_m(self._last_position_sampled, cur_pos) > POS_SAMPLE_MIN_DISTANCE_METER)):
-            self._last_position_sampled = cur_pos
-            self._last_position_sampled_time = timestamp
-            lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
-            self.record.stat.driving_path.add(lat=lat, lon=lon)
+            try:
+                lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
+                self.record.stat.driving_path.add(lat=lat, lon=lon)
+                self._last_position_sampled = cur_pos
+                self._last_position_sampled_time = timestamp
+            except Exception as e:
+                glog.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update position.
         self._last_position = cur_pos
 
