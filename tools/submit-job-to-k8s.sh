@@ -124,4 +124,4 @@ popd
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    "${REMOTE_JOB_FILE}" $@
+    "${REMOTE_JOB_FILE}" --running_mode=PROD $@

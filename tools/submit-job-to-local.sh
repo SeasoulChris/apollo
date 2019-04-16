@@ -37,4 +37,4 @@ fi
 source /usr/local/miniconda2/bin/activate ${CONDA_ENV}
 source /apollo/scripts/apollo_base.sh
 
-APOLLO_FUEL_MODE=TEST spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" $@
+spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@

@@ -16,7 +16,7 @@ class DemoPipeline(BasePipeline):
 
     def run_test(self):
         # Spark cascade style programming.
-        return (
+        pprint.PrettyPrinter().pprint(
             # RDD(record_path)
             self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
             # RDD(PyBagMessage)
@@ -28,10 +28,16 @@ class DemoPipeline(BasePipeline):
             # PairRDD(topic, N), with unique keys.
             .reduceByKey(lambda a, b: a + b)
             # PairRDD(topic, N), just sleep.
-            .map(DemoPipeline.dummy_process))
+            .map(DemoPipeline.dummy_process)
+            # [(topic, N)]
+            .collect())
 
     def run_prod(self):
         """For this demo, prod and test are the same."""
+        return self.run_test()
+
+    def run_grpc(self):
+        """For this demo, grpc and test are the same."""
         return self.run_test()
 
     @staticmethod
@@ -42,6 +48,4 @@ class DemoPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    # Gather result to memory and print nicely.
-    RESULT = DemoPipeline().run_test()
-    pprint.PrettyPrinter().pprint(RESULT.collect())
+    DemoPipeline().main()
