@@ -29,9 +29,10 @@ def lookup_hmi_status_for_dirs(record_dirs):
             # Already found for this target.
             continue
         record_meta = Mongo.doc_to_pb(doc, RecordMeta())
-        # Validate hmi_status by checking current_mode, which should be valid.
-        if record_meta.hmi_status.current_mode:
-            dir_to_result[record_meta.dir] = record_meta.hmi_status
+        hmi_status = record_meta.hmi_status
+        # Simple validate hmi_status.
+        if hmi_status.current_mode or hmi_status.current_map:
+            dir_to_result[record_meta.dir] = hmi_status
             glog.info('Got HMIStatus for task {}'.format(record_meta.dir))
     return dir_to_result
 

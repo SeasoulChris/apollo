@@ -162,10 +162,10 @@ def PointLLH_in_san_mateo(PointLLH):
     """start_point = [559082, 4156881],
        end_point = [559948, 4158061]"""
     return(PointLLH.lon > 37.557051039639084 and PointLLH.lat > -122.33107117188919 and
-           PointLLH.lon < 37.56763034989782, and PointLLH.lat < -122.32117041547312)
+           PointLLH.lon < 37.56763034989782 and PointLLH.lat < -122.32117041547312)
 
 def PointLLH_in_sunnyvale(PointLLH):
     """start_point = [585975, 4140016],
        end_point = [588537, 4141748]"""    
-    return(PointLLH.lon > 37.40293945243735, and PointLLH.lat > -122.0285911265343 and
-           PointLLH.lon < 37.41830762016944, and PointLLH.lat < -121.9994401268334)
+    return(PointLLH.lon > 37.40293945243735 and PointLLH.lat > -122.0285911265343 and
+           PointLLH.lon < 37.41830762016944 and PointLLH.lat < -121.9994401268334)
