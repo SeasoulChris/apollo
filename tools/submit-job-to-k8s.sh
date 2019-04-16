@@ -82,7 +82,7 @@ REMOTE_JOB_FILE="${BOS_MOUNT_PATH}/${REMOTE_JOB_FILE}"
 EVENTS_LOG_PATH=${BOS_MOUNT_PATH}/modules/data/spark/spark-events
 
 pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
-  LOCAL_FUELING_PKG=".fueling.zip"
+  LOCAL_FUELING_PKG="deploy/fueling.zip"
   rm -f "${LOCAL_FUELING_PKG}"
   zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
   "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 

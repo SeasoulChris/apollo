@@ -1,7 +1,7 @@
 apollo/
-py_proto
-.fueling.zip
+fueling.zip
 generated/
+py_proto/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
