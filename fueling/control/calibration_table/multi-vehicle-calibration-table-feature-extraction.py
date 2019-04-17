@@ -155,7 +155,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
     def run_prod(self):
         origin_prefix = 'modules/control/data/records'
-        target_prefix = 'modules/control/Calibration'
+        target_prefix = 'modules/control/data/results'
 
         # RDD(origin_dir)
         origin_dir_rdd = (self.context().parallelize([origin_prefix])
@@ -171,10 +171,48 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, path_to_vehicle_type)
             origin_dir_rdd
             # PairRDD(vehicle_type, target_prefix)
-            .map(lambda vehicleType_folder: gen_target_prefix(root_dir, vehicleType_folder[0]))
+            .map(lambda vehicleType_folder: gen_target_prefix(target_prefix, vehicleType_folder[0]))
             .cache())
-        # (vehicle_path, record_rdd)
-        # process(vehicle_path)
+        # PairRDD(vehicle_type, (target_prefix, origin_prefix))
+        target_origin_dirs= target_dir_rdd.join(origin_dir_rdd)
+
+        # skipped the processed folders
+        # PairRDD(vehicle, dir)
+        origin_dirs = (
+            origin_dir_rdd
+            .flatMapValues(s3_utils.list_files)
+            .mapValues(os.path.dirname)
+            .cache())
+
+        processed_dirs = (
+            # PairRDD(vehicle_type, (target_prefix, origin_prefix))
+            target_origin_dirs
+            # PairRDD((vehicle_type, origin_prefix), target_prefix)
+            .map(lambda vehicle_target_origin: (vehicle_target_origin,vehicle_target_origin[1][0]))
+            # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
+            .flatMapValues(s3_utils.list_files)
+            # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
+            .filter(lambda key_path: key_path[1].endswith(MARKER))
+            # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
+            .map(lambda key_path:
+                (key_path[0][0], key_path[1].replace(key_path[0][1][0], key_path[0][1][1])))
+            # PairRDD(vehicle_type, dir_include_MARKER_with_origin_prefix)
+            .mapValues(os.path.dirname))
+
+        # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
+        todo_dirs= origin_dirs.subtract(processed_dirs)
+
+        vehicle_param_conf = (
+            # PairRDD(vehicle, dir_of_vehicle)
+            origin_dir_rdd
+             # PairRDD(vehicle_type, vehicle_conf)
+            .mapValues(get_vehicle_param))
+
+        todo_dir_with_conf = (todo_dirs
+            .join(vehicle_param_conf)
+            .map(lambda vehicle_path_conf:
+                 ((vehicle_path_conf[0], vehicle_path_conf[1][1]), vehicle_path_conf[1][0])))
+
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
 
     def run(self, todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd):

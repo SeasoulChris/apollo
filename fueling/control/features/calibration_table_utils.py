@@ -27,7 +27,7 @@ import fueling.common.file_utils as file_utils
 # VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
 
 conf_file_dir = '/apollo/modules/data/fuel/fueling/control/conf'
-conf_filename = 'calibration_table_conf.pb.txt'
+conf_filename = 'calibration_table_conf_mkz7.pb.txt'
 calibration_conf_file = os.path.join(conf_file_dir, conf_filename)
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
@@ -94,7 +94,7 @@ def feature_generate(elem, VEHICLE_PARAM_CONF):
         acc_y = pose.linear_acceleration.y
 
         acc = acc_x*math.cos(heading_angle)+acc_y*math.sin(heading_angle)
-        feature_cmd = decide_cmd(chassis.throttle_percentage, 
+        feature_cmd = decide_cmd(chassis.throttle_percentage,
                                  chassis.brake_percentage, VEHICLE_PARAM_CONF)
         driving_mode = (chassis.driving_mode == wanted_driving_mode)
 
@@ -282,7 +282,7 @@ def write_h5_train_test(elem, origin_prefix, target_prefix):
 
     # throttle train file
     glog.info('throttle file size: %d' % throttle_train.shape[0])
-    
+
     # throttle train file
     throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
     throttle_train_file_dir = file_dir.replace(origin_prefix, throttle_train_target_prefix, 1)
