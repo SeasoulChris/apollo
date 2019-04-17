@@ -76,7 +76,7 @@ def write_table(elem, target_dir,
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
     cmd_array = np.linspace(axis_cmd_min, axis_cmd_max, num=cmd_segment_num)
 
-    speed_array, cmd_array = np.meshgrid(speed_array, cmd_array)
+    speed_array, cmd_array = np.meshgrid(speed_array, cmd_array)  #col, row
     grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
     acc_array = model.predict(grid_array).reshape(speed_array.shape)
 

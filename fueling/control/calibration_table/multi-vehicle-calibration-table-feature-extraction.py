@@ -38,8 +38,7 @@ def get_vehicle_param(folder_dir):
     return VEHICLE_PARAM_CONF.vehicle_param
 
 def gen_target_prefix(target_prefix, vehicle_type):
-    return vehicle_type, os.path.join(target_prefix,
-                                      vehicle_type, 'CalibrationTable')
+    return vehicle_type, os.path.join(target_prefix, vehicle_type, 'CalibrationTable')
 
 def gen_pre_segment(dir_to_msg):
     """Generate new key which contains a segment id part."""
@@ -82,9 +81,13 @@ def write_h5(elem):
 def list_end_files(origin_dir):
     end_files = list()
     for (dirpath, _, filenames) in os.walk(origin_dir):
-        end_files.extend([os.path.join(dirpath, file_name)
-                          for file_name in filenames])
+        end_files.extend([os.path.join(dirpath, file_name) for file_name in filenames])
     return end_files
+
+def list_end_files_u3(fils_dir):
+    # PairRDD(1, list_of_files)
+    return (u3_utils.list_files(files_dir)
+            .keyBy(lambda _: 1).groupByKey().mapValues(list).first())
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -113,7 +116,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .map(lambda vehicleType_folder: gen_target_prefix(target_prefix, vehicleType_folder[0])))
 
         # PairRDD(vehicle_type, (target_prefix, origin_prefix))
-        target_origin_dirs= target_dir_rdd.join(origin_dir_rdd)
+        target_origin_dirs = target_dir_rdd.join(origin_dir_rdd)
 
         # skipped the processed folders
         # PairRDD(vehicle, dir)
@@ -140,11 +143,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
         todo_dirs= origin_dirs.subtract(processed_dirs)
 
-        vehicle_param_conf = (
-            # PairRDD(vehicle, dir_of_vehicle)
-            origin_dir_rdd
-             # PairRDD(vehicle_type, vehicle_conf)
-            .mapValues(get_vehicle_param))
+        # PairRDD(vehicle_type, vehicle_conf)
+        vehicle_param_conf = origin_dir_rdd.mapValues(get_vehicle_param)
 
         todo_dir_with_conf = (todo_dirs
             .join(vehicle_param_conf)
@@ -153,6 +153,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         glog.info(todo_dirs.first())
 
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
+
     def run_prod(self):
         origin_prefix = 'modules/control/data/records'
         target_prefix = 'modules/control/data/results'
@@ -180,7 +181,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         # PairRDD(vehicle, dir)
         origin_dirs = (
             origin_dir_rdd
-            .flatMapValues(s3_utils.list_files)
+            .flatMapValues(list_end_files_u3)
             .mapValues(os.path.dirname)
             .cache())
 
@@ -190,7 +191,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle_type, origin_prefix), target_prefix)
             .map(lambda vehicle_target_origin: (vehicle_target_origin,vehicle_target_origin[1][0]))
             # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
-            .flatMapValues(s3_utils.list_files)
+            .flatMapValues(list_end_files_u3)
             # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
@@ -219,7 +220,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         # TODO(JiangShu): just replace list_end_files here since it's removed from dir_utils,
         # need more refactors
         # records
-        records = (todo_dirs
+        records = spark_helper.cache_and_log('Records',
+            todo_dirs
             # PairRDD(vehicle, files)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
             # PairRDD(vehicle, records)
@@ -229,19 +231,18 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir), records)
             .map(lambda vehicle_dir_file:
                 ((vehicle_dir_file[0], vehicle_dir_file[1][0]), vehicle_dir_file[1][1])))
-        glog.info('records %s' % str(records.first()))
 
-        msgs = (records
+        msgs = spark_helper.cache_and_log('Msgs',
+                records
                 # PairRDD(vehicle, msg)
                 .flatMapValues(record_utils.read_record(channels))
                 # PairRDD((vehicle, task_dir, timestamp_per_min), msg)
-                .map(gen_pre_segment)
-                .cache())
-        glog.info('msgs %s'% str(msgs.first()))
+                .map(gen_pre_segment))
 
         # PairRDD(vehicle, task_dir, timestamp_per_min)
-        valid_segments = feature_extraction_rdd_utils.chassis_localization_segment_rdd(
-            msgs, MIN_MSG_PER_SEGMENT)
+        valid_segments = spark_helper.cache_and_log('valid_segments',
+            feature_extraction_rdd_utils.chassis_localization_segment_rdd(
+            msgs, MIN_MSG_PER_SEGMENT))
 
         # PairRDD((vehicle, dir_segment, segment_id), msg)
         valid_msgs = feature_extraction_rdd_utils.valid_msg_rdd(msgs, valid_segments)
@@ -254,7 +255,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
 
 
         # join conf file
-        msgs_with_conf = (
+        msgs_with_conf = spark_helper.cache_and_log('msgs_with_conf',
             # PairRDD(vehicle, (dir_segment, segment_id, paired_chassis_msg_pose_msg))
             parsed_msgs.map(lambda key_value:
                             # remove last [0]
@@ -265,9 +266,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir_segment, segment_id),
             #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
             .map(re_org_elem))
-        glog.info('msgs_with_conf %s' % str(msgs_with_conf.first()))
 
-        data_rdd = (
+        data_rdd = spark_helper.cache_and_log('data_rdd',
             # PairRDD((vehicle, dir_segment, segment_id),
             #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
             msgs_with_conf
@@ -282,7 +282,6 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(feature_distribute)
             # PairRDD((vehicle, dir_segment, segment_id), one_matrix)
             .mapValues(feature_store))
-        glog.info('data_rdd %s' % str(data_rdd.first()))
 
         # write data to hdf5 files
         data_rdd = (
@@ -296,7 +295,6 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .join(target_dir_rdd)
             .map(write_h5)
             .count())
-        glog.info('final_data_rdd %s' % str(data_rdd.first()))
 
 if __name__ == '__main__':
     CalibrationTableFeatureExtraction().main()
