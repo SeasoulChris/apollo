@@ -149,11 +149,11 @@ def get_vehicle_id_from_records(records, default_id='Unknown'):
 
 def guess_map_name_from_point(point):
     """start_point = [559082, 4156881], end_point = [559948, 4158061]"""
-    if (37.557051039639084 < point.lon < 37.56763034989782 and
-        -122.33107117188919 < point.lat < -122.32117041547312):
+    if (37.557051039639084 < point.lat < 37.56763034989782 and
+        -122.33107117188919 < point.lon < -122.32117041547312):
         return 'San Mateo'
-    if (37.40293945243735 < point.lon < 37.41830762016944 and
-        -122.0285911265343 < point.lat < -121.9994401268334):
+    if (37.40293945243735 < point.lat < 37.41830762016944 and
+        -122.0285911265343 < point.lon < -121.9994401268334):
         return 'Sunnvale With Two Offices'
     return None
 
