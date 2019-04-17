@@ -3,6 +3,7 @@ dependencies:
   - python = 3.6
 
   # Google infra
+  - absl-py
   - protobuf
 
   # Web
@@ -12,8 +13,6 @@ dependencies:
 
   # Other
   - pytz
-  - termcolor
 
   - pip:
     - colored-glog
-    - python-gflags
