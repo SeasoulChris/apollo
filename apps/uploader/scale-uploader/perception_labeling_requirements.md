@@ -1,20 +1,35 @@
 # Raw Data Frame Filtering Rules For Data Labeling
 
-## 04/01/2019
-
+## 04/15/2019
 ### Special Requirements for Scale
-**(Added)** Add pedestrian face filter requirement to 'Special Requirements for Scale'
-- Filter out those frames with front 6mm images showing clearly any pedestrian's face that is recognizable. after the "1 meter relative movement" rule. 
+(**Added**) New task type LaneLine was added to 'Special Requirements for Scale'
+1. The LaneLine annotation must be submitted as separate tasks by following [special request format](https://scale.ai/docs#line-annotation)
+2. The objects to be labeled are pictures instead of frames.  It does not support multiple pictures in one task, so one picture per task.
+3. The regarded tasks in this section should be submitted only after all the below sampling rules are applied.
+4. There must be a mapping between LaneLine task and its corresponding Lidar task.
+
+
+## 04/01/2019
+### Special Requirements for Scale
+(**Added**) Add pedestrian face filter requirement to 'Special Requirements for Scale'
+1. Filter out those frames with front 6mm images showing clearly any pedestrian's face that is recognizable. after the "1 meter relative movement" rule.
+2. The detection and fixing should be automated, and tracked by [this issue](http://newicafe.baidu.com/issue/IDG-Apollo-3480/show?from=page).  Before it's done we have to manually fix it, which is the blocker for fully automation.
+3. Manual works for now:
+   - Submit all the filtered frames as long as pictures to Scale test projects, which will not be checked or labeled by Scale.
+   - Manually check the images that have clear faces, and if any one found, discard the whole task with 50 frames.
+   - Re-submit the qualified tasks again to Scale live projects, which will be labeled.
+
 
 ## 2019-03-28
 
 ### General
 1. Collect data with following sensors open and keep desired frame rates respectively
     - Lidar 128 (/apollo/sensor/lidar128/compensator/PointCloud2), frame rate: 10
-    - Front camera 6mm (/apollo/sensor/camera/rear_6mm/image/compressed), frame rate: 10+
+    - Front camera 6mm (/apollo/sensor/camera/front_6mm/image/compressed), frame rate: 10+
     - Front camera 12mm (/apollo/sensor/camera/front_12mm/image/compressed), frame rate: 10+
     - Left fisheye camera (/apollo/sensor/camera/left_fisheye/image/compressed), frame rate: 10+
     - Right fisheye camera (/apollo/sensor/camera/right_fisheye/image/compressed), frame rate: 10+
+    - Rear camera 6mm (/apollo/sensor/camera/rear_6mm/image/compressed), frame rate: 10+
     - Front Radar (/apollo/sensor/radar/front), frame rate: 2+
     - Rear Radar (/apollo/sensor/radar/rear), frame rate: 2+
     - Localization pose (/apollo/localization/pose), frame rate: 90+
@@ -24,8 +39,8 @@
 3. Upload data to NFS or BOS after data collection
 
 4. Extract above sensors data from recorded files, and do the following matches:
-    - Match <font color=#0000ff>*every*</font> Lidar frame with <font color=#0000ff>*all*</font> the <font color=#0000ff>*closest*</font> other sensors frame
-    - Match <font color=#0000ff>*every*</font> sensor frame with <font color=#0000ff>*closest*</font> pose frame
+    - Match **every** Lidar frame with **all** the **closest** other sensors frame
+    - Match **every** sensor frame with **closest** pose frame
    <br>For example, for each lidar frame we should find all the camera frames that have smallest time diff with it, 
    <br>and meanwhile, find closest pose frames to the cameras frames as well.
   
@@ -33,7 +48,7 @@
 
 6. Send over the frames for labeling.
 
-7. The above extraction and serialization must be reliable and efficient.  Targeting throughput is <font color=#0000ff>*10K frames*</font> per day.
+7. The above extraction and serialization must be reliable and efficient.  Targeting throughput is **10K frames** per day.
 
 ### Special Requirements for Scale
 1. Provide GPSLocation information, including the heading and position, for vehicle itself and devices, including Lidar, Camera, Radar, and Pose.
