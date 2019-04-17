@@ -2,13 +2,14 @@
 #!/usr/bin/env python
 import sys
 
-from absl import app, flags
+from absl import flags
 from pyspark import SparkConf, SparkContext
 import colored_glog as glog
 
+import fueling.common.flag_utils as flag_utils
+
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
-flags.DEFINE_integer('executors', 0, 'Pipeline executor count. 0 means unknown')
 
 
 class BasePipeline(object):
@@ -39,9 +40,9 @@ class BasePipeline(object):
         """Run the pipeline in GRPC mode."""
         raise Exception('{}::run_grpc not implemented!'.format(self.name))
 
-    def __main__(self, argv):
-        """"""
-        mode = flags.FLAGS.running_mode
+    def main(self):
+        """Run the pipeline."""
+        mode = flag_utils.get_flags().running_mode
         if mode is None:
             glog.fatal('No running mode is specified! Please run the pipeline with /tools/<runner> '
                        'instead of calling native "python".')
@@ -54,7 +55,3 @@ class BasePipeline(object):
             self.run_grpc()
         else:
             self.run_prod()
-
-    def main(self):
-        """Run the pipeline."""
-        app.run(self.__main__)

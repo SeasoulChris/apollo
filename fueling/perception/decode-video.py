@@ -7,10 +7,10 @@ import operator
 import os
 import time
 
-from absl import flags
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.flag_utils as flag_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels we need to decode
@@ -121,7 +121,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = flags.FLAGS.bos_mount_path
+        root_dir = flag_utils.get_flags().bos_mount_path
         target_dir = 'modules/perception/videos/decoded'
         streaming_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
         glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))

@@ -109,7 +109,7 @@ practices are:
 ### Test your pipeline at local
 
 ```bash
-tools/submit-job-to-local.sh /path/to/spark/job.py --other_absl_flags=<value>
+tools/submit-job-to-local.sh /path/to/spark/job.py
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
 
@@ -127,8 +127,7 @@ If you are pretty familliar with the infra, please:
        --worker <workers_count>  \
        --cpu <worker_cpu_count>  \
        --memory <worker_memory>  \
-       /path/to/spark/job.py \
-       --other_absl_flags=<value>
+       /path/to/spark/job.py
    ```
 
 Please request resources carefully, as it may block other teammates' work.

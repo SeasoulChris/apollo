@@ -11,6 +11,7 @@ import botocore.exceptions
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.flag_utils as flag_utils
 
 
 flags.DEFINE_string('bos_mount_path', '/mnt/bos', 'BOS mount path.')
@@ -36,7 +37,8 @@ def abs_path(object_key):
     As a side-effect feature of os.path.join, it returns the key itself if you
     pass an absolute path in, which is ideal for tests with local data.
     """
-    return os.path.join(flags.FLAGS.bos_mount_path, object_key)
+    flag = flag_utils.get_flags()
+    return os.path.join(flag.bos_mount_path, object_key)
 
 def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
     """

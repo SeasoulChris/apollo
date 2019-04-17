@@ -12,6 +12,8 @@ import colored_glog as glog
 import google.protobuf.json_format as json_format
 import pymongo
 
+import fueling.common.flag_utils as flag_utils
+
 
 flags.DEFINE_string(
     'mongo_url',
@@ -30,7 +32,8 @@ class Mongo(object):
         if not user or not passwd:
             glog.fatal('No credential found for MongoDB authentication.')
             return None
-        db_connection = pymongo.MongoClient(flags.FLAGS.mongo_url)[flags.FLAGS.mongo_db_name]
+        flag = flag_utils.get_flags()
+        db_connection = pymongo.MongoClient(flag.mongo_url)[flag.mongo_db_name]
         db_connection.authenticate(user, passwd)
         return db_connection
 
@@ -46,7 +49,8 @@ class Mongo(object):
     @staticmethod
     def record_collection():
         """Get record collection."""
-        return Mongo.collection(flags.FLAGS.mongo_record_collection_name)
+        flag = flag_utils.get_flags()
+        return Mongo.collection(flag.mongo_record_collection_name)
 
     @staticmethod
     def pb_to_doc(pb):
