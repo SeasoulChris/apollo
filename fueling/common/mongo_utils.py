@@ -7,16 +7,22 @@ Requirements: pymongo 3.x
 """
 import os
 
+from absl import flags
 import colored_glog as glog
 import google.protobuf.json_format as json_format
 import pymongo
 
 
+flags.DEFINE_string(
+    'mongo_url',
+    'mongodb://bJVmYB0.mongodb.bj.baidubce.com:27017,bJVmYB1.mongodb.bj.baidubce.com:27017',
+    'MongoDB url.')
+flags.DEFINE_string('mongo_db_name', 'apollo', 'MongoDB DB name to access.')
+flags.DEFINE_string('mongo_record_collection_name', 'records', 'MongoDB record collection name.')
+
+
 class Mongo(object):
     """MongoDB util"""
-    URL='mongodb://bJVmYB0.mongodb.bj.baidubce.com:27017,bJVmYB1.mongodb.bj.baidubce.com:27017'
-    DB='apollo'
-
     @staticmethod
     def db():
         """Connect to MongoDB instance."""
@@ -24,7 +30,7 @@ class Mongo(object):
         if not user or not passwd:
             glog.fatal('No credential found for MongoDB authentication.')
             return None
-        db_connection = pymongo.MongoClient(Mongo.URL)[Mongo.DB]
+        db_connection = pymongo.MongoClient(flags.FLAGS.mongo_url)[flags.FLAGS.mongo_db_name]
         db_connection.authenticate(user, passwd)
         return db_connection
 
@@ -36,6 +42,11 @@ class Mongo(object):
         """
         db_connection = Mongo.db()
         return db_connection[collection_name] if db_connection else None
+
+    @staticmethod
+    def record_collection():
+        """Get record collection."""
+        return Mongo.collection(flags.FLAGS.mongo_record_collection_name)
 
     @staticmethod
     def pb_to_doc(pb):

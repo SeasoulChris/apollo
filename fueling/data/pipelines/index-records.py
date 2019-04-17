@@ -13,9 +13,6 @@ import fueling.common.s3_utils as s3_utils
 import fueling.common.db_backed_utils as db_backed_utils
 
 
-COLLECTION_NAME = 'records'
-
-
 class IndexRecords(BasePipeline):
     """IndexRecords pipeline."""
 
@@ -43,7 +40,7 @@ class IndexRecords(BasePipeline):
 
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        docs = Mongo.collection(COLLECTION_NAME).find({}, {'path': 1})
+        docs = Mongo.record_collection().find({}, {'path': 1})
         # RDD(record_path), which is indexed before.
         indexed_records = spark_helper.cache_and_log(
             'IndexedRecords', self.context().parallelize([doc['path'] for doc in docs]))
@@ -60,7 +57,7 @@ class IndexRecords(BasePipeline):
     def index_records(records):
         """Import record docs to Mongo."""
         records = list(records)
-        collection = Mongo.collection(COLLECTION_NAME)
+        collection = Mongo.record_collection()
         indexed_records = set(db_backed_utils.lookup_existing_records(records, collection))
         new_indexed = []
         for record in records:

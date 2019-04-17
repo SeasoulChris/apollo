@@ -7,21 +7,18 @@ from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 
 
-COLLECTION_NAME = 'records'
-
-
 def lookup_existing_records(records, collection=None):
     """[record] -> [record which exists in DB]"""
     query = {'path': {'$in': records}}
     fields = {'path': 1}
-    collection = collection or Mongo.collection(COLLECTION_NAME)
+    collection = collection or Mongo.record_collection()
     return [doc['path'] for doc in collection.find(query, fields)]
 
 def lookup_hmi_status_for_dirs(record_dirs):
     """[record_dir] -> {record_dir: hmi_status}"""
     query = {'dir': {'$in': record_dirs}}
     fields = {'dir': 1, 'hmi_status': 1}
-    docs = Mongo.collection(COLLECTION_NAME).find(query, fields)
+    docs = Mongo.record_collection().find(query, fields)
 
     dir_to_result = {}
     for doc in docs:
