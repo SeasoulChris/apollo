@@ -15,7 +15,7 @@
 1. Filter out those frames with front 6mm images showing clearly any pedestrian's face that is recognizable. after the "1 meter relative movement" rule.
 2. The detection and fixing should be automated, and tracked by [this issue](http://newicafe.baidu.com/issue/IDG-Apollo-3480/show?from=page).  Before it's done we have to manually fix it, which is the blocker for fully automation.
 3. Manual works for now:
-   - Submit all the filtered frames as long as pictures to Scale test projects, which will not be checked or labeled by Scale.
+   - Submit all the filtered frames along with pictures to Scale test projects, which will not be checked or labeled by Scale.
    - Manually check the images that have clear faces, and if any one found, discard the whole task with 50 frames.
    - Re-submit the qualified tasks again to Scale live projects, which will be labeled.
 
