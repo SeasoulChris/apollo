@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import fnmatch
 import glob
 import operator
 import os
 
 import colored_glog as glog
 import numpy as np
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.s3_utils as s3_utils

@@ -6,7 +6,6 @@ MongoDB util.
 Requirements: pymongo 3.x
 """
 import os
-import sys
 
 import colored_glog as glog
 import google.protobuf.json_format as json_format

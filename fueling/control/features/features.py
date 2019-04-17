@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import math
 import sys
 
 import colored_glog as glog

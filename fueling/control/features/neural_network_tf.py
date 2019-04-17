@@ -2,7 +2,6 @@
 import os
 
 import tensorflow as tf
-import tensorflow.contrib
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 

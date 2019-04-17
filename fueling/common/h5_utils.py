@@ -1,4 +1,5 @@
-import os
+"""H5 utils."""
+#!/usr/bin/env python
 
 import h5py
 import numpy as np

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-import fnmatch
 import glob
-import operator
 import os
 
 import colored_glog as glog

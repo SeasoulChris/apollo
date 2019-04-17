@@ -7,8 +7,8 @@ from pyspark.streaming import StreamingContext
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.streaming.serialize_utils as serialize_utils
 from fueling.streaming.streaming_listener import DriverStreamingListener
+import fueling.streaming.serialize_utils as serialize_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 class DeserializeRecordsPipeline(BasePipeline):

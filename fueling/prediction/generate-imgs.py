@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import fnmatch
 import glob
 import operator
 import os
@@ -13,7 +12,6 @@ from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
-import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 
 
