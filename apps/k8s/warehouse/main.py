@@ -32,7 +32,7 @@ app.jinja_env.filters.update(display_util.utils)
 
 
 @app.route('/')
-@app.route('/tasks/<string:prefix>/<int:page_idx>')
+@app.route('/tasks/<prefix>/<int:page_idx>')
 def tasks_hdl(prefix='small-records', page_idx=1):
     """Handler of the task list page."""
     G = gflags.FLAGS
