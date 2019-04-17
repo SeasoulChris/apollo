@@ -7,7 +7,6 @@ import os
 
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
@@ -151,6 +150,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .join(vehicle_param_conf)
             .map(lambda vehicle_path_conf:
                  ((vehicle_path_conf[0], vehicle_path_conf[1][1]), vehicle_path_conf[1][0])))
+        glog.info(todo_dirs.first())
 
         self.run(todo_dirs, vehicle_param_conf, target_dir_rdd, origin_dir_rdd)
     def run_prod(self):
@@ -229,6 +229,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir), records)
             .map(lambda vehicle_dir_file:
                 ((vehicle_dir_file[0], vehicle_dir_file[1][0]), vehicle_dir_file[1][1])))
+        glog.info('records %s' % str(records.first()))
 
         msgs = (records
                 # PairRDD(vehicle, msg)
@@ -236,10 +237,12 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                 # PairRDD((vehicle, task_dir, timestamp_per_min), msg)
                 .map(gen_pre_segment)
                 .cache())
+        glog.info('msgs %s'% str(msgs.first()))
 
         # PairRDD(vehicle, task_dir, timestamp_per_min)
         valid_segments = feature_extraction_rdd_utils.chassis_localization_segment_rdd(
             msgs, MIN_MSG_PER_SEGMENT)
+
         # PairRDD((vehicle, dir_segment, segment_id), msg)
         valid_msgs = feature_extraction_rdd_utils.valid_msg_rdd(msgs, valid_segments)
 
@@ -247,6 +250,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         parsed_msgs = (feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
             # PairRDD((vehicle, dir_segment, segment_id), paired_chassis_msg_pose_msg)
             .mapValues(pair_cs_pose))
+        glog.info('parsed_msgs %s' % str(parsed_msgs.first()))
 
 
         # join conf file
@@ -261,6 +265,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir_segment, segment_id),
             #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
             .map(re_org_elem))
+        glog.info('msgs_with_conf %s' % str(msgs_with_conf.first()))
 
         data_rdd = (
             # PairRDD((vehicle, dir_segment, segment_id),
@@ -277,6 +282,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(feature_distribute)
             # PairRDD((vehicle, dir_segment, segment_id), one_matrix)
             .mapValues(feature_store))
+        glog.info('data_rdd %s' % str(data_rdd.first()))
 
         # write data to hdf5 files
         data_rdd = (
@@ -290,7 +296,8 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .join(target_dir_rdd)
             .map(write_h5)
             .count())
+        glog.info('final_data_rdd %s' % str(data_rdd.first()))
 
 if __name__ == '__main__':
-    # CalibrationTableFeatureExtraction().main()
-    CalibrationTableFeatureExtraction().run_test()
+    CalibrationTableFeatureExtraction().main()
+

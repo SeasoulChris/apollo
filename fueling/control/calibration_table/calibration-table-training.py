@@ -77,7 +77,7 @@ def get_feature_hdf5_files_prod(bucket, feature_prefix, throttle_or_brake):
         .groupByKey()
         # PairRDD('throttle or brake', list of hdf5 files)
         .mapValues(list))
-    
+
 def get_data_from_hdf5(hdf5_rdd):
     return (
         # PairRDD('throttle or brake', list of hdf5 files)
@@ -86,7 +86,7 @@ def get_data_from_hdf5(hdf5_rdd):
         .mapValues(train_utils.generate_segments)
         # PairRDD('throttle or brake', data)
         .mapValues(train_utils.generate_data))
-    
+
 class CalibrationTableTraining(BasePipeline):
     def __init__(self):
         """ initialize """
@@ -97,7 +97,7 @@ class CalibrationTableTraining(BasePipeline):
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                   WANTED_VEHICLE, 'CalibrationTable')
-        target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated', 
+        target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                   WANTED_VEHICLE, 'conf')
         # RDD(origin_dir)
         feature_dir = self.context().parallelize([origin_dir])
@@ -158,7 +158,7 @@ class CalibrationTableTraining(BasePipeline):
         throttle_train_data = get_data_from_hdf5(throttle_train_files).cache()
         # PairRDD('throttle', test data)
         throttle_test_data = get_data_from_hdf5(throttle_test_files).cache()
-            
+
         glog.info("throttle train data segment numbers: %d", throttle_train_data.count())
         glog.info("throttle test data segment numbers: %d", throttle_test_data.count())
 
@@ -185,7 +185,7 @@ class CalibrationTableTraining(BasePipeline):
         brake_train_data = get_data_from_hdf5(brake_train_files).cache()
         # PairRDD('brake', test data)
         brake_test_data = get_data_from_hdf5(brake_test_files).cache()
-            
+
         glog.info("brake train data numbers: %d", brake_train_data.count())
         glog.info("brake test data numbers: %d", brake_test_data.count())
 
@@ -204,7 +204,5 @@ class CalibrationTableTraining(BasePipeline):
                                          cmd_segment_num, brake_table_filename))
             .count())
 
-
-        
 if __name__ == '__main__':
     CalibrationTableTraining().main()
