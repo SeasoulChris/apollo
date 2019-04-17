@@ -46,13 +46,13 @@ class RecordParser(object):
             return None
         parser.ParseMessages()
 
-        record_meta = parser.record
-        if not record_meta.hmi_status.current_map:
-            guessed_map = record_utils.guess_map_name_from_driving_path(
-                record_meta.stat.driving_path)
+        record = parser.record
+        # If we have the driving_path but no map info, try guessing it.
+        if record.stat.driving_path and not record.hmi_status.current_map:
+            guessed_map = record_utils.guess_map_name_from_driving_path(record.stat.driving_path)
             if guessed_map:
-                record_meta.hmi_status.current_map = guessed_map
-        return record_meta
+                record.hmi_status.current_map = guessed_map
+        return record
 
     def __init__(self, record_file):
         """Init input reader and output record."""
