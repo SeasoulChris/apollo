@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import collections
 import os
-import sys
 
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo

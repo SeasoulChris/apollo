@@ -7,7 +7,6 @@ from pyspark.streaming import StreamingContext
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 import fueling.streaming.serialize_utils as serialize_utils
 from fueling.streaming.streaming_listener import DriverStreamingListener
 import fueling.streaming.streaming_utils as streaming_utils
@@ -28,7 +27,7 @@ class DeserializeRecordsPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        self._root_dir = s3_utils.S3_MOUNT_PATH
+        self._root_dir = flags.FLAGS.bos_mount_path
         self.run()
         glog.info('Serialization: All Done. PROD')
 

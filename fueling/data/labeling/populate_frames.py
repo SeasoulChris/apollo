@@ -9,14 +9,14 @@ import os
 import textwrap
 import time
 
-import colored_glog as glog
+from absl import flags
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
+import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
@@ -213,7 +213,7 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
+        root_dir = flags.FLAGS.bos_mount_path
         target_dir = 'modules/data/labeling/generated'
         populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
         glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))

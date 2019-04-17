@@ -7,6 +7,7 @@ import operator
 import os
 import time
 
+from absl import flags
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
@@ -121,7 +122,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.S3_MOUNT_PATH
+        root_dir = flags.FLAGS.bos_mount_path
         target_dir = 'modules/perception/videos/decoded'
         streaming_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
         glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))

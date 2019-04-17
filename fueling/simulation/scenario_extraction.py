@@ -107,7 +107,7 @@ class ScenarioExtractionPipeline(BasePipeline):
                                     lambda path: s3_utils.list_files(bucket, path))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, s3_utils.S3_MOUNT_PATH, original_prefix, target_prefix)
+        self.run(todo_tasks, original_prefix, target_prefix)
         glog.info('Simulation: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):

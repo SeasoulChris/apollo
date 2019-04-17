@@ -7,6 +7,7 @@ import math
 import os
 import subprocess
 
+from absl import flags
 from google.protobuf.json_format import MessageToJson
 from pyquaternion import Quaternion as PyQuaternion
 import colored_glog as glog
@@ -22,7 +23,6 @@ from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
-import fueling.common.s3_utils as s3_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 
@@ -94,7 +94,7 @@ def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
     if yaml_file_name is None:
         return None
-    yaml_file_name = os.path.join(s3_utils.S3_MOUNT_PATH, yaml_file_name)
+    yaml_file_name = os.path.join(flags.FLAGS.bos_mount_path, yaml_file_name)
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 
