@@ -10,9 +10,9 @@ JOB_FILE=""
 FLAGFILE="fueling/common/flagfile/k8s_job.flag"
 IMAGE="hub.baidubce.com/apollo/spark:latest"
 CONDA_ENV="fuel-py27-cyber"
-EXECUTORS=20
-EXECUTOR_CORES=2
-EXECUTOR_MEMORY=20g
+EXECUTORS=9
+EXECUTOR_CORES=3
+EXECUTOR_MEMORY=24g
 MEMORY_OVERHEAD_FACTOR=0
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
