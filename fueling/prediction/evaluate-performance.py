@@ -27,7 +27,7 @@ class PerformanceEvaluator(BasePipeline):
         result_files = self.context().parallelize(
             glob.glob('/apollo/data/mini_data_pipeline/results/*/prediction_result.*.bin'))
         metrics = self.run(result_files)
-        saved_filename = 'metrics_' + str(TIME_RANGE) + '.npy'
+        saved_filename = 'metrics_{}.npy'.format(TIME_RANGE)
         save_path = os.path.join('/apollo/data/mini_data_pipeline/results', saved_filename)
         np.save(save_path, metrics)
 
@@ -35,7 +35,7 @@ class PerformanceEvaluator(BasePipeline):
         """Run prod."""
         bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/results'
-        # RDD(result files with the pattern prediction_result.*.bin)
+        # RDD(file) result files with the pattern prediction_result.*.bin
         result_file_rdd = s3_utils.list_files(bucket, origin_prefix).filter(
             spark_op.filter_path(['prediction_result.*.bin']))
         metrics = self.run(result_file_rdd)
@@ -44,15 +44,15 @@ class PerformanceEvaluator(BasePipeline):
 
     def run(self, result_file_rdd):
         """Run the pipeline with given arguments."""
-        # RDD(0/1), 1 for success
+        # list [(unique_metric_key, metric_sum)]
         metrics = (
             # RDD(file), files with prediction results
             result_file_rdd
-            # -> [(metric_key, metric_value)]
+            # PairRDD(metric_key, metric_value)
             .flatMap(self.evaluate)
-            # -> [(unique_metric_key, metric_sum)]
+            # PairRDD(unique_metric_key, metric_sum)
             .reduceByKey(lambda v1, v2: v1 + v2)
-            # Collect
+            # list [(unique_metric_key, metric_sum)]
             .collect())
         return metrics
 
@@ -73,8 +73,7 @@ class PerformanceEvaluator(BasePipeline):
             list_prediction_result.ParseFromString(f.read())
         for prediction_result in list_prediction_result.prediction_result:
             portion_correct_predicted, num_obstacle, num_trajectory = \
-                CorrectlyPredictePortion(prediction_result, future_status_dict,
-                                         TIME_RANGE)
+                CorrectlyPredictePortion(prediction_result, future_status_dict, TIME_RANGE)
             portion_correct_predicted_sum += portion_correct_predicted
             num_obstacle_sum += num_obstacle
             num_trajectory_sum += num_trajectory
@@ -89,8 +88,7 @@ def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
     for predicted_traj in prediction_result.trajectory:
         i = 0
         while i + 1 < len(predicted_traj.trajectory_point) and \
-              predicted_traj.trajectory_point[i + 1].relative_time < \
-              future_relative_time:
+              predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
             i += 1
         predicted_x = predicted_traj.trajectory_point[i].path_point.x
         predicted_y = predicted_traj.trajectory_point[i].path_point.y
@@ -102,12 +100,11 @@ def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
 
 
 def CorrectlyPredictePortion(prediction_result, future_status_dict, time_range):
-    dict_key = "{}@{:.3f}".format(prediction_result.id,
-                                  prediction_result.timestamp)
-    if dict_key not in future_status_dict.keys():
+    dict_key = "{}@{:.3f}".format(prediction_result.id, prediction_result.timestamp)
+    if dict_key not in future_status_dict:
         return 0.0, 0.0, 0.0
     obstacle_future_status = future_status_dict[dict_key]
-    if obstacle_future_status == None or len(obstacle_future_status) == 0:
+    if not obstacle_future_status:
         return 0.0, 0.0, 0.0
 
     portion_correct_predicted = 0.0
@@ -123,11 +120,10 @@ def CorrectlyPredictePortion(prediction_result, future_status_dict, time_range):
         total_future_point_count += 1.0
     if total_future_point_count == 0:
         return 0.0, 0.0, 0.0
-    portion_correct_predicted = correct_future_point_count / \
-                                total_future_point_count
+    portion_correct_predicted = correct_future_point_count / total_future_point_count
 
     return portion_correct_predicted, 1.0, len(prediction_result.trajectory)
 
 
 if __name__ == '__main__':
-    PerformanceEvaluator().run_test()
+    PerformanceEvaluator().main()
