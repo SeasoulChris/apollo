@@ -8,9 +8,10 @@ Inherit the base class BaseRule to add a rule and implement the filter function
 import math
 import os
 
-import fueling.common.colored_glog as glog
+import colored_glog as glog
 
 class RulesChain(object):
+    """Rules organizor"""
     # The static list of rules that will apply one by one
     rules = []
 
@@ -34,7 +35,7 @@ class BaseRule(object):
         """Constructor"""
         self.name = name
         RulesChain.register(self)
-    
+
     def apply(self, frames):
         """Apply the rule"""
         raise Exception('{}::apply() not implemented for base class'.format(self.name))
@@ -45,7 +46,7 @@ class EvenIntervalRule(BaseRule):
         """Constructor"""
         BaseRule.__init__(self, 'Even-Interval-Rule')
         self._interval = 0.5
-    
+
     def apply(self, frames):
         """
         Loop the input frames list and look for the closest timestamp towards the given interval
@@ -62,7 +63,7 @@ class EvenIntervalRule(BaseRule):
                 next_idx += 1
             idx = next_idx
         return filtered_frames
-    
+
 class MovingCarRule(BaseRule):
     """The rule to filter out the frames where vehicle is standing still, by using GPS info"""
     def __init__(self):
@@ -71,7 +72,7 @@ class MovingCarRule(BaseRule):
         self._distance = 1.0
         self._pre_xpos = None
         self._pre_ypos = None
-    
+
     def apply(self, frames):
         """Filter out frames if the distance is not big enough which means it's not moving"""
         filtered_frames = list()
@@ -92,10 +93,10 @@ class MovingCarRule(BaseRule):
             self._pre_xpos = xpos
             self._pre_ypos = ypos
         return filtered_frames
-    
+
     def _load_gps_from_file(self, frame_file_path):
         """
-        Load first N lines of text which contains GPS info from frame file, 
+        Load first N lines of text which contains GPS info from frame file,
         instead of loading the whole json file to improve efficiency
         """
         lines_number = 15
@@ -108,7 +109,7 @@ class ExactBatchSizeRule(BaseRule):
         """Constructor"""
         BaseRule.__init__(self, 'Exact-BatchSize-Rule')
         self._batch_size = 50
-    
+
     def apply(self, frames):
         """Trunc the frames if it's over batch size, and returns none if less than batch size"""
         if len(frames) < self._batch_size:
@@ -116,6 +117,7 @@ class ExactBatchSizeRule(BaseRule):
         return frames[:50]
 
 def form_chains():
+    """Chain all the rules together"""
     # Initialize the rules objects here, which will add themselves into the rules chain
     EvenIntervalRule()
     MovingCarRule()
