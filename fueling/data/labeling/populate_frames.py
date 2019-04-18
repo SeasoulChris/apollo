@@ -15,8 +15,8 @@ import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
-import fueling.common.flag_utils as flag_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.s3_utils as s3_utils
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
@@ -213,7 +213,7 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = flag_utils.get_flags().bos_mount_path
+        root_dir = s3_utils.BOS_MOUNT_PATH
         target_dir = 'modules/data/labeling/generated'
         populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
         glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
