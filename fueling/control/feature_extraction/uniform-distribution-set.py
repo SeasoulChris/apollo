@@ -17,14 +17,13 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
-sample_size = 10
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
     segmentID = os.path.splitext(pre_segmentID)[0]
     return key, segmentID
 
 
-def pick_sample(list_of_segment):
+def pick_sample(list_of_segment, sample_size):
     counter = 0
     sample_list = []
     for segment in list_of_segment:
@@ -59,32 +58,37 @@ class UniformDistributionSet(BasePipeline):
 
     def run_test(self):
         """Run test."""
+        sample_size = 200
         glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
-                                   WANTED_VEHICLE, 'EvenlyDitributed')
+                                   WANTED_VEHICLE, 'UniformDistributed')
         # RDD(hdf5 files)
         hdf5_files = spark_helper.cache_and_log('hdf5 files',
-            self.context().parallelize(glob.glob(os.path.join(origin_prefix, '*hdf5'))))
-        self.run(hdf5_files, target_dir)
+            self.context().parallelize([origin_prefix])
+            .flatMap(lambda path: glob.glob(os.path.join(path, '*')))
+            .flatMap(lambda path: glob.glob(os.path.join(path, '*hdf5'))))
+
+        self.run(hdf5_files, target_dir, sample_size)
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
+        sample_size = 2000
+        label = '2019-04-17'
+
         # same of target prefix of sample-set-feature-extraction
-        origin_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
-                                     WANTED_VEHICLE, 'SampleSet')
+        origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
+                                     WANTED_VEHICLE, 'SampleSet', '2019-04-17')
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
-                                     WANTED_VEHICLE, 'UniformDistributedSampleSet')
-        target_dir = s3_utils.abs_path(target_prefix)
+                                     WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
 
         # RDD(.hdf5 file)
-        todo_tasks = s3_utils.list_files(bucket, origin_prefix, '.hdf5')
-        self.run(todo_tasks, target_dir)
+        todo_tasks = s3_utils.list_files(origin_prefix, '.hdf5')
+        self.run(todo_tasks, target_dir, sample_size)
 
-    def run(self, todo_tasks, target_prefix):
-        categorized_segments = (
+    def run(self, todo_tasks, target_prefix, sample_size):
+        categorized_segments = spark_helper.cache_and_log('categorized_segments',
             # RDD(.hdf5 files with absolute path)
             todo_tasks
             # PairRDD(file_path, file_name)
@@ -101,21 +105,19 @@ class UniformDistributionSet(BasePipeline):
             .mapValues(list)
         )
 
-        sampled_segments = (
+        sampled_segments = spark_helper.cache_and_log('sampled_segments',
             # PairRDD(key, list of segments)
             categorized_segments
             # PairRDD(key, (sampled segments, counter))
-            .mapValues(pick_sample)
+            .mapValues(lambda samples: pick_sample(samples, sample_size))
             # PairRDD(key, (sampled segments, counter=sample_size))
             .filter(lambda (_, segment_counter): segment_counter[1] == sample_size)
             # PairRDD(key, sampled segments)
             .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
             .map(lambda elem: write_to_file(target_prefix, elem))
-        ) 
-
-        glog.info('Generated %d categories', sampled_segments.count())
+        )
 
 
 if __name__ == '__main__':
-    UniformDistributionSet().main()
+    UniformDistributionSet().run_test()
