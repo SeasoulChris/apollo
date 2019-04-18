@@ -44,7 +44,7 @@ class DynamicModelEvaluation(BasePipeline):
         platform_path = 'modules/control/learning_based_model/'
         mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
         lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
-        data_predix = os.path.join(platform_path, 'hdf5_evaluation'
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation')
 
         # PairRDD('mlp', folder_path)
         mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')

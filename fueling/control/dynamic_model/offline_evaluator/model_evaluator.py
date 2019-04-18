@@ -6,6 +6,7 @@ import os
 import sys
 import time
 
+from google.protobuf import text_format
 from sklearn.metrics import mean_squared_error
 import colored_glog as glog
 import numpy as np
@@ -127,7 +128,7 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
     trajectory_imu[0, :] = trajectory_gps[0, :]
     trajectory_fnn[0, :] = trajectory_gps[0, :]
     trajectory_point_mass[0, :] = trajectory_gps[0, :]
-    Trajectory_length = 0
+    trajectory_length = 0
 
     for k in range(1, trajectory_gps.shape[0]):
         trajectory_imu[k, 0] = trajectory_imu[k - 1, 0] + vehicle_state_imu[k, 0] * \
@@ -142,7 +143,7 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
                 vehicle_state_point_mass[k, 0] * np.cos(vehicle_state_point_mass[k, 1]) * DELTA_T
         trajectory_point_mass[k, 1] = trajectory_point_mass[k - 1, 1] + \
                 vehicle_state_point_mass[k, 0] * np.sin(vehicle_state_point_mass[k, 1]) * DELTA_T
-        Trajectory_length += np.sqrt((trajectory_gps[k, 0] - trajectory_gps[k - 1, 0]) ** 2 + (
+        trajectory_length += sqrt((trajectory_gps[k, 0] - trajectory_gps[k - 1, 0]) ** 2 + (
                                         trajectory_gps[k, 1] - trajectory_gps[k - 1, 1]) ** 2)
 
     rmse_imu_trajectory = sqrt(mean_squared_error(trajectory_imu, trajectory_gps))
@@ -151,13 +152,13 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
 
     evaluation_results.sensor_error.trajectory_error = rmse_imu_trajectory
     evaluation_results.sensor_error.trajectory_error_rate = \
-                                            rmse_imu_trajectory / Trajectory_length
+                                            rmse_imu_trajectory / trajectory_length
     evaluation_results.learning_based_result.trajectory_error = rmse_fnn_trajectory
     evaluation_results.learning_based_result.trajectory_error_rate = \
-                                            rmse_fnn_trajectory / Trajectory_length
+                                            rmse_fnn_trajectory / trajectory_length
     evaluation_results.point_mass_result.trajectory_error = rmse_point_mass_trajectory
     evaluation_results.point_mass_result.trajectory_error_rate = \
-                                            rmse_point_mass_trajectory / Trajectory_length
+                                            rmse_point_mass_trajectory / trajectory_length
 
 
 def evaluate(model_info, dataset_path, platform_path):
@@ -174,11 +175,11 @@ def evaluate(model_info, dataset_path, platform_path):
         'evaluation_result/evaluation_metrics_for_' + model_info[0] + '_model.txt')
     
     with open(evaluation_result_path, 'a') as txt_file:
-        txt_file.write('\n evaluted on model: {} \n'.format(model_info[1]))
+        txt_file.write('evaluted on model: {} \n'.format(model_info[1]))
         txt_file.write('evaluted on record: {} \n'.format(dataset_path))
         evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results)
         vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
             vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
         evaluate_trajectory(trajectory_gps, vehicle_state_imu, 
                             vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
-        txt_file.write(evaluation_results.SerializeToString())
+        txt_file.write(text_format.MessageToString(evaluation_results))
