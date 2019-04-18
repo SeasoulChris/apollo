@@ -75,7 +75,7 @@ class UniformDistributionSet(BasePipeline):
         """Run prod."""
         sample_size = 2000
         label = '2019-04-17'
-
+        bucket = 'apollo-platform'
         # same of target prefix of sample-set-feature-extraction
         origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
                                      WANTED_VEHICLE, 'SampleSet', '2019-04-17')
@@ -83,7 +83,8 @@ class UniformDistributionSet(BasePipeline):
                                      WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
 
         # RDD(.hdf5 file)
-        todo_tasks = s3_utils.list_files(origin_prefix, '.hdf5')
+        todo_tasks = spark_helper.cache_and_log('todo_tasks',
+            s3_utils.list_files(bucket, origin_prefix, '.hdf5'))
         self.run(todo_tasks, target_dir, sample_size)
 
     def run(self, todo_tasks, target_prefix, sample_size):
