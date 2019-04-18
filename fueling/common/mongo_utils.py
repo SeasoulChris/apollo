@@ -6,13 +6,12 @@ MongoDB util.
 Requirements: pymongo 3.x
 """
 import os
+import sys
 
 from absl import flags
 import colored_glog as glog
 import google.protobuf.json_format as json_format
 import pymongo
-
-import fueling.common.flag_utils as flag_utils
 
 
 flags.DEFINE_string(
@@ -25,32 +24,38 @@ flags.DEFINE_string('mongo_record_collection_name', 'records', 'MongoDB record c
 
 class Mongo(object):
     """MongoDB util"""
-    @staticmethod
-    def db():
-        """Connect to MongoDB instance."""
-        user, passwd = os.environ.get('MONGO_USER'), os.environ.get('MONGO_PASSWD')
-        if not user or not passwd:
-            glog.fatal('No credential found for MongoDB authentication.')
+    def __init__(self, flags_dict):
+        if flags_dict['running_mode'] == 'TEST':
+            glog.error('MongoDB is not reachable in TEST mode.')
             return None
-        flag = flag_utils.get_flags()
-        db_connection = pymongo.MongoClient(flag.mongo_url)[flag.mongo_db_name]
-        db_connection.authenticate(user, passwd)
+
+        self.url = flags_dict['mongo_url']
+        self.db_name = flags_dict['mongo_db_name']
+        self.record_collection_name = flags_dict['mongo_record_collection_name']
+
+        self.user = os.environ.get('MONGO_USER')
+        self.passwd = os.environ.get('MONGO_PASSWD')
+        if not self.user or not self.passwd:
+            glog.fatal('No credential found for MongoDB authentication.')
+            sys.exit(1)
+
+    def db_connection(self):
+        """Create a connection to MongoDB instance."""
+        db_connection = pymongo.MongoClient(self.url)[self.db_name]
+        db_connection.authenticate(self.user, self.passwd)
         return db_connection
 
-    @staticmethod
-    def collection(collection_name):
+    def collection(self, collection_name):
         """
         Get collection handler. To use it, please refer
         https://api.mongodb.com/python/current/api/pymongo/collection.html
         """
-        db_connection = Mongo.db()
-        return db_connection[collection_name] if db_connection else None
+        conn = self.db_connection()
+        return conn[collection_name] if conn else None
 
-    @staticmethod
-    def record_collection():
+    def record_collection(self):
         """Get record collection."""
-        flag = flag_utils.get_flags()
-        return Mongo.collection(flag.mongo_record_collection_name)
+        return self.collection(self.record_collection_name)
 
     @staticmethod
     def pb_to_doc(pb):
@@ -68,4 +73,9 @@ class Mongo(object):
 
 
 if __name__ == '__main__':
-    print(Mongo.db().collection_names())
+    def main(argv):
+        mongo = Mongo(flags.FLAGS.flag_values_dict())
+        glog.info(Mongo.db().collection_names())
+
+    from absl import app
+    app.run(main)

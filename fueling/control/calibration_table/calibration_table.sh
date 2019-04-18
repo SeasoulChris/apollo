@@ -10,9 +10,9 @@ set -x
 # Feature extraction.
 JOB="fueling/control/calibration_table/calibration-table-feature-extraction.py"
 ENV="fuel-py27-cyber"
-./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 2 --memory 20g
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 16 --cpu 2 --memory 20g ${JOB}
 
 # Training.
 JOB="fueling/control/calibration_table/calibration-table-training.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 1 --cpu 20 --memory 200g
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 1 --cpu 20 --memory 200g ${JOB}

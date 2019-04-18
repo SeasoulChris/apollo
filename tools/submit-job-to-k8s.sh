@@ -7,7 +7,6 @@
 
 # Default value for configurable arguments.
 JOB_FILE=""
-FLAGFILE="fueling/common/flagfile/k8s_job.flag"
 IMAGE="hub.baidubce.com/apollo/spark:latest"
 CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=9
@@ -28,11 +27,6 @@ while [ $# -gt 0 ]; do
       shift
       CONDA_ENV=$1
       ;;
-    --flagfile|-f)
-      shift
-      # It must start from apollo-fuel root, such as 'fueling/...'.
-      FLAGFILE=$1
-      ;;
     --workers|-w)
       shift
       EXECUTORS=$1
@@ -52,6 +46,8 @@ while [ $# -gt 0 ]; do
     *)
       if [ -f "$1" ]; then
         JOB_FILE=$1
+        shift
+        break
       else
         echo -e "$1: Unknown option or file not exists."
         exit 1
@@ -130,4 +126,4 @@ popd
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    "${REMOTE_JOB_FILE}"
+    "${REMOTE_JOB_FILE}" --running_mode=PROD $@

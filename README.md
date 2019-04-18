@@ -103,17 +103,19 @@ practices are:
    failed unexpectedly, the pipeline have no idea about how to recover.
 1. Reading record header is much faster than reading record, if you can do
    significatnt filtering on records according to its header, do it.
-1. Use [gflags](https://abseil.io/docs/python/guides/flags), but don't abuse. To
-   pass values to pipeline, you need to save them into a flagfile which inherits
-   one of `fueling/common/flagfile/*.flag`, then pass with
-   `tools/submit-job-to-*.sh --flagfile <fueling/your.flag> ... <your-job.py>`.
+1. Use [gflags](https://abseil.io/docs/python/guides/flags), but don't abuse.
+   Always run your pipeline with our tools, and put job file and gflags at end:
+   `tools/submit-job-to-*.sh <tool-flags> <your-job.py> <job-gflags>`.
+
+   To access flag values, you need to call `self.FLAGS[KEY]` from an instance of
+   `BasePipeline`.
 1. To learn more about PySpark APIs, please go to
    [Spark Docs](https://spark.apache.org/docs/latest/api/python/pyspark.html).
 
 ### Test your pipeline at local
 
 ```bash
-tools/submit-job-to-local.sh /path/to/spark/job.py
+tools/submit-job-to-local.sh /path/to/spark/job.py <gflags>
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
 
@@ -131,8 +133,7 @@ If you are pretty familliar with the infra, please:
        --worker <workers_count>  \
        --cpu <worker_cpu_count>  \
        --memory <worker_memory>  \
-       --flagfile <flagfile>  \
-       /path/to/spark/job.py
+       /path/to/spark/job.py <gflags>
    ```
 
 Please request resources carefully, as it may block other teammates' work.

@@ -41,7 +41,7 @@ class IndexRecords(BasePipeline):
 
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
-        docs = Mongo.record_collection().find({}, {'path': 1})
+        docs = self.mongo().record_collection().find({}, {'path': 1})
         # RDD(record_path), which is indexed before.
         indexed_records = spark_helper.cache_and_log(
             'IndexedRecords', self.context().parallelize([doc['path'] for doc in docs]))
@@ -54,11 +54,10 @@ class IndexRecords(BasePipeline):
         if summary_receivers:
             self.send_summary(new_indexed_records, summary_receivers)
 
-    @staticmethod
-    def index_records(records):
+    def index_records(self, records):
         """Import record docs to Mongo."""
         records = list(records)
-        collection = Mongo.record_collection()
+        collection = self.mongo().record_collection()
         indexed_records = set(db_backed_utils.lookup_existing_records(records, collection))
         new_indexed = []
         for record in records:

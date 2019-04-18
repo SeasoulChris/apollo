@@ -43,7 +43,7 @@ class DemoPipeline(BasePipeline):
     @staticmethod
     def dummy_process(elem):
         """Dummy process to leave some time for UI show at http://localhost:4040"""
-        time.sleep(60)
+        time.sleep(20)
         return elem
 
 
