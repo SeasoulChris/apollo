@@ -79,7 +79,7 @@ class UniformDistributionSet(BasePipeline):
         # same of target prefix of sample-set-feature-extraction
         origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
                                      WANTED_VEHICLE, 'SampleSet', '2019-04-17')
-        target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
+        target_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
                                      WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
 
         # RDD(.hdf5 file)
