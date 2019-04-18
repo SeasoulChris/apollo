@@ -84,9 +84,9 @@ def list_end_files(origin_dir):
         end_files.extend([os.path.join(dirpath, file_name) for file_name in filenames])
     return end_files
 
-def list_end_files_u3(fils_dir):
+def list_end_files_prod(fils_dir):
     # PairRDD(1, list_of_files)
-    return (u3_utils.list_files(files_dir)
+    return (s3_utils.list_files(files_dir)
             .keyBy(lambda _: 1).groupByKey().mapValues(list).first())
 
 class CalibrationTableFeatureExtraction(BasePipeline):
@@ -181,7 +181,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         # PairRDD(vehicle, dir)
         origin_dirs = (
             origin_dir_rdd
-            .flatMapValues(list_end_files_u3)
+            .flatMapValues(list_end_files_prod)
             .mapValues(os.path.dirname)
             .cache())
 
@@ -191,7 +191,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD((vehicle_type, origin_prefix), target_prefix)
             .map(lambda vehicle_target_origin: (vehicle_target_origin,vehicle_target_origin[1][0]))
             # PairRDD((vehicle_type, origin_prefix), files_with_target_prefix)
-            .flatMapValues(list_end_files_u3)
+            .flatMapValues(list_end_files_prod)
             # PairRDD((vehicle_type, origin_prefix), files_with_MARKER_with_target_prefix)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle_type, files_with_MARKER_with_origin_prefix)
