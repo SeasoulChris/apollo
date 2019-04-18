@@ -51,9 +51,9 @@ class PredictionResult(BasePipeline):
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
-    def process_dir(input):
+    def process_dir(dir_path_info):
         """Call prediction C++ code."""
-        record_dir, (origin_prefix, target_prefix) = input
+        record_dir, (origin_prefix, target_prefix) = dir_path_info
         # use /apollo/hmi/status's current_map entry to match map info
         map_dir = record_utils.get_map_name_from_records(record_dir)
         target_dir = record_dir.replace(origin_prefix, os.path.join(target_prefix, map_dir))
