@@ -28,4 +28,3 @@ dependencies:
   - pip:
     - colored-glog
     - pyspark-utils >= 1.7.1
-    - utm

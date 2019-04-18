@@ -12,13 +12,13 @@ import os
 import sys
 
 import colored_glog as glog
-import utm
 
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.gps_pb2 import Gps
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+from fueling.common.coord_utils import CoortUtils
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
 
@@ -26,11 +26,8 @@ import fueling.common.record_utils as record_utils
 # Configs
 POS_SAMPLE_MIN_DURATION_SEC = 2
 POS_SAMPLE_MIN_DISTANCE_METER = 3
-UTM_ZONE_ID = 10
-UTM_ZONE_LETTER = 'S'
 
-
-def utm_distance_m(pos0, pos1):
+def pose_distance_m(pos0, pos1):
     """Return distance of pos0 and pos1 in meters."""
     return math.sqrt((pos0.x - pos1.x) ** 2 + (pos0.y - pos1.y) ** 2 + (pos0.z - pos1.z) ** 2)
 
@@ -123,7 +120,7 @@ class RecordParser(object):
             pos = self._last_position
             if pos is not None:
                 try:
-                    lat, lon = utm.to_latlon(pos.x, pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
+                    lat, lon = CoortUtils.utm_to_latlon(pos.x, pos.y)
                     disengagement.location.lat = lat
                     disengagement.location.lon = lon
                 except Exception as e:
@@ -135,7 +132,7 @@ class RecordParser(object):
         # Stat mileages.
         if self._last_position is not None and self._current_driving_mode is not None:
             driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
-            meters = utm_distance_m(self._last_position, position)
+            meters = pose_distance_m(self._last_position, position)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
             else:
@@ -144,9 +141,9 @@ class RecordParser(object):
         # Sample driving path.
         if (self._last_position_sampled is None or
             (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             utm_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
+             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
-                lat, lon = utm.to_latlon(position.x, position.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
+                lat, lon = CoortUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
                 self._last_position_sampled = position
                 self._last_position_sampled_time = time_sec

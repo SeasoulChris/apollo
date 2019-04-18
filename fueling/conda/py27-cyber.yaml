@@ -25,4 +25,3 @@ dependencies:
     - colored-glog
     - pyquaternion
     - pyspark-utils >= 1.7.1
-    - utm
