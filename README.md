@@ -131,6 +131,7 @@ If you are pretty familliar with the infra, please:
        --worker <workers_count>  \
        --cpu <worker_cpu_count>  \
        --memory <worker_memory>  \
+       --flagfile <flagfile>  \
        /path/to/spark/job.py
    ```
 

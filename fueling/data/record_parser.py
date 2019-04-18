@@ -16,11 +16,11 @@ import utm
 
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
+from modules.localization.proto.gps_pb2 import Gps
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 
 
 # Configs
@@ -58,9 +58,10 @@ class RecordParser(object):
         """Init input reader and output record."""
         self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
 
-        self._reader = RecordReader(s3_utils.abs_path(record_file))
+        self._reader = RecordReader(record_file)
         # State during processing messages.
         self._current_driving_mode = None
+        self._get_pose_from_gps = False
         self._last_position = None
         # To sample driving path.
         self._last_position_sampled = None
@@ -77,6 +78,10 @@ class RecordParser(object):
         if len(self.record.channels) == 0:
             glog.error('No message found in record')
             return False
+        if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL) and
+            not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
+            glog.info('Get pose from GPS as the localization channel is missing.')
+            self._get_pose_from_gps = True
         return True
 
     def ParseMessages(self):
@@ -84,6 +89,7 @@ class RecordParser(object):
         PROCESSORS = {
             record_utils.CHASSIS_CHANNEL: self.ProcessChassis,
             record_utils.DRIVE_EVENT_CHANNEL: self.ProcessDriveEvent,
+            record_utils.GNSS_ODOMETRY_CHANNEL: self.ProcessGnssOdometry,
             record_utils.HMI_STATUS_CHANNEL: self.ProcessHMIStatus,
             record_utils.LOCALIZATION_CHANNEL: self.ProcessLocalization,
         }
@@ -125,17 +131,11 @@ class RecordParser(object):
         # Update DrivingMode.
         self._current_driving_mode = chassis.driving_mode
 
-    def ProcessLocalization(self, msg):
-        """Process Localization, stat mileages and save driving path."""
-        localization = LocalizationEstimate()
-        localization.ParseFromString(msg)
-        timestamp = localization.header.timestamp_sec
-        cur_pos = localization.pose.position
-
+    def _process_position(self, time_sec, position):
         # Stat mileages.
         if self._last_position is not None and self._current_driving_mode is not None:
             driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
-            meters = utm_distance_m(self._last_position, cur_pos)
+            meters = utm_distance_m(self._last_position, position)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
             else:
@@ -143,18 +143,30 @@ class RecordParser(object):
 
         # Sample driving path.
         if (self._last_position_sampled is None or
-            (timestamp - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             utm_distance_m(self._last_position_sampled, cur_pos) > POS_SAMPLE_MIN_DISTANCE_METER)):
+            (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
+             utm_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
-                lat, lon = utm.to_latlon(cur_pos.x, cur_pos.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
+                lat, lon = utm.to_latlon(position.x, position.y, UTM_ZONE_ID, UTM_ZONE_LETTER)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
-                self._last_position_sampled = cur_pos
-                self._last_position_sampled_time = timestamp
+                self._last_position_sampled = position
+                self._last_position_sampled_time = time_sec
             except Exception as e:
                 glog.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update position.
-        self._last_position = cur_pos
+        self._last_position = position
 
+    def ProcessLocalization(self, msg):
+        """Process Localization, stat mileages and save driving path."""
+        localization = LocalizationEstimate()
+        localization.ParseFromString(msg)
+        self._process_position(localization.header.timestamp_sec, localization.pose.position)
+
+    def ProcessGnssOdometry(self, msg):
+        """Process GPS, stat mileages and save driving path."""
+        if self._get_pose_from_gps:
+            gps = Gps()
+            gps.ParseFromString(msg)
+            self._process_position(gps.header.timestamp_sec, gps.localization.position)
 
 if __name__ == '__main__':
     if len(sys.argv) > 0:

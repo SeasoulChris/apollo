@@ -28,6 +28,7 @@ FRONT_6mm_CHANNEL =                '/apollo/sensor/camera/front_6mm/image/compre
 LEFT_FISHEYE_CHANNEL =             '/apollo/sensor/camera/left_fisheye/image/compressed'
 REAR_6mm_CHANNEL =                 '/apollo/sensor/camera/rear_6mm/image/compressed'
 RIGHT_FISHEYE_CHANNEL =            '/apollo/sensor/camera/right_fisheye/image/compressed'
+GNSS_ODOMETRY_CHANNEL =            '/apollo/sensor/gnss/odometry'
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,
