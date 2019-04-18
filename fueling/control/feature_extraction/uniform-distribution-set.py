@@ -5,12 +5,10 @@ import os
 
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.h5_utils as h5_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 
@@ -63,7 +61,7 @@ class UniformDistributionSet(BasePipeline):
         origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
-                                   WANTED_VEHICLE, 'UniformDistributed')
+                                  WANTED_VEHICLE, 'UniformDistributed')
         # RDD(hdf5 files)
         hdf5_files = spark_helper.cache_and_log('hdf5 files',
             self.context().parallelize([origin_prefix])
@@ -74,13 +72,12 @@ class UniformDistributionSet(BasePipeline):
     def run_prod(self):
         """Run prod."""
         sample_size = 2000
-        label = '2019-04-17'
         bucket = 'apollo-platform'
         # same of target prefix of sample-set-feature-extraction
-        origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
+        origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
                                      WANTED_VEHICLE, 'SampleSet', '2019-04-17')
-        target_prefix = os.path.join('modules/control/learning_based_model/hdf5_training/',
-                                     WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
+        target_dir = os.path.join('modules/control/learning_based_model/hdf5_training',
+                                  WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
 
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
@@ -102,8 +99,7 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, segments RDD)
             .groupByKey()
             # PairRDD(key, list of segments)
-            .mapValues(list)
-        )
+            .mapValues(list))
 
         sampled_segments = spark_helper.cache_and_log('sampled_segments',
             # PairRDD(key, list of segments)
@@ -115,9 +111,8 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, sampled segments)
             .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
-            .map(lambda elem: write_to_file(target_prefix, elem))
-        )
+            .map(lambda elem: write_to_file(target_prefix, elem)))
 
 
 if __name__ == '__main__':
-    UniformDistributionSet().run_test()
+    UniformDistributionSet().main()
