@@ -40,11 +40,11 @@ class DynamicModelEvaluation(BasePipeline):
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
-        platform_path = '/mnt/bos/modules/control/'
         bucket = 'apollo-platform'
-        mlp_model_prefix = 'modules/control/dynamic_model_output/h5_model/mlp'
-        lstm_model_prefix = 'modules/control/dynamic_model_output/h5_model/lstm'
-        data_predix = 'modules/control/feature_extraction_hf5/hdf5_evaluation'
+        platform_path = 'modules/control/learning_based_model/'
+        mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
+        lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation'
 
         # PairRDD('mlp', folder_path)
         mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')

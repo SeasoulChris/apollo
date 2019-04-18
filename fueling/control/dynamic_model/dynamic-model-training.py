@@ -21,17 +21,18 @@ class DynamicModelTraining(BasePipeline):
     def run_test(self):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
-        training_dataset = [os.path.join(data_dir, 'hdf5/training.hdf5')]
+        training_dataset = [os.path.join(data_dir, 'hdf5_training/training_test.hdf5')]
         # RDD(file_path) for training dataset.
         training_dataset_rdd = self.context().parallelize(training_dataset)
         self.run(training_dataset_rdd, output_dir)
 
     def run_prod(self):
         bucket = 'apollo-platform'
-        prefix = 'modules/control/feature_extraction_hf5/hdf5_training/Transit'
+        prefix = 'modules/control/learning_based_model/hdf5_training/mkz7'
         # RDD(file_path) for training dataset
         training_dataset_rdd = s3_utils.list_files(bucket, prefix, '.hdf5')
-        output_dir = s3_utils.abs_path('modules/control/dynamic_model_output/')
+        output_dir = s3_utils.abs_path(
+            'modules/control/learning_based_model/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 
     def run(self, training_dataset_rdd, output_dir):
