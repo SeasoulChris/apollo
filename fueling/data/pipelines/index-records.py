@@ -8,9 +8,10 @@ import pyspark_utils.helper as spark_helper
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 from fueling.data.record_parser import RecordParser
+import fueling.common.db_backed_utils as db_backed_utils
+import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
-import fueling.common.db_backed_utils as db_backed_utils
 
 
 class IndexRecords(BasePipeline):
