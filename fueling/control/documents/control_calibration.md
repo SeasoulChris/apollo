@@ -68,9 +68,24 @@ The brake and throttle specs are different between vehicle models. Therefore, th
 
 (description)
 
-# Data Uploading/Downloading Tools
+# Data Upload and Download 
 
-upload:
+## Prerequisites
+
+Before uploading your data, take a note of:
+1. The folder structure to be maintained is:
+![](images/file_system1.png)
+
+2. As seen above, the file structure to be maintained is 
+```
+Origin Folder -> Vehicle Folder -> Records + Configuration files
+```
+3. A vehicle folder needs to be created for your vehicle. The name of the folder should be the same as seen in Dreamview
+4. Inside your folder, create a **Records** folder to hold the data
+5. Store all the **Configuration files** along with the Records folder, within the **Vehicle** folder
+
+
+## Upload
 
 ```
   bos-fstool-upload -s <local_record_file> -d modules/control/data/records/<vehecle_id>/<version>/<task_folder>/YYYYMMDDhhmmss.records.xxxxx
@@ -82,7 +97,7 @@ For example:
   bos-fstool-upload -s 20190314010101.record.00000 modules/control/data/records/MKZ7/2019-03-14/2013-03-14-01-01-01/20190314010101.record.00000
 ```
 
-download:
+## Download
 
 ```
   bos-fstool-download -s modules/control/calibration/<vihecle_id>/<version>/control_conf.pb.txt <local_folder>/control_conf.pb.txt
