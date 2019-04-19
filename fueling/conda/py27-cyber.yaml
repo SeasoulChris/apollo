@@ -20,6 +20,7 @@ dependencies:
 
   # Other
   - opencv
+  - pyproj
 
   - pip:
     - colored-glog

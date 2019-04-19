@@ -13,4 +13,13 @@ class CoortUtils(object):
         projector = cls.PROJECTOR
         if utm_zone_id is not None and utm_zone_id != cls.UTM_ZONE_ID:
             projector = pyproj.Proj(proj='utm', zone=UTM_ZONE_ID, ellps='WGS84')
-        return projector(x, y)
+        lon, lat = projector(x, y, inverse=True)
+        return (lat, lon)
+
+    @classmethod
+    def latlon_to_utm(cls, lat, lon, utm_zone_id=None):
+        """Convert (lat, lon) to UTM (x, y)."""
+        projector = cls.PROJECTOR
+        if utm_zone_id is not None and utm_zone_id != cls.UTM_ZONE_ID:
+            projector = pyproj.Proj(proj='utm', zone=UTM_ZONE_ID, ellps='WGS84')
+        return projector(lon, lat)
