@@ -130,8 +130,10 @@ class RecordParser(object):
 
     def _process_position(self, time_sec, position):
         # Stat mileages.
-        if self._last_position is not None and self._current_driving_mode is not None:
-            driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
+        if self._last_position is not None:
+            driving_mode = 'UNKNOWN'
+            if self._current_driving_mode:
+                driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
             meters = pose_distance_m(self._last_position, position)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
