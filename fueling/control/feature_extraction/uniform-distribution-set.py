@@ -46,7 +46,7 @@ def write_to_file(target_prefix, elem):
         file_name = str(counter).zfill(4) + "_of_" + str(total_number).zfill(4)
         h5_utils.write_h5_single_segment(data, file_dir, file_name)
         counter += 1
-    return total_number
+    return total_number, file_dir, file_name
 
 
 class UniformDistributionSet(BasePipeline):
@@ -62,6 +62,7 @@ class UniformDistributionSet(BasePipeline):
                                      WANTED_VEHICLE, 'SampleSet')
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                   WANTED_VEHICLE, 'UniformDistributed')
+
         # RDD(hdf5 files)
         hdf5_files = spark_helper.cache_and_log('hdf5 files',
             self.context().parallelize([origin_prefix])
@@ -82,6 +83,7 @@ class UniformDistributionSet(BasePipeline):
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
             s3_utils.list_files(bucket, origin_prefix, '.hdf5'))
+        target_dir = s3_utils.abs_path(target_dir)
         self.run(todo_tasks, target_dir, sample_size)
 
     def run(self, todo_tasks, target_prefix, sample_size):
