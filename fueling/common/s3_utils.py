@@ -61,6 +61,7 @@ def clean_cache():
     How to use: Process data in batches, which means you should call mapPartitions() instead of
                 map(). Call the function after every batch to get best performance.
     """
+    glog.info('Cleaning BOS cache...')
     for tmp_file in glob.glob('/tmp/bosfs.tmp.*'):
         try:
             os.remove(tmp_file)
