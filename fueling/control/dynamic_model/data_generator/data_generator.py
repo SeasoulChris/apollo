@@ -48,7 +48,7 @@ WHEEL_BASE = VEHICLE_PARAM_CONF.vehicle_param.wheel_base
 
 def generate_segment(h5_file):
     """
-    load h5 file to a numpy array
+    load a single h5 file to a numpy array
     """
     segment = None
     glog.info('Loading {}'.format(h5_file))
@@ -58,6 +58,21 @@ def generate_segment(h5_file):
                 segment = np.array(ds)
             else:
                 segment = np.concatenate((segment, np.array(ds)), axis=0)
+    return segment
+
+
+def generate_segment_from_list(hdf5_file_list):
+    """
+    load a list of h5 files to a numpy array
+    """
+    segment = None
+    for filename in hdf5_file_list:
+        with h5py.File(filename, 'r') as fin:
+            for value in fin.values():
+                if segment is None:
+                    segment = np.array(value)
+                else:
+                    segment = np.concatenate((segment, np.array(value)), axis=0)
     return segment
 
 

@@ -28,7 +28,7 @@ class DynamicModelTraining(BasePipeline):
 
     def run_prod(self):
         bucket = 'apollo-platform'
-        prefix = 'modules/control/learning_based_model/hdf5_training/mkz7'
+        prefix = 'modules/control/learning_based_model/hdf5_training/Mkz7/UniformDistributed'
         # RDD(file_path) for training dataset
         training_dataset_rdd = s3_utils.list_files(bucket, prefix, '.hdf5')
         output_dir = s3_utils.abs_path(
@@ -53,7 +53,7 @@ class DynamicModelTraining(BasePipeline):
             .filter(lambda data: data is not None)
             # RDD('mlp_data|lstm_data', (input, output)), with unique keys.
             .reduceByKey(lambda data_1, data_2: (np.concatenate((data_1[0], data_2[0]), axis=0),
-                                                   np.concatenate((data_1[1], data_2[1]), axis=0)))
+                                                 np.concatenate((data_1[1], data_2[1]), axis=0)))
             .cache())
 
         param_norm = (
@@ -77,4 +77,4 @@ class DynamicModelTraining(BasePipeline):
 
 
 if __name__ == '__main__':
-    DynamicModelTraining().run_prod()
+    DynamicModelTraining().main()
