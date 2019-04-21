@@ -21,8 +21,6 @@ class BasePipeline(object):
         # Values constructed on driver and broadcast to executors.
         self.name = name
         self.FLAGS = None
-        # Values constructed on driver or on demand.
-        self._mongo = None
         # Values constructed on driver and not shared.
         BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName(self.name))
 
@@ -48,9 +46,7 @@ class BasePipeline(object):
 
     def mongo(self):
         """Get a mongo instance."""
-        if self._mongo is None:
-            self._mongo = Mongo(self.FLAGS)
-        return self._mongo
+        return Mongo(self.FLAGS)
 
     def __main__(self, argv):
         """Run the pipeline."""
