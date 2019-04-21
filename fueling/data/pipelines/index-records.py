@@ -72,7 +72,6 @@ class IndexRecords(BasePipeline):
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             new_indexed.append(record)
             glog.info('Indexed record {}'.format(record))
-        s3_utils.clean_cache()
         return new_indexed
 
     @staticmethod

@@ -65,8 +65,8 @@ fi
 # Generally fixed config.
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
-APOLLO_SPARK_REPO="$(cd $( dirname "${BASH_SOURCE[0]}" )/../../apollo-spark; pwd)"
-BOS_FSTOOL_EXECUTABLE="$( dirname "${BASH_SOURCE[0]}" )/../apps/static/bos_fstool"
+FUEL_PATH="$( dirname "${BASH_SOURCE[0]}" )/.."
+BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/static/bos_fstool"
 # End of config.
 
 set -x
@@ -91,8 +91,15 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   REMOTE_FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 popd
 
+conda env update -f "${FUEL_PATH}/tools/tool-env.yaml"
+source activate fuel-tool
+
+# Add kubernetes package to the spark-submit tool.
+rsync -aht --size-only "${FUEL_PATH}/apps/static/spark-kubernetes_2.11-2.4.0.jar" \
+    ${CONDA_PREFIX}/lib/python3.6/site-packages/pyspark/jars/
+
 # Submit job with fueling package.
-"${APOLLO_SPARK_REPO}/bin/spark-submit" \
+spark-submit \
     --master "k8s://${K8S}" \
     --deploy-mode cluster \
     --conf spark.default.parallelism="${EXECUTORS}" \
