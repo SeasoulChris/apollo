@@ -8,16 +8,14 @@ import matplotlib
 matplotlib.use('Agg')
 
 from matplotlib.backends.backend_pdf import PdfPages
-<<<<<<< HEAD
 import colored_glog as glog
-=======
->>>>>>> control: added calibration table visualization tool for data pipeline
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.s3_utils as s3_utils
+
 
 def read_hdf5(hdf5_file_list):
     """
@@ -33,12 +31,14 @@ def read_hdf5(hdf5_file_list):
                     segment = np.concatenate((segment, np.array(value)), axis=0)
     return segment
 
+
 DIM_INPUT = 3
 input_index = {
     'speed': 0,  # chassis.speed_mps
     'acceleration': 1,
     'control command': 2,
 }
+
 
 def plot_feature_hist(fearure, result_file):
     with PdfPages(result_file) as pdf:
@@ -49,7 +49,6 @@ def plot_feature_hist(fearure, result_file):
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
     return result_file
-
 
 
 class CalibrationTableDataDistribution(BasePipeline):
@@ -82,6 +81,7 @@ class CalibrationTableDataDistribution(BasePipeline):
     def run(self, hdf5_file_list, result_file):
         features = read_hdf5(hdf5_file_list)
         plot_feature_hist(features, result_file)
+
 
 if __name__ == '__main__':
     CalibrationTableDataDistribution().main()

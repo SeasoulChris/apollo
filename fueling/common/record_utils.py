@@ -17,18 +17,18 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
 
-CHASSIS_CHANNEL =                  '/apollo/canbus/chassis'
-CONTROL_CHANNEL =                  '/apollo/control'
-DRIVE_EVENT_CHANNEL =              '/apollo/drive_event'
-HMI_STATUS_CHANNEL =               '/apollo/hmi/status'
-LOCALIZATION_CHANNEL =             '/apollo/localization/pose'
+CHASSIS_CHANNEL = '/apollo/canbus/chassis'
+CONTROL_CHANNEL = '/apollo/control'
+DRIVE_EVENT_CHANNEL = '/apollo/drive_event'
+HMI_STATUS_CHANNEL = '/apollo/hmi/status'
+LOCALIZATION_CHANNEL = '/apollo/localization/pose'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
-FRONT_12mm_CHANNEL =               '/apollo/sensor/camera/front_12mm/image/compressed'
-FRONT_6mm_CHANNEL =                '/apollo/sensor/camera/front_6mm/image/compressed'
-LEFT_FISHEYE_CHANNEL =             '/apollo/sensor/camera/left_fisheye/image/compressed'
-REAR_6mm_CHANNEL =                 '/apollo/sensor/camera/rear_6mm/image/compressed'
-RIGHT_FISHEYE_CHANNEL =            '/apollo/sensor/camera/right_fisheye/image/compressed'
-GNSS_ODOMETRY_CHANNEL =            '/apollo/sensor/gnss/odometry'
+FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
+FRONT_6mm_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
+LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
+REAR_6mm_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
+RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
+GNSS_ODOMETRY_CHANNEL = '/apollo/sensor/gnss/odometry'
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,
@@ -48,11 +48,12 @@ def is_record_file(path):
     """Naive check if a path is a record."""
     return path.endswith('.record') or fnmatch.fnmatch(path, '*.record.?????')
 
+
 def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615):
     """record_path -> [PyBagMessage, ...] or [] if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
-        # glog.info('Read record {}'.format(record_path))
+        glog.info('Read record {}'.format(record_path))
         try:
             reader = RecordReader(record_path)
             channel_set = {channel for channel in reader.get_channellist()
@@ -61,15 +62,15 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
                 channel_set.intersection_update(channels)
             if channel_set:
                 return [msg for msg in reader.read_messages() if (
-                    msg.topic in channel_set and
-                    msg.timestamp >= start_time_ns and
-                    msg.timestamp < end_time_ns)]
+                    msg.topic in channel_set
+                    and start_time_ns <= msg.timestamp < end_time_ns)]
         except Exception as err:
             # Stop poping messages elegantly if exception happends, including
             # the normal StopIteration.
             glog.error('Failed to read record {}: {}'.format(record_path, err))
         return []
     return read_record_func
+
 
 def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
@@ -85,6 +86,7 @@ def read_record_header(record_path):
         glog.error('Failed to read record header {}: {}'.format(record_path, e))
     return None
 
+
 def message_to_proto(py_bag_message):
     """Convert an Apollo py_bag_message to proto."""
     proto_type = CHANNEL_TO_TYPE.get(py_bag_message.topic)
@@ -98,6 +100,7 @@ def message_to_proto(py_bag_message):
         glog.error('Failed to parse message from {}: {}'.format(py_bag_message.topic, e))
         return None
     return proto
+
 
 def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
     """py_bag_messages -> {topic:[protos]]."""
@@ -116,6 +119,7 @@ def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
         return result
     return converter_func
 
+
 def get_map_name_from_records(records_dir):
     """Get the map_name from a records_dir by /apollo/hmi/status channel"""
     map_list = os.listdir('/apollo/modules/map/data/')
@@ -124,7 +128,7 @@ def get_map_name_from_records(records_dir):
     reader = read_record([HMI_STATUS_CHANNEL])
     glog.info('Try getting map name from {}'.format(records_dir))
     records = [os.path.join(records_dir, filename) for filename in os.listdir(records_dir)
-                                                   if is_record_file(filename)]
+               if is_record_file(filename)]
     for record in records:
         for msg in reader(record):
             hmi_status = message_to_proto(msg)
@@ -132,6 +136,7 @@ def get_map_name_from_records(records_dir):
             glog.info('Get map name "{}" from record {}'.format(map_name, record))
             return map_name
     glog.error('Failed to get map_name')
+
 
 def get_vehicle_id_from_records(records, default_id='Unknown'):
     """Get vehicle ID from records."""
@@ -148,15 +153,17 @@ def get_vehicle_id_from_records(records, default_id='Unknown'):
     glog.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
     return default_id
 
+
 def guess_map_name_from_point(point):
     """start_point = [559082, 4156881], end_point = [559948, 4158061]"""
     if (37.557051039639084 < point.lat < 37.56763034989782 and
-        -122.33107117188919 < point.lon < -122.32117041547312):
+            -122.33107117188919 < point.lon < -122.32117041547312):
         return 'San Mateo'
     if (37.40293945243735 < point.lat < 37.41830762016944 and
-        -122.0285911265343 < point.lon < -121.9994401268334):
+            -122.0285911265343 < point.lon < -121.9994401268334):
         return 'Sunnyvale With Two Offices'
     return None
+
 
 def guess_map_name_from_driving_path(driving_path):
     """Get the map_name from record_meta.stat.driving_path"""

@@ -18,7 +18,6 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 
 
-
 # # parameters
 # WANTED_VEHICLE = 'Zhongyun'
 # CONF_FOLDER = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
@@ -27,7 +26,7 @@ import fueling.common.file_utils as file_utils
 # VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
 
 conf_file_dir = '/apollo/modules/data/fuel/fueling/control/conf'
-conf_filename = 'calibration_table_conf_mkz7.pb.txt'
+conf_filename = 'calibration_table_conf.pb.txt'
 calibration_conf_file = os.path.join(conf_file_dir, conf_filename)
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
@@ -49,15 +48,19 @@ segment_store_num = 12
 wanted_driving_mode = "COMPLETE_MANUAL"
 
 # vehicle parameters
+
+
 def gen_brake_list(VEHICLE_PARAM_CONF):
     BRAKE_DEADZONE = -1 * VEHICLE_PARAM_CONF.brake_deadzone
     return np.linspace(
         BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.brake_segment).tolist()
 
+
 def gen_throttle_list(VEHICLE_PARAM_CONF):
     THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.throttle_deadzone
     return np.linspace(
         THROTTLE_DEADZONE, THROTTLE_MAX, num=CALIBRATION_TABLE_CONF.throttle_segment).tolist()
+
 
 def gen_cmd_list(VEHICLE_PARAM_CONF):
     segment_brake_list = gen_brake_list(VEHICLE_PARAM_CONF)
@@ -68,6 +71,7 @@ def gen_cmd_list(VEHICLE_PARAM_CONF):
 segment_speed_list = np.linspace(
     CALIBRATION_TABLE_CONF.speed_min, CALIBRATION_TABLE_CONF.speed_max,
     num=CALIBRATION_TABLE_CONF.speed_segment).tolist()
+
 
 def decide_cmd(chassis_throttle_val, chassis_brake_val, VEHICLE_PARAM_CONF):
     segment_throttle_list = gen_throttle_list(VEHICLE_PARAM_CONF)
@@ -93,7 +97,7 @@ def feature_generate(elem, VEHICLE_PARAM_CONF):
         acc_x = pose.linear_acceleration.x
         acc_y = pose.linear_acceleration.y
 
-        acc = acc_x*math.cos(heading_angle)+acc_y*math.sin(heading_angle)
+        acc = acc_x * math.cos(heading_angle) + acc_y * math.sin(heading_angle)
         feature_cmd = decide_cmd(chassis.throttle_percentage,
                                  chassis.brake_percentage, VEHICLE_PARAM_CONF)
         driving_mode = (chassis.driving_mode == wanted_driving_mode)
@@ -171,7 +175,7 @@ def feature_cut(elem, VEHICLE_PARAM_CONF):
     # find satisfied data
     for i in range(num_row):
         if satisfy_throttle_condition(elem, i, VEHICLE_PARAM_CONF) \
-            or satisfy_brake_condition(elem, i, VEHICLE_PARAM_CONF):
+                or satisfy_brake_condition(elem, i, VEHICLE_PARAM_CONF):
             elem[id_elem][0] = elem[i][0]
             elem[id_elem][1] = elem[i][1]
             elem[id_elem][2] = elem[i][2]
@@ -252,10 +256,11 @@ def feature_store(elem, VEHICLE_PARAM_CONF):
                 counter += 1
     return segment_feature[0:counter, :]
 
+
 def write_h5_train_test(elem, origin_prefix, target_prefix):
     """write to h5 file"""
     (file_dir, key), features = elem
-    feature_num = features.shape[0] # row
+    feature_num = features.shape[0]  # row
     throttle_train_feature_num, throttle_test_feature_num = 0, 0
     brake_train_feature_num, brake_test_feature_num = 0, 0
 
@@ -286,14 +291,14 @@ def write_h5_train_test(elem, origin_prefix, target_prefix):
     # throttle train file
     throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
     throttle_train_file_dir = file_dir.replace(origin_prefix, throttle_train_target_prefix, 1)
-    glog.info('Writing throttle_train hdf5 file to %s' % throttle_train_file_dir )
+    glog.info('Writing throttle_train hdf5 file to %s' % throttle_train_file_dir)
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
     h5_utils.write_h5_single_segment(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
     throttle_test_target_prefix = os.path.join(target_prefix, 'throttle', 'test')
     throttle_test_file_dir = file_dir.replace(origin_prefix, throttle_test_target_prefix, 1)
-    glog.info('Writing throttle_test hdf5 file to %s' % throttle_test_file_dir )
+    glog.info('Writing throttle_test hdf5 file to %s' % throttle_test_file_dir)
     throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
     h5_utils.write_h5_single_segment(throttle_test_data, throttle_test_file_dir, key)
 
@@ -312,6 +317,7 @@ def write_h5_train_test(elem, origin_prefix, target_prefix):
     h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
 
     return feature_num
+
 
 def write_h5_cal_tab(data, file_dir, file_name):
     file_utils.makedirs(file_dir)
