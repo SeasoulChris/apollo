@@ -11,9 +11,6 @@ throttle_segment: 11
 brake_max: 35.0
 brake_segment: 11
 
-acc_min: -5.0
-acc_max: 5.0
-
 train_percentage: 0.9
 steer_condition: 1.0
 curvature_condition: 0.01
