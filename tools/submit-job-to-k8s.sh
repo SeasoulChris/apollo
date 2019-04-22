@@ -72,6 +72,14 @@ BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/static/bos_fstool"
 set -x
 set -e
 
+# Prepare env.
+TOOL_ENV="fuel-tool-0"
+source activate ${TOOL_ENV}
+if [ $? -ne 0 ]; then
+  conda env update -f "${FUEL_PATH}/tools/tool-env.yaml"
+  source activate ${TOOL_ENV}
+fi
+
 # Upload local files to remote.
 BOS_MOUNT_PATH="/mnt/bos"
 REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
@@ -90,9 +98,6 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
   "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
   REMOTE_FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 popd
-
-conda env update -f "${FUEL_PATH}/tools/tool-env.yaml"
-source activate fuel-tool
 
 # Add kubernetes package to the spark-submit tool.
 rsync -aht --size-only "${FUEL_PATH}/apps/static/spark-kubernetes_2.11-2.4.0.jar" \
