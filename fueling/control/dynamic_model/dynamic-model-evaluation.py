@@ -2,13 +2,21 @@
 
 import glob
 import os
+import re
 
+import colored_glog as glog
 import h5py
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.s3_utils as s3_utils
 import fueling.control.dynamic_model.offline_evaluator.model_evaluator as evaluator
+
+VEHICLE_ID = 'Mkz7'
+
+def extract_scenario_name(dataset_path):
+    result = re.findall(r"hdf5_evaluation/.+/(.+?).hdf5", dataset_path)[0]
+    return result
 
 
 class DynamicModelEvaluation(BasePipeline):
@@ -32,9 +40,13 @@ class DynamicModelEvaluation(BasePipeline):
             # PairRDD(model_name, folder_path)
             .keyBy(lambda _: 'lstm'))
 
-        evaluation_dataset = [os.path.join(platform_path, 'hdf5_evaluation/evaluation.hdf5')]
-        # RDD(file_path) for evaluation dataset
-        evaluation_dataset_rdd = self.context().parallelize(evaluation_dataset)
+        evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation/%s/*.hdf5' % VEHICLE_ID)
+
+        evaluation_dataset_rdd = (
+            # RDD(file_path) for evaluation dataset
+            self.context().parallelize(glob.glob(evaluation_dataset))
+            # PairRDD(driving_scenario, file_path) for evaluation dataset
+            .keyBy(extract_scenario_name))
 
         self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
@@ -44,14 +56,18 @@ class DynamicModelEvaluation(BasePipeline):
         platform_path = 'modules/control/learning_based_model/'
         mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
         lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
-        data_predix = os.path.join(platform_path, 'hdf5_evaluation')
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation/%s' % VEHICLE_ID)
 
         # PairRDD('mlp', folder_path)
         mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
         lstm_model_rdd = s3_utils.list_dirs(bucket, lstm_model_prefix).keyBy(lambda _: 'lstm')
-        # RDD(file_path) for evaluation dataset
-        evaluation_dataset_rdd = s3_utils.list_files(bucket, data_predix, '.hdf5')
+
+        evaluation_dataset_rdd = (
+            # RDD(file_path) for evaluation dataset
+            s3_utils.list_files(bucket, data_predix, '.hdf5')
+            # PairRDD(driving_scenario, file_path) for evaluation dataset
+            .keyBy(extract_scenario_name))
 
         self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
@@ -60,7 +76,8 @@ class DynamicModelEvaluation(BasePipeline):
         results = (
             # PairRDD(dynamic_model_name, dynamic_model_path)
             model_rdd
-            # PairRDD((dynamic_model_name, dynamic_model_path), evaluation_dataset_path)
+            # PairRDD((dynamic_model_name, dynamic_model_path), 
+            # (driving_scenario, evaluation_dataset_path))
             .cartesian(evaluation_dataset_rdd)
             # Action: call evaluation functions
             .foreach(lambda model_and_dataset: evaluator.evaluate(

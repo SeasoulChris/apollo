@@ -6,9 +6,14 @@ import os
 import sys
 import time
 
+import matplotlib
+matplotlib.use('Agg')
+
 from google.protobuf import text_format
+from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
 import colored_glog as glog
+import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
@@ -159,27 +164,57 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
     evaluation_results.point_mass_result.trajectory_error = rmse_point_mass_trajectory
     evaluation_results.point_mass_result.trajectory_error_rate = \
                                             rmse_point_mass_trajectory / trajectory_length
+    return trajectory_imu, trajectory_fnn, trajectory_point_mass
 
 
-def evaluate(model_info, dataset_path, platform_path):
+def evaluate(model_info, dataset_info, platform_path):
     if model_info[0] == 'mlp':
         vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps = \
-                    data_generator.generate_evaluation_data(dataset_path, model_info[1], 'mlp')
+                    data_generator.generate_evaluation_data(dataset_info[1], model_info[1], 'mlp')
     elif model_info[0] == 'lstm':
         vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps = \
-                    data_generator.generate_evaluation_data(dataset_path, model_info[1], 'lstm')
+                    data_generator.generate_evaluation_data(dataset_info[1], model_info[1], 'lstm')
     else:
         return
+
+    # Dump the quantitative evaluation results to a protobuf-format txt file
     evaluation_results = EvaluationResults()
-    evaluation_result_path = os.path.join(platform_path, 
-        'evaluation_result/evaluation_metrics_for_' + model_info[0] + '_model.txt')
-    
-    with open(evaluation_result_path, 'a') as txt_file:
+    evaluation_result_path = os.path.join(model_info[1],
+         'evaluation_metrics_under_%s.txt' % dataset_info[0])
+    # Evaluate the accuracy of direct outputs of dynamic models
+    evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results)
+    # Evaluate the accuracy of vehicle states by first integration over time
+    vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
+        vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
+    trajectory_imu, trajectory_fnn, trajectory_point_mass = evaluate_trajectory(trajectory_gps,
+        vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+    with open(evaluation_result_path, 'w') as txt_file:
         txt_file.write('evaluted on model: {} \n'.format(model_info[1]))
-        txt_file.write('evaluted on record: {} \n'.format(dataset_path))
-        evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results)
-        vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
-            vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
-        evaluate_trajectory(trajectory_gps, vehicle_state_imu, 
-                            vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+        txt_file.write('evaluted on record: {} \n'.format(dataset_info[1]))
         txt_file.write(text_format.MessageToString(evaluation_results))
+
+    # Output the trajectory visualization plots to a pdf file
+    pdf_file_path = os.path.join(model_info[1],
+         'trajectory_visualization_under_%s.pdf' % dataset_info[0])
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.title("Trajectory Visualization")
+        # Plot the trajectory collected by GPS
+        plt.plot(trajectory_gps[:,0], trajectory_gps[:,1], color = 'blue',
+                 label = "Ground-truth Tracjectory")
+        plt.plot(trajectory_gps[-1,0], trajectory_gps[-1,1], color = 'blue', marker = 'x')
+        # Plot the trajectory calculated by IMU
+        plt.plot(trajectory_imu[:,0], trajectory_imu[:,1], color = 'orange',
+                 label = "Generated Tracjectory by IMU")
+        plt.plot(trajectory_imu[-1,0], trajectory_imu[-1,1], color = 'orange', marker = 'x')
+        # Plot the trajectory calculated by learning-based model
+        plt.plot(trajectory_fnn[:,0], trajectory_fnn[:,1], color = 'red',
+                 label = "Tracjectory by learning-based-model")
+        plt.plot(trajectory_fnn[-1,0], trajectory_fnn[-1,1],color = 'red', marker = 'x')
+        # Plot the trajectory calculated by point_mass model
+        plt.plot(trajectory_point_mass[:,0], trajectory_point_mass[:,1], color = 'green',
+                 label = "Tracjectory by sim_point_mass")
+        plt.plot(trajectory_point_mass[-1,0], trajectory_point_mass[-1,1],
+                 color = 'green', marker = 'x')
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
