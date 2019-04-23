@@ -70,7 +70,6 @@ BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/static/bos_fstool"
 # End of config.
 
 set -x
-set -e
 
 # Prepare env.
 TOOL_ENV="fuel-tool-0"
@@ -79,6 +78,8 @@ if [ $? -ne 0 ]; then
   conda env update -f "${FUEL_PATH}/tools/tool-env.yaml"
   source activate ${TOOL_ENV}
 fi
+
+set -e
 
 # Upload local files to remote.
 BOS_MOUNT_PATH="/mnt/bos"
