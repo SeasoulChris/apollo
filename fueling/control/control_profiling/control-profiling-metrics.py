@@ -14,7 +14,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.control.features.dir_utils as dir_utils
+import fueling.control.control_profiling.common.dir_utils as dir_utils
 import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
        as feature_utils
 import fueling.control.control_profiling.grading_evaluation.control_performance_grading_utils \
@@ -35,7 +35,7 @@ class ControlProfilingMetrics(BasePipeline):
         todo_tasks = self.context().parallelize([
             os.path.join(origin_prefix, 'Transit_Auto'),
             os.path.join(origin_prefix, 'Transit_Auto2')
-        ])
+        ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
         glog.info('Control Profiling: All Done, TEST')
