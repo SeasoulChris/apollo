@@ -136,4 +136,7 @@ If you are pretty familliar with the infra, please:
        /path/to/spark/job.py <gflags>
    ```
 
+1. Monitor jobs with general `kubectl` commands. Here is a useful
+   [Cheet Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/).
+
 Please request resources carefully, as it may block other teammates' work.
