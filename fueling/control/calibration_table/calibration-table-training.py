@@ -67,6 +67,7 @@ def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
         # PairRDD('throttle or brake', list of hdf5 files)
         .mapValues(list))
 
+
 def get_feature_hdf5_files_prod(bucket, feature_prefix, throttle_or_brake):
     return (
         # RDD(throttle feature folder)
@@ -78,6 +79,7 @@ def get_feature_hdf5_files_prod(bucket, feature_prefix, throttle_or_brake):
         # PairRDD('throttle or brake', list of hdf5 files)
         .mapValues(list))
 
+
 def get_data_from_hdf5(hdf5_rdd):
     return (
         # PairRDD('throttle or brake', list of hdf5 files)
@@ -86,6 +88,7 @@ def get_data_from_hdf5(hdf5_rdd):
         .mapValues(train_utils.generate_segments)
         # PairRDD('throttle or brake', data)
         .mapValues(train_utils.generate_data))
+
 
 class CalibrationTableTraining(BasePipeline):
     def __init__(self):
@@ -125,7 +128,8 @@ class CalibrationTableTraining(BasePipeline):
             os.path.join('modules/control/CalibrationTable/Conf', WANTED_VEHICLE))
         throttle_train_prefix = os.path.join(origin_dir, 'throttle', 'train')
         # RDD('throttle', list of hdf5 files)
-        throttle_train_files = get_feature_hdf5_files_prod(bucket, throttle_train_prefix, 'throttle')
+        throttle_train_files = get_feature_hdf5_files_prod(
+            bucket, throttle_train_prefix, 'throttle')
 
         throttle_test_prefix = os.path.join(origin_dir, 'throttle', 'test')
         # RDD('throttle', list of hdf5 files)
@@ -142,7 +146,6 @@ class CalibrationTableTraining(BasePipeline):
         feature_dir_rdds = (throttle_train_files, throttle_test_files,
                             brake_train_files, brake_test_files)
         self.run(feature_dir_rdds, target_dir)
-
 
     def run(self, feature_dir_rdds, target_dir):
         """ processing RDD """
@@ -198,11 +201,12 @@ class CalibrationTableTraining(BasePipeline):
             # PairRDD(dir, result_array)
             .mapValues(lambda elem: train_utils.train_model(elem, brake_train_layer, train_alpha))
             # RDD(a number)
-            .map(lambda elem:
-                 train_utils.write_table(elem, target_dir, speed_min, speed_max, speed_segment_num,
+            .map(lambda (path, model):
+                 train_utils.write_table(model, target_dir, speed_min, speed_max, speed_segment_num,
                                          brake_axis_cmd_min, brake_axis_cmd_max,
                                          cmd_segment_num, brake_table_filename))
             .count())
+
 
 if __name__ == '__main__':
     CalibrationTableTraining().main()

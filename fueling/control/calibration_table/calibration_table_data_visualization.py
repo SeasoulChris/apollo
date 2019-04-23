@@ -71,7 +71,7 @@ class CalibrationTableDataDistribution(BasePipeline):
         target_prefix = '/mnt/bos/modules/control/CalibrationTable'
         result_file = os.path.join(target_prefix, 'Dataset_Distribution_%s.pdf' % timestr)
 
-        hdf5_rdd = s3_utils.list_files(bucket, origin_prefix).cache()
+        hdf5_rdd = s3_utils.list_files(bucket, origin_prefix, '.hdf5').cache()
         if hdf5_rdd.count() != 0:
             hdf5_file_list = hdf5_rdd.collect()
             self.run(hdf5_file_list, result_file)

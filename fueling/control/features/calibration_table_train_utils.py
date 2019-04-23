@@ -14,6 +14,7 @@ from fueling.control.features.neural_network_tf import NeuralNetworkTF
 import fueling.common.file_utils as file_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
+
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
@@ -70,13 +71,13 @@ def write_table(elem, target_dir,
     """
     write calibration table
     """
-    model = elem[1]
+    model = elem
     calibration_table_pb = calibration_table_pb2.ControlCalibrationTable()
 
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
     cmd_array = np.linspace(axis_cmd_min, axis_cmd_max, num=cmd_segment_num)
 
-    speed_array, cmd_array = np.meshgrid(speed_array, cmd_array)  #col, row
+    speed_array, cmd_array = np.meshgrid(speed_array, cmd_array)  # col, row
     grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
     acc_array = model.predict(grid_array).reshape(speed_array.shape)
 
@@ -94,3 +95,14 @@ def write_table(elem, target_dir,
     with open(os.path.join(path, table_filename), 'w') as wf:
         wf.write(str(calibration_table_pb))
     return table_filename
+
+
+def train_write_model(elem, target_prefix):
+    (vehicle, throttle_or_brake), (data_set, train_param) = elem
+    table_filename = throttle_or_brake + '_calibration_table.pb.txt'
+    target_dir = os.path.join(target_prefix, vehicle)
+    ((speed_min, speed_max, speed_segment_num),
+     (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha) = train_param
+    model = train_model(data_set, layer, train_alpha)
+    return write_table(model, target_dir, speed_min, speed_max, speed_segment_num,
+                       cmd_min, cmd_max, cmd_segment_num, table_filename)
