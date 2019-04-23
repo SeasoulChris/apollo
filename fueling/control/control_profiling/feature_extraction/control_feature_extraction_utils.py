@@ -7,11 +7,9 @@ import os
 import colored_glog as glog
 import numpy as np
 
-import common.proto_utils as proto_utils
-
 from modules.data.fuel.fueling.control.proto.control_profiling_pb2 import ControlProfiling
+import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
-
 
 def verify_vehicle_controller(task):
     """Verify if the task has any record file whose controller/vehicle types match config"""
@@ -34,7 +32,7 @@ def verify_vehicle_controller(task):
     if not control_message:
         glog.error('no control messages found in task {} record {}'.format(task, record_file))
         return False
-    return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle, 
+    return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
         record_utils.message_to_proto(control_message))
 
 def data_matches_config(vehicle_type, controller_type):
