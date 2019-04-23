@@ -74,11 +74,14 @@ class DataForLearning(BasePipeline):
 
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
+        record_dirs = list(record_dirs)
         collection = self.mongo().record_collection()
         dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         dir_map_list = []
         for record_dir in record_dirs:
             map_name = dir_map_dict.get(record_dir)
+            if map_name is None:
+                continue
             if map_name.find("Sunnyvale") >= 0:
                 dir_map_list.append((record_dir, "sunnyvale_with_two_offices"))
             if map_name.find("San Mateo") >= 0:
