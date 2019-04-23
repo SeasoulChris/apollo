@@ -19,15 +19,15 @@ class DataForLearning(BasePipeline):
         """Run test."""
         # RDD(dir_path)
         records_dir = self.context().parallelize(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/features'
+        origin_prefix = '/apollo/docs/demo_guide/'
+        target_prefix = '/apollo/data/prediction/features/'
         self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        origin_prefix = 'small-records'
-        target_prefix = 'modules/prediction/features'
+        origin_prefix = 'small-records/'
+        target_prefix = 'modules/prediction/features/'
 
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -48,13 +48,13 @@ class DataForLearning(BasePipeline):
             # PairRDD(record_dir, map_name)
             .mapPartitions(self.get_dirs_map)
             # RDD(0/1), 1 for success
-            # .map(lambda dir_map: self.process_dir(
-            #     dir_map[0],
-            #     record_dir.replace(origin_prefix, os.path.join(target_prefix, dir_map[1]), 1)),
-            #     dir_map[1])
+            .map(lambda dir_map: self.process_dir(
+                dir_map[0],
+                dir_map[0].replace(origin_prefix,
+                                   os.path.join(target_prefix, dir_map[1] + '/'), 1),
+                dir_map[1]))
             .cache())
-        print(result.collect())
-        # glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
@@ -63,8 +63,6 @@ class DataForLearning(BasePipeline):
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_data_for_learning.sh '
             '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
-        print(command)
-        return 1
         if os.system(command) == 0:
             glog.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
             return 1
@@ -78,13 +76,10 @@ class DataForLearning(BasePipeline):
         collection = self.mongo().record_collection()
         dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         dir_map_list = []
-        for record_dir in record_dirs:
-            map_name = dir_map_dict.get(record_dir)
-            if map_name is None:
-                continue
-            if map_name.find("Sunnyvale") >= 0:
+        for record_dir, map_name in dir_map_dict.items():
+            if "Sunnyvale" in map_name:
                 dir_map_list.append((record_dir, "sunnyvale_with_two_offices"))
-            if map_name.find("San Mateo") >= 0:
+            if "San Mateo" in map_name:
                 dir_map_list.append((record_dir, "san_mateo"))
         return dir_map_list
 
