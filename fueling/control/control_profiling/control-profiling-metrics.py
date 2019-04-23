@@ -60,9 +60,11 @@ class ControlProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, task), the map of target dirs and source dirs
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # PairRDD(target_dir, record_file)
-         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')))
+         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
+                                     glob.glob(os.path.join(task, '*bag*')))
          # PairRDD(target_dir, record_file), filter out unqualified files
-         .filter(spark_op.filter_value(record_utils.is_record_file))
+         .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
+                                                    record_utils.is_bag_file(file)))
          # PairRDD(target_dir, message), control message only
          .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL]))
          # PairRDD(target_dir, (message)s)

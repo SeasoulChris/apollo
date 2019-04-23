@@ -11,10 +11,11 @@ from modules.data.fuel.fueling.control.proto.control_profiling_pb2 import Contro
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 
+
 def verify_vehicle_controller(task):
     """Verify if the task has any record file whose controller/vehicle types match config"""
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
-                        if record_utils.is_record_file(record_file)), None)
+                        if (record_utils.is_record_file(record_file) or record_utils.is_bag_file(record_file))), None)
     if not record_file:
         glog.warn('no valid record file found in task: {}'.format(task))
         return False
@@ -33,7 +34,7 @@ def verify_vehicle_controller(task):
         glog.error('no control messages found in task {} record {}'.format(task, record_file))
         return False
     return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
-        record_utils.message_to_proto(control_message))
+                               record_utils.message_to_proto(control_message))
 
 def data_matches_config(vehicle_type, controller_type):
     """Compare the data retrieved in record file and configured value and see if matches"""
