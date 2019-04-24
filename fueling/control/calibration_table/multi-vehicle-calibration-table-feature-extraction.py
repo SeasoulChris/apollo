@@ -36,6 +36,41 @@ def get_vehicle_type(data_folder):
     return vehicle_types
 
 
+def get_vehicle_type_prod(prefix):
+    bucket = 'apollo-platform'
+    vehicle = []
+    # list from RDD(conf_files).collect()
+    vehicle_dirs = s3_utils.list_files(bucket, prefix, '.pb.txt').collect()
+    for vehicle_dir in vehicle_dirs:
+        path = vehicle_dir.split('/')
+        vehicle.append(path[-2])
+    return vehicle
+
+
+def list_end_files_prod(prefix):
+    bucket = 'apollo-platform'
+    # list from RDD(files).collect()
+    return s3_utils.list_files(bucket, prefix).collect()
+
+
+def get_relative_path(abs_path):
+    return abs_path.replace(s3_utils.BOS_MOUNT_PATH + '/', '', 1)
+
+
+def get_vehicle_param_prod(prefix):
+    vehicle_para_conf_filename = 'vehicle_param.pb.txt'
+    bucket = 'apollo-platform'
+    return(
+        s3_utils.list_files(bucket, prefix, vehicle_para_conf_filename)
+        # PairRDD(vehicle, conf_file_path)
+        .keyBy(lambda path: path.split('/')[-2])
+        # PairRDD(vehicle, conf)
+        .mapValues(lambda conf_file: proto_utils.get_pb_from_text_file(
+            conf_file, vehicle_config_pb2.VehicleConfig()))
+        # PairRDD(vehicle, vehicle_param)
+        .mapValues(lambda vehicle_conf: vehicle_conf.vehicle_param))
+
+
 def get_todo_dirs(origin_vehicles):
     """ for run_test only, folder/vehicle/subfolder/*.record.* """
     return (origin_vehicles
@@ -108,12 +143,6 @@ def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
     return result_rdd
 
 
-def list_end_files_prod(files_dir):
-    # PairRDD(1, list_of_files)
-    return (s3_utils.list_files(files_dir)
-            .collect())
-
-
 class MultiCalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
         """ initialize """
@@ -153,16 +182,20 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/control/data/records'
         target_prefix = 'modules/control/data/results'
 
+        """ get conf files """
+        vehicle_param_conf = spark_helper.cache_and_log(
+            'conf_file', get_vehicle_param_prod(origin_prefix))
+
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
+            self.context().parallelize([origin_prefix])
             # RDD([vehicle_type])
-            .flatMap(get_vehicle_type)
+            .flatMap(get_vehicle_type_prod)
             # PairRDD(vehicle_type, [vehicle_type])
-            .keyBy(lambda vehicle_type: vehicle_type[0])
+            .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])))
+            .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type)))
 
         """ get to do jobs """
         todo_task_dirs = spark_helper.cache_and_log(
@@ -170,7 +203,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, path_to_vehicle_type)
             origin_vehicle_dir
             # PairRDD(vehicle_type, files)
-            .flatMapValues(lambda path: list_end_files_prod)
+            .flatMapValues(list_end_files_prod)
             # PairRDD(vehicle_type, 'COMPLETE'_files)
             .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
             # PairRDD(vehicle_type, path_to_'COMPLETE')
@@ -178,33 +211,31 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
 
         processed_dirs = spark_helper.cache_and_log(
             'processed_jobs',
-            # PairRDD(vehicle, task_dir)
+            # PairRDD(vehicle, abs_task_dir)
             todo_task_dirs
             # PairRDD(vehicle, task_dir_with_target_prefix)
             .map(lambda (vehicle, path):
-                 path.replace(os.path.join(origin_prefix, vehicle),
-                              os.path.join(target_prefix, 'CalibrationTableFeature',
-                                           vehicle, 'throttle', 'train'), 1))
+                 (vehicle, path.replace(os.path.join(origin_prefix, vehicle),
+                                        os.path.join(target_prefix, 'CalibrationTableFeature',
+                                                     vehicle, 'throttle', 'train'), 1)))
+            # PairRDD(vehicle, relative_task_dir)
+            .mapValues(get_relative_path)
+            # PairRDD(vehicle, files)
+            .flatMapValues(list_end_files_prod)
             # PairRDD(vehicle, file_end_with_MARKER)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle, file_end_with_MARKER with origin prefix)
             .map(lambda (vehicle, path):
-                 path.replace(os.path.join(target_prefix, 'CalibrationTableFeature',
-                                           vehicle, 'throttle', 'train'),
-                              os.path.join(origin_prefix, vehicle), 1))
-            # PairRDD(vehicle, processed_dir)
+                 (vehicle, path.replace(os.path.join(target_prefix, 'CalibrationTableFeature',
+                                                     vehicle, 'throttle', 'train'),
+                                        os.path.join(origin_prefix, vehicle), 1)))
+            # PairRDD(vehicle, dir of file_end_with_MARKER with origin prefix)
             .mapValues(os.path.dirname))
 
         # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
         todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
 
-        """ get conf files """
-        vehicle_param_conf = spark_helper.cache_and_log(
-            'conf_file',
-            # PairRDD(vehicle, dir_of_vehicle)
-            origin_vehicle_dir
-            # PairRDD(vehicle_type, vehicle_conf)
-            .mapValues(get_vehicle_param))
+        self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
     def run(self, todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix):
         records = spark_helper.cache_and_log(
