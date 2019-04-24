@@ -136,7 +136,15 @@ If you are pretty familliar with the infra, please:
        /path/to/spark/job.py <gflags>
    ```
 
-1. Monitor jobs with general `kubectl` commands. Here is a useful
-   [Cheet Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/).
+1. Monitor jobs with general `kubectl` commands.
 
-Please request resources carefully, as it may block other teammates' work.
+   * `kubectl get pods`, you'll find running PODs in the cluster.
+   * `kubectl logs -f <POD>`, you'll see all logs on that POD. Generally you may
+     need to check the `driver` logs often, and sometimes check the `exec` logs
+     to debug the executor code.
+   * Please study this
+     [Cheet Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet) to
+     get more from the cluster!
+
+Please request resources carefully, as it may block other teammates' work. And
+all your actions and jobs are under monitoring.
