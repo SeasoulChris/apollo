@@ -108,7 +108,7 @@ def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
     return result_rdd
 
 
-def list_end_files_prod(fils_dir):
+def list_end_files_prod(files_dir):
     # PairRDD(1, list_of_files)
     return (s3_utils.list_files(files_dir)
             .collect())
