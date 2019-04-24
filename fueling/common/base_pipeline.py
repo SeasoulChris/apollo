@@ -10,6 +10,7 @@ from fueling.common.mongo_utils import Mongo
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
+flags.DEFINE_boolean('debug', False, 'Enable debug logging.')
 
 
 class BasePipeline(object):
@@ -51,7 +52,10 @@ class BasePipeline(object):
     def __main__(self, argv):
         """Run the pipeline."""
         self.FLAGS = flags.FLAGS.flag_values_dict()
-        mode = self.FLAGS['running_mode']
+        if self.FLAGS.get('debug'):
+            glog.setLevel(glog.DEBUG)
+
+        mode = self.FLAGS.get('running_mode')
         if mode is None:
             glog.fatal('No running mode is specified! Please run the pipeline with /tools/<runner> '
                        'instead of calling native "python".')
