@@ -74,6 +74,7 @@ def get_config_control_profiling():
 def extract_data_from_msg(msg):
     """Extract wanted fields from control message"""
     msg_proto = record_utils.message_to_proto(msg)
+    control_latency = msg_proto.latency_stats;
     if get_config_control_profiling().controller_type == 'Lon_Lat_Controller':
         control_lon = msg_proto.debug.simple_lon_debug
         control_lat = msg_proto.debug.simple_lat_debug
@@ -108,6 +109,11 @@ def extract_data_from_msg(msg):
             control_lat.heading_rate,                    # 23
             control_lat.heading_acceleration,            # 24
             control_lat.heading_jerk,                    # 25
+            # Features: "Latency" category
+            control_latency.total_time_ms,               # 26
+            control_latency.total_time_exceeded,         # 27
+            control_latency.controller_time_ms[0],       # 28
+            control_latency.controller_time_ms[1]        # 29
         ])
     else:
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -142,5 +148,9 @@ def extract_data_from_msg(msg):
             control_mpc.heading_rate,                    # 23
             control_mpc.heading_acceleration,            # 24
             control_mpc.heading_jerk,                    # 25
+            # Features: "Latency" category
+            control_latency.total_time_ms,                # 26
+            control_latency.total_time_exceeded,          # 27
+            control_latency.controller_time_ms[0]         # 28
         ])
     return data_array

@@ -29,10 +29,12 @@ FEATURE_INDEX = {
     "heading_rate": 23,
     "heading_acceleration": 24,
     "heading_jerk": 25,
+    "total_time": 26,
+    "total_time_exceeded": 27,
 }
 
 FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
                  "curvature_reference", "station_error", "speed_error", "lateral_error", "lateral_error_rate", "heading_error",
                  "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station", "speed",
                  "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",
-                 "heading_acceleration", "heading_jerk"]
+                 "heading_acceleration", "heading_jerk", "total_time", "total_time_exceeded"]

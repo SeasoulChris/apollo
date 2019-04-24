@@ -37,5 +37,6 @@ message ControlProfiling {
     optional double control_period = 5;
     optional double control_frame_num = 6;
     optional double control_command_pct = 7;
-    optional double min_sample_size = 8;
+    optional double total_time_factor = 8;
+    optional double min_sample_size = 9;
 }

@@ -24,4 +24,5 @@ control_metrics{
 control_period: 0.01                    # unit: sec
 control_frame_num: 100                  # unit: frame
 control_command_pct: 100                # unit: 1
+total_time_factor: 1000                 # unit: micro-sec/sec
 min_sample_size: 5                      # unit: 1

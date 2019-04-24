@@ -65,7 +65,10 @@ def compute_h5_and_gradings(target_groups):
                                   'brake_control_usage',
                                   'brake_control_usage_harsh',
                                   'steering_control_usage',
-                                  'steering_control_usage_harsh'])
+                                  'steering_control_usage_harsh',
+                                  'total_time_usage',
+                                  'total_time_peak',
+                                  'total_time_exceeded_count'])
     grading_arguments = namedtuple('grading_arguments',
                                    ['std_filter_name',
                                     'std_filter_value',
@@ -78,8 +81,10 @@ def compute_h5_and_gradings(target_groups):
                                     'usage_feature_name',
                                     'usage_thold_value',
                                     'usage_threshold',
+                                    'usage_weight',
                                     'beyond_feature_name',
-                                    'beyond_threshold'])
+                                    'beyond_threshold',
+                                    'count_feature_name'])
     grading_results.__new__.__defaults__ = (None,) * len(grading_results._fields)
     grading_arguments.__new__.__defaults__ = (None,) * len(grading_arguments._fields)
     grading_group_result = grading_results(
@@ -240,32 +245,51 @@ def compute_h5_and_gradings(target_groups):
         throttle_control_usage=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='throttle_cmd',
             usage_thold_value='',
-            usage_threshold=''
+            usage_threshold='',
+            usage_weight=profiling_conf.control_command_pct
         )),
         brake_control_usage=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='brake_cmd',
             usage_thold_value='',
-            usage_threshold=''
+            usage_threshold='',
+            usage_weight=profiling_conf.control_command_pct
         )),
         steering_control_usage=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='steering_cmd',
             usage_thold_value='',
-            usage_threshold=''
+            usage_threshold='',
+            usage_weight=profiling_conf.control_command_pct
         )),
         throttle_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='throttle_cmd',
             usage_thold_value='acceleration_reference',
-            usage_threshold=profiling_conf.control_metrics.acceleration_harsh_limit
+            usage_threshold=profiling_conf.control_metrics.acceleration_harsh_limit,
+            usage_weight=profiling_conf.control_command_pct
         )),
         brake_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='brake_cmd',
             usage_thold_value='acceleration_reference',
-            usage_threshold=profiling_conf.control_metrics.acceleration_harsh_limit
+            usage_threshold=profiling_conf.control_metrics.acceleration_harsh_limit,
+            usage_weight=profiling_conf.control_command_pct
         )),
         steering_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='steering_cmd',
             usage_thold_value='curvature_reference',
-            usage_threshold=profiling_conf.control_metrics.curvature_harsh_limit
+            usage_threshold=profiling_conf.control_metrics.curvature_harsh_limit,
+            usage_weight=profiling_conf.control_command_pct
+        )),
+        total_time_usage=compute_usage(grading_mtx, grading_arguments(
+            usage_feature_name='total_time',
+            usage_thold_value='',
+            usage_threshold='',
+            usage_weight=profiling_conf.control_period * profiling_conf.total_time_factor
+        )),
+        total_time_peak=compute_peak(grading_mtx, grading_arguments(
+            peak_feature_name='total_time',
+            peak_threshold=profiling_conf.control_period * profiling_conf.total_time_factor
+        )),
+        total_time_exceeded_count=compute_count(grading_mtx, grading_arguments(
+            count_feature_name='total_time_exceeded'
         )))
     return (target, grading_group_result)
 
@@ -306,15 +330,21 @@ def compute_usage(grading_mtx, arg):
         glog.warn('no enough elements {} for usage computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
-    return (get_std_value([val / profiling_conf.control_command_pct
+    return (get_std_value([val / arg.usage_weight
                            for val in grading_mtx[:, feature_idx[arg.usage_feature_name]]]),
             elem_num)
 
 def compute_beyond(grading_mtx, arg):
-    """Compute the usage value"""
+    """Compute the beyond_the_threshold counting value"""
     elem_num, _ = grading_mtx.shape
     return (len(np.where(grading_mtx[:, feature_idx[arg.beyond_feature_name]] >=
                          arg.beyond_threshold)) / elem_num,
+            elem_num)
+
+def compute_count(grading_mtx, arg):
+    """Compute the event (boolean true) counting value"""
+    elem_num, _ = grading_mtx.shape
+    return (len(np.where(grading_mtx[:, feature_idx[arg.count_feature_name]] == 1)) / elem_num,
             elem_num)
 
 def get_std_value(grading_column):
@@ -338,7 +368,8 @@ def combine_gradings(grading_x, grading_y):
         val_x, num_x = grading_x[idx]
         val_y, num_y = grading_y[idx]
         # Standard deviation and usage values
-        if grading_x._fields[idx].find('std') >= 0 or grading_x._fields[idx].find('usage') >= 0:
+        if (grading_x._fields[idx].find('std') >= 0 or
+            grading_x._fields[idx].find('usage') >= 0):
             if num_x + num_y != 0:
                 grading_item_value = ((val_x ** 2 * (num_x - 1) + val_y ** 2 * (num_y - 1))
                                       / (num_x + num_y -1)) ** 0.5
@@ -347,8 +378,9 @@ def combine_gradings(grading_x, grading_y):
         # Peak values
         elif grading_x._fields[idx].find('peak') >= 0:
             grading_item_value = max(val_x, val_y)
-        # Beyond values
-        elif grading_x._fields[idx].find('sensation') >= 0:
+        # Beyond and count values
+        elif (grading_x._fields[idx].find('sensation') >= 0 or
+              grading_x._fields[idx].find('count') >= 0):
             if num_x + num_y != 0:
                 grading_item_value = (val_x * num_x + val_y * num_y) / (num_x + num_y)
             else:
