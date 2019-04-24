@@ -14,6 +14,7 @@ import colored_glog as glog
 from fueling.common.base_pipeline import BasePipeline
 
 
+# Constants
 BOS_MOUNT_PATH = '/mnt/bos'
 
 
@@ -53,20 +54,6 @@ def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
     for page in page_iterator:
         for obj in page.get('Contents', []):
             yield obj
-
-def clean_cache():
-    """
-    Clean BOS cache files which may take up POD ephemeral storage and cause failure.
-    When to use: If you read massive data from BOS.
-    How to use: Process data in batches, which means you should call mapPartitions() instead of
-                map(). Call the function after every batch to get best performance.
-    """
-    glog.info('Cleaning BOS cache...')
-    for tmp_file in glob.glob('/tmp/bosfs.tmp.*'):
-        try:
-            os.remove(tmp_file)
-        except Exception as error:
-            glog.error('Failed to remove file {}: {}'.format(tmp_file, error))
 
 def list_files(bucket, prefix, suffix='', to_abs_path=True):
     """Get a RDD of files with given prefix and suffix."""

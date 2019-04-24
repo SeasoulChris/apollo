@@ -6,6 +6,7 @@ from absl import app, flags
 from pyspark import SparkConf, SparkContext
 import colored_glog as glog
 
+from fueling.common.bos_client import BosClient
 from fueling.common.mongo_utils import Mongo
 
 
@@ -46,8 +47,12 @@ class BasePipeline(object):
         return cls.SPARK_CONTEXT
 
     def mongo(self):
-        """Get a mongo instance."""
+        """Get a mongo client."""
         return Mongo(self.FLAGS)
+
+    def bos(self):
+        """Get a BOS client."""
+        return BosClient(self.FLAGS)
 
     def __main__(self, argv):
         """Run the pipeline."""
