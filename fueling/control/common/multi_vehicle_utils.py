@@ -59,3 +59,27 @@ def plot_feature_hist(elem):
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
     return result_file
+
+
+def gen_param(vehicle_param, throttle_or_brake):
+    if throttle_or_brake == 'throttle':
+        cmd_min = vehicle_param.throttle_deadzone
+        cmd_max = CALIBRATION_TABLE_CONF.throttle_max
+        layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
+                 CALIBRATION_TABLE_CONF.throttle_train_layer2,
+                 CALIBRATION_TABLE_CONF.throttle_train_layer3]
+
+    elif throttle_or_brake == 'brake':
+        cmd_min = -1 * CALIBRATION_TABLE_CONF.brake_max
+        cmd_max = -1 * vehicle_param.brake_deadzone
+        layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
+                 CALIBRATION_TABLE_CONF.brake_train_layer2,
+                 CALIBRATION_TABLE_CONF.brake_train_layer3]
+
+    speed_min = CALIBRATION_TABLE_CONF.train_speed_min
+    speed_max = CALIBRATION_TABLE_CONF.train_speed_max
+    speed_segment_num = CALIBRATION_TABLE_CONF.train_speed_segment
+    cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
+    train_alpha = CALIBRATION_TABLE_CONF.train_alpha
+    return ((speed_min, speed_max, speed_segment_num),
+            (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha)

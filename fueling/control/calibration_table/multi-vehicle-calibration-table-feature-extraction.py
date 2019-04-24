@@ -149,14 +149,14 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
-    def run_prod(sef):
+    def run_prod(self):
         origin_prefix = 'modules/control/data/records'
         target_prefix = 'modules/control/data/results'
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([origin_prefix])
+            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
             # RDD([vehicle_type])
             .flatMap(get_vehicle_type)
             # PairRDD(vehicle_type, [vehicle_type])
