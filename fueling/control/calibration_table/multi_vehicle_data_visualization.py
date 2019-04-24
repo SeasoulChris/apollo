@@ -9,7 +9,6 @@ matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
 
 from matplotlib.backends.backend_pdf import PdfPages
-import colored_glog as glog
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,27 +56,35 @@ class MultiVehicleDataDistribution(BasePipeline):
             origin_vehicle_dir.mapValues(
                 lambda path: glob.glob(os.path.join(path, '*/*/*/*.hdf5'))))
 
+        # origin_prefix: absolute path
         self.run(hdf5_files, origin_prefix)
 
     def run_prod(self):
-        origin_prefix = 'modules/control/results/CalibrationTableFeature'
+        origin_prefix = 'modules/control/data/results/CalibrationTableFeature'
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
-            'origin_vehicle_dir', multi_vehicle_utils.get_vehicle_rdd(origin_prefix), 3)
+            'origin_vehicle_dir',
+            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
+            .flatMap(os.listdir)
+            .keyBy(lambda vehicle: vehicle)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         # PairRDD(vehicle, list_of_hdf5_files)
         hdf5_files = spark_helper.cache_and_log(
             'hdf5_files',
             origin_vehicle_dir.mapValues(list_end_files_prod))
 
-        self.run(hdf5_files, origin_prefix)
+        origin_dir = s3_utils.abs_path(origin_prefix)
+        self.run(hdf5_files, origin_dir)
 
-    def run(self, hdf5_file, target_prefix):
-        features = spark_helper.cache_and_log(
-            'features', hdf5_file.mapValues(read_hdf5))
+    def run(self, hdf5_file, target_dir):
+        # PairRDD(vehicle, features)
+        features = spark_helper.cache_and_log('features', hdf5_file.mapValues(read_hdf5))
+        # PairRDD(vehicle, result_file)
         plots = spark_helper.cache_and_log(
-            'plots', features.map(multi_vehicle_utils.plot_feature_hist))
+            'plots', features.map(lambda vehicle_feature:
+                                  multi_vehicle_utils.plot_feature_hist(vehicle_feature, target_dir)))
 
 
 if __name__ == '__main__':

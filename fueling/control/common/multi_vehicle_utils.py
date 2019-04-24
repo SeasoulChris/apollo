@@ -5,8 +5,9 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+import colored_glog as glog
 
 import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
@@ -40,22 +41,21 @@ def get_conf(conf_dir):
 
 DIM_INPUT = 3
 input_index = {
-    'speed': 0,  # chassis.speed_mps
-    'acceleration': 1,
-    'control command': 2,
+    0: 'speed',  # chassis.speed_mps
+    1: 'acceleration',
+    2: 'control command',
 }
 
 
-def plot_feature_hist(elem):
+def plot_feature_hist(elem, target_dir):
     vehicle, feature = elem
-    prefix = '/apollo/modules/data/fuel/testdata/control/generated/CalibrationTableFeature'
     timestr = time.strftime('%Y%m%d-%H%M%S')
-    result_file = os.path.join(prefix, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
+    result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
     with PdfPages(result_file) as pdf:
         for j in range(DIM_INPUT):
             plt.figure(figsize=(4, 3))
             plt.hist(feature[:, j], bins='auto')
-            plt.title("Histogram of the " + list(input_index)[j])
+            plt.title("Histogram of the " + input_index[j])
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
     return result_file
