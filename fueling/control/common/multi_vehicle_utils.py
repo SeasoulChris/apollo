@@ -35,8 +35,12 @@ brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
 train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
-def get_vehicle(input_folder):
-    return [folder.rsplit('/') for folder in os.listdir(input_folder)]
+# def get_vehicle(input_folder):
+#     return [folder.rsplit('/') for folder in os.listdir(input_folder)]
+
+
+def get_vehicle(path):
+    return [sub_folder for sub_folder in os.listdir(path) if os.path.isdir(os.path.join(path, sub_folder))]
 
 
 def get_vehicle_rdd(origin_prefix):
@@ -133,7 +137,8 @@ def gen_plot(elem, target_dir, throttle_or_brake):
                 (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha), acc_maxtrix)) = elem
 
     timestr = time.strftime('%Y%m%d-%H%M%S')
-    result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
+    result_file = os.path.join(
+        target_dir, vehicle, (throttle_or_brake + '_result_%s.pdf' % timestr))
 
     cmd_array = np.linspace(cmd_min, cmd_max, num=cmd_segment_num)
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
