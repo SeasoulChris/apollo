@@ -5,15 +5,34 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
 import colored_glog as glog
+import matplotlib.pyplot as plt
+import numpy as np
 
 import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.s3_utils as s3_utils
+import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
+
+
+FILENAME_CALIBRATION_TABLE_CONF = \
+    '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
+CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
+                                                           CalibrationTable.CalibrationTable())
+
+throttle_train_layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
+                        CALIBRATION_TABLE_CONF.throttle_train_layer2,
+                        CALIBRATION_TABLE_CONF.throttle_train_layer3]
+
+brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
+                     CALIBRATION_TABLE_CONF.brake_train_layer2,
+                     CALIBRATION_TABLE_CONF.brake_train_layer3]
+
+train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
 def get_vehicle(input_folder):
@@ -106,3 +125,27 @@ def gen_param(vehicle_param, throttle_or_brake):
     train_alpha = CALIBRATION_TABLE_CONF.train_alpha
     return ((speed_min, speed_max, speed_segment_num),
             (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha)
+
+
+def gen_plot(elem, target_dir, throttle_or_brake):
+
+    (vehicle, (((speed_min, speed_max, speed_segment_num),
+                (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha), acc_maxtrix)) = elem
+
+    timestr = time.strftime('%Y%m%d-%H%M%S')
+    result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
+
+    cmd_array = np.linspace(cmd_min, cmd_max, num=cmd_segment_num)
+    speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)
+    speed_maxtrix, cmd_matrix = np.meshgrid(speed_array, cmd_array)
+    grid_array = np.array([[s, c] for s, c in zip(np.ravel(speed_array), np.ravel(cmd_array))])
+    with PdfPages(result_file) as pdf:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(speed_maxtrix, cmd_matrix, acc_maxtrix,
+                        alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
+        ax.set_xlabel('$speed$')
+        ax.set_ylabel('$throttle$')
+        ax.set_zlabel('$acceleration$')
+        pdf.savefig()
+    return result_file
