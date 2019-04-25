@@ -39,8 +39,7 @@ train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
 def list_hdf5_prod(path):
-    bucket = 'apollo-platform'
-    return s3_utils.list_files(bucket, path, '.hdf5').collect()
+    return BasePipeline.bos().list_files(bucket, path, '.hdf5').collect()
 
 
 def get_todo_dirs(origin_vehicles):
