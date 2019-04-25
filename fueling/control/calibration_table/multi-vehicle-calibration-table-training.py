@@ -183,7 +183,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.to_rdd([s3_utils.abs_path(origin_prefix)])
+            self.to_rdd([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
             # RDD([vehicle_type])
             .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])
@@ -195,7 +195,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         conf_vehicle_dir = spark_helper.cache_and_log(
             'conf_vehicle_dir',
-            self.to_rdd([s3_utils.abs_path(origin_prefix)])
+            self.to_rdd([os.path.join(s3_utils.BOS_MOUNT_PATH, conf_prefix)])
             # RDD([vehicle_type])
             .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])
