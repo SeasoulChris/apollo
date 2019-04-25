@@ -38,8 +38,8 @@ brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
 train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
-def list_hdf5_prod(path):
-    return BasePipeline.bos().list_files(bucket, path, '.hdf5').collect()
+# def list_hdf5_prod(path):
+#     return BasePipeline.bos().list_files(path, '.hdf5').collect()
 
 
 def get_todo_dirs(origin_vehicles):
@@ -59,20 +59,20 @@ def get_vehicle_param(folder_dir):
     return VEHICLE_PARAM_CONF.vehicle_param
 
 
-def get_feature_hdf5_prod(feature_dir, throttle_or_brake, train_or_test):
-    return (
-        # PairRDD(vehicle, feature folder)
-        feature_dir
-        # PairRDD(vehicle, throttle/brake train/test folder)
-        .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
-        # PairRDD(vehicle, all files in throttle/brake train/test folder)
-        .flatMapValues(list_hdf5_prod)
-        # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
-        .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
-        # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
-        .groupByKey()
-        # PairRDD((vehicle, 'throttle or brake'), list of hdf5 files)
-        .mapValues(list))
+# def get_feature_hdf5_prod(feature_dir, throttle_or_brake, train_or_test):
+#     return (
+#         # PairRDD(vehicle, feature folder)
+#         feature_dir
+#         # PairRDD(vehicle, throttle/brake train/test folder)
+#         .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
+#         # PairRDD(vehicle, all files in throttle/brake train/test folder)
+#         .flatMapValues(list_hdf5_prod)
+#         # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
+#         .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
+#         # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
+#         .groupByKey()
+#         # PairRDD((vehicle, 'throttle or brake'), list of hdf5 files)
+#         .mapValues(list))
 
 
 def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
@@ -123,6 +123,21 @@ class MultiCalibrationTableTraining(BasePipeline):
     def __init__(self):
         """ initialize """
         BasePipeline.__init__(self, 'multi_calibration_table_training')
+
+    def get_feature_hdf5_prod(self, feature_dir, throttle_or_brake, train_or_test):
+        return (
+            # PairRDD(vehicle, feature folder)
+            feature_dir
+            # PairRDD(vehicle, throttle/brake train/test folder)
+            .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
+            # PairRDD(vehicle, all files in throttle/brake train/test folder)
+            .flatMapValues(self.bos().list_files(path, '.hdf5'))
+            # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
+            .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
+            # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
+            .groupByKey()
+            # PairRDD((vehicle, 'throttle or brake'), list of hdf5 files)
+            .mapValues(list))
 
     def run_test(self):
         """Run test."""
