@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
 
-function Run() {
-  # Go to apollo-fuel root.
-  cd "$( dirname "${BASH_SOURCE[0]}" )/.."
-  # Fail on first error.
-  set -e
+set -e
 
-  git remote update
-  git reset --hard origin/master
+# Preapre: Goto fuel root, checkout latest code.
+cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
-  # 1. Generate small records.
-  JOB="fueling/data/pipelines/generate-small-records.py"
-  ENV="fuel-py27-cyber"
-  ./tools/submit-job-to-k8s.sh ${JOB} --env ${ENV} --workers 16 --cpu 1 --memory 20g
-}
+git remote update
+git reset --hard origin/master
 
-function Help() {
-  echo "Add this to 'crontab -e':"
-  #     m h
-  echo "0 3 * * * $(realpath "${BASH_SOURCE[0]}") run"
-}
+# Job: Generate small records.
+JOB="fueling/data/pipelines/generate-small-records.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
+JOB="fueling/data/pipelines/reorg-small-records.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
 
-if [ "$1" = "run" ]; then
-  Run
-else
-  Help
-fi
+# Job: Bags to records.
+JOB="fueling/data/pipelines/bag-to-record.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
+
+# Job: Index records.
+JOB="fueling/data/pipelines/index-records.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
