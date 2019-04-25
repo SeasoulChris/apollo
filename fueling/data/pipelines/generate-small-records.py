@@ -68,20 +68,20 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        todo_records = self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+        todo_records = self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
         src_prefix = 'docs/demo_guide'
         dst_prefix = 'data'
         self.run(todo_records, src_prefix, dst_prefix)
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         src_prefix = 'public-test/2019/'
         dst_prefix = 'modules/data/public-test-small/2019/'
 
+        bos = self.bos()
         # RDD(src_file)
-        src_files = s3_utils.list_files(bucket, src_prefix).cache()
-        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
+        src_files = self.to_rdd(bos.list_files(src_prefix)).cache()
+        dst_files = self.to_rdd(bos.list_files(dst_prefix)).cache()
         # Only process those COMPLETE folders.
 
         is_marker = lambda path: path.endswith(MARKER)

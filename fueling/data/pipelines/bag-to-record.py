@@ -12,9 +12,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.s3_utils as s3_utils
 
 
-import termcolor
-
-
 flags.DEFINE_boolean('skip_existing_record', True, 'Skip existing record.')
 
 # Constants.
@@ -30,7 +27,7 @@ class BagToRecord(BasePipeline):
     def run_test(self):
         """Run test."""
         # PairRDD(src_bag, dst_record)
-        bag_to_record = self.context().parallelize([
+        bag_to_record = self.to_rdd([
             ('/apollo/docs/demo_guide/demo_2.0.bag',
              '/apollo/modules/data/fuel/testdata/data/generated/demo_2.0.record'),
         ])
@@ -38,16 +35,16 @@ class BagToRecord(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         src_prefix = 'stale-rosbags'
         dst_prefix = 'small-records'
 
+        bos = self.bos()
         # PairRDD(src_dir, src_bag)
         marked_dir_to_bag = spark_op.filter_keys(
             # PairRDD(src_dir, src_bag)
-            s3_utils.list_files(bucket, src_prefix, '.bag').keyBy(os.path.dirname),
+            self.to_rdd(bos.list_files(src_prefix, '.bag')).keyBy(os.path.dirname),
             # RDD(src_dir), which has a MARKER.
-            s3_utils.list_files(bucket, src_prefix, MARKER).map(os.path.dirname))
+            self.to_rdd(bos.list_files(src_prefix, MARKER)).map(os.path.dirname))
 
         # PairRDD(dst_record, src_bag)
         record_to_bag = (
@@ -64,7 +61,7 @@ class BagToRecord(BasePipeline):
             glog.info('Skip existing record.')
             # PairRDD(dst_record, src_bag)
             record_to_bag = spark_op.substract_keys(
-                record_to_bag, s3_utils.list_files(bucket, dst_prefix, '.record'))
+                record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record')))
         self.run(record_to_bag.map(spark_op.swap_kv))
 
     def run(self, bag_to_record):

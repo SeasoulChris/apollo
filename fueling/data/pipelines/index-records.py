@@ -23,19 +23,19 @@ class IndexRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        self.process(self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record']))
+        self.process(self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record']))
 
     def run_prod(self):
         """Run prod."""
         summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
-        bucket = 'apollo-platform'
         prefixes = [
             'public-test/',
             'small-records/',
         ]
+        bos = self.bos()
         # RDD(record_path)
         records_rdd = self.context().union([
-            s3_utils.list_files(bucket, prefix).filter(record_utils.is_record_file)
+            self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
         self.process(records_rdd, summary_receivers)
 

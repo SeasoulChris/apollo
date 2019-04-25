@@ -46,6 +46,10 @@ class BasePipeline(object):
             cls.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName('BasePipeline'))
         return cls.SPARK_CONTEXT
 
+    def to_rdd(self, data):
+        """Get an RDD of data."""
+        return self.context().parallelize(data)
+
     def mongo(self):
         """Get a mongo client."""
         return Mongo(self.FLAGS)

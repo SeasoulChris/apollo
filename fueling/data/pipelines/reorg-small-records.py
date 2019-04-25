@@ -31,21 +31,21 @@ class ReorgSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(src_record)
-        src_records = self.context().parallelize(['/apollo/docs/demo_guide/demo_3.5.record'])
+        src_records = self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
         src_prefix = '/apollo/docs/demo_guide'
         dst_prefix = '/apollo/data'
         self.run(src_records, src_prefix, dst_prefix)
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         src_prefix = 'modules/data/public-test-small/2019/'
         dst_prefix = 'small-records/2019/'
 
+        bos = self.bos()
         # RDD(src_file)
-        src_files = s3_utils.list_files(bucket, src_prefix).cache()
+        src_files = self.to_rdd(bos.list_files(src_prefix)).cache()
         # RDD(dst_file)
-        dst_files = s3_utils.list_files(bucket, dst_prefix).cache()
+        dst_files = self.to_rdd(bos.list_files(dst_prefix)).cache()
 
         is_complete_marker = lambda path: path.endswith(MARKER)
         # RDD(src_dir)
