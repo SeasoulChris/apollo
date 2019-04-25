@@ -112,7 +112,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle, throttle/brake train/test folder)
             .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
             # PairRDD(vehicle, all files in throttle/brake train/test folder)
-            .flatMapValues(self.bos().list_files(path, '.hdf5'))
+            .flatMapValues(lambda path: self.bos().list_files(path, '.hdf5'))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
             .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
@@ -211,7 +211,6 @@ class MultiCalibrationTableTraining(BasePipeline):
         throttle_train_files = spark_helper.cache_and_log(
             'throttle_train_files',
             self.get_feature_hdf5_prod(origin_vehicle_dir, 'throttle', 'train'), 3)
-        return
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_test_files = spark_helper.cache_and_log(
