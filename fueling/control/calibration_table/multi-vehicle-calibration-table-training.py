@@ -17,6 +17,7 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
+import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
@@ -61,6 +62,42 @@ def get_vehicle_param(folder_dir):
     VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(
         conf_file, vehicle_config_pb2.VehicleConfig())
     return VEHICLE_PARAM_CONF.vehicle_param
+
+
+def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
+    return (
+        # RDD(feature folder)
+        feature_dir
+        # RDD(throttle/brake train/test feature folder)
+        .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
+        # RDD(all files in throttle train feature folder)
+        .flatMapValues(multi_vehicle_utils.list_hdf5_prod)
+        # PairRDD('throttle or brake', hdf5 files)
+        .keyBy(lambda (vehicle, features): (vehicle, throttle_or_brake))
+        .mapValues(lambda (vehicle, path): path)
+        # PairRDD('throttle or brake', hdf5 files RDD)
+        .groupByKey()
+        # PairRDD('throttle or brake', list of hdf5 files)
+        .mapValues(list))
+
+# TODO: get hdf5 files for prod
+
+
+def get_feature_hdf5_files_prod(feature_dir, throttle_or_brake, train_or_test):
+    return (
+        # RDD(feature folder)
+        feature_dir
+        # RDD(throttle/brake train/test feature folder)
+        .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
+        # RDD(all files in throttle train feature folder)
+        .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5')))
+        # PairRDD('throttle or brake', hdf5 files)
+        .keyBy(lambda (vehicle, features): (vehicle, throttle_or_brake))
+        .mapValues(lambda (vehicle, path): path)
+        # PairRDD('throttle or brake', hdf5 files RDD)
+        .groupByKey()
+        # PairRDD('throttle or brake', list of hdf5 files)
+        .mapValues(list))
 
 
 def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
@@ -177,49 +214,49 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([origin_prefix])
+            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
             # RDD([vehicle_type])
-            .flatMap(get_vehicle_type)
+            .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])
-            .keyBy(lambda vehicle_type: vehicle_type[0])
+            .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])))
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         """ get conf files """
         # RDD(origin_dir)
         conf_vehicle_dir = spark_helper.cache_and_log(
             'conf_vehicle_dir',
-            self.context().parallelize([conf_prefix])
+            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, conf_prefix)])
             # RDD([vehicle_type])
-            .flatMap(get_vehicle_type)
+            .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])
-            .keyBy(lambda vehicle_type: vehicle_type[0])
+            .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(conf_prefix, vehicle_type[0])), 3)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
-            'conf_file',
-            # PairRDD(vehicle, dir_of_vehicle)
-            conf_vehicle_dir
-            # PairRDD(vehicle_type, vehicle_conf)
-            .mapValues(get_vehicle_param), 3)
+            'conf_file', multi_vehicle_utils.get_vehicle_param_prod(conf_prefix))
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_train_files = spark_helper.cache_and_log(
             'throttle_train_files',
             get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train'), 3)
-        return
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
-        throttle_test_files = get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'test')
+        throttle_test_files = spark_helper.cache_and_log(
+            'throttle_test_files',
+            get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'test'))
 
         # PairRDD((vehicle, 'brake'), list of hdf5 files)
-        brake_train_files = get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'train')
+        brake_train_files = spark_helper.cache_and_log(
+            'brake_train_files',
+            get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'train'))
 
         # PairRDD((vehicle, 'brake'), list of hdf5 files)
-        brake_test_files = get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'test')
-        glog.info(brake_test_files.collect())
+        brake_test_files = spark_helper.cache_and_log(
+            'brake_test_files',
+            get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'test'))
 
         feature_dir = (throttle_train_files, throttle_test_files,
                        brake_train_files, brake_test_files)

@@ -28,6 +28,11 @@ MARKER = 'CompleteCalibrationTable'
 TASK = 'CalibrationTalbe'
 
 
+def list_hdf5_prod(path):
+    bucket = 'apollo-platform'
+    return s3_utils.list_files(bucket, path, '.hdf5').collect()
+
+
 def get_vehicle_type(data_folder):
     sub_folders = os.listdir(data_folder)
     vehicle_types = []

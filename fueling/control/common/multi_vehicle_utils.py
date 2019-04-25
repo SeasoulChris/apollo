@@ -13,6 +13,7 @@ import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.s3_utils as s3_utils
 
 
 def get_vehicle(input_folder):
@@ -29,6 +30,28 @@ def get_vehicle_rdd(origin_prefix):
         .keyBy(lambda vehicle_type: vehicle_type[0])
         # PairRDD(vehicle_type, path_to_vehicle_type)
         .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])))
+
+
+def get_vehicle_param(folder_dir):
+    vehicle_para_conf_filename = 'vehicle_param.pb.txt'
+    conf_file = os.path.join(folder_dir, vehicle_para_conf_filename)
+    VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(
+        conf_file, vehicle_config_pb2.VehicleConfig())
+    return VEHICLE_PARAM_CONF.vehicle_param
+
+
+def get_vehicle_param_prod(prefix):
+    vehicle_para_conf_filename = 'vehicle_param.pb.txt'
+    bucket = 'apollo-platform'
+    return(
+        s3_utils.list_files(bucket, prefix, vehicle_para_conf_filename)
+        # PairRDD(vehicle, conf_file_path)
+        .keyBy(lambda path: path.split('/')[-2])
+        # PairRDD(vehicle, conf)
+        .mapValues(lambda conf_file: proto_utils.get_pb_from_text_file(
+            conf_file, vehicle_config_pb2.VehicleConfig()))
+        # PairRDD(vehicle, vehicle_param)
+        .mapValues(lambda vehicle_conf: vehicle_conf.vehicle_param))
 
 
 def get_conf(conf_dir):
