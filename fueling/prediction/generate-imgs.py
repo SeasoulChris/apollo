@@ -23,8 +23,7 @@ class GenerateImgs(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(dir_path)
-        records_dir = self.context().parallelize(
-            glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
+        records_dir = self.to_rdd(glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
         origin_prefix = '/apollo/data/prediction/frame_env'
         target_prefix = '/apollo/data/prediction/img_features'
         self.run(records_dir, origin_prefix, target_prefix)

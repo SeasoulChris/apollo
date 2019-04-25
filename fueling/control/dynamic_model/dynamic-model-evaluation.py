@@ -28,23 +28,16 @@ class DynamicModelEvaluation(BasePipeline):
         mlp_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp/*')
         lstm_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm/*')
 
-        mlp_model_rdd = (
-            # RDD(folder_path) for mlp models
-            self.context().parallelize(glob.glob(mlp_model_path))
-            # PairRDD(model_name, folder_path)
-            .keyBy(lambda _: 'mlp'))
-
-        lstm_model_rdd = (
-            # RDD(folder_path) for lstm models
-            self.context().parallelize(glob.glob(lstm_model_path))
-            # PairRDD(model_name, folder_path)
-            .keyBy(lambda _: 'lstm'))
+        # PairRDD(model_name, folder_path)
+        mlp_model_rdd = self.to_rdd(glob.glob(mlp_model_path)).keyBy(lambda _: 'mlp')
+        # PairRDD(model_name, folder_path)
+        lstm_model_rdd = self.to_rdd(glob.glob(lstm_model_path)).keyBy(lambda _: 'lstm')
 
         evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation/%s/*.hdf5' % VEHICLE_ID)
 
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
-            self.context().parallelize(glob.glob(evaluation_dataset))
+            self.to_rdd(glob.glob(evaluation_dataset))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
 

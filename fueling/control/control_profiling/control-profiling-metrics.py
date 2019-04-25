@@ -32,7 +32,7 @@ class ControlProfilingMetrics(BasePipeline):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
         # RDD(tasks), the task dirs
-        todo_tasks = self.context().parallelize([
+        todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, 'Road_Test'),
             os.path.join(origin_prefix, 'Sim_Test')
         ]).cache()

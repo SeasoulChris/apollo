@@ -35,7 +35,7 @@ class CalTabFeatureExt(BasePipeline):
         ]
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/calibration_table'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/calibration_table/generated'
-        dir_to_records = self.context().parallelize(records).keyBy(os.path.dirname)
+        dir_to_records = self.to_rdd(records).keyBy(os.path.dirname)
 
         self.run(dir_to_records, origin_prefix, target_prefix, root_dir)
 

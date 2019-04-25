@@ -51,7 +51,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
         result_file = os.path.join(output_dir, file_name)
 
         # RDD(file_path) for training dataset.
-        hdf5_rdd = self.context().parallelize(training_dataset)
+        hdf5_rdd = self.to_rdd(training_dataset)
         if hdf5_rdd.count() != 0:
             hdf5_file_list = hdf5_rdd.collect()
             self.run(hdf5_file_list, result_file)

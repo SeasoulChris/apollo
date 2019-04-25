@@ -138,9 +138,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
-        (self.context()
-         # RDD(task_dir), with absolute paths
-         .parallelize(todo_tasks)
+        (self.to_rdd(todo_tasks)
          # RDD(task_dir), distinct paths
          .distinct()
          # PairRDD(target_dir, task)

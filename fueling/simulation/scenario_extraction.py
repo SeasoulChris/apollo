@@ -90,7 +90,7 @@ class ScenarioExtractionPipeline(BasePipeline):
         # RDD(tasks), the tasks without root_dir as prefix
         todo_tasks = get_todo_tasks(
             original_prefix, target_prefix,
-            lambda path: self.context().parallelize(list_end_files(os.path.join(root_dir, path))))
+            lambda path: self.to_rdd(list_end_files(os.path.join(root_dir, path))))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, original_prefix, target_prefix)

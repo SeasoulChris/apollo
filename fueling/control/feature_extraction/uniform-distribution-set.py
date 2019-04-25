@@ -64,7 +64,7 @@ class UniformDistributionSet(BasePipeline):
 
         # RDD(hdf5 files)
         hdf5_files = spark_helper.cache_and_log('hdf5 files',
-            self.context().parallelize([origin_prefix])
+            self.to_rdd([origin_prefix])
             .flatMap(lambda path: glob.glob(os.path.join(path, '*/*hdf5'))))
 
         self.run(hdf5_files, target_dir, sample_size)

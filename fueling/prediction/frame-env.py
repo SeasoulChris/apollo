@@ -17,7 +17,7 @@ class FrameEnv(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(dir_path)
-        records_dir = self.context().parallelize(['/apollo/docs/demo_guide'])
+        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide'
         target_prefix = '/apollo/data/prediction/frame_env'
         self.run(records_dir, origin_prefix, target_prefix)

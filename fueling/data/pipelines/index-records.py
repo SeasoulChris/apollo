@@ -44,7 +44,7 @@ class IndexRecords(BasePipeline):
         docs = self.mongo().record_collection().find({}, {'path': 1})
         # RDD(record_path), which is indexed before.
         indexed_records = spark_helper.cache_and_log(
-            'IndexedRecords', self.context().parallelize([doc['path'] for doc in docs]))
+            'IndexedRecords', self.to_rdd([doc['path'] for doc in docs]))
         # RDD(record_path), which is not indexed.
         records_rdd = spark_helper.cache_and_log(
             'RecordsToIndex', records_rdd.subtract(indexed_records))

@@ -52,7 +52,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
                                      WANTED_VEHICLE, 'CalibrationTable')
         throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
         # RDD(record_dirs)
-        todo_tasks = self.context().parallelize([origin_prefix])
+        todo_tasks = self.to_rdd([origin_prefix])
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
             dir_utils.get_todo_records(todo_tasks))

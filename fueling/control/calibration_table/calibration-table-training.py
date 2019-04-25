@@ -103,7 +103,7 @@ class CalibrationTableTraining(BasePipeline):
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                   WANTED_VEHICLE, 'conf')
         # RDD(origin_dir)
-        feature_dir = self.context().parallelize([origin_dir])
+        feature_dir = self.to_rdd([origin_dir])
 
         # RDD('throttle', list of hdf5 files)
         throttle_train_files = get_feature_hdf5_files(feature_dir, 'throttle', 'train')

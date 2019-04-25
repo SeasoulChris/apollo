@@ -24,7 +24,7 @@ class PerformanceEvaluator(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        result_files = self.context().parallelize(
+        result_files = self.to_rdd(
             glob.glob('/apollo/data/mini_data_pipeline/results/*/prediction_result.*.bin'))
         metrics = self.run(result_files)
         saved_filename = 'metrics_{}.npy'.format(TIME_RANGE)

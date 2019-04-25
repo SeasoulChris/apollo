@@ -32,7 +32,7 @@ class ControlProfilingVisualization(BasePipeline):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
         target_prefix = origin_prefix
         # RDD(tasks), the task dirs
-        todo_tasks = self.context().parallelize([
+        todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, 'Transit_Auto'),
             os.path.join(origin_prefix, 'Transit_Auto2')
         ]).cache()

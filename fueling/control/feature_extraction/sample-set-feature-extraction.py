@@ -37,7 +37,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         # RDD(record_dirs)
-        todo_tasks = (self.context().parallelize([origin_prefix])
+        todo_tasks = (self.to_rdd([origin_prefix])
             .flatMap(lambda path: glob.glob(os.path.join(path, '*'))))
         print(todo_tasks.first())
         # PairRDD(record_dirs, record_files)

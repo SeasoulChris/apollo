@@ -20,7 +20,7 @@ class CalTabFeatureExtPipeline(BasePipeline):
     def run_test(self):
         """Run test."""
         folder_path = ["/apollo/modules/data/fuel/testdata/control/transient_1"]
-        self.run(self.context().parallelize(folder_path))
+        self.run(self.to_rdd(folder_path))
 
     @staticmethod
     def run(records_rdd):

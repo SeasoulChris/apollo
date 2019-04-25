@@ -18,8 +18,7 @@ class GenerateLabels(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(bin_files)
-        bin_files = self.context().parallelize(
-            glob.glob('/apollo/data/prediction/labels/*/feature.*.bin'))
+        bin_files = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/feature.*.bin'))
         self.run(bin_files)
 
     def run_prod(self):

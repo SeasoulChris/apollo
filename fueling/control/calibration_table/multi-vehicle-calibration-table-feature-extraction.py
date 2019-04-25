@@ -156,7 +156,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([origin_prefix])
+            self.to_rdd([origin_prefix])
             # RDD([vehicle_type])
             .flatMap(get_vehicle_type)
             # PairRDD(vehicle_type, [vehicle_type])
@@ -189,7 +189,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([origin_prefix])
+            self.to_rdd([origin_prefix])
             # RDD([vehicle_type])
             .flatMap(get_vehicle_type_prod)
             # PairRDD(vehicle_type, [vehicle_type])

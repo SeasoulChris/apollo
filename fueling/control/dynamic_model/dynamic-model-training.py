@@ -23,7 +23,7 @@ class DynamicModelTraining(BasePipeline):
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
         training_dataset = [os.path.join(data_dir, 'hdf5_training/training_test.hdf5')]
         # RDD(file_path) for training dataset.
-        training_dataset_rdd = self.context().parallelize(training_dataset)
+        training_dataset_rdd = self.to_rdd(training_dataset)
         self.run(training_dataset_rdd, output_dir)
 
     def run_prod(self):

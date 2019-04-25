@@ -65,7 +65,7 @@ class MultiVehicleDataDistribution(BasePipeline):
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.context().parallelize([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
+            self.to_rdd([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
             .flatMap(os.listdir)
             .keyBy(lambda vehicle: vehicle)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))

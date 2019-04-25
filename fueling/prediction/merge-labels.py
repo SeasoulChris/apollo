@@ -18,8 +18,7 @@ class MergeLabels(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(npy_file)
-        npy_file_rdd = self.context().parallelize(
-            glob.glob('/apollo/data/prediction/labels/*/*.npy'))
+        npy_file_rdd = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/*.npy'))
         self.run(npy_file_rdd)
 
     def run_prod(self):

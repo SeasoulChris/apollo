@@ -19,8 +19,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        datalearn_files = self.context().parallelize(
-            glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))
+        datalearn_files = self.to_rdd(glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))
         self.run(datalearn_files)
 
     def run_prod(self):

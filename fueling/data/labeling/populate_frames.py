@@ -237,7 +237,7 @@ class PopulateFramesPipeline(BasePipeline):
 
         glog.info('Load messages META data for query')
         # -> RDD(task_dir), with absolute paths
-        msgs_rdd = (self.context().parallelize(todo_tasks).distinct()
+        msgs_rdd = (self.to_rdd(todo_tasks).distinct()
                     # PairRDD(target_dir, task_dir), target_dir is destination, task_dir is source
                     .keyBy(lambda task_dir: os.path.join(target_dir, os.path.basename(task_dir)))
                     # PairRDD(target_dir, record_files)
