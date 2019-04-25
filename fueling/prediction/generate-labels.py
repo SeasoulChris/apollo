@@ -7,7 +7,6 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator
-import fueling.common.s3_utils as s3_utils
 
 
 class GenerateLabels(BasePipeline):
@@ -23,11 +22,10 @@ class GenerateLabels(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/ground_truth'
 
         # RDD(bin_file)
-        bin_files  = s3_utils.list_files(bucket, source_prefix).filter(
+        bin_files  = self.to_rdd(self.bos().list_files(source_prefix)).filter(
             spark_op.filter_path(['*feature.*.bin']))
         self.run(bin_files)
 

@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 
 
 def read_hdf5(hdf5_file_list):
@@ -64,16 +63,14 @@ class CalibrationTableDataDistribution(BasePipeline):
         self.run(hdf5_file_list, result_file)
 
     def run_prod(self):
-        bucket = 'apollo-platform'
         origin_prefix = 'modules/control/CalibrationTable'
 
         timestr = time.strftime('%Y%m%d-%H%M%S')
         target_prefix = '/mnt/bos/modules/control/CalibrationTable'
         result_file = os.path.join(target_prefix, 'Dataset_Distribution_%s.pdf' % timestr)
 
-        hdf5_rdd = s3_utils.list_files(bucket, origin_prefix, '.hdf5').cache()
-        if hdf5_rdd.count() != 0:
-            hdf5_file_list = hdf5_rdd.collect()
+        hdf5_file_list = self.bos().list_files(origin_prefix, '.hdf5')
+        if hdf5_file_list:
             self.run(hdf5_file_list, result_file)
         else:
             glog.error('No hdf5 files are found')

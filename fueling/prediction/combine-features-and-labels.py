@@ -9,7 +9,6 @@ import pyspark_utils.op as spark_op
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 
 
 class FeaturesAndLabelsCombine(BasePipeline):
@@ -24,11 +23,10 @@ class FeaturesAndLabelsCombine(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/features-san-mateo'
 
         # RDD(datalearn_file)
-        datalearn_file_rdd = s3_utils.list_files(bucket, origin_prefix).filter(
+        datalearn_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*datalearn.*.bin']))
 
         self.run(datalearn_file_rdd)

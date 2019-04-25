@@ -14,7 +14,6 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
@@ -41,11 +40,10 @@ class CalTabFeatureExt(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'small-records/2019/'
         target_prefix = 'modules/control/feature_extraction_hf5/2019/'
 
-        files = s3_utils.list_files(bucket, origin_prefix).cache()
+        files = self.to_rdd(self.bos().list_files(origin_prefix)).cache()
         complete_dirs = files.filter(lambda path: path.endswith('/COMPLETE')).map(os.path.dirname)
         dir_to_records = files.filter(record_utils.is_record_file).keyBy(os.path.dirname)
         self.run(spark_op.filter_keys(dir_to_records, complete_dirs), origin_prefix, target_prefix)

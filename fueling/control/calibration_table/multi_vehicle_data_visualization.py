@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
 
@@ -31,11 +31,6 @@ def read_hdf5(hdf5_file_list):
                 else:
                     segment = np.concatenate((segment, np.array(value)), axis=0)
     return segment
-
-
-def list_end_files_prod(path):
-    bucket = 'apollo-platform'
-    return s3_utils.list_files(bucket, path, '.hdf5').collect()
 
 
 class MultiVehicleDataDistribution(BasePipeline):
@@ -65,17 +60,16 @@ class MultiVehicleDataDistribution(BasePipeline):
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.to_rdd([os.path.join(s3_utils.BOS_MOUNT_PATH, origin_prefix)])
+            self.to_rdd([bos_client.abs_path(origin_prefix)])
             .flatMap(os.listdir)
             .keyBy(lambda vehicle: vehicle)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         # PairRDD(vehicle, list_of_hdf5_files)
         hdf5_files = spark_helper.cache_and_log(
-            'hdf5_files',
-            origin_vehicle_dir.mapValues(list_end_files_prod))
+            'hdf5_files', origin_vehicle_dir.mapValues(self.list_end_files_prod))
 
-        origin_dir = s3_utils.abs_path(origin_prefix)
+        origin_dir = bos_client.abs_path(origin_prefix)
         self.run(hdf5_files, origin_dir)
 
     def run(self, hdf5_file, target_dir):
@@ -86,6 +80,8 @@ class MultiVehicleDataDistribution(BasePipeline):
             'plots', features.map(lambda vehicle_feature:
                                   multi_vehicle_utils.plot_feature_hist(vehicle_feature, target_dir)))
 
+    def list_end_files_prod(self, path):
+        return self.bos().list_files(path, '.hdf5')
 
 if __name__ == '__main__':
     MultiVehicleDataDistribution().main()

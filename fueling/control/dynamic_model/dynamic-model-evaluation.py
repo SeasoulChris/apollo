@@ -9,7 +9,6 @@ import h5py
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 import fueling.control.dynamic_model.offline_evaluator.model_evaluator as evaluator
 
 VEHICLE_ID = 'Mkz7'
@@ -45,20 +44,20 @@ class DynamicModelEvaluation(BasePipeline):
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
-        bucket = 'apollo-platform'
         platform_path = 'modules/control/learning_based_model/'
         mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
         lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
         data_predix = os.path.join(platform_path, 'hdf5_evaluation/%s' % VEHICLE_ID)
 
+        bos = self.bos()
         # PairRDD('mlp', folder_path)
-        mlp_model_rdd = s3_utils.list_dirs(bucket, mlp_model_prefix).keyBy(lambda _: 'mlp')
+        mlp_model_rdd = self.to_rdd(bos.list_dirs(mlp_model_prefix)).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
-        lstm_model_rdd = s3_utils.list_dirs(bucket, lstm_model_prefix).keyBy(lambda _: 'lstm')
+        lstm_model_rdd = self.to_rdd(bos.list_dirs(lstm_model_prefix)).keyBy(lambda _: 'lstm')
 
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
-            s3_utils.list_files(bucket, data_predix, '.hdf5')
+            self.to_rdd(bos.list_files(data_predix, '.hdf5'))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
 

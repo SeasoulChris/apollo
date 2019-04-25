@@ -8,7 +8,7 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 import fueling.control.dynamic_model.data_generator.data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
@@ -27,12 +27,10 @@ class DynamicModelTraining(BasePipeline):
         self.run(training_dataset_rdd, output_dir)
 
     def run_prod(self):
-        bucket = 'apollo-platform'
         prefix = 'modules/control/learning_based_model/hdf5_training/Mkz7/UniformDistributed'
         # RDD(file_path) for training dataset
-        training_dataset_rdd = s3_utils.list_files(bucket, prefix, '.hdf5')
-        output_dir = s3_utils.abs_path(
-            'modules/control/learning_based_model/dynamic_model_output/')
+        training_dataset_rdd = self.to_rdd(self.bos().list_files(prefix, '.hdf5'))
+        output_dir = bos_client.abs_path('modules/control/learning_based_model/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 
     def run(self, training_dataset_rdd, output_dir):

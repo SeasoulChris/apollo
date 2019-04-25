@@ -6,7 +6,6 @@ import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 
 SKIP_EXISTING_DST_FILE = True
 
@@ -25,12 +24,11 @@ class DumpFeatureProto(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'small-records'
         target_prefix = 'modules/prediction/ground_truth'
         records_dir = (
             # RDD(file), start with origin_prefix
-            s3_utils.list_files(bucket, origin_prefix)
+            self.to_rdd(self.bos().list_files(origin_prefix))
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside

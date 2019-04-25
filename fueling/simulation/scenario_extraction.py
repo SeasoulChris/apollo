@@ -11,7 +11,7 @@ from cyber_py.record import RecordReader
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
+
 
 def list_end_files(target_dir):
     """
@@ -100,11 +100,10 @@ class ScenarioExtractionPipeline(BasePipeline):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = 'small-records/2019'
         target_prefix = 'modules/simulation/logsim_scenarios/2019'
-        bucket = 'apollo-platform'
 
         # RDD(tasks)
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,
-                                    lambda path: s3_utils.list_files(bucket, path))
+                                    lambda path: self.to_rdd(self.bos().list_files(path)))
         glog.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, original_prefix, target_prefix)

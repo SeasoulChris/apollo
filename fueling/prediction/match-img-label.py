@@ -7,7 +7,6 @@ import colored_glog as glog
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 
 
 class MatchImgLabel(BasePipeline):
@@ -23,10 +22,9 @@ class MatchImgLabel(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/junction_img/'
         # RDD(png_img)
-        png_img_rdd = s3_utils.list_files(bucket, source_prefix, '.png')
+        png_img_rdd = self.to_rdd(self.bos().list_files(source_prefix, '.png'))
         self.run(png_img_rdd)
 
     def run(self, png_img_rdd):

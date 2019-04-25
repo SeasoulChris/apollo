@@ -7,7 +7,6 @@ import colored_glog as glog
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
 
 
 class MergeLabels(BasePipeline):
@@ -23,10 +22,9 @@ class MergeLabels(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         source_prefix = 'modules/prediction/ground_truth'
         # RDD(npy_file)
-        npy_file_rdd = s3_utils.list_files(bucket, source_prefix, '.npy')
+        npy_file_rdd = self.to_rdd(self.bos().list_files(source_prefix, '.npy'))
         self.run(npy_file_rdd)
 
     def run(self, npy_file_rdd):

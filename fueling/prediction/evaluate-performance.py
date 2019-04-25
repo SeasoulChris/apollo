@@ -11,7 +11,7 @@ import pyspark_utils.op as spark_op
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 
 
 TIME_RANGE = 3.0
@@ -33,14 +33,13 @@ class PerformanceEvaluator(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/results'
         # RDD(file) result files with the pattern prediction_result.*.bin
-        result_file_rdd = s3_utils.list_files(bucket, origin_prefix).filter(
+        result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
             spark_op.filter_path(['prediction_result.*.bin']))
         metrics = self.run(result_file_rdd)
         saved_filename = 'metrics_' + str(TIME_RANGE) + '.npy'
-        np.save(os.path.join(s3_utils.abs_path('modules/prediction/results'), saved_filename))
+        np.save(os.path.join(bos_client.abs_path('modules/prediction/results'), saved_filename))
 
     def run(self, result_file_rdd):
         """Run the pipeline with given arguments."""

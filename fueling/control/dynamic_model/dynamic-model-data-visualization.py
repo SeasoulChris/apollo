@@ -14,7 +14,7 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 import fueling.control.dynamic_model.data_generator.data_generator as data_generator
 
 VEHICLE_ID = 'Mkz7'
@@ -61,20 +61,14 @@ class DynamicModelDatasetDistribution(BasePipeline):
 
     def run_prod(self):
         # hdf5 data directory
-        bucket = 'apollo-platform'
         prefix = 'modules/control/learning_based_model/hdf5_training/Mkz7/UniformDistributed'
-
         # file path to save visualization results
-        output_dir = s3_utils.abs_path(
-            'modules/control/learning_based_model/evaluation_result/')
+        output_dir = bos_client.abs_path('modules/control/learning_based_model/evaluation_result')
         file_name = 'dataset_distribution_%s.pdf' % VEHICLE_ID
         result_file = os.path.join(output_dir, file_name)
 
-        # RDD(file_path) for training dataset
-        hdf5_rdd = s3_utils.list_files(bucket, prefix, '.hdf5').cache()
-
-        if hdf5_rdd.count() != 0:
-            hdf5_file_list = hdf5_rdd.collect()
+        hdf5_file_list = self.bos().list_files(prefix, '.hdf5')
+        if hdf5_file_list:
             self.run(hdf5_file_list, result_file)
         else:
             glog.error('No hdf5 files are found')

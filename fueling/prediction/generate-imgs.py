@@ -12,7 +12,6 @@ from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
-import fueling.common.s3_utils as s3_utils
 
 
 class GenerateImgs(BasePipeline):
@@ -30,11 +29,10 @@ class GenerateImgs(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bucket = 'apollo-platform'
         origin_prefix = 'modules/prediction/frame_env'
         target_prefix = 'modules/prediction/img_features'
         # RDD(bin_file)
-        bin_file = s3_utils.list_files(bucket, origin_prefix).filter(
+        bin_file = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*frame_env.*.bin']))
         self.run(bin_file, origin_prefix, target_prefix)
 
