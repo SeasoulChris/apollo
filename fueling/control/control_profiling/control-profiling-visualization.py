@@ -33,8 +33,8 @@ class ControlProfilingVisualization(BasePipeline):
         target_prefix = origin_prefix
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
-            os.path.join(origin_prefix, 'Transit_Auto'),
-            os.path.join(origin_prefix, 'Transit_Auto2')
+            os.path.join(origin_prefix, 'Road_Test'),
+            os.path.join(origin_prefix, 'Sim_Test')
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
