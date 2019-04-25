@@ -150,7 +150,9 @@ class MultiCalibrationTableTraining(BasePipeline):
             .mapValues(get_vehicle_param), 3)
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
-        throttle_train_files = get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train')
+        throttle_train_files = spark_helper.cache_and_log(
+            'throttle_train_files',
+            get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train'))
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_test_files = get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'test')
@@ -204,7 +206,10 @@ class MultiCalibrationTableTraining(BasePipeline):
             .mapValues(get_vehicle_param), 3)
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
-        throttle_train_files = get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train')
+        throttle_train_files = spark_helper.cache_and_log(
+            'throttle_train_files',
+            get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train'), 3)
+        return
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_test_files = get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'test')
