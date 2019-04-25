@@ -94,7 +94,7 @@ def write_table(elem, target_dir,
 
     with open(os.path.join(path, table_filename), 'w') as wf:
         wf.write(str(calibration_table_pb))
-    return table_filename
+    return (path, table_filename)
 
 
 def train_write_model(elem, target_prefix):

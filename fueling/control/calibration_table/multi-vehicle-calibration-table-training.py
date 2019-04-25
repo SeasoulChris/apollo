@@ -40,6 +40,11 @@ brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
 train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
+def list_hdf5_prod(path):
+    bucket = 'apollo-platform'
+    return s3_utils.list_files(bucket, path, '.hdf5').collect()
+
+
 def get_vehicle_type(data_folder):
     sub_folders = os.listdir(data_folder)
     vehicle_types = []
@@ -80,17 +85,15 @@ def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
         # PairRDD('throttle or brake', list of hdf5 files)
         .mapValues(list))
 
-# TODO: get hdf5 files for prod
 
-
-def get_feature_hdf5_files_prod(feature_dir, throttle_or_brake, train_or_test):
+def get_feature_hdf5_prod(feature_dir, throttle_or_brake, train_or_test):
     return (
         # RDD(feature folder)
         feature_dir
         # RDD(throttle/brake train/test feature folder)
         .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
         # RDD(all files in throttle train feature folder)
-        .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5')))
+        .flatMapValues(list_hdf5_prod)
         # PairRDD('throttle or brake', hdf5 files)
         .keyBy(lambda (vehicle, features): (vehicle, throttle_or_brake))
         .mapValues(lambda (vehicle, path): path)
@@ -241,29 +244,30 @@ class MultiCalibrationTableTraining(BasePipeline):
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_train_files = spark_helper.cache_and_log(
             'throttle_train_files',
-            get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'train'), 3)
+            get_feature_hdf5_prod(origin_vehicle_dir, 'throttle', 'train'), 3)
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_test_files = spark_helper.cache_and_log(
             'throttle_test_files',
-            get_feature_hdf5_files(origin_vehicle_dir, 'throttle', 'test'))
+            get_feature_hdf5_prod(origin_vehicle_dir, 'throttle', 'test'))
 
         # PairRDD((vehicle, 'brake'), list of hdf5 files)
         brake_train_files = spark_helper.cache_and_log(
             'brake_train_files',
-            get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'train'))
+            get_feature_hdf5_prod(origin_vehicle_dir, 'brake', 'train'))
 
         # PairRDD((vehicle, 'brake'), list of hdf5 files)
         brake_test_files = spark_helper.cache_and_log(
             'brake_test_files',
-            get_feature_hdf5_files(origin_vehicle_dir, 'brake', 'test'))
+            get_feature_hdf5_prod(origin_vehicle_dir, 'brake', 'test'))
 
         feature_dir = (throttle_train_files, throttle_test_files,
                        brake_train_files, brake_test_files)
 
-        self.run(feature_dir, vehicle_param_conf, origin_prefix, target_prefix)
+        target_dir = s3_utils.abs_path(target_prefix)
+        self.run(feature_dir, vehicle_param_conf, origin_prefix, target_dir)
 
-    def run(self, feature_dir, vehicle_param_conf, origin_prefix, target_prefix):
+    def run(self, feature_dir, vehicle_param_conf, origin_prefix, target_dir):
         throttle_train_files, throttle_test_files, brake_train_files, brake_test_files = feature_dir
 
         # PairRDD((vehicle, 'throttle'), train data)
@@ -294,7 +298,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD((vehicle, 'throttle'), (data_set, train_param))
             throttle_data.join(throttle_train_param)
             # RDD(table_filename)
-            .map(lambda elem: train_utils.train_write_model(elem, target_prefix)))
+            .map(lambda elem: train_utils.train_write_model(elem, target_dir)))
 
         """ brake """
         # PairRDD((vehicle, 'brake'), train data)
@@ -325,7 +329,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD((vehicle, 'brake'), (data_set, train_param))
             brake_data.join(brake_train_param)
             # RDD(table_filename)
-            .map(lambda elem: train_utils.train_write_model(elem, target_prefix)))
+            .map(lambda elem: train_utils.train_write_model(elem, target_dir)))
 
 
 if __name__ == '__main__':
