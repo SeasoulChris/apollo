@@ -58,6 +58,9 @@ class DumpFeatureProto(BasePipeline):
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
         """Call prediction C++ code."""
+        if SKIP_EXISTING_DST_FILE and os.path.exists(os.path.join(target_dir, 'feature.0.bin')):
+            glog.info('{} has been skiped!'.format(target_dir))
+            return 1
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
