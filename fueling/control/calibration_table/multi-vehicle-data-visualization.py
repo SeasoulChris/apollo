@@ -15,7 +15,8 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
-import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+import fueling.common.s3_utils as s3_utils
+import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 
 
 def read_hdf5(hdf5_file_list):
@@ -42,7 +43,15 @@ class MultiVehicleDataDistribution(BasePipeline):
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
-            'origin_vehicle_dir', multi_vehicle_utils.get_vehicle_rdd(origin_prefix), 3)
+            'origin_vehicle_dir',
+            # RDD(input_folder)
+            self.to_rdd([origin_prefix])
+            # RDD(vehicle)
+            .flatMap(os.listdir)
+            # PairRDD(vehicle, vehicle)
+            .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle, path_to_vehicle)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)), 3)
 
         """ origin_prefix/brake_or_throttle/train_or_test/.../*.hdf5 """
         # PairRDD(vehicle, list_of_hdf5_files)
@@ -60,9 +69,13 @@ class MultiVehicleDataDistribution(BasePipeline):
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
+            # RDD(abs_input_folder)
             self.to_rdd([bos_client.abs_path(origin_prefix)])
+            # RDD(vehicle)
             .flatMap(os.listdir)
+            # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle, relative_path_vehicle)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         # PairRDD(vehicle, list_of_hdf5_files)
@@ -78,10 +91,11 @@ class MultiVehicleDataDistribution(BasePipeline):
         # PairRDD(vehicle, result_file)
         plots = spark_helper.cache_and_log(
             'plots', features.map(lambda vehicle_feature:
-                                  multi_vehicle_utils.plot_feature_hist(vehicle_feature, target_dir)))
+                                  multi_vehicle_plot_utils.plot_feature_hist(vehicle_feature, target_dir)))
 
     def list_end_files_prod(self, path):
         return self.bos().list_files(path, '.hdf5')
+
 
 if __name__ == '__main__':
     MultiVehicleDataDistribution().main()
