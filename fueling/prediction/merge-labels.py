@@ -22,7 +22,7 @@ class MergeLabels(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        source_prefix = 'modules/prediction/ground_truth'
+        source_prefix = 'modules/prediction/labels/'
         # RDD(npy_file)
         npy_file_rdd = self.to_rdd(self.bos().list_files(source_prefix, '.npy'))
         self.run(npy_file_rdd)
