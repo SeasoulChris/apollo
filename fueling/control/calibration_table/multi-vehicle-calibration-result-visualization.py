@@ -13,7 +13,7 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
@@ -30,8 +30,8 @@ class MultiCalibrationTableVisualization(BasePipeline):
     def run_prod(self):
         origin_prefix = 'modules/control/data/results/CalibrationTableConf'
         conf_prefix = 'modules/control/data/records/'
-        origin_dir = s3_utils.abs_path(origin_prefix)
-        conf_dir = s3_utils.abs_path(conf_prefix)
+        origin_dir = bos_client.abs_path(origin_prefix)
+        conf_dir = bos_client.abs_path(conf_prefix)
         self.run(origin_dir, conf_dir)
 
     def run(self, origin_prefix, conf_prefix):

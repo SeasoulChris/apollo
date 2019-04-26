@@ -11,7 +11,6 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.features import GetDatapoints
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils

@@ -15,7 +15,6 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
-import fueling.common.s3_utils as s3_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 
 

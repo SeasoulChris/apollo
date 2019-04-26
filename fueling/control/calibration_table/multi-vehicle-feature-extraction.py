@@ -11,9 +11,9 @@ import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
@@ -123,7 +123,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
     def run_prod(self):
         origin_prefix = 'modules/control/data/records'
         target_prefix = 'modules/control/data/results'
-        origin_dir = s3_utils.abs_path(origin_prefix)
+        origin_dir = bos_client.abs_path(origin_prefix)
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(

@@ -11,7 +11,6 @@ from fueling.data.record_parser import RecordParser
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 
 
 class IndexRecords(BasePipeline):

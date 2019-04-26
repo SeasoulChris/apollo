@@ -14,6 +14,7 @@ import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
@@ -59,7 +60,7 @@ def list_end_files_prod(prefix):
 
 
 def get_relative_path(abs_path):
-    return abs_path.replace(s3_utils.BOS_MOUNT_PATH + '/', '', 1)
+    return abs_path.replace(bos_client.BOS_MOUNT_PATH + '/', '', 1)
 
 
 def get_vehicle_param_prod(prefix):

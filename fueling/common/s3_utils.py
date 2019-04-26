@@ -14,10 +14,6 @@ import colored_glog as glog
 from fueling.common.base_pipeline import BasePipeline
 
 
-# Constants
-BOS_MOUNT_PATH = '/mnt/bos'
-
-
 def s3_client(aws_ak=None, aws_sk=None):
     """Get S3 client."""
     if aws_ak is None or aws_sk is None:
@@ -31,14 +27,6 @@ def s3_client(aws_ak=None, aws_sk=None):
                         config=botocore.client.Config(signature_version='s3v4'),
                         aws_access_key_id=aws_ak,
                         aws_secret_access_key=aws_sk)
-
-def abs_path(object_key):
-    """
-    Get absolute mounted path of an S3 object.
-    As a side-effect feature of os.path.join, it returns the key itself if you
-    pass an absolute path in, which is ideal for tests with local data.
-    """
-    return os.path.join(BOS_MOUNT_PATH, object_key)
 
 def list_objects(bucket, prefix, aws_ak=None, aws_sk=None):
     """
@@ -72,18 +60,6 @@ def list_files(bucket, prefix, suffix='', to_abs_path=True):
         files = files.map(abs_path)
     # RDD(file_path)
     return files
-
-def list_dirs(bucket, prefix, to_abs_path=True):
-    """Get a RDD of dirs with given prefix."""
-    dirs = (BasePipeline.context()
-        # RDD(obj_dict)
-        .parallelize(list_objects(bucket, prefix))
-        # RDD(dir_obj_dict)
-        .filter(lambda obj: obj['Key'].endswith('/'))
-        # RDD(dir_key), without the trailing slash.
-        .map(lambda obj: obj['Key'][:-1]))
-    # RDD(dir_path), relative or absolute according to argument.
-    return dirs.map(abs_path) if to_abs_path else dirs
 
 def file_exists(bucket, remote_path, aws_ak, aws_sk):
     """Check if specified file is existing"""

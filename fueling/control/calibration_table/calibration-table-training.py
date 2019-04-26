@@ -14,6 +14,7 @@ import common.proto_utils as proto_utils
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.bos_client as bos_client
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
@@ -122,9 +123,9 @@ class CalibrationTableTraining(BasePipeline):
     def run_prod(self):
         """Run prod."""
         bucket = 'apollo-platform'
-        origin_dir = s3_utils.abs_path(
+        origin_dir = bos_client.abs_path(
             os.path.join('modules/control/CalibrationTable/Features', WANTED_VEHICLE))
-        target_dir = s3_utils.abs_path(
+        target_dir = bos_client.abs_path(
             os.path.join('modules/control/CalibrationTable/Conf', WANTED_VEHICLE))
         throttle_train_prefix = os.path.join(origin_dir, 'throttle', 'train')
         # RDD('throttle', list of hdf5 files)

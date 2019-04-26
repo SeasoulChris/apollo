@@ -14,7 +14,6 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
@@ -183,7 +182,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.to_rdd([s3_utils.abs_path(origin_prefix)])
+            self.to_rdd([bos_client.abs_path(origin_prefix)])
             # RDD([vehicle_type])
             .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])
@@ -195,7 +194,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         conf_vehicle_dir = spark_helper.cache_and_log(
             'conf_vehicle_dir',
-            self.to_rdd([s3_utils.abs_path(conf_prefix)])
+            self.to_rdd([bos_client.abs_path(conf_prefix)])
             # RDD([vehicle_type])
             .flatMap(os.listdir)
             # PairRDD(vehicle_type, [vehicle_type])

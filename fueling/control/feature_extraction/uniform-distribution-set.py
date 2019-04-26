@@ -7,8 +7,8 @@ import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.bos_client as bos_client
 import fueling.common.h5_utils as h5_utils
-import fueling.common.s3_utils as s3_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 # parameters
@@ -72,7 +72,6 @@ class UniformDistributionSet(BasePipeline):
     def run_prod(self):
         """Run prod."""
         sample_size = 2000
-        bucket = 'apollo-platform'
         # same of target prefix of sample-set-feature-extraction
         origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
                                      WANTED_VEHICLE, 'SampleSet', '2019-04-17')
@@ -81,8 +80,8 @@ class UniformDistributionSet(BasePipeline):
 
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
-            s3_utils.list_files(bucket, origin_prefix, '.hdf5'))
-        target_dir = s3_utils.abs_path(target_dir)
+            self.to_rdd(self.bos().list_files(origin_prefix, '.hdf5')))
+        target_dir = bos_client.abs_path(target_dir)
         self.run(todo_tasks, target_dir, sample_size)
 
     def run(self, todo_tasks, target_prefix, sample_size):

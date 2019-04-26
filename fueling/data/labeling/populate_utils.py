@@ -22,8 +22,8 @@ from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+import fueling.common.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
-import fueling.common.s3_utils as s3_utils
 
 
 # Map channels to processing functions
@@ -94,7 +94,7 @@ def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
     if yaml_file_name is None:
         return None
-    yaml_file_name = os.path.join(s3_utils.BOS_MOUNT_PATH, yaml_file_name)
+    yaml_file_name = bos_client.abs_path(yaml_file_name)
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 

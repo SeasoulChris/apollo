@@ -10,7 +10,7 @@ import time
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.s3_utils as s3_utils
+import fueling.common.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels we need to decode
@@ -121,10 +121,11 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = s3_utils.BOS_MOUNT_PATH
+        root_dir = bos_client.BOS_MOUNT_PATH
         target_dir = 'modules/perception/videos/decoded'
-        streaming_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
-        glog.info('Running PROD, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
+        abs_target_dir = bos_client.abs_path(target_dir)
+        streaming_utils.create_dir_if_not_exist(abs_target_dir)
+        glog.info('Running PROD, target_dir: {}'.format(abs_target_dir))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
