@@ -22,7 +22,7 @@ class GenerateLabels(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        source_prefix = 'modules/prediction/ground_truth'
+        source_prefix = 'modules/prediction/labels/'
 
         # RDD(bin_file)
         bin_files  = self.to_rdd(self.bos().list_files(source_prefix)).filter(
@@ -50,4 +50,4 @@ class GenerateLabels(BasePipeline):
 
 
 if __name__ == '__main__':
-    GenerateLabels().run_prod()
+    GenerateLabels().main()

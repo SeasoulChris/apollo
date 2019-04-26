@@ -8,6 +8,7 @@ import numpy as np
 from google.protobuf.internal import decoder
 from google.protobuf.internal import encoder
 
+import fueling.common.proto_utils as proto_utils
 from modules.prediction.proto import offline_features_pb2
 from bounding_rectangle import BoundingRectangle
 from configure import parameters
@@ -60,8 +61,7 @@ class LabelGenerator(object):
         '''
         self.filepath = input_filepath
         offline_features = offline_features_pb2.Features()
-        with open(filepath, 'rb') as file_in:
-            offline_features.ParseFromString(file_in.read())
+        offline_features = proto_utils.get_pb_from_bin_file(self.filepath, offline_features)
         feature_sequences = offline_features.feature
         self.OrganizeFeatures(feature_sequences)
         del feature_sequences # Try to free up some memory
