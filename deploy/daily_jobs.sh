@@ -21,3 +21,9 @@ JOB="fueling/data/pipelines/bag-to-record.py"
 # Job: Index records.
 JOB="fueling/data/pipelines/index-records.py"
 ./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
+
+# Job: Control profiling.
+JOB="fueling/control/control_profiling/control-profiling-metrics.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
+JOB="fueling/control/control_profiling/control-profiling-visualization.py"
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
