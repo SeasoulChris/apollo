@@ -9,13 +9,13 @@ import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
+import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.s3_utils as s3_utils
 import fueling.common.time_utils as time_utils

@@ -11,10 +11,10 @@ import colored_glog as glog
 import matplotlib.pyplot as plt
 import numpy as np
 
-import common.proto_utils as proto_utils
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.proto_utils as proto_utils
 import fueling.common.s3_utils as s3_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 

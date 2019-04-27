@@ -9,13 +9,12 @@ import colored_glog as glog
 import h5py
 import numpy as np
 
-import common.proto_utils as proto_utils
-
 from fueling.control.features.filters import Filters
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
-import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.h5_utils as h5_utils
+import fueling.common.proto_utils as proto_utils
 
 
 # # parameters

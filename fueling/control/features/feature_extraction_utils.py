@@ -12,11 +12,11 @@ import numpy as np
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
-import common.proto_utils as proto_utils
 
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
 import fueling.common.h5_utils as h5_utils
+import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.dynamic_model.conf.model_config as model_config

@@ -13,8 +13,9 @@ import numpy as np
 from modules.common.configs.proto import vehicle_config_pb2
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
-import common.proto_utils as proto_utils
 import modules.control.proto.control_conf_pb2 as ControlConf
+
+import fueling.common.proto_utils as proto_utils
 
 
 # Constants
@@ -33,7 +34,7 @@ STD_EPSILON = 1e-6
 
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
-                                            vehicle_config_pb2.VehicleConfig())
+                                                       vehicle_config_pb2.VehicleConfig())
 FILENAME_CALIBRATION_TABLE_CONF = os.path.join(
     '/apollo/modules/calibration/data', VEHICLE_MODEL, 'control_conf.pb.txt')
 CONTROL_CONF = proto_utils.get_pb_from_text_file(

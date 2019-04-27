@@ -9,12 +9,12 @@ import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
-import common.proto_utils as proto_utils
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import gen_pre_segment
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
+import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.dir_utils as dir_utils

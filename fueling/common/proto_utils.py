@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Protobuf utils (refer to apollo/modules/tools/common/proto_utils)."""
+"""Protobuf utils."""
 
 import google.protobuf.text_format as text_format
 
@@ -20,7 +20,6 @@ def get_pb_from_bin_file(filename, pb_value):
     with open(filename, 'rb') as file_in:
         pb_value.ParseFromString(file_in.read())
     return pb_value
-
 
 def get_pb_from_file(filename, pb_value):
     """Get a proto from given file by trying binary mode and text mode."""

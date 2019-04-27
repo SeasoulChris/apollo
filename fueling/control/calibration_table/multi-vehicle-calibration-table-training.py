@@ -9,12 +9,12 @@ import numpy as np
 import pyspark_utils.helper as spark_helper
 
 from modules.common.configs.proto import vehicle_config_pb2
-import common.proto_utils as proto_utils
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
 import fueling.common.bos_client as bos_client
+import fueling.common.proto_utils as proto_utils
+import fueling.common.record_utils as record_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
