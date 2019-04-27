@@ -101,7 +101,7 @@ class GenerateSmallRecords(BasePipeline):
                 # RDD(mapped_src_record)
                 .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
 
-            partitions = flags.FLAGS.executors or 4
+            partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
             glog.info('Repartition to: {}'.format(partitions))
             todo_records = todo_records.repartition(partitions).cache()
 

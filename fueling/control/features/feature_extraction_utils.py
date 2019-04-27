@@ -22,14 +22,13 @@ import fueling.common.time_utils as time_utils
 import fueling.control.dynamic_model.conf.model_config as model_config
 
 
-FILENAME_FEATURE_KEY_CONF = \
-                "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
+FILENAME_FEATURE_KEY_CONF = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
 
 # vehicle param constant
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/calibration/data/mkz7/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
-                                            vehicle_config_pb2.VehicleConfig())
+                                                       vehicle_config_pb2.VehicleConfig())
 
 THROTTLE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.throttle_deadzone
 THROTTLE_MAX = FEATURE_KEY.throttle_max
@@ -63,8 +62,7 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
             for msg in reader(record):
                 hmi_status = record_utils.message_to_proto(msg)
                 vehicle = hmi_status.current_vehicle
-                glog.info('Get vehicle name "{}" from record {}'.format(
-                    vehicle, record))
+                glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
                 return vehicle
         glog.info('Failed to get vehicle name')
         return ''

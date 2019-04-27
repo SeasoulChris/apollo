@@ -12,6 +12,7 @@ import botocore.exceptions
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.bos_client as bos_client
 
 
 def s3_client(aws_ak=None, aws_sk=None):
@@ -57,7 +58,7 @@ def list_files(bucket, prefix, suffix='', to_abs_path=True):
         files = files.filter(lambda path: path.endswith(suffix))
     if to_abs_path:
         # RDD(file_path), in absolute style.
-        files = files.map(abs_path)
+        files = files.map(bos_client.abs_path)
     # RDD(file_path)
     return files
 

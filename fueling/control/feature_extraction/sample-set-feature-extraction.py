@@ -80,7 +80,6 @@ class SampleSetFeatureExtraction(BasePipeline):
         data_segment_rdd = spark_helper.cache_and_log('DataSegments',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
-
             # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # PairRDD((dir, timestamp_sec), data_point)
