@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 
 from modules.common.configs.proto import vehicle_config_pb2
+from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 import modules.control.proto.control_conf_pb2 as ControlConf
@@ -19,6 +20,8 @@ import fueling.common.proto_utils as proto_utils
 
 
 # Constants
+PP6_IMU_SCALING = imu_scaling["pp6"]
+PP7_IMU_SCALING = imu_scaling["pp7"]
 DIM_INPUT = feature_config["input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 DIM_SEQUENCE_LENGTH = feature_config["sequence_length"]
@@ -127,9 +130,9 @@ def generate_training_data(segment):
         # speed mps
         mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
         # acceleration
-        mlp_input_data[k, input_index["acceleration"]] = \
-            segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
-            segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]])
+        mlp_input_data[k, input_index["acceleration"]] = PP7_IMU_SCALING * \
+            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
+             segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # throttle control from chassis
         mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
         # brake control from chassis
@@ -137,13 +140,13 @@ def generate_training_data(segment):
         # steering control from chassis
         mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
         # acceleration next
-        mlp_output_data[k, output_index["acceleration"]] = \
-            segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
+        mlp_output_data[k, output_index["acceleration"]] = PP7_IMU_SCALING * \
+            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
                 np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
-            segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
-                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
+             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
+                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # angular speed next
-        mlp_output_data[k, output_index["w_z"]] = \
+        mlp_output_data[k, output_index["w_z"]] = PP7_IMU_SCALING * \
             segment[k + DIM_DELAY_STEPS, segment_index["w_z"]]
 
     lstm_input_data = np.zeros([total_sequence_num, DIM_INPUT, DIM_SEQUENCE_LENGTH], order='C')
@@ -189,9 +192,9 @@ def generate_imu_output(segment):
     output_imu = np.zeros([total_len, DIM_OUTPUT])
     # acceleration by imu
     output_imu[:, output_index["acceleration"]] = \
-            segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) + \
-            segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])
-    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]]  # angular speed by imu
+            (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) + \
+             segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])) * PP6_IMU_SCALING
+    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * PP6_IMU_SCALING # angular speed by imu
     return output_imu
 
 
@@ -259,10 +262,10 @@ def generate_network_output(segment, model_folder, model_name):
     for k in range(total_len):
         if k < DIM_SEQUENCE_LENGTH:
             velocity_fnn = segment[k, segment_index["speed"]]
-            acceleration_fnn = segment[k, segment_index["a_x"]] * \
+            acceleration_fnn = PP6_IMU_SCALING * (segment[k, segment_index["a_x"]] * \
                 np.cos(segment[k, segment_index["heading"]]) + \
-                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]])
-            angular_velocity_fnn = segment[k, segment_index["w_z"]]
+                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+            angular_velocity_fnn = PP6_IMU_SCALING * segment[k, segment_index["w_z"]]
             output_fnn[k, output_index["acceleration"]] = acceleration_fnn
             output_fnn[k, output_index["w_z"]] = angular_velocity_fnn
 

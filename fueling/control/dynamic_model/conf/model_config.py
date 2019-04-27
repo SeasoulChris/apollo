@@ -1,28 +1,28 @@
 #!/usr/bin/env python
 
 segment_index = {
-    "heading": 0,  # pose.heading
-    "q_x": 1,  # pose.orientation.qx
-    "q_y": 2,  # pose.orientation.qy
-    "q_z": 3, # pose.orientation.qz 
-    "q_w": 4, # pose.orientation.qw 
-    "v_x": 5,  # pose.linear_velocity.x
-    "v_y": 6,  # pose.linear_velocity.y
-    "v_z": 7,  # pose.linear_velocity.z
-    "a_x": 8,  # pose.linear_acceleration.x
-    "a_y": 9,  # pose.linear_acceleration.y
-    "a_z": 10,  # pose.linear_acceleration.z
-    "w_x": 11,  # pose.angular_velocity.x
-    "w_y": 12,  # pose.angular_velocity.y
-    "w_z": 13,  # pose.angular_velocity.z
+    "heading": 0,  # pose.heading, ENU 
+    "q_x": 1,  # pose.orientation.qx, ENU
+    "q_y": 2,  # pose.orientation.qy, ENU
+    "q_z": 3, # pose.orientation.qz, ENU
+    "q_w": 4, # pose.orientation.qw, ENU
+    "v_x": 5,  # pose.linear_velocity.x, ENU
+    "v_y": 6,  # pose.linear_velocity.y, ENU
+    "v_z": 7,  # pose.linear_velocity.z, ENU
+    "a_x": 8,  # pose.linear_acceleration.x, ENU
+    "a_y": 9,  # pose.linear_acceleration.y, ENU
+    "a_z": 10,  # pose.linear_acceleration.z, ENU
+    "w_x": 11,  # pose.angular_velocity.x, ENU
+    "w_y": 12,  # pose.angular_velocity.y, ENU
+    "w_z": 13,  # pose.angular_velocity.z, ENU
     "speed": 14, # chassis.speed_mps
     "throttle": 15, # chassis.throttle_percentage/100.0
     "brake": 16, # chassis.brake_percentage/100.0
     "steering": 17, # chassis.steering_percentage/100.0
     "mode": 18, # chassis.driving_mode
-    "x": 19, # pose.position.x
-    "y": 20, # pose.position.y
-    "z": 21 # pose.position.z
+    "x": 19, # pose.position.x, ENU
+    "y": 20, # pose.position.y, ENU
+    "z": 21 # pose.position.z, ENU
 }
 
 input_index = {
@@ -56,10 +56,16 @@ point_mass_config = {
 
 lstm_model_config = {
     "fnn_layers": 2, # depth of the feed-forward neural nets
-    "epochs": 10 # training epochs
+    "epochs": 30 # training epochs
 }
 
 mlp_model_config = {
     "fnn_layers": 2, # depth of the feed-forward neural nets
-    "epochs": 10 # training epochs
+    "epochs": 30 # training epochs
+}
+
+imu_scaling = {
+    # IMU compensation for localization scaling issue
+    "pp6": 0.55, # scaling rate for acceleration and angular speed on pp6
+    "pp7": 0.85 # scaling rate for acceleration and angular speed on pp7
 }
