@@ -70,4 +70,4 @@ def merge_dicts(dirpath, dict_name='future_status'):
     return dict_merged
 
 if __name__ == '__main__':
-    MergeLabels().run_prod()
+    MergeLabels().main()

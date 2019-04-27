@@ -53,4 +53,4 @@ class MatchImgLabel(BasePipeline):
 
 
 if __name__ == '__main__':
-    MatchImgLabel().run_prod()
+    MatchImgLabel().main()

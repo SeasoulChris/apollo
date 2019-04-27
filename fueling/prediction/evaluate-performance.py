@@ -39,7 +39,7 @@ class PerformanceEvaluator(BasePipeline):
             spark_op.filter_path(['prediction_result.*.bin']))
         metrics = self.run(result_file_rdd)
         saved_filename = 'metrics_' + str(TIME_RANGE) + '.npy'
-        np.save(os.path.join(bos_client.abs_path('modules/prediction/results'), saved_filename))
+        np.save(os.path.join(bos_client.abs_path('modules/prediction/results'), saved_filename), metrics)
 
     def run(self, result_file_rdd):
         """Run the pipeline with given arguments."""
@@ -59,7 +59,7 @@ class PerformanceEvaluator(BasePipeline):
     def evaluate(result_file):
         """Call prediction python code to evaluate performance"""
         result_dir = os.path.dirname(result_file)
-        future_status_dir = result_dir.replace('results', 'ground_truth')
+        future_status_dir = result_dir.replace('results', 'labels')
         future_status_file = os.path.join(future_status_dir, 'future_status.npy')
         future_status_dict = np.load(future_status_file).item()
 

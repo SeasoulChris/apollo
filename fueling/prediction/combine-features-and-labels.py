@@ -98,4 +98,4 @@ def CombineFeaturesAndLabels(feature_path, label_path, dict_name='future_status'
 
 
 if __name__ == '__main__':
-    FeaturesAndLabelsCombine().run_prod()
+    FeaturesAndLabelsCombine().main()

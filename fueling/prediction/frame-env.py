@@ -65,4 +65,4 @@ class FrameEnv(BasePipeline):
 
 
 if __name__ == '__main__':
-    FrameEnv().run_prod()
+    FrameEnv().main()

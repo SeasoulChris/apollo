@@ -97,4 +97,4 @@ def read_frame_env(file_path):
 
 
 if __name__ == '__main__':
-    GenerateImgs().run_prod()
+    GenerateImgs().main()
