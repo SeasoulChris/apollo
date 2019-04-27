@@ -29,7 +29,7 @@ from torch.utils.data import Dataset
 from learning_algorithms.utilities.train_utils import *
 
 class SocialInteraction(nn.Module):
-    def __init__(self):
+    def __init__(self, pred_len=12, grid_size=2, area_span=2.0):
         # Spatial processing
         # Temporal processing
         return
@@ -46,7 +46,52 @@ class SocialInteraction(nn.Module):
         return X
 
 
+class SocialLSTM(nn.Module):
+    def __init__(self, pred_len=12, grid_size=2, area_span=2.0,
+                 embed_size=64, hidden_size=128):
+        super(SocialLSTM, self).__init__()
+
+        self.pred_len = pred_len
+
+        self.pos_embedding = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+
+        self.social_embedding = torch.nn.Sequential(
+            nn.Linear(grid_size * grid_size * hidden_size, embed_size),
+            nn.ReLU(),
+        )
+
+        self.social_pooling = SocialPooling(grid_size, area_span)
+
+        self.lstm = nn.LSTM(embed_size * 2, hidden_size, num_layers=1, batch_first=True)
+        h0 = torch.zeros(1, 1, hidden_size)
+        c0 = torch.zeros(1, 1, hidden_size)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+
+        self.pred_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size, 5),
+        )
+
+    def forward(self, past_traj, past_traj_rel, past_traj_timestamp_mask,
+                is_predictable, same_scene_mask):
+        # Get dimensions
+        N = traj.size(0)
+        observation_len = traj.size(1)
+
+        # Look at the past trajectory
+        ht, ct = self.h0.repeat(N, 1, 1), self.c0.repeat(N, 1, 1)
+        for t in range(observation_len):
+            #  
+
+
 class SocialPooling(nn.Module):
+    '''The social-pooling module used in the paper of Social-LSTM.
+    '''
     def __init__(self, grid_size=2, area_span=1.6):
         super(SocialPooling, self).__init__()
         self.grid_size = grid_size
@@ -137,3 +182,11 @@ class SocialPooling(nn.Module):
             N_filled += curr_N
         
         return ht_pooled
+
+
+class EdgeToNodeAttention(nn.Module):
+    def __init__(self):
+        return
+
+    def forward(self, X):
+        return X
