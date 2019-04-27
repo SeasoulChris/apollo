@@ -49,7 +49,6 @@ MAX_PHASE_DELTA = 0.015
 MIN_SEGMENT_LENGTH = 10
 
 
-
 def get_vehicle_of_dirs(dir_to_records_rdd):
     """
     Extract HMIStatus.current_vehicle from each dir.
@@ -123,18 +122,14 @@ def pair_cs_pose(elem):
     res = []
 
     while index[0] < len(times_cs) and index[1] < len(times_pose):
-        if abs(times_cs[index[0]] - times_pose[index[1]]) < MAX_PHASE_DELTA:
+        if abs(times_cs[index[0]] - times_pose[index[1]]) <= MAX_PHASE_DELTA:
             res.append((chassis[index[0]], pose[index[1]]))
             index[0] += 1
             index[1] += 1
+        elif times_cs[index[0]] < times_pose[index[1]]:
+            index[0] += 1
         else:
-            while index[0] < len(times_cs) and index[1] < len(times_pose) \
-                    and times_cs[index[0]] < times_pose[index[1]] - MAX_PHASE_DELTA:
-                index[0] += 1
-            while index[0] < len(times_cs) and index[1] < len(times_pose) \
-                    and times_pose[index[1]] < times_cs[index[0]] - MAX_PHASE_DELTA:
-                index[1] += 1
-
+            index[1] += 1
     return res
 
 
@@ -158,9 +153,9 @@ def get_data_point(elem):
         pose.angular_velocity.y,  # 12
         pose.angular_velocity.z,  # 13
         chassis.speed_mps,  # 14 speed
-        chassis.throttle_percentage/100,  # 15 throttle
-        chassis.brake_percentage/100,  # 16 brake
-        chassis.steering_percentage/100,  # 17
+        chassis.throttle_percentage / 100,  # 15 throttle
+        chassis.brake_percentage / 100,  # 16 brake
+        chassis.steering_percentage / 100,  # 17
         chassis.driving_mode,  # 18
         pose.position.x,  # 19
         pose.position.y,  # 20
@@ -175,7 +170,7 @@ def feature_key_value(elem):
     throttle = max(elem[1][15] * 100 - THROTTLE_DEADZONE, 0)  # 0 or positive
     brake = max(elem[1][16] * 100 - BRAKE_DEADZONE, 0)  # 0 or positive
     steering = elem[1][17] * 100 + 100  # compensation for negative value
-    
+
     if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
@@ -191,7 +186,7 @@ def feature_key_value(elem):
 
         # speed-steering-throttle-brake
         elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
-        
+
     # ((folder_path, feature_key),(time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
