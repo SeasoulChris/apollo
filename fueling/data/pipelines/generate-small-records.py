@@ -160,14 +160,15 @@ class GenerateSmallRecords(BasePipeline):
         try:
             reader = RecordReader(src_record)
             msgs = [msg for msg in reader.read_messages() if msg.topic in CHANNELS]
+            if len(msgs) == 0:
+                glog.error('Failed to read any message from {}'.format(src_record))
+                return dst_record
+
             for msg in msgs:
                 if msg.topic not in topic_descs:
                     topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
-            else:
-                glog.error('Failed to read any message from {}'.format(src_record))
-                return dst_record
         except Exception as err:
-            glog.error('Failed to read record {}: {}'.format(record, err))
+            glog.error('Failed to read record {}: {}'.format(src_record, err))
             return None
 
         # Check once again to avoid duplicate work after reading.
