@@ -122,23 +122,24 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    '''
-    bin_dir = os.path.join(out_dir, 'binary_model')
-    model_bin = os.path.join(bin_dir, 'mlp_model_' + timestr + '.bin')
+    # save norm_params and model_weights to binary file
+    bin_model_dir = os.path.join(out_dir, 'binary_model/mlp')
+    bin_file_dir = os.path.join(bin_model_dir, timestr)
+    file_utils.makedirs(bin_file_dir)
+    model_bin = os.path.join(bin_file_dir, 'mlp_model.bin')
     save_model(model, param_norm, model_bin)
-    '''
 
    # save norm_params and model_weights to hdf5
-    h5_dir = os.path.join(out_dir, 'h5_model/mlp')
-    model_dir = os.path.join(h5_dir, timestr)
-    file_utils.makedirs(model_dir)
+    h5_model_dir = os.path.join(out_dir, 'h5_model/mlp')
+    h5_file_dir = os.path.join(h5_model_dir, timestr)
+    file_utils.makedirs(h5_file_dir)
 
-    norms_h5 = os.path.join(model_dir, 'norms.h5')
+    norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
         h5_file.create_dataset('input_mean', data=input_fea_mean)
         h5_file.create_dataset('input_std', data=input_fea_std)
         h5_file.create_dataset('output_mean', data=output_fea_mean)
         h5_file.create_dataset('output_std', data=output_fea_std)
 
-    weights_h5 = os.path.join(model_dir, 'weights.h5')
+    weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
     model.save(weights_h5)
