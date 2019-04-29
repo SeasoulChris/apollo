@@ -167,6 +167,57 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
     return trajectory_imu, trajectory_fnn, trajectory_point_mass
 
 
+def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, trajectory_fnn,
+                                 trajectory_point_mass, vehicle_state_gps, vehicle_state_imu, 
+                                 vehicle_state_fnn, vehicle_state_point_mass):
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.title("Trajectory Visualization")
+        # Plot the trajectory collected by GPS
+        plt.plot(trajectory_gps[:, 0], trajectory_gps[:, 1], color='blue',
+                 label="Ground-truth Tracjectory")
+        plt.plot(trajectory_gps[-1, 0],
+                 trajectory_gps[-1, 1], color='blue', marker='x')
+        # Plot the trajectory calculated by IMU
+        plt.plot(trajectory_imu[:, 0], trajectory_imu[:, 1], color='orange',
+                 label="Generated Tracjectory by IMU")
+        plt.plot(trajectory_imu[-1, 0],
+                 trajectory_imu[-1, 1], color='orange', marker='x')
+        # Plot the trajectory calculated by learning-based model
+        plt.plot(trajectory_fnn[:, 0], trajectory_fnn[:, 1], color='red',
+                 label="Tracjectory by learning-based-model")
+        plt.plot(trajectory_fnn[-1, 0],
+                 trajectory_fnn[-1, 1], color='red', marker='x')
+        # Plot the trajectory calculated by point_mass model
+        plt.plot(trajectory_point_mass[:, 0], trajectory_point_mass[:, 1], color='green',
+                 label="Tracjectory by sim_point_mass")
+        plt.plot(trajectory_point_mass[-1, 0], trajectory_point_mass[-1, 1],
+                 color='green', marker='x')
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+        plt.figure(figsize=(4, 3)) # Plot the speed calculated by different models
+        plt.title("Vehicle Speed Visualization")
+        plt.plot(vehicle_state_gps[:, 0], color='blue', label="Ground-truth Speed")
+        plt.plot(vehicle_state_imu[:, 0], color='orange', label="IMU Speed")
+        plt.plot(vehicle_state_point_mass[:, 0], color='green', label="PointMass Speed")
+        plt.plot(vehicle_state_fnn[:, 0], color='red', label="FNN Speed")
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+        plt.figure(figsize=(4, 3)) # Plot the heading calculated by different models
+        plt.title("Vehicle Heading Visualization")
+        plt.plot(vehicle_state_gps[:, 1], color='blue', label="Ground-truth Heading")
+        plt.plot(vehicle_state_imu[:, 1], color='orange', label="IMU Heading")
+        plt.plot(vehicle_state_point_mass[:, 1], color='green', label="PointMass Heading")
+        plt.plot(vehicle_state_fnn[:, 1], color='red', label="FNN Heading")
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+
 def evaluate(model_info, dataset_info, platform_path):
     if model_info[0] == 'mlp':
         vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps = \
@@ -196,25 +247,6 @@ def evaluate(model_info, dataset_info, platform_path):
     # Output the trajectory visualization plots to a pdf file
     pdf_file_path = os.path.join(model_info[1],
          'trajectory_visualization_under_%s.pdf' % dataset_info[0])
-    with PdfPages(pdf_file_path) as pdf_file:
-        plt.figure(figsize=(4, 3))
-        plt.title("Trajectory Visualization")
-        # Plot the trajectory collected by GPS
-        plt.plot(trajectory_gps[:,0], trajectory_gps[:,1], color = 'blue',
-                 label = "Ground-truth Tracjectory")
-        plt.plot(trajectory_gps[-1,0], trajectory_gps[-1,1], color = 'blue', marker = 'x')
-        # Plot the trajectory calculated by IMU
-        plt.plot(trajectory_imu[:,0], trajectory_imu[:,1], color = 'orange',
-                 label = "Generated Tracjectory by IMU")
-        plt.plot(trajectory_imu[-1,0], trajectory_imu[-1,1], color = 'orange', marker = 'x')
-        # Plot the trajectory calculated by learning-based model
-        plt.plot(trajectory_fnn[:,0], trajectory_fnn[:,1], color = 'red',
-                 label = "Tracjectory by learning-based-model")
-        plt.plot(trajectory_fnn[-1,0], trajectory_fnn[-1,1],color = 'red', marker = 'x')
-        # Plot the trajectory calculated by point_mass model
-        plt.plot(trajectory_point_mass[:,0], trajectory_point_mass[:,1], color = 'green',
-                 label = "Tracjectory by sim_point_mass")
-        plt.plot(trajectory_point_mass[-1,0], trajectory_point_mass[-1,1],
-                 color = 'green', marker = 'x')
-        pdf_file.savefig()  # saves the current figure into a pdf page
-        plt.close()
+    visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, trajectory_fnn,
+                                 trajectory_point_mass, vehicle_state_gps, vehicle_state_imu, 
+                                 vehicle_state_fnn, vehicle_state_point_mass)
