@@ -126,7 +126,7 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     bin_model_dir = os.path.join(out_dir, 'binary_model/mlp')
     bin_file_dir = os.path.join(bin_model_dir, timestr)
     file_utils.makedirs(bin_file_dir)
-    model_bin = os.path.join(bin_file_dir, 'mlp_model.bin')
+    model_bin = os.path.join(bin_file_dir, 'fnn_model.bin')
     save_model(model, param_norm, model_bin)
 
    # save norm_params and model_weights to hdf5
