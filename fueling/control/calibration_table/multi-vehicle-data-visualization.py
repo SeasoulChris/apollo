@@ -16,6 +16,7 @@ import numpy as np
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
+import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
 
 def read_hdf5(hdf5_file_list):
@@ -50,7 +51,7 @@ class MultiVehicleDataDistribution(BasePipeline):
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle, path_to_vehicle)
-            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)), 3)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         """ origin_prefix/brake_or_throttle/train_or_test/.../*.hdf5 """
         # PairRDD(vehicle, list_of_hdf5_files)
@@ -71,7 +72,7 @@ class MultiVehicleDataDistribution(BasePipeline):
             # RDD(abs_input_folder)
             self.to_rdd([bos_client.abs_path(origin_prefix)])
             # RDD(vehicle)
-            .flatMap(os.listdir)
+            .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle, relative_path_vehicle)

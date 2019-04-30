@@ -37,11 +37,11 @@ class SampleSetFeatureExtraction(BasePipeline):
                                      WANTED_VEHICLE, 'SampleSet')
         # RDD(record_dirs)
         todo_tasks = (self.to_rdd([origin_prefix])
-            .flatMap(lambda path: glob.glob(os.path.join(path, '*'))))
+                      .flatMap(lambda path: glob.glob(os.path.join(path, '*'))))
         print(todo_tasks.first())
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
+                                                  dir_utils.get_todo_records(todo_tasks))
 
         self.run(todo_records, origin_prefix, target_prefix)
 
@@ -55,31 +55,37 @@ class SampleSetFeatureExtraction(BasePipeline):
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
+                                                  dir_utils.get_todo_records(todo_tasks))
         self.run(todo_records, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         # RDD(aboslute_dir) which include records of the wanted vehicle
-        selected_vehicles = spark_helper.cache_and_log('SelectedVehicles',
+        selected_vehicles = spark_helper.cache_and_log(
+            'SelectedVehicles',
             feature_extraction_rdd_utils.wanted_vehicle_rdd(dir_to_records_rdd, WANTED_VEHICLE))
 
         # PairRDD((dir, timestamp_per_min), msg)
-        dir_to_msgs = spark_helper.cache_and_log('DirToMsgs',
+        dir_to_msgs = spark_helper.cache_and_log(
+            'DirToMsgs',
             feature_extraction_rdd_utils.msg_rdd(dir_to_records_rdd, selected_vehicles, channels))
 
         # RDD(dir, timestamp_per_min)
-        valid_segments = spark_helper.cache_and_log('ValidSegments',
+        valid_segments = spark_helper.cache_and_log(
+            'ValidSegments',
             feature_extraction_rdd_utils.
             chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT))
 
         # PairRDD((dir_segment, segment_id), msg)
-        valid_msgs = spark_helper.cache_and_log('ValidMsg',
+        valid_msgs = spark_helper.cache_and_log(
+            'ValidMsg',
             feature_extraction_rdd_utils. valid_msg_rdd(dir_to_msgs, valid_segments))
 
-        data_segment_rdd = spark_helper.cache_and_log('DataSegments',
+        data_segment_rdd = spark_helper.cache_and_log(
+            'DataSegments',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
-            feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
+            feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
+                valid_msgs)
             # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose)
             # PairRDD((dir, timestamp_sec), data_point)
@@ -88,7 +94,7 @@ class SampleSetFeatureExtraction(BasePipeline):
             .map(feature_extraction_utils.feature_key_value)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             # remove the standstill data
-            .filter(lambda ((_0, feature_key), _): feature_key != 9000)
+            # .filter(lambda ((_0, feature_key), _): feature_key != 9000)
             # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
             .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
@@ -96,7 +102,8 @@ class SampleSetFeatureExtraction(BasePipeline):
             # # PairRDD((dir, feature_key), one segment)
             .flatMapValues(feature_extraction_utils.gen_segment))
 
-        spark_helper.cache_and_log('H5ResultMarkers',
+        spark_helper.cache_and_log(
+            'H5ResultMarkers',
             # PairRDD((dir, feature_key), one segment)
             data_segment_rdd
             # PairRDD(dir, feature_key), write all segment into a hdf5 file

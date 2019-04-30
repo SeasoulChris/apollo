@@ -14,6 +14,8 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
+
+
 def get_key(file_name):
     key, pre_segmentID = file_name.split('_')
     segmentID = os.path.splitext(pre_segmentID)[0]
@@ -30,7 +32,7 @@ def pick_sample(list_of_segment, sample_size):
             sample_list.append(segment)
             counter += add_size
         elif counter < sample_size:
-            to_add_size = sample_size-counter+1
+            to_add_size = sample_size - counter + 1
             sample_list.append(segment[0:to_add_size, :])
             return (sample_list, sample_size)
     return (sample_list, counter)
@@ -63,7 +65,8 @@ class UniformDistributionSet(BasePipeline):
                                   WANTED_VEHICLE, 'UniformDistributed')
 
         # RDD(hdf5 files)
-        hdf5_files = spark_helper.cache_and_log('hdf5 files',
+        hdf5_files = spark_helper.cache_and_log(
+            'hdf5 files',
             self.to_rdd([origin_prefix])
             .flatMap(lambda path: glob.glob(os.path.join(path, '*/*hdf5'))))
 
@@ -73,19 +76,23 @@ class UniformDistributionSet(BasePipeline):
         """Run prod."""
         sample_size = 2000
         # same of target prefix of sample-set-feature-extraction
+        # TODO: remove date label
+        # TODO: remove complete marker
         origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
-                                     WANTED_VEHICLE, 'SampleSet', '2019-04-17')
+                                     WANTED_VEHICLE, 'SampleSet', '2019-04-25')
         target_dir = os.path.join('modules/control/learning_based_model/hdf5_training',
-                                  WANTED_VEHICLE, 'UniformDistributed', '2019-04-17')
+                                  WANTED_VEHICLE, 'UniformDistributed', '2019-04-25')
 
         # RDD(.hdf5 file)
-        todo_tasks = spark_helper.cache_and_log('todo_tasks',
+        todo_tasks = spark_helper.cache_and_log(
+            'todo_tasks',
             self.to_rdd(self.bos().list_files(origin_prefix, '.hdf5')))
         target_dir = bos_client.abs_path(target_dir)
         self.run(todo_tasks, target_dir, sample_size)
 
     def run(self, todo_tasks, target_prefix, sample_size):
-        categorized_segments = spark_helper.cache_and_log('categorized_segments',
+        categorized_segments = spark_helper.cache_and_log(
+            'categorized_segments',
             # RDD(.hdf5 files with absolute path)
             todo_tasks
             # PairRDD(file_path, file_name)
@@ -101,7 +108,8 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, list of segments)
             .mapValues(list))
 
-        sampled_segments = spark_helper.cache_and_log('sampled_segments',
+        sampled_segments = spark_helper.cache_and_log(
+            'sampled_segments',
             # PairRDD(key, list of segments)
             categorized_segments
             # PairRDD(key, (sampled segments, counter))
