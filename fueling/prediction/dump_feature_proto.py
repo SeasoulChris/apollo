@@ -37,7 +37,27 @@ class DumpFeatureProto(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct())
-        self.run(records_dir, origin_prefix, target_prefix)
+        completed_records_dir = (
+            # RDD(file). start with target_prefix
+            self.to_rdd(self.bos().list_files(target_prefix))
+            # RDD(file), got file feature.0.bin
+            .map(lambda path: path.endswith('feature.0.bin'))
+            # RDD(label_dir), with label inside
+            .map(os.path.dirname)
+            # RDD(record_dir), has been completed
+            .map(lambda label_dir: label_dir.replace(os.path.join(
+                target_prefix, label_dir[(label_dir.find(target_prefix) +
+                                         len(target_prefix)):].split('/')[0] + '/'),
+                origin_prefix))
+            # RDD(record_dir), which is unique
+            .distinct())
+        # RDD(todo_records_dir)
+        todo_records_dir = records_dir
+
+        if SKIP_EXISTING_DST_FILE:
+            todo_records_dir = todo_records_dir.subtract(completed_records_dir).distinct()
+
+        self.run(todo_records_dir, origin_prefix, target_prefix)
 
     def run(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
@@ -58,9 +78,6 @@ class DumpFeatureProto(BasePipeline):
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
         """Call prediction C++ code."""
-        if SKIP_EXISTING_DST_FILE and os.path.exists(os.path.join(target_dir, 'feature.0.bin')):
-            glog.info('{} has been skiped!'.format(target_dir))
-            return 1
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
