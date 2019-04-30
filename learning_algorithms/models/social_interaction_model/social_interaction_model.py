@@ -84,9 +84,68 @@ class SocialLSTM(nn.Module):
         observation_len = traj.size(1)
 
         # Look at the past trajectory
+        # (N x 1 x self.hidden_size)
         ht, ct = self.h0.repeat(N, 1, 1), self.c0.repeat(N, 1, 1)
         for t in range(observation_len):
-            #  
+            # Get the related variables at this timestamp.
+            curr_mask = time_mask[:, t] == 1
+            curr_N = torch.sum(curr_mask).item()
+            # (curr_N x 1 x 2)
+            curr_point = past_traj[curr_mask, t, :].reshape(curr_N, 1, 2)
+            curr_point_rel = past_traj_rel[curr_mask, t, :].reshape(curr_N, 2)
+            # (curr_N x 1)
+            curr_same_scene_mask = same_scene_mask[curr_mask]
+            # (1 x curr_N x hidden_size)
+            curr_ht, curr_ct = ht[curr_mask, :, :], ct[curr_mask, :, :]
+
+            # Apply social-pooling
+            # (curr_N x grid_size^2 x hidden_size)
+            Ht = self.social_pooling(curr_ht, curr_point, curr_same_scene_mask)
+
+            # Apply embeddings
+            # (curr_N x embed_size)
+            et = self.pos_embedding(curr_point_rel.float())
+            at = self.social_embedding(Ht.view(curr_N, -1))
+
+            # Step through RNN
+            _, (curr_ht, curr_ct) = self.lstm(
+                torch.cat((et, at), 1).view(curr_N, 1, -1), 
+                (curr_ht.view(1, curr_N, -1), curr_ct.view(1, curr_N, -1)))
+            ht[curr_mask, :, :], ct[curr_mask, :, :] = \
+                curr_ht.view(curr_N, 1, -1), curr_ct.view(curr_N, 1, -1)
+
+        # Predict the future trajectory
+        pred_mask = time_mask[:, -1] == 1
+        pred_N = torch.sum(pred_mask).item()
+        if pred_N == 0:
+            return None
+        pred_same_scene_mask = same_scene_mask[pred_mask]
+        pred_point = past_traj[pred_mask, -1, :].float().reshape(pred_N, 1, 2)
+        pred_ht, pred_ct = ht[:, pred_mask, :], ct[:, pred_mask, :]
+        # (pred_N x pred_len x (ux, uy, sigma_x, sigma_y, rho))
+        pred_out = cuda(torch.zeros(pred_N, self.pred_len, 5))
+        # (pred_N x pred_len x 2)
+        pred_traj = cuda(torch.zeros(pred_N, self.pred_len, 2))
+        for t in range(self.pred_len):
+            pred_out[:, t, :] = self.pred_layer(pred_ht.view(pred_N, -1)).view(pred_N, 5).float()
+            pred_point_rel = cuda(pred_out[:, t, :2].float().view(pred_N, 1, 2))
+            pred_point = pred_point + pred_point_rel
+            pred_traj[:, t, :] = pred_point
+            pred_point_rel = pred_point_rel.view(pred_N, 2).clone()
+
+            Ht = self.social_pooling(pred_ht, pred_point, pred_same_scene_mask)
+            et = self.pos_embedding(pred_point_rel)
+            at = self.social_embedding(Ht.view(pred_N, -1))
+            _, (pred_ht, pred_ct) = self.lstm(
+                torch.cat((et, at), 1).view(pred_N, 1, -1),
+                (pred_ht.view(1, pred_N, -1), pred_ct.view(1, pred_N, -1)))
+            pred_ht = pred_ht.view(pred_N, 1, -1)
+        pred_out_all = cuda(torch.zeros(N, self.pred_len, 5))
+        pred_out_all[pred_mask, :, :] = pred_out
+        pred_traj_all = cuda(torch.zeros(N, self.pred_len, 2))
+        pred_traj_all[pred_mask, :, :] = pred_traj
+        return pred_out_all[is_predictable_mask[:, 0] == 1, :, :],
+               pred_traj_all[is_predictable_mask[:, 0] == 1, :, :]
 
 
 class SocialPooling(nn.Module):
