@@ -38,10 +38,8 @@ class DumpFeatureProto(BasePipeline):
             # RDD(record_dir), which is unique
             .distinct())
         completed_records_dir = (
-            # RDD(file). start with target_prefix
-            self.to_rdd(self.bos().list_files(target_prefix))
-            # RDD(file), got file feature.0.bin
-            .map(lambda path: path.endswith('feature.0.bin'))
+            # RDD(file). start with target_prefix and endswist feature.0.bin
+            self.to_rdd(self.bos().list_files(target_prefix, 'feature.0.bin'))
             # RDD(label_dir), with label inside
             .map(os.path.dirname)
             # RDD(record_dir), has been completed
