@@ -33,7 +33,10 @@ POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 CALIBRATION_DIMENSION = point_mass_config["calibration_dimension"]
 VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
+SPEED_EPSILON = 1e-3 # Speed Threshold To Indicate Driving Directions
 
+# TODO(ALL): Deprecate the hard-code gear status and read from data
+GEAR_STATUS = 1 # 1: Driving Forward, 0: Natural, -1: Driving Backward
 
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
@@ -49,6 +52,7 @@ BRAKE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
 MAX_STEER_ANGLE = VEHICLE_PARAM_CONF.vehicle_param.max_steer_angle
 STEER_RATIO = VEHICLE_PARAM_CONF.vehicle_param.steer_ratio
 WHEEL_BASE = VEHICLE_PARAM_CONF.vehicle_param.wheel_base
+
 
 def generate_segment(h5_file):
     """
@@ -256,18 +260,15 @@ def generate_network_output(segment, model_folder, model_name):
     output_fnn = np.zeros([total_len, DIM_OUTPUT])
 
     velocity_fnn = 0.0
-    acceleration_fnn = 0.0
-    angular_velocity_fnn = 0.0
 
     for k in range(total_len):
         if k < DIM_SEQUENCE_LENGTH:
             velocity_fnn = segment[k, segment_index["speed"]]
-            acceleration_fnn = PP7_IMU_SCALING * (segment[k, segment_index["a_x"]] * \
-                np.cos(segment[k, segment_index["heading"]]) + \
+            # Scale the acceleration and angular speed data read from IMU
+            output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
+                segment[k, segment_index["a_x"]] *  np.cos(segment[k, segment_index["heading"]]) + \
                 segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
-            angular_velocity_fnn = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
-            output_fnn[k, output_index["acceleration"]] = acceleration_fnn
-            output_fnn[k, output_index["w_z"]] = angular_velocity_fnn
+            output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
         if k >= DIM_SEQUENCE_LENGTH:
             if model_name == 'mlp':
@@ -282,12 +283,19 @@ def generate_network_output(segment, model_folder, model_name):
         
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
 
-        acceleration_fnn = output_fnn[k, output_index["acceleration"]]
-        angular_velocity_fnn = output_fnn[k, output_index["w_z"]]
-        velocity_fnn += acceleration_fnn * DELTA_T
+        # Update the vehicle speed based on predicted acceleration
+        velocity_fnn += output_fnn[k, output_index["acceleration"]] * DELTA_T
+        # If (negative speed under forward gear || positive speed under backward gear ||
+        #     natural gear):
+        # Then truncate speed, acceleration, and angular speed to 0
+        if GEAR_STATUS * (velocity_fnn + GEAR_STATUS * SPEED_EPSILON) <= 0:
+            velocity_fnn = 0.0
+            output_fnn[k, output_index["acceleration"]] = 0.0
+            output_fnn[k, output_index["w_z"]]  = 0.0
 
         input_data[k, input_index["speed"]] = velocity_fnn  # speed mps
-        input_data[k, input_index["acceleration"]] = acceleration_fnn  # acceleration
+        # acceleration
+        input_data[k, input_index["acceleration"]] = output_fnn[k, output_index["acceleration"]]
 
         # throttle control from chassis
         input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
