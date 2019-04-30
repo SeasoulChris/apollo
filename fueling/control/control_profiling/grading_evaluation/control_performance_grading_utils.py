@@ -307,7 +307,7 @@ def compute_std(grading_mtx, arg):
     column_norm = grading_mtx[:, feature_idx[arg.std_norm_name]]
     column_denorm = grading_mtx[:, np.array([feature_idx[denorm_name]
                                 for denorm_name in arg.std_denorm_name])]
-    column_denorm = np.maximum(column_denorm,  arg.std_max_compare)
+    column_denorm = np.maximum(np.fabs(column_denorm), arg.std_max_compare)
     column_denorm = [np.prod(column) for column in column_denorm]
     std = [nor / (denor * arg.std_denorm_weight)
            for nor, denor in zip(column_norm, column_denorm)]
@@ -316,8 +316,8 @@ def compute_std(grading_mtx, arg):
 def compute_peak(grading_mtx, arg):
     """Compute the peak value"""
     elem_num, _ = grading_mtx.shape
-    return (np.max(np.fabs(grading_mtx[:, feature_idx[arg.peak_feature_name]])) / arg.peak_threshold,
-            elem_num)
+    return (np.max(np.fabs(grading_mtx[:, feature_idx[arg.peak_feature_name]])) /
+            arg.peak_threshold, elem_num)
 
 def compute_usage(grading_mtx, arg):
     """Compute the usage value"""
@@ -337,7 +337,7 @@ def compute_usage(grading_mtx, arg):
 def compute_beyond(grading_mtx, arg):
     """Compute the beyond_the_threshold counting value"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(grading_mtx[:, feature_idx[arg.beyond_feature_name]] >=
+    return (len(np.where(np.fabs(grading_mtx[:, feature_idx[arg.beyond_feature_name]]) >=
                          arg.beyond_threshold)) / elem_num,
             elem_num)
 
@@ -354,7 +354,7 @@ def get_std_value(grading_column):
 def filter_value(grading_mtx, column_name, threshold):
     """Filter the rows out if they do not satisfy threshold values"""
     return np.delete(grading_mtx,
-                     np.where(grading_mtx[:, column_name] < threshold), axis=0)
+                     np.where(np.fabs(grading_mtx[:, column_name]) < threshold), axis=0)
 
 def combine_gradings(grading_x, grading_y):
     """Reduce gradings by combining the groups with different strategies"""
