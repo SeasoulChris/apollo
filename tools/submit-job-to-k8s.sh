@@ -66,7 +66,7 @@ fi
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
 FUEL_PATH="$( dirname "${BASH_SOURCE[0]}" )/.."
-BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/static/bos_fstool"
+BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/local/bos_fstool"
 # End of config.
 
 set -x
@@ -101,7 +101,7 @@ pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
 popd
 
 # Add kubernetes package to the spark-submit tool.
-rsync -aht --size-only "${FUEL_PATH}/apps/static/spark-kubernetes_2.11-2.4.0.jar" \
+rsync -aht --size-only "${FUEL_PATH}/apps/local/spark-kubernetes_2.11-2.4.0.jar" \
     ${CONDA_PREFIX}/lib/python3.6/site-packages/pyspark/jars/
 
 # Submit job with fueling package.
