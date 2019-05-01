@@ -172,6 +172,19 @@ class SocialLSTM(nn.Module):
                pred_traj_all[is_predictable[:, 0] == 1, :, :]
 
 
+class SocialAttention(nn.Module):
+    '''The social-attention model
+    '''
+    def __init__(self, embed_size=64, edge_hidden_size=256, node_hidden_size=128):
+        super(SocialAttention, self).__init__()
+        self.edge_lstm = None
+        self.node_lstm = None
+        self.edge_to_node = EdgeToNodeAttention()
+
+    def forward(self, X):
+        return X
+
+
 class SocialPooling(nn.Module):
     '''The social-pooling module used in the paper of Social-LSTM.
     '''
