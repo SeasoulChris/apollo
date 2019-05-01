@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import glob
 import os
-
 import math
+
+import google.protobuf.text_format as text_format
 
 from cyber_py.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
@@ -31,7 +31,7 @@ def missing_file(path):
     for vehicle in vehicles:
         # config file
         conf = os.path.join(path, vehicle, ConfFile)
-        if os.path.exists(conf) == False:
+        if os.path.exists(conf) is False:
             print('Missing configuration file')
             return True
     # record file
@@ -49,7 +49,7 @@ def parse_error(path):
         try:
             proto_utils.get_pb_from_text_file(conf, pb_value)
             return False
-        except:
+        except text_format.ParseError:
             print('Error: Cannot parse %s as binary or text proto' % conf)
             return True
 
