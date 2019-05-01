@@ -8,6 +8,7 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 
+SKIP_EXISTING_DST_FILE = True
 
 class MergeLabels(BasePipeline):
     """Records to MergeLabels proto pipeline."""
@@ -23,9 +24,30 @@ class MergeLabels(BasePipeline):
     def run_prod(self):
         """Run prod."""
         source_prefix = 'modules/prediction/labels/'
-        # RDD(npy_file)
-        npy_file_rdd = self.to_rdd(self.bos().list_files(source_prefix, '.npy'))
-        self.run(npy_file_rdd)
+
+        npy_dirs = (
+            # RDD(npy_files)
+            self.to_rdd(self.bos().list_files(source_prefix, '.npy'))
+            # RDD(target_dir), in absolute path
+            .map(os.path.dirname)
+            # RDD(target_dir), in absolute path and unique
+            .distinct())
+
+        merged_dirs = (
+            # RDD(merged_label_files)
+            self.to_rdd(self.bos().list_files(source_prefix, '/future_status.npy'))
+            # RDD(target_dir), in absolute path
+            .map(os.path.dirname)
+            # RDD(target_dir), in absolute path and unique
+            .distinct())
+
+        # RDD(todo_npy_files)
+        todo_npy_files = npy_dirs
+
+        if SKIP_EXISTING_DST_FILE:
+            # RDD(todo_npy_files)
+            todo_npy_files = todo_npy_files.subtract(merged_dirs).distinct()
+        self.run(todo_npy_files)
 
     def run(self, npy_file_rdd):
         """Run the pipeline with given arguments."""
@@ -39,6 +61,10 @@ class MergeLabels(BasePipeline):
             # RDD(0/1), 1 for success
             .map(self.process_dir)
             .cache())
+
+        if result.isEmpty():
+            glog.info("Nothing to be processed, everything is under control!")
+            return
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod

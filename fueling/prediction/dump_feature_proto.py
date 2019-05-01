@@ -51,6 +51,7 @@ class DumpFeatureProto(BasePipeline):
         todo_records_dir = records_dir
 
         if SKIP_EXISTING_DST_FILE:
+            # RDD(todo_records_dir)
             todo_records_dir = todo_records_dir.subtract(completed_records_dir).distinct()
 
         self.run(todo_records_dir, origin_prefix, target_prefix)
@@ -69,6 +70,10 @@ class DumpFeatureProto(BasePipeline):
                                    os.path.join(target_prefix, dir_map[1] + '/'), 1),
                 dir_map[1]))
             .cache())
+
+        if result.isEmpty():
+            glog.info("Nothing to be processed, everything is under control!")
+            return
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod

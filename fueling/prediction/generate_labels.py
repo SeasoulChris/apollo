@@ -8,6 +8,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator
 
+SKIP_EXISTING_DST_FILE = True
 
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
@@ -24,15 +25,32 @@ class GenerateLabels(BasePipeline):
         """Run prod."""
         source_prefix = 'modules/prediction/labels/'
 
-        # RDD(bin_file)
-        bin_files  = self.to_rdd(self.bos().list_files(source_prefix)).filter(
-            spark_op.filter_path(['*feature.*.bin']))
+        # RDD(bin_files)
+        bin_files = (
+            self.to_rdd(self.bos().list_files(source_prefix)).filter(
+            spark_op.filter_path(['*feature.*.bin'])))
+        labeled_bin_files = (
+            # RDD(label_files)
+            self.to_rdd(self.bos().list_files(source_prefix, '.bin.future_status.npy'))
+            # RDD(bin_files)
+            .map(lambda label_file: label_file.replace('.bin.future_status.npy', '.bin')))
+        # RDD(todo_bin_files)
+        todo_bin_files = bin_files
+
+        if SKIP_EXISTING_DST_FILE:
+            # RDD(todo_bin_files)
+            todo_bin_files = todo_bin_files.subtract(labeled_bin_files).distinct()
+
         self.run(bin_files)
 
     def run(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = bin_files_rdd.map(self.process_file).cache()
+
+        if result.isEmpty():
+            glog.info("Nothing to be processed, everything is under control!")
+            return
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
