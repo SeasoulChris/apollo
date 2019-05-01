@@ -20,6 +20,7 @@ import fueling.control.control_profiling.feature_extraction.control_feature_extr
 import fueling.control.control_profiling.grading_evaluation.control_performance_grading_utils \
        as grading_utils
 
+
 class ControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
@@ -78,6 +79,7 @@ class ControlProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, combined_grading_result), output grading results for each target
          .foreach(grading_utils.output_gradings))
 
+
 def partition_data(target_msgs):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
@@ -86,6 +88,7 @@ def partition_data(target_msgs):
     msgs_groups = [msgs[idx: idx + grading_utils.MSG_PER_SEGMENT]
                    for idx in range(0, len(msgs), grading_utils.MSG_PER_SEGMENT)]
     return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
+
 
 def summarize_tasks(tasks, original_prefix, target_prefix):
     """Make summaries to specified tasks"""
@@ -103,6 +106,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
             Gradings=len(glob.glob(os.path.join(target_dir, '*performance_grading*')))))
         file_utils.touch(os.path.join(target_dir, 'COMPLETE'))
     email_utils.send_email_info(title, email_content, receivers)
+
 
 if __name__ == '__main__':
     ControlProfilingMetrics().main()

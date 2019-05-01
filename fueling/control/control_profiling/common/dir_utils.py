@@ -6,6 +6,7 @@ import os
 
 import fueling.common.s3_utils as s3_utils
 
+
 def get_todo_tasks(origin_prefix, target_prefix,
                    marker_origin='COMPLETE', marker_processed='COMPLETE'):
     """Get to be processed tasks/folders in rdd format."""
@@ -17,6 +18,7 @@ def get_todo_tasks(origin_prefix, target_prefix,
                       .map(lambda path: path.replace(target_prefix, origin_prefix, 1)))
     # RDD(dir_of_to_do_tasks)
     return origin_dirs.subtract(processed_dirs)
+
 
 # Helper function
 def list_completed_dirs(prefix, marker):

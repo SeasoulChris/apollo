@@ -84,5 +84,6 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
         file_utils.touch(os.path.join(target_dir, 'COMPLETE'))
     email_utils.send_email_info(title, email_content, receivers)
 
+
 if __name__ == '__main__':
     ControlProfilingVisualization().main()

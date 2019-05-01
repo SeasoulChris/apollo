@@ -33,10 +33,10 @@ POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 CALIBRATION_DIMENSION = point_mass_config["calibration_dimension"]
 VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
-SPEED_EPSILON = 1e-3 # Speed Threshold To Indicate Driving Directions
+SPEED_EPSILON = 1e-3   # Speed Threshold To Indicate Driving Directions
 
 # TODO(ALL): Deprecate the hard-code gear status and read from data
-GEAR_STATUS = 1 # 1: Driving Forward, 0: Natural, -1: Driving Backward
+GEAR_STATUS = 1  # 1: Driving Forward, 0: Natural, -1: Driving Backward
 
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
@@ -182,12 +182,11 @@ def generate_evaluation_data(dataset_path, model_folder, model_name):
     return vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps
 
 
-
 def generate_gps_data(segment):
     # speed, heading by gps
     vehicle_state_gps = segment[:, [segment_index["speed"], segment_index["heading"]]]
     # position x, y by gps
-    trajectory_gps = segment[:, [segment_index["x"], segment_index["y"]]] 
+    trajectory_gps = segment[:, [segment_index["x"], segment_index["y"]]]
     return vehicle_state_gps, trajectory_gps
 
 
@@ -217,7 +216,7 @@ def generate_point_mass_output(segment):
     calibration_table = load_calibration_table()
     table_interpolation = interpolate.interp2d(
         calibration_table[:, 0], calibration_table[:, 1], calibration_table[:, 2], kind='linear')
-    
+
     total_len = segment.shape[0]
     velocity_point_mass = 0.0
     acceleration_point_mass = 0.0
@@ -225,9 +224,9 @@ def generate_point_mass_output(segment):
 
     for k in range(total_len):
         if segment[k, segment_index["throttle"]] - THROTTLE_DEADZONE / 100.0 > \
-                segment[k, segment_index["brake"]] - BRAKE_DEADZONE / 100.0: 
+                segment[k, segment_index["brake"]] - BRAKE_DEADZONE / 100.0:
             lon_cmd = segment[k, segment_index["throttle"]]  # current cmd is throttle
-        else:  
+        else:
             lon_cmd = -segment[k, segment_index["brake"]]  # current cmd is brake
 
         if k == 0:
@@ -236,7 +235,7 @@ def generate_point_mass_output(segment):
             velocity_point_mass += acceleration_point_mass * DELTA_T
         acceleration_point_mass = table_interpolation(velocity_point_mass, lon_cmd * 100.0)
         # acceleration by point_mass given by calibration table
-        output_point_mass[k, output_index["acceleration"]] = acceleration_point_mass 
+        output_point_mass[k, output_index["acceleration"]] = acceleration_point_mass
         # angular speed by point_mass given by linear bicycle model
         output_point_mass[k, output_index["w_z"]] = segment[k, segment_index["steering"]] * \
             MAX_STEER_ANGLE / STEER_RATIO * velocity_point_mass / WHEEL_BASE
@@ -277,10 +276,10 @@ def generate_network_output(segment, model_folder, model_name):
 
             if model_name == 'lstm':
                 input_data_array = np.reshape(np.transpose(
-                        input_data[(k - DIM_SEQUENCE_LENGTH) : k, :]), 
+                        input_data[(k - DIM_SEQUENCE_LENGTH) : k, :]),
                         (1, DIM_INPUT, DIM_SEQUENCE_LENGTH))
                 output_fnn[k, :] = model.predict(input_data_array)
-        
+
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
 
         # Update the vehicle speed based on predicted acceleration
@@ -299,10 +298,10 @@ def generate_network_output(segment, model_folder, model_name):
 
         # throttle control from chassis
         input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
-        # brake control from chassis  
+        # brake control from chassis
         input_data[k, input_index["brake"]] = segment[k, segment_index["brake"]]
         # steering control from chassis
-        input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]] 
+        input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
         input_data[k, :] = (input_data[k, :] - input_mean) / input_std
 
     return output_fnn

@@ -36,6 +36,7 @@ def verify_vehicle_controller(task):
     return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
                                record_utils.message_to_proto(control_message))
 
+
 def data_matches_config(vehicle_type, controller_type):
     """Compare the data retrieved in record file and configured value and see if matches"""
     conf_vehicle_type = get_config_control_profiling().vehicle_type
@@ -59,9 +60,11 @@ def data_matches_config(vehicle_type, controller_type):
         return False
     return True
 
+
 def get_message_by_topic(messages, topic):
     """Get the first message from list that has specific topic"""
     return next((message for message in messages if message.topic == topic), None)
+
 
 def get_config_control_profiling():
     """Get configured value in control_profiling_conf.pb.txt"""
@@ -71,10 +74,11 @@ def get_config_control_profiling():
     proto_utils.get_pb_from_text_file(profiling_conf, control_profiling)
     return control_profiling
 
+
 def extract_data_from_msg(msg):
     """Extract wanted fields from control message"""
     msg_proto = record_utils.message_to_proto(msg)
-    control_latency = msg_proto.latency_stats;
+    control_latency = msg_proto.latency_stats
     if get_config_control_profiling().controller_type == 'Lon_Lat_Controller':
         control_lon = msg_proto.debug.simple_lon_debug
         control_lat = msg_proto.debug.simple_lat_debug

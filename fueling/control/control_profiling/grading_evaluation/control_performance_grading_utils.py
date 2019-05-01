@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 """ Control performance grading related utils. """
-
-from collections import namedtuple
 import os
-
-import colored_glog as glog
 import numpy as np
 
-import fueling.common.file_utils as file_utils
+from collections import namedtuple
+
+import colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_INDEX \
      as feature_idx
@@ -127,7 +125,7 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
-            std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num \
+            std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
                               * profiling_conf.vehicle_wheelbase
         )),
         lateral_err_std_harsh=compute_std(grading_mtx, grading_arguments(
@@ -137,7 +135,7 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
-            std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num \
+            std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
                               * profiling_conf.vehicle_wheelbase
         )),
         lateral_err_rate_std=compute_std(grading_mtx, grading_arguments(
@@ -292,6 +290,7 @@ def compute_h5_and_gradings(target_groups):
             count_feature_name='total_time_exceeded'
         )))
     return (target, grading_group_result)
+
 
 def compute_std(grading_mtx, arg):
     """Compute the std deviation value by using specified arguments in namedtuple format"""
