@@ -41,7 +41,7 @@ class GenerateLabels(BasePipeline):
             # RDD(todo_bin_files)
             todo_bin_files = todo_bin_files.subtract(labeled_bin_files).distinct()
 
-        self.run(bin_files)
+        self.run(todo_bin_files)
 
     def run(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
