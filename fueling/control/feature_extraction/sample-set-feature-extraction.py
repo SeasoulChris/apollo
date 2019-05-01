@@ -47,11 +47,22 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        # origin_prefix = 'small-records/2019'
-        origin_prefix = 'modules/control/learning_based_model/raw_data_collection'
-        target_prefix = os.path.join(
-            'modules/control/learning_based_model/hdf5_training', WANTED_VEHICLE, 'SampleSet')
+        origin_prefix = 'modules/control/records/Mkz7'
+        target_prefix = os.path.join('modules/control/data/results', 'SampleSet', WANTED_VEHICLE)
         # RDD(record_dirs)
+        """ get to do jobs """
+        print('end_files:', self.bos().list_files(origin_prefix))
+        todo_task_dirs = spark_helper.cache_and_log(
+            'todo_jobs',
+            # RDD(relative_path_to_vehicle_type)
+            self.to_rdd(self.bos().list_files(origin_prefix))
+            # RDD('COMPLETE'_files)
+            # .filter(lambda path: path.endswith('COMPLETE'))
+            # RDD(absolute_path_to_'COMPLETE')
+            .mapValues(os.path.dirname))
+
+        print('todo_jobs: ', todo_task_dirs.collect())
+        return
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
