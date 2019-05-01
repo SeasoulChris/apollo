@@ -61,14 +61,6 @@ def get_vehicle_param_prod(prefix):
         .mapValues(lambda vehicle_conf: vehicle_conf.vehicle_param))
 
 
-# def get_conf(conf_dir):
-#     vehicle_conf_filename = 'vehicle_param.pb.txt'
-#     conf_file = os.path.join(conf_dir, vehicle_conf_filename)
-#     VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(
-#         conf_file, vehicle_config_pb2.VehicleConfig())
-#     return VEHICLE_PARAM_CONF.vehicle_param
-
-
 DIM_INPUT = 3
 input_index = {
     0: 'speed',  # chassis.speed_mps
@@ -91,30 +83,6 @@ def plot_feature_hist(elem, target_dir):
     return result_file
 
 
-# def gen_param(vehicle_param, throttle_or_brake):
-#     if throttle_or_brake == 'throttle':
-#         cmd_min = vehicle_param.throttle_deadzone
-#         cmd_max = CALIBRATION_TABLE_CONF.throttle_max
-#         layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
-#                  CALIBRATION_TABLE_CONF.throttle_train_layer2,
-#                  CALIBRATION_TABLE_CONF.throttle_train_layer3]
-
-#     elif throttle_or_brake == 'brake':
-#         cmd_min = -1 * CALIBRATION_TABLE_CONF.brake_max
-#         cmd_max = -1 * vehicle_param.brake_deadzone
-#         layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
-#                  CALIBRATION_TABLE_CONF.brake_train_layer2,
-#                  CALIBRATION_TABLE_CONF.brake_train_layer3]
-
-#     speed_min = CALIBRATION_TABLE_CONF.train_speed_min
-#     speed_max = CALIBRATION_TABLE_CONF.train_speed_max
-#     speed_segment_num = CALIBRATION_TABLE_CONF.train_speed_segment
-#     cmd_segment_num = CALIBRATION_TABLE_CONF.train_cmd_segment
-#     train_alpha = CALIBRATION_TABLE_CONF.train_alpha
-#     return ((speed_min, speed_max, speed_segment_num),
-#             (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha)
-
-
 def gen_plot(elem, target_dir, throttle_or_brake):
 
     (vehicle, (((speed_min, speed_max, speed_segment_num),
@@ -134,7 +102,7 @@ def gen_plot(elem, target_dir, throttle_or_brake):
         ax.plot_surface(speed_maxtrix, cmd_matrix, acc_maxtrix,
                         alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
         ax.set_xlabel('$speed$')
-        ax.set_ylabel('$throttle$')
+        ax.set_ylabel('$%s$' % throttle_or_brake)
         ax.set_zlabel('$acceleration$')
         pdf.savefig()
     return result_file

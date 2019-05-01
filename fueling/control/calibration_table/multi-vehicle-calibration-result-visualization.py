@@ -45,7 +45,7 @@ class MultiCalibrationTableVisualization(BasePipeline):
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle, abs_path_to_vehicle_folder)
-            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)), 3)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
         # PairRDD((vehicle, 'throttle'), hdf5_file)
         throttle_features = spark_helper.cache_and_log(
