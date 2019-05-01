@@ -172,19 +172,6 @@ class SocialLSTM(nn.Module):
                pred_traj_all[is_predictable[:, 0] == 1, :, :]
 
 
-class SocialAttention(nn.Module):
-    '''The social-attention model
-    '''
-    def __init__(self, embed_size=64, edge_hidden_size=256, node_hidden_size=128):
-        super(SocialAttention, self).__init__()
-        self.edge_lstm = None
-        self.node_lstm = None
-        self.edge_to_node = EdgeToNodeAttention()
-
-    def forward(self, X):
-        return X
-
-
 class SocialPooling(nn.Module):
     '''The social-pooling module used in the paper of Social-LSTM.
     '''
@@ -234,7 +221,7 @@ class SocialPooling(nn.Module):
             pos_t: the matrix of current positions (N x 1 x 2)
             same_scene_mask: the mask indicating what agents are in the same scene.
                 agents that are in the same scene share the same number.
-                (N x 1) --> e.g. [1,1,1,2,2,2,2,2,2,3,3, ...]
+                (N x 1) --> e.g. [0,0,0,0,0,0,1,1,1,2,2,2,2,2,2,3,3, ...]
         '''
         N = ht.size(0)
         hidden_size = ht.size(2)
@@ -278,6 +265,75 @@ class SocialPooling(nn.Module):
             N_filled += curr_N
         
         return ht_pooled
+
+
+class SocialAttention(nn.Module):
+    '''The social-attention model
+    '''
+    def __init__(self, embed_size=64, edge_hidden_size=256, node_hidden_size=128):
+        super(SocialAttention, self).__init__()
+
+        # Initialize initial states for spatial-edge RNN.
+        s_edge_h0 = torch.zeros(1, 1, edge_hidden_size)
+        s_edge_c0 = torch.zeros(1, 1, edge_hidden_size)
+        nn.init.xavier_normal_(s_edge_h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(s_edge_c0, gain=nn.init.calculate_gain('relu'))
+        self.s_edge_h0 = nn.Parameter(s_edge_h0, requires_grad=True)
+        self.s_edge_c0 = nn.Parameter(s_edge_c0, requires_grad=True)
+
+        # Initialize initial states for temporal-edge RNN.
+        t_edge_h0 = torch.zeros(1, edge_hidden_size)
+        t_edge_c0 = torch.zeros(1, edge_hidden_size)
+        nn.init.xavier_normal_(t_edge_h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(t_edge_c0, gain=nn.init.calculate_gain('relu'))
+        self.t_edge_h0 = nn.Parameter(t_edge_h0, requires_grad=True)
+        self.t_edge_c0 = nn.Parameter(t_edge_c0, requires_grad=True)
+
+        # Initialize initial states for node RNN.
+        node_h0 = torch.zeros(1, node_hidden_size)
+        node_c0 = torch.zeros(1, node_hidden_size)
+        nn.init.xavier_normal_(node_h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(node_c0, gain=nn.init.calculate_gain('relu'))
+        self.node_h0 = nn.Parameter(node_h0, requires_grad=True)
+        self.node_c0 = nn.Parameter(node_c0, requires_grad=True)
+
+        #
+        self.edge_lstm = None
+        self.node_lstm = None
+        self.edge_to_node = EdgeToNodeAttention()
+
+    def forward(self, X):
+        past_traj, past_traj_rel, past_traj_timestamp_mask, is_predictable, same_scene_mask = X
+        N = past_traj.size(0)
+        observation_len = past_traj.size(1)
+
+        # INITIALIZATION:
+        # Create a list of square matrices to hold hidden-states for spatial edges. (h_{uv})
+        # e.g. if same_scene_mask is [0,0,1,1,1,2], then the resulting ct/ht_list
+        #      is a list of matrices [2x2, 3x3, 1x1].
+        s_edge_ht_list = []
+        s_edge_ct_list = []
+        for i in range(same_scene_mask.max().item()+1):
+            curr_dim = torch.sum(same_scene_mask==i).item()
+            s_edge_ht_list.append(self.s_edge_h0.repeat(curr_dim, curr_dim, 1))
+            s_edge_ct_list.append(self.s_edge_c0.repeat(curr_dim, curr_dim, 1))
+        # Create a vector of hidden-states for temporal edges. (h_{vv})
+        t_edge_ht_list = self.t_edge_h0.repeat(curr_dim, 1)
+        t_edge_ct_list = self.t_edge_c0.repeat(curr_dim, 1)
+        # Create a vector of hidden-states for nodes (h_v)
+        node_ht_list = self.node_h0.repeat(curr_dim, 1)
+        node_ct_list = self.node_c0.repeat(curr_dim, 1)
+
+        # RUNNING THROUGH EACH TIME-STAMP:
+
+
+
+class EdgeUpdate(nn.Module):
+    def __init__(self):
+        return
+
+    def forward(self, X):
+        return X
 
 
 class EdgeToNodeAttention(nn.Module):
