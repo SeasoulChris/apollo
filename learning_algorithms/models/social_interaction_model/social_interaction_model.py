@@ -46,6 +46,30 @@ class SocialInteraction(nn.Module):
         return X
 
 
+class SimpleLSTM(nn.Module):
+    def __init__(self, pred_len=12, embed_size=64, hidden_size=128):
+        super(SimpleLSTM, self).__init__()
+        self.pred_len = pred_len
+        self.pos_embedding = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True)
+        h0 = torch.zeros(1, 1, hidden_size)
+        c0 = torch.zeros(1, 1, hidden_size)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+        self.pred_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size, 5),
+        )
+
+    def forward(self, X):
+        return X
+
+
+
 class SocialLSTM(nn.Module):
     def __init__(self, pred_len=12, grid_size=2, area_span=2.0,
                  embed_size=64, hidden_size=128):
@@ -77,18 +101,18 @@ class SocialLSTM(nn.Module):
             nn.Linear(hidden_size, 5),
         )
 
-    def forward(self, past_traj, past_traj_rel, past_traj_timestamp_mask,
-                is_predictable, same_scene_mask):
+    def forward(self, X):
         # Get dimensions
-        N = traj.size(0)
-        observation_len = traj.size(1)
+        past_traj, past_traj_rel, past_traj_timestamp_mask, is_predictable, same_scene_mask = X
+        N = past_traj.size(0)
+        observation_len = past_traj.size(1)
 
         # Look at the past trajectory
         # (N x 1 x self.hidden_size)
         ht, ct = self.h0.repeat(N, 1, 1), self.c0.repeat(N, 1, 1)
         for t in range(observation_len):
             # Get the related variables at this timestamp.
-            curr_mask = time_mask[:, t] == 1
+            curr_mask = (past_traj_timestamp_mask[:, t] == 1)
             curr_N = torch.sum(curr_mask).item()
             # (curr_N x 1 x 2)
             curr_point = past_traj[curr_mask, t, :].reshape(curr_N, 1, 2)
@@ -115,13 +139,13 @@ class SocialLSTM(nn.Module):
                 curr_ht.view(curr_N, 1, -1), curr_ct.view(curr_N, 1, -1)
 
         # Predict the future trajectory
-        pred_mask = time_mask[:, -1] == 1
+        pred_mask = (past_traj_timestamp_mask[:, -1] == 1)
         pred_N = torch.sum(pred_mask).item()
         if pred_N == 0:
             return None
         pred_same_scene_mask = same_scene_mask[pred_mask]
         pred_point = past_traj[pred_mask, -1, :].float().reshape(pred_N, 1, 2)
-        pred_ht, pred_ct = ht[:, pred_mask, :], ct[:, pred_mask, :]
+        pred_ht, pred_ct = ht[pred_mask, :, :], ct[pred_mask, :, :]
         # (pred_N x pred_len x (ux, uy, sigma_x, sigma_y, rho))
         pred_out = cuda(torch.zeros(pred_N, self.pred_len, 5))
         # (pred_N x pred_len x 2)
@@ -130,7 +154,7 @@ class SocialLSTM(nn.Module):
             pred_out[:, t, :] = self.pred_layer(pred_ht.view(pred_N, -1)).view(pred_N, 5).float()
             pred_point_rel = cuda(pred_out[:, t, :2].float().view(pred_N, 1, 2))
             pred_point = pred_point + pred_point_rel
-            pred_traj[:, t, :] = pred_point
+            pred_traj[:, t, :] = pred_point.reshape(pred_N, 2)
             pred_point_rel = pred_point_rel.view(pred_N, 2).clone()
 
             Ht = self.social_pooling(pred_ht, pred_point, pred_same_scene_mask)
@@ -144,8 +168,8 @@ class SocialLSTM(nn.Module):
         pred_out_all[pred_mask, :, :] = pred_out
         pred_traj_all = cuda(torch.zeros(N, self.pred_len, 2))
         pred_traj_all[pred_mask, :, :] = pred_traj
-        return pred_out_all[is_predictable_mask[:, 0] == 1, :, :],
-               pred_traj_all[is_predictable_mask[:, 0] == 1, :, :]
+        return pred_out_all[is_predictable[:, 0] == 1, :, :],\
+               pred_traj_all[is_predictable[:, 0] == 1, :, :]
 
 
 class SocialPooling(nn.Module):
@@ -217,7 +241,7 @@ class SocialPooling(nn.Module):
             if (curr_N == 0):
                 continue
             curr_ht = curr_ht.view(curr_N, 1, -1)
-            curr_pos_t = curr_post_t.view(curr_N, 1, 2)
+            curr_pos_t = curr_pos_t.view(curr_N, 1, 2)
 
             # 2. get the pooling grid matrix.
             mask_within_pooling_area, mask_grid_id = self.decide_grid(curr_pos_t)
@@ -249,3 +273,54 @@ class EdgeToNodeAttention(nn.Module):
 
     def forward(self, X):
         return X
+
+
+class ProbablisticTrajectoryLoss:
+    def loss_fn(self, y_pred_tuple, y_true):
+        y_pred, y_traj = y_pred_tuple
+        if y_pred is None:
+            return 0
+        # y_pred: N x pred_len x 5
+        # y_true: (pred_traj, pred_traj_rel)  N x pred_len x 2
+        mux, muy, sigma_x, sigma_y, corr = y_pred[:,:,0], y_pred[:,:,1],\
+            y_pred[:,:,2], y_pred[:,:,3], y_pred[:,:,4]
+        is_predictable = y_true[2].long()
+        x, y = y_true[1][is_predictable[:,0]==1,:,0].float(), \
+               y_true[1][is_predictable[:,0]==1,:,1].float()
+        N = y_pred.size(0)
+        if N == 0:
+            return 0
+
+        eps = 1e-10
+
+        z = ((x-mux)/(eps+sigma_x))**2 + ((y-muy)/(eps+sigma_y))**2 - \
+            2*corr*(x-mux)*(y-muy)/(sigma_x*sigma_y+eps)
+        P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
+            torch.exp(-z/(2*(1-corr**2)))
+
+        loss = torch.clamp(P, min=eps)
+        loss = -loss.log()
+        return torch.sum(loss)/N
+
+    def loss_info(self, y_pred_tuple, y_true):
+        y_pred, y_pred_traj = y_pred_tuple
+        is_predictable = y_true[2].long()
+
+        # loss = nn.MSELoss()
+        # out = loss(y_pred[:, :, :2], y_true[1][is_predictable[:,0]==1,:,:].float())
+        # return out
+
+        loss = nn.MSELoss()
+        #y_pred_traj = y_true[0][is_predictable[:,0]==1,:,:].float()
+        #for i in range(1, y_pred_traj.size(1)):
+        #    y_pred_traj[:, i, :] = y_pred_traj[:, i-1, :] + y_pred[:, i, :2]
+        out = loss(y_pred_traj, y_true[0][is_predictable[:,0]==1,:,:].float())
+        return out
+
+        # out = y_pred[:, :, :2].float() - y_true[1][is_predictable[:,0]==1,:,:].float()
+        # out = out ** 2
+        # out = torch.sum(out, 2)
+        # out = torch.sqrt(out)
+        # out = torch.mean(out)
+        # return out
+        

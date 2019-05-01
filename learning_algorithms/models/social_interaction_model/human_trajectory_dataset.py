@@ -101,7 +101,7 @@ class HumanTrajectoryDataset(Dataset):
                     # If this obstacle doesn't have enough number of frames,
                     # mark it as non-predictable. Vice versa.
                     curr_ped_is_predictable = False
-                    if rel_time_end == seq_len and rel_time_begin < 2:
+                    if rel_time_end == seq_len and rel_time_begin == 0:
                         curr_ped_is_predictable = True
                     # Get the coordinates of positions and make them relative.
                     # (relative position contains 1 fewer data-point, because, for
@@ -111,10 +111,10 @@ class HumanTrajectoryDataset(Dataset):
                     curr_ped = curr_ped[:, 2:]
                     curr_ped_rel = np.zeros(curr_ped.shape)
                     curr_ped_timestamp_mask = np.ones((1, rel_time_end - rel_time_begin))
-                    curr_ped_rel[:, 1:] = curr_ped[:, 1:] - curr_ped[:, :-1]
+                    curr_ped_rel[1:, :] = curr_ped[1:, :] - curr_ped[:-1, :]
                     # Update into curr_scene matrix.
                     curr_scene[i, rel_time_begin:rel_time_end, :] = curr_ped
-                    curr_scene_rel[i,, rel_time_begin:rel_time_end, :] = curr_ped_rel
+                    curr_scene_rel[i, rel_time_begin:rel_time_end, :] = curr_ped_rel
                     curr_scene_timestamp_mask[i, rel_time_begin:rel_time_end] = \
                         curr_ped_timestamp_mask
                     curr_scene_is_predictable[i] = curr_ped_is_predictable
@@ -126,7 +126,7 @@ class HumanTrajectoryDataset(Dataset):
                     self.scene_rel_list.append(curr_scene_rel)
                     self.scene_timestamp_mask.append(curr_scene_timestamp_mask)
                     self.scene_is_predictable_list.append(curr_scene_is_predictable)
-        self.num_scene = len(scene_list)
+        self.num_scene = len(self.scene_list)
 
     def __len__(self):
         return self.num_scene
@@ -136,7 +136,7 @@ class HumanTrajectoryDataset(Dataset):
                self.scene_rel_list[idx][:, 0:self.obs_len, :],
                self.scene_list[idx][:, self.obs_len:, :],
                self.scene_rel_list[idx][:, self.obs_len:, :],
-               self.scene_timestamp_mask[:, 0:self.obs_len],
+               self.scene_timestamp_mask[idx][:, 0:self.obs_len],
                self.scene_is_predictable_list[idx])
         # TODO(jiacheng): may need some preprocessing such as adding Gaussian noise, etc.
         return out
