@@ -102,7 +102,7 @@ def gen_plot(elem, target_dir, throttle_or_brake):
         ax.plot_surface(speed_maxtrix, cmd_matrix, acc_maxtrix,
                         alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
         ax.set_xlabel('$speed$')
-        ax.set_ylabel('$%s$' % throttle_or_brake)
+        ax.set_ylabel('$' + throttle_or_brake + '$')
         ax.set_zlabel('$acceleration$')
         pdf.savefig()
     return result_file
