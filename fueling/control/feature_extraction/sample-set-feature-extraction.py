@@ -47,22 +47,19 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        origin_prefix = 'modules/control/records/Mkz7'
+        origin_prefix = 'modules/control/data/records/Mkz7'
         target_prefix = os.path.join('modules/control/data/results', 'SampleSet', WANTED_VEHICLE)
         # RDD(record_dirs)
         """ get to do jobs """
-        print('end_files:', self.bos().list_files(origin_prefix))
-        todo_task_dirs = spark_helper.cache_and_log(
-            'todo_jobs',
-            # RDD(relative_path_to_vehicle_type)
-            self.to_rdd(self.bos().list_files(origin_prefix))
-            # RDD('COMPLETE'_files)
-            # .filter(lambda path: path.endswith('COMPLETE'))
-            # RDD(absolute_path_to_'COMPLETE')
-            .mapValues(os.path.dirname))
+        # todo_task_dirs = spark_helper.cache_and_log(
+        #     'todo_jobs',
+        #     # RDD(relative_path_to_vehicle_type)
+        #     self.to_rdd([self.bos().list_files(origin_prefix)])
+        #     # RDD('COMPLETE'_files)
+        #     .filter(lambda path: path.endswith('COMPLETE'))
+        #     # RDD(absolute_path_to_'COMPLETE')
+        #     .mapValues(os.path.dirname))
 
-        print('todo_jobs: ', todo_task_dirs.collect())
-        return
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
@@ -93,16 +90,30 @@ class SampleSetFeatureExtraction(BasePipeline):
             feature_extraction_rdd_utils. valid_msg_rdd(dir_to_msgs, valid_segments))
 
         data_segment_rdd = spark_helper.cache_and_log(
-            'DataSegments',
+            'parsed_msg',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
-                valid_msgs)
+                valid_msgs))
+        data_segment_rdd = spark_helper.cache_and_log(
+            'pair_cs_pose',
+            data_segment_rdd
             # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
-            .flatMapValues(feature_extraction_utils.pair_cs_pose)
+            .flatMapValues(feature_extraction_utils.pair_cs_pose))
+        data_segment_rdd = spark_helper.cache_and_log(
+            'get_data_point',
+            data_segment_rdd
             # PairRDD((dir, timestamp_sec), data_point)
-            .map(feature_extraction_utils.get_data_point)
+            .map(feature_extraction_utils.get_data_point))
+
+        data_segment_rdd = spark_helper.cache_and_log(
+            'feature_key_value',
+            data_segment_rdd
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
-            .map(feature_extraction_utils.feature_key_value)
+            .map(feature_extraction_utils.feature_key_value))
+
+        data_segment_rdd = spark_helper.cache_and_log(
+            'gen_segment',
+            data_segment_rdd
             # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
             .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))

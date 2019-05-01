@@ -45,7 +45,8 @@ STEER_STEP = FEATURE_KEY.steer_step  # percentage
 WANTED_VEHICLE = FEATURE_KEY.vehicle_type
 print(WANTED_VEHICLE)
 
-MAX_PHASE_DELTA = 0.015
+MAX_PHASE_DELTA_SEGMENT = 0.015
+MAX_PHASE_DELTA = 0.005
 MIN_SEGMENT_LENGTH = 10
 
 
@@ -198,7 +199,7 @@ def gen_segment(elem):
     data_set = np.array(elem[0][1])
     counter = 1  # count segment length first element
     for i in range(1, len(elem)):
-        if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA:
+        if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA_SEGMENT:
             data_set = np.vstack([data_set, elem[i][1]])
             counter += 1
         else:
@@ -214,15 +215,6 @@ def gen_segment(elem):
 
 def segment_id(timestamp):
     return int(timestamp * 100) % 1000000
-
-# def write_h5_with_key(elem, origin_prefix, target_prefix, vehicle_type):
-#     """write to h5 file, use feature key as file name"""
-#     key = str(elem[0][1])
-#     folder_path = str(elem[0][0])
-#     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
-#     file_name = key
-#     h5_utils.write_h5(elem[1], folder_path, file_name)
-#     return elem[0]
 
 
 def write_segment_with_key(elem, origin_prefix, target_prefix):

@@ -78,10 +78,15 @@ class UniformDistributionSet(BasePipeline):
         # same of target prefix of sample-set-feature-extraction
         # TODO: remove date label
         # TODO: remove complete marker
-        origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
-                                     WANTED_VEHICLE, 'SampleSet', '2019-04-25')
-        target_dir = os.path.join('modules/control/learning_based_model/hdf5_training',
-                                  WANTED_VEHICLE, 'UniformDistributed', '2019-04-25')
+        # origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
+        #                              WANTED_VEHICLE, 'SampleSet', '2019-04-25')
+        # target_dir = os.path.join('modules/control/learning_based_model/hdf5_training',
+        #                           WANTED_VEHICLE, 'UniformDistributed', '2019-04-25')
+
+        origin_prefix = os.path.join('modules/control/data/results/SampleSet',
+                                     WANTED_VEHICLE, '2019-04-25')
+        target_dir = os.path.join('modules/control/data/results/UniformDistributed',
+                                  WANTED_VEHICLE, '2019-04-25')
 
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log(
