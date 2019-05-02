@@ -115,12 +115,15 @@ def group_video_frames(message_meta):
     glog.info('Grouping target topic: {}, with {} messages'.format(target_topic, len(meta_list)))
     groups = list()
     frames_group = list()
+    # Initial type of video frames that defined in apollo video drive proto
+    # The initial frame has meta data information shared by the following tens of frames
+    initial_frame_type = '1'
     for idx, (timestamp, fields, src_path) in enumerate(meta_list):
         frame_type = ast.literal_eval(fields).get('frame_type', None)
         if not frame_type:
             raise ValueError('Invalid frame type for {}'.format(target_topic))
-        if frame_type == '1' or idx == len(meta_list) - 1:
-            if frames_group and frames_group[0][1] == '1':
+        if frame_type == initial_frame_type or idx == len(meta_list) - 1:
+            if frames_group and frames_group[0][1] == initial_frame_type:
                 glog.info('generating new group, size:{}'.format(len(frames_group)))
                 groups.append(frames_group)
             frames_group = list()
