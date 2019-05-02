@@ -13,15 +13,10 @@ from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_
 import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
        as feature_utils
 
-# Message number in each segment
-MSG_PER_SEGMENT = 1000
 
 def compute_h5_and_gradings(target_groups):
     """Do computing against one group"""
     target, group_id, msgs = target_groups
-    if len(msgs) < MSG_PER_SEGMENT:
-        glog.warn('no enough items {} in group {} for task {}'.format(len(msgs), group_id, target))
-        return (target, None)
     glog.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_mtx = feature_utils.extract_data_at_auto_mode(msgs, profiling_conf.driving_mode,
@@ -34,7 +29,7 @@ def compute_h5_and_gradings(target_groups):
                                            profiling_conf.controller_type,
                                            group_id)
     glog.info('writing {} messages to h5 file {} for target {}'
-              .format(len(msgs), h5_output_file, target))
+              .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
     grading_results = namedtuple('grading_results',
                                  ['station_err_std',

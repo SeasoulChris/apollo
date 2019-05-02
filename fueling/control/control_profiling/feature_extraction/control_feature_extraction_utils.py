@@ -13,6 +13,8 @@ import fueling.common.record_utils as record_utils
 
 from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX
 
+# Message number in each segment
+MSG_PER_SEGMENT = 1000
 # Maximum allowed time gap betwee two messages
 MAX_PHASE_DELTA = 0.01
 

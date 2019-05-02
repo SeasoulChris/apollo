@@ -86,8 +86,8 @@ def partition_data(target_msgs):
     target, msgs = target_msgs
     glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
     msgs = sorted(msgs, key=lambda msg: msg.timestamp)
-    msgs_groups = [msgs[idx: idx + grading_utils.MSG_PER_SEGMENT]
-                   for idx in range(0, len(msgs), grading_utils.MSG_PER_SEGMENT)]
+    msgs_groups = [msgs[idx: idx + feature_utils.MSG_PER_SEGMENT]
+                   for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]
     return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
 
 
