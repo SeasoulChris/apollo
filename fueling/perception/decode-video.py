@@ -37,7 +37,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/apollo/home/disk3'
+        root_dir = '/apollo'
         video_dir = 'modules/perception/videos/decoded'
         decoded_records_dir = 'decoded_records'
 
