@@ -75,6 +75,7 @@ def generate_segment_from_list(hdf5_file_list):
     """
     segment = None
     for filename in hdf5_file_list:
+        glog.info('Processing file %s' % filename)
         with h5py.File(filename, 'r') as fin:
             for value in fin.values():
                 if segment is None:
@@ -135,7 +136,7 @@ def generate_training_data(segment):
         mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
         # acceleration
         mlp_input_data[k, input_index["acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
+            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
              segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # throttle control from chassis
         mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
@@ -145,9 +146,9 @@ def generate_training_data(segment):
         mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
         # acceleration next
         mlp_output_data[k, output_index["acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] * \
-                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) + \
-             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] * \
+            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] *
+                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) +
+             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] *
                 np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # angular speed next
         mlp_output_data[k, output_index["w_z"]] = PP7_IMU_SCALING * \
@@ -159,7 +160,6 @@ def generate_training_data(segment):
     for k in range(mlp_input_data.shape[0] - DIM_SEQUENCE_LENGTH):
         lstm_input_data[k, :, :] = np.transpose(mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
         lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
-
 
     glog.info('mlp_input_data shape: {}'.format(mlp_input_data.shape))
     glog.info('mlp_output_data shape: {}'.format(mlp_output_data.shape))
@@ -195,9 +195,10 @@ def generate_imu_output(segment):
     output_imu = np.zeros([total_len, DIM_OUTPUT])
     # acceleration by imu
     output_imu[:, output_index["acceleration"]] = \
-            (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) + \
-             segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])) * PP7_IMU_SCALING
-    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * PP7_IMU_SCALING # angular speed by imu
+        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) +
+         segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])) * PP7_IMU_SCALING
+    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * \
+        PP7_IMU_SCALING  # angular speed by imu
     return output_imu
 
 
@@ -206,9 +207,9 @@ def load_calibration_table():
     glog.info("Calibration Table Length: {}".format(table_length))
     calibration_table = np.zeros([table_length, CALIBRATION_DIMENSION])
     for i, calibration in enumerate(CALIBRATION_TABLE.calibration):
-         calibration_table[i, 0] = calibration.speed
-         calibration_table[i, 1] = calibration.command
-         calibration_table[i, 2] = calibration.acceleration
+        calibration_table[i, 0] = calibration.speed
+        calibration_table[i, 1] = calibration.command
+        calibration_table[i, 2] = calibration.acceleration
     return calibration_table
 
 
@@ -265,7 +266,7 @@ def generate_network_output(segment, model_folder, model_name):
             velocity_fnn = segment[k, segment_index["speed"]]
             # Scale the acceleration and angular speed data read from IMU
             output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] *  np.cos(segment[k, segment_index["heading"]]) + \
+                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
                 segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
             output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
@@ -276,8 +277,8 @@ def generate_network_output(segment, model_folder, model_name):
 
             if model_name == 'lstm':
                 input_data_array = np.reshape(np.transpose(
-                        input_data[(k - DIM_SEQUENCE_LENGTH) : k, :]),
-                        (1, DIM_INPUT, DIM_SEQUENCE_LENGTH))
+                    input_data[(k - DIM_SEQUENCE_LENGTH): k, :]),
+                    (1, DIM_INPUT, DIM_SEQUENCE_LENGTH))
                 output_fnn[k, :] = model.predict(input_data_array)
 
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
@@ -290,7 +291,7 @@ def generate_network_output(segment, model_folder, model_name):
         if GEAR_STATUS * (velocity_fnn + GEAR_STATUS * SPEED_EPSILON) <= 0:
             velocity_fnn = 0.0
             output_fnn[k, output_index["acceleration"]] = 0.0
-            output_fnn[k, output_index["w_z"]]  = 0.0
+            output_fnn[k, output_index["w_z"]] = 0.0
 
         input_data[k, input_index["speed"]] = velocity_fnn  # speed mps
         # acceleration

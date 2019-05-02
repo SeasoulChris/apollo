@@ -14,6 +14,7 @@ import numpy as np
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 import fueling.common.proto_utils as proto_utils
 import fueling.common.s3_utils as s3_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
@@ -62,11 +63,30 @@ def get_vehicle_param_prod(prefix):
 
 
 DIM_INPUT = 3
-input_index = {
+cali_input_index = {
     0: 'speed',  # chassis.speed_mps
     1: 'acceleration',
     2: 'control command',
 }
+
+
+def plot_dynamic_model_feature_hist(fearure, result_file):
+    with PdfPages(result_file) as pdf:
+        for feature_name in input_index:
+            glog.info('feature_name %s' % feature_name)
+            # skip if the feature is not in the segment_index list
+            if feature_name not in segment_index:
+                continue
+            feature_index = segment_index[feature_name]
+            plt.figure(figsize=(4, 3))
+            axes = plt.gca()
+            axes.set_ylim([0, 2000])
+            # plot the distribution of feature_index column of input data
+            plt.hist(fearure[:, feature_index], bins='auto', label='linear')
+            plt.title("Histogram of the Feature Input {}".format(feature_name))
+            pdf.savefig()  # saves the current figure into a pdf page
+            plt.close()
+    return result_file
 
 
 def plot_feature_hist(elem, target_dir):
@@ -77,7 +97,7 @@ def plot_feature_hist(elem, target_dir):
         for j in range(DIM_INPUT):
             plt.figure(figsize=(4, 3))
             plt.hist(feature[:, j], bins='auto')
-            plt.title("Histogram of the " + input_index[j])
+            plt.title("Histogram of the " + cali_input_index[j])
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
     return result_file
@@ -102,7 +122,7 @@ def gen_plot(elem, target_dir, throttle_or_brake):
         ax.plot_surface(speed_maxtrix, cmd_matrix, acc_maxtrix,
                         alpha=1, rstride=1, cstride=1, linewidth=0.5, antialiased=True)
         ax.set_xlabel('$speed$')
-        ax.set_ylabel('$' + throttle_or_brake + '$')
+        ax.set_ylabel('$%s$' % throttle_or_brake)
         ax.set_zlabel('$acceleration$')
         pdf.savefig()
     return result_file

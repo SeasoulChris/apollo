@@ -7,6 +7,7 @@ import glob
 
 import colored_glog as glog
 import h5py
+import math
 import numpy as np
 
 from modules.canbus.proto.chassis_pb2 import Chassis
@@ -182,8 +183,8 @@ def feature_key_value(elem):
         steering_key = int(steering / STEER_STEP)  # -100% ~ 0
 
         # deadzone~first step is 0;
-        throttle_key = int(min(throttle, THROTTLE_MAX) / ACC_STEP)
-        brake_key = int(min(brake, BRAKE_MAX) / ACC_STEP)
+        throttle_key = math.ceil(min(throttle, THROTTLE_MAX) / ACC_STEP)
+        brake_key = math.ceil(min(brake, BRAKE_MAX) / ACC_STEP)
 
         # speed-steering-throttle-brake
         elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
