@@ -1,6 +1,9 @@
-vehicle_type: "Transit"
+vehicle_type: "Mkz7"
 controller_type: "Lon_Lat_Controller"
 vehicle_wheelbase: 3.06
+driving_mode: COMPLETE_AUTO_DRIVE
+gear_position: GEAR_DRIVE
+gear_position: GEAR_REVERSE
 control_metrics{
   acceleration_harsh_limit: 1           # unit: m/sec^2
   curvature_harsh_limit: 0.05           # unit: 1/m

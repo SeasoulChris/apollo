@@ -2,7 +2,13 @@
 
 """Configs to store the necessary dict or list"""
 
-FEATURE_INDEX = {
+MODE_IDX = {
+    "driving_mode": 0,
+    "gear_location": 1,
+    "timestamp_sec": 2,
+}
+
+FEATURE_IDX= {
     "station_reference": 0,
     "speed_reference": 1,
     "acceleration_reference": 2,
@@ -31,6 +37,7 @@ FEATURE_INDEX = {
     "heading_jerk": 25,
     "total_time": 26,
     "total_time_exceeded": 27,
+    "timestamp_sec": 28,
 }
 
 FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",

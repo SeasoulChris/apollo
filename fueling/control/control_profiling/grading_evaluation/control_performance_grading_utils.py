@@ -8,15 +8,13 @@ from collections import namedtuple
 
 import colored_glog as glog
 import fueling.common.h5_utils as h5_utils
-from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_INDEX \
-     as feature_idx
+
+from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_IDX
 import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
        as feature_utils
 
-
 # Message number in each segment
 MSG_PER_SEGMENT = 1000
-
 
 def compute_h5_and_gradings(target_groups):
     """Do computing against one group"""
@@ -26,7 +24,12 @@ def compute_h5_and_gradings(target_groups):
         return (target, None)
     glog.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
-    grading_mtx = np.array([feature_utils.extract_data_from_msg(msg) for msg in msgs])
+    grading_mtx = feature_utils.extract_data_at_auto_mode(msgs, profiling_conf.driving_mode,
+                                                                profiling_conf.gear_position)
+    if grading_mtx.shape[0] == 0:
+        glog.warn('no valid element in {} items in group {} for task {}'
+                  .format(len(msgs), group_id, target))
+        return (target, None)
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
@@ -297,14 +300,14 @@ def compute_std(grading_mtx, arg):
     profiling_conf = feature_utils.get_config_control_profiling()
     if arg.std_filter_name:
         grading_mtx = filter_value(grading_mtx,
-                                   feature_idx[arg.std_filter_name], arg.std_filter_value)
+                                   FEATURE_IDX[arg.std_filter_name], arg.std_filter_value)
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         glog.warn('no enough elements {} for std computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
-    column_norm = grading_mtx[:, feature_idx[arg.std_norm_name]]
-    column_denorm = grading_mtx[:, np.array([feature_idx[denorm_name]
+    column_norm = grading_mtx[:, FEATURE_IDX[arg.std_norm_name]]
+    column_denorm = grading_mtx[:, np.array([FEATURE_IDX[denorm_name]
                                 for denorm_name in arg.std_denorm_name])]
     column_denorm = np.maximum(np.fabs(column_denorm), arg.std_max_compare)
     column_denorm = [np.prod(column) for column in column_denorm]
@@ -315,7 +318,7 @@ def compute_std(grading_mtx, arg):
 def compute_peak(grading_mtx, arg):
     """Compute the peak value"""
     elem_num, _ = grading_mtx.shape
-    return (np.max(np.fabs(grading_mtx[:, feature_idx[arg.peak_feature_name]])) /
+    return (np.max(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]])) /
             arg.peak_threshold, elem_num)
 
 def compute_usage(grading_mtx, arg):
@@ -323,27 +326,27 @@ def compute_usage(grading_mtx, arg):
     profiling_conf = feature_utils.get_config_control_profiling()
     if arg.usage_thold_value:
         grading_mtx = filter_value(grading_mtx,
-                                   feature_idx[arg.usage_thold_value], arg.usage_threshold)
+                                   FEATURE_IDX[arg.usage_thold_value], arg.usage_threshold)
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         glog.warn('no enough elements {} for usage computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     return (get_std_value([val / arg.usage_weight
-                           for val in grading_mtx[:, feature_idx[arg.usage_feature_name]]]),
+                           for val in grading_mtx[:, FEATURE_IDX[arg.usage_feature_name]]]),
             elem_num)
 
 def compute_beyond(grading_mtx, arg):
     """Compute the beyond_the_threshold counting value"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(np.fabs(grading_mtx[:, feature_idx[arg.beyond_feature_name]]) >=
+    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.beyond_feature_name]]) >=
                          arg.beyond_threshold)) / elem_num,
             elem_num)
 
 def compute_count(grading_mtx, arg):
     """Compute the event (boolean true) counting value"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(grading_mtx[:, feature_idx[arg.count_feature_name]] == 1)) / elem_num,
+    return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1)) / elem_num,
             elem_num)
 
 def get_std_value(grading_column):

@@ -66,11 +66,12 @@ class ControlProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, record_file), filter out unqualified files
          .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
                                                     record_utils.is_bag_file(file)))
-         # PairRDD(target_dir, message), control message only
-         .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL]))
+         # PairRDD(target_dir, message), control and chassis message
+         .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL,
+                                                  record_utils.CHASSIS_CHANNEL]))
          # PairRDD(target_dir, (message)s)
          .groupByKey()
-         # PairRDD(target_dir, (message)s), divide messages into groups
+         # RDD(target_dir, group_id, group of (message)s), divide messages into groups
          .flatMap(partition_data)
          # PairRDD(target_dir, grading_result), for each group get the gradings and write h5 files
          .map(grading_utils.compute_h5_and_gradings)

@@ -2,6 +2,7 @@ syntax = "proto2";
 
 package apollo_fuel.fueling.control.proto.control_profiling;
 
+
 message ControlMetrics {
     optional double acceleration_harsh_limit = 1;
     optional double curvature_harsh_limit = 2;
@@ -28,15 +29,34 @@ message ControlMetrics {
 }
 
 message ControlProfiling {
+    enum DrivingMode {
+      COMPLETE_MANUAL = 0;  // human drive
+      COMPLETE_AUTO_DRIVE = 1;
+      AUTO_STEER_ONLY = 2;  // only steer
+      AUTO_SPEED_ONLY = 3;  // include throttle and brake
+      // security mode when manual intervention happens, only response status
+      EMERGENCY_MODE = 4;
+    }
+    enum GearPosition {
+      GEAR_NEUTRAL = 0;
+      GEAR_DRIVE = 1;
+      GEAR_REVERSE = 2;
+      GEAR_PARKING = 3;
+      GEAR_LOW = 4;
+      GEAR_INVALID = 5;
+      GEAR_NONE = 6;
+    }
     optional string vehicle_type = 1;
     optional string controller_type = 2;
     optional double vehicle_wheelbase = 3;
+    optional DrivingMode driving_mode = 4;
+    repeated GearPosition gear_position = 5;
 
-    optional ControlMetrics control_metrics = 4;
+    optional ControlMetrics control_metrics = 6;
 
-    optional double control_period = 5;
-    optional double control_frame_num = 6;
-    optional double control_command_pct = 7;
-    optional double total_time_factor = 8;
-    optional double min_sample_size = 9;
+    optional double control_period = 7;
+    optional double control_frame_num = 8;
+    optional double control_command_pct = 9;
+    optional double total_time_factor = 10;
+    optional double min_sample_size = 11;
 }
