@@ -95,13 +95,13 @@ class BagToRecord(BasePipeline):
 
     def process_file(self, bag_to_record):
         """(src_bag, dst_record) -> dst_record if successful else None"""
-        import colored_glog as glog
         bag = bag_to_record[0]
         record = bag_to_record[1]
         file_utils.makedirs(os.path.dirname(record))
 
-        cmd = '"{}" "{}" "{}"'.format(BINARY, bag, record)
-        ret = os.system(cmd)
+        with self.bos().auto_download(bag) as local_bag:
+            cmd = '"{}" "{}" "{}"'.format(BINARY, local_bag, record)
+            ret = os.system(cmd)
         msg = 'SHELL[{}]: {}'.format(ret, cmd)
         if ret != 0:
             glog.error(msg)

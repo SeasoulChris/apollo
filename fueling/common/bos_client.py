@@ -2,6 +2,7 @@
 #!/usr/bin/env python
 
 import os
+import shutil
 import tempfile
 
 from absl import flags
@@ -25,9 +26,8 @@ abs_path = lambda object_key: os.path.join(BOS_MOUNT_PATH, object_key)
 class AutoDownload(object):
     """
     Usage:
-    with AutoDownload(client, bucket, key) as obj:
-        # Read obj.local_file, which is only accessiable within the scope, as it will be removed
-        # later.
+    with AutoDownload(client, bucket, key) as local_file:
+        # Read local_file, which is only accessiable within the scope, as it will be removed later.
     """
 
     def __init__(self, boto3_client, bucket, key):
@@ -35,44 +35,17 @@ class AutoDownload(object):
         self.bucket = bucket
         self.key = key
         self.temp_dir = tempfile.mkdtemp()
-        self.local_file = os.path.join(self.temp_dir, os.path.basename(key))
 
     def __enter__(self):
         """Download the file as local temporary file for access."""
-        self.boto3_client.download_file(self.bucket, self.key, self.local_file)
+        local_file = os.path.join(self.temp_dir, os.path.basename(self.key))
+        glog.info('Downloading key {} to {}'.format(self.key, local_file))
+        self.boto3_client.download_file(self.bucket, self.key, local_file)
+        return local_file
 
     def __exit__(self, type, value, traceback):
         """Remove the local temporary file."""
-        os.unlink(self.temp_dir)
-
-
-class AutoUpload(object):
-    """
-    Usage:
-    with AutoUpload(client, bucket, key) as obj:
-        # Write to obj.local_file, which is only accessiable within the scope, as it will be removed
-        # later.
-    """
-
-    def __init__(self, boto3_client, bucket, key):
-        """Download the object to be local temporary file, and clear after usage."""
-        self.boto3_client = boto3_client
-        self.bucket = bucket
-        self.key = key
-        self.temp_dir = tempfile.mkdtemp()
-        self.local_file = os.path.join(self.temp_dir, os.path.basename(key))
-
-    def __enter__(self):
-        """Dummy."""
-        glog.info('Map {} to {}'.format(self.local_file, self.key))
-
-    def __exit__(self, type, value, traceback):
-        """Upload the local temporary file and then delete."""
-        if os.path.exists(self.local_file):
-            glog.info('Uploading to {}'.format(self.key))
-            self.boto3_client.upload_file(self.local_file, self.bucket, self.key,
-                                          ExtraArgs={"Metadata": meta_data})
-        os.unlink(self.temp_dir)
+        shutil.rmtree(self.temp_dir)
 
 
 class BosClient(object):
@@ -139,10 +112,3 @@ class BosClient(object):
         if key_or_path.startswith(BOS_MOUNT_PATH):
             key = key_or_path[len(BOS_MOUNT_PATH) + 1:]
         return AutoDownload(self.client(), self.bucket, key)
-
-    def auto_upload(self, key_or_path):
-        """Return an AutoUpload instance."""
-        key = key_or_path
-        if key_or_path.startswith(BOS_MOUNT_PATH):
-            key = key_or_path[len(BOS_MOUNT_PATH) + 1:]
-        return AutoUpload(self.client(), self.bucket, key)
