@@ -9,9 +9,9 @@
 JOB_FILE=""
 IMAGE="hub.baidubce.com/apollo/spark:latest"
 CONDA_ENV="fuel-py27-cyber"
-EXECUTORS=9
-EXECUTOR_CORES=3
-EXECUTOR_MEMORY=24g
+EXECUTORS=4
+EXECUTOR_CORES=1
+EXECUTOR_MEMORY=8g
 MEMORY_OVERHEAD_FACTOR=0
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
