@@ -10,7 +10,6 @@ import time
 
 import colored_glog as glog
 import cv2
-#import numpy as np
 import pyspark_utils.helper as spark_helper
 
 from cyber_py.record import RecordReader, RecordWriter
