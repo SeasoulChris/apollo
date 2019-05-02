@@ -300,6 +300,7 @@ class SocialAttention(nn.Module):
         self.node_c0 = nn.Parameter(node_c0, requires_grad=True)
 
         #
+        self.spatial_edge_rnn = SpatialEdgeRNN(embed_size, edge_hidden_size)
         self.temporal_edge_rnn = TemporalEdgeRNN(embed_size, edge_hidden_size)
         self.pred_layer = torch.nn.Sequential(
             nn.Linear(edge_hidden_size, 5),
@@ -354,7 +355,11 @@ class SocialAttention(nn.Module):
                 pred_traj[:, t-observation_len, :] = curr_point
 
             # 1. Do spatial-edge (h_{uv}) RNN.
-            # TODO:(jiacheng) to be implemented.
+            if t < observation_len:
+                s_edge_ht_list, s_edge_ct_list = self.spatial_edge_rnn(\
+                    s_edge_ht_list, s_edge_ct_list, past_traj[:, t, :],\
+                    past_traj_timestamp_mask[:, t].view(N, 1),\
+                    same_scene_mask)
 
             # 2. Do temporal-edge (h_{vv}) RNN.
             # (curr_node_N x edge_hidden_size)
@@ -380,11 +385,83 @@ class SocialAttention(nn.Module):
 
 
 class SpatialEdgeRNN(nn.Module):
-    def __init__(self):
-        return
+    def __init__(self, embed_size=64, hidden_size=256):
+        super(SpatialEdgeRNN, self).__init__()
+        self.hidden_size = hidden_size
+        self.embed = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True)
 
-    def forward(self, X):
-        return X
+    def forward(self, ht_list, ct_list, traj, timestamp_mask, same_scene_mask):
+        '''The forward function for spatial-edge RNN.
+
+            ht_list: list of matrices [2x2, 4x4, 1x1] x hidden_size
+            ct_list: lsit of matrices [2x2, 4x4, 1x1] x hidden_size
+            traj: trajectory point at current time-stamp (N x 2)
+            timestamp_mask: (N x 1)
+            same_scene_mask: [0,0,1,1,1,1,2]
+        '''
+        N = traj.size(0)
+        all_scene_ids = torch.unique(same_scene_mask.long()).cpu().numpy().tolist()
+
+        for scene_id in all_scene_ids:
+            curr_ht = ht_list[scene_id]
+            curr_ct = ct_list[scene_id]
+            curr_mask = (same_scene_mask[:,0] == scene_id)
+            # (curr_N x 2)
+            curr_traj = traj[curr_mask==1, :]
+            curr_N = curr_traj.size(0)
+            # (curr_N x 1) -- e.g. [1, 1, 1, 0, 1]
+            curr_timestamp_mask = (timestamp_mask[curr_mask, 0] == 1)
+            # (curr_N) -- e.g. [0, 1, 2, 4]
+            curr_timestamp_idx = torch.nonzero(curr_timestamp_mask.view(-1)).view(-1)
+            curr_existing_N = torch.sum(curr_timestamp_mask).item()
+
+            # If there is less than or equal to one agent, then there is
+            # no spatial edge.
+            if curr_existing_N <= 1:
+                continue
+
+            # Select only those edges that are present at current timestamp
+            # (curr_existing_N x curr_N x hidden_size)
+            curr_ht_0 = torch.index_select(curr_ht, 0, curr_timestamp_idx)
+            # (curr_existing_N x curr_existing_N x hidden_size)
+            curr_ht_1 = torch.index_select(curr_ht_0, 1, curr_timestamp_idx)
+            # (curr_existing_N x curr_N x hidden_size)
+            curr_ct_0 = torch.index_select(curr_ct, 0, curr_timestamp_idx)
+            # (curr_existing_N x curr_existing_N x hidden_size)
+            curr_ct_1 = torch.index_select(curr_ct_0, 1, curr_timestamp_idx)
+            # (curr_existing_N x 1 x 2)
+            curr_xt_1 = curr_traj[curr_timestamp_mask, :].view(curr_existing_N, 1, 2)
+            # (curr_existing_N x curr_existing_N x 2)
+            curr_xt_1 = torch.transpose(curr_xt_1.repeat(1, curr_existing_N, 1), 0, 1).float() -\
+                        curr_xt_1.repeat(1, curr_existing_N, 1).float()
+
+            # Process with LSTM.
+            # (curr_existing_N**2, embed_size)
+            e_uv = self.embed(curr_xt_1.view(curr_existing_N**2, 2))
+            _, (curr_ht_1, curr_ct_1) = self.lstm(e_uv.view(curr_existing_N**2, 1, -1), \
+                (curr_ht_1.view(1, curr_existing_N**2, -1), curr_ct_1.view(1, curr_existing_N**2, -1)))
+            curr_ht_1 = curr_ht_1.view(curr_existing_N, curr_existing_N, -1)
+            curr_ct_1 = curr_ct_1.view(curr_existing_N, curr_existing_N, -1)
+
+            # Scatter back to the original matrices.
+            curr_ht_0 = curr_ht_0.scatter(
+                1, curr_timestamp_idx.view(1,curr_existing_N,1).repeat(curr_existing_N,1,self.hidden_size), curr_ht_1)
+            curr_ht = curr_ht.scatter(
+                0, curr_timestamp_idx.view(curr_existing_N,1,1).repeat(1,curr_N,self.hidden_size), curr_ht_0)
+            curr_ct_0 = curr_ct_0.scatter(
+                1, curr_timestamp_idx.view(1,curr_existing_N,1).repeat(curr_existing_N,1,self.hidden_size), curr_ct_1)
+            curr_ct = curr_ct.scatter(
+                0, curr_timestamp_idx.view(curr_existing_N,1,1).repeat(1,curr_N,self.hidden_size), curr_ct_0)
+
+            # Update the list of ht/ct:
+            ht_list[scene_id] = curr_ht
+            ct_list[scene_id] = curr_ct
+
+        return ht_list, ct_list
 
 
 class TemporalEdgeRNN(nn.Module):

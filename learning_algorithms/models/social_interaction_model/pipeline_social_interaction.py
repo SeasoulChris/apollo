@@ -41,13 +41,13 @@ if __name__ == "__main__":
     valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=8, pred_len=12,\
         skip=1, min_ped=0, delim='\t')
 
-    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True,\
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True,\
         num_workers=8, collate_fn=collate_scenes)
-    valid_loader = DataLoader(valid_dataset, batch_size=128, shuffle=True,\
+    valid_loader = DataLoader(valid_dataset, batch_size=64, shuffle=True,\
         num_workers=8, collate_fn=collate_scenes)
 
     # Model and training setup
-    model = SocialLSTM()
+    model = SocialAttention()
     loss = ProbablisticTrajectoryLoss()
     print (model)
     learning_rate = 3e-4
