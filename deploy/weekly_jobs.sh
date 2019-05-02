@@ -8,4 +8,6 @@ set -e
 # Preapre: Goto fuel root.
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
-# Add your job here.
+# Job: Prediction data labeling.
+JOB="fueling/prediction/prediction-app-data-labeling.py"
+./tools/submit-job-to-k8s.sh --workers 8 --memory 10g ${JOB}
