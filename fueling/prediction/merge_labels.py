@@ -47,6 +47,7 @@ class MergeLabels(BasePipeline):
         if SKIP_EXISTING_DST_FILE:
             # RDD(todo_npy_files)
             todo_npy_files = todo_npy_files.subtract(merged_dirs).distinct()
+
         self.run(todo_npy_files)
 
     def run(self, npy_file_rdd):
@@ -54,8 +55,6 @@ class MergeLabels(BasePipeline):
         result = (
             # RDD(npy_file)
             npy_file_rdd
-            # RDD(target_dir), in absolute path
-            .map(os.path.dirname)
             # RDD(target_dir), in absolute path and unique
             .distinct()
             # RDD(0/1), 1 for success
