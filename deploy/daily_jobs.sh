@@ -2,7 +2,7 @@
 
 set -e
 
-# Preapre: Goto fuel root, checkout latest code.
+# Preapre: Goto fuel root.
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # Job: Generate small records.
@@ -21,7 +21,7 @@ JOB="fueling/data/pipelines/index-records.py"
 
 # Job: Control profiling.
 JOB="fueling/control/control_profiling/control-profiling-metrics.py"
-./tools/submit-job-to-k8s.sh ${JOB}
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g ${JOB}
 JOB="fueling/control/control_profiling/control-profiling-visualization.py"
 CONDA_ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh -e ${CONDA_ENV} ${JOB}
+./tools/submit-job-to-k8s.sh --workers 16 --memory 24g -e ${CONDA_ENV} ${JOB}
