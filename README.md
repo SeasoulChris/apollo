@@ -123,7 +123,6 @@ tools/submit-job-to-local.sh /path/to/spark/job.py <gflags>
 If you are pretty familliar with the infra, please:
 1. Loop the data team in to have your job well reviewed and setup local k8s
    client.
-1. Clone `apollo-spark` repo and run `apollo/0_build-spark.sh`
 1. Then run:
 
    ```bash
