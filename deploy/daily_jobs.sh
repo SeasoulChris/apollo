@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Jobs that run once everyday at 1:00 a.m.
+# Crontab example: 0 1 * * * /this/script.sh
+
 set -e
 
 # Preapre: Goto fuel root.
