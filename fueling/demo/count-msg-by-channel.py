@@ -1,14 +1,23 @@
 """A simple demo PySpark job."""
 #!/usr/bin/env python
+
+# Standard packages
 import pprint
 import time
 
+# Third-party packages
+from absl import flags
+
+# Apollo packages
 from cyber_py.record import RecordReader
 
+# Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 
+flags.DEFINE_integer('sleep_time', 0, 'Time to sleep.')
 
-class DemoPipeline(BasePipeline):
+
+class CountMsgByChannel(BasePipeline):
     """Demo pipeline."""
 
     def __init__(self):
@@ -28,7 +37,7 @@ class DemoPipeline(BasePipeline):
             # PairRDD(topic, N), with unique keys.
             .reduceByKey(lambda a, b: a + b)
             # PairRDD(topic, N), just sleep.
-            .map(DemoPipeline.dummy_process)
+            .map(self.sleep)
             # [(topic, N)]
             .collect())
 
@@ -36,16 +45,13 @@ class DemoPipeline(BasePipeline):
         """For this demo, prod and test are the same."""
         return self.run_test()
 
-    def run_grpc(self):
-        """For this demo, grpc and test are the same."""
-        return self.run_test()
-
-    @staticmethod
-    def dummy_process(elem):
+    def sleep(self, input):
         """Dummy process to leave some time for UI show at http://localhost:4040"""
-        time.sleep(20)
-        return elem
+        sleep_time = self.FLAGS.get('sleep_time')
+        if sleep_time:
+            time.sleep(sleep_time)
+        return input
 
 
 if __name__ == '__main__':
-    DemoPipeline().main()
+    CountMsgByChannel().main()
