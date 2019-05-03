@@ -165,6 +165,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
     model.eval()
 
     loss_history = []
+    loss_info_history = []
     for i, (X, y) in enumerate(valid_loader):
         X, y = cuda(X), cuda(y)
         pred = model(X)
@@ -173,14 +174,16 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         
         valid_loss_info = loss.loss_info(pred, y)
         if valid_loss_info is not None:
-            print ('Validation avg displacement = {}'.format(valid_loss_info))
-            logging.info('Validation avg displacement = {}'.format(valid_loss_info))
+            #print ('Validation avg displacement = {}'.format(valid_loss_info))
+            #logging.info('Validation avg displacement = {}'.format(valid_loss_info))
+            loss_info_history.append(valid_loss_info.item())
         if analyzer is not None:
             analyzer.process(X, y, pred)
 
     valid_loss = np.mean(loss_history)
     logging.info('Validation loss: {}.'.format(valid_loss))
     print ('Validation loss: {}.'.format(valid_loss))
+    print ('Validation avg displacement = {}'.format(np.mean(loss_info_history)))
 
     return valid_loss
 

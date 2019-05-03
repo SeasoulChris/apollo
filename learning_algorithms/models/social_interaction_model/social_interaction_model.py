@@ -302,9 +302,11 @@ class SocialAttention(nn.Module):
         #
         self.spatial_edge_rnn = SpatialEdgeRNN(embed_size, edge_hidden_size)
         self.temporal_edge_rnn = TemporalEdgeRNN(embed_size, edge_hidden_size)
-        self.edge_to_node = EdgeToNodeAverage()
+        #self.edge_to_node = EdgeToNodeAverage()
+        self.edge_to_node = EdgeToNodeAttention(64, edge_hidden_size)
+        self.node_rnn = NodeRNN(embed_size, edge_hidden_size, node_hidden_size)
         self.pred_layer = torch.nn.Sequential(
-            nn.Linear(edge_hidden_size, 5),
+            nn.Linear(node_hidden_size, 5),
         )
 
     def forward(self, X):
@@ -328,7 +330,7 @@ class SocialAttention(nn.Module):
         t_edge_ht_list = self.t_edge_h0.repeat(N, 1)
         t_edge_ct_list = self.t_edge_c0.repeat(N, 1)
         # Create a vector of hidden-states for nodes (h_{v})
-        # (N x edge_hidden_size)
+        # (N x node_hidden_size)
         node_ht_list = self.node_h0.repeat(N, 1)
         node_ct_list = self.node_c0.repeat(N, 1)
 
@@ -347,25 +349,27 @@ class SocialAttention(nn.Module):
                 this_traj = past_traj[:, t, :].float()
             else:
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(t_edge_ht_list).float()
+                pred_out[:, t-observation_len, :] = self.pred_layer(node_ht_list).float()
                 this_traj_rel = pred_out[:, t-observation_len, :2]
                 this_traj = this_traj + this_traj_rel
                 pred_traj[:, t-observation_len, :] = this_traj
 
             # 1. Do spatial-edge (h_{uv}) RNN.
             s_edge_ht_list, s_edge_ct_list = self.spatial_edge_rnn(\
-                s_edge_ht_list, s_edge_ct_list, this_traj,\
-                this_timestamp_mask, same_scene_mask)
+                s_edge_ht_list, s_edge_ct_list, this_traj, this_timestamp_mask, same_scene_mask)
 
             # 2. Do temporal-edge (h_{vv}) RNN.
             t_edge_ht_list, t_edge_ct_list = self.temporal_edge_rnn(\
                 t_edge_ht_list, t_edge_ct_list, this_traj_rel, this_timestamp_mask)
 
             # 3. Do EdgeToNodeAttention.
-            Ht = self.edge_to_node(s_edge_ht_list, t_edge_ht_list)
+            #Ht = self.edge_to_node(s_edge_ht_list, t_edge_ht_list)
+            Ht = self.edge_to_node(\
+                s_edge_ht_list, t_edge_ht_list,this_timestamp_mask, same_scene_mask)
 
             # 4. Aggregate and update nodes (h_v).
-            # TODO:(jiacheng) to be implemented.
+            node_ht_list, node_ct_list = self.node_rnn(\
+                Ht, t_edge_ht_list, this_traj_rel, node_ht_list, node_ct_list, this_timestamp_mask)
 
         return pred_out[is_predictable[:, 0] == 1, :, :],\
                pred_traj[is_predictable[:, 0] == 1, :, :]
@@ -495,11 +499,102 @@ class TemporalEdgeRNN(nn.Module):
 
 
 class EdgeToNodeAttention(nn.Module):
-    def __init__(self):
-        return
+    def __init__(self, attention_dim=64, edge_hidden_size=256):
+        super(EdgeToNodeAttention, self).__init__()
+        self.edge_hidden_size = edge_hidden_size
+        self.attention_score = EdgeAttentionScore(attention_dim, edge_hidden_size)
 
-    def forward(self, X):
-        return X
+    def forward(self, spatial_ht_list, temporal_ht_list, ts_mask, same_scene_mask):
+        '''The forward function.
+
+            If same_scene_mask is: [0,0,1,1,1,1,2] (N=7)
+            spatial_ht_list: ([2x2, 4x4, 1x1])
+            temporal_ht_list: (N x edge_hidden_size))
+        '''
+        # same size as spatial_ht_list
+        attention_score_list = self.attention_score(\
+            spatial_ht_list, temporal_ht_list, ts_mask, same_scene_mask)
+        spatial_ht_summary = []
+        for i in range(len(spatial_ht_list)):
+            s_ht = spatial_ht_list[i]
+            curr_N = s_ht.size(0)
+            attention_score =\
+                attention_score_list[i].view(curr_N, curr_N, 1).repeat(1, 1, self.edge_hidden_size)
+            spatial_ht_summary.append(torch.sum(s_ht*attention_score, 1))
+
+        return torch.cat(spatial_ht_summary, 0)
+
+
+class EdgeAttentionScore(nn.Module):
+    def __init__(self, attention_dim=64, edge_hidden_size=256):
+        super(EdgeAttentionScore, self).__init__()
+        self.attention_dim = attention_dim
+        self.edge_hidden_size = edge_hidden_size
+        self.W1 = nn.Linear(edge_hidden_size, attention_dim)
+        self.W2 = nn.Linear(edge_hidden_size, attention_dim)
+
+    def forward(self, spatial_ht_list, temporal_ht_list, ts_mask, same_scene_mask):
+        '''The forward function.
+
+            If same_scene_mask is: [0,0,1,1,1,1,2] (N=7)
+            spatial_ht_list: ([2x2, 4x4, 1x1])
+            temporal_ht_list: (N x edge_hidden_size))
+            ts_mask: (N x 1)
+        '''
+        timestamp_mask = (ts_mask[:, 0] == 1)
+        attention_score_list = []
+        all_scene_ids = torch.unique(same_scene_mask.long()).cpu().numpy().tolist()
+        
+        for scene_id in all_scene_ids:
+            # (curr_N x curr_N x edge_hidden_size)
+            curr_spatial_ht = spatial_ht_list[scene_id]
+            # (curr_N x edge_hidden_size)
+            curr_temporal_ht = temporal_ht_list[same_scene_mask[:,0]==scene_id, :]
+            curr_N = curr_temporal_ht.size(0)\
+            # (curr_N x 1)
+            curr_timestamp_mask = (timestamp_mask[same_scene_mask[:,0]==scene_id] == 1)
+            curr_timestamp_idx = torch.nonzero(curr_timestamp_mask.view(-1)).view(-1)
+            curr_existing_N = torch.sum(curr_timestamp_mask).item()
+
+            if curr_existing_N <= 1:
+                attention_score_list.append(cuda(torch.zeros(curr_N, curr_N)))
+                continue
+
+            # (curr_existing_N x curr_N x edge_hidden_size)
+            curr_spatial_ht_0 = torch.index_select(curr_spatial_ht, 0, curr_timestamp_idx)
+            # (curr_existing_N x curr_existing_N x edge_hidden_size)
+            curr_spatial_ht_1 = torch.index_select(curr_spatial_ht_0, 1, curr_timestamp_idx)
+            # (curr_existing_N x edge_hidden_size)
+            curr_temporal_ht_0 = torch.index_select(curr_temporal_ht, 0, curr_timestamp_idx)
+            # (curr_existing_N x curr_existing_N x edge_hidden_size)
+            curr_temporal_ht_1 =\
+                curr_temporal_ht_0.view(curr_existing_N, 1, -1).repeat(1, curr_existing_N, 1)
+
+            curr_spatial_ht_proj = self.W1(curr_spatial_ht_1.view(curr_existing_N**2, -1))
+            curr_spatial_ht_proj = curr_spatial_ht_proj.view(curr_existing_N, curr_existing_N, -1)
+            curr_temporal_ht_proj = self.W2(curr_temporal_ht_1.view(curr_existing_N**2, -1))
+            curr_temporal_ht_proj = curr_temporal_ht_proj.view(curr_existing_N, curr_existing_N, -1)
+
+            # (curr_existing_N x curr_existing_N)
+            curr_score_mat = torch.sum((curr_spatial_ht_proj * curr_temporal_ht_proj), 2)
+            curr_score_mat = curr_score_mat * cuda(torch.tensor(curr_existing_N)) / cuda(torch.sqrt(torch.tensor(self.attention_dim).float()))
+            curr_score_mat_numerator = torch.exp(curr_score_mat) * \
+                cuda(torch.ones(curr_existing_N, curr_existing_N) - torch.eye(curr_existing_N))
+            curr_score_mat_denominator = torch.sum(curr_score_mat_numerator, 1)
+            curr_score_mat_denominator =\
+                curr_score_mat_denominator.view(curr_existing_N, 1).repeat(1, curr_existing_N)
+
+            curr_score_1 = curr_score_mat_numerator / curr_score_mat_denominator
+            curr_score_0 = cuda(torch.zeros(curr_existing_N, curr_N))
+            curr_score_0 = curr_score_0.scatter(
+                1, curr_timestamp_idx.view(1, curr_existing_N).repeat(curr_existing_N, 1), curr_score_1)
+            curr_score = cuda(torch.zeros(curr_N, curr_N))
+            curr_score = curr_score.scatter(
+                0, curr_timestamp_idx.view(curr_existing_N, 1).repeat(1, curr_N), curr_score_0)
+
+            attention_score_list.append(curr_score)
+
+        return attention_score_list
 
 
 class EdgeToNodeAverage(nn.Module):
@@ -522,8 +617,44 @@ class EdgeToNodeAverage(nn.Module):
         return torch.cat(spatial_ht_summary, 0)
 
 
+class NodeRNN(nn.Module):
+    def __init__(self, embed_size=64, edge_hidden_size=256, node_hidden_size=128):
+        super(NodeRNN, self).__init__()
+        self.pos_embed = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+        self.hid_embed = torch.nn.Sequential(
+            nn.Linear(edge_hidden_size*2, embed_size),
+            nn.ReLU(),
+        )
+        self.lstm = nn.LSTM(embed_size*2, node_hidden_size, num_layers=1, batch_first=True)
 
+    def forward(self, Hv_t, hvv_t, xv_t, hv_tm1, cv_tm1, ts_mask):
+        '''
+            Hv_t: (N x edge_hidden_size)
+            hvv_t: (N x edge_hidden_size)
+            xv_t: (N x 2)
+            hv_tm1: (N x node_hidden_size)
+            ts_mask: (N x 1)
+        '''
+        N = Hv_t.size(0)
+        timestamp_mask = (ts_mask[:, 0] == 1)
+        existing_N = torch.sum(timestamp_mask).item()
 
+        e_v = self.pos_embed(xv_t[timestamp_mask, :])
+        a_v = self.hid_embed(torch.cat((hvv_t[timestamp_mask, :], Hv_t[timestamp_mask, :]), 1))
+        _, (new_hv_t, new_cv_t) = self.lstm(
+            torch.cat((e_v, a_v), 1).view(existing_N, 1, -1),
+            (hv_tm1[timestamp_mask, :].view(1, existing_N, -1),
+             cv_tm1[timestamp_mask, :].view(1, existing_N, -1)))
+
+        hv_t = hv_tm1.clone()
+        cv_t = cv_tm1.clone()
+        hv_t[timestamp_mask, :] = new_hv_t
+        cv_t[timestamp_mask, :] = new_cv_t
+
+        return hv_t, cv_t
 
 
 class ProbablisticTrajectoryLoss:
