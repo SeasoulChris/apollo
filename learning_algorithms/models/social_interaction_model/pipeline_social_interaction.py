@@ -41,10 +41,10 @@ if __name__ == "__main__":
     valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=8, pred_len=12,\
         skip=1, min_ped=0, delim='\t')
 
-    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True,\
-        num_workers=8, collate_fn=collate_scenes)
-    valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=True,\
-        num_workers=8, collate_fn=collate_scenes)
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True,\
+        num_workers=8, drop_last=True, collate_fn=collate_scenes)
+    valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=True,\
+        num_workers=8, drop_last=True, collate_fn=collate_scenes)
 
     # Model and training setup
     model = SocialAttention()

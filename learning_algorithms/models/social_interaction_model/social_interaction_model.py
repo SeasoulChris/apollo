@@ -661,7 +661,7 @@ class ProbablisticTrajectoryLoss:
     def loss_fn(self, y_pred_tuple, y_true):
         y_pred, y_traj = y_pred_tuple
         if y_pred is None:
-            return 0
+            return cuda(torch.tensor(0))
         # y_pred: N x pred_len x 5
         # y_true: (pred_traj, pred_traj_rel)  N x pred_len x 2
         mux, muy, sigma_x, sigma_y, corr = y_pred[:,:,0], y_pred[:,:,1],\
@@ -671,7 +671,7 @@ class ProbablisticTrajectoryLoss:
                y_true[1][is_predictable[:,0]==1,:,1].float()
         N = y_pred.size(0)
         if N == 0:
-            return 0
+            return cuda(torch.tensor(0))
 
         eps = 1e-10
 
@@ -682,6 +682,7 @@ class ProbablisticTrajectoryLoss:
 
         loss = torch.clamp(P, min=eps)
         loss = -loss.log()
+
         return torch.sum(loss)/N
 
     def loss_info(self, y_pred_tuple, y_true):
@@ -705,4 +706,4 @@ class ProbablisticTrajectoryLoss:
         # out = torch.sqrt(out)
         # out = torch.mean(out)
         # return out
-        
+ 
