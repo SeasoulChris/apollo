@@ -15,12 +15,14 @@ import fueling.common.bos_client as bos_client
 
 
 TIME_RANGE = 3.0
+REGION = 'sunnyvale_with_two_offices'
+
 DISTANCE_THRESHOLD = 1.5
 
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
     def __init__(self):
-        BasePipeline.__init__(self, 'evaluate-performance')
+        BasePipeline.__init__(self, 'evaluate-performance-{}-{}'.format(TIME_RANGE, REGION))
 
     def run_test(self):
         """Run test."""
@@ -33,12 +35,12 @@ class PerformanceEvaluator(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        origin_prefix = 'modules/prediction/results'
+        origin_prefix = os.path.join('modules/prediction/results', REGION)
         # RDD(file) result files with the pattern prediction_result.*.bin
         result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
-            spark_op.filter_path(['prediction_result.*.bin']))
+            spark_op.filter_path(['*prediction_result.*.bin']))
         metrics = self.run(result_file_rdd)
-        saved_filename = 'metrics_' + str(TIME_RANGE) + '.npy'
+        saved_filename = 'metrics_{}_{}.npy'.format(TIME_RANGE, REGION)
         np.save(os.path.join(bos_client.abs_path('modules/prediction/results'), saved_filename), metrics)
 
     def run(self, result_file_rdd):
