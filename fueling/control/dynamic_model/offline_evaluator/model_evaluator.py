@@ -250,3 +250,6 @@ def evaluate(model_info, dataset_info, platform_path):
     visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, trajectory_fnn,
                                  trajectory_point_mass, vehicle_state_gps, vehicle_state_imu, 
                                  vehicle_state_fnn, vehicle_state_point_mass)
+    
+    # return (dynamic_model_path, Trajectory_RMSE)
+    return [(model_info[1], evaluation_results.learning_based_result.trajectory_error)]

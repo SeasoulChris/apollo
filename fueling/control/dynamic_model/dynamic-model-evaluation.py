@@ -32,8 +32,8 @@ class DynamicModelEvaluation(BasePipeline):
         # PairRDD(model_name, folder_path)
         lstm_model_rdd = self.to_rdd(glob.glob(lstm_model_path)).keyBy(lambda _: 'lstm')
 
-        evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation/%s/*.hdf5' % VEHICLE_ID)
-
+        evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID,
+                                          'golden_test/*.hdf5')
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
             self.to_rdd(glob.glob(evaluation_dataset))
@@ -47,7 +47,7 @@ class DynamicModelEvaluation(BasePipeline):
         platform_path = 'modules/control/learning_based_model/'
         mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
         lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
-        data_predix = os.path.join(platform_path, 'hdf5_evaluation/%s' % VEHICLE_ID)
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, 'golden_test')
 
         bos = self.bos()
         # PairRDD('mlp', folder_path)
@@ -65,16 +65,34 @@ class DynamicModelEvaluation(BasePipeline):
         self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def model_evalution(self, model_rdd, evaluation_dataset_rdd, platform_path):
-        results = (
+        results_rdd = (
             # PairRDD(dynamic_model_name, dynamic_model_path)
             model_rdd
             # PairRDD((dynamic_model_name, dynamic_model_path), 
             # (driving_scenario, evaluation_dataset_path))
             .cartesian(evaluation_dataset_rdd)
             # Action: call evaluation functions
-            .foreach(lambda model_and_dataset: evaluator.evaluate(
-                model_and_dataset[0], model_and_dataset[1], platform_path)))
+            # PairRDD(dynamic_model_path, trajectory_rmse)
+            .flatMap(lambda model_and_dataset: evaluator.evaluate(
+                model_and_dataset[0], model_and_dataset[1], platform_path))
+            # PairRDD(dynamic_model_path, trajectory_rmse), which is valid
+            .filter(lambda grading_result: grading_result is not None)
+            # PairRDD(dynamic_model_path, iter[trajectory_rmse])
+            .groupByKey()
+            # PairRDD(dynamic_model_path, list[trajectory_rmse])
+            .mapValues(list)
+            # PairRDD(dynamic_model_path, average_trajectory_rmse)
+            .mapValues(np.mean)
+            .cache())
 
+        def _print(result):
+            dynamic_model_path, average_trajectory_rmse = result
+            evaluation_result_path = os.path.join(dynamic_model_path, 'average_rmse.txt')
+            with open(evaluation_result_path, 'w') as txt_file:
+                txt_file.write('average rmse: {}'.format(average_trajectory_rmse))
+
+        results_rdd.foreach(_print)
+        
 
 if __name__ == '__main__':
     DynamicModelEvaluation().main()
