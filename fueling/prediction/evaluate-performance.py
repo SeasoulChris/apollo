@@ -14,34 +14,38 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
 
 
-TIME_RANGE = 3.0
-REGION = 'sunnyvale_with_two_offices'
+TIME_RANGES = [1.0, 3.0, 8.0]
+REGIONS = ['sunnyvale_with_two_offices', 'san_mateo']
 
 DISTANCE_THRESHOLD = 1.5
 
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
     def __init__(self):
-        BasePipeline.__init__(self, 'evaluate-performance-{}-{}'.format(TIME_RANGE, REGION))
+        BasePipeline.__init__(self, 'evaluate-performance')
 
     def run_test(self):
         """Run test."""
         result_files = self.to_rdd(
             glob.glob('/apollo/data/mini_data_pipeline/results/*/prediction_result.*.bin'))
-        metrics = self.run(result_files)
-        saved_filename = 'metrics_{}.npy'.format(TIME_RANGE)
-        save_path = os.path.join('/apollo/data/mini_data_pipeline/results', saved_filename)
-        np.save(save_path, metrics)
+        for time_range in TIME_RANGES:
+            metrics = self.run(result_files)
+            saved_filename = 'metrics_{}.npy'.format(time_range)
+            save_path = os.path.join('/apollo/data/mini_data_pipeline/results', saved_filename)
+            np.save(save_path, metrics)
 
     def run_prod(self):
-        """Run prod."""
-        origin_prefix = os.path.join('modules/prediction/results', REGION)
-        # RDD(file) result files with the pattern prediction_result.*.bin
-        result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
-            spark_op.filter_path(['*prediction_result.*.bin']))
-        metrics = self.run(result_file_rdd)
-        saved_filename = 'metrics_{}_{}.npy'.format(TIME_RANGE, REGION)
-        np.save(os.path.join(bos_client.abs_path('modules/prediction/results'), saved_filename), metrics)
+        for time_range in TIME_RANGES:
+            for region in REGIONS:
+                """Run prod."""
+                origin_prefix = os.path.join('modules/prediction/results', region)
+                # RDD(file) result files with the pattern prediction_result.*.bin
+                result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
+                    spark_op.filter_path(['*prediction_result.*.bin']))
+                metrics = self.run(result_file_rdd)
+                saved_filename = 'metrics_{}_{}.npy'.format(time_range, region)
+                np.save(os.path.join(bos_client.abs_path('modules/prediction/results'),
+                                     saved_filename), metrics)
 
     def run(self, result_file_rdd):
         """Run the pipeline with given arguments."""
