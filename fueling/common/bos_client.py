@@ -40,7 +40,11 @@ class AutoDownload(object):
         """Download the file as local temporary file for access."""
         local_file = os.path.join(self.temp_dir, os.path.basename(self.key))
         glog.info('Downloading key {} to {}'.format(self.key, local_file))
-        self.boto3_client.download_file(self.bucket, self.key, local_file)
+        try:
+            self.boto3_client.download_file(self.bucket, self.key, local_file)
+        except:
+            glog.error('Failed to download {}, use its botfs path.'.format(self.key))
+            return abs_path(self.key)
         return local_file
 
     def __exit__(self, type, value, traceback):
