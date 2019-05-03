@@ -12,13 +12,10 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.features.features import GetDatapoints
 import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
-import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.dynamic_model.conf.model_config as model_config
-import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
@@ -75,31 +72,7 @@ def get_data_point(elem):
     """ extract data from msg """
     chassis, pose_pre = elem
     pose = pose_pre.pose
-    res = np.array([
-        pose.heading,  # 0
-        pose.orientation.qx,  # 1
-        pose.orientation.qy,  # 2
-        pose.orientation.qz,  # 3
-        pose.orientation.qw,  # 4
-        pose.linear_velocity.x,  # 5
-        pose.linear_velocity.y,  # 6
-        pose.linear_velocity.z,  # 7
-        pose.linear_acceleration.x,  # 8
-        pose.linear_acceleration.y,  # 9
-        pose.linear_acceleration.z,  # 10
-        pose.angular_velocity.x,  # 11
-        pose.angular_velocity.y,  # 12
-        pose.angular_velocity.z,  # 13
-        chassis.speed_mps,  # 14 speed
-        chassis.throttle_percentage / 100,  # 15 throttle
-        chassis.brake_percentage / 100,  # 16 brake
-        chassis.steering_percentage / 100,  # 17
-        chassis.driving_mode,  # 18
-        pose.position.x,  # 19
-        pose.position.y,  # 20
-        pose.position.z,  # 21
-    ])
-    return (chassis.header.timestamp_sec, res)
+    return (chassis.header.timestamp_sec, feature_extraction_utils.gen_data_point(pose, chassis))
 
 
 class GoldenSet(BasePipeline):
@@ -157,8 +130,7 @@ class GoldenSet(BasePipeline):
             # PairRDD(dir, msgs)
             .flatMapValues(record_utils.read_record(channels)))
 
-        valid_msgs = spark_helper.cache_and_log(
-            'valid_msgs',
+        valid_msgs = (
             dir_to_msgs
             # PairRDD(dir, topic_counter)
             .mapValues(lambda msg: Counter([msg.topic]))
@@ -169,39 +141,42 @@ class GoldenSet(BasePipeline):
                     counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT
                     and counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT)
             # RDD(dir)
-            .keys())
+            .keys()
+            .cache())
+
+        glog.info('valid_msgs number: %d' % valid_msgs.count())
 
         # PairRDD(dir, valid_msgs)
         valid_msgs = spark_op.filter_keys(dir_to_msgs, valid_msgs)
 
-        data_segment_rdd = spark_helper.cache_and_log(
-            'parsed_msg',
+        data_segment_rdd = (
             # PairRDD(dir_segment, (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs))
+        glog.info('parsed_msg number: %d' % data_segment_rdd.count())
 
-        data_segment_rdd = spark_helper.cache_and_log(
-            'pair_cs_pose',
+        data_segment_rdd = (
             data_segment_rdd
             # PairRDD(dir_segment, paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose))
+        glog.info('pair_cs_pose number: %d' % data_segment_rdd.count())
 
-        data_segment_rdd = spark_helper.cache_and_log(
-            'get_data_point',
+        data_segment_rdd = (
             data_segment_rdd
             # PairRDD(dir, data_point)
             .mapValues(get_data_point))
+        glog.info('get_data_point: %d' % data_segment_rdd.count())
 
-        data_segment_rdd = spark_helper.cache_and_log(
-            'data_segment',
+        data_segment_rdd = (
             data_segment_rdd
             .groupByKey()
             # PairRDD(dir, list of (timestamp_sec, data_point))
             .mapValues(list))
+        glog.info('data_segment: %d' % data_segment_rdd.count())
 
-        data_segment_rdd = spark_helper.cache_and_log(
-            'data_segment',
+        data_segment_rdd = (
             # PairRDD(dir, (timestamp_sec, data_point))
             data_segment_rdd.mapValues(gen_segment))
+        glog.info('data_segment number: %d' % data_segment_rdd.count())
 
         spark_helper.cache_and_log(
             'hdf5',

@@ -135,11 +135,8 @@ def pair_cs_pose(elem):
     return res
 
 
-def get_data_point(elem):
-    """ extract data from msg """
-    chassis = elem[1][0]
-    pose = elem[1][1].pose
-    res = np.array([
+def gen_data_point(pose, chassis):
+    return np.array([
         pose.heading,  # 0
         pose.orientation.qx,  # 1
         pose.orientation.qy,  # 2
@@ -163,7 +160,13 @@ def get_data_point(elem):
         pose.position.y,  # 20
         pose.position.z,  # 21
     ])
-    return ((elem[0][0], chassis.header.timestamp_sec), res)
+
+
+def get_data_point(elem):
+    """ extract data from msg """
+    chassis = elem[1][0]
+    pose = elem[1][1].pose
+    return ((elem[0][0], chassis.header.timestamp_sec), gen_data_point(pose, chassis))
 
 
 def feature_key_value(elem):
@@ -193,6 +196,79 @@ def feature_key_value(elem):
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
 
 
+def gen_steering_key(steering):
+    if steering < -60.0:
+        return 0
+    elif -60.0 <= steering < -30.0:
+        return 1
+    elif -30.0 <= steering < -1.0:
+        return 2
+    elif -1.0 <= steering < 1.0:
+        return 3
+    elif 1.0 <= steering < 30:
+        return 4
+    elif 30 <= steering < 60:
+        return 5
+    else:
+        return 6
+
+
+def gen_speed_key(non_stop_speed):
+    if non_stop_speed < 10:
+        return 1
+    elif 10 <= non_stop_speed < 20:
+        return 2
+    else:
+        return 3
+
+
+def gen_brake_key(brake):
+    if brake < BRAKE_DEADZONE:
+        return 0
+    elif BRAKE_DEADZONE <= brake < 20:
+        return 1
+    elif 20 <= brake < 25:
+        return 2
+    else:
+        return 3
+
+
+def gen_throttle_key(throttle):
+    if throttle < THROTTLE_DEADZONE:
+        return 0
+    elif THROTTLE_DEADZONE <= throttle < 25:
+        return 1
+    elif 25 <= throttle < 30:
+        return 2
+    else:
+        return 3
+
+
+def gen_feature_key(elem):
+    """ generate label for each data segment """
+    speed = elem[1][14]
+    throttle = elem[1][15] * 100  # 0 or positive
+    brake = elem[1][16] * 100  # 0 or positive
+    steering = elem[1][17] * 100
+
+    if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+        elem_key = int(9000)
+    else:
+        speed_key = int(gen_speed_key(speed))
+
+        steering_key = int(gen_steering_key(steering))
+
+        throttle_key = int(gen_throttle_key(throttle))
+
+        brake_key = int(gen_brake_key(brake))
+
+        # speed-steering-throttle-brake
+        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
+
+    # ((folder_path, feature_key), (time_stamp, paired_data))
+    return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
+
+
 def gen_segment(elem):
     """ generate segment w.r.t time """
     segments = []
@@ -200,15 +276,18 @@ def gen_segment(elem):
     data_set = np.array(elem[0][1])
     counter = 1  # count segment length first element
     for i in range(1, len(elem)):
+        # print('len of elem: %d', i)
         if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA_SEGMENT:
             data_set = np.vstack([data_set, elem[i][1]])
             counter += 1
         else:
+            # glog.info('time differences: %f' % (elem[i][0] - pre_time))
             if counter > model_config.feature_config['sequence_length']:
                 segments.append((segment_id(pre_time), data_set))
             data_set = np.array([elem[i][1]])
             counter = 0
         pre_time = elem[i][0]
+        # glog.info('previous time: %f' % pre_time)
     if counter > model_config.feature_config['sequence_length']:
         segments.append((segment_id(pre_time), data_set))
     return segments

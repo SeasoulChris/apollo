@@ -80,9 +80,9 @@ def plot_dynamic_model_feature_hist(fearure, result_file):
             feature_index = segment_index[feature_name]
             plt.figure(figsize=(4, 3))
             axes = plt.gca()
-            axes.set_ylim([0, 2000])
+            axes.set_ylim([0, 7000])
             # plot the distribution of feature_index column of input data
-            plt.hist(fearure[:, feature_index], bins='auto', label='linear')
+            plt.hist(fearure[:, feature_index], bins='scott', label='linear')
             plt.title("Histogram of the Feature Input {}".format(feature_name))
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
