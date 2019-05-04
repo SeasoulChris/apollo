@@ -17,7 +17,7 @@ message Disengagement {
 // planning stat
 message PlanningStat {
   message Latency {
-    map<string,uint64> latency_hist = 1;
+    map<string, uint64> latency_hist = 1;
     optional uint64 max = 2;
     optional uint64 min = 3;
     optional uint64 avg = 4;
