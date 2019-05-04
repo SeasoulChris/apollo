@@ -42,19 +42,19 @@ class PerformanceEvaluator(BasePipeline):
                 # RDD(file) result files with the pattern prediction_result.*.bin
                 result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
                     spark_op.filter_path(['*prediction_result.*.bin']))
-                metrics = self.run(result_file_rdd)
+                metrics = self.run(result_file_rdd, time_range)
                 saved_filename = 'metrics_{}_{}.npy'.format(time_range, region)
                 np.save(os.path.join(bos_client.abs_path('modules/prediction/results'),
                                      saved_filename), metrics)
 
-    def run(self, result_file_rdd):
+    def run(self, result_file_rdd, time_range):
         """Run the pipeline with given arguments."""
         # list [(unique_metric_key, metric_sum)]
         metrics = (
             # RDD(file), files with prediction results
             result_file_rdd
             # PairRDD(metric_key, metric_value)
-            .flatMap(self.evaluate)
+            .flatMap(lambda file: self.evaluate(file, time_range))
             # PairRDD(unique_metric_key, metric_sum)
             .reduceByKey(lambda v1, v2: v1 + v2)
             # list [(unique_metric_key, metric_sum)]
@@ -62,7 +62,7 @@ class PerformanceEvaluator(BasePipeline):
         return metrics
 
     @staticmethod
-    def evaluate(result_file):
+    def evaluate(result_file, time_range):
         """Call prediction python code to evaluate performance"""
         result_dir = os.path.dirname(result_file)
         future_status_dir = result_dir.replace('results', 'labels')
@@ -78,7 +78,7 @@ class PerformanceEvaluator(BasePipeline):
             list_prediction_result.ParseFromString(f.read())
         for prediction_result in list_prediction_result.prediction_result:
             portion_correct_predicted, num_obstacle, num_trajectory = \
-                CorrectlyPredictePortion(prediction_result, future_status_dict, TIME_RANGE)
+                CorrectlyPredictePortion(prediction_result, future_status_dict, time_range)
             portion_correct_predicted_sum += portion_correct_predicted
             num_obstacle_sum += num_obstacle
             num_trajectory_sum += num_trajectory
