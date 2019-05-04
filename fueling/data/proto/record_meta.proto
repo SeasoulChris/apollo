@@ -14,6 +14,17 @@ message Disengagement {
   optional string desc = 3;
 }
 
+// planning stat
+message PlanningStat {
+  message Latency {
+    map<string,uint64> latency_hist = 1;
+    optional uint64 max = 2;
+    optional uint64 min = 3;
+    optional uint64 avg = 4;
+  }
+  optional Latency latency = 1;
+}
+
 // Rich metadata for a Cyber record, which contains useful information for
 // warehousing needs.
 message RecordMeta {
@@ -49,4 +60,6 @@ message RecordMeta {
     repeated apollo.common.PointLLH driving_path = 2;
   }
   optional Stat stat = 8;
+
+  optional PlanningStat planning_stat = 9;
 }
