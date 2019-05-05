@@ -62,6 +62,8 @@ def compute_h5_and_gradings(target_groups):
                                   'brake_control_usage_harsh',
                                   'steering_control_usage',
                                   'steering_control_usage_harsh',
+                                  'throttle_deadzone_mean',
+                                  'brake_deadzone_mean',
                                   'total_time_usage',
                                   'total_time_peak',
                                   'total_time_exceeded_count'])
@@ -78,6 +80,10 @@ def compute_h5_and_gradings(target_groups):
                                     'usage_thold_value',
                                     'usage_threshold',
                                     'usage_weight',
+                                    'mean_feature_name',
+                                    'mean_filter_name',
+                                    'mean_filter_value',
+                                    'mean_weight',
                                     'beyond_feature_name',
                                     'beyond_threshold',
                                     'count_feature_name'])
@@ -274,6 +280,18 @@ def compute_h5_and_gradings(target_groups):
             usage_threshold=profiling_conf.control_metrics.curvature_harsh_limit,
             usage_weight=profiling_conf.control_command_pct
         )),
+        throttle_deadzone_mean=compute_mean(grading_mtx, grading_arguments(
+            mean_feature_name='throttle_chassis',
+            mean_filter_name='brake_cmd',
+            mean_filter_value=feature_utils.MIN_EPSILON,
+            mean_weight=profiling_conf.control_command_pct
+        )),
+        brake_deadzone_mean=compute_mean(grading_mtx, grading_arguments(
+            mean_feature_name='brake_chassis',
+            mean_filter_name='throttle_cmd',
+            mean_filter_value=feature_utils.MIN_EPSILON,
+            mean_weight=profiling_conf.control_command_pct
+        )),
         total_time_usage=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='total_time',
             usage_thold_value='',
@@ -344,6 +362,24 @@ def compute_count(grading_mtx, arg):
     return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1)) / elem_num,
             elem_num)
 
+def compute_mean(grading_mtx, arg):
+    """Compute the mean value"""
+    profiling_conf = feature_utils.get_config_control_profiling()
+    if arg.mean_filter_name:
+        grading_mtx = filter_value(grading_mtx,
+                                   FEATURE_IDX[arg.mean_filter_name], arg.mean_filter_value)
+    elem_num, item_num = grading_mtx.shape
+    if elem_num < profiling_conf.min_sample_size:
+        glog.warn('no enough elements {} for mean computing requirement {}'
+                  .format(elem_num, profiling_conf.min_sample_size))
+        return (0.0, 0)
+    if item_num <= FEATURE_IDX[arg.mean_feature_name]:
+        glog.warn('no desired feature item {} for mean computing requirement {}'
+                  .format(item_num, FEATURE_IDX[arg.mean_feature_name]))
+        return (0.0, 0)
+    return (np.mean(grading_mtx[:, FEATURE_IDX[arg.mean_feature_name]], axis=0) / arg.mean_weight,
+            elem_num)
+
 def get_std_value(grading_column):
     """Calculate the standard deviation value"""
     return (sum(val**2 for val in grading_column) / (len(grading_column)-1)) ** 0.5
@@ -377,7 +413,8 @@ def combine_gradings(grading_x, grading_y):
             grading_item_value = max(val_x, val_y)
         # Beyond and count values
         elif (grading_x._fields[idx].find('sensation') >= 0 or
-              grading_x._fields[idx].find('count') >= 0):
+              grading_x._fields[idx].find('count') >= 0 or
+              grading_x._fields[idx].find('mean') >= 0):
             if num_x + num_y != 0:
                 grading_item_value = (val_x * num_x + val_y * num_y) / (num_x + num_y)
             else:

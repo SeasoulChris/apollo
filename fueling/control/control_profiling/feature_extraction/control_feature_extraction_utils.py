@@ -17,6 +17,8 @@ from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_
 MSG_PER_SEGMENT = 1000
 # Maximum allowed time gap betwee two messages
 MAX_PHASE_DELTA = 0.01
+# Minimum epsilon value used in compare with zero
+MIN_EPSILON = 0.000001
 
 
 def verify_vehicle_controller(task):
@@ -70,7 +72,7 @@ def data_matches_config(vehicle_type, controller_type):
 
 
 def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
-    """Extract control data array and filter the control data with selected chassis features"""
+    """Extract control/chassis data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
     chassis_mtx = np.array([extract_chassis_data_from_msg(msg) for msg in chassis_msgs])
@@ -81,9 +83,10 @@ def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
     gear_condition =  (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
     for gear_idx in range(1, len(gear_position)):
         gear_condition |= (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[gear_idx])
-    chassis_mtx_filtered = np.delete(chassis_mtx,
-                                     np.where(driving_condition & gear_condition), axis=0)
+    chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
+    chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
     control_idx_filtered = []
+    chassis_idx_refiltered = []
     chassis_idx = 0
     control_idx = 0
     while (chassis_idx < chassis_mtx_filtered.shape[0]) and (control_idx < control_mtx.shape[0]):
@@ -95,12 +98,21 @@ def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
             chassis_idx += 1
         else:
             control_idx_filtered.append(control_idx)
+            chassis_idx_refiltered.append(chassis_idx)
             chassis_idx += 1
             control_idx += 1
-    control_mtx_filtered = np.delete(control_mtx, control_idx_filtered, axis=0)
-    glog.info('The deleted chassis msgs size is: {} and filtered control msgs size is: {}'
-              .format(chassis_mtx_filtered.shape[0], control_mtx_filtered.shape[0]))
-    return control_mtx_filtered
+    control_mtx_filtered = np.take(control_mtx, control_idx_filtered, axis=0)
+    chassis_mtx_refiltered = np.take(chassis_mtx_filtered, chassis_idx_refiltered, axis=0)
+    glog.info('The filterd chassis msgs size is: {} and filtered control msgs size is: {}'
+              .format(chassis_mtx_refiltered.shape[0], control_mtx_filtered.shape[0]))
+    if (chassis_mtx_refiltered.shape[1] > MODE_IDX['throttle_chassis'] and
+        chassis_mtx_refiltered.shape[1] > MODE_IDX['brake_chassis']):
+        grading_mtx = np.hstack((control_mtx_filtered,
+                                 chassis_mtx_refiltered[:, [MODE_IDX['throttle_chassis'],
+                                                            MODE_IDX['brake_chassis']]]))
+    else:
+        grading_mtx = control_mtx_filtered
+    return grading_mtx
 
 
 def get_message_by_topic(messages, topic):
@@ -212,11 +224,23 @@ def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
     chassis_header = msg_proto.header
-    data_array = np.array([
-        # Features: "Status" category
-        msg_proto.driving_mode,                          # 0
-        msg_proto.gear_location,                         # 1
-        # Features" "Time" category
-        chassis_header.timestamp_sec                     # 2
-    ])
+    if get_config_control_profiling().vehicle_type.find('Mkz') >= 0:
+        data_array = np.array([
+            # Features: "Status" category
+            msg_proto.driving_mode,                          # 0
+            msg_proto.gear_location,                         # 1
+            # Features: "Time" category
+            chassis_header.timestamp_sec,                    # 2
+            # Features: "Action" category
+            msg_proto.throttle_percentage,                   # 3
+            msg_proto.brake_percentage                       # 4
+        ])
+    else:
+        data_array = np.array([
+            # Features: "Status" category
+            msg_proto.driving_mode,                          # 0
+            msg_proto.gear_location,                         # 1
+            # Features: "Time" category
+            chassis_header.timestamp_sec                     # 2
+        ])
     return data_array
