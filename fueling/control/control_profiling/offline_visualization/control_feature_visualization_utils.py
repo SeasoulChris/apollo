@@ -18,6 +18,9 @@ from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_
 def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
     segments = []
+    if not h5s:
+        glog.warn('No hdf5 files found under the targeted path.')
+        return segments
     for h5 in h5s:
         glog.info('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as h5file:
@@ -29,7 +32,11 @@ def generate_segments(h5s):
 
 def generate_data(segments):
     """generate data array from the given data segments"""
-    data = segments[0]
+    data = []
+    if not segments:
+        glog.warn('No segments from hdf5 files found under the targetd path.')
+        return data
+    data.append(segments[0])
     for i in range(1, len(segments)):
         data = np.vstack([data, segments[i]])
     print('Data_Set length is: ', len(data))
@@ -39,6 +46,10 @@ def plot_h5_features_hist(data_rdd):
     """plot the histogram of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
+    if len(data) == 0:
+        glog.warn('No data from hdf5 files can be visualized under the targetd path {}'
+                  .format(dir_data))
+        return
     pdffile = dir_data + '/control_data_visualization.pdf'
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
