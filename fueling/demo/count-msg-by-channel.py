@@ -30,10 +30,8 @@ class CountMsgByChannel(BasePipeline):
             self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
-            # PairRDD(topic, PyBagMessage)
-            .keyBy(lambda msg: msg.topic)
             # PairRDD(topic, 1)
-            .mapValues(lambda msg: 1)
+            .map(lambda msg: (msg.topic, 1))
             # PairRDD(topic, N), with unique keys.
             .reduceByKey(lambda a, b: a + b)
             # PairRDD(topic, N), just sleep.
@@ -46,10 +44,10 @@ class CountMsgByChannel(BasePipeline):
         return self.run_test()
 
     def sleep(self, input):
-        """Dummy process to leave some time for UI show at http://localhost:4040"""
-        sleep_time = self.FLAGS.get('sleep_time')
-        if sleep_time:
-            time.sleep(sleep_time)
+        """Dummy process to run longer so you can access Spark UI or check logs."""
+        for i in range(self.FLAGS.get('sleep_time', 0))
+            glog.info('Tick {}'.format(i))
+            time.sleep(1)
         return input
 
 
