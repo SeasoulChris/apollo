@@ -18,13 +18,11 @@ from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_
 def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
     segments = []
-    segments_width = len(FEATURE_NAMES)
     for h5 in h5s:
         glog.info('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as h5file:
             for value in h5file.values():
-                if value.shape[0] == segments_width:
-                    segments.append(np.array(value))
+                segments.append(np.array(value))
     print('Segments width is: ', len(segments[0]))
     print('Segments length is: ', len(segments))
     return segments
@@ -44,11 +42,12 @@ def plot_h5_features_hist(data_rdd):
     pdffile = dir_data + '/control_data_visualization.pdf'
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
-            plt.figure(figsize=(4, 3))
-            plt.hist(data[:, i], bins='auto')
-            plt.xlabel(FEATURE_NAMES[i])
-            plt.ylabel('Sample Count')
-            plt.title("Histogram of the " + FEATURE_NAMES[i])
-            plt.tight_layout()
-            pdf.savefig()
-            plt.close()
+            if i < data.shape[1]:
+                plt.figure(figsize=(4, 3))
+                plt.hist(data[:, i], bins='auto')
+                plt.xlabel(FEATURE_NAMES[i])
+                plt.ylabel('Sample Count')
+                plt.title("Histogram of the " + FEATURE_NAMES[i])
+                plt.tight_layout()
+                pdf.savefig()
+                plt.close()
