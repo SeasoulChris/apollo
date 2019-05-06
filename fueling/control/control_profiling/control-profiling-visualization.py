@@ -45,7 +45,8 @@ class ControlProfilingVisualization(BasePipeline):
         target_prefix = original_prefix
         # RDD(tasks), the task dirs
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
-            dir_utils.get_todo_tasks(original_prefix, target_prefix))
+            dir_utils.get_todo_tasks(original_prefix, target_prefix, 
+                                     'COMPLETE', 'PLOT_COMPLETE'))
         self.run(todo_tasks, original_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         glog.info('Control Profiling Visualization: All Done, PROD')
@@ -81,7 +82,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
             Target=target_dir,
             HDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
             VisualPlot=len(glob.glob(os.path.join(target_dir, '*visualization*')))))
-        file_utils.touch(os.path.join(target_dir, 'COMPLETE'))
+        file_utils.touch(os.path.join(target_dir, 'PLOT_COMPLETE'))
     email_utils.send_email_info(title, email_content, receivers)
 
 
