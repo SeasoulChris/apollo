@@ -26,15 +26,19 @@ def pick_sample(list_of_segment, sample_size):
     counter = 0
     sample_list = []
     for segment in list_of_segment:
-        add_size = segment.shape[0]
-        if counter + add_size < sample_size:
-            counter += segment.shape[0]  # row, data points
+        add_size = segment.shape[0]  # row, data points
+        glog.info('segment_shape %d' % segment.shape[0])
+        if counter + add_size <= sample_size:
+            glog.info('counter+add_size %d' % (counter + add_size))
             sample_list.append(segment)
             counter += add_size
-        elif counter < sample_size:
-            to_add_size = sample_size - counter + 1
+        elif counter <= sample_size:
+            to_add_size = sample_size - counter
+            glog.info('to_add_size: %d' % to_add_size)
             sample_list.append(segment[0:to_add_size, :])
+            glog.info('more than sampe_size: %d' % (counter + to_add_size))
             return (sample_list, sample_size)
+    glog.info('counter: %d' % counter)
     return (sample_list, counter)
 
 
@@ -74,7 +78,7 @@ class UniformDistributionSet(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        sample_size = 2000
+        sample_size = 6000
         # same of target prefix of sample-set-feature-extraction
         # TODO: remove date label
         # TODO: remove complete marker
