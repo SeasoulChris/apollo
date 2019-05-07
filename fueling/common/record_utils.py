@@ -14,6 +14,7 @@ from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
 
@@ -22,6 +23,7 @@ CONTROL_CHANNEL = '/apollo/control'
 DRIVE_EVENT_CHANNEL = '/apollo/drive_event'
 HMI_STATUS_CHANNEL = '/apollo/hmi/status'
 LOCALIZATION_CHANNEL = '/apollo/localization/pose'
+PLANNING_CHANNEL = '/apollo/planning'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
 FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
 FRONT_6mm_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
@@ -41,6 +43,7 @@ CHANNEL_TO_TYPE = {
     REAR_6mm_CHANNEL: CompressedImage,
     LEFT_FISHEYE_CHANNEL: CompressedImage,
     RIGHT_FISHEYE_CHANNEL: CompressedImage,
+    PLANNING_CHANNEL: ADCTrajectory,
 }
 
 

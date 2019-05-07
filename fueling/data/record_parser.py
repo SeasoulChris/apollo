@@ -17,8 +17,10 @@ from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.gps_pb2 import Gps
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
+from modules.planning.proto.planning_pb2 import ADCTrajectory
 
 from fueling.common.coord_utils import CoortUtils
+from fueling.planning.metrics.latency import LatencyMetrics
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
 
@@ -49,6 +51,13 @@ class RecordParser(object):
             guessed_map = record_utils.guess_map_name_from_driving_path(record.stat.driving_path)
             if guessed_map:
                 record.hmi_status.current_map = guessed_map
+        # planning metrics
+        record.planning_stat.latency.max = parser._planning_latency_analyzer.get_max()
+        record.planning_stat.latency.min = parser._planning_latency_analyzer.get_min()
+        record.planning_stat.latency.avg = parser._planning_latency_analyzer.get_avg()
+        for bucket, cnt in parser._planning_latency_analyzer.get_hist().items():
+            record.planning_stat.latency.latency_hist[bucket] = cnt
+
         return record
 
     def __init__(self, record_file):
@@ -63,6 +72,8 @@ class RecordParser(object):
         # To sample driving path.
         self._last_position_sampled = None
         self._last_position_sampled_time = None
+        # Planning stat
+        self._planning_latency_analyzer = LatencyMetrics()
 
     def ParseMeta(self):
         """
@@ -89,6 +100,7 @@ class RecordParser(object):
             record_utils.GNSS_ODOMETRY_CHANNEL: self.ProcessGnssOdometry,
             record_utils.HMI_STATUS_CHANNEL: self.ProcessHMIStatus,
             record_utils.LOCALIZATION_CHANNEL: self.ProcessLocalization,
+            record_utils.PLANNING_CHANNEL: self.ProcessPlanning,
         }
         for channel, msg, _type, timestamp in self._reader.read_messages():
             processor = PROCESSORS.get(channel)
@@ -127,6 +139,11 @@ class RecordParser(object):
                     glog.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update DrivingMode.
         self._current_driving_mode = chassis.driving_mode
+
+    def ProcessPlanning(self, msg):
+        planning = ADCTrajectory()
+        planning.ParseFromString(msg)
+        self._planning_latency_analyzer.process(planning)
 
     def _process_position(self, time_sec, position):
         # Stat mileages.
