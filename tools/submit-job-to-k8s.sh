@@ -83,7 +83,7 @@ set -e
 
 # Upload local files to remote.
 BOS_MOUNT_PATH="/mnt/bos"
-REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M)_${USER}"
+REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M%S)_${USER}"
 REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
 REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
