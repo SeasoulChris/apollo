@@ -9,6 +9,7 @@ import pyspark_utils.helper as spark_helper
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
 import fueling.common.h5_utils as h5_utils
+import fueling.control.dynamic_model.conf.model_config as model_config
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 # parameters
@@ -33,11 +34,11 @@ def pick_sample(list_of_segment, sample_size):
             sample_list.append(segment)
             counter += add_size
         elif counter <= sample_size:
-            to_add_size = sample_size - counter
+            to_add_size = max(sample_size - counter, model_config.feature_config['sequence_length'])
             glog.info('to_add_size: %d' % to_add_size)
             sample_list.append(segment[0:to_add_size, :])
             glog.info('more than sampe_size: %d' % (counter + to_add_size))
-            return (sample_list, sample_size)
+            return (sample_list, (counter + to_add_size))
     glog.info('counter: %d' % counter)
     return (sample_list, counter)
 
