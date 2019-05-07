@@ -176,17 +176,14 @@ def send_laneline_request(lidar_task_id, image_url, access_key):
                 'choices': [
                     'single solid',
                     'single dash',
-                    'double solid',
+                    'double solid‘,
                     'double dash',
                     'left dash right solid',
                     'left solid right dash',
                     'curb',
                     'parking lane',
-                    'carpool lane',
-                    'narrow lane',
+                    'imaginary lane',
                     'construction cone line',
-                    'bicycle left',
-                    'bicycle right',
                     'other'
                 ]
             },
