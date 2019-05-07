@@ -50,7 +50,13 @@ def plot_h5_features_hist(data_rdd):
         glog.warn('No data from hdf5 files can be visualized under the targetd path {}'
                   .format(dir_data))
         return
-    pdffile = dir_data + '/control_data_visualization.pdf'
+    grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
+    if grading_dir:
+        vehicle_controller = os.path.basename(grading_dir[0]).replace(
+                                             'control_performance_grading.txt', '')
+        pdffile = os.path.join(dir_data, vehicle_controller + 'control_data_visualization.pdf')
+    else:
+        pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
             if i < data.shape[1]:
