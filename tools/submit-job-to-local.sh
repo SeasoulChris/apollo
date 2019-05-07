@@ -34,7 +34,7 @@ if [ -z "${JOB_FILE}" ]; then
   exit 1
 fi
 
-source /usr/local/miniconda2/bin/activate ${CONDA_ENV}
+source /usr/local/miniconda/bin/activate ${CONDA_ENV}
 source /apollo/scripts/apollo_base.sh
 
 spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@

@@ -7,6 +7,7 @@ import time
 
 # Third-party packages
 from absl import flags
+import colored_glog as glog
 
 # Apollo packages
 from cyber_py.record import RecordReader
@@ -28,14 +29,14 @@ class CountMsgByChannel(BasePipeline):
         pprint.PrettyPrinter().pprint(
             # RDD(record_path)
             self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
+            # RDD(record_path), just sleep.
+            .map(self.sleep)
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
             # PairRDD(topic, 1)
             .map(lambda msg: (msg.topic, 1))
             # PairRDD(topic, N), with unique keys.
             .reduceByKey(lambda a, b: a + b)
-            # PairRDD(topic, N), just sleep.
-            .map(self.sleep)
             # [(topic, N)]
             .collect())
 
@@ -45,7 +46,7 @@ class CountMsgByChannel(BasePipeline):
 
     def sleep(self, input):
         """Dummy process to run longer so you can access Spark UI or check logs."""
-        for i in range(self.FLAGS.get('sleep_time', 0))
+        for i in range(self.FLAGS.get('sleep_time', 0)):
             glog.info('Tick {}'.format(i))
             time.sleep(1)
         return input
