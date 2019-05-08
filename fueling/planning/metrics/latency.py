@@ -24,22 +24,13 @@ class LatencyMetrics:
         self.latency_list.append(latency_ms)
 
     def get_min(self):
-        if len(self.latency_list) > 0:
-            return int(min(self.latency_list))
-        else:
-            return 0
+        return int(min(self.latency_list)) if self.latency_list else 0
 
     def get_max(self):
-        if len(self.latency_list) > 0:
-            return int(max(self.latency_list))
-        else:
-            return 0
+        return int(max(self.latency_list)) if self.latency_list else 0
 
     def get_avg(self):
-        if len(self.latency_list) > 0:
-            return int(np.average(self.latency_list))
-        else:
-            return 0
+        return int(np.average(self.latency_list)) if self.latency_list else 0
 
     def get_hist(self):
         hist = {PLANNING_LATENCY_BIN_0_20_MS: 0,
