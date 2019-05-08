@@ -44,7 +44,7 @@ feature_config = {
     "maximum_segment_length": 20000, # maximum segment length
     "sequence_length": 20, # consider historical sequences for RNN models
     "delta_t": 0.01, # update delta t for dynamic models
-    "delay_steps": 1, # consider model delays between input and output
+    "delay_steps": 6, # consider model delays between input and output
     "window_size": 51, # window_size for savgol_filter
     "polynomial_order": 3 # polynomial_order for savgol_filter
 }

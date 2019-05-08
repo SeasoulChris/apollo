@@ -52,6 +52,7 @@ BRAKE_DEADZONE = VEHICLE_PARAM_CONF.vehicle_param.brake_deadzone
 MAX_STEER_ANGLE = VEHICLE_PARAM_CONF.vehicle_param.max_steer_angle
 STEER_RATIO = VEHICLE_PARAM_CONF.vehicle_param.steer_ratio
 WHEEL_BASE = VEHICLE_PARAM_CONF.vehicle_param.wheel_base
+REAR_WHEEL_BASE_PERCENTAGE = 0.3
 
 
 def generate_segment(h5_file):
@@ -220,6 +221,7 @@ def generate_point_mass_output(segment):
 
     total_len = segment.shape[0]
     velocity_point_mass = 0.0
+    velocity_angle_shift = 0.0
     acceleration_point_mass = 0.0
     output_point_mass = np.zeros([total_len, DIM_OUTPUT])
 
@@ -232,14 +234,27 @@ def generate_point_mass_output(segment):
 
         if k == 0:
             velocity_point_mass = segment[k, segment_index["speed"]]
-        else:
-            velocity_point_mass += acceleration_point_mass * DELTA_T
+
         acceleration_point_mass = table_interpolation(velocity_point_mass, lon_cmd * 100.0)
+        velocity_point_mass += acceleration_point_mass * DELTA_T
+
+        # If (negative speed under forward gear || positive speed under backward gear ||
+        #     natural gear):
+        # Then truncate speed, acceleration, and angular speed to 0
+        if GEAR_STATUS * (velocity_point_mass + GEAR_STATUS * SPEED_EPSILON) <= 0:
+            velocity_point_mass = 0.0
+            output_point_mass[k, output_index["acceleration"]] = 0.0
+            output_point_mass[k, output_index["w_z"]] = 0.0
+            continue
+
         # acceleration by point_mass given by calibration table
         output_point_mass[k, output_index["acceleration"]] = acceleration_point_mass
+        # the angle between current velocity and vehicle heading
+        velocity_angle_shift = np.arctan(REAR_WHEEL_BASE_PERCENTAGE * np.tan(
+            segment[k, segment_index["steering"]] *  MAX_STEER_ANGLE / STEER_RATIO))
         # angular speed by point_mass given by linear bicycle model
-        output_point_mass[k, output_index["w_z"]] = segment[k, segment_index["steering"]] * \
-            MAX_STEER_ANGLE / STEER_RATIO * velocity_point_mass / WHEEL_BASE
+        output_point_mass[k, output_index["w_z"]] = velocity_point_mass * np.sin(
+            velocity_angle_shift) / (WHEEL_BASE * REAR_WHEEL_BASE_PERCENTAGE)
     return output_point_mass
 
 
