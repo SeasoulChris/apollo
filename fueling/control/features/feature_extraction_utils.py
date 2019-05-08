@@ -95,23 +95,6 @@ def process_seg(elem):
     return (chassis, pose)
 
 
-def to_list(elem):
-    """convert element to list"""
-    return [elem]
-
-
-def append(orig_elem, app_elem):
-    """append another element to the previous element"""
-    orig_elem.append((app_elem))
-    return orig_elem
-
-
-def extend(orig_elem, app_elem):
-    """extend the original list"""
-    orig_elem.extend(app_elem)
-    return orig_elem
-
-
 def pair_cs_pose(elem):
     """pair chassis and pose"""
     chassis = elem[0]
@@ -159,7 +142,7 @@ def gen_data_point(pose, chassis):
         pose.position.x,  # 19
         pose.position.y,  # 20
         pose.position.z,  # 21
-        chassis.gear_location,  #22
+        chassis.gear_location,  # 22
     ])
 
 
@@ -170,35 +153,8 @@ def get_data_point(elem):
     return ((elem[0][0], chassis.header.timestamp_sec), gen_data_point(pose, chassis))
 
 
-def feature_key_value(elem):
-    """ generate key for each data segment """
-    speed = elem[1][14]
-    throttle = max(elem[1][15] * 100 - THROTTLE_DEADZONE, 0)  # 0 or positive
-    brake = max(elem[1][16] * 100 - BRAKE_DEADZONE, 0)  # 0 or positive
-    steering = elem[1][17] * 100 + 100  # compensation for negative value
-
-    if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
-        elem_key = int(9000)
-    else:
-        # speed key staring from 1; less than 5 m/s is 1
-        speed_key = int(min(speed, SPEED_MAX) / SPEED_STEP + 1)
-
-        # steering key 0 ~ 9: -100% is 0; 100% is 9
-        steering_key = int(steering / STEER_STEP)  # -100% ~ 0
-
-        # deadzone~first step is 0;
-        throttle_key = math.ceil(min(throttle, THROTTLE_MAX) / ACC_STEP)
-        brake_key = math.ceil(min(brake, BRAKE_MAX) / ACC_STEP)
-
-        # speed-steering-throttle-brake
-        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
-
-    # ((folder_path, feature_key),(time_stamp, paired_data))
-    return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
-
-
 def gen_steering_key(steering):
-    if steering < -60.0:
+    if steering < -60.0:  # right
         return 0
     elif -60.0 <= steering < -30.0:
         return 1
@@ -244,6 +200,7 @@ def gen_throttle_key(throttle):
     else:
         return 3
 
+
 def gen_reverse_throttle_key(throttle):
     if throttle < THROTTLE_DEADZONE:
         return 0
@@ -253,30 +210,36 @@ def gen_reverse_throttle_key(throttle):
         return 2
 
 
+def gen_gear_key(gear):
+    if gear < 0:  # backward driving
+        return 1
+    else:  # forward driving
+        return 2
+
+
 def gen_feature_key(elem):
-    """ generate label for each data segment """
+    """ generate label for both forward and backward driving"""
     speed = elem[1][14]
     throttle = elem[1][15] * 100  # 0 or positive
     brake = elem[1][16] * 100  # 0 or positive
     steering = elem[1][17] * 100
     gear = elem[1][22]
-    gear_key = int(gear)
+    gear_key = int(gen_gear_key(gear))
 
     if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
         steering_key = int(gen_steering_key(steering))
         brake_key = int(gen_brake_key(brake))
-
-        if gear == -1: # reverse driving
-           speed_key = 6
-           throttle_key = int(gen_reverse_throttle_key(throttle))
+        if gear == -1:  # reverse driving
+            speed_key = 0
+            throttle_key = int(gen_reverse_throttle_key(throttle))
         else:
             speed_key = int(gen_speed_key(speed))
             throttle_key = int(gen_throttle_key(throttle))
-        # speed-steering-throttle-brake
-        elem_key = int(speed_key * 10000 + steering_key * 1000 + throttle_key * 100
-                       + brake_key * 10 + gear_key)
+        # gear-speed-steering-throttle-brake
+        elem_key = int(gear_key * 10000 + speed_key * 1000 + steering_key * 100 + throttle_key * 10 +
+                       brake_key)
 
     # ((folder_path, feature_key), (time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
