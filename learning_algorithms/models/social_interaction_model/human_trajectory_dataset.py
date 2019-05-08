@@ -145,12 +145,12 @@ class HumanTrajectoryDataset(Dataset):
         return self.num_scene
 
     def __getitem__(self, idx):
-
-        out = (self.scene_list[idx][:, 0:self.obs_len, :],
-               self.scene_rel_list[idx][:, 0:self.obs_len, :],
-               self.scene_list[idx][:, self.obs_len:, :],
-               self.scene_rel_list[idx][:, self.obs_len:, :],
-               self.scene_timestamp_mask[idx][:, 0:self.obs_len],
+        aug_obs_len = (self.obs_len - 1) * (self.extra_sample + 1) + 1
+        out = (self.scene_list[idx][:, 0:aug_obs_len, :],
+               self.scene_rel_list[idx][:, 0:aug_obs_len, :],
+               self.scene_list[idx][:, aug_obs_len:, :],
+               self.scene_rel_list[idx][:, aug_obs_len:, :],
+               self.scene_timestamp_mask[idx][:, 0:aug_obs_len],
                self.scene_is_predictable_list[idx])
         # TODO(jiacheng): may need some preprocessing such as adding Gaussian noise, etc.
         return out

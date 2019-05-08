@@ -24,7 +24,6 @@ from learning_algorithms.utilities.train_utils import *
 from human_trajectory_dataset import *
 from social_interaction_model import *
 
-
 if __name__ == "__main__":
 
     # data parser:
@@ -36,18 +35,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=8, pred_len=12,\
-        skip=1, min_ped=0, delim='\t')
-    valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=8, pred_len=12,\
-        skip=1, min_ped=0, delim='\t')
+    train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=4, pred_len=7,\
+        skip=1, min_ped=0, delim='\t', extra_sample=3)
+    valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=4, pred_len=7,\
+        skip=1, min_ped=0, delim='\t', extra_sample=3)
 
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True,\
+    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
-    valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=True,\
+    valid_loader = DataLoader(valid_dataset, batch_size=4, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
 
     # Model and training setup
-    model = SocialAttention()
+    model = SocialAttention(pred_len=28)
     loss = ProbablisticTrajectoryLoss()
     print (model)
     learning_rate = 3e-4

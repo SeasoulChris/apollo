@@ -673,7 +673,6 @@ class ProbablisticTrajectoryLoss:
             return cuda(torch.tensor(0))
 
         eps = 1e-10
-
         z = ((x-mux)/(eps+sigma_x))**2 + ((y-muy)/(eps+sigma_y))**2 - \
             2*corr*(x-mux)*(y-muy)/(sigma_x*sigma_y+eps)
         P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
