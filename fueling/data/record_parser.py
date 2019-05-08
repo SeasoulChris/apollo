@@ -19,7 +19,7 @@ from modules.localization.proto.gps_pb2 import Gps
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 
-from fueling.common.coord_utils import CoortUtils
+from fueling.common.coord_utils import CoordUtils
 from fueling.planning.metrics.latency import LatencyMetrics
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
@@ -132,7 +132,7 @@ class RecordParser(object):
             pos = self._last_position
             if pos is not None:
                 try:
-                    lat, lon = CoortUtils.utm_to_latlon(pos.x, pos.y)
+                    lat, lon = CoordUtils.utm_to_latlon(pos.x, pos.y)
                     disengagement.location.lat = lat
                     disengagement.location.lon = lon
                 except Exception as e:
@@ -162,7 +162,7 @@ class RecordParser(object):
             (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
              pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
-                lat, lon = CoortUtils.utm_to_latlon(position.x, position.y)
+                lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
                 self._last_position_sampled = position
                 self._last_position_sampled_time = time_sec

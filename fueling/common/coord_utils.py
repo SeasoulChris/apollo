@@ -3,7 +3,7 @@
 import pyproj
 
 
-class CoortUtils(object):
+class CoordUtils(object):
     UTM_ZONE_ID = 10
     PROJECTOR = pyproj.Proj(proj='utm', zone=UTM_ZONE_ID, ellps='WGS84')
 
