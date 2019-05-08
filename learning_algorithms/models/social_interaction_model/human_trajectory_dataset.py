@@ -48,11 +48,13 @@ def read_file(_path, delim='\t'):
 
 class HumanTrajectoryDataset(Dataset):
     def __init__(self, data_dir, obs_len=8, pred_len=12, skip=1,
-                 min_ped=0, delim='\t'):
+                 min_ped=0, delim='\t', extra_sample=0):
         all_file_paths = os.listdir(data_dir)
         all_file_paths = [os.path.join(data_dir, _path) for _path in all_file_paths]
         seq_len = obs_len + pred_len
+        augmented_seq_len = (seq_len - 1) * (extra_sample + 1) + 1
         num_peds_in_scene = []
+        self.extra_sample = int(extra_sample)
         self.obs_len = obs_len
         self.pred_len = pred_len
         self.scene_list = []
@@ -84,11 +86,11 @@ class HumanTrajectoryDataset(Dataset):
                     frame_data[time_stamp_idx:time_stamp_idx+seq_len], axis=0)
                 peds_in_curr_scene_data = np.unique(curr_scene_data[:, 1])
                 curr_scene = np.zeros(
-                    (len(peds_in_curr_scene_data), seq_len, 2))
+                    (len(peds_in_curr_scene_data), augmented_seq_len, 2))
                 curr_scene_rel = np.zeros(
-                    (len(peds_in_curr_scene_data), seq_len, 2))
+                    (len(peds_in_curr_scene_data), augmented_seq_len, 2))
                 curr_scene_timestamp_mask = np.zeros(
-                    (len(peds_in_curr_scene_data), seq_len))
+                    (len(peds_in_curr_scene_data), augmented_seq_len))
                 curr_scene_is_predictable = np.zeros(
                     (len(peds_in_curr_scene_data), 1))
                 # Go through every obstacle in the current scene:
@@ -101,22 +103,33 @@ class HumanTrajectoryDataset(Dataset):
                     # If this obstacle doesn't have enough number of frames,
                     # mark it as non-predictable. Vice versa.
                     curr_ped_is_predictable = False
-                    if rel_time_end == seq_len and rel_time_begin == 0:
+                    if rel_time_end == seq_len and rel_time_begin < 5:
                         curr_ped_is_predictable = True
+
+                    # Augment the data, if needed.
+                    rel_time_begin = (self.extra_sample + 1) * rel_time_begin
+                    rel_time_end = (rel_time_end - 1) * (self.extra_sample + 1) + 1
+                    curr_ped = curr_ped[:, 2:]
+                    curr_ped_aug = np.zeros(((curr_ped.shape[0] - 1) * (self.extra_sample + 1) + 1, 2))
+                    for j in range(curr_ped.shape[0]-1):
+                        xy_diff = curr_ped[j+1, :] - curr_ped[j, :]
+                        for k in range(self.extra_sample+1):
+                            curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j, :] + xy_diff*k/(self.extra_sample+1)
+                    curr_ped_aug[curr_ped_aug.shape[0]-1, :] = curr_ped[curr_ped.shape[0]-1, :]
+                    curr_ped = curr_ped_aug
+
                     # Get the coordinates of positions and make them relative.
                     # (relative position contains 1 fewer data-point, because, for
                     #  example, if there are 12 time-stamps, there will only be
                     #  11 intervals -- 11 relative displacements. The zeroth one
                     #  is set to 0.0 by default)
-                    curr_ped = curr_ped[:, 2:]
                     curr_ped_rel = np.zeros(curr_ped.shape)
                     curr_ped_timestamp_mask = np.ones((1, rel_time_end - rel_time_begin))
                     curr_ped_rel[1:, :] = curr_ped[1:, :] - curr_ped[:-1, :]
                     # Update into curr_scene matrix.
                     curr_scene[i, rel_time_begin:rel_time_end, :] = curr_ped
                     curr_scene_rel[i, rel_time_begin:rel_time_end, :] = curr_ped_rel
-                    curr_scene_timestamp_mask[i, rel_time_begin:rel_time_end] = \
-                        curr_ped_timestamp_mask
+                    curr_scene_timestamp_mask[i, rel_time_begin:rel_time_end] = curr_ped_timestamp_mask
                     curr_scene_is_predictable[i] = curr_ped_is_predictable
                     num_peds_considered += 1
 
@@ -132,6 +145,7 @@ class HumanTrajectoryDataset(Dataset):
         return self.num_scene
 
     def __getitem__(self, idx):
+
         out = (self.scene_list[idx][:, 0:self.obs_len, :],
                self.scene_rel_list[idx][:, 0:self.obs_len, :],
                self.scene_list[idx][:, self.obs_len:, :],

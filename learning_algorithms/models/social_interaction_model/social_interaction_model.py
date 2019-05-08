@@ -69,7 +69,6 @@ class SimpleLSTM(nn.Module):
         return X
 
 
-
 class SocialLSTM(nn.Module):
     def __init__(self, pred_len=12, grid_size=2, area_span=2.0,
                  embed_size=64, hidden_size=128):
