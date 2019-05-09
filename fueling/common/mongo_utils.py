@@ -27,7 +27,7 @@ class Mongo(object):
     def __init__(self, flags_dict=None):
         if flags_dict is None:
             flags_dict = flags.FLAGS.flag_values_dict()
-        if flags_dict['running_mode'] == 'TEST':
+        if flags_dict.get('running_mode') == 'TEST':
             glog.error('MongoDB is not reachable in TEST mode.')
             return None
 

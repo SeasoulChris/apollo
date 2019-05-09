@@ -162,58 +162,59 @@
         </tr>
       </thead>
       <tbody>
-          <tr>
-            <td>Max</td>
-            <td>{{ record.planning_stat.latency.max }}</td>
-          </tr>
-          <tr>
-            <td>Min</td>
-            <td>{{ record.planning_stat.latency.min }}</td>
-          </tr>
-          <tr>
-            <td>Avg</td>
-            <td>{{ record.planning_stat.latency.avg }}</td>
-          </tr>
-          <tr>
-            <td>Latency 0-10 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_0_10_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 20-40 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_20_40_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 40-60 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_40_60_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 60-80 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_60_80_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 80-100 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_80_100_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 100-120 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_100_120_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 120-150 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_120_150_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 150-200 ms</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_150_200_ms"] }}</td>
-          </tr>
-          <tr>
-            <td>Latency 200 ms and up</td>
-            <td>{{ record.planning_stat.latency.latency_hist["latency_200_up_ms"] }}</td>
-          </tr>
+        <tr>
+          <td>Max</td>
+          <td>{{ record.planning_stat.latency.max }}</td>
+        </tr>
+        <tr>
+          <td>Min</td>
+          <td>{{ record.planning_stat.latency.min }}</td>
+        </tr>
+        <tr>
+          <td>Avg</td>
+          <td>{{ record.planning_stat.latency.avg }}</td>
+        </tr>
+        <tr>
+          <td>Latency 0-10 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_0_10_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 20-40 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_20_40_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 40-60 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_40_60_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 60-80 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_60_80_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 80-100 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_80_100_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 100-120 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_100_120_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 120-150 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_120_150_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 150-200 ms</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_150_200_ms"] }}</td>
+        </tr>
+        <tr>
+          <td>Latency 200 ms and up</td>
+          <td>{{ record.planning_stat.latency.latency_hist["latency_200_up_ms"] }}</td>
+        </tr>
       </tbody>
     </table>
   </div>
 </div>
+{% endif %}
 
 <div class="panel panel-default">
   <div class="panel-heading">Channels</div>
