@@ -73,6 +73,7 @@ class MergeLabels(BasePipeline):
             merge_dicts(src_dir, dict_name='future_status')
             merge_dicts(src_dir, dict_name='junction_label')
             merge_dicts(src_dir, dict_name='cruise_label')
+            merge_dicts(src_dir, dict_name='visited_lane_segment')
             glog.info('Successfuly processed {}'.format(src_dir))
             return 1
         except:

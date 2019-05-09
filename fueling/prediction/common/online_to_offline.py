@@ -52,7 +52,7 @@ class LabelGenerator(object):
         self.future_status_dict = dict()
         self.cruise_label_dict = dict()
         self.junction_label_dict = dict()
-
+        self.visited_lane_segment_dict = dict()
 
     def LoadFeaturePBAndSaveLabelFiles(self, input_filepath):
         '''
@@ -146,6 +146,7 @@ class LabelGenerator(object):
         feature_seq_len = len(feature_sequence)
         prev_timestamp = -1.0
         obs_actual_lane_ids = []
+        obs_visited_lane_seg = []
         obs_traj = []
         total_observed_time_span = 0.0
 
@@ -168,6 +169,15 @@ class LabelGenerator(object):
                              feature_sequence[j].length,
                              feature_sequence[j].width,
                              feature_sequence[j].timestamp))
+
+            #####################################################################
+            # Update the visited lane segment info:
+            if feature_sequence[j].HasField('lane') and \
+               feature_sequence[j].lane.HasField('lane_feature'):
+                # (relative_timestamp, visited_lane_segment_id)
+                obs_visited_lane_seg.append((
+                    feature_sequence[j].timestamp - feature_sequence[idx_curr].timestamp,
+                    feature_sequence[j].lane.lane_feature.lane_id))
 
             #####################################################################
             # Update the lane-change info (mainly for cruise scenario):
@@ -215,6 +225,7 @@ class LabelGenerator(object):
         dict_val = dict()
         dict_val['obs_traj'] = obs_traj
         dict_val['obs_traj_len'] = len(obs_traj)
+        dict_val['obs_visited_lane_seg'] = obs_visited_lane_seg
         dict_val['obs_actual_lane_ids'] = obs_actual_lane_ids
         dict_val['has_started_lane_change'] = has_started_lane_change
         dict_val['has_finished_lane_change'] = has_finished_lane_change
@@ -352,7 +363,6 @@ class LabelGenerator(object):
                 self.cruise_label_dict["{}@{:.3f}".format(feature.id, feature.timestamp)] = lane_sequence_dict
         np.save(self.filepath + '.cruise_label.npy', self.cruise_label_dict)
 
-
     def LabelTrajectory(self, period_of_interest=3.0):
         output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
@@ -361,19 +371,24 @@ class LabelGenerator(object):
                 if "{}@{:.3f}".format(feature.id, feature.timestamp) not in self.observation_dict:
                     continue
                 observed_val = self.observation_dict["{}@{:.3f}".format(feature.id, feature.timestamp)]
-                self.future_status_dict["{}@{:.3f}".format(feature.id, feature.timestamp)] = observed_val['obs_traj']
+                key = "{}@{:.3f}".format(feature.id, feature.timestamp)
+                self.future_status_dict[key] = observed_val['obs_traj']
         np.save(self.filepath + '.future_status.npy', self.future_status_dict)
-        #         for point in observed_val['obs_traj']:
-        #             traj_point = feature.future_trajectory_points.add()
-        #             traj_point.path_point.x = point[0]
-        #             traj_point.path_point.y = point[1]
-        #             traj_point.path_point.velocity_heading = point[2]
-        #             traj_point.timestamp = point[3]
 
+    def LabelVisitedLaneSegment(self):
+        output_features = offline_features_pb2.Features()
+        for obs_id, feature_sequence in self.feature_dict.items():
+            for idx, feature in enumerate(feature_sequence):
+                # Observe the subsequent Features
+                if "{}@{:.3f}".format(feature.id, feature.timestamp) not in self.observation_dict:
+                    continue
+                observed_val = self.observation_dict["{}@{:.3f}".format(feature.id, feature.timestamp)]
+                key = "{}@{:.3f}".format(feature.id, feature.timestamp)
+                self.visited_lane_segment_dict[key] = observed_val['obs_visited_lane_seg']
+        np.save(self.filepath + '.visited_lane_segment.npy', self.visited_lane_segment_dict)
 
     def LabelJunctionExit(self):
-        '''
-        label feature trajectory according to real future lane sequence in 7s
+        '''Label feature trajectory according to real future lane sequence in 7s
         '''
         output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
@@ -440,6 +455,7 @@ class LabelGenerator(object):
 
     def Label(self):
         self.LabelTrajectory()
+        self.LabelVisitedLaneSegment()
         self.LabelSingleLane()
         self.LabelJunctionExit()
         # TODO(all):
