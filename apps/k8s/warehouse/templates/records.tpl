@@ -45,7 +45,8 @@
             <td>{{ ((record.header.end_time - record.header.begin_time) / 1000000000.0) | round(1) }} s</td>
             <td>{{ record.header.size | readable_data_size }}</td>
             <td>{{ (record.disengagements | length) + (record.drive_events | length) }}</td>
-            <td>{{ record.stat.mileages['COMPLETE_AUTO_DRIVE'] | int }} / {{ record.stat.mileages.values() | sum | int }} m</td>
+            <td>{{ record.stat.mileages['COMPLETE_AUTO_DRIVE'] | meter_to_miles }} /
+                {{ record.stat.mileages.values() | sum | meter_to_miles }} miles</td>
             <td><a target="_blank"
               {% if is_tasks %}
                 href="{{ url_for('task_hdl', task_path=record.path[1:]) }}"

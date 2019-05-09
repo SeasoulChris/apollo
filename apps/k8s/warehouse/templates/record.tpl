@@ -36,7 +36,8 @@
           <td>{{ record.header.begin_time | timestamp_ns_to_time }}</td>
           <td>{{ ((record.header.end_time - record.header.begin_time) / 1000000000.0) | round(1) }} s</td>
           <td>{{ record.header.size | readable_data_size }}</td>
-          <td>{{ record.stat.mileages['COMPLETE_AUTO_DRIVE'] | int }} / {{ record.stat.mileages.values() | sum | int }} m</td>
+          <td>{{ record.stat.mileages['COMPLETE_AUTO_DRIVE'] | meter_to_miles }} /
+              {{ record.stat.mileages.values() | sum | meter_to_miles }} miles</td>
         </tr>
       </tbody>
     </table>

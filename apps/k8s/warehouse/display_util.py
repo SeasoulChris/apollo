@@ -77,6 +77,11 @@ def readable_data_size(num):
     return "%.2f %s" % (num, 'YB')
 
 
+def meter_to_miles(meters):
+    """Convert meter to miles."""
+    return "%.2f" % (meters / 1609.344)
+
+
 def drive_event_type_name(event_type):
     """Convert DriveEvent type to name."""
     return DriveEvent.Type.Name(event_type)
@@ -90,4 +95,5 @@ utils = {
     'timestamp_to_time': timestamp_to_time,
     'timestamp_ns_to_time': timestamp_ns_to_time,
     'drive_event_type_name': drive_event_type_name,
+    'meter_to_miles': meter_to_miles,
 }
