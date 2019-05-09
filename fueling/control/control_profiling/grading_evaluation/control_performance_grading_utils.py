@@ -436,11 +436,14 @@ def output_gradings(target_grading):
     with open(grading_output_path, 'w') as grading_file:
         grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} \n'
                            .format('Grading Items', 'Grading Values', 'Sampling Size'))
-        for name, value in grading._asdict().iteritems():
-            if not value:
-                glog.warn('grading value for {} is None'.format(name))
-                continue
-            grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
-                               .format(name, value[0], value[1]))
-        grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
-        grading_file.write('{}\n\n'.format(profiling_conf))
+        if not grading:
+            glog.warn('No grading results written to {}'.format(grading_output_path))
+        else:
+            for name, value in grading._asdict().iteritems():
+                if not value:
+                    glog.warn('grading value for {} is None'.format(name))
+                    continue
+                grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
+                                   .format(name, value[0], value[1]))
+            grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
+            grading_file.write('{}\n\n'.format(profiling_conf))
