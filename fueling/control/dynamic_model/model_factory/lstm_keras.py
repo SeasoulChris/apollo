@@ -36,8 +36,9 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = feature_config["input_dim"]
-DIM_OUTPUT = feature_config["output_dim"]
+IS_HOLISTIC = feature_config["is_holistic"]
+DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
+DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 DIM_LSTM_LENGTH = feature_config["sequence_length"]
 EPOCHS = lstm_model_config["epochs"]
 

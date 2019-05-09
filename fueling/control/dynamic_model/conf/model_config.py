@@ -33,14 +33,36 @@ input_index = {
     "steering": 4  # chassis.steering_percentage/100.
 }
 
+# holistic dynamic model by taking lateral speed and acceleration in account
+holistic_input_index = {
+    "lon_speed": 0,  # v_x * cos(heading) + v_y * sin(heading), longitudinal speed in RFU
+    "lat_speed": 1,  # v_x * sin(heading) - v_y * cos(heading), lateral speed in RFU
+    "lon_acceleration": 2,  # a_x * cos(heading) + a_y * sin(heading), longitudinal acceleration in RFU
+    "lat_acceleration": 3,  # a_x * sin(heading) - a_y * cos(heading), lateral acceleration in RFU
+    "w_z": 4,  # a_x * sin(heading) - a_y * cos(heading), lateral acceleration in RFU
+    "throttle": 5,  # chassis.throttle_percentage/100.0
+    "brake": 6,  # chassis.brake_percentage/100.0
+    "steering": 7  # chassis.steering_percentage/100.
+}
+
 output_index = {
     "acceleration": 0,  # a_x * cos(heading) + a_y * sin(heading)
     "w_z": 1  # pose.angular_velocity.z
 }
 
+# holistic dynamic model by taking lateral speed and acceleration in account
+holistic_output_index = {
+    "lon_acceleration": 0,  # a_x * cos(heading) + a_y * sin(heading), longitudinal acceleration in RFU
+    "lat_acceleration": 1,  # a_x * sin(heading) - a_y * cos(heading), lateral acceleration in RFU
+    "w_z": 2  # pose.angular_velocity.z
+}
+
 feature_config = {
+    "is_holistic": 1, # is the current dynamic model is holistic
     "input_dim": 5, # input feature dimension
+    "holistic_input_dim": 8, # holistic input feature dimension
     "output_dim": 2, # output feature dimension
+    "holistic_output_dim": 3, # holistic output feature dimension
     "maximum_segment_length": 20000, # maximum segment length
     "sequence_length": 20, # consider historical sequences for RNN models
     "delta_t": 0.01, # update delta t for dynamic models
@@ -60,7 +82,7 @@ lstm_model_config = {
 }
 
 mlp_model_config = {
-    "fnn_layers": 2, # depth of the feed-forward neural nets
+    "fnn_layers": 3, # depth of the feed-forward neural nets
     "epochs": 30 # training epochs
 }
 

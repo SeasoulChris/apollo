@@ -42,8 +42,9 @@ else:
         os.environ["THEANORC"] = os.path.join(os.getcwd(), "theanorc/cpu_config")
 
 # Constants
-DIM_INPUT = feature_config["input_dim"]
-DIM_OUTPUT = feature_config["output_dim"]
+IS_HOLISTIC = feature_config["is_holistic"]
+DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
+DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 EPOCHS = mlp_model_config["epochs"]
 
 
@@ -53,11 +54,12 @@ def setup_model(model_name):
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
     """
     model = Sequential()
-    model.add(Dense(10, input_dim=5, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
+    model.add(Dense(10, input_dim=DIM_INPUT, init='he_normal',
+                    activation='relu', W_regularizer=l2(0.001)))
     if model_name == 'mlp_three_layer':
-        model.add(Dense(4, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
+        model.add(Dense(6, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
         glog.info('Load Three-layer MLP Model')
-    model.add(Dense(2, init='he_normal', W_regularizer=l2(0.001)))
+    model.add(Dense(DIM_OUTPUT, init='he_normal', W_regularizer=l2(0.001)))
     model.compile(loss='mse', optimizer='adam', metrics=['mse'])
     return model
 
@@ -78,7 +80,6 @@ def save_model(model, param_norm, filename):
         net_params.num_layer += 1
         net_layer = net_params.layer.add()
         config = layer.get_config()
-        print config
         if net_params.num_layer == 1:
             net_layer.layer_input_dim = config['batch_input_shape'][1]
             net_layer.layer_output_dim = config['units']
@@ -106,7 +107,7 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
+def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_three_layer'):
     glog.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std
@@ -118,7 +119,8 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model(model_name)
-    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS, batch_size=32, verbose=2)
+    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS,
+                                 batch_size=32, verbose=2)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
