@@ -24,8 +24,6 @@ flags.DEFINE_integer('workers', 5, 'Web host workers.')
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 flags.DEFINE_integer('page_size', 20, 'Search results per page.')
 
-flags.DEFINE_string('mongo_collection_name', 'records', 'MongoDB collection name.')
-
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
@@ -35,18 +33,18 @@ app.jinja_env.filters.update(display_util.utils)
 @app.route('/tasks/<prefix>/<int:page_idx>')
 def tasks_hdl(prefix='small-records', page_idx=1):
     """Handler of the task list page."""
-    G = flags.FLAGS
-    mongo_col = Mongo.collection(G.mongo_collection_name)
+    mongo_col = Mongo().record_collection()
     query = {'dir': {'$regex': '^/mnt/bos/' + prefix}}
     task_dirs = {doc['dir'] for doc in mongo_col.find(query, {'dir': 1})}
-    page_count = (len(task_dirs) + G.page_size - 1) // G.page_size
+    page_size = flags.FLAGS.page_size
+    page_count = (len(task_dirs) + page_size - 1) // page_size
     if page_idx > page_count:
         flask.flash('Page index out of bound')
         return flask.render_template('base.tpl')
 
-    offset = G.page_size * (page_idx - 1)
+    offset = page_size * (page_idx - 1)
     task_dirs = sorted(list(task_dirs), reverse=True)
-    query = {'dir': {'$in': task_dirs[offset : offset + G.page_size]}}
+    query = {'dir': {'$in': task_dirs[offset : offset + page_size]}}
     kFields = {
         'dir': 1,
         'header.begin_time': 1,
@@ -71,8 +69,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
 @app.route('/task/<path:task_path>')
 def task_hdl(task_path):
     """Handler of the task detail page."""
-    mongo_col = Mongo.collection(flags.FLAGS.mongo_collection_name)
-    docs = mongo_col.find({'dir': os.path.join('/', task_path)})
+    docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
     records = [Mongo.doc_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
     return flask.render_template('record.tpl', record=task, sub_records=records)
@@ -96,7 +93,7 @@ def records_hdl(page_idx=1):
     }
     kSort = [('header.begin_time', pymongo.DESCENDING)]
 
-    docs = Mongo.collection(G.mongo_collection_name).find({}, kFields)
+    docs = Mongo().record_collection().find({}, kFields)
     page_count = (docs.count() + G.page_size - 1) // G.page_size
     offset = G.page_size * (page_idx - 1)
     records = [Mongo.doc_to_pb(doc, RecordMeta())
@@ -108,8 +105,7 @@ def records_hdl(page_idx=1):
 @app.route('/record/<path:record_path>')
 def record_hdl(record_path):
     """Handler of the record detail page."""
-    mongo_col = Mongo.collection(flags.FLAGS.mongo_collection_name)
-    doc = mongo_col.find_one({'path': os.path.join('/', record_path)})
+    doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
     record = Mongo.doc_to_pb(doc, RecordMeta())
     return flask.render_template('record.tpl', record=record)
 
