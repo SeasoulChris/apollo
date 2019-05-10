@@ -8,7 +8,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.record_utils as record_utils
 
-SKIP_EXISTING_DST_FILE = True
+SKIP_EXISTING_DST_FILE = False
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
