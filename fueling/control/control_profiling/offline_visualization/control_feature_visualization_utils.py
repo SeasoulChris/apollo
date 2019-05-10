@@ -60,11 +60,52 @@ def plot_h5_features_hist(data_rdd):
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
             if i < data.shape[1]:
-                plt.figure(figsize=(4, 3))
-                plt.hist(data[:, i], bins='auto')
-                plt.xlabel(FEATURE_NAMES[i])
-                plt.ylabel('Sample Count')
-                plt.title("Histogram of the " + FEATURE_NAMES[i])
-                plt.tight_layout()
-                pdf.savefig()
-                plt.close()
+                glog.info('Processing the plots at Column: {}, Feature: {}'
+                          .format(i, FEATURE_NAMES[i]))
+                length = data.shape[0]
+                seq = np.argsort(data[:, i])
+                scope = data[seq[length-1], i] - data[seq[0], i]
+                scope_90 = data[seq[int(length*0.95)], i] - data[seq[int(length*0.05)], i]
+                glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
+                          .format(scope, scope_90))
+                if scope <= 2*scope_90:
+                    plt.figure(figsize=(4, 3))
+                    plt.hist(data[:, i], bins='auto')
+                    plt.xlabel(FEATURE_NAMES[i])
+                    plt.ylabel('Sample length')
+                    plt.title("Histogram of " + FEATURE_NAMES[i])
+                    xmin, xmax, ymin, ymax = plt.axis()
+                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                             .format(data[seq[length-1], i], data[seq[0], i]),
+                             color='red', fontsize=8)
+                    plt.tight_layout()
+                    pdf.savefig()
+                    plt.close()
+                else:
+                    plt.figure(figsize=(4, 3))
+                    plt.hist(data[seq[int(length*0.05):int(length*0.95)], i], bins='auto')
+                    plt.xlabel(FEATURE_NAMES[i])
+                    plt.ylabel('Sample length')
+                    plt.title("Histogram of " + FEATURE_NAMES[i] + " (90% Data)")
+                    xmin, xmax, ymin, ymax = plt.axis()
+                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                             .format(data[seq[int(length*0.95)], i], data[seq[int(length*0.05)], i]),
+                             color='red', fontsize=8)
+                    plt.tight_layout()
+                    pdf.savefig()
+                    plt.close()
+                    plt.figure(figsize=(4, 3))
+                    plt.plot(data[:, i])
+                    plt.ylabel(FEATURE_NAMES[i])
+                    plt.xlabel('Sample Number')
+                    plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
+                    xmin, xmax, ymin, ymax = plt.axis()
+                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                             .format(data[seq[length-1], i], data[seq[0], i]),
+                             color='red', fontsize=8)
+                    plt.tight_layout()
+                    pdf.savefig()
+                    plt.close()
