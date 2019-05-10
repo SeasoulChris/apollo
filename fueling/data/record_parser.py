@@ -52,11 +52,11 @@ class RecordParser(object):
             if guessed_map:
                 record.hmi_status.current_map = guessed_map
         # planning metrics
-        record.planning_stat.latency.max = parser._planning_latency_analyzer.get_max()
-        record.planning_stat.latency.min = parser._planning_latency_analyzer.get_min()
-        record.planning_stat.latency.avg = parser._planning_latency_analyzer.get_avg()
+        record.stat.planning_stat.latency.max = parser._planning_latency_analyzer.get_max()
+        record.stat.planning_stat.latency.min = parser._planning_latency_analyzer.get_min()
+        record.stat.planning_stat.latency.avg = parser._planning_latency_analyzer.get_avg()
         for bucket, cnt in parser._planning_latency_analyzer.get_hist().items():
-            record.planning_stat.latency.latency_hist[bucket] = cnt
+            record.stat.planning_stat.latency.latency_hist[bucket] = cnt
 
         return record
 

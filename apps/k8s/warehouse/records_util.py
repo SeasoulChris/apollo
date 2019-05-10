@@ -35,14 +35,14 @@ def CombineRecords(records):
             mileages[driving_mode] = (mileages.get(driving_mode) or 0) + miles
         virtual_record.stat.driving_path.extend(record.stat.driving_path)
 
-    virtual_record.planning_stat.CopyFrom(CombinePlanningMetrics(records))
+    virtual_record.stat.planning_stat.CopyFrom(CombinePlanningMetrics(records))
 
     return virtual_record
 
 
 def CombinePlanningMetrics(records):
     planning_stat = PlanningStat()
-    if len(records) == 0:
+    if not records:
         return planning_stat
 
     planning_stat.latency.max = 0
@@ -54,20 +54,20 @@ def CombinePlanningMetrics(records):
     total_weight = 0
 
     for record in records:
-        planning_stat.latency.max = \
-            max(planning_stat.latency.max, record.planning_stat.latency.max)
-        planning_stat.latency.min = \
-            min(planning_stat.latency.min, record.planning_stat.latency.min)
+        planning_stat.latency.max = max(planning_stat.latency.max,
+                                        record.stat.planning_stat.latency.max)
+        planning_stat.latency.min = min(planning_stat.latency.min,
+                                        record.stat.planning_stat.latency.min)
 
         weight = 0
-        for hist_bin in record.planning_stat.latency.latency_hist:
+        for hist_bin in record.stat.planning_stat.latency.latency_hist:
             if hist_bin in latency_hist:
-                latency_hist[hist_bin] += record.planning_stat.latency.latency_hist[hist_bin]
+                latency_hist[hist_bin] += record.stat.planning_stat.latency.latency_hist[hist_bin]
             else:
-                latency_hist[hist_bin] = record.planning_stat.latency.latency_hist[hist_bin]
-            weight += record.planning_stat.latency.latency_hist[hist_bin]
-            total_weight += record.planning_stat.latency.latency_hist[hist_bin]
-        weighted_avg.append(record.planning_stat.latency.avg * weight)
+                latency_hist[hist_bin] = record.stat.planning_stat.latency.latency_hist[hist_bin]
+            weight += record.stat.planning_stat.latency.latency_hist[hist_bin]
+            total_weight += record.stat.planning_stat.latency.latency_hist[hist_bin]
+        weighted_avg.append(record.stat.planning_stat.latency.avg * weight)
 
     avg_list = [i / float(total_weight) for i in weighted_avg]
     planning_stat.latency.avg = int(sum(avg_list))
