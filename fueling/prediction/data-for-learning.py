@@ -52,6 +52,9 @@ class DataForLearning(BasePipeline):
                                    os.path.join(target_prefix, dir_map[1] + '/'), 1),
                 dir_map[1]))
             .cache())
+        if result.isEmpty():
+            glog.info("Nothing to be processed, everything is under control!")
+            return
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
