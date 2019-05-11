@@ -3,6 +3,7 @@
 import glob
 import os
 
+import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -124,6 +125,15 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = 'modules/control/data/records'
         target_prefix = 'modules/control/data/results'
         origin_dir = bos_client.abs_path(origin_prefix)
+
+        """ vehicles """
+        vehicles = spark_helper.cache_and_log(
+            'conf_file',
+            # RDD(input_dir)
+            self.to_rdd([origin_dir])
+            # RDD(vehicle)
+            .flatMap(multi_vehicle_utils.get_vehicle))
+        glog.info("vehicles: %s", vehicles.collect())
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(

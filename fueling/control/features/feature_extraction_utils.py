@@ -56,8 +56,12 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
     Extract HMIStatus.current_vehicle from each dir.
     Convert RDD(dir, record) to RDD(dir, vehicle).
     """
+    glog.info('records: ', dir_to_records_rdd)
+
     def _get_vehicle_from_records(records):
         reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
+        glog.info('records: ', records)
+
         for record in records:
             glog.info('Try getting vehicle name from {}'.format(record))
             for msg in reader(record):
@@ -210,21 +214,63 @@ def gen_reverse_throttle_key(throttle):
         return 2
 
 
-def gen_gear_key(gear):
-    if gear < 0:  # backward driving
-        return 1
-    else:  # forward driving
-        return 2
-
-
 def gen_feature_key(elem):
+    """ generate label for both forward driving"""
+    speed = elem[1][14]
+    throttle = elem[1][15] * 100  # 0 or positive
+    brake = elem[1][16] * 100  # 0 or positive
+    steering = elem[1][17] * 100
+    gear = elem[1][22]
+    gear_key = int(gear)
+
+    # forward driving:
+    if gear_key == 2:  # check if it backward driving
+        elem_key = int(10000)
+    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+        elem_key = int(9000)
+    else:
+        steering_key = int(gen_steering_key(steering))
+        brake_key = int(gen_brake_key(brake))
+        speed_key = int(gen_speed_key(speed))
+        throttle_key = int(gen_throttle_key(throttle))
+        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
+    # ((folder_path, feature_key), (time_stamp, paired_data))
+    return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
+
+
+def gen_feature_key_backwards(elem):
+    """ generate label for backward driving"""
+    speed = elem[1][14]
+    throttle = elem[1][15] * 100  # 0 or positive
+    brake = elem[1][16] * 100  # 0 or positive
+    steering = elem[1][17] * 100
+    gear = elem[1][22]
+    gear_key = int(gear)
+    # glog.info('gear: %d' % gear)
+
+    if gear_key == 1:  # check if it fardward driving
+        elem_key = int(10000)
+    elif speed < -1 * VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+        elem_key = int(9000)
+    else:
+        steering_key = int(gen_steering_key(steering))
+        brake_key = int(gen_brake_key(brake))
+        speed_key = 0
+        throttle_key = int(gen_reverse_throttle_key(throttle))
+        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
+    # glog.info('elem_key: %d' % elem_key)
+    # ((folder_path, feature_key), (time_stamp, paired_data))
+    return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
+
+
+def gen_feature_key_all(elem):
     """ generate label for both forward and backward driving"""
     speed = elem[1][14]
     throttle = elem[1][15] * 100  # 0 or positive
     brake = elem[1][16] * 100  # 0 or positive
     steering = elem[1][17] * 100
     gear = elem[1][22]
-    gear_key = int(gen_gear_key(gear))
+    gear_key = int(gear)
 
     if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
@@ -238,8 +284,8 @@ def gen_feature_key(elem):
             speed_key = int(gen_speed_key(speed))
             throttle_key = int(gen_throttle_key(throttle))
         # gear-speed-steering-throttle-brake
-        elem_key = int(gear_key * 10000 + speed_key * 1000 + steering_key * 100 + throttle_key * 10 +
-                       brake_key)
+        elem_key = int(gear_key * 10000 + speed_key * 1000 + steering_key * 100 + throttle_key * 10
+                       + brake_key)
 
     # ((folder_path, feature_key), (time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
