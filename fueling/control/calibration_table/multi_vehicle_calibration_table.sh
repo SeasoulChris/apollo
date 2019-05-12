@@ -11,13 +11,13 @@ set -x
 # Feature extraction.
 JOB="fueling/control/calibration_table/multi-vehicle-feature-extraction.py"
 ENV="fuel-py27-cyber"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 16 --cpu 2 --memory 20g ${JOB}
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 9 --cpu 2 --memory 20g ${JOB}
 
 
 # Training.
 JOB="fueling/control/calibration_table/multi-vehicle-calibration-table-training.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 10 --cpu 20 --memory 200g ${JOB}
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 10 --memory 100g ${JOB}
 
 
 # Result visualization
@@ -29,4 +29,4 @@ ENV="fuel-py27"
 # Data distribution visualization
 JOB="fueling/control/calibration_table/multi-vehicle-data-visualization.py"
 ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 10 --memory 100g ${JOB}
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 20g ${JOB}
