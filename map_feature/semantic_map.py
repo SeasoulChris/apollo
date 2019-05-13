@@ -14,39 +14,43 @@
 # limitations under the License.
 ###############################################################################
 
-import numpy as np
 import cv2 as cv
+import numpy as np
+import os
+
+import common.proto_utils as proto_utils
 from modules.map.proto import map_pb2
+from modules.prediction.proto import semantic_map_config_pb2
 
 
-class Mapping(object):
-    """class of Mapping to get a feature map"""
+class SemanticMap(object):
+    """class to get a semantic map"""
     def __init__(self, region):
-        """contruct function to init Mapping object"""
+        """contruct function to init SemanticMap object"""
         self.region = region
-        if (self.region == "san_mateo"):
-            self.GRID = [10000, 12000]
-            self.base_point = np.array([559000, 4156860])
-            self.resolution = 0.1
-        if (self.region == "sunnyvale_with_two_offices"):
-            self.GRID = [26000, 18000]
-            self.base_point = np.array([585950, 4140000])
-            self.resolution = 0.1
+        self.config = semantic_map_config_pb2.SemanticMapConfig()
+        self.resolution = 0.1
+        self.observation_range = 100.0
+        self._read_hdmap()
+
+        # get base_point
+        p_min, p_max = self._get_map_base_point()
+        p_min -= self.observation_range * 1.1
+        p_max += self.observation_range * 1.1
+        self.base_point = p_min
+        self.GRID = ((p_max - p_min) / self.resolution).astype(int)
 
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
-        self._read_hdmap()
         self._draw_base_map()
+        self._output_semantic_map("./apollo-map/" + self.region + "/")
 
-            
+
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
         self.hd_map = map_pb2.Map()
         map_path = "/apollo/modules/map/data/" + self.region + "/base_map.bin"
         print("Loading map from file: " + map_path)
-        with open(map_path, 'rb') as file_in:
-            self.hd_map.ParseFromString(file_in.read())
-        # p_min, p_max = self._get_map_base_point()
-        # print(p_min, p_max)
+        proto_utils.get_pb_from_file(map_path, self.hd_map)
 
     def _draw_base_map(self):
         self._draw_road()
@@ -55,6 +59,16 @@ class Mapping(object):
         self._draw_lane_boundary()
         self._draw_lane_central()
 
+    def _output_semantic_map(self, output_dir = "./"):
+        os.makedirs(output_dir)
+        cv.imwrite(output_dir + "semantic_map.png", self.base_map)
+        self.config.base_point.x = self.base_point[0]
+        self.config.base_point.y = self.base_point[1]
+        self.config.dim_x = self.GRID[0]
+        self.config.dim_y = self.GRID[1]
+        self.config.resolution = self.resolution
+        self.config.observation_range = self.observation_range
+        proto_utils.write_pb_to_text_file(self.config, output_dir + "semantic_map_config.pb.txt")
 
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
@@ -175,6 +189,4 @@ class Mapping(object):
                     cv.line(self.base_map, tuple(p0), tuple(p1), color=self._hsv_to_rgb(theta), thickness = 4)
 
 if __name__ == '__main__':
-    mapping = Mapping("san_mateo")
-    # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(mapping.region + ".png", mapping.base_map)
+    semantic_map = SemanticMap("san_mateo")
