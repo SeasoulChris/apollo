@@ -35,18 +35,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=4, pred_len=7,\
+    train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=6, pred_len=10,\
         skip=1, min_ped=0, delim='\t', extra_sample=3)
-    valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=4, pred_len=7,\
+    valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=6, pred_len=10,\
         skip=1, min_ped=0, delim='\t', extra_sample=3)
 
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True,\
+    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
-    valid_loader = DataLoader(valid_dataset, batch_size=4, shuffle=True,\
+    valid_loader = DataLoader(valid_dataset, batch_size=128, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
 
     # Model and training setup
-    model = SocialAttention(pred_len=28)
+    model = SimpleLSTM(pred_len=40)
     loss = ProbablisticTrajectoryLoss()
     print (model)
     learning_rate = 3e-4
@@ -63,4 +63,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=100, save_name='./', print_period=1)
+                           scheduler, epochs=100, save_name='./temp_trained_models', print_period=1)

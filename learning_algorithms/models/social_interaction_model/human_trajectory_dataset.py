@@ -107,6 +107,7 @@ class HumanTrajectoryDataset(Dataset):
                         curr_ped_is_predictable = True
 
                     # Augment the data, if needed.
+                    # 1. "Upsample" the human trajectory data.
                     rel_time_begin = (self.extra_sample + 1) * rel_time_begin
                     rel_time_end = (rel_time_end - 1) * (self.extra_sample + 1) + 1
                     curr_ped = curr_ped[:, 2:]
@@ -117,6 +118,7 @@ class HumanTrajectoryDataset(Dataset):
                             curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j, :] + xy_diff*k/(self.extra_sample+1)
                     curr_ped_aug[curr_ped_aug.shape[0]-1, :] = curr_ped[curr_ped.shape[0]-1, :]
                     curr_ped = curr_ped_aug
+
 
                     # Get the coordinates of positions and make them relative.
                     # (relative position contains 1 fewer data-point, because, for

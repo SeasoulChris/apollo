@@ -50,13 +50,9 @@ class SimpleLSTM(nn.Module):
     def __init__(self, pred_len=12, embed_size=64, hidden_size=128):
         super(SimpleLSTM, self).__init__()
         self.pred_len = pred_len
-        self.pos_embedding = torch.nn.Sequential(
-            nn.Linear(2, embed_size),
-            nn.ReLU(),
-        )
-        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True)
-        h0 = torch.zeros(1, 1, hidden_size)
-        c0 = torch.zeros(1, 1, hidden_size)
+        self.simple_rnn = TemporalEdgeRNN(embed_size, hidden_size)
+        h0 = torch.zeros(1, hidden_size)
+        c0 = torch.zeros(1, hidden_size)
         nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
@@ -66,7 +62,34 @@ class SimpleLSTM(nn.Module):
         )
 
     def forward(self, X):
-        return X
+        past_traj, past_traj_rel, past_traj_timestamp_mask, is_predictable, same_scene_mask = X
+        N = past_traj.size(0)
+        observation_len = past_traj.size(1)
+        ht = self.h0.repeat(N, 1)
+        ct = self.c0.repeat(N, 1)
+
+        pred_mask = past_traj_timestamp_mask[:, -1].view(N, 1)
+        pred_out = cuda(torch.zeros(N, self.pred_len, 5))
+        pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
+        this_timestamp_mask, this_traj, this_traj_rel = None, None, None
+        for t in range(observation_len + self.pred_len):
+            if t < observation_len:
+                # Processing observed data.
+                this_timestamp_mask = past_traj_timestamp_mask[:, t].view(N, 1)
+                this_traj_rel = past_traj_rel[:, t, :].float()
+                this_traj = past_traj[:, t, :].float()
+            else:
+                # Making predictions.
+                this_timestamp_mask = pred_mask
+                pred_out[:, t-observation_len, :] = self.pred_layer(ht).float()
+                this_traj_rel = pred_out[:, t-observation_len, :2]
+                this_traj = this_traj + this_traj_rel
+                pred_traj[:, t-observation_len, :] = this_traj
+
+            ht, ct = self.simple_rnn(ht, ct, this_traj_rel, this_timestamp_mask)
+
+        return pred_out[is_predictable[:, 0] == 1, :, :], \
+               pred_traj[is_predictable[:, 0] == 1, :, :]
 
 
 class SocialLSTM(nn.Module):
@@ -673,6 +696,7 @@ class ProbablisticTrajectoryLoss:
             return cuda(torch.tensor(0))
 
         eps = 1e-10
+
         z = ((x-mux)/(eps+sigma_x))**2 + ((y-muy)/(eps+sigma_y))**2 - \
             2*corr*(x-mux)*(y-muy)/(sigma_x*sigma_y+eps)
         P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
