@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Current cluster resources (Show usage with "kubectl top nodes"):
-#   CPU Cores: 64
-#   Memory: 500GB
-#   Ephemeral Storage: 2TB
+#   CPU Cores: 128
+#   Memory: 1TB
+#   Ephemeral Storage: 20TB
 
 # Default value for configurable arguments.
 JOB_FILE=""
@@ -12,6 +12,7 @@ CONDA_ENV="fuel-py27-cyber"
 EXECUTORS=8
 EXECUTOR_CORES=2
 EXECUTOR_MEMORY=24g
+EXECUTOR_DISK_GB=50
 MEMORY_OVERHEAD_FACTOR=0
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
@@ -42,6 +43,10 @@ while [ $# -gt 0 ]; do
     --memory-overhead)
       shift
       MEMORY_OVERHEAD_FACTOR=$1
+      ;;
+    --disk|-d)
+      shift
+      EXECUTOR_DISK_GB=$1
       ;;
     *)
       if [ -f "$1" ]; then
@@ -120,6 +125,7 @@ spark-submit \
     --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.container.image.pullPolicy="Always" \
     --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
+    --conf spark.kubernetes.executor.ephemeralStorageGB="${EXECUTOR_DISK_GB}" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \

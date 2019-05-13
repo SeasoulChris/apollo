@@ -19,7 +19,6 @@
         <li><a href="{{ url_for('tasks_hdl', prefix='public-test', page_idx=1) }}"
             >Public Test</a></li>
         <li><a href="{{ url_for('records_hdl') }}">Records</a></li>
-        <li><a href="http://172.19.40.55:8000">Stale NFS Data</a></li>
       </ul>
     </div>
   </nav>

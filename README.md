@@ -131,6 +131,7 @@ If you are pretty familliar with the infra, please:
        --worker <workers_count>  \
        --cpu <worker_cpu_count>  \
        --memory <worker_memory>  \
+       --disk <worker_disk_GB>   \
        /path/to/spark/job.py <gflags>
    ```
 
@@ -144,5 +145,11 @@ If you are pretty familliar with the infra, please:
      [Cheet Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet) to
      get more from the cluster!
 
-Please request resources carefully, as it may block other teammates' work. And
-all your actions and jobs are under monitoring.
+1. Please request resources carefully, as it may block other teammates' work.
+
+   * Increase workers if you need better parallelism.
+   * Increase CPU if your job is computing intensive.
+   * Increase memory if you saw out-of-memory error.
+   * Increase disk if you saw running out of ephemeral stroage.
+
+Note that all your actions and jobs are under monitoring.
