@@ -3,13 +3,15 @@
 import os
 
 import colored_glog as glog
+import glob
 import h5py
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
-import fueling.control.dynamic_model.data_generator.data_generator as data_generator
+import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
+import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 
@@ -21,7 +23,8 @@ class DynamicModelTraining(BasePipeline):
     def run_test(self):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
-        training_dataset = [os.path.join(data_dir, 'hdf5_training/training_test.hdf5')]
+        training_dataset = glob.glob(os.path.join(data_dir,
+                                     'hdf5_training/Mkz7/UniformDistributed/2019-04-25/*/*.hdf5'))
         # RDD(file_path) for training dataset.
         training_dataset_rdd = self.to_rdd(training_dataset)
         self.run(training_dataset_rdd, output_dir)
@@ -30,7 +33,8 @@ class DynamicModelTraining(BasePipeline):
         prefix = 'modules/control/learning_based_model/hdf5_training/Mkz7/UniformDistributed'
         # RDD(file_path) for training dataset
         training_dataset_rdd = self.to_rdd(self.bos().list_files(prefix, '.hdf5'))
-        output_dir = bos_client.abs_path('modules/control/learning_based_model/dynamic_model_output/')
+        output_dir = bos_client.abs_path(
+            'modules/control/learning_based_model/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 
     def run(self, training_dataset_rdd, output_dir):
@@ -38,11 +42,11 @@ class DynamicModelTraining(BasePipeline):
             # RDD(absolute_file_path)
             training_dataset_rdd
             # RDD(training_data_segment)
-            .map(data_generator.generate_segment)
+            .map(feature_extraction.generate_segment)
             # RDD(training_data_segment), which is valid.
             .filter(lambda segment: segment is not None)
             # RDD(training_data_segment), smoothing input features.
-            .map(data_generator.feature_preprocessing)
+            .map(feature_extraction.feature_preprocessing)
             # RDD(training_data_segment), which is valid after feature_preprocessing.
             .filter(lambda segment: segment is not None)
             # RDD('mlp_data|lstm_data', (input, output)).
@@ -58,8 +62,8 @@ class DynamicModelTraining(BasePipeline):
             # RDD('mlp_data', (input, output))
             data.filter(lambda key_value: key_value[0] == 'mlp_data')
             # RDD('mlp_data', param_norm)
-            .mapValues(lambda input_output: data_generator.get_param_norm(input_output[0], 
-                                                                            input_output[1]))
+            .mapValues(lambda input_output: feature_extraction.get_param_norm(input_output[0],
+                                                                              input_output[1]))
             # param_norm
             .values()
             .first())
