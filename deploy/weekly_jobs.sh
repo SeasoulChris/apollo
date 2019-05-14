@@ -10,4 +10,4 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # Job: Prediction data labeling.
 JOB="fueling/prediction/prediction-app-data-labeling.py"
-./tools/submit-job-to-k8s.sh --workers 8 --memory 10g ${JOB}
+./tools/submit-job-to-k8s.sh --workers 10 --memory 30g --disk 50 ${JOB}
