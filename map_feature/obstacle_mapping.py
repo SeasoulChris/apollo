@@ -18,36 +18,30 @@ import os
 import shutil
 import numpy as np
 import cv2 as cv
+import common.proto_utils as proto_utils
 from modules.prediction.proto import offline_features_pb2
-from mapping import Mapping
-
+from modules.prediction.proto import semantic_map_config_pb2
 
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
     def __init__(self, region, frame_env):
         """contruct function to init ObstacleMapping object"""
         center_point = np.array([frame_env.ego_history.feature[0].position.x, frame_env.ego_history.feature[0].position.y])
-        if region=="san_mateo" and os.path.exists("san_mateo.png"):
-            base_map = cv.imread("san_mateo.png")
-            # print("san_mateo.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-559000)/0.1)), int(12000-np.round((center_point[1]-4156860)/0.1))]
-        elif region=="sunnyvale_with_two_offices" and os.path.exists("sunnyvale_with_two_offices.png"):
-            base_map = cv.imread("sunnyvale_with_two_offices.png")
-            print("sunnyvale_with_two_offices.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-585950)/0.1)), int(18000-np.round((center_point[1]-4140000)/0.1))]
-        else:
-            mapping = Mapping(region)
-            base_map = mapping.base_map
-            cv.imwrite(mapping.region + ".png", base_map)
-            print("Drawing map: " + mapping.region + ".png")
-            center_idx = mapping.get_trans_point(center_point)
+        map_dir = "/apollo/modules/map/data/" + region + "/"
+        base_map = cv.imread(map_dir + "semantic_map.png")
+        config = semantic_map_config_pb2.SemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(map_dir + "semantic_map_config.pb.txt", config)
+        self.resolution = config.resolution
+        center_idx = [int(np.round((center_point[0]-config.base_point.x)/self.resolution)),
+                      int(config.dim_y-np.round((center_point[1]-config.base_point.y)/self.resolution))]
 
         self.frame_env = frame_env
         self.timestamp = self.frame_env.timestamp
-        self.base_point = np.array(center_point) - 100
-        self.GRID = [2000, 2000]
-        self.resolution = 0.1
-        self.feature_map = base_map[center_idx[1]-1000:center_idx[1]+1000, center_idx[0]-1000:center_idx[0]+1000]
+        self.base_point = np.array(center_point) - config.observation_range
+        self.GRID = [int(2 * config.observation_range / config.resolution),
+                     int(2 * config.observation_range / config.resolution)]
+        self.feature_map = base_map[center_idx[1]-int(config.observation_range / config.resolution):center_idx[1]+int(config.observation_range / config.resolution),
+                                    center_idx[0]-int(config.observation_range / config.resolution):center_idx[0]+int(config.observation_range / config.resolution)]
         self.draw_frame()
 
     def get_trans_point(self, p):
