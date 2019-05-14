@@ -48,11 +48,13 @@ def read_file(_path, delim='\t'):
 
 class HumanTrajectoryDataset(Dataset):
     def __init__(self, data_dir, obs_len=8, pred_len=12, skip=1,
-                 min_ped=0, delim='\t', extra_sample=0):
+                 min_ped=0, delim='\t', extra_sample=0, noise_std_dev=0.0,
+                 verbose=False):
         all_file_paths = os.listdir(data_dir)
         all_file_paths = [os.path.join(data_dir, _path) for _path in all_file_paths]
         seq_len = obs_len + pred_len
         augmented_seq_len = (seq_len - 1) * (extra_sample + 1) + 1
+        augmented_obs_len = (obs_len - 1) * (extra_sample + 1) + 1
         num_peds_in_scene = []
         self.extra_sample = int(extra_sample)
         self.obs_len = obs_len
@@ -118,8 +120,12 @@ class HumanTrajectoryDataset(Dataset):
                             curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j, :] + xy_diff*k/(self.extra_sample+1)
                     curr_ped_aug[curr_ped_aug.shape[0]-1, :] = curr_ped[curr_ped.shape[0]-1, :]
                     curr_ped = curr_ped_aug
-
-
+                    # 2. Add noise to the observed trajectory (no noise added
+                    #    to the ground-truth label).
+                    if noise_std_dev != 0.0 and rel_time_begin < augmented_obs_len:
+                        curr_ped[:min(augmented_obs_len, rel_time_end) - rel_time_begin, :] += \
+                            np.random.normal(0.0, noise_std_dev, (min(augmented_obs_len, rel_time_end) - rel_time_begin, 2))
+                        curr_ped = np.around(curr_ped, decimals=4)
                     # Get the coordinates of positions and make them relative.
                     # (relative position contains 1 fewer data-point, because, for
                     #  example, if there are 12 time-stamps, there will only be
@@ -142,6 +148,13 @@ class HumanTrajectoryDataset(Dataset):
                     self.scene_timestamp_mask.append(curr_scene_timestamp_mask)
                     self.scene_is_predictable_list.append(curr_scene_is_predictable)
         self.num_scene = len(self.scene_list)
+        if verbose:
+            print ('Statistics:')
+            print ('Average # of pedestrians in a scene = {}'.format(np.average(num_peds_in_scene)))
+            print ('Standard deviation of # of pedestrians in a scene = {}'.format(np.std(num_peds_in_scene)))
+            print ('Max # of pedestrians in a scene = {}'.format(np.max(num_peds_in_scene)))
+            print ('Min # of pedestrians in a scene = {}'.format(np.min(num_peds_in_scene)))
+            print ('Median # of pedestrians in a scene = {}'.format(np.median(num_peds_in_scene)))
 
     def __len__(self):
         return self.num_scene
@@ -154,13 +167,14 @@ class HumanTrajectoryDataset(Dataset):
                self.scene_rel_list[idx][:, aug_obs_len:, :],
                self.scene_timestamp_mask[idx][:, 0:aug_obs_len],
                self.scene_is_predictable_list[idx])
-        # TODO(jiacheng): may need some preprocessing such as adding Gaussian noise, etc.
         return out
 
 
 def collate_scenes(batch):
     # batch is a list of tuples
     # unzip to form list of np-arrays
+    # TODO(jiacheng): set a max. limit in case the collated data exceeds the limit
+    #                 of graphics memory of NVIDIA.
     past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = zip(*batch)
 
     same_scene_mask = [scene.shape[0] for scene in past_traj]

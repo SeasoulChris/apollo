@@ -36,9 +36,9 @@ if __name__ == "__main__":
 
     # Set-up data-loader
     train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=6, pred_len=10,\
-        skip=1, min_ped=0, delim='\t', extra_sample=3)
+        skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
     valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=6, pred_len=10,\
-        skip=1, min_ped=0, delim='\t', extra_sample=3)
+        skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
 
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
