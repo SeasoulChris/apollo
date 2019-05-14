@@ -42,7 +42,7 @@ class SemanticMap(object):
 
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
         self._draw_base_map()
-        self._output_semantic_map("./apollo-map/" + self.region + "/")
+        self._output_semantic_map("/apollo/modules/map/data/" + self.region + "/")
 
 
     def _read_hdmap(self):
@@ -60,7 +60,8 @@ class SemanticMap(object):
         self._draw_lane_central()
 
     def _output_semantic_map(self, output_dir = "./"):
-        os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         cv.imwrite(output_dir + "semantic_map.png", self.base_map)
         self.config.base_point.x = self.base_point[0]
         self.config.base_point.y = self.base_point[1]
