@@ -81,7 +81,9 @@ def CombineFeaturesAndLabels(feature_path, label_path, dict_name='future_status'
             list_curr = [len(features_for_learning)] + features_for_learning + labels
         elif dict_name == 'visited_lane_segment':
             labels = dict_labels[key]
-            list_curr = features_for_learning + labels + [len(labels)]
+            list_curr = [len(features_for_learning)] + features_for_learning + \
+                        [len(string_features_for_learning)] + string_features_for_learning + \
+                        labels + [len(labels)]
         elif dict_name == 'cruise_label':
             lane_seq_id = data_for_learning.lane_sequence_id
             if lane_seq_id not in dict_labels[key]:
