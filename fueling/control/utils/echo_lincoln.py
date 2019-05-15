@@ -3,9 +3,11 @@ import os
 
 import colored_glog as glog
 
+import fueling.control.dynamic_model.data_generator.data_generator as data_generator
+
 
 def hdf52txt(hdf5_file, txt_file):
-    data = generate_segment_from_list(hdf5_files)
+    data = data_generator.generate_segment_from_list(hdf5_files)
     np.savetxt(txt_file, input_data, delimiter=' ')
 
 
@@ -22,8 +24,12 @@ def echo_lincoln(input_file, output_file):
     return 0
 
 
-# # usage
-# if __name__ == '__main__':
-#     input_file = "/apollo/data/hdf52txt/2_3.txt"
-#     output_file = "/apollo/data/hdf52txt/2_3_result.txt"
-#     echo_lincoln(input_file, output_file)
+def txt2numpy(txt_file):
+    output_data = np.loadtxt(fname=txt_file)
+    return output_data
+
+    # # usage
+    # if __name__ == '__main__':
+    #     input_file = "/apollo/data/hdf52txt/2_3.txt"
+    #     output_file = "/apollo/data/hdf52txt/2_3_result.txt"
+    #     echo_lincoln(input_file, output_file)
