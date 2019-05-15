@@ -58,7 +58,7 @@ holistic_output_index = {
 }
 
 feature_config = {
-    "is_holistic": 1, # is the current dynamic model is holistic
+    "is_holistic": 0, # is the current dynamic model is holistic
     "input_dim": 5, # input feature dimension
     "holistic_input_dim": 8, # holistic input feature dimension
     "output_dim": 2, # output feature dimension

@@ -101,8 +101,8 @@ def generate_imu_output(segment):
     output_imu[:, output_index["acceleration"]] = PP7_IMU_SCALING * \
         (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) +
          segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]]))
-    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * \
-        PP7_IMU_SCALING  # angular speed by imu
+    # angular speed by imu
+    output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * PP7_IMU_SCALING
     return output_imu
 
 
@@ -188,8 +188,7 @@ def generate_network_output(segment, model_folder, model_name):
             output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
                 segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
                 segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
-            output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * \
-                segment[k, segment_index["w_z"]]
+            output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
         if k >= DIM_SEQUENCE_LENGTH:
             if model_name == 'mlp':
@@ -217,7 +216,6 @@ def generate_network_output(segment, model_folder, model_name):
         input_data[k, input_index["speed"]] = velocity_fnn  # speed mps
         # acceleration
         input_data[k, input_index["acceleration"]] = output_fnn[k, output_index["acceleration"]]
-
         # throttle control from chassis
         input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
         # brake control from chassis

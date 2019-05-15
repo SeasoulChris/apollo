@@ -46,12 +46,10 @@ DELTA_T = feature_config["delta_t"]
 
 def evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results):
 
-    rmse_fnn_acceleration = sqrt(mean_squared_error(
-        output_imu[:, 0], output_fnn[:, 0]))
+    rmse_fnn_acceleration = sqrt(mean_squared_error(output_imu[:, 0], output_fnn[:, 0]))
     rmse_point_mass_acceleration = sqrt(mean_squared_error(
         output_imu[:, 0], output_point_mass[:, 0]))
-    rms_acceleration = sqrt(
-        sum(n * n for n in output_imu[:, 0]) / len(output_imu[:, 0]))
+    rms_acceleration = sqrt(sum(n * n for n in output_imu[:, 0]) / len(output_imu[:, 0]))
     evaluation_results.learning_based_result.acceleration_error = rmse_fnn_acceleration
     evaluation_results.learning_based_result.acceleration_error_rate = \
         rmse_fnn_acceleration / rms_acceleration
@@ -59,12 +57,10 @@ def evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation
     evaluation_results.point_mass_result.acceleration_error_rate = \
         rmse_point_mass_acceleration / rms_acceleration
 
-    rmse_fnn_angular_speed = sqrt(
-        mean_squared_error(output_imu[:, 1], output_fnn[:, 1]))
+    rmse_fnn_angular_speed = sqrt(mean_squared_error(output_imu[:, 1], output_fnn[:, 1]))
     rmse_point_mass_angular_speed = sqrt(
         mean_squared_error(output_imu[:, 1], output_point_mass[:, 1]))
-    rms_angular_speed = sqrt(
-        sum(n * n for n in output_imu[:, 1]) / len(output_imu[:, 1]))
+    rms_angular_speed = sqrt(sum(n * n for n in output_imu[:, 1]) / len(output_imu[:, 1]))
     evaluation_results.learning_based_result.angular_speed_error = rmse_fnn_angular_speed
     evaluation_results.learning_based_result.angular_speed_error_rate = \
         rmse_fnn_angular_speed / rms_angular_speed
@@ -82,30 +78,24 @@ def normalize_angle(theta):
 
 def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_point_mass,
                            evaluation_results):
-    vehicle_state_imu = np.zeros(
-        [vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
-    vehicle_state_fnn = np.zeros(
-        [vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
-    vehicle_state_point_mass = np.zeros(
-        [vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
+    vehicle_state_imu = np.zeros([vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
+    vehicle_state_fnn = np.zeros([vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
+    vehicle_state_point_mass = np.zeros([vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
     vehicle_state_imu[0, :] = vehicle_state_gps[0, :]
     vehicle_state_fnn[0, :] = vehicle_state_gps[0, :]
     vehicle_state_point_mass[0, :] = vehicle_state_gps[0, :]
 
     for k in range(1, vehicle_state_gps.shape[0]):
         # vehicle states by imu sensor
-        vehicle_state_imu[k, :] = vehicle_state_imu[k -
-                                                    1, :] + output_imu[k, :] * DELTA_T
+        vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
         vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
         # vehicle states by learning-based-model
-        vehicle_state_fnn[k, :] = vehicle_state_fnn[k -
-                                                    1, :] + output_fnn[k, :] * DELTA_T
+        vehicle_state_fnn[k, :] = vehicle_state_fnn[k - 1, :] + output_fnn[k, :] * DELTA_T
         vehicle_state_fnn[k, 1] = normalize_angle(vehicle_state_fnn[k, 1])
         # vehicle states by sim_point_mass
         vehicle_state_point_mass[k, :] = vehicle_state_point_mass[k - 1, :] + \
             output_point_mass[k, :] * DELTA_T
-        vehicle_state_point_mass[k, 1] = normalize_angle(
-            vehicle_state_point_mass[k, 1])
+        vehicle_state_point_mass[k, 1] = normalize_angle(vehicle_state_point_mass[k, 1])
 
     rmse_imu_lon_speed = sqrt(mean_squared_error(
         vehicle_state_imu[:, 0], vehicle_state_gps[:, 0]))
@@ -123,10 +113,8 @@ def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_poi
     evaluation_results.point_mass_result.speed_error = rmse_point_mass_lon_speed
     evaluation_results.point_mass_result.speed_error_rate = rmse_point_mass_lon_speed / rms_lon_speed
 
-    rmse_imu_lat_speed = sqrt(mean_squared_error(
-        vehicle_state_imu[:, 1], vehicle_state_gps[:, 1]))
-    rmse_fnn_lat_speed = sqrt(mean_squared_error(
-        vehicle_state_fnn[:, 1], vehicle_state_gps[:, 1]))
+    rmse_imu_lat_speed = sqrt(mean_squared_error(vehicle_state_imu[:, 1], vehicle_state_gps[:, 1]))
+    rmse_fnn_lat_speed = sqrt(mean_squared_error(vehicle_state_fnn[:, 1], vehicle_state_gps[:, 1]))
     rmse_point_mass_lat_speed = sqrt(mean_squared_error(vehicle_state_point_mass[:, 1],
                                                         vehicle_state_gps[:, 1]))
     rms_lat_speed = sqrt(
@@ -139,14 +127,11 @@ def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_poi
     evaluation_results.point_mass_result.speed_error = rmse_point_mass_lat_speed
     evaluation_results.point_mass_result.speed_error_rate = rmse_point_mass_lat_speed / rms_lat_speed
 
-    rmse_imu_heading = sqrt(mean_squared_error(
-        vehicle_state_imu[:, 2], vehicle_state_gps[:, 2]))
-    rmse_fnn_heading = sqrt(mean_squared_error(
-        vehicle_state_fnn[:, 2], vehicle_state_gps[:, 2]))
+    rmse_imu_heading = sqrt(mean_squared_error(vehicle_state_imu[:, 2], vehicle_state_gps[:, 2]))
+    rmse_fnn_heading = sqrt(mean_squared_error(vehicle_state_fnn[:, 2], vehicle_state_gps[:, 2]))
     rmse_point_mass_heading = sqrt(mean_squared_error(vehicle_state_point_mass[:, 2],
                                                       vehicle_state_gps[:, 2]))
-    rms_heading = sqrt(
-        sum(n * n for n in vehicle_state_gps[:, 2]) / len(vehicle_state_gps[:, 2]))
+    rms_heading = sqrt(sum(n * n for n in vehicle_state_gps[:, 2]) / len(vehicle_state_gps[:, 2]))
 
     evaluation_results.sensor_error.speed_error = rmse_imu_heading
     evaluation_results.sensor_error.speed_error_rate = rmse_imu_heading / rms_heading
@@ -160,12 +145,9 @@ def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_poi
 
 def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
                         vehicle_state_point_mass, evaluation_results):
-    trajectory_imu = np.zeros(
-        [trajectory_gps.shape[0], trajectory_gps.shape[1]])
-    trajectory_fnn = np.zeros(
-        [trajectory_gps.shape[0], trajectory_gps.shape[1]])
-    trajectory_point_mass = np.zeros(
-        [trajectory_gps.shape[0], trajectory_gps.shape[1]])
+    trajectory_imu = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
+    trajectory_fnn = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
+    trajectory_point_mass = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
     trajectory_imu[0, :] = trajectory_gps[0, :]
     trajectory_fnn[0, :] = trajectory_gps[0, :]
     trajectory_point_mass[0, :] = trajectory_gps[0, :]
@@ -198,12 +180,9 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
         trajectory_length += sqrt((trajectory_gps[k, 0] - trajectory_gps[k - 1, 0]) ** 2 + (
             trajectory_gps[k, 1] - trajectory_gps[k - 1, 1]) ** 2)
 
-    rmse_imu_trajectory = sqrt(
-        mean_squared_error(trajectory_imu, trajectory_gps))
-    rmse_fnn_trajectory = sqrt(
-        mean_squared_error(trajectory_fnn, trajectory_gps))
-    rmse_point_mass_trajectory = sqrt(
-        mean_squared_error(trajectory_point_mass, trajectory_gps))
+    rmse_imu_trajectory = sqrt(mean_squared_error(trajectory_imu, trajectory_gps))
+    rmse_fnn_trajectory = sqrt(mean_squared_error(trajectory_fnn, trajectory_gps))
+    rmse_point_mass_trajectory = sqrt(mean_squared_error(trajectory_point_mass, trajectory_gps))
 
     evaluation_results.sensor_error.trajectory_error = rmse_imu_trajectory
     evaluation_results.sensor_error.trajectory_error_rate = \
@@ -250,11 +229,9 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
         # Plot the speed calculated by different models
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Speed Visualization")
-        plt.plot(vehicle_state_gps[:, 0],
-                 color='blue', label="Ground-truth Speed")
+        plt.plot(vehicle_state_gps[:, 0], color='blue', label="Ground-truth Speed")
         plt.plot(vehicle_state_imu[:, 0], color='orange', label="IMU Speed")
-        plt.plot(vehicle_state_point_mass[:, 0],
-                 color='green', label="PointMass Speed")
+        plt.plot(vehicle_state_point_mass[:, 0], color='green', label="PointMass Speed")
         plt.plot(vehicle_state_fnn[:, 0], color='red', label="FNN Speed")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
@@ -263,11 +240,9 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
         # Plot the heading calculated by different models
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Heading Visualization")
-        plt.plot(vehicle_state_gps[:, 1],
-                 color='blue', label="Ground-truth Heading")
+        plt.plot(vehicle_state_gps[:, 1], color='blue', label="Ground-truth Heading")
         plt.plot(vehicle_state_imu[:, 1], color='orange', label="IMU Heading")
-        plt.plot(vehicle_state_point_mass[:, 1],
-                 color='green', label="PointMass Heading")
+        plt.plot(vehicle_state_point_mass[:, 1], color='green', label="PointMass Heading")
         plt.plot(vehicle_state_fnn[:, 1], color='red', label="FNN Heading")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
@@ -277,12 +252,10 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
 def evaluate(model_info, dataset_info, platform_path):
     if model_info[0] == 'mlp':
         vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps = \
-            data_generator.generate_evaluation_data(
-                dataset_info[1], model_info[1], 'mlp')
+            data_generator.generate_evaluation_data(dataset_info[1], model_info[1], 'mlp')
     elif model_info[0] == 'lstm':
         vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps = \
-            data_generator.generate_evaluation_data(
-                dataset_info[1], model_info[1], 'lstm')
+            data_generator.generate_evaluation_data(dataset_info[1], model_info[1], 'lstm')
     else:
         return
 
@@ -291,13 +264,12 @@ def evaluate(model_info, dataset_info, platform_path):
     evaluation_result_path = os.path.join(model_info[1],
                                           'evaluation_metrics_under_%s.txt' % dataset_info[0])
     # Evaluate the accuracy of direct outputs of dynamic models
-    evaluate_direct_output(output_imu, output_fnn,
-                           output_point_mass, evaluation_results)
+    evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results)
     # Evaluate the accuracy of vehicle states by first integration over time
     vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
         vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
     trajectory_imu, trajectory_fnn, trajectory_point_mass = evaluate_trajectory(trajectory_gps,
-                                                                                vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+        vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
     with open(evaluation_result_path, 'w') as txt_file:
         txt_file.write('evaluted on model: {} \n'.format(model_info[1]))
         txt_file.write('evaluted on record: {} \n'.format(dataset_info[1]))
