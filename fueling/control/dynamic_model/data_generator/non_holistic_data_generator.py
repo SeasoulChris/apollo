@@ -37,9 +37,6 @@ VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
 SPEED_EPSILON = 1e-3   # Speed Threshold To Indicate Driving Directions
 
-# TODO(ALL): Deprecate the hard-code gear status and read from data
-GEAR_STATUS = 1  # 1: Driving Forward, 0: Natural, -1: Driving Backward
-
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                                        vehicle_config_pb2.VehicleConfig())
@@ -63,7 +60,10 @@ def generate_mlp_data(segment, total_len):
 
     for k in range(segment.shape[0] - DIM_DELAY_STEPS):
         # speed mps
-        mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
+        # mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
+        mlp_input_data[k, input_index["speed"]] = (
+            segment[k, segment_index["v_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
+            segment[k, segment_index["v_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # acceleration
         mlp_input_data[k, input_index["acceleration"]] = PP7_IMU_SCALING * \
             (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
@@ -87,8 +87,13 @@ def generate_mlp_data(segment, total_len):
 
 
 def generate_gps_data(segment):
+    total_len = segment.shape[0]
+    vehicle_state_gps = np.zeros([total_len, DIM_OUTPUT])
     # speed, heading by gps
-    vehicle_state_gps = segment[:, [segment_index["speed"], segment_index["heading"]]]
+    vehicle_state_gps[:, 0] = (
+        segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) + \
+        segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]]))
+    vehicle_state_gps[:, 1] = segment[:, segment_index["heading"]]
     # position x, y by gps
     trajectory_gps = segment[:, [segment_index["x"], segment_index["y"]]]
     return vehicle_state_gps, trajectory_gps
@@ -143,10 +148,19 @@ def generate_point_mass_output(segment):
         acceleration_point_mass = table_interpolation(velocity_point_mass, lon_cmd * 100.0)
         velocity_point_mass += acceleration_point_mass * DELTA_T
 
+        # Get gear status from data, default status is forward driving gear
+        # 0: Natural, 1: Driving Forward, 2: Driving Backward
+        if segment.shape[1] > segment_index["gear_position"]:
+            gear_status = segment[k, segment_index["gear_position"]]
+            # Convert backward gear from 2 to -1 for computation convenience
+            if gear_status == 2:
+                gear_status = -1
+        else:
+            gear_status = 1
         # If (negative speed under forward gear || positive speed under backward gear ||
         #     natural gear):
         # Then truncate speed, acceleration, and angular speed to 0
-        if GEAR_STATUS * (velocity_point_mass + GEAR_STATUS * SPEED_EPSILON) <= 0:
+        if gear_status * (velocity_point_mass + gear_status * SPEED_EPSILON) <= 0:
             velocity_point_mass = 0.0
             output_point_mass[k, output_index["acceleration"]] = 0.0
             output_point_mass[k, output_index["w_z"]] = 0.0
@@ -203,12 +217,19 @@ def generate_network_output(segment, model_folder, model_name):
 
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
 
-        # Update the vehicle speed based on predicted acceleration
-        velocity_fnn += output_fnn[k, output_index["acceleration"]] * DELTA_T
+        # Get gear status from data, default status is forward driving gear
+        # 0: Natural, 1: Driving Forward, -1: Driving Backward
+        if segment.shape[1] > segment_index["gear_position"]:
+            gear_status = segment[k, segment_index["gear_position"]]
+            # Convert backward gear from 2 to -1 for computation convenience
+            if gear_status == 2:
+                gear_status = -1
+        else:
+            gear_status = 1
         # If (negative speed under forward gear || positive speed under backward gear ||
         #     natural gear):
         # Then truncate speed, acceleration, and angular speed to 0
-        if GEAR_STATUS * (velocity_fnn + GEAR_STATUS * SPEED_EPSILON) <= 0:
+        if gear_status * (velocity_fnn + gear_status * SPEED_EPSILON) <= 0:
             velocity_fnn = 0.0
             output_fnn[k, output_index["acceleration"]] = 0.0
             output_fnn[k, output_index["w_z"]] = 0.0

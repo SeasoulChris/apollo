@@ -22,7 +22,8 @@ segment_index = {
     "mode": 18, # chassis.driving_mode
     "x": 19, # pose.position.x, ENU
     "y": 20, # pose.position.y, ENU
-    "z": 21 # pose.position.z, ENU
+    "z": 21, # pose.position.z, ENU
+    "gear_position": 22 # gear position: 0-neutral, 1-drive, 2-reverse
 }
 
 input_index = {
