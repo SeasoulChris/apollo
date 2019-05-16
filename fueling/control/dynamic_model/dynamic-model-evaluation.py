@@ -15,8 +15,8 @@ if feature_config["is_holistic"]:
 else:
     import fueling.control.dynamic_model.offline_evaluator.non_holistic_model_evaluator as evaluator
 
-VEHICLE_ID = 'Mkz7'
-
+VEHICLE_ID = feature_config["vehicle_id"]
+IS_BACKWARD = feature_config["is_backward"]
 
 def extract_scenario_name(dataset_path):
     result = re.findall(r"hdf5_evaluation/.+/(.+?).hdf5", dataset_path)[0]
@@ -29,30 +29,49 @@ class DynamicModelEvaluation(BasePipeline):
 
     def run_test(self):
         platform_path = '/apollo/modules/data/fuel/testdata/control/learning_based_model/'
-        mlp_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp/*')
-        lstm_model_path = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm/*')
+        if IS_BACKWARD:
+            evaluation_set = 'golden_test_backward'
+            mlp_model_path = os.path.join(platform_path,
+                                          'dynamic_model_output/h5_model/mlp/backward/*')
+            lstm_model_path = os.path.join(platform_path,
+                                          'dynamic_model_output/h5_model/lstm/backward/*')
+        else:
+            evaluation_set = 'golden_test_forward'
+            mlp_model_path = os.path.join(platform_path,
+                                          'dynamic_model_output/h5_model/mlp/forward/*')
+            lstm_model_path = os.path.join(platform_path,
+                                          'dynamic_model_output/h5_model/lstm/forward/*')
 
         # PairRDD(model_name, folder_path)
         mlp_model_rdd = self.to_rdd(glob.glob(mlp_model_path)).keyBy(lambda _: 'mlp')
         # PairRDD(model_name, folder_path)
         lstm_model_rdd = self.to_rdd(glob.glob(lstm_model_path)).keyBy(lambda _: 'lstm')
-
         evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID,
-                                          'golden_test/*.hdf5')
+                                          evaluation_set, '*.hdf5')
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
             self.to_rdd(glob.glob(evaluation_dataset))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
 
-        self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
-        self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
         platform_path = 'modules/control/learning_based_model/'
-        mlp_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/mlp')
-        lstm_model_prefix = os.path.join(platform_path, 'dynamic_model_output/h5_model/lstm')
-        data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, 'golden_test')
+        if IS_BACKWARD:
+            evaluation_set = 'golden_test_backward'
+            mlp_model_prefix = os.path.join(platform_path, 
+                                            'dynamic_model_output/h5_model/mlp/backward')
+            lstm_model_prefix = os.path.join(platform_path, 
+                                            'dynamic_model_output/h5_model/lstm/backward')
+        else:
+            evaluation_set = 'golden_test_forward'
+            mlp_model_prefix = os.path.join(platform_path, 
+                                            'dynamic_model_output/h5_model/mlp/forward')
+            lstm_model_prefix = os.path.join(platform_path, 
+                                            'dynamic_model_output/h5_model/lstm/forward')
+        data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, evaluation_set)
 
         bos = self.bos()
         # PairRDD('mlp', folder_path)
@@ -66,10 +85,10 @@ class DynamicModelEvaluation(BasePipeline):
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
 
-        self.model_evalution(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
-        self.model_evalution(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
-    def model_evalution(self, model_rdd, evaluation_dataset_rdd, platform_path):
+    def model_evaluation(self, model_rdd, evaluation_dataset_rdd, platform_path):
         results_rdd = (
             # PairRDD(dynamic_model_name, dynamic_model_path)
             model_rdd

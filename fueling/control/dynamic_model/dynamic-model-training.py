@@ -9,12 +9,15 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.bos_client as bos_client
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 
+VEHICLE_ID = feature_config["vehicle_id"]
+IS_BACKWARD = feature_config["is_backward"]
 
 class DynamicModelTraining(BasePipeline):
     def __init__(self):
@@ -23,14 +26,22 @@ class DynamicModelTraining(BasePipeline):
     def run_test(self):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
-        training_dataset = glob.glob(os.path.join(data_dir,
-                                     'hdf5_training/Mkz7/UniformDistributed/2019-04-25/*/*.hdf5'))
+        if IS_BACKWARD:
+            training_dataset = glob.glob(os.path.join(data_dir,
+                                     'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
+        else:
+            training_dataset = glob.glob(os.path.join(data_dir,
+                                     'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
         # RDD(file_path) for training dataset.
         training_dataset_rdd = self.to_rdd(training_dataset)
         self.run(training_dataset_rdd, output_dir)
 
     def run_prod(self):
-        prefix = 'modules/control/learning_based_model/hdf5_training/Mkz7/UniformDistributed'
+        dataset_dir = 'modules/control/learning_based_model/hdf5_training'
+        if IS_BACKWARD:
+            prefix = os.path.join(dataset_dir, VEHICLE_ID, '/UniformDistributed/backward')
+        else:
+            prefix = os.path.join(dataset_dir, VEHICLE_ID, '/UniformDistributed/forward')
         # RDD(file_path) for training dataset
         training_dataset_rdd = self.to_rdd(self.bos().list_files(prefix, '.hdf5'))
         output_dir = bos_client.abs_path(

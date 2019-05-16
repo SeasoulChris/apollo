@@ -43,6 +43,7 @@ else:
 
 # Constants
 IS_HOLISTIC = feature_config["is_holistic"]
+IS_BACKWARD = feature_config["is_backward"]
 DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
 DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 EPOCHS = mlp_model_config["epochs"]
@@ -132,7 +133,11 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_three_layer')
     save_model(model, param_norm, model_bin)
 
    # save norm_params and model_weights to hdf5
-    h5_model_dir = os.path.join(out_dir, 'h5_model/mlp')
+    if IS_BACKWARD:
+        h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/backward')
+    else:
+        h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/forward')
+
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)
 

@@ -37,6 +37,7 @@ else:
 
 # Constants
 IS_HOLISTIC = feature_config["is_holistic"]
+IS_BACKWARD = feature_config["is_backward"]
 DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
 DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 DIM_LSTM_LENGTH = feature_config["sequence_length"]
@@ -78,16 +79,21 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
    # save norm_params and model_weights to hdf5
-    h5_dir = os.path.join(out_dir, 'h5_model/lstm')
-    model_dir = os.path.join(h5_dir, timestr)
-    file_utils.makedirs(model_dir)
+   # save norm_params and model_weights to hdf5
+    if IS_BACKWARD:
+        h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/backward')
+    else:
+        h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/forward')
+        
+    h5_file_dir = os.path.join(h5_model_dir, timestr)
+    file_utils.makedirs(h5_file_dir)
 
-    norms_h5 = os.path.join(model_dir, 'norms.h5')
+    norms_h5 = os.path.join(h5_file_dir, 'norms.h5')
     with h5py.File(norms_h5, 'w') as h5_file:
         h5_file.create_dataset('input_mean', data=input_fea_mean)
         h5_file.create_dataset('input_std', data=input_fea_std)
         h5_file.create_dataset('output_mean', data=output_fea_mean)
         h5_file.create_dataset('output_std', data=output_fea_std)
 
-    weights_h5 = os.path.join(model_dir, 'weights.h5')
+    weights_h5 = os.path.join(h5_file_dir, 'weights.h5')
     model.save(weights_h5)
