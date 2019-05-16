@@ -21,6 +21,7 @@ import os
 import torch
 
 from learning_algorithms.utilities.train_utils import *
+from learning_algorithms.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset import *
 from human_trajectory_dataset import *
 from social_interaction_model import *
 
@@ -37,8 +38,9 @@ if __name__ == "__main__":
     # Set-up data-loader
     train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=6, pred_len=10,\
         skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
-    valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=6, pred_len=10,\
-        skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
+    # valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=6, pred_len=10,\
+    #     skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
+    valid_dataset = ApolloPedestrianDataset(args.valid_file, threshold_dist_to_adc=30.0, verbose=True)
 
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     learning_rate = 3e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.3, patience=2, min_lr=1e-9, verbose=True, mode='min')
+        optimizer, factor=0.3, patience=10, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:
     if (torch.cuda.is_available()):
@@ -63,4 +65,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=100, save_name='./temp_trained_models', print_period=1)
+                           scheduler, epochs=200, save_name='./temp_trained_models', print_period=1)

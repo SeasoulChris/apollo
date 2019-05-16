@@ -26,23 +26,26 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-import data_for_learning_pb2
-from data_for_learning_pb2 import *
+import learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
+from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 from learning_algorithms.utilities.IO_utils import *
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = data_for_learning_pb2.ListDataForLearning()
+    list_of_data_for_learning = \
+        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
     with open(filepath, 'rb') as file_in:
         list_of_data_for_learning.ParseFromString(file_in.read())
     return list_of_data_for_learning.data_for_learning
 
 
 class ApolloPedestrianDataset(Dataset):
-    def __init__(self, data_dir, obs_len=21, pred_len=40, threshold_dist_to_adc=30.0,
+    def __init__(self, data_dir, obs_len=21, pred_len=40, threshold_dist_to_adc=15.0,
                  threshold_discontinuity=0.25, verbose=False):
         all_file_paths = GetListOfFiles(data_dir)
         seq_len = obs_len + pred_len
+        self.obs_len = obs_len
+        self.pred_len = pred_len
         self.ped_id_to_traj_data = dict()
         self.scene_list = []
         self.scene_rel_list = []
@@ -91,7 +94,7 @@ class ApolloPedestrianDataset(Dataset):
             # a:
             for ped_pt in ped_val:
                 if ped_pt[3] < threshold_dist_to_adc:
-                    clean_ped_val.append(ped_pt)
+                    clean_ped_val.append([ped_pt[1], ped_pt[2]])
                     clean_ped_timestamp.append(ped_pt[0])
             if len(clean_ped_val) <= pred_len + 1:
                 continue
@@ -112,9 +115,32 @@ class ApolloPedestrianDataset(Dataset):
         # Go through all the pedestrians, and construct the scene_list, scene_rel_list,
         # scene_timestamp_mask, and scene_is_predictable_list, just like the public
         # HumanTrajectoryDataset.
-        
+        for ped_id, ped_val in self.ped_id_to_traj_data.items():
+            if len(ped_val) <= seq_len:
+                curr_scene = np.zeros((1, seq_len, 2))
+                curr_scene_rel = np.zeros((1, seq_len, 2))
+                curr_scene_timestamp_mask = np.zeros((1, seq_len))
+
+                curr_scene[0, -len(ped_val): ,:] = np.asarray(ped_val)
+                curr_scene_rel[0, -len(ped_val)+1: ,:] = np.asarray(ped_val)[1:, :] - np.asarray(ped_val)[:-1, :]
+                curr_scene_timestamp_mask[0, -len(ped_val):] = np.ones((len(ped_val)))
+
+                self.scene_list.append(curr_scene)
+                self.scene_rel_list.append(curr_scene_rel)
+                self.scene_timestamp_mask.append(curr_scene_timestamp_mask)
+                self.scene_is_predictable_list.append(np.ones((1, 1)))
+            else:
+                for i in range(len(ped_val)-seq_len+1):
+                    self.scene_list.append(np.asarray(ped_val[i:i+seq_len]).reshape((1, seq_len, 2)))
+                    curr_scene_rel = np.zeros((1, seq_len, 2))
+                    curr_scene_rel[0, 1: ,:] = np.asarray(ped_val[i:i+seq_len])[1:, :] - np.asarray(ped_val[i:i+seq_len])[:-1, :]
+                    self.scene_rel_list.append(curr_scene_rel)
+                    self.scene_timestamp_mask.append(np.ones((1, seq_len)))
+                    self.scene_is_predictable_list.append(np.ones((1, 1)))
+        self.num_scene = len(self.scene_list)
 
         if verbose:
+            print ('Dataset size = {}'.format(self.num_scene))
             print ('Total number of usable pedestrians: {}'.format(len(self.ped_id_to_traj_data)))
             print ('Number of data with tracking length >= seq_len = {}'.format(
                        np.sum((ped_tracking_length - pred_len - obs_len) >= 0)))
@@ -125,11 +151,13 @@ class ApolloPedestrianDataset(Dataset):
             print ('Standard deviation of tracking length = {}'.format(np.std(ped_tracking_length)))
 
     def __len__(self):
-        return 0
+        return self.num_scene
 
     def __getitem__(self, idx):
-        return idx
-
-
-if __name__ == "__main__":
-    trial_dataset = ApolloPedestrianDataset('/home/jiacheng/work/apollo/data/all_pedestrian_data/features', verbose=True)
+        out = (self.scene_list[idx][:, :self.obs_len, :],
+               self.scene_rel_list[idx][:, :self.obs_len, :],
+               self.scene_list[idx][:, self.obs_len:, :],
+               self.scene_rel_list[idx][:, self.obs_len:, :],
+               self.scene_timestamp_mask[idx][:, :self.obs_len],
+               self.scene_is_predictable_list[idx])
+        return out
