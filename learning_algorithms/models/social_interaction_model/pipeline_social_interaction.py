@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
-    valid_loader = DataLoader(valid_dataset, batch_size=128, shuffle=True,\
+    valid_loader = DataLoader(valid_dataset, batch_size=2048, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_scenes)
 
     # Model and training setup
