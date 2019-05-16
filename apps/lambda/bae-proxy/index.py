@@ -8,7 +8,7 @@ from vehicle_calibration import VehicleCalibration
 
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
-api.add_resource(VehicleCalibration, '/')
+api.add_resource(VehicleCalibration, '/vehicle-calibration')
 
 
 if __name__ == '__main__':
