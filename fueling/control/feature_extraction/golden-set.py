@@ -31,11 +31,9 @@ def write_h5(elem, folder_path, file_name):
     """write to h5 file, use feature key as file name"""
     file_utils.makedirs(folder_path)
     with h5py.File("{}/{}.hdf5".format(folder_path, file_name), "w") as out_file:
-        i = 0
-        for data_set in elem:
-            name = "_segment_" + str(i).zfill(3)
-            out_file.create_dataset(name, data=data_set, dtype="float32")
-            i += 1
+        for count, data_set in enumerate(elem, 1):
+            name = "_segment_" + str(count).zfill(3)
+            out_file.create_dataset(name, data=data_set, dtype="float64")
 
 
 def write_segment(elem, origin_prefix, target_prefix):
@@ -54,6 +52,7 @@ def gen_segment(elem):
     data_set = np.array(elem[0][1])
     counter = 1  # count segment length first element
     for i in range(1, len(elem)):
+
         if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA_SEGMENT:
             data_set = np.vstack([data_set, elem[i][1]])
             counter += 1
