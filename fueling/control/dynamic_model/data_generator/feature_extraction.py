@@ -33,6 +33,7 @@ def generate_segment(h5_file):
                 segment = np.array(ds)
             else:
                 segment = np.concatenate((segment, np.array(ds)), axis=0)
+    glog.info('The length of frames {}'.format(segment.shape[0]))
     return segment
 
 

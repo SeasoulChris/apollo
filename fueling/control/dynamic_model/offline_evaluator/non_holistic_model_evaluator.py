@@ -42,6 +42,7 @@ else:
             os.getcwd(), "theanorc/cpu_config")
 
 # Constants
+IS_BACKWARD = feature_config["is_backward"]
 DIM_INPUT = feature_config["input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 DIM_LSTM_LENGTH = feature_config["sequence_length"]
@@ -178,7 +179,8 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
 
 def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, trajectory_fnn,
                                  trajectory_point_mass, vehicle_state_gps, vehicle_state_imu,
-                                 vehicle_state_fnn, vehicle_state_point_mass):
+                                 vehicle_state_fnn, vehicle_state_point_mass, output_imu,
+                                 output_fnn):
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
         plt.title("Trajectory Visualization")
@@ -196,11 +198,12 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
         plt.plot(trajectory_fnn[:, 0], trajectory_fnn[:, 1], color='red',
                  label="Tracjectory by learning-based-model")
         plt.plot(trajectory_fnn[-1, 0], trajectory_fnn[-1, 1], color='red', marker='x')
-        # Plot the trajectory calculated by point_mass model
-        plt.plot(trajectory_point_mass[:, 0], trajectory_point_mass[:, 1], color='green',
-                 label="Tracjectory by sim_point_mass")
-        plt.plot(trajectory_point_mass[-1, 0], trajectory_point_mass[-1, 1],
-                 color='green', marker='x')
+        if not IS_BACKWARD:
+            # Plot the trajectory calculated by point_mass model
+            plt.plot(trajectory_point_mass[:, 0], trajectory_point_mass[:, 1], color='green',
+                     label="Tracjectory by sim_point_mass")
+            plt.plot(trajectory_point_mass[-1, 0], trajectory_point_mass[-1, 1],
+                     color='green', marker='x')
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
@@ -210,8 +213,9 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
         plt.title("Vehicle Speed Visualization")
         plt.plot(vehicle_state_gps[:, 0], color='blue', label="Ground-truth Speed")
         plt.plot(vehicle_state_imu[:, 0], color='orange', label="IMU Speed")
-        plt.plot(vehicle_state_point_mass[:, 0], color='green', label="PointMass Speed")
         plt.plot(vehicle_state_fnn[:, 0], color='red', label="FNN Speed")
+        if not IS_BACKWARD:
+            plt.plot(vehicle_state_point_mass[:, 0], color='green', label="PointMass Speed")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
@@ -221,8 +225,27 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, 
         plt.title("Vehicle Heading Visualization")
         plt.plot(vehicle_state_gps[:, 1], color='blue', label="Ground-truth Heading")
         plt.plot(vehicle_state_imu[:, 1], color='orange', label="IMU Heading")
-        plt.plot(vehicle_state_point_mass[:, 1], color='green', label="PointMass Heading")
         plt.plot(vehicle_state_fnn[:, 1], color='red', label="FNN Heading")
+        if not IS_BACKWARD:
+            plt.plot(vehicle_state_point_mass[:, 1], color='green', label="PointMass Heading")
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+        # Plot the acceleration calculated by fnn and imu
+        plt.figure(figsize=(4, 3))
+        plt.title("Vehicle Acceleration Visualization")
+        plt.plot(output_imu[:, 0], color='orange', label="IMU Heading")
+        plt.plot(output_fnn[:, 0], color='red', label="FNN Heading")
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+        # Plot the angular velocity calculated by fnn and imu
+        plt.figure(figsize=(4, 3))
+        plt.title("Vehicle Angular Speed Visualization")
+        plt.plot(output_imu[:, 1], color='orange', label="IMU Heading")
+        plt.plot(output_fnn[:, 1], color='red', label="FNN Heading")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
@@ -260,7 +283,8 @@ def evaluate(model_info, dataset_info, platform_path):
                                  'trajectory_visualization_under_%s.pdf' % dataset_info[0])
     visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_imu, trajectory_fnn,
                                  trajectory_point_mass, vehicle_state_gps, vehicle_state_imu,
-                                 vehicle_state_fnn, vehicle_state_point_mass)
+                                 vehicle_state_fnn, vehicle_state_point_mass, output_imu,
+                                 output_fnn)
 
     # return (dynamic_model_path, Trajectory_RMSE)
     return [(model_info[1], evaluation_results.learning_based_result.trajectory_error)]

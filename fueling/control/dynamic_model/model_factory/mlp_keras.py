@@ -108,7 +108,7 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_three_layer'):
+def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     glog.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std

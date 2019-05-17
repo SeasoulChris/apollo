@@ -217,12 +217,14 @@ def generate_network_output(segment, model_folder, model_name):
 
         output_fnn[k, :] = output_fnn[k, :] * output_std + output_mean
 
+        # Update the vehicle speed based on predicted acceleration
+        velocity_fnn += output_fnn[k, output_index["acceleration"]] * DELTA_T
+        
         # Get gear status from data, default status is forward driving gear
         # 0: Natural, 1: Driving Forward, -1: Driving Backward
         if segment.shape[1] > segment_index["gear_position"]:
-            gear_status = segment[k, segment_index["gear_position"]]
             # Convert backward gear from 2 to -1 for computation convenience
-            if gear_status == 2:
+            if segment[k, segment_index["gear_position"]] > 1.0 + STD_EPSILON:
                 gear_status = -1
         else:
             gear_status = 1
