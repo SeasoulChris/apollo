@@ -5,6 +5,7 @@ import os
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.record_utils as record_utils
 
 
@@ -41,17 +42,20 @@ class FrameEnv(BasePipeline):
         result = (
             # RDD(record_dir)
             records_dir_rdd
+            # PairRDD(record_dir, map_name)
+            .mapPartitions(self.get_dirs_map)
             # RDD(0/1), 1 for success
-            .map(lambda record_dir: self.process_dir(record_dir, origin_prefix, target_prefix))
+            .map(lambda dir_map: self.process_dir(
+                dir_map[0],
+                dir_map[0].replace(origin_prefix,
+                                   os.path.join(target_prefix, dir_map[1] + '/'), 1),
+                dir_map[1]))
             .cache())
         glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
-    def process_dir(record_dir, origin_prefix, target_prefix):
+    def process_dir(record_dir, target_dir, map_name):
         """Call prediction C++ code."""
-        # use /apollo/hmi/status's current_map entry to match map info
-        map_name = record_utils.get_map_name_from_records(record_dir)
-        target_dir = record_dir.replace(origin_prefix, os.path.join(target_prefix, map_name))
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_frame_env.sh '
@@ -62,6 +66,19 @@ class FrameEnv(BasePipeline):
         else:
             glog.error('Failed to process {} to {}'.format(record_dir, target_dir))
         return 0
+
+    def get_dirs_map(self, record_dirs):
+        """Return the (record_dir, map_name) pair"""
+        record_dirs = list(record_dirs)
+        collection = self.mongo().record_collection()
+        dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
+        dir_map_list = []
+        for record_dir, map_name in dir_map_dict.items():
+            if "Sunnyvale" in map_name:
+                dir_map_list.append((record_dir, "sunnyvale_with_two_offices"))
+            if "San Mateo" in map_name:
+                dir_map_list.append((record_dir, "san_mateo"))
+        return dir_map_list
 
 
 if __name__ == '__main__':
