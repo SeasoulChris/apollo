@@ -9,9 +9,9 @@ set -e
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # Job: Prediction data labeling.
-JOB="fueling/prediction/prediction-app-data-labeling.py"
-./tools/submit-job-to-k8s.sh --workers 10 --memory 30g --disk 50 ${JOB}
+# JOB="fueling/prediction/prediction-app-data-labeling.py"
+# ./tools/submit-job-to-k8s.sh --workers 10 --memory 30g --disk 50 ${JOB}
 
 # Job: Prediction performance evaluation.
 JOB="fueling/prediction/prediction-app-performance-evaluation.py"
-./tools/submit-job-to-k8s.sh --workers 10 --memory 30g --disk 50 ${JOB}
+./tools/submit-job-to-k8s.sh --workers 10 --memory 30g --disk 200 ${JOB}
