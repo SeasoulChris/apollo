@@ -132,9 +132,9 @@ class LabelGenerator(object):
             if lane_sequence.vehicle_on_lane:
                 for lane_segment in lane_sequence.lane_segment:
                     curr_lane_segments.add(lane_segment.lane_id)
-        if len(curr_lane_segments) == 0:
+        # if len(curr_lane_segments) == 0:
             # print("Obstacle is not on any lane.")
-            return
+        #     return
 
         # Declare needed varables.
         new_lane_id = None
