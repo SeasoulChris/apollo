@@ -1,6 +1,7 @@
-name: fuel-py36
+name: fuel-py37
 dependencies:
-  - python = 3.6
+  - python = 3.7
+  - pip
 
   # Google infra
   - absl-py
@@ -16,3 +17,4 @@ dependencies:
 
   - pip:
     - colored-glog
+    - flask-restful
