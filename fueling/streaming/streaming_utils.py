@@ -78,7 +78,7 @@ def load_topic(root_dir, record_file, topic):
     data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
     topic_file_path = os.path.join(data_dir, topic_to_file_name(topic))
     if not os.path.exists(topic_file_path):
-        return None
+        return []
     with open(topic_file_path) as read_topic_file:
         return read_topic_file.readlines()
 
@@ -174,9 +174,9 @@ def write_to_file(file_path, mode, message):
     file_stat = os.stat(file_path)
     os.chmod(file_path, file_stat.st_mode | stat.S_IWOTH)
 
-def write_message_obj(record_dir, renamed_topic, py_message):
+def write_message_obj(record_dir, renamed_topic, py_message, header_time):
     """Write message object in binary to file system"""
-    message_file_name = get_message_id(py_message.timestamp, renamed_topic)
+    message_file_name = get_message_id(header_time, renamed_topic)
     with open(os.path.join(record_dir, message_file_name), 'wb') as message_file:
         # For compressed camera messages, write binary data instead of message objects
         if renamed_topic.endswith('compressed'):

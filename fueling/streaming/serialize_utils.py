@@ -13,7 +13,6 @@ from cyber_py import record
 import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
-
 def build_file_handles(topic_file_paths):
     """Build a map between topic file and its handle"""
     handles = {}
@@ -21,9 +20,12 @@ def build_file_handles(topic_file_paths):
         handles[os.path.basename(topic_file)] = open(topic_file, 'w+')
     return handles
 
-def build_line_with_fields(line, fields, message):
+def build_meta_with_fields(fields, message):
     """Combine the fields values with timestamp to form the complete metadata"""
     proto = record_utils.message_to_proto(message)
+    header_time = int(round(proto.header.timestamp_sec * (10 ** 9)))
+    if not fields:
+        return header_time, str(header_time)
     field_suffix = '{'
     for field in fields:
         field_parts = field.split('.')
@@ -32,7 +34,7 @@ def build_line_with_fields(line, fields, message):
             value = getattr(value, part)
         field_suffix += '"{}":"{}"'.format(field, value)
     field_suffix += '}'
-    return '{},{}'.format(line, field_suffix)
+    return header_time, '{},{}'.format(header_time, field_suffix)
 
 def parse_record(record_file, root_dir):
     """
@@ -66,13 +68,11 @@ def parse_record(record_file, root_dir):
         for message in freader.read_messages():
             renamed_topic = streaming_utils.topic_to_file_name(message.topic)
             if renamed_topic in topic_file_handles:
-                line = str(message.timestamp)
                 fields = next(x for x in settings if x.get('topic') == message.topic)\
                          .get('fields')
-                if fields is not None:
-                    line = build_line_with_fields(line, fields, message)
-                topic_file_handles[renamed_topic].write(line+"\n")
-                streaming_utils.write_message_obj(record_dir, renamed_topic, message)
+                header_time, meta = build_meta_with_fields(fields, message)
+                topic_file_handles[renamed_topic].write('{}\n'.format(meta))
+                streaming_utils.write_message_obj(record_dir, renamed_topic, message, header_time)
         glog.info('completed serializing record file {}, now upload images'.format(record_file))
         streaming_utils.upload_images(root_dir, record_dir, record_file)
         glog.info('completed everything about {}, and marking complete'.format(record_file))
