@@ -14,7 +14,7 @@ set -x
 bash ../apollo/apollo_docker.sh build_py
 cp -r ../apollo/py_proto ./
 
-docker build -t ${IMAGE} --network host -f apps/k8s/warehouse/docker/Dockerfile .
+docker build -t ${IMAGE} --network host -f apps/k8s/warehouse/deploy/Dockerfile .
 
 # Login.
 DOCKER_REGISTRY="hub.baidubce.com"

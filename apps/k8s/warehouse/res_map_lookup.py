@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from flask_restful import Resource
+
+from fueling.common.mongo_utils import Mongo
+from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+
+
+class MapLookup(Resource):
+    """Map lookup service"""
+
+    def get(self, lat, lon):
+        try:
+            lat = float(lat)
+            lon = float(lon)
+        except:
+            return 'Error: Cannot parse input as float numbers.'
+
+        query = {
+            'stat.driving_path': {'$exists': True}
+        }
+        fields = {
+            'path': 1,
+            'stat.driving_path': 1,
+        }
+
+        result = []
+        for doc in Mongo().record_collection().find(query, fields):
+            record_meta = Mongo.doc_to_pb(doc, RecordMeta())
+            points = record_meta.stat.driving_path
+            min_diff = 1.0
+            min_index = -1
+            for index, point in enumerate(points):
+                diff = (lat - point.lat) ** 2 + (lon - point.lon) ** 2
+                if diff < min_diff:
+                    min_diff = diff
+                    min_index = index
+            # About 10 meters
+            if min_diff < 3e-7:
+                print ('{} {}/{} {}'.format(min_diff, min_index, len(points), record_meta.path))
+                result.append((record_meta.path, float(min_index) / len(points)))
+        return sorted(result, reversed=True)

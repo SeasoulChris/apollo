@@ -8,12 +8,14 @@ import os
 from absl import app as absl_app
 from absl import flags
 import flask
+import flask_restful
 import gunicorn.app.base
 import pymongo
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 
+from res_map_lookup import MapLookup
 import display_util
 import records_util
 
@@ -129,12 +131,17 @@ class FlaskApp(gunicorn.app.base.BaseApplication):
         return self.application
 
 
+api = flask_restful.Api(app)
+# As there might be negative values which are not supported by float type, we
+# accept them as string and convert in code.
+api.add_resource(MapLookup, '/map-lookup/<string:lat>/<string:lon>')
+
+
 def main(argv):
     if flags.FLAGS.debug:
         app.run(flags.FLAGS.host, flags.FLAGS.port, flags.FLAGS.debug)
     else:
         FlaskApp(app).run()
-
 
 if __name__ == '__main__':
     absl_app.run(main)
