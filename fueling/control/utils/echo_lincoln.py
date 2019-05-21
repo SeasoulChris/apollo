@@ -18,7 +18,8 @@ def hdf52txt(hdf5_file, txt_file):
         gear_col = data[:, 22]
 
     input_data = np.append(data[:, 15:18] * 100, gear_col, 1)  # 100%
-    np.savetxt(txt_file, input_data[1:10, :], delimiter=' ')  # set 1:10 for test
+    # np.savetxt(txt_file, input_data[1:10, :], delimiter=' ')  # set 1:10 for test
+    np.savetxt(txt_file, input_data[:, :], delimiter=' ')
 
 
 def echo_lincoln(input_file, output_file):

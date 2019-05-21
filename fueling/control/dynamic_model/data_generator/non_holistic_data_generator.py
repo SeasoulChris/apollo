@@ -10,15 +10,16 @@ import colored_glog as glog
 import h5py
 import numpy as np
 
-from modules.common.configs.proto import vehicle_config_pb2
 from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
-import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
-import modules.control.proto.control_conf_pb2 as ControlConf
 import fueling.common.proto_utils as proto_utils
+import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
+import fueling.control.utils.echo_lincoln as echo_lincoln
 
+from modules.common.configs.proto import vehicle_config_pb2
+import modules.control.proto.control_conf_pb2 as ControlConf
 
 # Constants
 PP6_IMU_SCALING = imu_scaling["pp6"]
@@ -219,7 +220,7 @@ def generate_network_output(segment, model_folder, model_name):
 
         # Update the vehicle speed based on predicted acceleration
         velocity_fnn += output_fnn[k, output_index["acceleration"]] * DELTA_T
-        
+
         # Get gear status from data, default status is forward driving gear
         # 0: Natural, 1: Driving Forward, -1: Driving Backward
         if segment.shape[1] > segment_index["gear_position"]:
@@ -253,7 +254,9 @@ def generate_network_output(segment, model_folder, model_name):
 def generate_evaluation_data(dataset_path, model_folder, model_name):
     segment = feature_extraction.generate_segment(dataset_path)
     vehicle_state_gps, trajectory_gps = generate_gps_data(segment)
+    output_echo_lincoln = echo_lincoln.echo_lincoln_wrapper(dataset_path)
     output_imu = generate_imu_output(segment)
     output_point_mass = generate_point_mass_output(segment)
     output_fnn = generate_network_output(segment, model_folder, model_name)
-    return vehicle_state_gps, output_imu, output_point_mass, output_fnn, trajectory_gps
+    return vehicle_state_gps, output_echo_lincoln, output_imu, output_point_mass, \
+           output_fnn, trajectory_gps
