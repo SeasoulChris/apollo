@@ -51,7 +51,7 @@ def CombinePlanningMetrics(records):
 
     latency_hist = {}
     weighted_avg = []
-    total_weight = 0
+    total_weight = 0.00001
 
     for record in records:
         planning_stat.latency.max = max(planning_stat.latency.max,

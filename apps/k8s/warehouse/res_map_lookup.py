@@ -17,7 +17,8 @@ class MapLookup(Resource):
             return 'Error: Cannot parse input as float numbers.'
 
         query = {
-            'stat.driving_path': {'$exists': True}
+            'path': {'$regex': '^/mnt/bos/public-test/.*'},
+            'stat.driving_path': {'$exists': True},
         }
         fields = {
             'path': 1,
@@ -35,8 +36,6 @@ class MapLookup(Resource):
                 if diff < min_diff:
                     min_diff = diff
                     min_index = index
-            # About 10 meters
-            if min_diff < 3e-7:
-                print ('{} {}/{} {}'.format(min_diff, min_index, len(points), record_meta.path))
+            if min_diff < 1e-7:
                 result.append((record_meta.path, float(min_index) / len(points)))
-        return sorted(result, reversed=True)
+        return sorted(result, reverse=True)
