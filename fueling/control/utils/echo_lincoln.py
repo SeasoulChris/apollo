@@ -9,7 +9,15 @@ import fueling.control.dynamic_model.data_generator.feature_extraction as featur
 
 def hdf52txt(hdf5_file, txt_file):
     data = feature_extraction.generate_segment_from_list(hdf5_file)
-    input_data = data[:, 15:18] * 100  # 100%
+    data_points = np.size(data, 0)
+    # dimension check
+    if np.size(data, 1) == 22:  # gear info is not included
+        # generate forward gear
+        gear_col = np.ones((data_points, 1))
+    else:
+        gear_col = data[:, 22]
+
+    input_data = np.append(data[:, 15:18] * 100, gear_col, 1)  # 100%
     np.savetxt(txt_file, input_data[1:10, :], delimiter=' ')  # set 1:10 for test
 
 
@@ -45,7 +53,8 @@ def echo_lincoln_wrapper(hdf5_file):
     print(output_file)
     return txt2numpy(output_file)  # numpy data
 
-# demo
+
+# # demo
 # if __name__ == '__main__':
 #     FILE = '/apollo/data/hdf52txt/2_3.hdf5'
 #     result = echo_lincoln_wrapper(FILE)
