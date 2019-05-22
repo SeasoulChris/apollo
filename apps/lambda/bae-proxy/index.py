@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from bae.core.wsgi import WSGIApplication
 import flask
 import flask_restful
 
@@ -10,6 +11,4 @@ app = flask.Flask(__name__)
 api = flask_restful.Api(app)
 api.add_resource(VehicleCalibration, '/vehicle-calibration')
 
-
-if __name__ == '__main__':
-    app.run()
+application = WSGIApplication(app)

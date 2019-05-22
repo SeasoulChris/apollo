@@ -11,6 +11,9 @@ parser.add_argument('proto')
 class VehicleCalibration(Resource):
     """Vehicle Calibration restful service"""
 
+    def get(self):
+        return "OK"
+
     def post(self):
         proto_text = parser.parse_args().get('proto')
         # TODO(xiaoxq): This is just an echo for now.
