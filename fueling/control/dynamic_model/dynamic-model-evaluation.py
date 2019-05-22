@@ -18,6 +18,7 @@ else:
 VEHICLE_ID = feature_config["vehicle_id"]
 IS_BACKWARD = feature_config["is_backward"]
 
+
 def extract_scenario_name(dataset_path):
     result = re.findall(r"hdf5_evaluation/.+/(.+?).hdf5", dataset_path)[0]
     return result
@@ -34,13 +35,13 @@ class DynamicModelEvaluation(BasePipeline):
             mlp_model_path = os.path.join(platform_path,
                                           'dynamic_model_output/h5_model/mlp/backward/*')
             lstm_model_path = os.path.join(platform_path,
-                                          'dynamic_model_output/h5_model/lstm/backward/*')
+                                           'dynamic_model_output/h5_model/lstm/backward/*')
         else:
             evaluation_set = 'golden_test_forward'
             mlp_model_path = os.path.join(platform_path,
                                           'dynamic_model_output/h5_model/mlp/forward/*')
             lstm_model_path = os.path.join(platform_path,
-                                          'dynamic_model_output/h5_model/lstm/forward/*')
+                                           'dynamic_model_output/h5_model/lstm/forward/*')
 
         # PairRDD(model_name, folder_path)
         mlp_model_rdd = self.to_rdd(glob.glob(mlp_model_path)).keyBy(lambda _: 'mlp')
@@ -48,29 +49,32 @@ class DynamicModelEvaluation(BasePipeline):
         lstm_model_rdd = self.to_rdd(glob.glob(lstm_model_path)).keyBy(lambda _: 'lstm')
         evaluation_dataset = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID,
                                           evaluation_set, '*.hdf5')
+
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
             self.to_rdd(glob.glob(evaluation_dataset))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
+        # glog.info(evaluation_dataset_rdd.collect())
+        # return
 
         self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
-        self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
+        # self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
         platform_path = 'modules/control/learning_based_model/'
         if IS_BACKWARD:
             evaluation_set = 'golden_test_backward'
-            mlp_model_prefix = os.path.join(platform_path, 
+            mlp_model_prefix = os.path.join(platform_path,
                                             'dynamic_model_output/h5_model/mlp/backward')
-            lstm_model_prefix = os.path.join(platform_path, 
-                                            'dynamic_model_output/h5_model/lstm/backward')
+            lstm_model_prefix = os.path.join(platform_path,
+                                             'dynamic_model_output/h5_model/lstm/backward')
         else:
             evaluation_set = 'golden_test_forward'
-            mlp_model_prefix = os.path.join(platform_path, 
+            mlp_model_prefix = os.path.join(platform_path,
                                             'dynamic_model_output/h5_model/mlp/forward')
-            lstm_model_prefix = os.path.join(platform_path, 
-                                            'dynamic_model_output/h5_model/lstm/forward')
+            lstm_model_prefix = os.path.join(platform_path,
+                                             'dynamic_model_output/h5_model/lstm/forward')
         data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, evaluation_set)
 
         bos = self.bos()

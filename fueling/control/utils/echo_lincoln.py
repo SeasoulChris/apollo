@@ -6,26 +6,35 @@ import colored_glog as glog
 
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 
+# first line is initial velocity
+# second line is initial throttle, brake, gear
+
 
 def hdf52txt(hdf5_file, txt_file):
     data = feature_extraction.generate_segment_from_list(hdf5_file)
     data_points = np.size(data, 0)
+    init_v = data[0, 14]
     # dimension check
     if np.size(data, 1) > 22:  # gear info is included
-        input_data = data[:, [15, 16, 17, 22]] # (throttle, brake, steering, gear)
+        input_data = data[:, [15, 16, 17, 22]]  # (throttle, brake, steering, gear)
         # scale (throttle, brake, steering) to 100%
         input_data[:, 0:3] = input_data[:, 0:3] * 100
         # scale steering angle to [-720, 720]
-        input_data[:, 2] = input_data[:, 2] * 7.2
+        input_data[:, 2] = input_data[:, 2] * 4.7
     else:
         # generate fake gear, which is forward by default
         gear_col = np.ones((data_points, 1))
         # scale (throttle, brake, steering) to 100%
-        input_data = np.append(data[:, 15:18] * 100, gear_col, axis = 1)
+        input_data = np.append(data[:, 15:18] * 100, gear_col, axis=1)
         # scale steering angle to [-720, 720]
-        input_data[:, 2] = input_data[:, 2] * 7.2
+        input_data[:, 2] = input_data[:, 2] * 4.7
     # np.savetxt(txt_file, input_data[1:10, :], delimiter=' ')  # set 1:10 for test
     np.savetxt(txt_file, input_data[:, :], delimiter=' ')
+    # insert initial velocity as the first line
+    with open(txt_file, 'r+') as f:
+        content = f.read()
+        f.seek(0, 0)
+        f.write(str(init_v) + '\n' + content)
 
 
 def echo_lincoln(input_file, output_file):
