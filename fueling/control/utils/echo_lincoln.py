@@ -11,13 +11,19 @@ def hdf52txt(hdf5_file, txt_file):
     data = feature_extraction.generate_segment_from_list(hdf5_file)
     data_points = np.size(data, 0)
     # dimension check
-    if np.size(data, 1) == 22:  # gear info is not included
-        # generate forward gear
-        gear_col = np.ones((data_points, 1))
+    if np.size(data, 1) > 22:  # gear info is included
+        input_data = data[:, [15, 16, 17, 22]] # (throttle, brake, steering, gear)
+        # scale (throttle, brake, steering) to 100%
+        input_data[:, 0:3] = input_data[:, 0:3] * 100
+        # scale steering angle to [-720, 720]
+        input_data[:, 2] = input_data[:, 2] * 7.2
     else:
-        gear_col = data[:, 22]
-
-    input_data = np.append(data[:, 15:18] * 100, gear_col, 1)  # 100%
+        # generate fake gear, which is forward by default
+        gear_col = np.ones((data_points, 1))
+        # scale (throttle, brake, steering) to 100%
+        input_data = np.append(data[:, 15:18] * 100, gear_col, axis = 1)
+        # scale steering angle to [-720, 720]
+        input_data[:, 2] = input_data[:, 2] * 7.2
     # np.savetxt(txt_file, input_data[1:10, :], delimiter=' ')  # set 1:10 for test
     np.savetxt(txt_file, input_data[:, :], delimiter=' ')
 
