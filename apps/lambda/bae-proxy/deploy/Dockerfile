@@ -11,10 +11,12 @@ COPY tools/tool-env.yaml /tmp/tool-env.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
     /usr/local/miniconda/bin/conda env update -f /tmp/tool-env.yaml
 
-COPY apps/lambda/bae-proxy /apollo/modules/data/fuel/apps/lambda/bae-proxy
 COPY apps/local /apollo/modules/data/fuel/apps/local
 COPY fueling /apollo/modules/data/fuel/fueling
 COPY tools /apollo/modules/data/fuel/tools
 COPY kube.config /root/.kube/config
 
-ENTRYPOINT [ "/apollo/modules/data/fuel/apps/lambda/bae-proxy/entrypoint.sh" ]
+# Image layout:
+# https://cloud.baidu.com/doc/BAE-Pro/GUIGettingStarted.html#.E8.87.AA.E5.AE.9A.E4.B9.89.E9.95.9C.E5.83.8F
+COPY apps/lambda/bae-proxy /home/bae/app
+ENTRYPOINT [ "/home/bae/app/entrypoint.sh" ]

@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_REGISTRY="registry.bce.baidu.com"
-DOCKER_USER="378e14ae2b7b4da5bebfa17bf566686f"
-DOCKER_PASSWORD=""
-
-REPO="${DOCKER_REGISTRY}/${DOCKER_USER}/apollo-fuel-bae-proxy"
+REPO="${DOCKER_REGISTRY}/a7e094e2914d424caa523a201e57995b/apollo-fuel-bae-proxy"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
 
 echo "Building image: ${IMAGE}"
@@ -17,7 +14,9 @@ cp ~/.kube/config ./kube.config
 #    -subj "/C=CN/ST=Beijing/L=Beijing/O=Baidu/OU=IDG/CN=apollo.bceapp.com"
 docker build -t ${IMAGE} --network host -f apps/lambda/bae-proxy/deploy/Dockerfile .
 
-# Please provide password if you want to login automatically.
+# Please provide credential if you want to login automatically.
+DOCKER_USER=""
+DOCKER_PASSWORD=""
 if [ ! -z "${DOCKER_PASSWORD}" ]; then
   docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
 fi
