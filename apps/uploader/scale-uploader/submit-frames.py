@@ -180,8 +180,8 @@ def send_laneline_request(lidar_task_id, image_url, access_key):
                     'double dash',
                     'left dash right solid',
                     'left solid right dash',
-                    'curb',
-                    'parking lane',
+                    'left curb',
+                    'right curb',
                     'imaginary lane',
                     'construction cone line',
                     'other'
@@ -203,16 +203,15 @@ def send_laneline_request(lidar_task_id, image_url, access_key):
                     'other'
                 ]
             },
-            'fork and merge': {
+            'sub category': {
                 'type': 'category',
-                'description': 'Does the line include a fork or merge?',
+                'description': 'Does this line belong to one of sub-categories below?',
                 'choices': [
-                    'lane fork left',
-                    'lane fork right',
-                    'left lane before merge',
-                    'right lane before merge',
-                    'left end lane',
-                    'right end lane',
+                    'fork lane left',
+                    'fork lane right',
+                    'merge lane left',
+                    'merge lane right ',
+                    'parking lane',
                     'center lane',
                     'none'
                 ]
