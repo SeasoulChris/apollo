@@ -596,7 +596,8 @@ class FramePopulator(object):
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
-            return
+            glog.warn('keep this frame anyways, and let agent do the filtering per requirement')
+            #return
 
         pcd_file_name = os.path.join(pcd_dir, 'velodyne128-{}.pcd'.format(frame_counter))
         if os.path.exists(pcd_file_name):
