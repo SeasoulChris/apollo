@@ -168,9 +168,44 @@ class LaneLSTM(nn.Module):
 # TODO(jiacheng):
 #   - Add pairwise attention between obs_encoding and every lane_encoding during aggregating.
 class AttentionalAggregation(nn.Module):
-    def __init__(self):
+    def __init__(self, input_encoding_size, output_size):
         super(AttentionalAggregation, self).__init__()
+        self.input_encoding_size = input_encoding_size
+        self.output_size = output_size
+
+        self.encode = torch.nn.Sequential(
+            nn.Linear(input_encoding_size*2, output_size),
+            nn.ReLU(),
+        )
+
+    def forward(self, obs_encoding, lane_encoding, same_obs_mask):
+        '''Forward function
+            - obs_encoding: N x input_encoding_size
+            - lane_encoding: M x input_encoding_size
+            - same_obs_mask: M x 1
+
+            output: N x output_size
+        '''
+        N = obs_encoding.size(0)
+        out = cuda(torch.zeros(N, self.input_encoding_size*2))
+
+        for obs_id in range(same_obs_mask.max().long().item() + 1):
+            curr_mask = (same_obs_mask[:, 0] == obs_id)
+            curr_num_lane = torch.sum(curr_mask).long().item()
+
+            # (curr_num_lane x input_encoding_size)
+            curr_lane_encoding = lane_encoding[curr_mask, :].view(curr_num_lane, -1)
+            curr_lane_maxpool = torch.max(curr_lane_encoding, 0, keepdim=True)
+            curr_lane_avgpool = torch.mean(curr_lane_encoding, 0, keepdim=True)
+            out[obs_id, :] = torch.cat((curr_lane_maxpool, curr_lane_avgpool), 1)
+
+        out = self.encode(out)
+        return out
+
+
+class DistributionalScoring(nn.Module):
+    def __init__(self):
+        super(DistributionalScoring, self).__init__()
 
     def forward(self, X):
-        # TODO(jiacheng): For now, use simple MAX & AVG pooling.
         return X
