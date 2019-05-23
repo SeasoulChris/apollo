@@ -73,11 +73,13 @@ class VehicleLSTM(nn.Module):
         '''Forward function
             - obs_features: N x 180
             - hist_size: N x 1
+
+            output: N x encode_size
         '''
         N = obs_features.size(0)
 
         # Input embedding.
-        # (N x 20)
+        # (N x 20 x 1)
         obs_x = obs_features[:, 1::9].view(N, 20, 1)
         obs_y = obs_features[:, 2::9].view(N, 20, 1)
         vel_x = obs_features[:, 3::9].view(N, 20, 1)
@@ -111,12 +113,56 @@ class VehicleLSTM(nn.Module):
 # TODO(jiacheng):
 #   - With the help of obstacle_feature, add attention mechanism in LSTM.
 class LaneLSTM(nn.Module):
-    def __init__(self):
+    def __init__(self, embed_size=64, hidden_size=128, encode_size=128):
         super(LaneLSTM, self).__init__()
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.encode_size = encode_size
 
-    def forward(self, X):
-        # TODO(jiacheng): For now, use simple LSTM.
-        return X
+        self.embed = torch.nn.Sequential(
+            nn.Linear(4, embed_size),
+            nn.ReLU(),
+        )
+
+        h0 = torch.zeros(2, 1, hidden_size)
+        c0 = torch.zeros(2, 1, hidden_size)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+
+        self.encode = torch.nn.Sequential(
+            nn.Linear(hidden_size*8, encode_size),
+            nn.ReLU(),
+        )
+
+    def forward(self, lane_features):
+        '''Forward function:
+            - lane_features: N x 400
+
+            output: N x encode_size
+        '''
+        N = lane_features.size(0)
+
+        # Input embedding.
+        # (N x 100 x embed_size)
+        lane_embed = self.embed(lane_features.view(N*100, 4)).view(N, 100, self.embed_size)
+
+        # Run through RNN.
+        h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
+        # (N x 20 x 2*hidden_size)
+        lane_states, _ = self.vehicle_rnn(lane_embed, (h0, c0))
+        # (N x 2*hidden_size)
+        front_states = lane_states[:, 0, :]
+        back_states = lane_states[:, -1, :]
+        max_states = torch.max(lane_states, 1)
+        avg_states = torch.mean(lane_states, 1)
+
+        # Encoding
+        out = torch.cat((front_states, back_states, max_states, avg_states), 1)
+        out = self.encode(out)
+        return out
 
 
 # TODO(jiacheng):
