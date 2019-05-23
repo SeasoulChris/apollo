@@ -5,12 +5,13 @@
 import gc
 import math
 import os
-import subprocess
 
-from google.protobuf.json_format import MessageToJson
-from pyquaternion import Quaternion as PyQuaternion
 import colored_glog as glog
+import cv2
+from google.protobuf.json_format import MessageToJson
 import numpy as np
+import pypcd
+from pyquaternion import Quaternion as PyQuaternion
 import yaml
 
 from cyber_py import record
@@ -23,8 +24,8 @@ from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 import fueling.common.bos_client as bos_client
+import fueling.common.file_utils as file_utils
 import fueling.streaming.streaming_utils as streaming_utils
-
 
 # Map channels to processing functions
 CHANNEL_PROCESS_MAP = {}
@@ -100,7 +101,7 @@ def load_yaml_settings(yaml_file_name):
 
 def dump_img_name(output_dir, image_name):
     """Write image file name only"""
-    create_dir_if_not_exist(output_dir)
+    file_utils.makedirs(output_dir)
     image_file_path = os.path.join(output_dir, image_name)
     if not os.path.exists(image_file_path):
         os.mknod(image_file_path)
@@ -272,15 +273,6 @@ def get_interp_pose(timestamp, pose_left, pose_right):
     sensor_pose_interp.orientation.qz = pyqt_interp.z
     sensor_pose_interp.orientation.qw = pyqt_interp.w
     return sensor_pose_interp
-
-def create_dir_if_not_exist(dir_path):
-    """Simple wrapper to run shell command"""
-    if os.path.exists(dir_path):
-        return 0
-    command = 'sudo mkdir -p {} -m 755'.format(dir_path)
-    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    prc.communicate()
-    return prc.returncode
 
 def read_messages_func(record_file):
     """Define a util function to read messages from record file"""
@@ -482,7 +474,7 @@ class FramePopulator(object):
         self._root_dir = root_dir
         self._task_dir = os.path.join(root_dir, task_dir)
         self._slice_size = slice_size
-        create_dir_if_not_exist(self._task_dir)
+        file_utils.makedirs(self._task_dir)
 
         pointcloud_128 = PointCloudSensor(channel=SENSOR_PARAMS['lidar_channel'],
                                           intrinsics=None,
@@ -522,21 +514,17 @@ class FramePopulator(object):
                                  extrinsics=SENSOR_PARAMS['radar_rear_extrinsics'])
         radar_rear.set_radar_properties(frame_pb2.RadarPoint.REAR, [pointcloud_128.transform])
 
-    def construct_frames(self, message_structs):
+    def construct_frames(self, message_structs, max_diff):
         """Construct the frames by using given messages."""
         frame_dir = os.path.join(self._task_dir, 'frames')
-        create_dir_if_not_exist(frame_dir)
+        file_utils.makedirs(frame_dir)
         lidar_msg = \
             next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
-        max_diff = 30
-        front6mm_msg = \
-            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['front6mm_channel'])
-        diff = abs(float(lidar_msg.message.timestamp) - float(front6mm_msg.message.timestamp))
-        if diff > max_diff * (10**6):
-            glog.warn('time diff between lidar and front6mm is too big: {}, skip this frame'.format(diff))
+        if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
             return
+
         lidar_pose = get_interp_pose(lidar_msg.message.timestamp,
                                      lidar_msg.pose_left,
                                      lidar_msg.pose_right)
@@ -570,6 +558,129 @@ class FramePopulator(object):
         with open(file_name, 'w') as outfile:
             outfile.write(json_obj)
         glog.info('dumped json: {}'.format(file_name))
+
+    def diff_between_lidar_and_camera(self, lidar_msg, message_structs, max_diff):
+        """Check if time diff between lidar and camera is acceptable"""
+        front6mm_msg = \
+            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['front6mm_channel'])
+        diff = abs(float(lidar_msg.message.timestamp) - float(front6mm_msg.message.timestamp))
+        actual_diff = diff / (10 ** 6)
+        if actual_diff > max_diff:
+            glog.warn('diff {} is bigger than {}'.format(actual_diff, max_diff))
+            return False
+        return True
+
+    def format_output(self, file_path, params, tab_size):
+        """Output content to file with particular format"""
+        with open(file_path, 'a') as output_file:
+            line = '{}\n'.format((' ' * tab_size).join([str(param) for param in params]))
+            output_file.write(line)
+
+    def construct_bj_frames(self, message_structs, frame_counter, max_diff):
+        """Construct frames for labeling pcd/cameras only"""
+        channel_map = {
+            '/apollo/sensor/camera/front_6mm/image/compressed':'front6mm',
+            '/apollo/sensor/camera/front_12mm/image/compressed':'front12mm',
+            '/apollo/sensor/camera/left_fisheye/image/compressed':'leftfisheye',
+            '/apollo/sensor/camera/right_fisheye/image/compressed':'rightfisheye',
+            '/apollo/sensor/camera/rear_6mm/image/compressed':'rear6mm'
+        }
+        pcd_dir = os.path.join(self._task_dir, 'PCD')
+        img_dir = os.path.join(self._task_dir, 'images')
+        file_utils.makedirs(pcd_dir)
+        file_utils.makedirs(img_dir)
+        lidar_msg = \
+            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
+        lidar_time = float(lidar_msg.message.timestamp)/(10**9)
+        lidar_time_str = '{:.9f}'.format(lidar_time)
+
+        # Filter out the frames that lidar-128 has time diff bigger than designed value
+        if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
+            return
+
+        pcd_file_name = os.path.join(pcd_dir, 'velodyne128-{}.pcd'.format(frame_counter))
+        if os.path.exists(pcd_file_name):
+            glog.info('frame file {} already existed, do nothing'.format(pcd_file_name))
+            return
+
+        # PCD
+        glog.info('generating pcd: {}'.format(pcd_file_name))
+        pcd_object = streaming_utils.load_message_obj(lidar_msg.message.objpath)
+        point_cloud = PointCloud()
+        point_cloud.ParseFromString(pcd_object)
+        pcd_points = []
+        pcd_time = lidar_time
+        for point in point_cloud.point:
+            pcd_points.append([point.x, point.y, point.z, point.intensity, pcd_time])
+        pcd_data = np.array(pcd_points)
+        meta_data={}
+        meta_data['version'] = '0.7'
+        meta_data['fields'] = ['x', 'y', 'z', 'intensity', 'timestamp']
+        meta_data['size'] = [4, 4, 4, 1, 4]
+        meta_data['type'] = ['F', 'F', 'F', 'U', 'F']
+        meta_data['count'] = [1, 1, 1, 1, 1]
+        meta_data['width'] = len(pcd_points)
+        meta_data['height'] = 1
+        meta_data['viewpoint'] = '0 0 0 1 0 0 0'
+        meta_data['points'] = len(pcd_points)
+        meta_data['data'] = 'ascii'
+        pcd = pypcd.PointCloud(meta_data, pcd_data)
+        pcd.save_pcd('{}-ascii'.format(pcd_file_name), 'ascii')
+        cloud = pypcd.PointCloud.from_path('{}-ascii'.format(pcd_file_name))
+        cloud.save_pcd(pcd_file_name, compression='binary_compressed')
+        os.remove('{}-ascii'.format(pcd_file_name))
+
+        # IMAGES
+        image_file_name = os.path.join(pcd_dir, 'photo.txt')
+        glog.info('generating images: {}'.format(image_file_name))
+        params = [frame_counter, lidar_time_str]
+        for message_struct in message_structs:
+            channel, timestamp, _, objpath = message_struct.message
+            if channel.find('camera') != -1:
+                current_image_files = os.listdir(img_dir)
+                results = [e for i, e in enumerate(current_image_files) if e.endswith('.jpg')]
+                image_counter = len(results)
+                image_data = streaming_utils.load_image_data(objpath)
+                img = np.asarray(bytearray(image_data), dtype="uint8")
+                img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+                image_name = 'pic-{}.jpg'.format(image_counter)
+                cv2.imwrite(os.path.join(img_dir, image_name), img)
+                image_name_in_log = '{}_{}'.format(channel_map[channel], image_name)
+                if channel == '/apollo/sensor/camera/front_6mm/image/compressed':
+                    image_name_in_log = '{:.9f}#{}'.format(float(timestamp)/(10**9), 
+                                                           image_name_in_log)
+                params.append(image_name_in_log)
+        self.format_output(image_file_name, params, 3)
+
+        # POSE
+        pose_file_name = os.path.join(pcd_dir, 'pose.txt')
+        glog.info('printing gps pose info to: {}'.format(pose_file_name))
+        lidar_pose = get_interp_pose(lidar_msg.message.timestamp,
+                                     lidar_msg.pose_left,
+                                     lidar_msg.pose_right)
+        pose_transform = generate_transform(lidar_pose.orientation, lidar_pose.position)
+        lidar_transform = CHANNEL_PROCESS_MAP[lidar_msg.message.topic].transform
+        transform = np.dot(pose_transform, lidar_transform)
+        rotation = get_rotation_from_tranform(transform)
+        qtn = rotation_to_quaternion(rotation)
+        if not os.path.exists(pose_file_name):
+            with open(pose_file_name, 'w') as pose_file:
+                line = (' '*4).join([str(i) for i in 
+                    ['SEQ','TIME','X','Y','Z','QW','QX','QY','QZ']])
+                pose_file.write('{}\n'.format(line))
+        params = [frame_counter, lidar_time_str, transform[0][3], transform[1][3], transform[2][3],
+                  qtn.qw, qtn.qx, qtn.qy, qtn.qz]
+        self.format_output(pose_file_name, params, 2)
+
+        #TIMESTAMP
+        stamp_file_name = os.path.join(pcd_dir, 'stamp.txt')
+        record_file_name = os.path.basename(self._task_dir)
+        if not os.path.exists(stamp_file_name):
+            with open(stamp_file_name, 'w') as stamp_file:
+                line = (' '*8).join([str(i) for i in ['RECORD_FILE','SEQ','TIME']])
+                stamp_file.write('{}\n'.format(line))
+        params = [record_file_name, frame_counter, lidar_time_str]
+        self.format_output(stamp_file_name, params, 2)
 
 class DataStream(object):
     """Logic data buffer to manage data reading from different kinds of sources."""
@@ -664,11 +775,14 @@ class Builder(object):
             return 0, None   # means message accepted
         return 0, message_struct # means message not accepted
 
-    def complete(self, frame_populator):
+    def complete(self, frame_populator, frame_counter, agent, diff):
         """Builder complete, and send messages to framepopulator in this case"""
         messages = self._guide_lines.values()
         messages = sorted(messages, key=lambda message_struct: message_struct.message.topic)
-        frame_populator.construct_frames(messages)
+        if agent == "scale":
+            frame_populator.construct_frames(messages, diff)
+        elif agent == "bj":
+            frame_populator.construct_bj_frames(messages, frame_counter, diff)
 
 class BuilderManager(object):
     """Builder management pool."""
@@ -676,17 +790,17 @@ class BuilderManager(object):
         self._builder_list = []
         self._rules = rules
         self._frame_populator = frame_populator
-        self._counter = 0
+        self._counter = 1
 
-    def throw_to_pool(self, message_struct):
+    def throw_to_pool(self, message_struct, agent, diff):
         """Process new coming message. Loop each builder in the list and find the right one"""
         for builder in self._builder_list:
             status, msg = builder.build(message_struct)
             if msg is None:
                 if status == 1:
                     glog.info('constructing the {}th frame'.format(self._counter))
+                    builder.complete(self._frame_populator, self._counter, agent, diff)
                     self._counter += 1
-                    builder.complete(self._frame_populator)
                     self._builder_list.remove(builder)
                 return
         self._builder_list.append(Builder(message_struct, self._rules))

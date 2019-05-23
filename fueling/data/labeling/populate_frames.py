@@ -9,6 +9,7 @@ import os
 import textwrap
 import time
 
+from absl import flags
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
 import colored_glog as glog
@@ -16,12 +17,15 @@ import colored_glog as glog
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
 import fueling.common.email_utils as email_utils
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # Partition records into slices, this is to tell how many records files in one slice
-SLICE_SIZE = 4
+flags.DEFINE_integer('slice_size', 3, 'How many records files in one slice.')
+flags.DEFINE_string('labeling_agent', 'scale', 'The labeling company/entity.')
+flags.DEFINE_integer('diff', 30, 'Max diff allowed between lidar and camera, in milliseconds.')
 
 # The channels we need to populate
 WANTED_CHANNELS = {
@@ -50,11 +54,11 @@ def are_all_channels_available(todo_target, root_dir):
             return False
     return True
 
-def record_to_target_partition(target_record):
+def record_to_partition(target_record, slice_size):
     """Shard source record file to a certain partition."""
     target_partition, record_file = target_record
     record_fileparts = os.path.basename(record_file).split('.')
-    target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2])/SLICE_SIZE)
+    target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2])/slice_size)
     return (target_partition, record_file)
 
 def create_dataframe(sql_context, msgs_rdd, topics):
@@ -77,7 +81,7 @@ def get_next_message(msg, msg_map, msgs_iterator):
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
     return msg
 
-def construct_frames(root_dir, frames):
+def construct_frames(root_dir, frames, slice_size, agent, diff):
     """Construct the frame by using given messages.
     Read the according message ONCE again, to avoid playing big messages in memory"""
     target_dir, msgs = frames
@@ -98,7 +102,7 @@ def construct_frames(root_dir, frames):
     glog.info('Total messages: {}'.format(sum(msg_map.itervalues())))
 
     src_records = list(streaming_utils.target_partition_to_records(
-        root_dir, target_dir, SLICE_SIZE))
+        root_dir, target_dir, slice_size))
 
     msgs_stream = populate_utils.DataStream(
         src_records,
@@ -111,7 +115,7 @@ def construct_frames(root_dir, frames):
 
     builder_manager = populate_utils. \
         BuilderManager(WANTED_CHANNELS.values(),
-                       populate_utils.FramePopulator(root_dir, target_dir, SLICE_SIZE))
+                       populate_utils.FramePopulator(root_dir, target_dir, slice_size))
     msg = get_next_message(None, msg_map, msgs_iterator)
     message_struct = populate_utils.MessageStruct(msg, None, None)
     pose = pose_iterator.next(lambda x: x.topic == '/apollo/localization/pose')
@@ -124,12 +128,12 @@ def construct_frames(root_dir, frames):
         else:
             if message_struct.pose_right is None or message_struct.pose_right > pose.timestamp:
                 message_struct.pose_right = pose
-            builder_manager.throw_to_pool(message_struct)
+            builder_manager.throw_to_pool(message_struct, agent, diff)
             msg_new = get_next_message(msg, msg_map, msgs_iterator)
             while msg_new is not None and msg_new.timestamp == msg.timestamp \
                  and msg_new.topic == msg.topic:
-                builder_manager.throw_to_pool(populate_utils.MessageStruct(
-                    message_struct.message, message_struct.pose_left, message_struct.pose_right))
+                builder_manager.throw_to_pool(populate_utils.MessageStruct(message_struct.message,
+                    message_struct.pose_left, message_struct.pose_right), agent, diff)
                 msg_new = get_next_message(msg, msg_map, msgs_iterator)
             msg = msg_new
             message_struct = populate_utils.MessageStruct(msg, None, None)
@@ -185,7 +189,7 @@ class PopulateFramesPipeline(BasePipeline):
         """Run test."""
         root_dir = '/apollo'
         target_dir = 'modules/data/labeling/generated'
-        populate_utils.create_dir_if_not_exist(os.path.join(root_dir, target_dir))
+        file_utils.makedirs(os.path.join(root_dir, target_dir))
         glog.info('Running TEST, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
@@ -215,7 +219,7 @@ class PopulateFramesPipeline(BasePipeline):
         """Run prod."""
         root_dir = bos_client.BOS_MOUNT_PATH
         target_dir = 'modules/data/labeling/generated'
-        populate_utils.create_dir_if_not_exist(bos_client.abs_path(target_dir))
+        file_utils.makedirs(bos_client.abs_path(target_dir))
         glog.info('Running PROD, target_dir: {}'.format(bos_client.abs_path(target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
@@ -247,7 +251,7 @@ class PopulateFramesPipeline(BasePipeline):
                     # PairRDD(target_dir, record_files)
                     .filter(lambda record: are_all_channels_available(record, root_dir))
                     # PairRDD(target_partition, record_files), slice the task into partitions
-                    .map(record_to_target_partition)
+                    .map(lambda record: record_to_partition(record, self.FLAGS.get('slice_size')))
                     # PairRDD(target_partition, messages_metadata), load messages for each record
                     .flatMapValues(lambda record: streaming_utils
                                    .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
@@ -270,7 +274,8 @@ class PopulateFramesPipeline(BasePipeline):
          # PairRDD(target, (topic-time-pair)s)
          .groupByKey()
          # PairRDD(target, (topic-time-pair)s), process every partition with frames belonging to it
-         .map(lambda frames: construct_frames(root_dir, frames))
+         .map(lambda frames: construct_frames(root_dir, frames, self.FLAGS.get('slice_size'),
+            self.FLAGS.get('labeling_agent'), self.FLAGS.get('diff')))
          # Simply trigger action
          .count())
 
