@@ -167,8 +167,9 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
 
 
 class ApolloVehicleRegularRoadDataset(Dataset):
-    def __init__(self, data_dir, is_lane_scanning=True):
+    def __init__(self, data_dir, is_lane_scanning=True, training_mode=True):
         self.obstacle_features = []
+        self.obstacle_hist_size = []
         self.lane_features = []
         self.labels = []
         self.is_cutin = []
@@ -181,6 +182,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
             for data_pt in file_content:
                 curr_num_lane_sequence = int(data_pt[0])
                 curr_obs_feature = np.array(data_pt[1:181]).reshape((1, 180))
+                curr_obs_hist_size = np.sum(np.array(data_pt[1:181:9])) * np.ones((1, 1))
                 curr_lane_feature = np.array(data_pt[181:181+400*curr_num_lane_sequence])
                                     .reshape((curr_num_lane_sequence, 400))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
@@ -191,6 +193,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                     for i, lane_label in enumerate(curr_label):
                         if lane_label == 1:
                             self.obstacle_features.append(curr_obs_feature)
+                            self.obstacle_hist_size.append(curr_obs_hist_size)
                             self.lane_features.append(curr_lane_feature)
                             curr_lane_label = np.zeros((curr_num_lane_sequence, 1))
                             curr_lane_label[i, 0] = 1
@@ -206,7 +209,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        out = (self.obstacle_features[idx], self.lane_features[idx],
+        out = (self.obstacle_features[idx], self.obstacle_hist_size[idx], self.lane_features[idx],
                self.labels[idx], self.is_cutin[idx])
         return out
 
@@ -214,10 +217,11 @@ class ApolloVehicleRegularRoadDataset(Dataset):
 def collate_fn(batch):
     # batch is a list of tuples.
     # unzip to form lists of np-arrays.
-    obs_features, lane_features, labels, is_cutin = zip(*batch)
+    obs_features, obs_hist_size, lane_features, labels, is_cutin = zip(*batch)
 
     same_obstacle_mask = [elem[0] for elem in lane_features]
     obs_features = np.concatenate(obstacle_features)
+    obs_hist_size = np.concatenate(obs_hist_size)
     lane_features = np.concatenate(lane_features)
     labels = np.concatenate(labels)
     is_cutin = np.concatenate(is_cutin)
@@ -225,8 +229,10 @@ def collate_fn(batch):
     same_obstacle_mask = [np.ones((length, 1))*i for i, length in enumerate(same_obstacle_mask)]
     same_obstacle_mask = np.concatenate(same_obstacle_mask)
 
-    return (torch.from_numpy(obs_features), torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
-           (torch.from_numpy(labels), torch.from_numpy(is_cutin), torch.from_numpy(same_obstacle_mask))
+    return (torch.from_numpy(obs_features), torch.from_numpy(obs_hist_size), \
+            torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
+           (torch.from_numpy(labels), torch.from_numpy(is_cutin), \
+            torch.from_numpy(same_obstacle_mask))
 
 
 if __name__ == '__main__':
