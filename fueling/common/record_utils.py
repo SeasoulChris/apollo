@@ -12,11 +12,12 @@ from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
+from modules.drivers.proto.conti_radar_pb2 import ContiRadar
+from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.routing.proto.routing_pb2 import RoutingResponse
-
 
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'
 CONTROL_CHANNEL = '/apollo/control'
@@ -31,6 +32,9 @@ LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
 REAR_6mm_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
 RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
 GNSS_ODOMETRY_CHANNEL = '/apollo/sensor/gnss/odometry'
+FRONT_RADAR_CHANNEL = '/apollo/sensor/radar/front'
+REAR_RADAR_CHANNEL = '/apollo/sensor/radar/rear'
+LIDAR_128_CHANNEL = '/apollo/sensor/lidar128/compensator/PointCloud2'
 
 CHANNEL_TO_TYPE = {
     CHASSIS_CHANNEL: Chassis,
@@ -44,6 +48,9 @@ CHANNEL_TO_TYPE = {
     LEFT_FISHEYE_CHANNEL: CompressedImage,
     RIGHT_FISHEYE_CHANNEL: CompressedImage,
     PLANNING_CHANNEL: ADCTrajectory,
+    FRONT_RADAR_CHANNEL: ContiRadar,
+    REAR_RADAR_CHANNEL: ContiRadar,
+    LIDAR_128_CHANNEL: PointCloud
 }
 
 

@@ -8,9 +8,9 @@ import os
 import pickle
 import re
 import shutil
-import subprocess
 import stat
 
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 
 STREAMING_PATH = 'modules/streaming'
@@ -186,28 +186,10 @@ def write_message_obj(record_dir, renamed_topic, py_message, header_time):
         else:
             pickle.dump(py_message.message, message_file, pickle.HIGHEST_PROTOCOL)
 
-def create_dir_if_not_exist(dir_path):
-    """Simple wrapper to run shell command"""
-    if os.path.exists(dir_path):
-        return 0
-    command = 'sudo mkdir -p {} -m 755'.format(dir_path)
-    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    prc.communicate()
-    return prc.returncode
-
-def chmod_dir(dir_path, mode):
-    """Simple wrapper to run shell command"""
-    if not os.path.exists(dir_path):
-        return 0
-    command = 'sudo chmod {} {}'.format(mode, dir_path)
-    prc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    prc.communicate()
-    return prc.returncode
-
 def upload_images(root_dir, record_dir, record_file):
     """Upload binary images to streaming image folder"""
     image_path = record_to_stream_path(record_file, root_dir, STREAMING_IMAGE)
-    create_dir_if_not_exist(image_path)
+    file_utils.makedirs(image_path)
     for message_name in os.listdir(record_dir):
         if message_name.find('compressed') != -1:
             shutil.copy2(

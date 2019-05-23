@@ -10,6 +10,7 @@ import yaml
 
 from cyber_py import record
 
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
@@ -55,7 +56,7 @@ def parse_record(record_file, root_dir):
                                                        root_dir,
                                                        streaming_utils.STREAMING_DATA)
     glog.info('Executor: record directory : {}'.format(record_dir))
-    streaming_utils.create_dir_if_not_exist(record_dir)
+    file_utils.makedirs(record_dir)
     if os.path.exists(os.path.join(record_dir, 'COMPLETE')):
         glog.info('target has been generated, do nothing')
         return

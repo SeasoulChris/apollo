@@ -143,7 +143,7 @@ def decode_videos(message_meta):
         glog.error('no video frames for target dir and topic {}'.format(target_topic))
         return
     target_dir, topic = target_topic
-    streaming_utils.create_dir_if_not_exist(target_dir)
+    file_utils.makedirs(target_dir)
     # Use the first message name in the group as the current group name
     cur_group_name = streaming_utils.get_message_id(meta_list[0][0], topic)
     h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(cur_group_name))
@@ -154,7 +154,7 @@ def decode_videos(message_meta):
                 h265_video_file.write(video_frame_bin.read())
     # Invoke video2jpg binary executable
     image_output_path = os.path.join(target_dir, cur_group_name)
-    streaming_utils.create_dir_if_not_exist(image_output_path)
+    file_utils.makedirs(image_output_path)
     video_decoder_path = '/apollo/bazel-bin/modules/drivers/video/tools/decode_video/video2jpg'
     return_code = os.system('{} --input_video={} --output_dir={}'.format(
         video_decoder_path, h265_video_file_path, image_output_path))
@@ -183,6 +183,7 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     topic_descs = {}
     counter = 0
     for message in reader.read_messages():
+        message_content = message.message
         if message.topic in VIDEO_CHANNELS.values():
             message_content = get_image_back(video_dir, message)
             if not message_content:
@@ -201,7 +202,10 @@ def replace_images(target_record, root_dir, decoded_records_dir):
 
 def get_image_back(video_dir, message):
     """Actually change the content of message from video bytes to image bytes"""
-    message_id = streaming_utils.get_message_id(message.timestamp, message.topic)
+    message_proto = CompressedImage()
+    message_proto.ParseFromString(message.message)
+    message_id = streaming_utils.get_message_id(
+        int(round(message_proto.header.timestamp_sec * (10 ** 9))), message.topic)
     message_path = find_message_in_video_dir(video_dir, message_id)
     if not message_path:
         glog.error('message {} not found in video dir {}'.format(message_id, video_dir))
@@ -216,8 +220,6 @@ def get_image_back(video_dir, message):
     if not result:
         glog.error('failed to encode message {}'.format(message_id))
         return None
-    message_proto = CompressedImage()
-    message_proto.ParseFromString(message.message)
     message_proto.format = '; jpeg compressed bgr8'
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
     return message_proto.SerializeToString()
