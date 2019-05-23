@@ -27,6 +27,7 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from learning_algorithms.utilities.train_utils import *
+from learning_algorithms.utilities.network_utils import *
 
 
 class LaneAttention(nn.Module):
@@ -204,8 +205,33 @@ class AttentionalAggregation(nn.Module):
 
 
 class DistributionalScoring(nn.Module):
-    def __init__(self):
+    def __init__(self, obs_enc_size, lane_enc_size, aggr_enc_size, mlp_size=[100, 30, 1]):
         super(DistributionalScoring, self).__init__()
+        self.mlp = generate_mlp(\
+            [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0)
 
-    def forward(self, X):
-        return X
+    def forward(self, obs_encoding, lane_encoding, aggregated_info, same_obs_mask):
+        '''Forward function (M >= N)
+            - obs_encoding: N x obs_enc_size
+            - lane_encoding: M x lane_enc_size
+            - aggregated_info: N x aggr_enc_size
+        '''
+        N = obs_encoding.size(0)
+        M = lane_encoding.size(0)
+        out = cuda(torch.zeros(M, 1))
+
+        for obs_id in range(same_obs_mask.max().long().item() + 1):
+            curr_mask = (same_obs_mask[:, 0] == obs_id)
+            curr_num_lane = torch.sum(curr_mask).long().item()
+
+            curr_obs_enc = obs_encoding[obs_id, :].view(1, -1)
+            curr_obs_enc = curr_obs_enc.repeat(curr_num_lane, 1)
+            curr_agg_info = aggregated_info[obs_id, :].view(1, -1)
+            curr_agg_info = curr_agg_info.repeat(curr_num_lane, 1)
+            curr_lane_enc = lane_encoding[curr_mask, :].view(curr_num_lane, -1)
+
+            curr_encodings = torch.cat((curr_obs_enc, curr_agg_info, curr_lane_enc), 1)
+            curr_scores = self.mlp(curr_encodings).view(-1)
+            out[curr_mask, :] = curr_scores
+
+        return out
