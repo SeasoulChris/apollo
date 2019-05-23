@@ -58,7 +58,7 @@ def record_to_partition(target_record, slice_size):
     """Shard source record file to a certain partition."""
     target_partition, record_file = target_record
     record_fileparts = os.path.basename(record_file).split('.')
-    target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2])/slice_size)
+    target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2]) / slice_size)
     return (target_partition, record_file)
 
 def create_dataframe(sql_context, msgs_rdd, topics):
@@ -274,8 +274,9 @@ class PopulateFramesPipeline(BasePipeline):
          # PairRDD(target, (topic-time-pair)s)
          .groupByKey()
          # PairRDD(target, (topic-time-pair)s), process every partition with frames belonging to it
-         .map(lambda frames: construct_frames(root_dir, frames, self.FLAGS.get('slice_size'),
-            self.FLAGS.get('labeling_agent'), self.FLAGS.get('diff')))
+         .map(lambda frames:
+              (construct_frames(root_dir, frames, self.FLAGS.get('slice_size'),
+               self.FLAGS.get('labeling_agent'), self.FLAGS.get('diff'))))
          # Simply trigger action
          .count())
 

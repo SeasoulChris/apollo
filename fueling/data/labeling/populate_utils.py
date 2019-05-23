@@ -6,12 +6,12 @@ import gc
 import math
 import os
 
+from google.protobuf.json_format import MessageToJson
+from pyquaternion import Quaternion as PyQuaternion
 import colored_glog as glog
 import cv2
-from google.protobuf.json_format import MessageToJson
 import numpy as np
 import pypcd
-from pyquaternion import Quaternion as PyQuaternion
 import yaml
 
 from cyber_py import record
@@ -518,8 +518,8 @@ class FramePopulator(object):
         """Construct the frames by using given messages."""
         frame_dir = os.path.join(self._task_dir, 'frames')
         file_utils.makedirs(frame_dir)
-        lidar_msg = \
-            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
+        lidar_msg = next(x for x in message_structs
+                         if x.message.topic == SENSOR_PARAMS['lidar_channel'])
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
@@ -531,8 +531,8 @@ class FramePopulator(object):
         frame = frame_pb2.Frame()
         lidar_pose.process(frame)
         if self._stationary_pole is None:
-            self._stationary_pole = \
-                (lidar_pose.position.x, lidar_pose.position.y, lidar_pose.position.z)
+            self._stationary_pole = (lidar_pose.position.x,
+                                     lidar_pose.position.y, lidar_pose.position.z)
         file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.message.timestamp))
         if os.path.exists(file_name):
             glog.info('frame file {} already existed, do nothing'.format(file_name))
@@ -561,8 +561,8 @@ class FramePopulator(object):
 
     def diff_between_lidar_and_camera(self, lidar_msg, message_structs, max_diff):
         """Check if time diff between lidar and camera is acceptable"""
-        front6mm_msg = \
-            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['front6mm_channel'])
+        front6mm_msg = next(x for x in message_structs
+                            if x.message.topic == SENSOR_PARAMS['front6mm_channel'])
         diff = abs(float(lidar_msg.message.timestamp) - float(front6mm_msg.message.timestamp))
         actual_diff = diff / (10 ** 6)
         if actual_diff > max_diff:
@@ -589,8 +589,8 @@ class FramePopulator(object):
         img_dir = os.path.join(self._task_dir, 'images')
         file_utils.makedirs(pcd_dir)
         file_utils.makedirs(img_dir)
-        lidar_msg = \
-            next(x for x in message_structs if x.message.topic == SENSOR_PARAMS['lidar_channel'])
+        lidar_msg = next(x for x in message_structs
+                         if x.message.topic == SENSOR_PARAMS['lidar_channel'])
         lidar_time = float(lidar_msg.message.timestamp)/(10**9)
         lidar_time_str = '{:.9f}'.format(lidar_time)
 
@@ -648,7 +648,7 @@ class FramePopulator(object):
                 cv2.imwrite(os.path.join(img_dir, image_name), img)
                 image_name_in_log = '{}_{}'.format(channel_map[channel], image_name)
                 if channel == '/apollo/sensor/camera/front_6mm/image/compressed':
-                    image_name_in_log = '{:.9f}#{}'.format(float(timestamp)/(10**9), 
+                    image_name_in_log = '{:.9f}#{}'.format(float(timestamp) / (10**9), 
                                                            image_name_in_log)
                 params.append(image_name_in_log)
         self.format_output(image_file_name, params, 3)
@@ -666,7 +666,7 @@ class FramePopulator(object):
         qtn = rotation_to_quaternion(rotation)
         if not os.path.exists(pose_file_name):
             with open(pose_file_name, 'w') as pose_file:
-                line = (' '*4).join([str(i) for i in 
+                line = (' ' * 4).join([str(i) for i in 
                     ['SEQ','TIME','X','Y','Z','QW','QX','QY','QZ']])
                 pose_file.write('{}\n'.format(line))
         params = [frame_counter, lidar_time_str, transform[0][3], transform[1][3], transform[2][3],
@@ -678,7 +678,7 @@ class FramePopulator(object):
         record_file_name = os.path.basename(self._task_dir)
         if not os.path.exists(stamp_file_name):
             with open(stamp_file_name, 'w') as stamp_file:
-                line = (' '*8).join([str(i) for i in ['RECORD_FILE','SEQ','TIME']])
+                line = (' ' * 8).join([str(i) for i in ['RECORD_FILE','SEQ','TIME']])
                 stamp_file.write('{}\n'.format(line))
         params = [record_file_name, frame_counter, lidar_time_str]
         self.format_output(stamp_file_name, params, 2)
