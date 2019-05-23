@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import httplib
+import http
 
 from flask_restful import Resource, reqparse
 
@@ -20,4 +20,4 @@ class VehicleCalibration(Resource):
         # 1. Parse the text to proto.
         # 2. Sanity check.
         # 3. Send notification and operation.
-        return proto_text, httplib.ACCEPTED
+        return proto_text, http.HTTPStatus.ACCEPTED
