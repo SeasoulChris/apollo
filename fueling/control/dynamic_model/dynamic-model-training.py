@@ -19,6 +19,7 @@ import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 VEHICLE_ID = feature_config["vehicle_id"]
 IS_BACKWARD = feature_config["is_backward"]
 
+
 class DynamicModelTraining(BasePipeline):
     def __init__(self):
         BasePipeline.__init__(self, 'dynamic_model')
@@ -28,10 +29,10 @@ class DynamicModelTraining(BasePipeline):
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
         if IS_BACKWARD:
             training_dataset = glob.glob(os.path.join(data_dir,
-                                     'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
+                                                      'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
         else:
             training_dataset = glob.glob(os.path.join(data_dir,
-                                     'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
+                                                      'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
         # RDD(file_path) for training dataset.
         training_dataset_rdd = self.to_rdd(training_dataset)
         self.run(training_dataset_rdd, output_dir)

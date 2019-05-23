@@ -47,9 +47,10 @@ IS_BACKWARD = feature_config["is_backward"]
 DIM_INPUT = feature_config["holistic_input_dim"] if IS_HOLISTIC else feature_config["input_dim"]
 DIM_OUTPUT = feature_config["holistic_output_dim"] if IS_HOLISTIC else feature_config["output_dim"]
 EPOCHS = mlp_model_config["epochs"]
+MLP_MODEL_LAYER = mlp_model_config["fnn_layers"]
 
 
-def setup_model(model_name):
+def setup_model():
     """
     set up neural network based on keras.Sequential
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
@@ -57,7 +58,7 @@ def setup_model(model_name):
     model = Sequential()
     model.add(Dense(10, input_dim=DIM_INPUT, init='he_normal',
                     activation='relu', W_regularizer=l2(0.001)))
-    if model_name == 'mlp_three_layer':
+    if MLP_MODEL_LAYER == 3:
         model.add(Dense(6, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
         glog.info('Load Three-layer MLP Model')
     model.add(Dense(DIM_OUTPUT, init='he_normal', W_regularizer=l2(0.001)))
@@ -108,7 +109,7 @@ def save_model(model, param_norm, filename):
         params_file.write(net_params.SerializeToString())
 
 
-def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
+def mlp_keras(x_data, y_data, param_norm, out_dir):
     glog.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std
@@ -119,7 +120,7 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
                                                         test_size=0.2, random_state=42)
     glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
-    model = setup_model(model_name)
+    model = setup_model()
     training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS,
                                  batch_size=32, verbose=2)
 
@@ -132,7 +133,7 @@ def mlp_keras(x_data, y_data, param_norm, out_dir, model_name='mlp_two_layer'):
     model_bin = os.path.join(bin_file_dir, 'fnn_model.bin')
     save_model(model, param_norm, model_bin)
 
-   # save norm_params and model_weights to hdf5
+    # save norm_params and model_weights to hdf5
     if IS_BACKWARD:
         h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/backward')
     else:

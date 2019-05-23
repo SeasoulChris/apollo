@@ -63,7 +63,7 @@ def generate_mlp_data(segment, total_len):
         # speed mps
         # mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
         mlp_input_data[k, input_index["speed"]] = (
-            segment[k, segment_index["v_x"]] * np.cos(segment[k, segment_index["heading"]]) + \
+            segment[k, segment_index["v_x"]] * np.cos(segment[k, segment_index["heading"]]) +
             segment[k, segment_index["v_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # acceleration
         mlp_input_data[k, input_index["acceleration"]] = PP7_IMU_SCALING * \
@@ -92,7 +92,7 @@ def generate_gps_data(segment):
     vehicle_state_gps = np.zeros([total_len, DIM_OUTPUT])
     # speed, heading by gps
     vehicle_state_gps[:, 0] = (
-        segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) + \
+        segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) +
         segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]]))
     vehicle_state_gps[:, 1] = segment[:, segment_index["heading"]]
     # position x, y by gps
@@ -253,10 +253,14 @@ def generate_network_output(segment, model_folder, model_name):
 
 def generate_evaluation_data(dataset_path, model_folder, model_name):
     segment = feature_extraction.generate_segment(dataset_path)
+    segment = feature_extraction.feature_preprocessing(segment)
+    if not segment.any():
+        glog.error('Errors occur during evaluation data generation')
+        sys.exit()
     vehicle_state_gps, trajectory_gps = generate_gps_data(segment)
     output_echo_lincoln = echo_lincoln.echo_lincoln_wrapper(dataset_path)
     output_imu = generate_imu_output(segment)
     output_point_mass = generate_point_mass_output(segment)
     output_fnn = generate_network_output(segment, model_folder, model_name)
     return vehicle_state_gps, output_echo_lincoln, output_imu, output_point_mass, \
-           output_fnn, trajectory_gps
+        output_fnn, trajectory_gps

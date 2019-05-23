@@ -78,13 +78,13 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-   # save norm_params and model_weights to hdf5
-   # save norm_params and model_weights to hdf5
+    # save norm_params and model_weights to hdf5
+    # save norm_params and model_weights to hdf5
     if IS_BACKWARD:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/backward')
     else:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/forward')
-        
+
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)
 

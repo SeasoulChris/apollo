@@ -68,6 +68,8 @@ def feature_preprocessing(segment):
         segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
     segment[:, segment_index["a_y"]] = savgol_filter(
         segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    segment[:, segment_index["w_z"]] = savgol_filter(
+        segment[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
     return segment
 
 
