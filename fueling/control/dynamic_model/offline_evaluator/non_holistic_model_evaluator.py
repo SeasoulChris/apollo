@@ -86,7 +86,7 @@ def normalize_angle(theta):
 def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, output_fnn,
                            output_point_mass, evaluation_results):
     vehicle_state_echo_lincoln = np.zeros(
-        [vehicle_state_gps.shape[0], vehicle_state_gps.shape[1] + 1])
+        [vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
 
     vehicle_state_imu = np.zeros([vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
     vehicle_state_fnn = np.zeros([vehicle_state_gps.shape[0], vehicle_state_gps.shape[1]])
@@ -101,8 +101,6 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
         # vehicle states by echo_lincoln
         vehicle_state_echo_lincoln[k, 0:2] = vehicle_state_echo_lincoln[k - 1, 0:2] + \
             output_echo_lincoln[k - 1, 0:2] * DELTA_T
-        vehicle_state_echo_lincoln[k - 1, 2] = output_echo_lincoln[k - 1, 2]
-
         vehicle_state_echo_lincoln[k, 1] = normalize_angle(vehicle_state_echo_lincoln[k, 1])
         # vehicle states by imu sensor
         vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
@@ -114,8 +112,6 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
         vehicle_state_point_mass[k, :] = vehicle_state_point_mass[k - 1, :] + \
             output_point_mass[k, :] * DELTA_T
         vehicle_state_point_mass[k, 1] = normalize_angle(vehicle_state_point_mass[k, 1])
-
-    vehicle_state_echo_lincoln[k, 2] = output_echo_lincoln[k - 1, 2]  # compensation
 
     rmse_imu_speed = sqrt(mean_squared_error(vehicle_state_imu[:, 0], vehicle_state_gps[:, 0]))
     rmse_fnn_speed = sqrt(mean_squared_error(vehicle_state_fnn[:, 0], vehicle_state_gps[:, 0]))
@@ -238,8 +234,6 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_echo_
         plt.title("Vehicle Speed Visualization")
         plt.plot(vehicle_state_gps[:, 0], color='blue', label="Ground-truth Speed")
         plt.plot(vehicle_state_echo_lincoln[:, 0], color='black', label="Echo_lincoln Speed")
-        plt.plot(vehicle_state_echo_lincoln[:, 2], color='purple',
-                 label="Echo_lincoln Speed Directly")
         plt.plot(vehicle_state_imu[:, 0], color='orange', label="IMU Speed")
         plt.plot(vehicle_state_fnn[:, 0], color='red', label="FNN Speed")
         if not IS_BACKWARD:

@@ -59,7 +59,7 @@ class DynamicModelEvaluation(BasePipeline):
         # return
 
         self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
-        # self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
+        self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
     def run_prod(self):
         platform_path = 'modules/control/learning_based_model/'

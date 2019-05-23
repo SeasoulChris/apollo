@@ -34,7 +34,7 @@ def hdf52txt(hdf5_file, txt_file):
     with open(txt_file, 'r+') as f:
         content = f.read()
         f.seek(0, 0)
-        f.write(str(init_v) + '\n' + content)
+        f.write(str(init_v).join(['\n', content]))  # + '\n' + content)
 
 
 def echo_lincoln(input_file, output_file):
