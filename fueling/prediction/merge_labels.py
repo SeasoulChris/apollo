@@ -55,6 +55,8 @@ class MergeLabels(BasePipeline):
         result = (
             # RDD(npy_file)
             npy_file_rdd
+            #RDD(dir containing npy files)
+            .map(os.path.dirname)
             # RDD(target_dir), in absolute path and unique
             .distinct()
             # RDD(0/1), 1 for success
