@@ -19,7 +19,7 @@ class MergeLabels(BasePipeline):
         """Run test."""
         # RDD(npy_file)
         npy_file_rdd = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/*.npy'))
-        self.run(npy_file_rdd)
+        self.run(npy_file_rdd.map(os.path.dirname))
 
     def run_prod(self):
         """Run prod."""
@@ -41,22 +41,20 @@ class MergeLabels(BasePipeline):
             # RDD(target_dir), in absolute path and unique
             .distinct())
 
-        # RDD(todo_npy_files)
-        todo_npy_files = npy_dirs
+        # RDD(todo_npy_dirs)
+        todo_npy_dirs = npy_dirs
 
         if SKIP_EXISTING_DST_FILE:
-            # RDD(todo_npy_files)
-            todo_npy_files = todo_npy_files.subtract(merged_dirs).distinct()
+            # RDD(todo_npy_dirs)
+            todo_npy_dirs = todo_npy_dirs.subtract(merged_dirs).distinct()
 
-        self.run(todo_npy_files)
+        self.run(todo_npy_dirs)
 
-    def run(self, npy_file_rdd):
+    def run(self, npy_dir_rdd):
         """Run the pipeline with given arguments."""
         result = (
             # RDD(npy_file)
-            npy_file_rdd
-            #RDD(dir containing npy files)
-            .map(os.path.dirname)
+            npy_dir_rdd
             # RDD(target_dir), in absolute path and unique
             .distinct()
             # RDD(0/1), 1 for success
