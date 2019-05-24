@@ -191,7 +191,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
 
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
-                if is_lane_scanning:
+                if training_mode:
                     for i, lane_label in enumerate(curr_label):
                         if lane_label == 1:
                             self.obstacle_features.append(curr_obs_feature)
@@ -202,8 +202,11 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                             self.labels.append(curr_lane_label)
                             self.is_cutin.append(curr_is_cutin)
                 else:
-                    # TODO(jiacheng): implement this for regular cruiseMLP model.
-                    1 == 1
+                    self.obstacle_features.append(curr_obs_feature)
+                    self.obstacle_hist_size.append(curr_obs_hist_size)
+                    self.lane_features.append(curr_lane_feature)
+                    self.labels.append(curr_label.reshape((curr_num_lane_sequence, 1)))
+                    self.is_cutin.append(curr_is_cutin)
 
         self.total_num_data_pt = len(self.obstacle_features)
 

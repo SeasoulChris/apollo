@@ -30,16 +30,64 @@ from learning_algorithms.utilities.train_utils import *
 from learning_algorithms.utilities.network_utils import *
 
 
+class CruiseMLP(nn.Module):
+    def __init__(self):
+        super(CruiseMLP, self).__init__()
+        self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
+        self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
+        self.lane_aggregation = AttentionalAggregation(input_encoding_size=128, output_size=512)
+        self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
+
+    def forward(self, X):
+        obs_features, obs_hist_size, lane_features, same_obs_mask = X
+        obs_features = obs_features.float()
+        obs_hist_size = obs_hist_size.float()
+        lane_features = lane_features.float()
+        same_obs_mask = same_obs_mask.float()
+        N = obs_features.size(0)
+        M = lane_features.size(0)
+
+        obs_enc = self.vehicle_encoding(obs_features, obs_hist_size)
+
+        lane_enc_1 = self.lane_encoding(lane_features)
+        lane_enc_2 = lane_features[:, 0].view(M, 1)
+        lane_enc = torch.cat((lane_enc_1, lane_enc_2), 1)
+
+        aggr_enc = cuda(torch.zeros(N, 1))
+
+        out = self.prediction_layer(obs_enc, lane_enc, aggr_enc, same_obs_mask)
+
+        return out
+
+
 class LaneAttention(nn.Module):
     def __init__(self):
         super(LaneAttention, self).__init__()
-        self.vehicle_encoding = None
-        self.lane_encoding = None
-        self.lane_aggregation = None
-        self.prediction_layer = None
+        self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
+        self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
+        self.lane_aggregation = AttentionalAggregation(input_encoding_size=128, output_size=512)
+        self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[100, 30, 1])
 
     def forward(self, X):
-        return X
+        obs_features, obs_hist_size, lane_features, same_obs_mask = X
+        obs_features = obs_features.float()
+        obs_hist_size = obs_hist_size.float()
+        lane_features = lane_features.float()
+        same_obs_mask = same_obs_mask.float()
+        N = obs_features.size(0)
+        M = lane_features.size(0)
+
+        obs_enc = self.vehicle_encoding(obs_features, obs_hist_size)
+
+        lane_enc_1 = self.lane_encoding(lane_features)
+        lane_enc_2 = lane_features[:, 0].view(M, 1)
+        lane_enc = torch.cat((lane_enc_1, lane_enc_2), 1)
+
+        aggr_enc = self.lane_aggregation(obs_enc, lane_enc, same_obs_mask)
+
+        out = self.prediction_layer(obs_enc, lane_enc, aggr_enc, same_obs_mask)
+
+        return out
 
 
 # TODO(jiacheng):
@@ -91,9 +139,9 @@ class VehicleLSTM(nn.Module):
         vel_heading_changing_rate = obs_features[:, 8::9].view(N, 20, 1)
         # (N x 20 x 8)
         obs_position = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y, \
-            vel_heading, vel_heading_changing_rate), 2)
+            vel_heading, vel_heading_changing_rate), 2).float()
         # (N x 20 x embed_size)
-        obs_embed = self.embed(obs_position.view(N*20, 2)).view(N, 20, self.embed_size)
+        obs_embed = self.embed(obs_position.view(N*20, 8)).view(N, 20, self.embed_size)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
@@ -102,7 +150,7 @@ class VehicleLSTM(nn.Module):
         # (N x 2*hidden_size)
         front_states = obs_states[:, 0, :]
         back_states = obs_states[:, -1, :]
-        max_states = torch.max(obs_states, 1)
+        max_states, _ = torch.max(obs_states, 1)
         avg_states = torch.mean(obs_states, 1)
 
         # Encoding
@@ -148,16 +196,16 @@ class LaneLSTM(nn.Module):
 
         # Input embedding.
         # (N x 100 x embed_size)
-        lane_embed = self.embed(lane_features.view(N*100, 4)).view(N, 100, self.embed_size)
+        lane_embed = self.embed(lane_features.float().view(N*100, 4)).view(N, 100, self.embed_size)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
         # (N x 20 x 2*hidden_size)
-        lane_states, _ = self.vehicle_rnn(lane_embed, (h0, c0))
+        lane_states, _ = self.single_lane_rnn(lane_embed, (h0, c0))
         # (N x 2*hidden_size)
         front_states = lane_states[:, 0, :]
         back_states = lane_states[:, -1, :]
-        max_states = torch.max(lane_states, 1)
+        max_states, _ = torch.max(lane_states, 1)
         avg_states = torch.mean(lane_states, 1)
 
         # Encoding
@@ -169,7 +217,7 @@ class LaneLSTM(nn.Module):
 # TODO(jiacheng):
 #   - Add pairwise attention between obs_encoding and every lane_encoding during aggregating.
 class AttentionalAggregation(nn.Module):
-    def __init__(self, input_encoding_size, output_size):
+    def __init__(self, input_encoding_size=128, output_size=512):
         super(AttentionalAggregation, self).__init__()
         self.input_encoding_size = input_encoding_size
         self.output_size = output_size
@@ -197,7 +245,7 @@ class AttentionalAggregation(nn.Module):
             # (curr_num_lane x input_encoding_size)
             curr_lane_encoding = lane_encoding[curr_mask, :].view(curr_num_lane, -1)
             curr_lane_encoding = self.encode(curr_lane_encoding)
-            curr_lane_maxpool = torch.max(curr_lane_encoding, 0, keepdim=True)
+            curr_lane_maxpool, _ = torch.max(curr_lane_encoding, 0, keepdim=True)
             curr_lane_avgpool = torch.mean(curr_lane_encoding, 0, keepdim=True)
             out[obs_id, :] = torch.cat((curr_lane_maxpool, curr_lane_avgpool), 1)
 
@@ -205,11 +253,11 @@ class AttentionalAggregation(nn.Module):
 
 
 class DistributionalScoring(nn.Module):
-    def __init__(self, obs_enc_size, lane_enc_size, aggr_enc_size, mlp_size=[100, 30, 1]):
+    def __init__(self, obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[600, 100, 16, 1]):
         super(DistributionalScoring, self).__init__()
         self.mlp = generate_mlp(\
-            [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0)
-        self.softmax = nn.Softmax()
+            [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
+        self.softmax_layer = nn.Softmax()
 
     def forward(self, obs_encoding, lane_encoding, aggregated_info, same_obs_mask):
         '''Forward function (M >= N)
@@ -233,7 +281,43 @@ class DistributionalScoring(nn.Module):
 
             curr_encodings = torch.cat((curr_obs_enc, curr_agg_info, curr_lane_enc), 1)
             curr_scores = self.mlp(curr_encodings).view(-1)
-            curr_scores = self.softmax(curr_scores)
-            out[curr_mask, :] = curr_scores
+            curr_scores = self.softmax_layer(curr_scores)
+            out[curr_mask, :] = curr_scores.view(curr_num_lane, 1)
 
         return out
+
+
+class ClassificationLoss:
+    def loss_fn(self, y_pred, y_true_tuple):
+        y_labels, y_is_cutin, y_same_obs_mask = y_true_tuple
+        y_pred_score = -torch.log(y_pred).float()
+        y_labels = y_labels.float()
+
+        total_num_data_pt = y_same_obs_mask.max().long().item() + 1
+        scores = cuda(torch.zeros(total_num_data_pt))
+
+        for obs_id in range(total_num_data_pt):
+            curr_mask = (y_same_obs_mask[:, 0] == obs_id)
+            curr_pred = y_pred[curr_mask, 0]
+            curr_true = y_labels[curr_mask, 0]
+            curr_score = torch.sum(curr_pred * curr_true)
+            scores[obs_id] = curr_score
+
+        final_loss = torch.mean(scores)
+        return final_loss
+
+    def loss_info(self, y_pred, y_true_tuple):
+        y_labels, y_is_cutin, y_same_obs_mask = y_true_tuple
+        total_num_data_pt = 0.0
+        total_correct_data_pt = 0.0
+
+        for obs_id in range(y_same_obs_mask.max().long().item() + 1):
+            curr_mask = (y_same_obs_mask[:, 0] == obs_id)
+
+            curr_pred = y_pred[curr_mask, 0]
+            curr_true = y_labels[curr_mask, 0]
+            if curr_true[torch.argmax(curr_pred)] == 1:
+                total_correct_data_pt += 1
+            total_num_data_pt += 1
+
+        return total_correct_data_pt/total_num_data_pt

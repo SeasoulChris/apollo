@@ -176,14 +176,14 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         if valid_loss_info is not None:
             #print ('Validation avg displacement = {}'.format(valid_loss_info))
             #logging.info('Validation avg displacement = {}'.format(valid_loss_info))
-            loss_info_history.append(valid_loss_info.item())
+            loss_info_history.append(valid_loss_info)
         if analyzer is not None:
             analyzer.process(X, y, pred)
 
     valid_loss = np.mean(loss_history)
     logging.info('Validation loss: {}.'.format(valid_loss))
     print ('Validation loss: {}.'.format(valid_loss))
-    print ('Validation avg displacement = {}'.format(np.mean(loss_info_history)))
+    print ('Validation accuracy = {}'.format(np.mean(loss_info_history)))
 
     return valid_loss
 
