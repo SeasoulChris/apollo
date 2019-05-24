@@ -4,6 +4,7 @@ dependencies:
   - pip
 
   # Google infra
+  - absl-py
   - protobuf
 
   # Web
