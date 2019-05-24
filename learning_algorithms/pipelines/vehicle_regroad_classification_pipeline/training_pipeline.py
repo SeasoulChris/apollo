@@ -40,19 +40,19 @@ if __name__ == "__main__":
     train_dataset = ApolloVehicleRegularRoadDataset(args.train_file, training_mode=True)
     valid_dataset = ApolloVehicleRegularRoadDataset(args.valid_file, training_mode=False)
 
-    train_loader = DataLoader(train_dataset, batch_size=512, shuffle=True,\
+    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=1024, shuffle=True,\
+    valid_loader = DataLoader(valid_dataset, batch_size=256, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_fn)
 
     # Model and training setup
     model = LaneAttention()
     loss = ClassificationLoss()
     print (model)
-    learning_rate = 3e-4
+    learning_rate = 1e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.3, patience=10, min_lr=1e-9, verbose=True, mode='min')
+        optimizer, factor=0.3, patience=3, min_lr=1e-11, verbose=True, mode='min')
 
     # CUDA setup:
     if (torch.cuda.is_available()):
@@ -63,4 +63,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=100, save_name='./temp_trained_models', print_period=1)
+                           scheduler, epochs=100, save_name='./', print_period=50)

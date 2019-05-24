@@ -298,7 +298,7 @@ class ClassificationLoss:
 
         for obs_id in range(total_num_data_pt):
             curr_mask = (y_same_obs_mask[:, 0] == obs_id)
-            curr_pred = y_pred[curr_mask, 0]
+            curr_pred = y_pred_score[curr_mask, 0]
             curr_true = y_labels[curr_mask, 0]
             curr_score = torch.sum(curr_pred * curr_true)
             scores[obs_id] = curr_score
