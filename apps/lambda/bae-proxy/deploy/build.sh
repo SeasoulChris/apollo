@@ -24,5 +24,8 @@ fi
 if [ "$1" = "push" ]; then
   docker push ${IMAGE}
 else
-  echo "Now you can push the images with: docker push ${IMAGE}"
+  echo "Now you can test the image with:
+        docker run -it --rm --net host ${IMAGE} --debug"
+  echo "Or push the image with:
+        docker push ${IMAGE}"
 fi
