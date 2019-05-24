@@ -175,7 +175,7 @@ class AttentionalAggregation(nn.Module):
         self.output_size = output_size
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(input_encoding_size*2, output_size),
+            nn.Linear(input_encoding_size, output_size),
             nn.ReLU(),
         )
 
@@ -188,7 +188,7 @@ class AttentionalAggregation(nn.Module):
             output: N x output_size
         '''
         N = obs_encoding.size(0)
-        out = cuda(torch.zeros(N, self.input_encoding_size*2))
+        out = cuda(torch.zeros(N, self.output_size*2))
 
         for obs_id in range(same_obs_mask.max().long().item() + 1):
             curr_mask = (same_obs_mask[:, 0] == obs_id)
@@ -196,11 +196,11 @@ class AttentionalAggregation(nn.Module):
 
             # (curr_num_lane x input_encoding_size)
             curr_lane_encoding = lane_encoding[curr_mask, :].view(curr_num_lane, -1)
+            curr_lane_encoding = self.encode(curr_lane_encoding)
             curr_lane_maxpool = torch.max(curr_lane_encoding, 0, keepdim=True)
             curr_lane_avgpool = torch.mean(curr_lane_encoding, 0, keepdim=True)
             out[obs_id, :] = torch.cat((curr_lane_maxpool, curr_lane_avgpool), 1)
 
-        out = self.encode(out)
         return out
 
 
@@ -209,6 +209,7 @@ class DistributionalScoring(nn.Module):
         super(DistributionalScoring, self).__init__()
         self.mlp = generate_mlp(\
             [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0)
+        self.softmax = nn.Softmax()
 
     def forward(self, obs_encoding, lane_encoding, aggregated_info, same_obs_mask):
         '''Forward function (M >= N)
@@ -232,6 +233,7 @@ class DistributionalScoring(nn.Module):
 
             curr_encodings = torch.cat((curr_obs_enc, curr_agg_info, curr_lane_enc), 1)
             curr_scores = self.mlp(curr_encodings).view(-1)
+            curr_scores = self.softmax(curr_scores)
             out[curr_mask, :] = curr_scores
 
         return out

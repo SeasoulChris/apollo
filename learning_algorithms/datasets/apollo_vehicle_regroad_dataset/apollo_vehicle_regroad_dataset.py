@@ -181,15 +181,17 @@ class ApolloVehicleRegularRoadDataset(Dataset):
             file_content = np.load(file_path).tolist()
             for data_pt in file_content:
                 curr_num_lane_sequence = int(data_pt[0])
+                if len(data_pt) != curr_num_lane_sequence*401+180+2:
+                    continue
                 curr_obs_feature = np.array(data_pt[1:181]).reshape((1, 180))
                 curr_obs_hist_size = np.sum(np.array(data_pt[1:181:9])) * np.ones((1, 1))
-                curr_lane_feature = np.array(data_pt[181:181+400*curr_num_lane_sequence])
+                curr_lane_feature = np.array(data_pt[181:181+400*curr_num_lane_sequence])\
                                     .reshape((curr_num_lane_sequence, 400))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
+
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
                 if is_lane_scanning:
-                    self.obstacle_features.append(curr_obs_feature)
                     for i, lane_label in enumerate(curr_label):
                         if lane_label == 1:
                             self.obstacle_features.append(curr_obs_feature)
@@ -219,8 +221,8 @@ def collate_fn(batch):
     # unzip to form lists of np-arrays.
     obs_features, obs_hist_size, lane_features, labels, is_cutin = zip(*batch)
 
-    same_obstacle_mask = [elem[0] for elem in lane_features]
-    obs_features = np.concatenate(obstacle_features)
+    same_obstacle_mask = [elem.shape[0] for elem in lane_features]
+    obs_features = np.concatenate(obs_features)
     obs_hist_size = np.concatenate(obs_hist_size)
     lane_features = np.concatenate(lane_features)
     labels = np.concatenate(labels)
@@ -233,8 +235,3 @@ def collate_fn(batch):
             torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
            (torch.from_numpy(labels), torch.from_numpy(is_cutin), \
             torch.from_numpy(same_obstacle_mask))
-
-
-if __name__ == '__main__':
-    DataPreprocessing('/home/jiacheng/work/apollo/data/vehicle_regroad_data/features-2019-05-16', 
-                      '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/labels/')
