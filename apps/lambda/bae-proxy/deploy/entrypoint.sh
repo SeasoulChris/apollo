@@ -5,7 +5,7 @@ export PYTHONPATH="/apollo/modules/data/fuel:${PYTHONPATH}"
 
 mkdir -p /apollo/modules/data/fuel/deploy /home/bae/log
 
-cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd /home/bae/app
 if [ "$1" = "--debug" ]; then
   python index.py $@
 else
