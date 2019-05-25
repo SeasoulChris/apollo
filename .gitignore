@@ -1,8 +1,7 @@
 apollo/
-fueling.zip
-generated/
 py_proto/
 kube.config
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
