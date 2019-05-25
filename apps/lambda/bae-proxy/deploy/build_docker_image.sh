@@ -9,9 +9,6 @@ echo "Building image: ${IMAGE}"
 cd $( dirname "${BASH_SOURCE[0]}" )/../../../..
 
 cp ~/.kube/config ./kube.config
-# Generate HTTPS keys. The common name should be the host domain.
-# openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 3650
-#    -subj "/C=CN/ST=Beijing/L=Beijing/O=Baidu/OU=IDG/CN=apollo.bceapp.com"
 docker build -t ${IMAGE} --network host -f apps/lambda/bae-proxy/deploy/Dockerfile .
 
 # Please provide credential if you want to login automatically.
