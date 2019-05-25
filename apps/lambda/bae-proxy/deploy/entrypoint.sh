@@ -8,7 +8,7 @@ mkdir -p /apollo/modules/data/fuel/deploy
 cd /home/bae/app
 gunicorn --reload \
     --workers=3 \
-    --bind="0.0.0.0:8080" \
+    --bind="0.0.0.0:8443" \
     --pythonpath="/apollo/modules/data/fuel" \
     --certfile="ssl_keys/cert.pem" \
     --keyfile="ssl_keys/key.pem" \
