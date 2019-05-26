@@ -8,7 +8,14 @@ echo "Building image: ${IMAGE}"
 # Go to apollo-fuel root.
 cd $( dirname "${BASH_SOURCE[0]}" )/../../../..
 
+set -e
+set -x
+
+# Build your local apollo.
+bash ../apollo/apollo_docker.sh build_py
+cp -r ../apollo/py_proto ./
 cp ~/.kube/config ./kube.config
+
 docker build -t ${IMAGE} --network host -f apps/lambda/bae-proxy/deploy/Dockerfile .
 
 # Please provide credential if you want to login automatically.

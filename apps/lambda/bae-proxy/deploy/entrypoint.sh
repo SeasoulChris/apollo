@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 source /usr/local/miniconda/bin/activate fuel-py37
-export PYTHONPATH="/apollo/modules/data/fuel:${PYTHONPATH}"
+export PYTHONPATH="/apollo/py_proto:/apollo/modules/data/fuel:${PYTHONPATH}"
 
 mkdir -p /apollo/modules/data/fuel/deploy
 

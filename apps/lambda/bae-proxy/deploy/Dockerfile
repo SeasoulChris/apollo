@@ -11,6 +11,7 @@ COPY tools/tool-env.yaml /tmp/tool-env.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
     /usr/local/miniconda/bin/conda env update -f /tmp/tool-env.yaml
 
+COPY py_proto /apollo/py_proto
 COPY apps/local /apollo/modules/data/fuel/apps/local
 COPY fueling /apollo/modules/data/fuel/fueling
 COPY tools /apollo/modules/data/fuel/tools

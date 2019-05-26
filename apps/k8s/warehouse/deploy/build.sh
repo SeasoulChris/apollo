@@ -2,7 +2,6 @@
 
 DOCKER_REGISTRY="hub.baidubce.com"
 DOCKER_USER="apollo"
-DOCKER_PASSWORD=""
 
 REPO="${DOCKER_REGISTRY}/${DOCKER_USER}/warehouse"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
@@ -20,7 +19,8 @@ cp -r ../apollo/py_proto ./
 
 docker build -t ${IMAGE} --network host -f apps/k8s/warehouse/deploy/Dockerfile .
 
-# Please provide password if you want to login automatically.
+# Please provide credential if you want to login automatically.
+DOCKER_PASSWORD=""
 if [ ! -z "${DOCKER_PASSWORD}" ]; then
   docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
 fi
@@ -28,5 +28,5 @@ fi
 if [ "$1" = "push" ]; then
   docker push ${IMAGE}
 else
-  echo "Now you can push the images with: docker push ${IMAGE}"
+  echo "Now you can push the image with: docker push ${IMAGE}"
 fi

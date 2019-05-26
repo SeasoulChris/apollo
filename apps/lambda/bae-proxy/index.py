@@ -10,17 +10,12 @@ from absl import flags
 from vehicle_calibration import VehicleCalibration
 
 
-flags.DEFINE_boolean('debug', True, 'Enable debug mode.')
+flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 
 
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
 api.add_resource(VehicleCalibration, '/vehicle-calibration')
-
-
-@app.route('/')
-def home():
-    return 'It works!'
 
 
 def main(argv):
@@ -29,7 +24,7 @@ def main(argv):
     else:
         # Enable HTTPS for production.
         ssl_context = ('./ssl_keys/cert.pem', './ssl_keys/key.pem')
-        app.run(host='0.0.0.0', port=8443, ssl_context=ssl_context)
+        app.run(host='0.0.0.0', port=443, ssl_context=ssl_context)
 
 if __name__ == '__main__':
     absl_app.run(main)
