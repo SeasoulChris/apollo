@@ -28,7 +28,7 @@ class ProductionApp(gunicorn.app.base.BaseApplication):
 
     def load_config(self):
         """Load config."""
-        self.cfg.set('bind', '0.0.0.0:8043')
+        self.cfg.set('bind', '0.0.0.0:443')
         self.cfg.set('workers', flags.FLAGS.workers)
         self.cfg.set('proc_name', 'BaeProxy')
         self.cfg.set('certfile', 'ssl_keys/cert.pem')
