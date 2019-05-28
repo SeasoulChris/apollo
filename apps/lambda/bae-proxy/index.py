@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 """BAE proxy."""
 
-import flask
-import flask_restful
+from http import HTTPStatus
+import json
 
 from absl import app as absl_app
 from absl import flags
+import flask
+import flask_restful
+import google.protobuf.json_format as json_format
 import gunicorn.app.base
+
+from modules.tools.fuel_proxy.proto.job_config_pb2 import JobConfig
 
 from vehicle_calibration import VehicleCalibration
 
@@ -15,9 +20,27 @@ flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 flags.DEFINE_integer('workers', 5, 'Workers to run.')
 
 
+class FuelJob(flask_restful.Resource):
+    """Fuel job restful service"""
+
+    def post(self):
+        """Accept user request, verify and process."""
+        # 1. Parse request.
+        try:
+            job_config = json_format.Parse(flask.request.get_json(), JobConfig())
+        except json_format.ParseError:
+            return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
+        # TODO: 2. User authentication.
+        user = 'myself'
+        # 3. Dispatch jobs.
+        if job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
+            return VehicleCalibration(job_config).process()
+        return json.dumps({'message': 'Unsupported job type'}), HTTPStatus.BAD_REQUEST
+
+
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
-api.add_resource(VehicleCalibration, '/vehicle-calibration')
+api.add_resource(FuelJob, '/')
 
 
 class ProductionApp(gunicorn.app.base.BaseApplication):
