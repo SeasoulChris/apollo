@@ -144,12 +144,15 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
         vehicle_state_point_mass
 
 
-def evaluate_trajectory(trajectory_gps, vehicle_state_echo_lincoln, vehicle_state_imu,
-                        vehicle_state_fnn, vehicle_state_point_mass, evaluation_results):
+def evaluate_trajectory(trajectory_gps, vehicle_state_gps, vehicle_state_echo_lincoln,
+                        vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass,
+                        evaluation_results):
+    trajectory_gps2 = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
     trajectory_echo_lincoln = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
     trajectory_imu = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
     trajectory_fnn = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
     trajectory_point_mass = np.zeros([trajectory_gps.shape[0], trajectory_gps.shape[1]])
+    trajectory_gps2[0, :] = trajectory_gps[0, :]
     trajectory_echo_lincoln[0, :] = trajectory_gps[0, :]
     trajectory_imu[0, :] = trajectory_gps[0, :]
     trajectory_fnn[0, :] = trajectory_gps[0, :]
@@ -157,6 +160,10 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_echo_lincoln, vehicle_stat
     trajectory_length = 0
 
     for k in range(1, trajectory_gps.shape[0]):
+        trajectory_gps2[k, 0] = trajectory_gps2[k - 1, 0] + vehicle_state_gps[k, 0] * \
+            np.cos(vehicle_state_gps[k, 1]) * DELTA_T
+        trajectory_gps2[k, 1] = trajectory_gps2[k - 1, 1] + vehicle_state_gps[k, 0] * \
+            np.sin(vehicle_state_gps[k, 1]) * DELTA_T
         trajectory_echo_lincoln[k, 0] = trajectory_echo_lincoln[k - 1, 0] + \
             vehicle_state_echo_lincoln[k, 0] * np.cos(vehicle_state_echo_lincoln[k, 1]) * DELTA_T
         trajectory_echo_lincoln[k, 1] = trajectory_echo_lincoln[k - 1, 1] + \
@@ -189,14 +196,16 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_echo_lincoln, vehicle_stat
     evaluation_results.point_mass_result.trajectory_error = rmse_point_mass_trajectory
     evaluation_results.point_mass_result.trajectory_error_rate = \
         rmse_point_mass_trajectory / trajectory_length
-    return trajectory_echo_lincoln, trajectory_imu, trajectory_fnn, trajectory_point_mass
+    return trajectory_gps2, trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,\
+        trajectory_point_mass
 
 
-def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_echo_lincoln,
-                                 trajectory_imu, trajectory_fnn, trajectory_point_mass,
-                                 vehicle_state_gps, vehicle_state_echo_lincoln, vehicle_state_imu,
-                                 vehicle_state_fnn, vehicle_state_point_mass, output_echo_lincoln,
-                                 output_imu, output_fnn):
+def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
+                                 trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,
+                                 trajectory_point_mass, vehicle_state_gps,
+                                 vehicle_state_echo_lincoln, vehicle_state_imu, vehicle_state_fnn,
+                                 vehicle_state_point_mass, output_echo_lincoln, output_imu,
+                                 output_fnn):
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
         plt.title("Trajectory Visualization")
@@ -205,6 +214,11 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_echo_
                  label="Ground-truth Tracjectory")
         plt.plot(trajectory_gps[-1, 0],
                  trajectory_gps[-1, 1], color='blue', marker='x')
+        # Plot the trajectory collected by GPS2
+        plt.plot(trajectory_gps2[:, 0], trajectory_gps2[:, 1], color='purple',
+                 label="Ground-truth2 Tracjectory")
+        plt.plot(trajectory_gps2[-1, 0],
+                 trajectory_gps2[-1, 1], color='purple', marker='x')
         # Plot the trajectory calculated by Echo_lincoln
         plt.plot(trajectory_echo_lincoln[:, 0], trajectory_echo_lincoln[:, 1], color='black',
                  label="Echo_lincoln Tracjectory")
@@ -301,9 +315,12 @@ def evaluate(model_info, dataset_info, platform_path):
         evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, output_fnn,
                                output_point_mass, evaluation_results)
 
-    trajectory_echo_lincoln, trajectory_imu, trajectory_fnn, trajectory_point_mass = \
-        evaluate_trajectory(trajectory_gps, vehicle_state_echo_lincoln, vehicle_state_imu,
-                            vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+    trajectory_gps2, trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,\
+        trajectory_point_mass = evaluate_trajectory(trajectory_gps, vehicle_state_gps,
+                                                    vehicle_state_echo_lincoln,
+                                                    vehicle_state_imu, vehicle_state_fnn,
+                                                    vehicle_state_point_mass,
+                                                    evaluation_results)
 
     with open(evaluation_result_path, 'w') as txt_file:
         txt_file.write('evaluted on model: {} \n'.format(model_info[1]))
@@ -314,11 +331,12 @@ def evaluate(model_info, dataset_info, platform_path):
     pdf_file_path = os.path.join(model_info[1],
                                  'trajectory_visualization_under_%s.pdf' % dataset_info[0])
     glog.warn(pdf_file_path)
-    visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_echo_lincoln,
-                                 trajectory_imu, trajectory_fnn, trajectory_point_mass,
-                                 vehicle_state_gps, vehicle_state_echo_lincoln, vehicle_state_imu,
-                                 vehicle_state_fnn, vehicle_state_point_mass, output_echo_lincoln,
-                                 output_imu, output_fnn)
+    visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
+                                 trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,
+                                 trajectory_point_mass, vehicle_state_gps,
+                                 vehicle_state_echo_lincoln, vehicle_state_imu, vehicle_state_fnn,
+                                 vehicle_state_point_mass, output_echo_lincoln, output_imu,
+                                 output_fnn)
 
     # return (dynamic_model_path, Trajectory_RMSE)
     return [(model_info[1], evaluation_results.learning_based_result.trajectory_error)]
