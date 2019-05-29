@@ -224,7 +224,7 @@ def gen_feature_key(elem):
     gear_key = int(gear)
 
     # forward driving:
-    if gear_key == 2:  # check if it backward driving
+    if gear_key != 1:  # check if it backward driving
         elem_key = int(10000)
     elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
@@ -248,44 +248,16 @@ def gen_feature_key_backwards(elem):
     gear_key = int(gear)
     # glog.info('gear: %d' % gear)
 
-    if gear_key == 1:  # check if it fardward driving
+    if gear_key != 2:  # check if it fardward driving
         elem_key = int(10000)
-    elif speed < -1 * VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
         steering_key = int(gen_steering_key(steering))
+        throttle_key = int(gen_throttle_key(throttle))
         brake_key = int(gen_brake_key(brake))
-        speed_key = 0
-        throttle_key = int(gen_reverse_throttle_key(throttle))
-        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
-    # glog.info('elem_key: %d' % elem_key)
-    # ((folder_path, feature_key), (time_stamp, paired_data))
-    return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
-
-
-def gen_feature_key_all(elem):
-    """ generate label for both forward and backward driving"""
-    speed = elem[1][14]
-    throttle = elem[1][15] * 100  # 0 or positive
-    brake = elem[1][16] * 100  # 0 or positive
-    steering = elem[1][17] * 100
-    gear = elem[1][22]
-    gear_key = int(gear)
-
-    if speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
-        elem_key = int(9000)
-    else:
-        steering_key = int(gen_steering_key(steering))
-        brake_key = int(gen_brake_key(brake))
-        if gear == -1:  # reverse driving
-            speed_key = 0
-            throttle_key = int(gen_reverse_throttle_key(throttle))
-        else:
-            speed_key = int(gen_speed_key(speed))
-            throttle_key = int(gen_throttle_key(throttle))
-        # gear-speed-steering-throttle-brake
-        elem_key = int(gear_key * 10000 + speed_key * 1000 + steering_key * 100 + throttle_key * 10
-                       + brake_key)
+        # speed-steering-throttle-brake
+        elem_key = int(steering_key * 100 + throttle_key * 10 + brake_key)
 
     # ((folder_path, feature_key), (time_stamp, paired_data))
     return ((elem[0][0], elem_key), (elem[0][1], elem[1]))
