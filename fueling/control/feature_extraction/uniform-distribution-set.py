@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """ extracting even distributed sample set """
+from datetime import date
 import glob
 import os
 
@@ -15,6 +16,7 @@ import fueling.control.features.feature_extraction_utils as feature_extraction_u
 # parameters
 WANTED_VEHICLE = feature_extraction_utils.FEATURE_KEY.vehicle_type
 counter = 0
+today = str(date.today())
 
 
 def get_key(file_name):
@@ -81,17 +83,12 @@ class UniformDistributionSet(BasePipeline):
         """Run prod."""
         sample_size = 6000
         # same of target prefix of sample-set-feature-extraction
-        # TODO: remove date label
-        # TODO: remove complete marker
-        # origin_prefix = os.path.join('modules/control/learning_based_model/hdf5_training',
-        #                              WANTED_VEHICLE, 'SampleSet', '2019-04-25')
-        # target_dir = os.path.join('modules/control/learning_based_model/hdf5_training',
-        #                           WANTED_VEHICLE, 'UniformDistributed', '2019-04-25')
-
-        origin_prefix = os.path.join('modules/control/data/results/SampleSet',
-                                     WANTED_VEHICLE, '2019-04-25')
+        # TODO: add label to backward/forward
+        origin_prefix = os.path.join('modules/control/data/results/BackwardSampleSet',
+                                     WANTED_VEHICLE)
         target_dir = os.path.join('modules/control/data/results/UniformDistributed',
-                                  WANTED_VEHICLE, '2019-04-25')
+                                  WANTED_VEHICLE, today)
+        glog.info('target dir: %s' % target_dir)
 
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log(
@@ -125,7 +122,7 @@ class UniformDistributionSet(BasePipeline):
             # PairRDD(key, (sampled segments, counter))
             .mapValues(lambda samples: pick_sample(samples, sample_size))
             # PairRDD(key, (sampled segments, counter=sample_size))
-            .filter(lambda (_, segment_counter): segment_counter[1] == sample_size)
+            # .filter(lambda (_, segment_counter): segment_counter[1] == sample_size)
             # PairRDD(key, sampled segments)
             .mapValues(lambda segment_counter: segment_counter[0])
             # RDD(segment_length)
