@@ -13,6 +13,7 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
+from fueling.control.common.training_conf import vehicle_list
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
@@ -44,6 +45,8 @@ class MultiCalibrationTableVisualization(BasePipeline):
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle_in_the_list, vehicle)
+            .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle, abs_path_to_vehicle_folder)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
@@ -64,6 +67,8 @@ class MultiCalibrationTableVisualization(BasePipeline):
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle_in_the_list, vehicle)
+            .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle, abs_path_to_vehicle_folder)
             .mapValues(lambda vehicle: os.path.join(conf_prefix, vehicle))
             # PairRDD(vehicle, VEHICLE_PARAM_CONF.vehicle_param)

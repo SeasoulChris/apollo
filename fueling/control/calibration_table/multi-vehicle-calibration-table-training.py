@@ -4,6 +4,7 @@ import glob
 import operator
 import os
 
+import colored_glog as glog
 import h5py
 import numpy as np
 import pyspark_utils.helper as spark_helper
@@ -134,7 +135,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type[0])
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])), 3)
+            .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])))
 
         # RDD(origin_dir)
         conf_vehicle_dir = spark_helper.cache_and_log(
@@ -145,7 +146,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type[0])
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(conf_prefix, vehicle_type[0])), 3)
+            .mapValues(lambda vehicle_type: os.path.join(conf_prefix, vehicle_type[0])))
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
@@ -153,7 +154,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle, dir_of_vehicle)
             conf_vehicle_dir
             # PairRDD(vehicle_type, vehicle_conf)
-            .mapValues(get_vehicle_param), 3)
+            .mapValues(get_vehicle_param))
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_train_files = spark_helper.cache_and_log(
@@ -188,6 +189,8 @@ class MultiCalibrationTableTraining(BasePipeline):
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle_in_the_list, vehicle)
+            .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
@@ -200,8 +203,10 @@ class MultiCalibrationTableTraining(BasePipeline):
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle_in_the_list, vehicle)
+            .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle: os.path.join(conf_dir, vehicle)), 3)
+            .mapValues(lambda vehicle: os.path.join(conf_dir, vehicle)))
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
@@ -211,7 +216,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_train_files = spark_helper.cache_and_log(
             'throttle_train_files',
-            self.get_feature_hdf5_prod(origin_vehicle_dir, 'throttle', 'train'), 3)
+            self.get_feature_hdf5_prod(origin_vehicle_dir, 'throttle', 'train'))
 
         # PairRDD((vehicle, 'throttle'), list of hdf5 files)
         throttle_test_files = spark_helper.cache_and_log(
