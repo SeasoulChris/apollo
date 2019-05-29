@@ -6,6 +6,7 @@ message EvaluationResults {
     optional IMUSensorError sensor_error = 1;
     optional EvaluationMetrics point_mass_result = 2;
     optional EvaluationMetrics learning_based_result = 3;
+    optional EvaluationMetrics echo_lincoln_result = 4;
 }
 
 message IMUSensorError {

@@ -186,6 +186,7 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_gps, vehicle_state_echo_li
     rmse_imu_trajectory = sqrt(mean_squared_error(trajectory_imu, trajectory_gps))
     rmse_fnn_trajectory = sqrt(mean_squared_error(trajectory_fnn, trajectory_gps))
     rmse_point_mass_trajectory = sqrt(mean_squared_error(trajectory_point_mass, trajectory_gps))
+    rmse_echo_lincoln_trajectory = sqrt(mean_squared_error(trajectory_echo_lincoln, trajectory_gps))
 
     evaluation_results.sensor_error.trajectory_error = rmse_imu_trajectory
     evaluation_results.sensor_error.trajectory_error_rate = \
@@ -196,6 +197,9 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_gps, vehicle_state_echo_li
     evaluation_results.point_mass_result.trajectory_error = rmse_point_mass_trajectory
     evaluation_results.point_mass_result.trajectory_error_rate = \
         rmse_point_mass_trajectory / trajectory_length
+    evaluation_results.echo_lincoln_result.trajectory_error = rmse_echo_lincoln_trajectory
+    evaluation_results.echo_lincoln_result.trajectory_error_rate = \
+        rmse_echo_lincoln_trajectory / trajectory_length
     return trajectory_gps2, trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,\
         trajectory_point_mass
 
