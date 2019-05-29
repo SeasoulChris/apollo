@@ -7,7 +7,7 @@ set -e
 
 CUT_TIMESTAMP=$(date -d '12 hours ago' +%s%3N)
 
-kubectl get pods | grep '\-driver' | grep -e 'Completed' -e 'Error' | awk '{print $1}' | \
+kubectl get pods | grep '\-driver' | grep -e 'Completed' | awk '{print $1}' | \
 while read -r DRIVER_POD; do
   DRIVER_TIMESTAMP=$(echo "${DRIVER_POD}" | awk -F- '{print $(NF-1)}')
   if [ "${DRIVER_TIMESTAMP}" -lt "${CUT_TIMESTAMP}" ]; then
