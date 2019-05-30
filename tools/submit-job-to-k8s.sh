@@ -48,6 +48,22 @@ while [ $# -gt 0 ]; do
       shift
       EXECUTOR_DISK_GB=$1
       ;;
+    --partner_bos_bucket)
+      shift
+      PARTNER_BOS_BUCKET=$1
+      ;;
+    --partner_bos_endpoint)
+      shift
+      PARTNER_BOS_ENDPOINT=$1
+      ;;
+    --partner_bos_access)
+      shift
+      PARTNER_BOS_ACCESS=$1
+      ;;
+    --partner_bos_secret)
+      shift
+      PARTNER_BOS_SECRET=$1
+      ;;
     *)
       if [ -f "$1" ]; then
         JOB_FILE=$1
@@ -109,6 +125,20 @@ popd
 rsync -aht --size-only "${FUEL_PATH}/apps/local/spark-kubernetes_2.11-2.4.0.jar" \
     ${CONDA_PREFIX}/lib/python3.6/site-packages/pyspark/jars/
 
+# Add partner config.
+PARTNER_CONF=""
+if [ ! -z "${PARTNER_BOS_BUCKET}" ]; then
+  PARTNER_CONF="
+      --conf spark.kubernetes.driverEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
+      --conf spark.kubernetes.driverEnv.PARTNER_BOS_ENDPOINT=${PARTNER_BOS_ENDPOINT}
+      --conf spark.kubernetes.driverEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
+      --conf spark.kubernetes.driverEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}
+      --conf spark.executorEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
+      --conf spark.executorEnv.PARTNER_BOS_ENDPOINT=${PARTNER_BOS_ENDPOINT}
+      --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
+      --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}"
+fi
+
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \
@@ -142,5 +172,6 @@ spark-submit \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+    ${PARTNER_CONF} \
 \
     "${REMOTE_JOB_FILE}" --running_mode=PROD $@

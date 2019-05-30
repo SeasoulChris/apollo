@@ -14,7 +14,7 @@ flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or 
 flags.DEFINE_boolean('debug', False, 'Enable debug logging.')
 
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
-flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
+flags.DEFINE_string('job_id', '2019', 'Pipeline job ID.')
 
 
 class BasePipeline(object):
