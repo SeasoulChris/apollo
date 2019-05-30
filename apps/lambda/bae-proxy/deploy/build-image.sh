@@ -9,7 +9,6 @@ echo "Building image: ${IMAGE}"
 cd $( dirname "${BASH_SOURCE[0]}" )/../../../..
 
 set -e
-set -x
 
 # Build your local apollo.
 bash ../apollo/apollo_docker.sh build_py
@@ -29,7 +28,7 @@ if [ "$1" = "push" ]; then
   docker push ${IMAGE}
 else
   echo "Now you can test the image with:
-        docker run -it --rm --net host ${IMAGE} --debug"
+        docker run -it --rm --net host -v $(pwd)/apps/lambda/bae-proxy:/home/bae/app -v $(pwd):/home/bae/log ${IMAGE} --debug"
   echo "Or push the image with:
         docker push ${IMAGE}"
 fi
