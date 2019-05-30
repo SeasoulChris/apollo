@@ -1,5 +1,6 @@
 """Fueling base pipeline."""
 #!/usr/bin/env python
+import os
 import sys
 
 from absl import app, flags
