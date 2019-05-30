@@ -18,9 +18,11 @@ flags.DEFINE_string('bos_region', 'bj', 'BOS region.')
 
 # Constants
 BOS_MOUNT_PATH = '/mnt/bos'
+PARTNER_BOS_MOUNT_PATH = '/mnt/partner'
 
 # Helpers.
 abs_path = lambda object_key: os.path.join(BOS_MOUNT_PATH, object_key)
+partner_abs_path = lambda object_key: os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
 
 
 class AutoDownload(object):
@@ -54,11 +56,11 @@ class AutoDownload(object):
 
 class BosClient(object):
     """A BOS client."""
-    def __init__(self, FLAGS):
-        self.access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-        self.secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        self.bucket = FLAGS.get('bos_bucket')
-        self.region = FLAGS.get('bos_region')
+    def __init__(self, region, bucket, ak, sk):
+        self.region = region
+        self.bucket = bucket
+        self.access_key = ak
+        self.secret_key = sk
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
             glog.error('Failed to get BOS config.')
             return None

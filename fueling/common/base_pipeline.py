@@ -8,13 +8,14 @@ import colored_glog as glog
 
 from fueling.common.bos_client import BosClient
 from fueling.common.mongo_utils import Mongo
+import fueling.common.time_utils as time_utils
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
 flags.DEFINE_boolean('debug', False, 'Enable debug logging.')
 
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
-flags.DEFINE_string('job_id', '2019', 'Pipeline job ID.')
+flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 
 
 class BasePipeline(object):
@@ -59,7 +60,19 @@ class BasePipeline(object):
 
     def bos(self):
         """Get a BOS client."""
-        return BosClient(self.FLAGS)
+        return BosClient(self.FLAGS.get('bos_region'), self.FLAGS.get('bos_bucket'),
+                         os.environ.get('AWS_ACCESS_KEY_ID'),
+                         os.environ.get('AWS_SECRET_ACCESS_KEY'))
+
+    @staticmethod
+    def partner_bos():
+        """Get a BOS client."""
+        if os.environ.get('PARTNER_BOS_REGION'):
+            return BosClient(os.environ.get('PARTNER_BOS_REGION'),
+                             os.environ.get('PARTNER_BOS_BUCKET'),
+                             os.environ.get('PARTNER_BOS_ACCESS'),
+                             os.environ.get('PARTNER_BOS_SECRET'))
+        return None
 
     def __main__(self, argv):
         """Run the pipeline."""
@@ -72,6 +85,8 @@ class BasePipeline(object):
             glog.fatal('No running mode is specified! Please run the pipeline with /tools/<runner> '
                        'instead of calling native "python".')
             sys.exit(1)
+        if not self.FLAGS.get('job_id'):
+            self.FLAGS['job_id'] = time_utils.format_current_time()
 
         glog.info('Running {} job in {} mode, owner={}, id={}'.format(
             self.name, mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))

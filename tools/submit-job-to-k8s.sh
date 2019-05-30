@@ -48,13 +48,13 @@ while [ $# -gt 0 ]; do
       shift
       EXECUTOR_DISK_GB=$1
       ;;
+    --partner_bos_region)
+      shift
+      PARTNER_BOS_REGION=$1
+      ;;
     --partner_bos_bucket)
       shift
       PARTNER_BOS_BUCKET=$1
-      ;;
-    --partner_bos_endpoint)
-      shift
-      PARTNER_BOS_ENDPOINT=$1
       ;;
     --partner_bos_access)
       shift
@@ -129,12 +129,12 @@ rsync -aht --size-only "${FUEL_PATH}/apps/local/spark-kubernetes_2.11-2.4.0.jar"
 PARTNER_CONF=""
 if [ ! -z "${PARTNER_BOS_BUCKET}" ]; then
   PARTNER_CONF="
+      --conf spark.kubernetes.driverEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION}
       --conf spark.kubernetes.driverEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
-      --conf spark.kubernetes.driverEnv.PARTNER_BOS_ENDPOINT=${PARTNER_BOS_ENDPOINT}
       --conf spark.kubernetes.driverEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
       --conf spark.kubernetes.driverEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}
+      --conf spark.executorEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION}
       --conf spark.executorEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
-      --conf spark.executorEnv.PARTNER_BOS_ENDPOINT=${PARTNER_BOS_ENDPOINT}
       --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
       --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}"
 fi
