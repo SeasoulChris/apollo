@@ -3,6 +3,7 @@
 import glob
 import os
 
+from absl import flags
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
@@ -20,6 +21,11 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
+
+
+flags.DEFINE_string('input_data_path', 'modules/control/data/records',
+                    'Multi-vehicle calibration feature extraction input data path.')
+
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 1
@@ -122,7 +128,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
     def run_prod(self):
-        origin_prefix = 'modules/control/data/records'
+        origin_prefix = self.FLAGS.get('input_data_path')
         target_prefix = 'modules/control/data/results'
         origin_dir = bos_client.abs_path(origin_prefix)
 

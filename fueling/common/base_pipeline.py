@@ -13,6 +13,9 @@ from fueling.common.mongo_utils import Mongo
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
 flags.DEFINE_boolean('debug', False, 'Enable debug logging.')
 
+flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
+flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
+
 
 class BasePipeline(object):
     """Fueling base pipeline."""
@@ -70,7 +73,8 @@ class BasePipeline(object):
                        'instead of calling native "python".')
             sys.exit(1)
 
-        glog.info('Running {} pipeline in {} mode'.format(self.name, mode))
+        glog.info('Running {} job in {} mode, owner={}, id={}'.format(
+            self.name, mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))
         if mode == 'TEST':
             self.run_test()
         elif mode == 'GRPC':

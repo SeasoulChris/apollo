@@ -37,7 +37,7 @@ class FuelJob(flask_restful.Resource):
             return json.dumps({'message': msg}), HTTPStatus.UNAUTHORIZED
         # 3. Dispatch jobs.
         if job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
-            return VehicleCalibration(job_config).process()
+            return VehicleCalibration.process(job_config)
         return json.dumps({'message': 'Unsupported job type'}), HTTPStatus.BAD_REQUEST
 
 
