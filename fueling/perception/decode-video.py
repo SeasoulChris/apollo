@@ -175,6 +175,9 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     """Scan messages in original record file, and replace video frames with decoded image frames"""
     video_dir, record = target_record
     dst_record = locate_target_decoded_record(root_dir, decoded_records_dir, record)
+    if os.path.exists(os.path.join(os.path.dirname(dst_record), 'COMPLETE')):
+        glog.info('target already replaced {}, do nothing'.format(dst_record))
+        return
     glog.info("replacing frames for {} to {}".format(target_record, dst_record))
     reader = RecordReader(record)
     file_utils.makedirs(os.path.dirname(dst_record))
