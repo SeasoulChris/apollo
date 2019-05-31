@@ -39,10 +39,6 @@ class BasePipeline(object):
         """Run the pipeline in production mode."""
         raise Exception('{}::run_prod not implemented!'.format(self.name))
 
-    def run_grpc(self):
-        """Run the pipeline in GRPC mode."""
-        raise Exception('{}::run_grpc not implemented!'.format(self.name))
-
     # Helper functions.
     @classmethod
     def context(cls):
@@ -90,11 +86,9 @@ class BasePipeline(object):
             self.FLAGS['job_id'] = time_utils.format_current_time()
 
         glog.info('Running {} job in {} mode, owner={}, id={}'.format(
-            self.name, mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))
+            self.name, mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))
         if mode == 'TEST':
             self.run_test()
-        elif mode == 'GRPC':
-            self.run_grpc()
         else:
             self.run_prod()
 
