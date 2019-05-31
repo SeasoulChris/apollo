@@ -36,7 +36,7 @@ POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 CALIBRATION_DIMENSION = point_mass_config["calibration_dimension"]
 VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
-SPEED_EPSILON = 1e-3   # Speed Threshold To Indicate Driving Directions
+SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
 
 FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
@@ -123,6 +123,20 @@ def load_calibration_table():
     return calibration_table
 
 
+def gear_position_conversion(raw_gear):
+    gear_status = np.round(raw_gear)
+    # Convert backward gear from 2 to -1 for computation convenience
+    if gear_status == 2:
+        gear_status = -1
+    # Set forward gear as 1
+    elif gear_status == 1:
+        pass
+    # Set neutral gear as 0
+    else:
+        gear_status = 0
+    return gear_status
+
+
 def generate_point_mass_output(segment):
     calibration_table = load_calibration_table()
     table_interpolation = interpolate.interp2d(
@@ -150,12 +164,9 @@ def generate_point_mass_output(segment):
         velocity_point_mass += acceleration_point_mass * DELTA_T
 
         # Get gear status from data, default status is forward driving gear
-        # 0: Natural, 1: Driving Forward, 2: Driving Backward
+        # 0: Neutral, 1: Driving Forward, 2: Driving Backward
         if segment.shape[1] > segment_index["gear_position"]:
-            gear_status = segment[k, segment_index["gear_position"]]
-            # Convert backward gear from 2 to -1 for computation convenience
-            if gear_status == 2:
-                gear_status = -1
+            gear_status = gear_position_conversion(segment[k, segment_index["gear_position"]])
         else:
             gear_status = 1
         # If (negative speed under forward gear || positive speed under backward gear ||
@@ -221,16 +232,15 @@ def generate_network_output(segment, model_folder, model_name):
         # Update the vehicle speed based on predicted acceleration
         velocity_fnn += output_fnn[k, output_index["acceleration"]] * DELTA_T
 
-        # Get gear status from data, default status is forward driving gear
-        # 0: Natural, 1: Driving Forward, -1: Driving Backward
+        # Get raw gear status from data, default status is forward driving gear
+        # Before conversion: 1: Driving Forward, 2: Driving Backward, 3: Neutral
+        # After conversion: 1: Driving Forward, -1: Driving Backward,  0: Neutral
         if segment.shape[1] > segment_index["gear_position"]:
-            # Convert backward gear from 2 to -1 for computation convenience
-            if segment[k, segment_index["gear_position"]] > 1.0 + STD_EPSILON:
-                gear_status = -1
+            gear_status = gear_position_conversion(segment[k, segment_index["gear_position"]])
         else:
             gear_status = 1
         # If (negative speed under forward gear || positive speed under backward gear ||
-        #     natural gear):
+        #     neutral gear):
         # Then truncate speed, acceleration, and angular speed to 0
         if gear_status * (velocity_fnn + gear_status * SPEED_EPSILON) <= 0:
             velocity_fnn = 0.0
