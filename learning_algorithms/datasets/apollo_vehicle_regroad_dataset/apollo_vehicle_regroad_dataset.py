@@ -31,8 +31,8 @@ from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb
 from learning_algorithms.utilities.IO_utils import *
 
 obs_feature_size = 180
-single_lane_feature_size = 640
-past_lane_feature_size = 240
+single_lane_feature_size = 600
+past_lane_feature_size = 200
 future_lane_feature_size = 400
 
 def LoadDataForLearning(filepath):
@@ -45,6 +45,15 @@ def LoadDataForLearning(filepath):
     except:
         return None
 
+
+def CalculateDistanceAndAngle(curve, point):
+    '''Calculate the distance and angle-diff between the point and given curve
+        - curve: a list of tuples (x, y)
+        - point: a tuple (x, y)
+
+        return dist, angle-diff
+    '''
+    return
 
 def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
     # Go through all the data_for_learning file, for each data-point, find
@@ -132,19 +141,29 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                 num_dirty_data_point += 1
                 continue
 
-            # # Extract the features of obstacle's historical distances/angles
-            # #    w.r.t. all lane-sequences.
-            # list_of_lane_points = []
-            # obs_past_history = features_for_learning[:obs_feature_size]
-            # for i in range(num_lane_sequence):
-            #     list_of_lane_points.append(features_for_learning[obs_feature_size+i*single_lane_feature_size:\
-            #                                                      obs_feature_size+(i+1)*single_lane_feature_size])
-            # for lane_points in list_of_lane_points:
-            #     past_points = lane_points[:past_lane_feature_size]
-            #     for j in range(int(obs_feature_size/9)):
+            # 4. Extract the features of obstacle's historical distances/angles w.r.t. the lane-sequences.
+            #    a. First, calculate the historical distances/angles w.r.t. all lane-sequences.
+            list_of_backward_lane_points = []    # Contains num_lane_sequence lists, while each list of tuples represents a lane-curve.
+            obs_past_history = features_for_learning[:obs_feature_size]
+            for i in range(num_lane_sequence):
+                lane_points_l = features_for_learning[obs_feature_size+i*single_lane_feature_size:\
+                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
+                lane_points_s = features_for_learning[obs_feature_size+i*single_lane_feature_size+1:\
+                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
+                list_of_backward_lane_points.append(list(zip(lane_points_l, lane_points_s))[:past_lane_feature_size/4])
+            list_of_dists_and_angles = []   # Contains num_lane_sequence lists, while each list of tuples represents historical dist and angle.
+            for lane_points in list_of_backward_lane_points:
+                curr_historical_dist_and_angle = []
+                for obs_hist_point in range(obs_hist_size/9):
+                    # TODO(jiacheng):
+                list_of_dists_and_angles.append(curr_historical_dist_and_angle)
+            #    b. Second, if multiple backward lane merges into one, then only retain one that has the
+            #       smallest historical average displacement from the obstacle's historical positions.
+            # TODO(jiacheng): update the new num_lane_sequence.
+            valid_lane_sequence_ids = []
+            num_lane_sequence = len(valid_lane_sequence_ids)
 
-
-            # 4. Extract the features of whether each lane is the self-lane or not.
+            # 5. Extract the features of whether each lane is the self-lane or not.
             start_lane_sequences = set()
             start_lane_segment_id = visited_lane_segments[0][1]
             for i, lane_sequence in enumerate(lane_graph):
@@ -157,14 +176,15 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                 else:
                     self_lane_features.append(0)
 
-            # 5. Label whether the obstacle has stepped out of its original lane-sequence(s).
+            # 6. Label whether the obstacle has stepped out of its original lane-sequence(s).
+            # TODO(jiacheng): reconstruct a new end_lane_sequences because the previous one has wrong ids now.
             has_stepped_out = 1
             for i in end_lane_sequences:
                 if i in start_lane_sequences:
                     has_stepped_out = 0
             num_cutin_data_points += has_stepped_out
 
-            # 6. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume there are five lane sequences)
+            # 7. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume there are five lane sequences)
             one_hot_encoding_label = []
             for i in range(num_lane_sequence):
                 if i in end_lane_sequences:
@@ -218,11 +238,10 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
                 curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
                                                      single_lane_feature_size*curr_num_lane_sequence])\
-                                    .reshape((curr_num_lane_sequence, 400))
+                                    .reshape((curr_num_lane_sequence, single_lane_feature_size))
                 curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence])
                                          .reshape((curr_num_lane_sequence, 1))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
-
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
                 if training_mode:
