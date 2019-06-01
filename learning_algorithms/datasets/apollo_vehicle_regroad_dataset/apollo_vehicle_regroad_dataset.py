@@ -30,6 +30,10 @@ import learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_
 from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 from learning_algorithms.utilities.IO_utils import *
 
+obs_feature_size = 180
+single_lane_feature_size = 640
+past_lane_feature_size = 240
+future_lane_feature_size = 400
 
 def LoadDataForLearning(filepath):
     list_of_data_for_learning = \
@@ -85,7 +89,7 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             serial_lane_graph.append('|')
             visited_lane_segments = dict_labels[key]
 
-            # 2. Deserialize the lane_graph.
+            # 2. Deserialize the lane_graph, and remove data-points with incorrect sizes.
             lane_graph = []
             lane_sequence = None
             for lane_seg_id in serial_lane_graph:
@@ -95,6 +99,10 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                     lane_sequence = set()
                 else:
                     lane_sequence.add(lane_seg_id)
+            num_lane_sequence = len(lane_graph)
+            if (len(features_for_learning) - obs_feature_size) % single_lane_feature_size != 0 or \
+               (len(features_for_learning) - obs_feature_size) / single_lane_feature_size != num_lane_sequence:
+                continue
 
             # 3. Based on the lane graph, remove those jittering data points (data cleaning).
             stable_window_lane_sequences = []
@@ -124,27 +132,49 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                 num_dirty_data_point += 1
                 continue
 
-            # 4. Label whether the obstacle has stepped out of its original lane-sequence(s).
+            # # Extract the features of obstacle's historical distances/angles
+            # #    w.r.t. all lane-sequences.
+            # list_of_lane_points = []
+            # obs_past_history = features_for_learning[:obs_feature_size]
+            # for i in range(num_lane_sequence):
+            #     list_of_lane_points.append(features_for_learning[obs_feature_size+i*single_lane_feature_size:\
+            #                                                      obs_feature_size+(i+1)*single_lane_feature_size])
+            # for lane_points in list_of_lane_points:
+            #     past_points = lane_points[:past_lane_feature_size]
+            #     for j in range(int(obs_feature_size/9)):
+
+
+            # 4. Extract the features of whether each lane is the self-lane or not.
             start_lane_sequences = set()
             start_lane_segment_id = visited_lane_segments[0][1]
             for i, lane_sequence in enumerate(lane_graph):
                 if start_lane_segment_id in lane_sequence:
                     start_lane_sequences.add(i)
+            self_lane_features = []
+            for i in range(num_lane_sequence):
+                if i in start_lane_sequences:
+                    self_lane_features.append(1)
+                else:
+                    self_lane_features.append(0)
+
+            # 5. Label whether the obstacle has stepped out of its original lane-sequence(s).
             has_stepped_out = 1
             for i in end_lane_sequences:
                 if i in start_lane_sequences:
                     has_stepped_out = 0
             num_cutin_data_points += has_stepped_out
 
-            # 5. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume there are five lane sequences)
+            # 6. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume there are five lane sequences)
             one_hot_encoding_label = []
-            for i in range(len(lane_graph)):
+            for i in range(num_lane_sequence):
                 if i in end_lane_sequences:
                     one_hot_encoding_label.append(1)
                 else:
                     one_hot_encoding_label.append(0)
-            curr_data_point = [len(lane_graph)] + features_for_learning[:180+400*len(lane_graph)] + \
-                              one_hot_encoding_label + [has_stepped_out]
+
+            # Put everything together.
+            curr_data_point = [num_lane_sequence] + features_for_learning + self_lane_features + \
+                one_hot_encoding_label + [has_stepped_out]
             output_np_array.append(curr_data_point)
 
         # Save into a local file for training.
@@ -171,6 +201,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         self.obstacle_features = []
         self.obstacle_hist_size = []
         self.lane_features = []
+        self.is_self_lane = []
         self.labels = []
         self.is_cutin = []
 
@@ -181,12 +212,15 @@ class ApolloVehicleRegularRoadDataset(Dataset):
             file_content = np.load(file_path).tolist()
             for data_pt in file_content:
                 curr_num_lane_sequence = int(data_pt[0])
-                if len(data_pt) != curr_num_lane_sequence*401+180+2:
+                if len(data_pt) != curr_num_lane_sequence*(single_lane_feature_size+2)+obs_feature_size+2:
                     continue
-                curr_obs_feature = np.array(data_pt[1:181]).reshape((1, 180))
-                curr_obs_hist_size = np.sum(np.array(data_pt[1:181:9])) * np.ones((1, 1))
-                curr_lane_feature = np.array(data_pt[181:181+400*curr_num_lane_sequence])\
+                curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((1, obs_feature_size))
+                curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
+                curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
+                                                     single_lane_feature_size*curr_num_lane_sequence])\
                                     .reshape((curr_num_lane_sequence, 400))
+                curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence])
+                                         .reshape((curr_num_lane_sequence, 1))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
 
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
@@ -197,6 +231,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                             self.obstacle_features.append(curr_obs_feature)
                             self.obstacle_hist_size.append(curr_obs_hist_size)
                             self.lane_features.append(curr_lane_feature)
+                            self.is_self_lane.append(curr_self_lane_feature)
                             curr_lane_label = np.zeros((curr_num_lane_sequence, 1))
                             curr_lane_label[i, 0] = 1
                             self.labels.append(curr_lane_label)
@@ -205,6 +240,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                     self.obstacle_features.append(curr_obs_feature)
                     self.obstacle_hist_size.append(curr_obs_hist_size)
                     self.lane_features.append(curr_lane_feature)
+                    self.is_self_lane.append(curr_self_lane_feature)
                     self.labels.append(curr_label.reshape((curr_num_lane_sequence, 1)))
                     self.is_cutin.append(curr_is_cutin)
 
