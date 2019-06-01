@@ -26,7 +26,7 @@ class EmailService(Resource):
         # }
         request = flask.request.get_json()
         # Verify Pin.
-        if request.get('Pin') != PIN:
+        if request.get('Pin') != self.PIN:
             return 'Rejected', httplib.UNAUTHORIZED
         title = request.get('Title', '')
         content = request.get('Content', '')

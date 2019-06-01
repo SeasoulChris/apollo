@@ -7,6 +7,11 @@ import os
 import smtplib
 
 import colored_glog as glog
+import requests
+
+
+BAE_PROXY = 'http://192.168.1.31'
+BAE_PROXY_PIN = 'apollo2019-woyouyitouxiaomaolv'
 
 
 def send_email_info(title, content, receivers=None):
@@ -43,34 +48,20 @@ def send_email(title, title_color, content, receivers=None):
     4. receivers, recepients of the notification. Default should be a group account, but can also
        be specified explicitly.
     """
-    host = 'smtp.office365.com'
-    port = 587
-    from_addr = 'apollo-data-pipeline@outlook.com'
-
-    subject = 'Apollo data pipeline job status'
-    mail_passwd = os.environ.get('APOLLO_EMAIL_PASSWD')
-    if not mail_passwd:
-        glog.error('No credential provided to send emails.')
-        return
-
-    smtp = smtplib.SMTP()
-    try:
-        smtp.connect(host, port)
-        smtp.starttls()
-        smtp.login(from_addr, mail_passwd)
-    except Exception as ex:
-        glog.error('accessing email server failed with error: {}'.format(str(ex)))
-        return
-
-    to_addrs = receivers or 'apollo-data-pipeline01@baidu.com'
-    message = MIMEMultipart('alternative')
-    html_page = MIMEText(get_html_content(title, title_color, content), 'html')
-    message.attach(html_page)
-    message['From'] = from_addr
-    message['To'] = ';'.join(to_addrs)
-    message['Subject'] = subject
-    smtp.sendmail(from_addr, to_addrs, message.as_string())
-    smtp.quit()
+    html_content = get_html_content(title, title_color, content)
+    receivers = ';'.join(receivers)
+    request_json = {
+        'Pin': BAE_PROXY_PIN,
+        'Title': title,
+        'Content': html_content,
+        'Receivers': receivers,
+    }
+    request = requests.post(BAE_PROXY, json=request_json)
+    if request.ok:
+        glog.info('Successfully send email to {}'.format(receivers))
+    else:
+        glog.error('Failed to send email to {}, status={}, content={}'.format(
+            receivers, request.status_code, request.content))
 
 def get_html_content(title, title_color, content):
     """Help function to constuct HTML message body"""
