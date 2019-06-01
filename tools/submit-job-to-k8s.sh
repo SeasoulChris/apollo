@@ -93,8 +93,6 @@ BOS_MOUNT_PATH="/mnt/bos"
 EVENTS_LOG_PATH=${BOS_MOUNT_PATH}/modules/data/spark/spark-events
 # End of config.
 
-set -x
-
 # Prepare env.
 TOOL_ENV="fuel-tool-0"
 source activate ${TOOL_ENV}

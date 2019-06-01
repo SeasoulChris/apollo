@@ -32,16 +32,16 @@ class VehicleCalibration(object):
         if set(bos_config.secret_key).difference(set('0123456789abcdef')):
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
 
-        # Job summit.
-        # TODO: job_config.input_data_path
-        # vehicle_calibration.sh <bash args> <python args>
+        # Job summit: vehicle_calibration.sh <bash args> <python args> <input_data_path>
         os.system('nohup bash vehicle_calibration.sh \
             "--partner_bos_region {} --partner_bos_bucket {} \
             --partner_bos_access {} --partner_bos_secret {}" \
-            "--job_owner={} --job_id={}" > /tmp/{}_{}.log 2>&1 &'.format(
+            "--job_owner={} --job_id={}" "{}" > /tmp/{}_{}.log 2>&1 &'.format(
                 BosConfig.Region.Name(bos_config.region), bos_config.bucket,
                 bos_config.access_key, bos_config.secret_key,
-                job_config.partner_id, job_id, job_config.partner_id, job_id))
+                job_config.partner_id, job_id,
+                job_config.input_data_path,
+                job_config.partner_id, job_id))
 
         msg = ('Your job {} is in process now! You will receive a notification in your '
                'corresponding email when it is finished.'.format(job_id))
