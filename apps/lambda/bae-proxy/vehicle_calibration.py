@@ -4,7 +4,7 @@ from http import HTTPStatus
 import json
 import os
 
-from modules.tools.fuel_proxy.proto.job_config_pb2 import JobConfig
+from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig
 
 import fueling.common.time_utils as time_utils
 
@@ -33,16 +33,16 @@ class VehicleCalibration(object):
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
 
         # Job summit.
-        os.system('cd /apollo/modules/data/fuel && '
-                  'nohup bash tools/submit-job-to-k8s.sh -w 1 -c 1 -m 1g -d 1 '
-                  '--partner_bos_region "{}" --partner_bos_bucket "{}" '
-                  '--partner_bos_access "{}" --partner_bos_secret "{}" '
-                  'fueling/demo/count-msg-by-channel.py '
-                  '--job_owner="{}" --job_id="{}" --input_data_path="{}" &'.format(
-                      JobConfig.BosConfig.Region.Name(bos_config.region), bos_config.bucket,
-                      bos_config.access_key, bos_config.secret_key,
-                      job_config.partner_id, job_id, job_config.input_data_path))
+        # TODO: job_config.input_data_path
+        # vehicle_calibration.sh <bash args> <python args>
+        os.system('nohup bash vehicle_calibration.sh \
+            "--partner_bos_region {} --partner_bos_bucket {} \
+            --partner_bos_access {} --partner_bos_secret {}" \
+            "--job_owner={} --job_id={}" > /tmp/{}_{}.log 2>&1 &'.format(
+                BosConfig.Region.Name(bos_config.region), bos_config.bucket,
+                bos_config.access_key, bos_config.secret_key,
+                job_config.partner_id, job_id, job_config.partner_id, job_id))
 
         msg = ('Your job {} is in process now! You will receive a notification in your '
-               'corresponding email when it is finished.'.format(task_id))
+               'corresponding email when it is finished.'.format(job_id))
         return json.dumps({'message': msg}), HTTPStatus.ACCEPTED
