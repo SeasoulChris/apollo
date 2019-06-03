@@ -112,7 +112,6 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
-        return
 
         """ get to do jobs """
         """ for run_test only, folder/vehicle/subfolder/*.record.* """
