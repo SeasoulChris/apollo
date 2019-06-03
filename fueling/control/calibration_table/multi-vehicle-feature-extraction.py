@@ -67,7 +67,7 @@ def write_h5(elem, origin_prefix, target_prefix):
 
 
 def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
-   # PairRDD((vehicle, segment_dir, segment_id), msg)
+    # PairRDD((vehicle, segment_dir, segment_id), msg)
     result_rdd = (
         valid_segment
         # PairRDD(dir_segment, vehicle)

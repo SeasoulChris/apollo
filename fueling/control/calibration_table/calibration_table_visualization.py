@@ -4,8 +4,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 from mpl_toolkits.mplot3d import Axes3D
-import h5py
 import matplotlib.pyplot as plt
+import h5py
 import numpy as np
 
 

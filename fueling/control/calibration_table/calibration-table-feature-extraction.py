@@ -24,11 +24,13 @@ channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 10
 MARKER = 'CompleteCalibrationTable'
 
+
 def get_single_vehicle_type(data_folder):
     sub_folders = os.listdir(data_folder)
     for one_folder in sub_folders:
         vehicle_type = one_folder.rsplit('/')
     return vehicle_type[0]
+
 
 def get_vehicle_param(folder_dir, vehicle_type):
     # CONF_FOLDER = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
@@ -36,6 +38,7 @@ def get_vehicle_param(folder_dir, vehicle_type):
     conf_file = os.path.join(folder_dir, vehicle_type, vehicle_para_conf_filename)
     VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
     return VEHICLE_PARAM_CONF
+
 
 class CalibrationTableFeatureExtraction(BasePipeline):
     def __init__(self):
@@ -54,9 +57,9 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         todo_tasks = self.to_rdd([origin_prefix])
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
-        self.run(todo_records, origin_prefix, target_prefix, 
-            throttle_train_target_prefix, VEHICLE_PARAM_CONF)
+                                                  dir_utils.get_todo_records(todo_tasks))
+        self.run(todo_records, origin_prefix, target_prefix,
+             throttle_train_target_prefix, VEHICLE_PARAM_CONF)
 
     def run_prod(self):
         """Run prod."""
@@ -67,27 +70,27 @@ class CalibrationTableFeatureExtraction(BasePipeline):
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dir, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
+                                                  dir_utils.get_todo_records(todo_tasks))
         self.run(todo_records, origin_prefix, target_prefix, throttle_train_target_prefix)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix, 
+    def run(self, dir_to_records_rdd, origin_prefix, target_prefix,
             throttle_train_target_prefix, VEHICLE_PARAM_CONF):
         """ processing RDD """
         # PairRDD((dir, timestamp_per_min), msg)
-        dir_to_msgs = (dir_to_records_rdd
+        dir_to_msgs = (dir_to_records_rdd.
                       # PairRDD(dir, msg)
-                      .flatMapValues(record_utils.read_record(channels))
+                      flatMapValues(record_utils.read_record(channels))
                       # PairRDD((dir, timestamp_per_min), msg)
                       .map(gen_pre_segment)
                       .cache())
 
         # RDD(dir, timestamp_per_min)
         valid_segments = (feature_extraction_rdd_utils.
-                            chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT))
+                          chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT))
 
-        # PairRDD((dir_segment, segment_id), msg) 
+        # PairRDD((dir_segment, segment_id), msg)
         valid_msgs = feature_extraction_rdd_utils.valid_msg_rdd(dir_to_msgs, valid_segments)
- 
+
         # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
         parsed_msgs = feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs)
 
@@ -98,7 +101,7 @@ class CalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(pair_cs_pose)
             # PairRDD((dir_segment, segment_id), features)
             .mapValues(
-                lambda msgs:calibration_table_utils.feature_generate(msgs, VEHICLE_PARAM_CONF))
+                lambda msgs: calibration_table_utils.feature_generate(msgs, VEHICLE_PARAM_CONF))
             # PairRDD ((dir_segment, segment_id), filtered_features)
             .mapValues(calibration_table_utils.feature_filter)
             # PairRDD ((dir_segment, segment_id), cutted_features)
