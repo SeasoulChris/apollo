@@ -99,7 +99,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
         # add sanity check
-        if sanity_check(origin_prefix) == False:
+        if not sanity_check(origin_prefix):
             return
 
         # RDD(origin_dir)
