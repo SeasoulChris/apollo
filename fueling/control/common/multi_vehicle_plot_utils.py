@@ -71,6 +71,7 @@ cali_input_index = {
 
 
 def plot_dynamic_model_feature_hist(fearure, result_file):
+    glog.info('Total Number of Feature Frames %s' % fearure.shape[0])
     with PdfPages(result_file) as pdf:
         for feature_name in input_index:
             glog.info('feature_name %s' % feature_name)

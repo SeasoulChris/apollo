@@ -17,7 +17,12 @@ JOB="fueling/control/dynamic_model/dynamic-model-training.py"
 ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 2 --cpu 20 --memory 100g ${JOB}
 
-# Evaluation
+# Model Evaluation
 JOB="fueling/control/dynamic_model/dynamic-model-evaluation.py"
 ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 16 --cpu 2 --memory 20g ${JOB}
+
+# Training Data Visualization
+JOB="fueling/control/dynamic_model/dynamic-model-data-visualization.py"
+ENV="fuel-py27"
+./tools/submit-job-to-k8s.sh --env ${ENV} --workers 2 --cpu 20 --memory 100g ${JOB}
