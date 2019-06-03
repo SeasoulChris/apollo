@@ -13,6 +13,7 @@ import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
+from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
 import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
@@ -134,8 +135,15 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
 
     def run_prod(self):
         origin_prefix = self.FLAGS.get('input_data_path')
-        target_prefix = 'modules/control/data/results'
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        # extract features to intermediate result folder
+        target_prefix = os.path.join(inter_result_folder, job_owner, job_id)
+
         origin_dir = bos_client.abs_path(origin_prefix)
+
+        glog.info("origin_dir: %s" % origin_dir)
+        glog.info("target_prefix: %s" % target_prefix)
 
         # add sanity check
         if not sanity_check(origin_dir):

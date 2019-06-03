@@ -4,6 +4,8 @@ import glob
 import os
 import time
 
+from absl import flags
+import colored_glog as glog
 import matplotlib
 matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
@@ -14,9 +16,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.common.training_conf import inter_result_folder
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+
+flags.DEFINE_string('input_data_path', 'modules/control/data/records',
+                    'Multi-vehicle calibration feature extraction input data path.')
+flags.DEFINE_string('output_data_path', 'modules/control/data/results',
+                    'Multi-vehicle calibration feature extraction output data path.')
 
 
 def read_hdf5(hdf5_file_list):
@@ -64,7 +72,16 @@ class MultiVehicleDataDistribution(BasePipeline):
         self.run(hdf5_files, origin_prefix)
 
     def run_prod(self):
-        origin_prefix = 'modules/control/data/results/CalibrationTableFeature'
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        glog.info("job_id: %s" % job_id)
+        # intermediate result folder
+        origin_prefix = os.path.join(inter_result_folder, job_owner,
+                                     job_id, 'CalibrationTableFeature')
+        glog.info("origin_prefix: %s" % origin_prefix)
+        target_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+        glog.info("origin_prefix: %s" % target_prefix)
+        return
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -82,8 +99,8 @@ class MultiVehicleDataDistribution(BasePipeline):
         hdf5_files = spark_helper.cache_and_log(
             'hdf5_files', origin_vehicle_dir.mapValues(self.list_end_files_prod))
 
-        origin_dir = bos_client.abs_path(origin_prefix)
-        self.run(hdf5_files, origin_dir)
+        target_dir = bos_client.abs_path(target_prefix)
+        self.run(hdf5_files, target_dir)
 
     def run(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)

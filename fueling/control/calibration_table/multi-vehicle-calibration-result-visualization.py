@@ -4,6 +4,7 @@ import glob
 import os
 import time
 
+from absl import flags
 from matplotlib.backends.backend_pdf import PdfPages
 import colored_glog as glog
 import h5py
@@ -18,6 +19,11 @@ import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
+flags.DEFINE_string('input_data_path', 'modules/control/data/records',
+                    'Multi-vehicle calibration feature extraction input data path.')
+flags.DEFINE_string('output_data_path', 'modules/control/data/results',
+                    'Multi-vehicle calibration feature extraction output data path.')
+
 
 class MultiCalibrationTableVisualization(BasePipeline):
     def __init__(self):
@@ -29,8 +35,16 @@ class MultiCalibrationTableVisualization(BasePipeline):
         self.run(origin_dir, conf_dir)
 
     def run_prod(self):
-        origin_prefix = 'modules/control/data/results/CalibrationTableConf'
-        conf_prefix = 'modules/control/data/records/'
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+
+        # conf file in the input data folder
+        conf_prefix = self.FLAGS.get('input_data_path')
+
+        # results in output folder
+        # origin_prefix = self.FLAGS.get('output_data_path')
+        origin_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+
         origin_dir = bos_client.abs_path(origin_prefix)
         conf_dir = bos_client.abs_path(conf_prefix)
         self.run(origin_dir, conf_dir)
@@ -46,7 +60,7 @@ class MultiCalibrationTableVisualization(BasePipeline):
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_in_the_list, vehicle)
-            .filter(lambda (vehicle, _): vehicle in vehicle_list)
+            # .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle, abs_path_to_vehicle_folder)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
@@ -68,7 +82,7 @@ class MultiCalibrationTableVisualization(BasePipeline):
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_in_the_list, vehicle)
-            .filter(lambda (vehicle, _): vehicle in vehicle_list)
+            # .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle, abs_path_to_vehicle_folder)
             .mapValues(lambda vehicle: os.path.join(conf_prefix, vehicle))
             # PairRDD(vehicle, VEHICLE_PARAM_CONF.vehicle_param)

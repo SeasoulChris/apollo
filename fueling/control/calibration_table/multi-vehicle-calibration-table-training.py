@@ -4,6 +4,7 @@ import glob
 import operator
 import os
 
+from absl import flags
 import colored_glog as glog
 import h5py
 import numpy as np
@@ -13,6 +14,7 @@ from modules.common.configs.proto import vehicle_config_pb2
 import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.common.training_conf import inter_result_folder
 import fueling.common.bos_client as bos_client
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
@@ -22,6 +24,10 @@ import fueling.control.features.calibration_table_utils as calibration_table_uti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
+flags.DEFINE_string('input_data_path', 'modules/control/data/records',
+                    'Multi-vehicle calibration feature extraction input data path.')
+flags.DEFINE_string('output_data_path', 'modules/control/data/results',
+                    'Multi-vehicle calibration feature extraction output data path.')
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
@@ -177,9 +183,19 @@ class MultiCalibrationTableTraining(BasePipeline):
         self.run(feature_dir, vehicle_param_conf, origin_prefix, target_prefix)
 
     def run_prod(self):
-        origin_prefix = 'modules/control/data/results/CalibrationTableFeature'
-        target_prefix = 'modules/control/data/results/CalibrationTableConf'
-        conf_prefix = 'modules/control/data/records'
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        # intermediate result folder
+        origin_prefix = os.path.join(inter_result_folder, job_owner,
+                                     job_id, 'CalibrationTableFeature')
+
+        # output folder
+        # target_prefix = self.FLAGS.get('output_data_path')
+        target_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+
+        # get conf file from origin input folder
+        conf_prefix = self.FLAGS.get('input_data_path')
+
         conf_dir = bos_client.abs_path(conf_prefix)
 
         # RDD(origin_dir)
@@ -191,7 +207,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_in_the_list, vehicle)
-            .filter(lambda (vehicle, _): vehicle in vehicle_list)
+            # .filter(lambda (vehicle, _): vehicle in vehicle_list)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
@@ -205,7 +221,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_in_the_list, vehicle)
-            .filter(lambda (vehicle, _): vehicle in vehicle_list)
+            # .filter(lambda (vehicle, _): vehicle in vehicle_lFist)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(conf_dir, vehicle)))
 
