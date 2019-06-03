@@ -12,6 +12,7 @@ import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+from fueling.control.common.sanity_check import sanity_check  # include sanity check
 import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
@@ -97,6 +98,10 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
+        # add sanity check
+        if sanity_check(origin_prefix) == False:
+            return
+
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
@@ -106,7 +111,8 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, vehicle_type)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)), 3)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
+        return
 
         """ get to do jobs """
         """ for run_test only, folder/vehicle/subfolder/*.record.* """
@@ -115,7 +121,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             origin_vehicle_dir
             # PairRDD(vehicle_type, list_of_records)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
-            .mapValues(os.path.dirname), 3)
+            .mapValues(os.path.dirname))
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
@@ -123,7 +129,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, dir_of_vehicle)
             origin_vehicle_dir
             # PairRDD(vehicle_type, vehicle_conf)
-            .mapValues(multi_vehicle_utils.get_vehicle_param), 3)
+            .mapValues(multi_vehicle_utils.get_vehicle_param))
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
@@ -131,6 +137,10 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = self.FLAGS.get('input_data_path')
         target_prefix = 'modules/control/data/results'
         origin_dir = bos_client.abs_path(origin_prefix)
+
+        # add sanity check
+        if not sanity_check(origin_dir):
+            return
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(
@@ -151,9 +161,13 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, vehicle)
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle, dir_of_vehicle)
-            .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle))
-            # PairRDD(vehicle, vehicle_param)
-            .mapValues(multi_vehicle_utils.get_vehicle_param))
+            .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle)))
+
+        # PairRDD(vehicle, vehicle_param)
+        vehicle_param_conf = vehicle_param_conf.mapValues(multi_vehicle_utils.get_vehicle_param)
+        glog.info("vehicle_param_conf: %d", vehicle_param_conf.count())
+
+        # sanity check
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
