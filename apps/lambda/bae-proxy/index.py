@@ -28,7 +28,9 @@ class FuelJob(flask_restful.Resource):
         """Accept user request, verify and process."""
         # 1. Parse request.
         try:
-            job_config = json_format.Parse(flask.request.get_json(), JobConfig())
+            request = flask.request.get_json()
+            parser = json_format.Parse if isinstance(request, str) else json_format.ParseDict
+            job_config = parser(request, JobConfig())
         except json_format.ParseError:
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
         # 2. User authentication.
