@@ -154,6 +154,27 @@ def send_lidar_request(task, frames, access_key):
     glog.info('submitted task to scale, response: {}'.format(response.json()))
     return response.json()
 
+def send_2d_3d_linking_request(scale_lidar_task_id, access_key):
+    """Send requests for 2D/3D linking tasks"""
+    payload = {
+        'project': 'scale_labeling_2019Q2_2d3dlinking'
+        'callback_url': 'http://www.example.com/callback',
+        'instruction': '<iframe src="https://docs.google.com/document/d/e/' \
+                       '2PACX-1vS6hRcfulf58CPRlFYwWgz29VqCEq8NDLivNY2RBQ3P5' \
+                       'UBi_uIoN2btNnkDd_gCrq3mirRzVNQsc-gS/pub?embedded=true"></iframe>',
+        'camera_ids': [1],
+        'attachment_type': 'image',
+        'lidar_task': scale_lidar_task_id,
+        'annotation_type': 'annotation',
+    }
+    headers = {"Content-Type": "application/json"}
+    response = requests.post('https://api.scale.ai/v1/task/lidarlinking',
+                             json=payload,
+                             headers=headers,
+                             auth=(access_key, ''))
+    glog.info('submitted 2d/3d task to scale, response: {}'.format(response.json()))
+    return response.json()
+
 def send_laneline_request(lidar_task_id, image_url, access_key):
     """Send scale request for LaneLine labeling"""
     client = scaleapi.ScaleClient(access_key)
@@ -291,12 +312,18 @@ def main():
         # Send scale requests and record responses
         lidar_response = send_lidar_request(task, frames, scale_access_key)
         record_task_response(task, frames, lidar_response)
-        front6mm_uploaded_images = get_uploaded_front6mm_images(task, frames)
-        glog.info('got {} pictures from frames: {}'
-                  .format(len(front6mm_uploaded_images), front6mm_uploaded_images))
-        for front6mm_image in front6mm_uploaded_images:
-            laneline_response = send_laneline_request(task, front6mm_image, scale_access_key)
-            record_task_response(task, front6mm_uploaded_images[0], laneline_response)
+        if opts.repeat:
+            # Send 2D/3D linking tasks
+            scale_task_id = lidar_response['task_id']
+            linking_response = send_2d_3d_linking_request(scale_task_id, scale_access_key)
+            record_task_response(task, [scale_task_id], linking_response)
+            # Send Laneline tasks
+            front6mm_uploaded_images = get_uploaded_front6mm_images(task, frames)
+            glog.info('got {} pictures from frames: {}'
+                    .format(len(front6mm_uploaded_images), front6mm_uploaded_images))
+            for front6mm_image in front6mm_uploaded_images:
+                laneline_response = send_laneline_request(task, front6mm_image, scale_access_key)
+                record_task_response(task, front6mm_uploaded_images[0], laneline_response)
         sucessful_tasks_counter += 1
         glog.info('successfully submitted task {}'.format(task))
     glog.info('All Done. Submitted {}/{} tasks'.format(sucessful_tasks_counter, len(tasks)))
