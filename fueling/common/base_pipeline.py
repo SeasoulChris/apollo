@@ -63,9 +63,14 @@ class BasePipeline(object):
                                     bos_client.BOS_MOUNT_PATH)
 
     @staticmethod
+    def has_partner():
+        """Test if we have partner bos."""
+        return os.environ.get('PARTNER_BOS_REGION') is not None
+
+    @staticmethod
     def partner_bos():
         """Get a BOS client."""
-        if os.environ.get('PARTNER_BOS_REGION'):
+        if BasePipeline.has_partner():
             return bos_client.BosClient(os.environ.get('PARTNER_BOS_REGION'),
                                         os.environ.get('PARTNER_BOS_BUCKET'),
                                         os.environ.get('PARTNER_BOS_ACCESS'),
