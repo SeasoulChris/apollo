@@ -25,8 +25,6 @@ import fueling.control.features.calibration_table_utils as calibration_table_uti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
-# flags.DEFINE_string('input_data_path', 'modules/control/data/records',
-#                     'Multi-vehicle calibration feature extraction input data path.')
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'

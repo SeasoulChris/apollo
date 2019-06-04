@@ -147,7 +147,6 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_vehicle_dir.join(target_param_conf).mapValues(
             lambda (src_path, dst_path): shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
                                                          os.path.join(dst_path, VEHICLE_CONF))).count()
-        return
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
@@ -198,13 +197,12 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         target_param_conf = vehicle_param_conf.map(lambda (vehicle, path):
                                                    (vehicle, path.replace(os.path.join(origin_dir, vehicle),
                                                                           os.path.join(conf_target_dir, vehicle), 1)))
-        glog.info('join_result: %s' % vehicle_param_conf.join(target_param_conf))
+        glog.info('join_result: %s' % vehicle_param_conf.join(target_param_conf).collect())
         vehicle_param_conf.join(target_param_conf).mapValues(
             lambda (src_path, dst_path): shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                                         os.path.join(dst_path, VEHICLE_CONF)))
+                                                         os.path.join(dst_path, VEHICLE_CONF))).count()
 
         glog.info('target_param_conf: %s' % target_param_conf.collect())
-        return
 
         # PairRDD(vehicle, vehicle_param)
         vehicle_param_conf = vehicle_param_conf.mapValues(multi_vehicle_utils.get_vehicle_param)
