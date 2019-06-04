@@ -7,8 +7,8 @@ from absl import app, flags
 from pyspark import SparkConf, SparkContext
 import colored_glog as glog
 
-from fueling.common.bos_client import BosClient
 from fueling.common.mongo_utils import Mongo
+import fueling.common.bos_client as bos_client
 import fueling.common.time_utils as time_utils
 
 
@@ -57,18 +57,20 @@ class BasePipeline(object):
 
     def bos(self):
         """Get a BOS client."""
-        return BosClient(self.FLAGS.get('bos_region'), self.FLAGS.get('bos_bucket'),
-                         os.environ.get('AWS_ACCESS_KEY_ID'),
-                         os.environ.get('AWS_SECRET_ACCESS_KEY'))
+        return bos_client.BosClient(self.FLAGS.get('bos_region'), self.FLAGS.get('bos_bucket'),
+                                    os.environ.get('AWS_ACCESS_KEY_ID'),
+                                    os.environ.get('AWS_SECRET_ACCESS_KEY'),
+                                    bos_client.BOS_MOUNT_PATH)
 
     @staticmethod
     def partner_bos():
         """Get a BOS client."""
         if os.environ.get('PARTNER_BOS_REGION'):
-            return BosClient(os.environ.get('PARTNER_BOS_REGION'),
-                             os.environ.get('PARTNER_BOS_BUCKET'),
-                             os.environ.get('PARTNER_BOS_ACCESS'),
-                             os.environ.get('PARTNER_BOS_SECRET'))
+            return bos_client.BosClient(os.environ.get('PARTNER_BOS_REGION'),
+                                        os.environ.get('PARTNER_BOS_BUCKET'),
+                                        os.environ.get('PARTNER_BOS_ACCESS'),
+                                        os.environ.get('PARTNER_BOS_SECRET'),
+                                        bos_client.PARTNER_BOS_MOUNT_PATH)
         return None
 
     def __main__(self, argv):

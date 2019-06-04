@@ -27,11 +27,12 @@ partner_abs_path = lambda object_key: os.path.join(PARTNER_BOS_MOUNT_PATH, objec
 
 class BosClient(object):
     """A BOS client."""
-    def __init__(self, region, bucket, ak, sk):
+    def __init__(self, region, bucket, ak, sk, mnt_path):
         self.region = region
         self.bucket = bucket
         self.access_key = ak
         self.secret_key = sk
+        self.mnt_path = mnt_path
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
             glog.error('Failed to get BOS config.')
             return None
@@ -59,19 +60,22 @@ class BosClient(object):
             for obj in page.get('Contents', []):
                 yield obj
 
+    def abs_path(self, key):
+        return os.path.join(self.mnt_path, key)
+
     def list_files(self, prefix, suffix='', to_abs_path=True):
         """Get a RDD of files with given prefix and suffix."""
         files = [obj['Key'] for obj in self.list_objects(prefix) if not obj['Key'].endswith('/')]
         if suffix:
             files = [path for path in files if path.endswith(suffix)]
         if to_abs_path:
-            files = map(abs_path, files)
+            files = map(self.abs_path, files)
         return files
 
     def list_dirs(self, prefix, to_abs_path=True):
         """Get a RDD of dirs with given prefix."""
         dirs = [obj['Key'][:-1] for obj in self.list_objects(prefix) if obj['Key'].endswith('/')]
-        return map(abs_path, dirs) if to_abs_path else dirs
+        return map(self.abs_path, dirs) if to_abs_path else dirs
 
     def file_exists(self, remote_path):
         """Check if specified file is existing"""
