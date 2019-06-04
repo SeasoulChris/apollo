@@ -53,7 +53,19 @@ def CalculateDistanceAndAngle(curve, point):
 
         return dist, angle-diff
     '''
-    return
+    min_dist = None
+    for i in range(len(curve)):
+        distance = np.sqrt((point[0] - curve[len(curve)-1-i][0])**2 + \
+                           (point[1] - curve[len(curve)-1-i][1])**2)
+        if min_dist is None:
+            min_dist = distance
+        else:
+            if distance > min_dist:
+                break
+            else:
+                min_dist = distance
+
+    return (min_dist, 0)
 
 def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
     # Go through all the data_for_learning file, for each data-point, find
@@ -68,7 +80,7 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
         file_count += 1
         # Load the label dict file.
         dir_path = os.path.dirname(path)
-        label_path = os.path.join(dir_path, 'merged_visited_lane_segment.npy')
+        label_path = os.path.join(dir_path, 'visited_lane_segment.npy')
         label_path = label_path.replace('features', 'labels')
         if not os.path.isfile(label_path):
             continue
@@ -89,6 +101,7 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             if data_for_learning.category != 'cruise':
                 continue
             curr_data_point = []
+
             # 1. Find in the dict the corresponding visited lane segments.
             key = '{}@{:.3f}'.format(data_for_learning.id, data_for_learning.timestamp)
             if key not in dict_labels:
@@ -99,21 +112,70 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             visited_lane_segments = dict_labels[key]
 
             # 2. Deserialize the lane_graph, and remove data-points with incorrect sizes.
-            lane_graph = []
+            lane_graph = []     # list of lane_sequences, each lane_sequence is represented by a frozenset.
             lane_sequence = None
             for lane_seg_id in serial_lane_graph:
                 if lane_seg_id == '|':
                     if lane_sequence is not None:
-                        lane_graph.append(lane_sequence)
-                    lane_sequence = set()
+                        lane_graph.append(frozenset(lane_sequence))
+                    lane_sequence = []
                 else:
-                    lane_sequence.add(lane_seg_id)
+                    lane_sequence.append(lane_seg_id)
             num_lane_sequence = len(lane_graph)
+            # Remove corrupted data points.
             if (len(features_for_learning) - obs_feature_size) % single_lane_feature_size != 0 or \
                (len(features_for_learning) - obs_feature_size) / single_lane_feature_size != num_lane_sequence:
                 continue
+            # Get a set of unique lane-sequences only
+            unique_lane_sequence_set = set()
+            for lane_sequence in lane_graph:
+                unique_lane_sequence_set.add(lane_sequence)
 
-            # 3. Based on the lane graph, remove those jittering data points (data cleaning).
+            # 3. Extract the features of obstacle's historical distances/angles w.r.t. the lane-sequences.
+            #    a. First, calculate the historical distances/angles w.r.t. all lane-sequences.
+            list_of_backward_lane_points = []    # Contains num_lane_sequence lists, while each list of tuples represents a lane-curve.
+            obs_past_history = features_for_learning[:obs_feature_size]
+            for i in range(num_lane_sequence):
+                lane_points_l = features_for_learning[obs_feature_size+i*single_lane_feature_size:\
+                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
+                lane_points_s = features_for_learning[obs_feature_size+i*single_lane_feature_size+1:\
+                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
+                curr_backward_lane_points = list(zip(lane_points_l, lane_points_s))
+                curr_backward_lane_points = curr_backward_lane_points[0:int(past_lane_feature_size/4)]
+                list_of_backward_lane_points.append(curr_backward_lane_points)
+            list_of_dists_and_angles = []   # Contains num_lane_sequence lists, while each list of tuples represents historical dist and angle.
+            for lane_points in list_of_backward_lane_points:
+                curr_historical_dist_and_angle = []
+                for obs_hist_idx in range(int(obs_feature_size/9)):
+                    # If no history, then exit.
+                    if obs_past_history[obs_hist_idx*9] == 0:
+                        break
+                    curr_historical_dist_and_angle.append(CalculateDistanceAndAngle(\
+                        lane_points, (obs_past_history[obs_hist_idx*9+2], obs_past_history[obs_hist_idx*9+1])))
+                list_of_dists_and_angles.append(curr_historical_dist_and_angle)
+            #    b. Second, if multiple backward lane merges into one, then remove those that have exactly the same avg displacement.
+            list_of_avg_displacement = []
+            for curr_historical_dist_and_angle in list_of_dists_and_angles:
+                list_of_avg_displacement.append(sum(curr_dist_and_angle[0] for curr_dist_and_angle in curr_historical_dist_and_angle))
+            valid_lane_sequence_ids = []
+            for unique_lane_sequence in unique_lane_sequence_set:
+                avg_disp_set = set()
+                for i in range(len(lane_graph)):
+                    lane_sequence = lane_graph[i]
+                    if lane_sequence == unique_lane_sequence:
+                        if list_of_avg_displacement[i] not in avg_disp_set:
+                            avg_disp_set.add(list_of_avg_displacement[i])
+                            valid_lane_sequence_ids.append(i)
+            new_lane_graph = []
+            new_lane_disp_and_angle = []
+            for lane_seq_id in valid_lane_sequence_ids:
+                new_lane_graph.append(lane_graph[lane_seq_id])
+                new_lane_disp_and_angle.append(list_of_dists_and_angles[lane_seq_id])
+            lane_graph = new_lane_graph
+            # list_of_dists_and_angles = new_lane_disp_and_angle
+            num_lane_sequence = len(lane_graph)
+
+            # 4. Based on the lane graph, remove those jittering data points (data cleaning).
             stable_window_lane_sequences = []
             for element in visited_lane_segments:
                 timestamp = element[0]
@@ -141,28 +203,6 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                 num_dirty_data_point += 1
                 continue
 
-            # 4. Extract the features of obstacle's historical distances/angles w.r.t. the lane-sequences.
-            #    a. First, calculate the historical distances/angles w.r.t. all lane-sequences.
-            list_of_backward_lane_points = []    # Contains num_lane_sequence lists, while each list of tuples represents a lane-curve.
-            obs_past_history = features_for_learning[:obs_feature_size]
-            for i in range(num_lane_sequence):
-                lane_points_l = features_for_learning[obs_feature_size+i*single_lane_feature_size:\
-                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
-                lane_points_s = features_for_learning[obs_feature_size+i*single_lane_feature_size+1:\
-                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
-                list_of_backward_lane_points.append(list(zip(lane_points_l, lane_points_s))[:past_lane_feature_size/4])
-            list_of_dists_and_angles = []   # Contains num_lane_sequence lists, while each list of tuples represents historical dist and angle.
-            for lane_points in list_of_backward_lane_points:
-                curr_historical_dist_and_angle = []
-                for obs_hist_point in range(obs_hist_size/9):
-                    # TODO(jiacheng):
-                list_of_dists_and_angles.append(curr_historical_dist_and_angle)
-            #    b. Second, if multiple backward lane merges into one, then only retain one that has the
-            #       smallest historical average displacement from the obstacle's historical positions.
-            # TODO(jiacheng): update the new num_lane_sequence.
-            valid_lane_sequence_ids = []
-            num_lane_sequence = len(valid_lane_sequence_ids)
-
             # 5. Extract the features of whether each lane is the self-lane or not.
             start_lane_sequences = set()
             start_lane_segment_id = visited_lane_segments[0][1]
@@ -177,7 +217,6 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                     self_lane_features.append(0)
 
             # 6. Label whether the obstacle has stepped out of its original lane-sequence(s).
-            # TODO(jiacheng): reconstruct a new end_lane_sequences because the previous one has wrong ids now.
             has_stepped_out = 1
             for i in end_lane_sequences:
                 if i in start_lane_sequences:
@@ -193,8 +232,15 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                     one_hot_encoding_label.append(0)
 
             # Put everything together.
-            curr_data_point = [num_lane_sequence] + features_for_learning + self_lane_features + \
-                one_hot_encoding_label + [has_stepped_out]
+            curr_data_point = [num_lane_sequence] + features_for_learning[:obs_feature_size]
+            for i in valid_lane_sequence_ids:
+                curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:\
+                                                         obs_feature_size+(i+1)*single_lane_feature_size]
+                past_distances = [-1 for j in range(int(obs_feature_size/9))]
+                for j in range(len(list_of_dists_and_angles[i])):
+                    past_distances[j] = list_of_dists_and_angles[i][j][0]
+                curr_data_point += past_distances
+            curr_data_point += self_lane_features + one_hot_encoding_label + [has_stepped_out]
             output_np_array.append(curr_data_point)
 
         # Save into a local file for training.
@@ -239,8 +285,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
                                                      single_lane_feature_size*curr_num_lane_sequence])\
                                     .reshape((curr_num_lane_sequence, single_lane_feature_size))
-                curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence])
-                                         .reshape((curr_num_lane_sequence, 1))
+                curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
@@ -293,3 +338,8 @@ def collate_fn(batch):
             torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
            (torch.from_numpy(labels), torch.from_numpy(is_cutin), \
             torch.from_numpy(same_obstacle_mask))
+
+
+if __name__ == '__main__':
+    DataPreprocessing('/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/features',\
+                      '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/features')

@@ -37,14 +37,14 @@ from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
 
 
 def point_to_idx(point_x, point_y):
-        return (int((point_x + 40)/0.1), int((point_y + 20)/0.1))
+        return (int((point_x + 40)/0.1), int((point_y + 40)/0.1))
 
 def plot_img(obs_features, lane_features, labels, count):
     # black background
     img = np.zeros([1000, 800, 3], dtype=np.uint8)
 
     # draw boundaries
-    cv.circle(img,(400,200),2,color=[255,255,255], thickness=4)
+    cv.circle(img,(400,400),2,color=[255,255,255], thickness=4)
     cv.line(img, (0,0), (799,0), color=[255, 255, 255])
     cv.line(img, (799,0), (799,999), color=[255, 255, 255])
     cv.line(img, (0,999), (0,0), color=[255, 255, 255])
@@ -59,7 +59,7 @@ def plot_img(obs_features, lane_features, labels, count):
         color_to_use = [0, 128, 128]
         if labels[lane_idx] == 1:
             continue
-        for point_idx in range(99):
+        for point_idx in range(149):
             cv.line(img, point_to_idx(curr_lane[point_idx*4], curr_lane[point_idx*4+1]), \
                 point_to_idx(curr_lane[point_idx*4+4], curr_lane[point_idx*4+5]), \
                 color=color_to_use)
@@ -69,7 +69,7 @@ def plot_img(obs_features, lane_features, labels, count):
         color_to_use = [255, 0, 0]
         if labels[lane_idx] == 0:
             continue
-        for point_idx in range(99):
+        for point_idx in range(149):
             cv.line(img, point_to_idx(curr_lane[point_idx*4], curr_lane[point_idx*4+1]), \
                 point_to_idx(curr_lane[point_idx*4+4], curr_lane[point_idx*4+5]), \
                 color=color_to_use)
@@ -78,14 +78,14 @@ def plot_img(obs_features, lane_features, labels, count):
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/training_data/features/sunnyvale_with_two_offices/2018/2018-12-14'
-    test_dataset = ApolloVehicleRegularRoadDataset(dataset_path, is_lane_scanning=True, training_mode=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=1, collate_fn=collate_fn)
+    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/train_data'
+    test_dataset = ApolloVehicleRegularRoadDataset(dataset_path, is_lane_scanning=True, training_mode=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=collate_fn)
 
     count = 0
     for i, (X, y) in enumerate(test_dataloader):
-        if count == 10:
+        if count == 100:
             break
-        if (y[1][0,0] == 1):
-            plot_img(X[0].numpy().reshape(-1), X[2].numpy(), y[0].numpy().reshape(-1), count)
-            count += 1
+        #if (y[1][0,0] == 1):
+        plot_img(X[0].numpy().reshape(-1), X[2].numpy(), y[0].numpy().reshape(-1), count)
+        count += 1
