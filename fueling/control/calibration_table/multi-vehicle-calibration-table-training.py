@@ -25,8 +25,8 @@ import fueling.control.features.calibration_table_utils as calibration_table_uti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
-flags.DEFINE_string('input_data_path', 'modules/control/data/records',
-                    'Multi-vehicle calibration feature extraction input data path.')
+# flags.DEFINE_string('input_data_path', 'modules/control/data/records',
+#                     'Multi-vehicle calibration feature extraction input data path.')
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
@@ -193,9 +193,9 @@ class MultiCalibrationTableTraining(BasePipeline):
         target_prefix = os.path.join(output_folder, job_owner, job_id)
 
         # get conf file from origin input folder
-        conf_prefix = self.FLAGS.get('input_data_path')
-
-        conf_dir = bos_client.partner_abs_path(conf_prefix)
+        # conf_prefix = self.FLAGS.get('input_data_path')
+        # conf_dir = bos_client.partner_abs_path(conf_prefix)
+        origin_dir = bos_client.abs_path(origin_prefix)
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -214,7 +214,7 @@ class MultiCalibrationTableTraining(BasePipeline):
         # RDD(origin_dir)
         conf_vehicle_dir = spark_helper.cache_and_log(
             'conf_vehicle_dir',
-            self.to_rdd([conf_dir])
+            self.to_rdd([origin_dir])
             # RDD([vehicle_type])
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle_type, [vehicle_type])
@@ -222,7 +222,7 @@ class MultiCalibrationTableTraining(BasePipeline):
             # PairRDD(vehicle_in_the_list, vehicle)
             # .filter(lambda (vehicle, _): vehicle in vehicle_lFist)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle: os.path.join(conf_dir, vehicle)))
+            .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle)))
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(

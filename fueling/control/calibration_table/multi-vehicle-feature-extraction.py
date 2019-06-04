@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ extract features for multiple vehicles """
 import glob
+import shutil
 import os
 
 from absl import flags
@@ -32,6 +33,8 @@ flags.DEFINE_string('input_data_path', 'modules/control/data/records',
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 1
 MARKER = 'CompleteCalibrationTable'
+JOB_TAG = 'CalibrationTableFeature'
+VEHICLE_CONF = 'vehicle_param.pb.txt'
 
 
 def gen_pre_segment(dir_to_msg):
@@ -99,9 +102,9 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
 
-        # add sanity check
-        if not sanity_check(origin_prefix):
-            return
+        # # add sanity check
+        # if not sanity_check(origin_prefix):
+        #     return
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -131,6 +134,21 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, vehicle_conf)
             .mapValues(multi_vehicle_utils.get_vehicle_param))
 
+        conf_target_prefix = os.path.join(target_prefix, JOB_TAG)
+        glog.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
+        glog.info(conf_target_prefix)
+        target_param_conf = origin_vehicle_dir.map(lambda (vehicle, path):
+                                                   (vehicle, path.replace(origin_prefix,
+                                                                          conf_target_prefix, 1)))
+        glog.info('target_param_conf: %s' % target_param_conf.collect())
+
+        print("origin_vehicle_dir.join", origin_vehicle_dir.join(target_param_conf).collect())
+
+        origin_vehicle_dir.join(target_param_conf).mapValues(
+            lambda (src_path, dst_path): shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
+                                                         os.path.join(dst_path, VEHICLE_CONF))).count()
+        return
+
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -140,8 +158,10 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         # extract features to intermediate result folder
         target_prefix = os.path.join(inter_result_folder, job_owner, job_id)
 
-        # origin_dir = bos_client.abs_path(origin_prefix)
-        origin_dir = bos_client.partner_abs_path(origin_prefix)
+        if self.has_partner():
+            origin_dir = bos_client.partner_abs_path(origin_prefix)
+        else:
+            origin_dir = bos_client.abs_path(origin_prefix)
 
         glog.info("origin_dir: %s" % origin_dir)
         glog.info("target_prefix: %s" % target_prefix)
@@ -154,7 +174,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         vehicles = spark_helper.cache_and_log(
             'conf_file',
             # RDD(input_dir)
-            self.to_rdd([origin_dir])  # partner
+            self.to_rdd([origin_dir])
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle))
         glog.info("vehicles: %s", vehicles.collect())
@@ -163,7 +183,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         vehicle_param_conf = spark_helper.cache_and_log(
             'conf_file',
             # RDD(input_dir)
-            self.to_rdd([origin_dir])  # partner
+            self.to_rdd([origin_dir])
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle, vehicle)
@@ -171,11 +191,24 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, dir_of_vehicle)
             .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle)))
 
+        # copy vehicle param configure file to target folder
+        # target dir
+        conf_target_prefix = os.path.join(target_prefix, JOB_TAG)
+        conf_target_dir = bos_client.abs_path(conf_target_prefix)
+        target_param_conf = vehicle_param_conf.map(lambda (vehicle, path):
+                                                   (vehicle, path.replace(os.path.join(origin_dir, vehicle),
+                                                                          os.path.join(conf_target_dir, vehicle), 1)))
+        glog.info('join_result: %s' % vehicle_param_conf.join(target_param_conf))
+        vehicle_param_conf.join(target_param_conf).mapValues(
+            lambda (src_path, dst_path): shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
+                                                         os.path.join(dst_path, VEHICLE_CONF)))
+
+        glog.info('target_param_conf: %s' % target_param_conf.collect())
+        return
+
         # PairRDD(vehicle, vehicle_param)
         vehicle_param_conf = vehicle_param_conf.mapValues(multi_vehicle_utils.get_vehicle_param)
         glog.info("vehicle_param_conf: %d", vehicle_param_conf.count())
-
-        # sanity check
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -189,13 +222,24 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type)))
 
         """ get to do jobs """
+        if self.has_partner():
+            todo_task_dirs = spark_helper.cache_and_log(
+                'todo_jobs',
+                # PairRDD(vehicle_type, relative_path_to_vehicle_type)
+                origin_vehicle_dir
+                # PairRDD(vehicle_type, files)
+                .flatMapValues(self.partner_bos().list_files))
+        else:
+            todo_task_dirs = spark_helper.cache_and_log(
+                'todo_jobs',
+                # PairRDD(vehicle_type, relative_path_to_vehicle_type)
+                origin_vehicle_dir
+                # PairRDD(vehicle_type, files)
+                .flatMapValues(self.bos().list_files))
+
         todo_task_dirs = spark_helper.cache_and_log(
             'todo_jobs',
-            # PairRDD(vehicle_type, relative_path_to_vehicle_type)
-            origin_vehicle_dir
-            # PairRDD(vehicle_type, files)
-            # .flatMapValues(self.bos().list_files)
-            .flatMapValues(self.partner_bos().list_files)
+            todo_task_dirs
             # PairRDD(vehicle_type, 'COMPLETE'_files)
             .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
             # PairRDD(vehicle_type, absolute_path_to_'COMPLETE')

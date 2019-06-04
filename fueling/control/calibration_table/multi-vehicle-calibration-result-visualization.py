@@ -37,14 +37,14 @@ class MultiCalibrationTableVisualization(BasePipeline):
         job_id = self.FLAGS.get('job_id')
 
         # conf file in the input data folder
-        conf_prefix = self.FLAGS.get('input_data_path')
+        conf_prefix = output_folder
 
         # results in output folder
         # origin_prefix = self.FLAGS.get('output_data_path')
         origin_prefix = os.path.join(output_folder, job_owner, job_id)
 
         origin_dir = bos_client.abs_path(origin_prefix)
-        conf_dir = bos_client.partner_abs_path(conf_prefix)
+        conf_dir = bos_client.abs_path(conf_prefix)
         self.run(origin_dir, conf_dir)
 
     def run(self, origin_prefix, conf_prefix):

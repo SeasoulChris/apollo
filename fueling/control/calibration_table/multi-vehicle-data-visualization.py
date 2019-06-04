@@ -22,9 +22,6 @@ import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
-flags.DEFINE_string('input_data_path', 'modules/control/data/records',
-                    'Multi-vehicle calibration feature extraction input data path.')
-
 
 def read_hdf5(hdf5_file_list):
     """
