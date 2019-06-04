@@ -125,11 +125,15 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             # Remove corrupted data points.
             if (len(features_for_learning) - obs_feature_size) % single_lane_feature_size != 0 or \
                (len(features_for_learning) - obs_feature_size) / single_lane_feature_size != num_lane_sequence:
+                num_dirty_data_point += 1
                 continue
             # Get a set of unique lane-sequences only
             unique_lane_sequence_set = set()
             for lane_sequence in lane_graph:
                 unique_lane_sequence_set.add(lane_sequence)
+            if len(unique_lane_sequence_set) == 1:
+                num_dirty_data_point += 1
+                continue
 
             # 3. Extract the features of obstacle's historical distances/angles w.r.t. the lane-sequences.
             #    a. First, calculate the historical distances/angles w.r.t. all lane-sequences.
@@ -189,9 +193,13 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                             lane_seq_set.add(i)
                     stable_window_lane_sequences.append(lane_seq_set)
             if len(stable_window_lane_sequences) != int(stable_window/0.1):
+                num_dirty_data_point += 1
                 continue
             is_dirty_data_point = False
             end_lane_sequences = stable_window_lane_sequences[-1]
+            if len(end_lane_sequences) == 0:
+                num_dirty_data_point += 1
+                continue
             for i in end_lane_sequences:
                 for j in stable_window_lane_sequences:
                     if i not in j:
@@ -246,8 +254,8 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
         # Save into a local file for training.
         try:
             num_usable_data_points = len(output_np_array)
-            print ('Total usable data points: {}'.format(num_usable_data_points))
             print ('Removed dirty data points: {}'.format(num_dirty_data_point))
+            print ('Total usable data points: {}'.format(num_usable_data_points))
             print ('Total cut-in data points: {}'.format(num_cutin_data_points))
             output_np_array = np.array(output_np_array)
             np.save(path+'.training_data.npy', output_np_array)
@@ -278,15 +286,18 @@ class ApolloVehicleRegularRoadDataset(Dataset):
             file_content = np.load(file_path).tolist()
             for data_pt in file_content:
                 curr_num_lane_sequence = int(data_pt[0])
-                if len(data_pt) != curr_num_lane_sequence*(single_lane_feature_size+2)+obs_feature_size+2:
+                if len(data_pt) != curr_num_lane_sequence*(single_lane_feature_size+20+2)+obs_feature_size+2:
                     continue
                 curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((1, obs_feature_size))
                 curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
                 curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
-                                                     single_lane_feature_size*curr_num_lane_sequence])\
-                                    .reshape((curr_num_lane_sequence, single_lane_feature_size))
+                                                     (single_lane_feature_size+20)*curr_num_lane_sequence])\
+                                    .reshape((curr_num_lane_sequence, single_lane_feature_size+20))
+                curr_lane_feature = curr_lane_feature[:, :single_lane_feature_size]
                 curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
+                if np.sum(curr_label) == 0:
+                    continue
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
                 if training_mode:
@@ -314,6 +325,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
+        # TODO: modify this part to return past-dist and self-lane info.
         out = (self.obstacle_features[idx], self.obstacle_hist_size[idx], self.lane_features[idx],
                self.labels[idx], self.is_cutin[idx])
         return out

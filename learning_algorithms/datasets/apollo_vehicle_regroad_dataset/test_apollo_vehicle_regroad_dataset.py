@@ -86,6 +86,6 @@ if __name__ == '__main__':
     for i, (X, y) in enumerate(test_dataloader):
         if count == 100:
             break
-        #if (y[1][0,0] == 1):
-        plot_img(X[0].numpy().reshape(-1), X[2].numpy(), y[0].numpy().reshape(-1), count)
-        count += 1
+        if (y[1][0,0] == 1):
+            plot_img(X[0].numpy().reshape(-1), X[2].numpy(), y[0].numpy().reshape(-1), count)
+            count += 1
