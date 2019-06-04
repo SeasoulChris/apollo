@@ -25,35 +25,6 @@ abs_path = lambda object_key: os.path.join(BOS_MOUNT_PATH, object_key)
 partner_abs_path = lambda object_key: os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
 
 
-class AutoDownload(object):
-    """
-    Usage:
-    with AutoDownload(client, bucket, key) as local_file:
-        # Read local_file, which is only accessiable within the scope, as it will be removed later.
-    """
-
-    def __init__(self, boto3_client, bucket, key):
-        self.boto3_client = boto3_client
-        self.bucket = bucket
-        self.key = key
-        self.temp_dir = tempfile.mkdtemp()
-
-    def __enter__(self):
-        """Download the file as local temporary file for access."""
-        local_file = os.path.join(self.temp_dir, os.path.basename(self.key))
-        glog.info('Downloading key {} to {}'.format(self.key, local_file))
-        try:
-            self.boto3_client.download_file(self.bucket, self.key, local_file)
-        except:
-            glog.error('Failed to download {}, use its botfs path.'.format(self.key))
-            return abs_path(self.key)
-        return local_file
-
-    def __exit__(self, type, value, traceback):
-        """Remove the local temporary file."""
-        shutil.rmtree(self.temp_dir)
-
-
 class BosClient(object):
     """A BOS client."""
     def __init__(self, region, bucket, ak, sk):
@@ -111,10 +82,3 @@ class BosClient(object):
                 return False
             raise ex
         return True
-
-    def auto_download(self, key_or_path):
-        """Return an AutoDownload instance."""
-        key = key_or_path
-        if key_or_path.startswith(BOS_MOUNT_PATH):
-            key = key_or_path[len(BOS_MOUNT_PATH) + 1:]
-        return AutoDownload(self.client(), self.bucket, key)

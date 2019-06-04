@@ -99,9 +99,8 @@ class BagToRecord(BasePipeline):
         record = bag_to_record[1]
         file_utils.makedirs(os.path.dirname(record))
 
-        with self.bos().auto_download(bag) as local_bag:
-            cmd = '"{}" "{}" "{}"'.format(BINARY, local_bag, record)
-            ret = os.system(cmd)
+        cmd = '"{}" "{}" "{}"'.format(BINARY, bag, record)
+        ret = os.system(cmd)
         msg = 'SHELL[{}]: {}'.format(ret, cmd)
         if ret != 0:
             glog.error(msg)
