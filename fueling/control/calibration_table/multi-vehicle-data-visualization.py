@@ -17,14 +17,13 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import inter_result_folder
+from fueling.control.common.training_conf import output_folder
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
 flags.DEFINE_string('input_data_path', 'modules/control/data/records',
                     'Multi-vehicle calibration feature extraction input data path.')
-flags.DEFINE_string('output_data_path', 'modules/control/data/results',
-                    'Multi-vehicle calibration feature extraction output data path.')
 
 
 def read_hdf5(hdf5_file_list):
@@ -79,9 +78,9 @@ class MultiVehicleDataDistribution(BasePipeline):
         origin_prefix = os.path.join(inter_result_folder, job_owner,
                                      job_id, 'CalibrationTableFeature')
         glog.info("origin_prefix: %s" % origin_prefix)
-        target_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+
+        target_prefix = os.path.join(output_folder, job_owner, job_id)
         glog.info("origin_prefix: %s" % target_prefix)
-        return
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(

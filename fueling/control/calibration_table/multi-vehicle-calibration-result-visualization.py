@@ -14,15 +14,13 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
-from fueling.control.common.training_conf import vehicle_list
+from fueling.control.common.training_conf import output_folder
 import fueling.common.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
 flags.DEFINE_string('input_data_path', 'modules/control/data/records',
                     'Multi-vehicle calibration feature extraction input data path.')
-flags.DEFINE_string('output_data_path', 'modules/control/data/results',
-                    'Multi-vehicle calibration feature extraction output data path.')
 
 
 class MultiCalibrationTableVisualization(BasePipeline):
@@ -43,10 +41,10 @@ class MultiCalibrationTableVisualization(BasePipeline):
 
         # results in output folder
         # origin_prefix = self.FLAGS.get('output_data_path')
-        origin_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+        origin_prefix = os.path.join(output_folder, job_owner, job_id)
 
         origin_dir = bos_client.abs_path(origin_prefix)
-        conf_dir = bos_client.abs_path(conf_prefix)
+        conf_dir = bos_client.partner_abs_path(conf_prefix)
         self.run(origin_dir, conf_dir)
 
     def run(self, origin_prefix, conf_prefix):

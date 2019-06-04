@@ -15,6 +15,7 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import inter_result_folder
+from fueling.control.common.training_conf import output_folder
 import fueling.common.bos_client as bos_client
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
@@ -26,8 +27,6 @@ import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as Calibrat
 
 flags.DEFINE_string('input_data_path', 'modules/control/data/records',
                     'Multi-vehicle calibration feature extraction input data path.')
-flags.DEFINE_string('output_data_path', 'modules/control/data/results',
-                    'Multi-vehicle calibration feature extraction output data path.')
 
 FILENAME_CALIBRATION_TABLE_CONF = \
     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
@@ -191,12 +190,12 @@ class MultiCalibrationTableTraining(BasePipeline):
 
         # output folder
         # target_prefix = self.FLAGS.get('output_data_path')
-        target_prefix = os.path.join(self.FLAGS.get('output_data_path'), job_owner, job_id)
+        target_prefix = os.path.join(output_folder, job_owner, job_id)
 
         # get conf file from origin input folder
         conf_prefix = self.FLAGS.get('input_data_path')
 
-        conf_dir = bos_client.abs_path(conf_prefix)
+        conf_dir = bos_client.partner_abs_path(conf_prefix)
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(

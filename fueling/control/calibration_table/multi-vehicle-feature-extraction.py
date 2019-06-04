@@ -140,7 +140,8 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         # extract features to intermediate result folder
         target_prefix = os.path.join(inter_result_folder, job_owner, job_id)
 
-        origin_dir = bos_client.abs_path(origin_prefix)
+        # origin_dir = bos_client.abs_path(origin_prefix)
+        origin_dir = bos_client.partner_abs_path(origin_prefix)
 
         glog.info("origin_dir: %s" % origin_dir)
         glog.info("target_prefix: %s" % target_prefix)
@@ -153,7 +154,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         vehicles = spark_helper.cache_and_log(
             'conf_file',
             # RDD(input_dir)
-            self.to_rdd([origin_dir])
+            self.to_rdd([origin_dir])  # partner
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle))
         glog.info("vehicles: %s", vehicles.collect())
@@ -162,7 +163,7 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         vehicle_param_conf = spark_helper.cache_and_log(
             'conf_file',
             # RDD(input_dir)
-            self.to_rdd([origin_dir])
+            self.to_rdd([origin_dir])  # partner
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle, vehicle)
@@ -193,7 +194,8 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, relative_path_to_vehicle_type)
             origin_vehicle_dir
             # PairRDD(vehicle_type, files)
-            .flatMapValues(self.bos().list_files)
+            # .flatMapValues(self.bos().list_files)
+            .flatMapValues(self.partner_bos().list_files)
             # PairRDD(vehicle_type, 'COMPLETE'_files)
             .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
             # PairRDD(vehicle_type, absolute_path_to_'COMPLETE')

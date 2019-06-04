@@ -19,14 +19,21 @@ flags.DEFINE_string('bos_region', 'bj', 'BOS region.')
 # Constants
 BOS_MOUNT_PATH = '/mnt/bos'
 PARTNER_BOS_MOUNT_PATH = '/mnt/partner'
+# for test
+# PARTNER_BOS_MOUNT_PATH = '/mnt/bos'
 
 # Helpers.
-abs_path = lambda object_key: os.path.join(BOS_MOUNT_PATH, object_key)
-partner_abs_path = lambda object_key: os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
+
+
+def abs_path(object_key): return os.path.join(BOS_MOUNT_PATH, object_key)
+
+
+def partner_abs_path(object_key): return os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
 
 
 class BosClient(object):
     """A BOS client."""
+
     def __init__(self, region, bucket, ak, sk, mnt_path):
         self.region = region
         self.bucket = bucket
