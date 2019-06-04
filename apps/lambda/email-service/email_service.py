@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import binascii
 import httplib
+import os
 import smtplib
 import sys
 
@@ -28,37 +31,49 @@ class EmailService(Resource):
         # Verify Pin.
         if request.get('Pin') != self.PIN:
             return 'Rejected', httplib.UNAUTHORIZED
-        title = request.get('Title', '')
+        subject = '[Apollo Fuel] ' + request.get('Title', '')
         content = request.get('Content', '')
         receivers = request.get('Receivers')
+        attachments = {filename: binascii.a2b_base64(base64_content)
+                       for filename, base64_content in request.get('Attachments', {}).items()}
         try:
-            # TODO: Send attachments.
-            self.send_outlook_email(title, content, receivers)
+            self.send_outlook_email(subject, content, receivers, attachments)
         except Exception as e:
             sys.stderr.write('Request={}, Exception={}\n'.format(request, e))
             return 'Failed to send email', httplib.BAD_REQUEST
         return 'Sent', httplib.OK
 
     @staticmethod
-    def send_outlook_email(title, html_content, receivers):
+    def send_outlook_email(subject, content, receivers, attachments={}):
+        """Send email"""
         host = 'smtp.office365.com'
         port = 587
         from_addr = 'apollo-data-pipeline@outlook.com'
         password = 'ap0ll0!@#'
-        subject = '[Apollo Fuel] ' + title
+        EmailService.send_smtp_email(host, port, from_addr, password,
+                                     subject, content, receivers, attachments)
 
+    @staticmethod
+    def send_smtp_email(smtp_host, smtp_port, from_addr, password,
+                        subject, content, receivers, attachments={}):
+        """Send email via SMTP server."""
         smtp = smtplib.SMTP()
         try:
-            smtp.connect(host, port)
+            smtp.connect(smtp_host, smtp_port)
             smtp.starttls()
             smtp.login(from_addr, password)
         except Exception as e:
             sys.stderr.write('accessing email server failed with error: {}\n'.format(ex))
             return
         message = MIMEMultipart('alternative')
-        message.attach(MIMEText(html_content, 'html'))
+        message.attach(MIMEText(content, 'html'))
+        message['Subject'] = subject
         message['From'] = from_addr
         message['To'] = receivers
-        message['Subject'] = subject
+        for filename, file_content in attachments.items():
+            attachment = MIMEBase('application', 'octet-stream')
+            attachment.set_payload(file_content)
+            attachment.add_header('Content-Disposition', 'attachment', filename=filename)
+            message.attach(attachment)
         smtp.sendmail(from_addr, receivers, message.as_string())
         smtp.quit()

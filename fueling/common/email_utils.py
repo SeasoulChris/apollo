@@ -3,6 +3,7 @@
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import binascii
 import os
 import smtplib
 
@@ -14,19 +15,19 @@ BAE_PROXY = 'http://192.168.1.31'
 BAE_PROXY_PIN = 'apollo2019-woyouyitouxiaomaolv'
 
 
-def send_email_info(title, content, receivers=None):
+def send_email_info(title, content, receivers=None, attachments=[]):
     """Send email with normal information"""
-    send_email(title, 'blue', content, receivers)
+    send_email(title, 'blue', content, receivers, attachments)
 
-def send_email_warn(title, content, receivers=None):
+def send_email_warn(title, content, receivers=None, attachments=[]):
     """Send email with warning information"""
-    send_email(title, 'yellow', content, receivers)
+    send_email(title, 'yellow', content, receivers, attachments)
 
-def send_email_error(title, content, receivers=None):
+def send_email_error(title, content, receivers=None, attachments=[]):
     """Send email with error information"""
-    send_email(title, 'red', content, receivers)
+    send_email(title, 'red', content, receivers, attachments)
 
-def send_email(title, title_color, content, receivers=None):
+def send_email(title, title_color, content, receivers=None, attachments=[]):
     """
     Send emails in the format of HTML for notification of job status, statistic and etc
     Parameters:
@@ -47,14 +48,22 @@ def send_email(title, title_color, content, receivers=None):
        )
     4. receivers, recepients of the notification. Default should be a group account, but can also
        be specified explicitly.
+    5. attachments, attachment files list.
     """
     html_content = get_html_content(title, title_color, content)
     receivers = ';'.join(receivers)
+
+    base64_attachments = {}
+    for attachment in attachments:
+        with open(attachment, 'rb') as fin:
+            base64_attachments[os.path.basename(attachment)] = binascii.b2a_base64(fin.read())
+
     request_json = {
         'Pin': BAE_PROXY_PIN,
         'Title': title,
         'Content': html_content,
         'Receivers': receivers,
+        'Attachments': base64_attachments,
     }
     request = requests.post(BAE_PROXY, json=request_json)
     if request.ok:
