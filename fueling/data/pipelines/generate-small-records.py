@@ -198,7 +198,7 @@ class GenerateSmallRecords(BasePipeline):
             glog.info('No need to send summary for empty result')
             return
         SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
-        title = 'Generated small records for {} tasks'.format(len(task_dirs))
+        title = 'Generated small records: {}'.format(len(task_dirs))
         message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in task_dirs]
         try:
             email_utils.send_email_info(title, message, receivers)

@@ -95,7 +95,7 @@ class IndexRecords(BasePipeline):
             glog.error('No record was imported')
             return
 
-        title = 'Imported {} tasks into Apollo Fuel Warehouse'.format(msg_count)
+        title = 'Index records: {}'.format(msg_count)
         try:
             email_utils.send_email_info(title, msgs.collect(), receivers)
         except Exception as error:
