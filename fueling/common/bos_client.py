@@ -34,7 +34,7 @@ def partner_abs_path(object_key): return os.path.join(PARTNER_BOS_MOUNT_PATH, ob
 class BosClient(object):
     """A BOS client."""
 
-    def __init__(self, region, bucket, ak, sk, mnt_path):
+    def __init__(self, region, bucket, ak, sk, mnt_path=BOS_MOUNT_PATH):
         self.region = region
         self.bucket = bucket
         self.access_key = ak
@@ -93,3 +93,56 @@ class BosClient(object):
                 return False
             raise ex
         return True
+
+    def upload_file(self, local_path, remote_path, meta_data={'User': 'apollo-user'}):
+        """Upload a file from local to BOS"""
+        # arguments validation
+        if not os.path.exists(local_path):
+            raise ValueError('No local file/folder found for uploading')
+
+        allowed_chars = set(string.ascii_letters + string.digits + '/' + '-' + '_')
+        if set(remote_path) > allowed_chars:
+            raise ValueError('Only ascii digits dash and underscore characters are allowed in paths')
+
+        max_path_length = 1024
+        if len(remote_path) > max_path_length:
+            raise ValueError('Path length exceeds the limitation')
+
+        if remote_path.endswith('/'):
+            raise ValueError('Do not support uploading a folder')
+
+        sub_paths = remote_path.split('/')
+        if remote_path.startswith('/') or not self.file_exists(sub_paths[0] + '/'):
+            raise ValueError('Creating folders or files under root is not allowed')
+
+        minimal_path_depth = 2
+        maximal_path_depth = 10
+        minimal_sub_path_len = 1
+        maximal_sub_path_len = 256
+        if (len(sub_paths) < minimal_path_depth or
+            len(sub_paths) > maximal_path_depth or
+            any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths)):
+            raise ValueError('Destination path is either too short or too long')
+
+        overwrite_whitelist = ('modules/control/control_conf/mkz7/',)
+        if (self.file_exists(remote_path) and
+            not any(remote_path.startswith(x) for x in overwrite_whitelist)):
+            raise ValueError('Destination already exists')
+
+        # Actually upload
+        self.client().upload_file(local_path, self.bucket, remote_path,
+                                  ExtraArgs={"Metadata": meta_data})
+
+    def download_file(self, remote_path, local_path):
+        """Download a file from BOS to local"""
+        # Support download a dir with all files under it
+        if os.path.isdir(local_path):
+            for obj in self.list_objects(remote_path):
+                remote_file = obj['Key']
+                # aws_skip the folder itself
+                if remote_file == remote_path or remote_file == remote_path + '/':
+                    continue
+                local_file = os.path.join(local_path, os.path.basename(remote_file))
+                self.client().download_file(self.bucket, remote_file, local_file)
+        else:
+            self.client().download_file(self.bucket, remote_path, local_path)

@@ -3,6 +3,7 @@
 from http import HTTPStatus
 import json
 import os
+import string
 
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig
 
@@ -11,6 +12,8 @@ import fueling.common.time_utils as time_utils
 
 class VehicleCalibration(object):
     """Vehicle Calibration restful service"""
+    BOS_BUCKET_CHARSET = set(string.ascii_lowercase + string.digits + '-')
+    BOS_KEY_CHARSET = set(string.hexdigits.lower())
 
     @staticmethod
     def process(job_config):
@@ -25,11 +28,11 @@ class VehicleCalibration(object):
 
         # Bos config sanity check.
         bos_config = job_config.storage.bos
-        if set(bos_config.bucket).difference(set('0123456789abcdefghijklmnopqrstuvwxyz-')):
+        if set(bos_config.bucket) > VehicleCalibration.BOS_BUCKET_CHARSET:
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
-        if set(bos_config.access_key).difference(set('0123456789abcdef')):
+        if set(bos_config.access_key) > VehicleCalibration.BOS_KEY_CHARSET:
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
-        if set(bos_config.secret_key).difference(set('0123456789abcdef')):
+        if set(bos_config.secret_key) > VehicleCalibration.BOS_KEY_CHARSET:
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
 
         # Job summit: vehicle_calibration.sh <bash args> <python args> <input_data_path>
