@@ -78,14 +78,14 @@ def plot_img(obs_features, lane_features, labels, count):
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/train_data'
+    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/train_data/lane_changes'
     test_dataset = ApolloVehicleRegularRoadDataset(dataset_path, is_lane_scanning=True, training_mode=False)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=collate_fn)
 
     count = 0
     for i, (X, y) in enumerate(test_dataloader):
-        if count == 100:
+        if count == 200:
             break
         if (y[1][0,0] == 1):
-            plot_img(X[0].numpy().reshape(-1), X[2].numpy(), y[0].numpy().reshape(-1), count)
+            plot_img(X[1].numpy().reshape(-1), X[3].numpy(), y[0].numpy().reshape(-1), count)
             count += 1

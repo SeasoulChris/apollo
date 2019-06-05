@@ -272,8 +272,9 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
 
 class ApolloVehicleRegularRoadDataset(Dataset):
     def __init__(self, data_dir, is_lane_scanning=True, training_mode=True):
-        self.obstacle_features = []
         self.obstacle_hist_size = []
+        self.obstacle_features = []
+        self.backward_lane_points = []
         self.lane_features = []
         self.is_self_lane = []
         self.labels = []
@@ -288,23 +289,42 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 curr_num_lane_sequence = int(data_pt[0])
                 if len(data_pt) != curr_num_lane_sequence*(single_lane_feature_size+20+2)+obs_feature_size+2:
                     continue
-                curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((1, obs_feature_size))
+
                 curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
+                print (curr_obs_hist_size)
+
+                curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((int(obs_feature_size/9), 9))
+                curr_obs_feature = np.flip(curr_obs_feature, 0)
+                new_curr_obs_feature = np.zeros((int(obs_feature_size/9), 9))
+                new_curr_obs_feature[:int(curr_obs_hist_size[0][0]), :] = curr_obs_feature[-int(curr_obs_hist_size[0][0]):, :]
+                curr_obs_feature = new_curr_obs_feature.reshape((1, obs_feature_size))
+                # TODO(jiacheng): remove dirty obstacle-feature data-points.
+
                 curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
                                                      (single_lane_feature_size+20)*curr_num_lane_sequence])\
                                     .reshape((curr_num_lane_sequence, single_lane_feature_size+20))
+                curr_backward_lane_points = curr_lane_feature[:, single_lane_feature_size:]
+                curr_backward_lane_points = np.flip(curr_backward_lane_points, 1)
+                new_curr_backward_lane_points = np.zeros((curr_num_lane_sequence, 20))
+                new_curr_backward_lane_points[:int(curr_obs_hist_size[0][0]), :] = curr_backward_lane_points[-int(curr_obs_hist_size[0][0]):, :]
+                curr_backward_lane_points = new_curr_backward_lane_points
+
                 curr_lane_feature = curr_lane_feature[:, :single_lane_feature_size]
+
                 curr_self_lane_feature = np.array(data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
+
                 curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
                 if np.sum(curr_label) == 0:
                     continue
+
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
                 if training_mode:
                     for i, lane_label in enumerate(curr_label):
                         if lane_label == 1:
-                            self.obstacle_features.append(curr_obs_feature)
                             self.obstacle_hist_size.append(curr_obs_hist_size)
+                            self.obstacle_features.append(curr_obs_feature)
+                            self.backward_lane_points.append(curr_backward_lane_points)
                             self.lane_features.append(curr_lane_feature)
                             self.is_self_lane.append(curr_self_lane_feature)
                             curr_lane_label = np.zeros((curr_num_lane_sequence, 1))
@@ -312,8 +332,9 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                             self.labels.append(curr_lane_label)
                             self.is_cutin.append(curr_is_cutin)
                 else:
-                    self.obstacle_features.append(curr_obs_feature)
                     self.obstacle_hist_size.append(curr_obs_hist_size)
+                    self.obstacle_features.append(curr_obs_feature)
+                    self.backward_lane_points.append(curr_backward_lane_points)
                     self.lane_features.append(curr_lane_feature)
                     self.is_self_lane.append(curr_self_lane_feature)
                     self.labels.append(curr_label.reshape((curr_num_lane_sequence, 1)))
@@ -325,31 +346,31 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        # TODO: modify this part to return past-dist and self-lane info.
-        out = (self.obstacle_features[idx], self.obstacle_hist_size[idx], self.lane_features[idx],
-               self.labels[idx], self.is_cutin[idx])
+        out = (self.obstacle_hist_size[idx], self.obstacle_features[idx], self.backward_lane_points[idx],\
+               self.lane_features[idx], self.is_self_lane[idx], self.labels[idx], self.is_cutin[idx])
         return out
 
 
 def collate_fn(batch):
     # batch is a list of tuples.
     # unzip to form lists of np-arrays.
-    obs_features, obs_hist_size, lane_features, labels, is_cutin = zip(*batch)
+    obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, labels, is_cutin = zip(*batch)
 
     same_obstacle_mask = [elem.shape[0] for elem in lane_features]
-    obs_features = np.concatenate(obs_features)
     obs_hist_size = np.concatenate(obs_hist_size)
+    obs_features = np.concatenate(obs_features)
+    backward_lane_points = np.concatenate(backward_lane_points)
     lane_features = np.concatenate(lane_features)
+    is_self_lane = np.concatenate(is_self_lane)
     labels = np.concatenate(labels)
     is_cutin = np.concatenate(is_cutin)
 
     same_obstacle_mask = [np.ones((length, 1))*i for i, length in enumerate(same_obstacle_mask)]
     same_obstacle_mask = np.concatenate(same_obstacle_mask)
 
-    return (torch.from_numpy(obs_features), torch.from_numpy(obs_hist_size), \
-            torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
-           (torch.from_numpy(labels), torch.from_numpy(is_cutin), \
-            torch.from_numpy(same_obstacle_mask))
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_features), torch.from_numpy(backward_lane_points), \
+            torch.from_numpy(lane_features), torch.from_numpy(is_self_lane), torch.from_numpy(same_obstacle_mask)), \
+           (torch.from_numpy(labels), torch.from_numpy(is_cutin), torch.from_numpy(same_obstacle_mask))
 
 
 if __name__ == '__main__':
