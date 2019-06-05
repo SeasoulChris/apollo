@@ -14,9 +14,11 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
+from fueling.common.partners import partners
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.bos_client as bos_client
+import fueling.common.email_utils as email_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
@@ -45,7 +47,17 @@ class MultiCalibrationTableVisualization(BasePipeline):
         origin_dir = bos_client.abs_path(origin_prefix)
         conf_dir = bos_client.abs_path(conf_prefix)
 
-        self.run(origin_dir, conf_dir)
+        # RDD(plot_file)
+        plot_files = self.run(origin_dir, conf_dir)
+
+        partner = partners.get(job_owner)
+        if partner and partner.email:
+            title = 'Your vehicle calibration job is done!'
+            content = 'Please find the result in attachments.'
+            receivers = [partner.email, 'apollo_internal@baidu.com']
+            # TODO: Add the generated calibration table to the attachments
+            attachments = plot_files.collect()
+            email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, origin_prefix, conf_prefix):
         # PairRDD(vehicle, path_to_vehicle)
@@ -95,7 +107,8 @@ class MultiCalibrationTableVisualization(BasePipeline):
             # PairRDD(vehicle, (data, throttle_param))
             .join(throttle_features)
             # RDD(plot_file)
-            .map(lambda vehicle_data: multi_vehicle_plot_utils.gen_plot(vehicle_data, origin_prefix, 'throttle')))
+            .map(lambda vehicle_data:
+                 multi_vehicle_plot_utils.gen_plot(vehicle_data, origin_prefix, 'throttle')))
 
         brake_features = spark_helper.cache_and_log(
             'brake_hdf5',
@@ -114,7 +127,10 @@ class MultiCalibrationTableVisualization(BasePipeline):
             # PairRDD(vehicle, (data, brake_param))
             .join(brake_features)
             # RDD(plot_file)
-            .map(lambda vehicle_data: multi_vehicle_plot_utils.gen_plot(vehicle_data, origin_prefix, 'brake')))
+            .map(lambda vehicle_data:
+                 multi_vehicle_plot_utils.gen_plot(vehicle_data, origin_prefix, 'brake')))
+        # RDD(plot_file)
+        return throttle_plots.union(brake_plots)
 
 
 if __name__ == '__main__':

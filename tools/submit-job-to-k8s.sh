@@ -15,6 +15,12 @@ EXECUTOR_CORES=2
 EXECUTOR_MEMORY=24g
 EXECUTOR_DISK_GB=50
 MEMORY_OVERHEAD_FACTOR=0
+
+# Partner BOS config.
+PARTNER_BOS_REGION=""
+PARTNER_BOS_BUCKET=""
+PARTNER_BOS_ACCESS=""
+PARTNER_BOS_SECRET=""
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
