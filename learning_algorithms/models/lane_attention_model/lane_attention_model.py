@@ -64,6 +64,7 @@ class LaneAttention(nn.Module):
     def __init__(self):
         super(LaneAttention, self).__init__()
         self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
+        self.backward_lane_encoding = None
         self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
         self.lane_aggregation = AttentionalAggregation(input_encoding_size=128, output_size=512)
         self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[100, 30, 1])
@@ -91,7 +92,6 @@ class LaneAttention(nn.Module):
 
 
 # TODO(jiacheng):
-#   - Reverse the sequence to be from past to present to save run-time.
 #   - Only run through the actual time-stamps with the help of "packing".
 class VehicleLSTM(nn.Module):
     def __init__(self, embed_size=64, hidden_size=128, encode_size=128):
@@ -157,6 +157,16 @@ class VehicleLSTM(nn.Module):
         out = torch.cat((front_states, back_states, max_states, avg_states), 1)
         out = self.encode(out)
         return out
+
+
+# TODO(jiacheng):
+#   - Implement this.
+class BackwardLaneLSTM(nn.Module):
+    def __init__(self):
+        super(BackwardLaneLSTM, self).__init__()
+
+    def forward(self, X):
+        return X
 
 
 # TODO(jiacheng):
