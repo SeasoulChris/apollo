@@ -62,16 +62,24 @@ class CruiseMLP(nn.Module):
 class LaneAttention(nn.Module):
     def __init__(self):
         super(LaneAttention, self).__init__()
-        self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
+        self.vehicle_encoding = VehicleDynamicLSTM(embed_size=64, hidden_size=128, encode_size=128)
         self.backward_lane_encoding = None
         self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
         self.lane_aggregation = AttentionalAggregation(input_encoding_size=128, output_size=512)
         self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[100, 30, 1])
 
     def forward(self, X):
-        obs_features, obs_hist_size, lane_features, same_obs_mask = X
-        obs_features = obs_features.float()
+        '''
+            - obs_hist_size: N x 1
+            - obs_features: N x 180
+            - backward_lane_points: M x 20
+            - lane_features: M x 600
+            - is_self_lane: M x 1
+            - same_obs_mask: M x 1
+        '''
+        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
         obs_hist_size = obs_hist_size.float()
+        obs_features = obs_features.float()
         lane_features = lane_features.float()
         same_obs_mask = same_obs_mask.float()
         N = obs_features.size(0)
@@ -90,8 +98,6 @@ class LaneAttention(nn.Module):
         return out
 
 
-# TODO(jiacheng):
-#   - Only run through the actual time-stamps with the help of "packing".
 class VehicleDynamicLSTM(nn.Module):
     def __init__(self, embed_size=64, hidden_size=128, encode_size=128):
         super(VehicleDynamicLSTM, self).__init__()
@@ -104,16 +110,16 @@ class VehicleDynamicLSTM(nn.Module):
             nn.ReLU(),
         )
 
-        h0 = torch.zeros(2, 1, hidden_size)
-        c0 = torch.zeros(2, 1, hidden_size)
+        h0 = torch.zeros(1, 1, hidden_size)
+        c0 = torch.zeros(1, 1, hidden_size)
         nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
         self.c0 = nn.Parameter(c0, requires_grad=True)
-        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=False)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*8, encode_size),
+            nn.Linear(hidden_size*3, encode_size),
             nn.ReLU(),
         )
 
@@ -137,24 +143,36 @@ class VehicleDynamicLSTM(nn.Module):
         vel_heading = obs_features[:, 7::9].view(N, 20, 1)
         vel_heading_changing_rate = obs_features[:, 8::9].view(N, 20, 1)
         # (N x 20 x 8)
-        obs_position = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y, \
+        obs_fea = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y, \
             vel_heading, vel_heading_changing_rate), 2).float()
+
+        # Sort the obstacle_features by descending history-length.
+        # original_idx = torch.arange(N)                                # [0, 1, 2, 3, 4]
+        seq_lengths, sorted_idx = hist_size.sort(0, descending=True)    # [1, 3, 2, 0, 4]
+        _, recover_idx = sorted_idx.sort(0, descending=False)           # [3, 0, 2, 1, 4]
+        obs_fea = obs_fea.index_select(0, sorted_idx)
+
         # (N x 20 x embed_size)
-        obs_embed = self.embed(obs_position.view(N*20, 8)).view(N, 20, self.embed_size)
+        obs_embed = self.embed(obs_fea.view(N*20, 8)).view(N, 20, self.embed_size)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
-        # (N x 20 x 2*hidden_size)
-        obs_states, _ = self.vehicle_rnn(obs_embed, (h0, c0))
-        # (N x 2*hidden_size)
-        front_states = obs_states[:, 0, :]
-        back_states = obs_states[:, -1, :]
-        max_states, _ = torch.max(obs_states, 1)
-        avg_states = torch.mean(obs_states, 1)
+        packed_input = pack_padded_sequence(obs_embed, seq_lengths.cpu().numpy(), batch_first=True)
+        packed_output, (ht, ct) = self.vehicle_rnn(packed_input)
+        # (N x 20 x hidden_size)
+        obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
+        min_val = torch.min(obs_states)
+        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,\
+            padding_value=min_val.item()-0.1)
+        # (N x hidden_size)
+        final_states = ht.view(N, -1)
+        max_states, _ = torch.max(obs_states_for_maxpool, 1)
+        avg_states = torch.sum(obs_states, 1) / seq_lengths.view(N, 1)
 
         # Encoding
-        out = torch.cat((front_states, back_states, max_states, avg_states), 1)
+        out = torch.cat((final_states, max_states, avg_states), 1)
         out = self.encode(out)
+        out = out.index_select(0, recover_idx)
         return out
 
 
