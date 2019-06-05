@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-# Current cluster resources (Show usage with "kubectl top nodes"):
-#   CPU Cores: 128
-#   Memory: 1TB
-#   Ephemeral Storage: 20TB
+# Guideline for resource allocation:
+# 1. Maximum resource of an EXECUTOR is the resource of a node, i.e.:
+#    CPU Cores: 32
+#    Memory: 256GB
+#    Ephemeral Storage: 5TB
+# 2. Maximum resource of a JOB is the total resource of all 5 nodes, i.e.:
+#    CPU Cores: 160
+#    Memory: 1.25TB
+#    Ephemeral Storage: 25TB
+# Show current cluster resource usage with "kubectl top nodes".
 
 # Default value for configurable arguments.
 JOB_FILE=""
