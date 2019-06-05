@@ -323,4 +323,4 @@ def write_h5_cal_tab(data, file_dir, file_name):
     file_name = file_name + '.hdf5'
     file_path = os.path.join(file_dir, file_name)
     with h5py.File(file_path, 'w') as h5_file:
-        h5_file.create_dataset('segment', data=data, dtype='float32')
+        h5_file.create_dataset('segment', data=data, dtype='float64')

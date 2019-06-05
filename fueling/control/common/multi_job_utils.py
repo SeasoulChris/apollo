@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+import copy
 import glob
 import math
 import os
 import random
-import copy
+
 
 import colored_glog as glog
 import h5py
@@ -144,10 +146,8 @@ def satisfy_brake_condition(elem, index, vehicle_param_conf, train_conf):
     acc_min_condition = vehicle_param_conf.max_deceleration
     steer_condition = train_conf.steer_condition
     condition = abs(elem[index][3]) < steer_condition and \
-        elem[index][2] > brake_min_condition and \
-        elem[index][2] < brake_max_condition and \
-        elem[index][1] < 0.0 and \
-        elem[index][1] > acc_min_condition and \
+        brake_min_condition < elem[index][2] < brake_max_condition and \
+        acc_min_condition < elem[index][1] < 0.0 and \
         int(elem[index][4]) == 0
     return condition
 
@@ -161,10 +161,8 @@ def satisfy_throttle_condition(elem, index, vehicle_param_conf, train_conf):
     acc_max_condition = vehicle_param_conf.max_acceleration
     steer_condition = train_conf.steer_condition
     condition = abs(elem[index][3]) < steer_condition and \
-        elem[index][2] > throttle_min_condition and \
-        elem[index][2] < throttle_max_condition and \
-        elem[index][1] > 0.0 and \
-        elem[index][1] < acc_max_condition and \
+        throttle_min_condition < elem[index][2] < throttle_max_condition and \
+        0.0 < elem[index][1] < acc_max_condition and \
         int(elem[index][4]) == 0
     return condition
 

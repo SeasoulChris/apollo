@@ -40,6 +40,30 @@ def get_vehicle_param(folder_dir):
     return VEHICLE_PARAM_CONF.vehicle_param
 
 
+def gen_param_w_train_conf(vehicle_conf, train_conf, throttle_or_brake):
+    if throttle_or_brake == 'throttle':
+        cmd_min = vehicle_conf.throttle_deadzone
+        cmd_max = train_conf.throttle_max
+        layer = [train_conf.throttle_train_layer1,
+                 train_conf.throttle_train_layer2,
+                 train_conf.throttle_train_layer3]
+
+    elif throttle_or_brake == 'brake':
+        cmd_min = -1 * train_conf.brake_max
+        cmd_max = -1 * vehicle_conf.brake_deadzone
+        layer = [train_conf.brake_train_layer1,
+                 train_conf.brake_train_layer2,
+                 train_conf.brake_train_layer3]
+
+    speed_min = train_conf.train_speed_min
+    speed_max = train_conf.train_speed_max
+    speed_segment_num = train_conf.train_speed_segment
+    cmd_segment_num = train_conf.train_cmd_segment
+    train_alpha = train_conf.train_alpha
+    return ((speed_min, speed_max, speed_segment_num),
+            (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha)
+
+
 def gen_param(vehicle_param, throttle_or_brake):
     if throttle_or_brake == 'throttle':
         cmd_min = vehicle_param.throttle_deadzone
