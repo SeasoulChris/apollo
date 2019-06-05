@@ -333,6 +333,16 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                             curr_lane_label[i, 0] = 1
                             self.labels.append(curr_lane_label)
                             self.is_cutin.append(curr_is_cutin)
+                            if curr_is_cutin[0,0] != 0:
+                                self.obstacle_hist_size.append(curr_obs_hist_size)
+                                self.obstacle_features.append(curr_obs_feature)
+                                self.backward_lane_points.append(curr_backward_lane_points)
+                                self.lane_features.append(curr_lane_feature)
+                                self.is_self_lane.append(curr_self_lane_feature)
+                                curr_lane_label = np.zeros((curr_num_lane_sequence, 1))
+                                curr_lane_label[i, 0] = 1
+                                self.labels.append(curr_lane_label)
+                                self.is_cutin.append(curr_is_cutin)
                 else:
                     self.obstacle_hist_size.append(curr_obs_hist_size)
                     self.obstacle_features.append(curr_obs_feature)

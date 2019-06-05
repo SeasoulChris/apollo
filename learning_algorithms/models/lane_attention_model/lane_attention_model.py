@@ -245,21 +245,144 @@ class VehicleLSTM(nn.Module):
 # TODO(jiacheng):
 #   - Implement this.
 class BackwardLaneLSTM(nn.Module):
-    def __init__(self):
+    def __init__(self, embed_size=16, hidden_size=64, encode_size=64):
         super(BackwardLaneLSTM, self).__init__()
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.encode_size = encode_size
 
-    def forward(self, X):
-        return X
+        self.embed = torch.nn.Sequential(
+            nn.Linear(1, embed_size),
+            nn.ReLU(),
+        )
+
+        h0 = torch.zeros(1, 1, hidden_size)
+        c0 = torch.zeros(1, 1, hidden_size)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=False)
+
+        self.encode = torch.nn.Sequential(
+            nn.Linear(hidden_size*4, encode_size),
+            nn.ReLU(),
+        )
+
+    def forward(self, obs_backward_features, hist_size):
+        '''Forward function
+            - obs_features: N x 20
+            - hist_size: N x 1
+
+            output: N x encode_size
+        '''
+        N = obs_backward_features.size(0)
+
+        # Input embedding.
+        obs_fea = obs_backward_features.float()
+
+        # Sort the obstacle_features by descending history-length.
+        # original_idx = torch.arange(N)                                # [0, 1, 2, 3, 4]
+        seq_lengths, sorted_idx = hist_size.sort(0, descending=True)    # [1, 3, 2, 0, 4]
+        _, recover_idx = sorted_idx.sort(0, descending=False)           # [3, 0, 2, 1, 4]
+        obs_fea = obs_fea.index_select(0, sorted_idx)
+
+        # (N x 20 x embed_size)
+        obs_embed = self.embed(obs_fea.view(N*20, 1)).view(N, 20, self.embed_size)
+
+        # Run through RNN.
+        h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
+        packed_input = pack_padded_sequence(obs_embed, seq_lengths.cpu().numpy(), batch_first=True)
+        packed_output, (ht, ct) = self.vehicle_rnn(packed_input)
+        # (N x 20 x hidden_size)
+        obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
+        min_val = torch.min(obs_states)
+        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,\
+            padding_value=min_val.item()-0.1)
+        # (N x hidden_size)
+        final_states = ht.view(N, -1)
+        max_states, _ = torch.max(obs_states_for_maxpool, 1)
+        avg_states = torch.sum(obs_states, 1) / seq_lengths.view(N, 1)
+
+        # Encoding
+        out = torch.cat((final_states, max_states, avg_states), 1)
+        out = self.encode(out)
+        out = out.index_select(0, recover_idx)
+        return out
 
 
-# TODO(jiacheng):
-#   - With the help of encoded obstacle_feature, add attention mechanism in LaneLSTM.
 class AttentionalLaneLSTM(nn.Module):
-    def __init__(self):
+    def __init__(self, embed_size=64, hidden_size=128, encode_size=128, obs_encode_size=128):
         super(AttentionalLaneLSTM, self).__init__()
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.encode_size = encode_size
+        self.obs_encode_size = obs_encode_size
 
-    def forward(self, X):
-        return X
+        self.embed = torch.nn.Sequential(
+            nn.Linear(4, embed_size),
+            nn.ReLU(),
+        )
+
+        self.obs_attention = torch.nn.Sequential(
+            nn.Linear(obs_encode_size, 100),
+            nn.ReLU(),
+            nn.Softmax(dim=1),
+        )
+
+        h0 = torch.zeros(2, 1, hidden_size)
+        c0 = torch.zeros(2, 1, hidden_size)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+
+        self.encode = torch.nn.Sequential(
+            nn.Linear(hidden_size*8, encode_size),
+            nn.ReLU(),
+        )
+
+    def forward(self, lane_features, obs_encoding, same_obs_mask):
+        '''Forward function:
+            - lane_features: M x 600
+            - obs_encoding: N x 128
+            - same_obs_mask: M x 1
+
+            output: M x encode_size
+        '''
+        M = lane_features.size(0)
+        N = obs_encoding.size(0)
+
+        # Input embedding.
+        # (M x 100 x embed_size)
+        lane_embed = self.embed(lane_features.float().view(M*100, 4)).view(M, 100, self.embed_size)
+
+        # obs_feature attention.
+        # (N x 100)
+        attention_scores = self.obs_attention(obs_encoding)
+        new_attention_scores = cudas(torch.zeros(M, 100))
+        for obs_id in range(same_obs_mask.max().long().item() + 1):
+            curr_mask = (same_obs_mask[:, 0] == obs_id)
+            curr_N = torch.sum(curr_mask).item()
+            new_attention_scores[curr_mask, :] = attention_scores[obs_id, :].view(1, -1).repeat(curr_N, 1)
+        # (M x 100 x hidden_size)
+        attention_scores = new_attention_scores.view(M, 100, 1).repeat(1, 1, self.hidden_size)
+
+        # Run through RNN.
+        h0, c0 = self.h0.repeat(1, M, 1), self.c0.repeat(1, M, 1)
+        # (M x 100 x hidden_size)
+        lane_states, _ = self.single_lane_rnn(lane_embed, (h0, c0))
+        # (M x hidden_size)
+        front_states = lane_states[:, 0, :]
+        back_states = lane_states[:, -1, :]
+        max_states, _ = torch.max(lane_states, 1)
+        attentiona_states = torch.sum(lane_states[:, -100:, :] * attention_scores, 1)
+
+        # Encoding
+        out = torch.cat((front_states, back_states, max_states, attentiona_states), 1)
+        out = self.encode(out)
+        return out
 
 
 class LaneLSTM(nn.Module):
