@@ -65,7 +65,7 @@ def valid_segment(records):
 def write_h5(elem, origin_prefix, target_prefix):
     (vehicle, segment_dir, segment_id), feature_data = elem
     origin_prefix = os.path.join(origin_prefix, vehicle)
-    target_prefix = os.path.join(target_prefix, 'CalibrationTableFeature', vehicle)
+    target_prefix = os.path.join(target_prefix, vehicle)
     data_set = ((segment_dir, segment_id), feature_data)
     # return feature_data
     return calibration_table_utils.write_h5_train_test(data_set, origin_prefix, target_prefix)
@@ -83,7 +83,7 @@ def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
         # RDD(dir_segment with target_prefix)
         .map(lambda (path, vehicle):
              path.replace(os.path.join(origin_prefix, vehicle),
-                          os.path.join(target_prefix, 'CalibrationTableFeature',
+                          os.path.join(target_prefix,
                                        vehicle, 'throttle', 'train'), 1))
         # RDD(MARKER files)
         .map(lambda path: os.path.join(path, MARKER)))

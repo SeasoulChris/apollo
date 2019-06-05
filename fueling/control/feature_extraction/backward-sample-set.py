@@ -73,37 +73,37 @@ class BackwardSampleSet(BasePipeline):
         valid_segments = spark_helper.cache_and_log(
             'ValidSegments',
             feature_extraction_rdd_utils.
-            chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT))
+            chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT), 0)
 
         # PairRDD((dir_segment, segment_id), msg)
         valid_msgs = spark_helper.cache_and_log(
             'ValidMsg',
-            feature_extraction_rdd_utils. valid_msg_rdd(dir_to_msgs, valid_segments))
+            feature_extraction_rdd_utils. valid_msg_rdd(dir_to_msgs, valid_segments), 0)
 
         data_segment_rdd = spark_helper.cache_and_log(
             'parsed_msg',
             # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(
-                valid_msgs))
+                valid_msgs), 0)
 
         data_segment_rdd = spark_helper.cache_and_log(
             'pair_cs_pose',
             data_segment_rdd
             # PairRDD((dir_segment, segment_id), paired_chassis_msg_pose_msg)
-            .flatMapValues(feature_extraction_utils.pair_cs_pose))
+            .flatMapValues(feature_extraction_utils.pair_cs_pose), 0)
 
         data_segment_rdd = spark_helper.cache_and_log(
             'get_data_point',
             data_segment_rdd
             # PairRDD((dir, timestamp_sec), signle data_point)
-            .map(feature_extraction_utils.get_data_point))
+            .map(feature_extraction_utils.get_data_point), 0)
 
         # same size
         data_segment_rdd = spark_helper.cache_and_log(
             'feature_key_value',
             data_segment_rdd
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
-            .map(feature_extraction_utils.gen_feature_key_backwards))
+            .map(feature_extraction_utils.gen_feature_key_backwards), 0)
 
         glog.info('number of elems: %d' % data_segment_rdd
                   # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
@@ -121,7 +121,7 @@ class BackwardSampleSet(BasePipeline):
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
             .mapValues(list)
             # # PairRDD((dir, feature_key), one segment)
-            .flatMapValues(feature_extraction_utils.gen_segment))
+            .flatMapValues(feature_extraction_utils.gen_segment), 0)
 
         # glog.info('ALL segment: %s' % data_segment_rdd
         #           .map(lambda (key, (time_stamp, segment))

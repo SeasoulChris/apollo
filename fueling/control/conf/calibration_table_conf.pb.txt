@@ -2,13 +2,13 @@ speed_min_condition: 0
 speed_max_condition: 10.0
 
 speed_min: 0.0
-speed_max: 5.0
+speed_max: 50.0
 speed_segment: 21
 
-throttle_max: 40.0
+throttle_max: 100.0
 throttle_segment: 21
 
-brake_max:40.0
+brake_max: 100.0
 brake_segment: 21
 
 train_percentage: 0.9
