@@ -299,6 +299,8 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 new_curr_obs_feature[:int(curr_obs_hist_size[0][0]), :] = curr_obs_feature[-int(curr_obs_hist_size[0][0]):, :]
                 curr_obs_feature = new_curr_obs_feature.reshape((1, obs_feature_size))
                 # TODO(jiacheng): remove dirty obstacle-feature data-points.
+                #   - Remove data-points with history that has positive s values.
+                #   - Remove data-points with history that has big abrupt jumps.
 
                 curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
                                                      (single_lane_feature_size+20)*curr_num_lane_sequence])\
