@@ -63,51 +63,48 @@ All data are saved in `nvme dirve` or `data/record/`
 The brake and throttle specs are different between vehicle models. Therefore, the criteria for brake pulsing/tap and hash/under throttle depend on vehicle models. The default setting is based on Lincoln MKZ model. For different vehicle model, these parameters is configurable at
 
 ```
-/modules/dreamview/conf/mkz7_data_collection_table.pb.txt
+/apollo/modules/dreamview/conf/mkz7_data_collection_table.pb.txt
 ```
 
 (description)
 
-# Data Upload and Download 
+# Data Upload
 
 ## Prerequisites
 
 Before uploading your data, take a note of:
 1. The folder structure to be maintained is:
-![](images/file_system1.png)
+   ![](images/file_system1.png)
 
-2. As seen above, the file structure to be maintained is 
-```
-Origin Folder -> Vehicle Folder -> Records + Configuration files
-```
-3. A vehicle folder needs to be created for your vehicle. The name of the folder should be the same as seen in Dreamview
-4. Inside your folder, create a **Records** folder to hold the data
-5. Store all the **Configuration files** along with the Records folder, within the **Vehicle** folder
-
+1. As seen above, the file structure to be maintained is 
+   ```
+   Origin Folder -> Vehicle Folder -> Records + Configuration files
+   ```
+1. A vehicle folder needs to be created for your vehicle. The name of the folder
+   should be the same as seen in Dreamview
+1. Inside your folder, create a **Records** folder to hold the data
+1. Store all the **Configuration files** along with the Records folder, within
+   the **Vehicle** folder
 
 ## Upload
 
-```
-  bos-fstool-upload -s <local_record_file> -d modules/control/data/records/<vehecle_id>/<version>/<task_folder>/YYYYMMDDhhmmss.records.xxxxx
-```
-
-For example:
+Use [bosfs](https://cloud.baidu.com/doc/BOS/BOSCLI/8.5CBOS.20FS.html) to mount
+your bucket to local, for example,
 
 ```
-  bos-fstool-upload -s 20190314010101.record.00000 modules/control/data/records/MKZ7/2019-03-14/2013-03-14-01-01-01/20190314010101.record.00000
+BUCKET=<bucket>
+AK=<access key>
+SK=<secret key>
+MOUNT=/mnt/bos
+# It's required to provide correct BOS region. Please read the document
+# https://cloud.baidu.com/doc/BOS/S3.html#.E6.9C.8D.E5.8A.A1.E5.9F.9F.E5.90.8D
+REGION=bj
+
+mkdir -p "${MOUNT}"
+bosfs "${BUCKET}" "${MOUNT}" -o allow_other,logfile=/tmp/bos-${BUCKET}.log,endpoint=http://su.${REGION}.bcebos.com,ak=${AK},sk=${SK}
 ```
 
-## Download
-
-```
-  bos-fstool-download -s modules/control/calibration/<vihecle_id>/<version>/control_conf.pb.txt <local_folder>/control_conf.pb.txt
-```
-
-For example:
-
-```
-  bos-fstool-download -s modules/control/calibration/MKZ7/2019-03-14/control_conf.pb.txt ./control_conf.pb.txt
-```
+Then you can copy the prepared data folder to somewhere under /mnt/bos.
 
 # Result Visualization
 
