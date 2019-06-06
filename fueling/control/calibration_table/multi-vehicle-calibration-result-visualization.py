@@ -53,7 +53,7 @@ class MultiCalibrationTableVisualization(BasePipeline):
         partner = partners.get(job_owner)
         if partner and partner.email:
             title = 'Your vehicle calibration job is done!'
-            content = 'Please find the result in attachments.'
+            content = []
             receivers = [partner.email, 'apollo_internal@baidu.com']
             # TODO: Add the generated calibration table to the attachments
             attachments = plot_files.collect()
