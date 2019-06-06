@@ -63,6 +63,9 @@ def feature_preprocessing(segment):
     # discard the segments that are too long
     if segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
         return None
+    # correct the localization outliers
+    outlier_data_correction(segment)
+
     # smooth IMU acceleration data
     segment[:, segment_index["a_x"]] = savgol_filter(
         segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
@@ -70,6 +73,28 @@ def feature_preprocessing(segment):
         segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
     segment[:, segment_index["w_z"]] = savgol_filter(
         segment[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    return segment
+
+
+def outlier_data_correction(segment):
+    """
+    correct the localization error regarding the acceleration and angular velocity values
+    some values are doubled abnormally and periodically every 3 or 4 frames
+    """
+    # iterate the segment and check 3 points each time
+    # if the middle point is abnormally large, divide it by 2
+    for k in range(segment.shape[0] - 2):
+        if abs(segment[k + 1, segment_index["a_x"]]) > 0.75 * (
+                abs(segment[k, segment_index["a_x"]]) + abs(segment[k + 2, segment_index["a_x"]])):
+            segment[k + 1, segment_index["a_x"]] /= 2.0
+        if abs(segment[k + 1, segment_index["a_y"]]) > 0.75 * (
+                abs(segment[k, segment_index["a_y"]]) + abs(segment[k + 2, segment_index["a_y"]])):
+            segment[k + 1, segment_index["a_y"]] /= 2.0
+        if abs(segment[k + 1, segment_index["w_z"]]) > 0.75 * (
+                abs(segment[k, segment_index["w_z"]]) + abs(segment[k + 2, segment_index["w_z"]])):
+            segment[k + 1, segment_index["w_z"]] /= 2.0
+    # delete the first and last column since they are not checked
+    segment = segment[:, 1:-1]
     return segment
 
 

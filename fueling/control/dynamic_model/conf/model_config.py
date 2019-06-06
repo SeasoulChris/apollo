@@ -82,7 +82,7 @@ point_mass_config = {
 }
 
 lstm_model_config = {
-    "fnn_layers": 2,  # depth of the feed-forward neural nets
+    "fnn_layers": 3,  # depth of the feed-forward neural nets
     "epochs": 30  # training epochs
 }
 
@@ -94,5 +94,5 @@ mlp_model_config = {
 imu_scaling = {
     # IMU compensation for localization scaling issue
     "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
-    "pp7": 0.85  # scaling rate for acceleration and angular speed on pp7
+    "pp7": 1.085  # scaling rate for acceleration and angular speed on pp7
 }
