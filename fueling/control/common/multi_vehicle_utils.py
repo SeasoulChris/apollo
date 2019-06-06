@@ -55,8 +55,8 @@ def gen_param_w_train_conf(vehicle_conf, train_conf, throttle_or_brake):
                  train_conf.brake_train_layer2,
                  train_conf.brake_train_layer3]
 
-    speed_min = train_conf.train_speed_min
-    speed_max = train_conf.train_speed_max
+    speed_min = train_conf.speed_min
+    speed_max = train_conf.speed_max
     speed_segment_num = train_conf.train_speed_segment
     cmd_segment_num = train_conf.train_cmd_segment
     train_alpha = train_conf.train_alpha
