@@ -68,7 +68,7 @@ The brake and throttle specs are different between vehicle models. Therefore, th
 
 (description)
 
-# Data Upload
+# Data Upload/Download
 
 ## Prerequisites
 
@@ -76,7 +76,7 @@ Before uploading your data, take a note of:
 1. The folder structure to be maintained is:
    ![](images/file_system1.png)
 
-1. As seen above, the file structure to be maintained is 
+1. As seen above, the file structure to be maintained is
    ```
    Origin Folder -> Vehicle Folder -> Records + Configuration files
    ```
@@ -105,6 +105,11 @@ bosfs "${BUCKET}" "${MOUNT}" -o allow_other,logfile=/tmp/bos-${BUCKET}.log,endpo
 ```
 
 Then you can copy the prepared data folder to somewhere under /mnt/bos.
+
+## Download
+
+No download needed, the results will be sent to your email associated with your BOS bucket.
+
 
 # Result Visualization
 
