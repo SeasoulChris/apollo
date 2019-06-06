@@ -5,7 +5,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/../../.."
 
 set -e
 
-JOB_ID="0604003"
+JOB_ID=$(date +%Y-%m-%d-%H-%M-%S)
 
 # Feature extraction.
 JOB="fueling/control/calibration_table/multi-job-feature-extraction.py"
