@@ -44,7 +44,7 @@ def list_uploaded_tasks(target_dir, qualified_tasks_path):
             if os.path.exists(os.path.join(cur_task, 'FRAME-UPLOADED')) and \
                 urllib.parse.quote(os.path.basename(cur_task), safe='') in qualified_tasks:
                 tasks.append(cur_task)
-    glog.info('todo tasks: {}'.format(tasks))
+    glog.info('uploaded tasks: {}'.format(tasks))
     return tasks
 
 def list_images(target_dir, task):
@@ -56,7 +56,6 @@ def list_images(target_dir, task):
         if cur_dir:
             images.extend(list(glob.glob(r'{}/*/*compressed*'.format(
                 os.path.join(root, cur_dir)))))
-            glog.info('{} image bins in dir {}'.format(len(images), os.path.join(root, cur_dir)))
     return images
 
 def pickup_frames(task):
@@ -64,9 +63,7 @@ def pickup_frames(task):
     frames_dir = os.path.join(task, 'frames')
     frames = sorted([os.path.join(frames_dir, frame) for frame in os.listdir(frames_dir)
                      if frame.startswith('frame-') and frame.endswith('.json')])
-    glog.info('original frames: {}: {}'.format(len(frames), frames))
     filtered_frames = rules.RulesChain.do_filter(frames)
-    glog.info('filtered frames: {}: {}'.format(len(filtered_frames), filtered_frames))
     return [os.path.basename(frame) for frame in filtered_frames]
 
 def upload_frames(task, frames, s3_client):
@@ -79,7 +76,6 @@ def upload_frames(task, frames, s3_client):
         if frame in frames:
             frame_src = os.path.join(frames_dir, frame)
             frame_dst = 'frames/{}/{}'.format(os.path.basename(task), frame)
-            glog.info('uploading frame from {} to {}'.format(frame_src, frame_dst))
             s3_upload_file(s3_client, frame_src, frame_dst)
     os.mknod(os.path.join(task, 'FRAME-UPLOADED'))
 
@@ -109,7 +105,6 @@ def generate_and_upload_images(task, s3_client):
             img = cv2.imdecode(img, cv2.IMREAD_COLOR)
             cv2.imwrite(jpg_file_path, img)
         image_dst = 'images/{}.jpg'.format(image_name)
-        glog.info('uploading picture to AWS: {}'.format(image_dst))
         s3_upload_file(s3_client, jpg_file_path, image_dst)
     os.mknod(os.path.join(task, 'IMAGE-UPLOADED'))
 
@@ -151,13 +146,14 @@ def send_lidar_request(task, frames, access_key):
                              json=payload,
                              headers=headers,
                              auth=(access_key, ''))
-    glog.info('submitted task to scale, response: {}'.format(response.json()))
-    return response.json()
+    response_json = response.json()
+    glog.info('submitted lidar task to scale, task id: {}'.format(response_json['task_id']))
+    return response_json
 
 def send_2d_3d_linking_request(scale_lidar_task_id, access_key):
     """Send requests for 2D/3D linking tasks"""
     payload = {
-        'project': 'scale_labeling_2019Q2_2d3dlinking'
+        'project': 'scale_labeling_2019Q2_2d3dlinking',
         'callback_url': 'http://www.example.com/callback',
         'instruction': '<iframe src="https://docs.google.com/document/d/e/' \
                        '2PACX-1vS6hRcfulf58CPRlFYwWgz29VqCEq8NDLivNY2RBQ3P5' \
@@ -172,8 +168,9 @@ def send_2d_3d_linking_request(scale_lidar_task_id, access_key):
                              json=payload,
                              headers=headers,
                              auth=(access_key, ''))
-    glog.info('submitted 2d/3d task to scale, response: {}'.format(response.json()))
-    return response.json()
+    response_json = response.json()
+    glog.info('submitted 2d/3d task to scale, task id: {}'.format(response_json['task_id']))
+    return response_json
 
 def send_laneline_request(lidar_task_id, image_url, access_key):
     """Send scale request for LaneLine labeling"""
@@ -246,7 +243,7 @@ def send_laneline_request(lidar_task_id, image_url, access_key):
                 ]
             }})
     response_json = json.dumps(repr(response))
-    glog.info('submitted LaneLine task to scale, response: {}'.format(response_json))
+    glog.info('submitted LaneLine task to scale, task id: {}'.format(response_json['task_id']))
     return response_json
 
 def record_task_response(task, contents, scale_response):

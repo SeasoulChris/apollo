@@ -85,9 +85,6 @@ class MovingCarRule(BaseRule):
             if self._pre_xpos and self._pre_ypos:
                 if math.sqrt((xpos-self._pre_xpos)**2 + (ypos-self._pre_ypos)**2) > self._distance:
                     filtered_frames.append(frame)
-                else:
-                    glog.warn('car not moving. cur x&y: {}&{}, pre x&y: {}&{}'.
-                              format(xpos, ypos, self._pre_xpos, self._pre_ypos))
             else:
                 filtered_frames.append(frame)
             self._pre_xpos = xpos
