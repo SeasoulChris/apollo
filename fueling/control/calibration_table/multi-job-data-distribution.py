@@ -17,7 +17,9 @@ import numpy as np
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
+from fueling.common.partners import partners
 import fueling.common.bos_client as bos_client
+import fueling.common.email_utils as email_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
@@ -65,6 +67,11 @@ class MultiJobDataDistribution(BasePipeline):
 
         # origin_prefix: absolute path
         self.run(hdf5_files, origin_prefix)
+        conf_files = glob.glob(os.path.join(origin_prefix, '*/*.pb.txt'))
+        # print('conf_files', conf_files)
+        plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
+        attachments = conf_files + plots
+        # print('attachments', attachments)
 
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
@@ -95,6 +102,16 @@ class MultiJobDataDistribution(BasePipeline):
 
         target_dir = bos_client.abs_path(target_prefix)
         self.run(hdf5_files, target_dir)
+        partner = partners.get(job_owner)
+        if partner and partner.email:
+            title = 'Your vehicle calibration job is done!'
+            content = []
+            receivers = [partner.email, 'apollo_internal@baidu.com']
+            # TODO: Add the generated calibration table to the attachments
+            conf_files = glob.glob(os.path.join(origin_prefix, '*/*.pb.txt'))
+            plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
+            attachments = conf_files + plots
+            email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)

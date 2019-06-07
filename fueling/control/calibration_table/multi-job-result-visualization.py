@@ -50,14 +50,14 @@ class MultiJobResultVisualization(BasePipeline):
         # RDD(plot_file)
         plot_files = self.run(origin_dir, conf_dir)
 
-        partner = partners.get(job_owner)
-        if partner and partner.email:
-            title = 'Your vehicle calibration job is done!'
-            content = []
-            receivers = [partner.email, 'apollo_internal@baidu.com']
-            # TODO: Add the generated calibration table to the attachments
-            attachments = plot_files.collect()
-            email_utils.send_email_info(title, content, receivers, attachments)
+        # partner = partners.get(job_owner)
+        # if partner and partner.email:
+        #     title = 'Your vehicle calibration job is done!'
+        #     content = []
+        #     receivers = [partner.email, 'apollo_internal@baidu.com']
+        #     # TODO: Add the generated calibration table to the attachments
+        #     attachments = plot_files.collect()
+        #     email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, origin_prefix, conf_prefix):
         # PairRDD(vehicle, path_to_vehicle)

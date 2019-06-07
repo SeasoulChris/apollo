@@ -23,7 +23,7 @@ import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-import fueling.control.features.dir_utils as dir_utils
+# import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 
 
@@ -233,13 +233,28 @@ class MultiJobFeatureExtraction(BasePipeline):
                 # PairRDD(vehicle_type, files)
                 .flatMapValues(self.bos().list_files))
 
+        # todo_task_dirs1 = spark_helper.cache_and_log(
+        #     'todo_jobs',
+        #     todo_task_dirs
+        #     # TODO: find a better way to get the folder dirs
+        #     # PairRDD(vehicle_type, 'COMPLETE'_files)
+        #     .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
+        #     # PairRDD(vehicle_type, absolute_path_to_records)
+        #     .mapValues(os.path.dirname)
+        #     .distinct())
+        # print('todo_task_dirs1: ', todo_task_dirs1.collect())
+
         todo_task_dirs = spark_helper.cache_and_log(
             'todo_jobs',
             todo_task_dirs
+            # TODO: find a better way to get the folder dirs
             # PairRDD(vehicle_type, 'COMPLETE'_files)
-            .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
-            # PairRDD(vehicle_type, absolute_path_to_'COMPLETE')
-            .mapValues(os.path.dirname))
+            # .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
+            # PairRDD(vehicle_type, absolute_path_to_records)
+            .mapValues(os.path.dirname)
+            .distinct())
+        # print('todo_task_dirs: ', todo_task_dirs2.collect())
+        # return
 
         processed_dirs = spark_helper.cache_and_log(
             'processed_jobs',
