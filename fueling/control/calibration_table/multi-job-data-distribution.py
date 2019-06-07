@@ -106,7 +106,7 @@ class MultiJobDataDistribution(BasePipeline):
         if partner and partner.email:
             title = 'Your vehicle calibration job is done!'
             content = []
-            receivers = [partner.email, 'apollo_internal@baidu.com']
+            receivers = [partner.email] + email_utils.CONTROL_TEAM
             # TODO: Add the generated calibration table to the attachments
             conf_files = glob.glob(os.path.join(origin_prefix, '*/*.pb.txt'))
             plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))

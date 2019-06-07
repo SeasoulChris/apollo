@@ -33,4 +33,3 @@ message FnnModel {
     repeated Layer layer = 7;  // num_layer must equal to first layer layer_input_dim
     optional int32 dim_output = 8;  // dim_ouput must equal to last layer layer_output_dim
 }
-

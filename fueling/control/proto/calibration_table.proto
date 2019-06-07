@@ -3,7 +3,6 @@ syntax = "proto2";
 package apollo_fuel.fueling.control.proto.calibration_table;
 
 message CalibrationTable {
-
     optional double speed_min_condition = 1;
     optional double speed_max_condition = 2;
     optional int32 speed_segment = 3;
@@ -41,5 +40,4 @@ message CalibrationTable {
     optional int32 throttle_train_layer1 =25;
     optional int32 throttle_train_layer2 =26;
     optional int32 throttle_train_layer3 =27;
-    
 }

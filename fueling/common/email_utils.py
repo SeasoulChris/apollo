@@ -13,6 +13,21 @@ import requests
 
 BAE_PROXY = 'http://192.168.1.31'
 BAE_PROXY_PIN = 'apollo2019-woyouyitouxiaomaolv'
+DATA_TEAM = [
+    'longtaolin@baidu.com',
+    'xiaoxiangquan@baidu.com',
+]
+CONTROL_TEAM = [
+    'jiaxuanxu@baidu.com',
+    'luoqi06@baidu.com',
+    'shujiang@baidu.com',
+    'yuwang01@baidu.com',
+]
+PREDICTION_TEAM = [
+    'hongyisun@baidu.com',
+    'jiachengpan@baidu.com',
+    'xukecheng@baidu.com',
+]
 
 
 def send_email_info(title, content, receivers=None, attachments=[]):
