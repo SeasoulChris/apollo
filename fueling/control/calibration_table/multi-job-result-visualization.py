@@ -30,7 +30,6 @@ class MultiJobResultVisualization(BasePipeline):
 
     def run_test(self):
         origin_dir = '/apollo/modules/data/fuel/testdata/control/generated'
-        # conf_dir = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
         self.run(origin_dir, origin_dir)
 
     def run_prod(self):

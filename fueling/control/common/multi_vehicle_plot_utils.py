@@ -17,50 +17,6 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 import fueling.common.proto_utils as proto_utils
 import fueling.common.s3_utils as s3_utils
-# import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
-
-
-# FILENAME_CALIBRATION_TABLE_CONF = \
-#     '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
-# CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
-#                                                            CalibrationTable.CalibrationTable())
-
-# throttle_train_layer = [CALIBRATION_TABLE_CONF.throttle_train_layer1,
-#                         CALIBRATION_TABLE_CONF.throttle_train_layer2,
-#                         CALIBRATION_TABLE_CONF.throttle_train_layer3]
-
-# brake_train_layer = [CALIBRATION_TABLE_CONF.brake_train_layer1,
-#                      CALIBRATION_TABLE_CONF.brake_train_layer2,
-#                      CALIBRATION_TABLE_CONF.brake_train_layer3]
-
-# train_alpha = CALIBRATION_TABLE_CONF.train_alpha
-
-
-# def get_vehicle_rdd(origin_prefix):
-#     # RDD(origin_dir)
-#     return (
-#         BasePipeline.context().parallelize([origin_prefix])
-#         # RDD([vehicle_type])
-#         .flatMap(get_vehicle)
-#         # PairRDD(vehicle_type, [vehicle_type])
-#         .keyBy(lambda vehicle_type: vehicle_type[0])
-#         # PairRDD(vehicle_type, path_to_vehicle_type)
-#         .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type[0])))
-
-
-# def get_vehicle_param_prod(prefix):
-#     vehicle_para_conf_filename = 'vehicle_param.pb.txt'
-#     bucket = 'apollo-platform'
-#     return(
-#         s3_utils.list_files(bucket, prefix, vehicle_para_conf_filename)
-#         # PairRDD(vehicle, conf_file_path)
-#         .keyBy(lambda path: path.split('/')[-2])
-#         # PairRDD(vehicle, conf)
-#         .mapValues(lambda conf_file: proto_utils.get_pb_from_text_file(
-#             conf_file, vehicle_config_pb2.VehicleConfig()))
-#         # PairRDD(vehicle, vehicle_param)
-#         .mapValues(lambda vehicle_conf: vehicle_conf.vehicle_param))
-
 
 DIM_INPUT = 3
 cali_input_index = {

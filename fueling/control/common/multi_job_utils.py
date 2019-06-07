@@ -36,17 +36,25 @@ def get_conf_value(msgs):
     throttle_max = 0.0  # positive value
     brake_max = 0.0  # positive value
     speed_min = 30.0
+    acc_min = 0.0  # negative
+    acc_max = 0.0
     for msg in msgs:
         chassis, pose_pre = msg
         pose = pose_pre.pose
-        if int(chassis.gear_location) != 1:  # keep only gear_drive data
+        heading_angle = pose.heading
+        acc_x = pose.linear_acceleration.x
+        acc_y = pose.linear_acceleration.y
+        acc = acc_x * math.cos(heading_angle) + acc_y * math.sin(heading_angle)
+        if int(chassis.gear_location) != 1 or chassis.speed_mps < 0:  # keep only gear_drive data
             # glog.info("chassis.gear_location %s" % chassis.gear_location)
             continue
         throttle_max = max(chassis.throttle_percentage, throttle_max)
         brake_max = max(chassis.brake_percentage, brake_max)
         speed_max = max(chassis.speed_mps, speed_max)
         speed_min = min(chassis.speed_mps, speed_min)
-    return (speed_min, speed_max, throttle_max, brake_max)
+        acc_min = min(acc, acc_min)
+        acc_max = max(acc, acc_max)
+    return (speed_min, speed_max, throttle_max, brake_max, acc_min, acc_max)
 
 
 def compare_conf_value(conf_value_x, conf_value_y):
@@ -54,23 +62,28 @@ def compare_conf_value(conf_value_x, conf_value_y):
         return conf_value_y
     elif not conf_value_y:
         return conf_value_x
-    speed_min_x, speed_max_x, throttle_max_x, brake_max_x = conf_value_x
-    speed_min_y, speed_max_y, throttle_max_y, brake_max_y = conf_value_y
+    speed_min_x, speed_max_x, throttle_max_x, brake_max_x, acc_min_x, acc_max_x = conf_value_x
+    speed_min_y, speed_max_y, throttle_max_y, brake_max_y, acc_min_y, acc_max_y = conf_value_y
     speed_min = min(speed_min_x, speed_min_y)
     speed_max = max(speed_max_x, speed_max_y)
-    brake_max = max(brake_max_x, brake_max_y)
     throttle_max = max(throttle_max_x, throttle_max_y)
-    return (speed_min, speed_max, throttle_max, brake_max)
+    brake_max = max(brake_max_x, brake_max_y)
+    acc_max = max(acc_max_x, acc_max_y)
+    acc_min = min(acc_min_x, acc_min_y)
+    return (speed_min, speed_max, throttle_max, brake_max, acc_min, acc_max)
 
 
 def write_conf(conf_value, vehicle_param_conf, train_conf_path, train_conf=CALIBRATION_TABLE_CONF):
     cur_conf = copy.deepcopy(train_conf)
-    speed_min, speed_max, throttle_max, brake_max = conf_value
+    speed_min, speed_max, throttle_max, brake_max, acc_min, acc_max = conf_value
 
+    cur_conf.speed_min = max(speed_min, vehicle_param_conf.max_abs_speed_when_stopped)
     cur_conf.speed_max = min(speed_max, train_conf.speed_max)
     cur_conf.throttle_max = min(throttle_max, train_conf.throttle_max)
     cur_conf.brake_max = min(brake_max, train_conf.brake_max)
-    cur_conf.speed_min = max(speed_min, vehicle_param_conf.max_abs_speed_when_stopped)
+    # acc range is a supper set of the range in vehicle_param
+    cur_conf.acc_min = min(acc_min, vehicle_param_conf.max_deceleration)
+    cur_conf.acc_max = max(acc_max, vehicle_param_conf.max_deceleration)
 
     glog.info('Load calibration table conf: %s' % cur_conf)
     file_utils.makedirs(train_conf_path)
@@ -95,8 +108,6 @@ def decide_cmd(chassis_throttle_val, chassis_brake_val, vehicle_param_conf):
 
 def feature_generate(elems, vehicle_param_conf):
     """ extract data from segment """
-    # glog.info('Load calibration table conf: %s' % CALIBRATION_TABLE_CONF)
-    # cur_conf = copy.deepcopy(train_conf)  # deep copy
     res = np.zeros([len(elems), 5])
     counter = 0
     for elem in elems:
@@ -143,12 +154,12 @@ def satisfy_brake_condition(elem, index, vehicle_param_conf, train_conf):
     """
     brake_max_condition = -1 * vehicle_param_conf.brake_deadzone
     brake_min_condition = -1 * train_conf.brake_max
-    acc_min_condition = vehicle_param_conf.max_deceleration
+    # vehicle param conf is not vehicle actual acc limit
+    # acc_min_condition = vehicle_param_conf.max_deceleration
     steer_condition = train_conf.steer_condition
     condition = abs(elem[index][3]) < steer_condition and \
         brake_min_condition < elem[index][2] < brake_max_condition and \
-        acc_min_condition < elem[index][1] < 0.0 and \
-        int(elem[index][4]) == 0
+        elem[index][1] < 0.0 and int(elem[index][4]) == 0
     return condition
 
 
@@ -158,12 +169,12 @@ def satisfy_throttle_condition(elem, index, vehicle_param_conf, train_conf):
     """
     throttle_min_condition = vehicle_param_conf.throttle_deadzone
     throttle_max_condition = train_conf.throttle_max
-    acc_max_condition = vehicle_param_conf.max_acceleration
+    # vehicle param conf is not vehicle actual acc limit
+    # acc_max_condition = vehicle_param_conf.max_acceleration
     steer_condition = train_conf.steer_condition
     condition = abs(elem[index][3]) < steer_condition and \
         throttle_min_condition < elem[index][2] < throttle_max_condition and \
-        0.0 < elem[index][1] < acc_max_condition and \
-        int(elem[index][4]) == 0
+        0.0 < elem[index][1] and int(elem[index][4]) == 0
     return condition
 
 
