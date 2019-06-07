@@ -26,7 +26,6 @@ class IndexRecords(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        summary_receivers = ['apollo_internal@baidu.com', 'xiaoxiangquan@baidu.com']
         prefixes = [
             'public-test/',
             'small-records/',
@@ -36,7 +35,7 @@ class IndexRecords(BasePipeline):
         records_rdd = self.context().union([
             self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
-        self.process(records_rdd, summary_receivers)
+        self.process(records_rdd, email_utils.DATA_TEAM)
 
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""

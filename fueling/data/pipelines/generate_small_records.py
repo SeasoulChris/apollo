@@ -123,8 +123,7 @@ class GenerateSmallRecords(BasePipeline):
                 .map(file_utils.touch))
 
         spark_helper.cache_and_log('TodoRecords', todo_records)
-        summary_receivers = ['xiaoxiangquan@baidu.com']
-        self.run(todo_records, src_prefix, dst_prefix, summary_receivers)
+        self.run(todo_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
 
     def run(self, todo_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""

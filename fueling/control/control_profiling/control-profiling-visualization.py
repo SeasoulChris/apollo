@@ -73,7 +73,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
     SummaryTuple = namedtuple('Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
     timestr = time.strftime("%Y%m%d-%H%M%S")
     title = 'Control Profiling Visualization Results' + ' _ %s' % timestr
-    receivers = ['longtaolin@baidu.com', 'yuwang01@baidu.com', 'luoqi06@baidu.com']
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     email_content = []
     for task in tasks:
         target_dir = task.replace(original_prefix, target_prefix, 1)

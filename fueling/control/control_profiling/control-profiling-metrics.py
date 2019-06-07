@@ -95,7 +95,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple('Summary', ['Task', 'Records', 'Target', 'HDF5s', 'Gradings'])
     title = 'Control Profiling Gradings Results'
-    receivers = ['longtaolin@baidu.com', 'yuwang01@baidu.com', 'luoqi06@baidu.com']
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     email_content = []
     for task in tasks:
         target_dir = task.replace(original_prefix, target_prefix, 1)

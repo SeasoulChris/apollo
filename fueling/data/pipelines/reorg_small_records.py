@@ -68,8 +68,7 @@ class ReorgSmallRecords(BasePipeline):
             todo_src_dirs
         ).values()
 
-        summary_receivers = ['xiaoxiangquan@baidu.com']
-        self.run(src_records, src_prefix, dst_prefix, summary_receivers)
+        self.run(src_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
 
     def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""

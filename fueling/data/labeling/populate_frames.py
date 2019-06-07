@@ -197,11 +197,8 @@ class PopulateFramesPipeline(BasePipeline):
 
         # TODO: Just show case for email notification, to be updated as something more useful
         notification = namedtuple('Notification', ['todo_tasks', 'root_dir', 'target_dir'])
-        message = [notification(todo_tasks=task, root_dir=root_dir, target_dir=target_dir)
-                   for task in todo_tasks]
-        email_utils.send_email_info('Frame Population Job Running',
-                                    message,
-                                    ['longtaolin@baidu.com'])
+        message = [notification(task, root_dir, target_dir) for task in todo_tasks]
+        email_utils.send_email_info('Frame Population Job Running', message, email_utils.DATA_TEAM)
 
         self.run(todo_tasks, root_dir, target_dir)
 
@@ -211,9 +208,8 @@ class PopulateFramesPipeline(BasePipeline):
         glog.info('Labeling: All Done, TEST.')
 
         # TODO: Just show case for email notification, to be updated as something more useful
-        email_utils.send_email_info('Frame Population Job Completed',
-                                    {'Success': 100, 'Fail': 200},
-                                    ['longtaolin@baidu.com'])
+        email_utils.send_email_info('Frame Population Job Completed', {'Success': 100, 'Fail': 200},
+                                    email_utils.DATA_TEAM)
 
     def run_prod(self):
         """Run prod."""
