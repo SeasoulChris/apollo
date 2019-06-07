@@ -18,3 +18,7 @@ JOB="fueling/control/control_profiling/control-profiling-metrics.py"
 JOB="fueling/control/control_profiling/control-profiling-visualization.py"
 CONDA_ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh --workers 15 --memory 24g -e ${CONDA_ENV} ${JOB}
+
+# Job: Video decompression job.
+JOB="fueling/perception/decode-video.py"
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB}
