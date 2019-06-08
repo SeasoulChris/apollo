@@ -94,7 +94,7 @@ def write_table(elem, target_dir,
 
     with open(os.path.join(path, table_filename), 'w') as wf:
         wf.write(str(calibration_table_pb))
-    return (path, table_filename)
+    return os.path.join(path, table_filename)
 
 
 def train_write_model(elem, target_prefix):
@@ -104,5 +104,17 @@ def train_write_model(elem, target_prefix):
     ((speed_min, speed_max, speed_segment_num),
      (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha) = train_param
     model = train_model(data_set, layer, train_alpha)
-    return write_table(model, target_dir, speed_min, speed_max, speed_segment_num,
-                       cmd_min, cmd_max, cmd_segment_num, table_filename)
+    return (vehicle, write_table(model, target_dir, speed_min, speed_max, speed_segment_num,
+                                 cmd_min, cmd_max, cmd_segment_num, table_filename))
+
+
+def combine_file(files):
+    brake_file, throttle_file = files
+    file_name = os.path.join(os.path.dirname(brake_file), 'calibration_table.pb.txt')
+    with open(file_name, 'wb') as outfile:
+        for f in files:
+            glog.info('infile: %s' % f)
+            with open(f, "rb") as infile:
+                for line in infile:
+                    outfile.write(line)
+    return file_name

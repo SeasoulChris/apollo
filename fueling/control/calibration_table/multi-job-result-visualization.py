@@ -29,7 +29,7 @@ class MultiJobResultVisualization(BasePipeline):
         BasePipeline.__init__(self, 'Multi_Job_Result_Visualization')
 
     def run_test(self):
-        origin_dir = '/apollo/modules/data/fuel/testdata/control/generated'
+        origin_dir = '/apollo/modules/data/fuel/testdata/control/generated_conf'
         self.run(origin_dir, origin_dir)
 
     def run_prod(self):

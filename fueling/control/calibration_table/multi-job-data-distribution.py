@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import glob
 import os
+import tarfile
 import time
 
 from absl import flags
@@ -45,6 +46,7 @@ class MultiJobDataDistribution(BasePipeline):
 
     def run_test(self):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_conf'
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -67,11 +69,22 @@ class MultiJobDataDistribution(BasePipeline):
 
         # origin_prefix: absolute path
         self.run(hdf5_files, origin_prefix)
-        conf_files = glob.glob(os.path.join(origin_prefix, '*/*.pb.txt'))
+
+        conf_files = glob.glob(os.path.join(target_prefix, '*/calibration_table.pb.txt'))
         # print('conf_files', conf_files)
-        plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
+        plots = glob.glob(os.path.join(target_prefix, '*/*.pdf'))
         attachments = conf_files + plots
-        # print('attachments', attachments)
+        output_filename = os.path.join(origin_prefix, 'result.tar.gz')
+
+        with tarfile.open(output_filename, "w:gz") as tar:
+            for attachment in attachments:
+                # print('attachment: %s' % attachment)
+                # print('os.path.basename(os.path.dirname(attachment))',
+                #       os.path.basename(os.path.dirname(attachment)))
+                # print('os.path.basename(attachment): ', os.path.basename(attachment))
+                vehicle = os.path.basename(os.path.dirname(attachment))
+                file_name = os.path.basename(attachment)
+                tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
 
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
@@ -107,11 +120,17 @@ class MultiJobDataDistribution(BasePipeline):
             title = 'Your vehicle calibration job is done!'
             content = []
             receivers = [partner.email] + email_utils.CONTROL_TEAM
-            # TODO: Add the generated calibration table to the attachments
-            conf_files = glob.glob(os.path.join(origin_prefix, '*/*.pb.txt'))
+            conf_files = glob.glob(os.path.join(origin_prefix, '*/calibration_table.pb.txt'))
             plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
             attachments = conf_files + plots
-            email_utils.send_email_info(title, content, receivers, attachments)
+            # add all file to a tar.gz file
+            output_filename = os.path.join(target_dir, 'result.tar.gz')
+            with tarfile.open(output_filename, "w:gz") as tar:
+                for attachment in attachments:
+                    vehicle = os.path.basename(os.path.dirname(attachment))
+                    file_name = os.path.basename(attachment)
+                    tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
+                email_utils.send_email_info(title, content, receivers, tar)
 
     def run(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)

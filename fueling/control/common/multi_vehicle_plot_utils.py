@@ -48,8 +48,9 @@ def plot_dynamic_model_feature_hist(fearure, result_file):
 
 def plot_feature_hist(elem, target_dir):
     vehicle, feature = elem
-    timestr = time.strftime('%Y%m%d-%H%M%S')
-    result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
+    # timestr = time.strftime('%Y%m%d-%H%M%S')
+    # result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution_%s.pdf' % timestr)
+    result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution.pdf')
     with PdfPages(result_file) as pdf:
         for j in range(DIM_INPUT):
             plt.figure(figsize=(4, 3))
@@ -65,9 +66,11 @@ def gen_plot(elem, target_dir, throttle_or_brake):
     (vehicle, (((speed_min, speed_max, speed_segment_num),
                 (cmd_min, cmd_max, cmd_segment_num), layer, train_alpha), acc_maxtrix)) = elem
 
-    timestr = time.strftime('%Y%m%d-%H%M%S')
+    # timestr = time.strftime('%Y%m%d-%H%M%S')
+    # result_file = os.path.join(
+    #     target_dir, vehicle, (throttle_or_brake + '_result_%s.pdf' % timestr))
     result_file = os.path.join(
-        target_dir, vehicle, (throttle_or_brake + '_result_%s.pdf' % timestr))
+        target_dir, vehicle, (throttle_or_brake + '_result.pdf'))
 
     cmd_array = np.linspace(cmd_min, cmd_max, num=cmd_segment_num)
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)

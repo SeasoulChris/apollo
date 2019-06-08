@@ -59,6 +59,7 @@ class MultiJobTrain(BasePipeline):
         """Run test."""
         # target folder is the same as origin folder for test case
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
+        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_conf'
 
         def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
             return (
@@ -103,7 +104,7 @@ class MultiJobTrain(BasePipeline):
         feature_dir = (throttle_train_files, throttle_test_files,
                        brake_train_files, brake_test_files)
 
-        self.run(feature_dir, origin_vehicle_dir, origin_prefix)
+        self.run(feature_dir, origin_vehicle_dir, target_prefix)
 
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
@@ -208,7 +209,7 @@ class MultiJobTrain(BasePipeline):
             'throttle_model',
             # PairRDD((vehicle, 'throttle'), (data_set, train_param))
             throttle_data.join(throttle_train_param)
-            # RDD(table_filename)
+            # PairRDD(vehicle, table_filename)
             .map(lambda elem: train_utils.train_write_model(elem, target_dir)))
 
         """ brake """
@@ -241,8 +242,14 @@ class MultiJobTrain(BasePipeline):
             'brake_model',
             # PairRDD((vehicle, 'brake'), (data_set, train_param))
             brake_data.join(brake_train_param)
-            # RDD(table_filename)
+            # PairRDD(vehicle, table_filename)
             .map(lambda elem: train_utils.train_write_model(elem, target_dir)))
+        print('brake_model.collect() ', brake_model.collect())
+        print('throttle_model.collect() ', throttle_model.collect())
+
+        model = spark_helper.cache_and_log(
+            'model',
+            brake_model.join(throttle_model).mapValues(train_utils.combine_file))
 
 
 if __name__ == '__main__':
