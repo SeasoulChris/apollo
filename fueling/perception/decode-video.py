@@ -138,7 +138,7 @@ def decode_videos(message_meta):
     """
     target_topic, meta_values = message_meta
     meta_list = sorted(list(meta_values), key=operator.itemgetter(0))
-    glog.info('decoding task {} with {} frames:{}'.format(target_topic, len(meta_list), meta_list))
+    glog.info('decoding task {} with {} frames'.format(target_topic, len(meta_list)))
     if not meta_list:
         glog.error('no video frames for target dir and topic {}'.format(target_topic))
         return
@@ -275,4 +275,4 @@ def mark_complete(task_path):
         os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
 
 if __name__ == '__main__':
-    DecodeVideoPipeline().run_test()
+    DecodeVideoPipeline().main()

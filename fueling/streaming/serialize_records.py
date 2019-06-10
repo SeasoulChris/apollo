@@ -59,4 +59,4 @@ class DeserializeRecordsPipeline(BasePipeline):
         records_rdd.map(lambda record: serialize_utils.parse_record(record, self._root_dir)).count()
 
 if __name__ == '__main__':
-    DeserializeRecordsPipeline().run_test()
+    DeserializeRecordsPipeline().main()
