@@ -79,6 +79,8 @@ def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
     control_mtx = np.array([extract_control_data_from_msg(msg) for msg in control_msgs])
     glog.info('The original chassis msgs size is: {} and original control msgs size is: {}'
               .format(chassis_mtx.shape[0], control_mtx.shape[0]))
+    if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0):
+        return np.take(control_mtx, [], axis=0)
     driving_condition = (chassis_mtx[:, MODE_IDX['driving_mode']] == driving_mode)
     gear_condition =  (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
     for gear_idx in range(1, len(gear_position)):
@@ -105,7 +107,9 @@ def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
     chassis_mtx_refiltered = np.take(chassis_mtx_filtered, chassis_idx_refiltered, axis=0)
     glog.info('The filterd chassis msgs size is: {} and filtered control msgs size is: {}'
               .format(chassis_mtx_refiltered.shape[0], control_mtx_filtered.shape[0]))
-    if (chassis_mtx_refiltered.shape[1] > MODE_IDX['throttle_chassis'] and
+    if (chassis_mtx_refiltered.shape[0] > 0 and
+        control_mtx_filtered.shape[0] > 0 and
+        chassis_mtx_refiltered.shape[1] > MODE_IDX['throttle_chassis'] and
         chassis_mtx_refiltered.shape[1] > MODE_IDX['brake_chassis']):
         grading_mtx = np.hstack((control_mtx_filtered,
                                  chassis_mtx_refiltered[:, [MODE_IDX['throttle_chassis'],

@@ -433,12 +433,12 @@ def output_gradings(target_grading):
                                        .format(profiling_conf.vehicle_type,
                                                profiling_conf.controller_type))
     glog.info('writing grading output {} to {}'.format(grading, grading_output_path))
-    with open(grading_output_path, 'w') as grading_file:
-        grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} \n'
-                           .format('Grading Items', 'Grading Values', 'Sampling Size'))
-        if not grading:
-            glog.warn('No grading results written to {}'.format(grading_output_path))
-        else:
+    if not grading:
+        glog.warn('No grading results written to {}'.format(grading_output_path))
+    else:
+        with open(grading_output_path, 'w') as grading_file:
+            grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} \n'
+                               .format('Grading Items', 'Grading Values', 'Sampling Size'))
             for name, value in grading._asdict().iteritems():
                 if not value:
                     glog.warn('grading value for {} is None'.format(name))
