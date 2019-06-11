@@ -6,7 +6,7 @@ INPUT_DATA_PATH=$3
 
 export PATH=/usr/local/miniconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-FUELING="/mnt/bos/modules/data/jobs/deploy/20190531-133701_fueling.zip"
+FUELING="/mnt/bos/modules/data/jobs/deploy/20190610-191135_fueling.zip"
 SUBMITER="/apollo/modules/data/fuel/tools/submit-job-to-k8s.sh --fueling ${FUELING} ${BASH_ARGS}"
 
 # Feature extraction.

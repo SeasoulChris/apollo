@@ -13,5 +13,5 @@ zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
 # Upload new package
 ./apps/local/bos_fstool -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}"
 # Update usage
-sed -i "s/^FUELING=.*/FUELING=\"${REMOTE_FUELING_PKG}\"/g" \
+sed -i "s|^FUELING=.*|FUELING=\"/mnt/bos/${REMOTE_FUELING_PKG}\"|g" \
     ./apps/lambda/bae-proxy/vehicle_calibration.sh
