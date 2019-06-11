@@ -4,10 +4,10 @@
 import collections
 
 
-Partner = collections.namedtuple('Partner', ['name', 'email', 'phone'])
+Partner = collections.namedtuple('Partner', ['name', 'email'])
 
 partners = {
-    'apollo': Partner(name='Apollo', email='xiaoxiangquan@baidu.com', phone='+16502792727'),
-    'apollo-evangelist': Partner(name='Evangelist', email=None, phone=None),
-    'udelv2019': Partner(name='Udelv', email=None, phone=None),
+    'apollo': Partner(name='Apollo', email='xiaoxiangquan@baidu.com'),
+    'apollo-evangelist': Partner(name='Evangelist', email='apollo-evangelist@baidu.com'),
+    'udelv2019': Partner(name='Udelv', email=None),
 }

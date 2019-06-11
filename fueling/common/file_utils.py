@@ -10,7 +10,7 @@ import colored_glog as glog
 def makedirs(dir_path):
     """Make directories recursively."""
     if os.path.exists(dir_path):
-        return
+        return dir_path
     try:
         os.makedirs(dir_path)
     except OSError as error:
