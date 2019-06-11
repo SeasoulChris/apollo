@@ -42,6 +42,20 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
+def clean_data(data, seq):
+    """clean the data until the distribution matches the given standard"""
+    length = data.shape[0]
+    for i in range(9):
+        idx_h = seq[int(length * (1 - 0.05 * i) - 1)]
+        idx_l = seq[int(length * (0.05 * i))]
+        scope = data[idx_h] - data[idx_l]
+        idx_h_partial = seq[int(length * (1-0.05 * (i + 1)) - 1)]
+        idx_l_partial = seq[int(length * (0.05 * (i + 1)))]
+        scope_partial = data[idx_h_partial] - data[idx_l_partial]
+        if (scope <= 2 * scope_partial):
+            return [0.05 * i, 1 - 0.05 * i]
+    return [0.05 * i, 1 - 0.05 * i]
+
 def plot_h5_features_hist(data_rdd):
     """plot the histogram of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
@@ -64,34 +78,38 @@ def plot_h5_features_hist(data_rdd):
                           .format(i, FEATURE_NAMES[i]))
                 length = data.shape[0]
                 seq = np.argsort(data[:, i])
-                scope = data[seq[length-1], i] - data[seq[0], i]
-                scope_90 = data[seq[int(length*0.95)], i] - data[seq[int(length*0.05)], i]
+                scope = data[seq[length - 1], i] - data[seq[0], i]
+                scope_90 = data[seq[int(length * 0.95 - 1)], i] - data[seq[int(length * 0.05)], i]
                 glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
                           .format(scope, scope_90))
-                if scope <= 2*scope_90:
+                bounds = clean_data(data[:, i], seq)
+                if (bounds[0] == 0 and bounds[1] == 1):
                     plt.figure(figsize=(4, 3))
                     plt.hist(data[:, i], bins='auto')
                     plt.xlabel(FEATURE_NAMES[i])
                     plt.ylabel('Sample length')
                     plt.title("Histogram of " + FEATURE_NAMES[i])
                     xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
                              'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[length-1], i], data[seq[0], i]),
+                             .format(data[seq[length - 1], i], data[seq[0], i]),
                              color='red', fontsize=8)
                     plt.tight_layout()
                     pdf.savefig()
                     plt.close()
                 else:
                     plt.figure(figsize=(4, 3))
-                    plt.hist(data[seq[int(length*0.05):int(length*0.95)], i], bins='auto')
+                    plt.hist(data[seq[int(length * bounds[0]):int(length * bounds[1] - 1)], i],
+                             bins='auto')
                     plt.xlabel(FEATURE_NAMES[i])
                     plt.ylabel('Sample length')
-                    plt.title("Histogram of " + FEATURE_NAMES[i] + " (90% Data)")
+                    plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
+                              + str(int(round((bounds[1] - bounds[0]) * 100))) + "% Data)")
                     xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
                              'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[int(length*0.95)], i], data[seq[int(length*0.05)], i]),
+                             .format(data[seq[int(length * bounds[1] - 1)], i],
+                                     data[seq[int(length * bounds[0])], i]),
                              color='red', fontsize=8)
                     plt.tight_layout()
                     pdf.savefig()
@@ -102,9 +120,9 @@ def plot_h5_features_hist(data_rdd):
                     plt.xlabel('Sample Number')
                     plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
                     xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin*0.9+xmax*0.1, ymin*0.1+ymax*0.9,
+                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
                              'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[length-1], i], data[seq[0], i]),
+                             .format(data[seq[length - 1], i], data[seq[0], i]),
                              color='red', fontsize=8)
                     plt.tight_layout()
                     pdf.savefig()
