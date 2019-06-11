@@ -124,12 +124,11 @@ def sanity_check(input_folder, email_receivers=None):
         glog.info("%s Passed sanity check." % input_folder)
         return True
 
-    glog.error(err_msg)
-
     if email_receivers:
         title = 'Error occured during data sanity check'
         email_utils.send_email_error(title, {'Error': err_msg}, email_receivers)
 
+    glog.error(err_msg)
     return False
 
 
