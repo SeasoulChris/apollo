@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import collections
 import os
 import math
 
@@ -8,6 +9,7 @@ import google.protobuf.text_format as text_format
 from cyber_py.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
+import fueling.common.email_utils as email_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
@@ -108,22 +110,27 @@ def missing_message_data(path, channels=CHANNELS):
     return False
 
 
-def sanity_check(input_folder):
+def sanity_check(input_folder, email_receivers=None):
+    err_msg = None
     if missing_file(input_folder):
-        glog.error("One or more files are missing in %s" % input_folder)
-        return False
+        err_msg = "One or more files are missing in %s" % input_folder
     elif parse_error(input_folder):
-        glog.error("Confige file cannot be parsed in %s" % input_folder)
-        return False
+        err_msg = "Confige file cannot be parsed in %s" % input_folder
     elif missing_field(input_folder):
-        glog.error("One or more field is missing in Confige file %s" % input_folder)
-        return False
+        err_msg = "One or more field is missing in Confige file %s" % input_folder
     elif missing_message_data(input_folder):
-        glog.error("Messages are missing in records of %s" % input_folder)
-        return False
+        err_msg = "Messages are missing in records of %s" % input_folder
     else:
         glog.info("%s Passed sanity check." % input_folder)
         return True
+
+    glog.error(err_msg)
+
+    if email_receivers:
+        title = 'Error occured during data sanity check'
+        email_utils.send_email_error(title, {'Error': err_msg}, email_receivers)
+
+    return False
 
 
 # if __name__ == '__main__':

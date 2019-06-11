@@ -12,6 +12,7 @@ import pyspark_utils.op as spark_op
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
@@ -167,7 +168,11 @@ class MultiJobFeatureExtraction(BasePipeline):
         glog.info("target_prefix: %s" % target_prefix)
 
         # # add sanity check
-        # if not sanity_check(origin_dir):
+        partner = partners.get(job_owner)
+        email_receivers = email_utils.CONTROL_TEAM[:]
+        if partner:
+            email_receivers.append(partner.email)
+        # if not sanity_check(origin_dir, email_receivers):
         #     return
 
         """ vehicles """
