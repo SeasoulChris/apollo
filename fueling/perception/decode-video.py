@@ -3,7 +3,7 @@
 """This script generates video files from records and decode them into images"""
 
 import ast
-import collection
+import collections
 import glob
 import operator
 import os
@@ -40,7 +40,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/apollo'
+        root_dir = '/mnt/kawai/'
         video_dir = 'modules/perception/videos/decoded'
         decoded_records_dir = 'decoded_records'
 
@@ -51,7 +51,7 @@ class DecodeVideoPipeline(BasePipeline):
 
         glog.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
-        mark_decoded_dir_complete(todo_tasks, decoded_records_dir, root_dir)
+        mark_complete_and_send_summary(todo_tasks, decoded_records_dir, root_dir)
 
         glog.info('Video Decoding: All Done, TEST.')
 
