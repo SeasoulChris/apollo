@@ -6,8 +6,7 @@ import time
 
 from absl import flags
 import colored_glog as glog
-import matplotlib
-matplotlib.use('Agg')
+import matplotlib; matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -115,22 +114,26 @@ class MultiJobDataDistribution(BasePipeline):
 
         target_dir = bos_client.abs_path(target_prefix)
         self.run(hdf5_files, target_dir)
+
+        receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM
         partner = partners.get(job_owner)
-        if partner and partner.email:
-            title = 'Your vehicle calibration job is done!'
-            content = []
-            receivers = [partner.email] + email_utils.CONTROL_TEAM
-            conf_files = glob.glob(os.path.join(origin_prefix, '*/calibration_table.pb.txt'))
-            plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
-            attachments = conf_files + plots
-            # add all file to a tar.gz file
+        if partner:
+            receivers.append(partner.email)
+        title = 'Your vehicle calibration job is done!'
+        content = ''
+        conf_files = glob.glob(os.path.join(origin_prefix, '*/calibration_table.pb.txt'))
+        plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
+        attachments = conf_files + plots
+        # add all file to a tar.gz file
+        if attachments:
             output_filename = os.path.join(target_dir, 'result.tar.gz')
             with tarfile.open(output_filename, "w:gz") as tar:
                 for attachment in attachments:
                     vehicle = os.path.basename(os.path.dirname(attachment))
                     file_name = os.path.basename(attachment)
                     tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
-                email_utils.send_email_info(title, content, receivers, tar)
+            attachments = [output_filename]
+        email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)

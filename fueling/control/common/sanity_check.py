@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import cgi
 import collections
 import os
 import math
@@ -125,8 +126,8 @@ def sanity_check(input_folder, email_receivers=None):
         return True
 
     if email_receivers:
-        title = 'Error occured during data sanity check'
-        email_utils.send_email_error(title, {'Error': err_msg}, email_receivers)
+        title = 'Error occured during vehicle-calibration data sanity check'
+        email_utils.send_email_error(title, cgi.escape(err_msg), email_receivers)
 
     glog.error(err_msg)
     return False

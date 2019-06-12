@@ -168,9 +168,9 @@ class MultiJobFeatureExtraction(BasePipeline):
         glog.info("origin_dir: %s" % origin_dir)
         glog.info("target_prefix: %s" % target_prefix)
 
-        # # add sanity check
+        # Add sanity check
         partner = partners.get(job_owner)
-        email_receivers = email_utils.CONTROL_TEAM[:]
+        email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM
         if partner:
             email_receivers.append(partner.email)
         if not sanity_check(origin_dir, email_receivers):

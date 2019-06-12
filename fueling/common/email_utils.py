@@ -30,21 +30,21 @@ PREDICTION_TEAM = [
 ]
 
 
-def send_email_info(title, content, receivers=None, attachments=[]):
+def send_email_info(title, content, receivers, attachments=[]):
     """Send email with normal information"""
     send_email(title, 'blue', content, receivers, attachments)
 
-def send_email_warn(title, content, receivers=None, attachments=[]):
+def send_email_warn(title, content, receivers, attachments=[]):
     """Send email with warning information"""
     send_email(title, 'yellow', content, receivers, attachments)
 
-def send_email_error(title, content, receivers=None, attachments=[]):
+def send_email_error(title, content, receivers, attachments=[]):
     """Send email with error information"""
     send_email(title, 'red', content, receivers, attachments)
 
-def send_email(title, title_color, content, receivers=None, attachments=[]):
+def send_email(title, title_color, content, receivers, attachments=[]):
     """
-    Send emails in the format of HTML for notification of job status, statistic and etc
+    Send email in the format of HTML for notification of job status, statistic and etc
     Parameters:
     1. title, for example 'Control Feature Extraction Job Processing'
     2. title_color, got from the interface functions, like send_email_info etc
@@ -61,6 +61,7 @@ def send_email(title, title_color, content, receivers=None, attachments=[]):
            'Failed': 2000,
            'Total': 2100
        )
+       3). a string.
     4. receivers, recepients of the notification. Default should be a group account, but can also
        be specified explicitly.
     5. attachments, attachment files list.
@@ -69,9 +70,14 @@ def send_email(title, title_color, content, receivers=None, attachments=[]):
     receivers = ';'.join(receivers)
 
     base64_attachments = {}
+    attachment_size = 0
     for attachment in attachments:
         with open(attachment, 'rb') as fin:
-            base64_attachments[os.path.basename(attachment)] = binascii.b2a_base64(fin.read())
+            base64_content = binascii.b2a_base64(fin.read())
+            base64_attachments[os.path.basename(attachment)] = base64_content
+            attachment_size += len(base64_content)
+    glog.info('Attached {} files with {} bytes of base64 content'.format(len(base64_attachments),
+                                                                         attachment_size))
 
     request_json = {
         'Pin': BAE_PROXY_PIN,
@@ -89,18 +95,16 @@ def send_email(title, title_color, content, receivers=None, attachments=[]):
 
 def get_html_content(title, title_color, content):
     """Help function to constuct HTML message body"""
+    if not content:
+        return ''
+    if isinstance(content, str):
+        return '<html><body><pre>%s</pre></body></html>' % content
+
     header_row_prefix = '<thead>\n<tr>\n'
     header_row_suffix = '</tr>\n</thead>\n'
     header_col_prefix = '<th style="text-align:center;font-family:Arial;font-size:18px;">'
     header_col_suffix = '</th>\n'
-    row_prefix = '<tr>\n'
-    row_suffix = '</tr>\n'
-    col_prefix = '<td style="text-align:left;font-family:Arial;font-size:16px;">'
-    col_suffix = '</td>\n'
     header = None
-    html_content = ''
-    if not content:
-        return html_content
     if isinstance(content, dict):
         rows = content.items()
     else:
@@ -108,17 +112,19 @@ def get_html_content(title, title_color, content):
         header = ['{}{}{}'.format(header_col_prefix, named_tuple, header_col_suffix)
                   for named_tuple in content[0]._fields]
         header = '{}{}{}'.format(header_row_prefix, '\n'.join(header), header_row_suffix)
+
+    row_prefix = '<tr>\n'
+    row_suffix = '</tr>\n'
+    col_prefix = '<td style="text-align:left;font-family:Arial;font-size:16px;">'
+    col_suffix = '</td>\n'
+    html_content = ''
     for row in rows:
         html_content += row_prefix
         for col in row:
             html_content += '{}{}{}'.format(col_prefix, col, col_suffix)
         html_content += row_suffix
-    # TODO: we should consider loading template files from storage if there are more than one
-    # in the future.  And a better idea might be loading html directly from web application
-    # frontend so we dont have to put together all the pieces here
     return '''
             <html>
-            <head></head>
             <body>
             <div id="container" align="left" style="width:800px">
               <h1 align="center" style="color:%(title_color)s;">%(title)s</h1>
