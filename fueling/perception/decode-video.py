@@ -190,7 +190,7 @@ def replace_images(target_record, root_dir, decoded_records_dir):
         return
     if os.path.exists(dst_record):
         dst_header = record_utils.read_record_header(dst_record)
-        if dst_header.is_complete:
+        if dst_header and dst_header.is_complete:
             glog.info('destination record exists and is complete, do nothing'.format(dst_record))
             return
     glog.info("replacing frames for {} to {}".format(target_record, dst_record))
