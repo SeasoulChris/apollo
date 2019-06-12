@@ -17,6 +17,7 @@ from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
 import fueling.common.bos_client as bos_client
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
@@ -172,8 +173,8 @@ class MultiJobFeatureExtraction(BasePipeline):
         email_receivers = email_utils.CONTROL_TEAM[:]
         if partner:
             email_receivers.append(partner.email)
-        # if not sanity_check(origin_dir, email_receivers):
-        #     return
+        if not sanity_check(origin_dir, email_receivers):
+            return
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(
