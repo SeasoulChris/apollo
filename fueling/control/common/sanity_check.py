@@ -123,6 +123,10 @@ def sanity_check(input_folder, email_receivers=None):
         err_msg = "Messages are missing in records of %s" % input_folder
     else:
         glog.info("%s Passed sanity check." % input_folder)
+        if email_receivers:
+            title = 'Vehicle-calibration data sanity check passed'
+            content = 'We are processing you job now. Please expect another email with results.'
+            email_utils.send_email_info(title, content, email_receivers)
         return True
 
     if email_receivers:
