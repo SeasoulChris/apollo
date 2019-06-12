@@ -75,5 +75,5 @@ class EmailService(Resource):
             attachment.set_payload(file_content)
             attachment.add_header('Content-Disposition', 'attachment', filename=filename)
             message.attach(attachment)
-        smtp.sendmail(from_addr, receivers, message.as_string())
+        smtp.sendmail(from_addr, receivers.split(';'), message.as_string())
         smtp.quit()
