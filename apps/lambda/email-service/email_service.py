@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
+from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import binascii
+import email.encoders
 import httplib
+import mimetypes
 import os
 import smtplib
 import sys
@@ -72,8 +76,20 @@ class EmailService(Resource):
         message['From'] = from_addr
         message['To'] = receivers
         for filename, file_content in attachments.items():
-            attachment = MIMEBase('application', 'octet-stream')
-            attachment.set_payload(file_content)
+            attachment = None
+            # Create attachment with proper MIME type.
+            ctype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            maintype, subtype = ctype.split('/', 1)
+            if maintype == 'text':
+                attachment = MIMEText(file_content, _subtype=subtype)
+            elif maintype == 'image':
+                attachment = MIMEImage(file_content, _subtype=subtype)
+            elif maintype == 'audio':
+                attachment = MIMEAudio(file_content, _subtype=subtype)
+            else:
+                attachment = MIMEBase(maintype, subtype)
+                attachment.set_payload(file_content)
+            email.encoders.encode_base64(attachment)
             attachment.add_header('Content-Disposition', 'attachment', filename=filename)
             message.attach(attachment)
         smtp.sendmail(from_addr, receivers.split(';'), message.as_string())
