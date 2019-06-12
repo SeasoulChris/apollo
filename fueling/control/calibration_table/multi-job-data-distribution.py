@@ -6,7 +6,8 @@ import time
 
 from absl import flags
 import colored_glog as glog
-import matplotlib; matplotlib.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -132,7 +133,9 @@ class MultiJobDataDistribution(BasePipeline):
                     vehicle = os.path.basename(os.path.dirname(attachment))
                     file_name = os.path.basename(attachment)
                     tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
+            glog.info('output_filename: %s' % output_filename)
             attachments = [output_filename]
+            glog.info('attachments: %s' % attachments)
         email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, hdf5_file, target_dir):
