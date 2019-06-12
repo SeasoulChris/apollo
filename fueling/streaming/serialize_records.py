@@ -8,7 +8,6 @@ from pyspark.streaming import StreamingContext
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.streaming.streaming_listener import DriverStreamingListener
 import fueling.common.bos_client as bos_client
 import fueling.streaming.serialize_utils as serialize_utils
 import fueling.streaming.streaming_utils as streaming_utils
@@ -36,7 +35,6 @@ class DeserializeRecordsPipeline(BasePipeline):
     def run(self):
         """Run streaming process"""
         stream_context = StreamingContext(self.context(), 30)
-        stream_context.addStreamingListener(DriverStreamingListener())
 
         record_path = streaming_utils.get_streaming_records(self._root_dir)
         glog.info('Streaming monitors at {}'.format(record_path))

@@ -18,7 +18,8 @@ def build_file_handles(topic_file_paths):
     """Build a map between topic file and its handle"""
     handles = {}
     for topic_file in topic_file_paths:
-        handles[os.path.basename(topic_file)] = open(topic_file, 'w+')
+        func = lambda file_path: open(file_path, 'w+')
+        handles[os.path.basename(topic_file)] = streaming_utils.retry(func, [topic_file], 3)
     return handles
 
 def build_meta_with_fields(fields, message):
@@ -74,9 +75,7 @@ def parse_record(record_file, root_dir):
                 header_time, meta = build_meta_with_fields(fields, message)
                 topic_file_handles[renamed_topic].write('{}\n'.format(meta))
                 streaming_utils.write_message_obj(record_dir, renamed_topic, message, header_time)
-        glog.info('completed serializing record file {}, now upload images'.format(record_file))
-        streaming_utils.upload_images(root_dir, record_dir, record_file)
-        glog.info('completed everything about {}, and marking complete'.format(record_file))
+        glog.info('completed serializing record file {}.'.format(record_file))
         streaming_utils.write_to_file(os.path.join(record_dir, 'COMPLETE'),
                                       'w',
                                       '{:.6f}'.format(time.time()))

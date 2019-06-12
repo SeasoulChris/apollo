@@ -9,6 +9,9 @@ import pickle
 import re
 import shutil
 import stat
+import time
+
+import colored_glog as glog
 
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -186,16 +189,6 @@ def write_message_obj(record_dir, renamed_topic, py_message, header_time):
         else:
             pickle.dump(py_message.message, message_file, pickle.HIGHEST_PROTOCOL)
 
-def upload_images(root_dir, record_dir, record_file):
-    """Upload binary images to streaming image folder"""
-    image_path = record_to_stream_path(record_file, root_dir, STREAMING_IMAGE)
-    file_utils.makedirs(image_path)
-    for message_name in os.listdir(record_dir):
-        if message_name.find('compressed') != -1:
-            shutil.copy2(
-                os.path.join(record_dir, message_name),
-                os.path.join(image_path, message_name))
-
 def build_meta_from_line(root_dir, record_file, topic, line):
     """Parse the line in topic file and form a tuple"""
     timestamp = None
@@ -210,3 +203,18 @@ def build_meta_from_line(root_dir, record_file, topic, line):
     data_dir = record_to_stream_path(record_file, root_dir, STREAMING_DATA)
     objpath = os.path.join(data_dir, get_message_id(timestamp, topic))
     return message_meta(topic=topic, timestamp=timestamp, fields=fields, objpath=objpath)
+
+def retry(func, params, retry_times):
+    """A wrapper to retry calling given function for specified times"""
+    while retry_times > 0:
+        try:
+            ret = func(*params)
+            return ret
+        except Exception as expn:
+            error_msg = 'func failed with error {}. params: {}'.format(expn, params)
+            glog.error(error_msg)
+            retry_times -= 1
+            if retry_times <= 0:
+                raise Exception(error_msg)
+            time.sleep(1)
+

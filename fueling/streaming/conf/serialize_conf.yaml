@@ -50,8 +50,3 @@
   fields:
     - current_vehicle
 
----
-  name: 'chasis'
-  topic: '/apollo/canbus/chassis'
-  fields:
-    - header.timestamp_sec

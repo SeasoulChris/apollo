@@ -3,6 +3,7 @@
 """This script generates video files from records and decode them into images"""
 
 import ast
+import collection
 import glob
 import operator
 import os
@@ -17,7 +18,9 @@ from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels that have videos we need to decode
@@ -65,7 +68,7 @@ class DecodeVideoPipeline(BasePipeline):
 
         glog.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
-        mark_decoded_dir_complete(todo_tasks, decoded_records_dir, root_dir)
+        mark_complete_and_send_summary(todo_tasks, decoded_records_dir, root_dir)
 
         glog.info('Video Decoding: All Done, PROD.')
 
@@ -98,6 +101,7 @@ class DecodeVideoPipeline(BasePipeline):
          .foreach(decode_videos))
 
         # Replace video frames with the decoded images back to original records
+        glog.info('Decoding done, now replacing original records')
         # PairRDD(target_dir, record)
         (target_records
          .foreach(lambda target_record:
@@ -146,6 +150,12 @@ def decode_videos(message_meta):
     file_utils.makedirs(target_dir)
     # Use the first message name in the group as the current group name
     cur_group_name = streaming_utils.get_message_id(meta_list[0][0], topic)
+    image_output_path = os.path.join(target_dir, cur_group_name)
+    # Check COMPLETE in a finer granular group level
+    complete_marker = os.path.join(image_output_path, 'COMPLETE')
+    if os.path.exists(complete_marker):
+        glog.info('images are already converted, {}'.format(image_output_path))
+        return
     h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(cur_group_name))
     glog.info('current video file path: {}'.format(h265_video_file_path))
     with open(h265_video_file_path, 'wb') as h265_video_file:
@@ -153,7 +163,6 @@ def decode_videos(message_meta):
             with open(video_frame_bin_path, 'rb') as video_frame_bin:
                 h265_video_file.write(video_frame_bin.read())
     # Invoke video2jpg binary executable
-    image_output_path = os.path.join(target_dir, cur_group_name)
     file_utils.makedirs(image_output_path)
     video_decoder_path = '/apollo/bazel-bin/modules/drivers/video/tools/decode_video/video2jpg'
     return_code = os.system('{} --input_video={} --output_dir={}'.format(
@@ -169,6 +178,7 @@ def decode_videos(message_meta):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
                   os.path.join(image_output_path,
                                streaming_utils.get_message_id(meta_list[idx][0], topic)))
+    file_utils.touch(complete_marker)
     glog.info('done with group {}, image path: {}'.format(cur_group_name, image_output_path))
 
 def replace_images(target_record, root_dir, decoded_records_dir):
@@ -178,11 +188,16 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     if os.path.exists(os.path.join(os.path.dirname(dst_record), 'COMPLETE')):
         glog.info('target already replaced {}, do nothing'.format(dst_record))
         return
+    if os.path.exists(dst_record):
+        dst_header = record_utils.read_record_header(dst_record)
+        if dst_header.is_complete:
+            glog.info('destination record exists and is complete, do nothing'.format(dst_record))
+            return
     glog.info("replacing frames for {} to {}".format(target_record, dst_record))
     reader = RecordReader(record)
     file_utils.makedirs(os.path.dirname(dst_record))
     writer = RecordWriter(0, 0)
-    writer.open(dst_record)
+    streaming_utils.retry(lambda record: writer.open(record), [dst_record], 3)
     topic_descs = {}
     counter = 0
     for message in reader.read_messages():
@@ -195,7 +210,7 @@ def replace_images(target_record, root_dir, decoded_records_dir):
                     message.topic, message.timestamp, record))
                 continue
         counter += 1
-        if counter % 100 == 0:
+        if counter % 1000 == 0:
             glog.info('writing {} th message to record {}'.format(counter, dst_record))
         writer.write_message(message.topic, message_content, message.timestamp)
         if message.topic not in topic_descs:
@@ -256,18 +271,30 @@ def mark_video_complete(todo_tasks, video_dir, root_dir):
             continue
         mark_complete(task_path)
 
-def mark_decoded_dir_complete(todo_tasks, decoded_dir, root_dir):
+def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
     """Create COMPLETE file to mark the decoded dir part done"""
+    SummaryTuple = collections.namedtuple('Summary',
+                                          ['Source', 'SourceRecords', 'Target', 'TargetRecords'])
+    email_title = 'Decode Video Results'
+    email_message = []
+    receivers = email_utils.DATA_TEAM
     for task in todo_tasks:
         record = next((record for record in streaming_utils.list_records_for_task(task)), None)
         if not record:
             glog.warn('no record found for task: {}'.format(task))
             continue
-        task_path = os.path.dirname(locate_target_decoded_record(root_dir, decoded_dir, record))
-        if not os.path.exists(task_path):
-            glog.warn('no decoded dir for task: {}'.format(task_path))
+        source_task = os.path.dirname(record)
+        target_task = os.path.dirname(locate_target_decoded_record(root_dir, decoded_dir, record))
+        if not os.path.exists(target_task):
+            glog.warn('no decoded dir for task: {}'.format(target_task))
             continue
-        mark_complete(task_path)
+        mark_complete(target_task)
+        email_message.append(SummaryTuple(
+            Source=source_task,
+            SourceRecords=len(os.listdir(source_task)),
+            Target=target_task,
+            TargetRecords=len(os.listdir(target_task))))
+    email_utils.send_email_info(email_title, email_message, receivers)
 
 def mark_complete(task_path):
     """Create COMPLETE file to mark the job done"""
