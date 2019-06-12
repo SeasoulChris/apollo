@@ -37,6 +37,7 @@ class EmailService(Resource):
         attachments = {filename: binascii.a2b_base64(base64_content)
                        for filename, base64_content in request.get('Attachments', {}).items()}
         try:
+            sys.stderr.write('Request={}\n'.format(request))
             self.send_outlook_email(subject, content, receivers, attachments)
         except Exception as e:
             sys.stderr.write('Request={}, Exception={}\n'.format(request, e))
@@ -63,7 +64,7 @@ class EmailService(Resource):
             smtp.starttls()
             smtp.login(from_addr, password)
         except Exception as e:
-            sys.stderr.write('accessing email server failed with error: {}\n'.format(ex))
+            sys.stderr.write('Accessing email server failed with error: {}\n'.format(e))
             return
         message = MIMEMultipart('alternative')
         message.attach(MIMEText(content, 'html'))
