@@ -125,7 +125,7 @@ def sanity_check(input_folder, email_receivers=None):
         glog.info("%s Passed sanity check." % input_folder)
         if email_receivers:
             title = 'Vehicle-calibration data sanity check passed'
-            content = 'We are processing you job now. Please expect another email with results.'
+            content = 'We are processing your job now. Please expect another email with results.'
             email_utils.send_email_info(title, content, email_receivers)
         return True
 
