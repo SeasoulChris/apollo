@@ -76,8 +76,8 @@ def send_email(title, title_color, content, receivers, attachments=[]):
             base64_content = binascii.b2a_base64(fin.read())
             base64_attachments[os.path.basename(attachment)] = base64_content
             attachment_size += len(base64_content)
-    glog.info('Attached {} files with {} bytes of base64 content'.format(len(base64_attachments),
-                                                                         attachment_size))
+    glog.info('Attached {} files with {} bytes of base64 content from {}'.format(
+        len(base64_attachments), attachment_size, attachments))
 
     request_json = {
         'Pin': BAE_PROXY_PIN,
