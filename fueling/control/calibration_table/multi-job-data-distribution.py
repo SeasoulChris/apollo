@@ -122,17 +122,29 @@ class MultiJobDataDistribution(BasePipeline):
             receivers.append(partner.email)
         title = 'Your vehicle calibration job is done!'
         content = ''
-        conf_files = glob.glob(os.path.join(origin_prefix, '*/calibration_table.pb.txt'))
-        plots = glob.glob(os.path.join(origin_prefix, '*/*.pdf'))
+        origin_dir = bos_client.abs_path(origin_prefix)
+        conf_files = glob.glob(os.path.join(target_dir, '*/calibration_table.pb.txt'))
+        plots = glob.glob(os.path.join(target_dir, '*/*.pdf'))
         attachments = conf_files + plots
+        glog.info('conf_files: %s' % conf_files)
+        glog.info('plots: %s' % plots)
+        glog.info('attachments before tar: %s' % attachments)
         # add all file to a tar.gz file
         if attachments:
             output_filename = os.path.join(target_dir, 'result.tar.gz')
-            with tarfile.open(output_filename, "w:gz") as tar:
-                for attachment in attachments:
-                    vehicle = os.path.basename(os.path.dirname(attachment))
-                    file_name = os.path.basename(attachment)
-                    tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
+            # with tarfile.open(output_filename, "w:gz") as tar:
+            tar = tarfile.open(output_filename, 'w:gz')
+            for attachment in attachments:
+                vehicle = os.path.basename(os.path.dirname(attachment))
+                file_name = os.path.basename(attachment)
+                glog.info('add_to_tar_attachment: %s' % attachment)
+                glog.info('add_to_tar_vehicle: %s' % vehicle)
+                glog.info('add_to_tar_file_name: %s' % file_name)
+                tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
+            tar.close()
+            tar = tarfile.open(output_filename, 'r:gz')
+            tar.extractall(target_dir)
+            tar.close()
             glog.info('output_filename: %s' % output_filename)
             attachments = [output_filename]
             glog.info('attachments: %s' % attachments)
