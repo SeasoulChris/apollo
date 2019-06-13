@@ -40,7 +40,7 @@ class DecodeVideoPipeline(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        root_dir = '/mnt/kawai/'
+        root_dir = '/apollo'
         video_dir = 'modules/perception/videos/decoded'
         decoded_records_dir = 'decoded_records'
 
@@ -198,12 +198,13 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     file_utils.makedirs(os.path.dirname(dst_record))
     writer = RecordWriter(0, 0)
     streaming_utils.retry(lambda record: writer.open(record), [dst_record], 3)
+    message_ids = get_all_message_ids(video_dir)
     topic_descs = {}
     counter = 0
     for message in reader.read_messages():
         message_content = message.message
         if message.topic in VIDEO_CHANNELS.values():
-            message_content = get_image_back(video_dir, message)
+            message_content = get_image_back(video_dir, message, message_ids)
             if not message_content:
                 # For any reason it failed to convert, just ignore the message
                 glog.error('failed to convert message {}-{} in record {}'.format(
@@ -218,16 +219,16 @@ def replace_images(target_record, root_dir, decoded_records_dir):
             writer.write_channel(message.topic, message.data_type, topic_descs[message.topic])
     writer.close()
 
-def get_image_back(video_dir, message):
+def get_image_back(video_dir, message, message_ids):
     """Actually change the content of message from video bytes to image bytes"""
     message_proto = CompressedImage()
     message_proto.ParseFromString(message.message)
     message_id = streaming_utils.get_message_id(
         int(round(message_proto.header.timestamp_sec * (10 ** 9))), message.topic)
-    message_path = find_message_in_video_dir(video_dir, message_id)
-    if not message_path:
+    if message_id not in message_ids:
         glog.error('message {} not found in video dir {}'.format(message_id, video_dir))
         return None
+    message_path = message_ids[message_id]
     img_bin = cv2.imread(message_path)
     # Check by using NoneType explicitly to avoid ambitiousness
     if img_bin is None:
@@ -242,13 +243,16 @@ def get_image_back(video_dir, message):
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
     return message_proto.SerializeToString()
 
-def find_message_in_video_dir(target_dir, message_id):
-    """Walk through video dir to find the corresponding decoded message"""
-    for (root, _, files) in os.walk(target_dir):
-        target_file = next((end_file for end_file in files if end_file == message_id), None)
-        if target_file:
-            return os.path.join(root, target_file)
-    return None
+def get_all_message_ids(target_dir):
+    """Get the mapping of all messages and their paths"""
+    message_ids = {}
+    for group in os.listdir(target_dir):
+        group_dir = os.path.join(target_dir, group)
+        if not os.path.isdir(group_dir):
+            continue
+        for image in os.listdir(group_dir):
+            message_ids[image] = os.path.join(group_dir, image)
+    return message_ids
 
 def locate_target_decoded_record(root_dir, decoded_records_dir, record):
     """Determine the target dir of decoded records"""
