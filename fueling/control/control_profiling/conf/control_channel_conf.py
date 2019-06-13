@@ -7,9 +7,10 @@ MODE_IDX = {
     "driving_mode": 0,
     "gear_location": 1,
     "timestamp_sec": 2,
+    "sequence_num": 3,
     # Additional Modes extracted from Lincoln vehicle type
-    "throttle_chassis": 3,
-    "brake_chassis": 4,
+    "throttle_chassis": 4,
+    "brake_chassis": 5,
 }
 
 FEATURE_IDX= {
@@ -43,14 +44,32 @@ FEATURE_IDX= {
     "total_time": 26,
     "total_time_exceeded": 27,
     "timestamp_sec": 28,
+    "sequence_num": 29,
+    "localization_timestamp_sec": 30,
+    "localization_sequence_num": 31,
+    "chassis_timestamp_sec": 32,
+    "chassis_sequence_num": 33,
+    "trajectory_timestamp_sec": 34,
+    "trajectory_sequence_num": 35,
     # Additional Features extracted from Chassis Channel
-    "throttle_chassis": 29,
-    "brake_chassis": 30,
+    "throttle_chassis": 36,
+    "brake_chassis": 37,
+    "pose_heading_offset": 38,
+}
+
+POSE_IDX = {
+    # Features extracted from Localization Channel
+    "timestamp_sec": 0,
+    "sequence_num": 1,
+    "pose_position_x": 2,
+    "pose_position_y": 3,
+    "pose_heading": 4,
 }
 
 FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
                  "curvature_reference", "station_error", "speed_error", "lateral_error", "lateral_error_rate", "heading_error",
                  "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station", "speed",
                  "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",
-                 "heading_acceleration", "heading_jerk", "total_time", "total_time_exceeded", "timestamp_sec", "throttle_chassis",
-                 "brake_chassis"]
+                 "heading_acceleration", "heading_jerk", "total_time", "total_time_exceeded", "timestamp_sec", "sequence_num",
+                 "localization_timestamp_sec", "localization_sequence_num", "chassis_timestamp_sec", "chassis_sequence_num",
+                 "trajectory_timestamp_sec", "trajectory_sequence_num", "throttle_chassis", "brake_chassis", "pose_heading_offset"]

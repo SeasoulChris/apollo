@@ -19,8 +19,8 @@ def compute_h5_and_gradings(target_groups):
     target, group_id, msgs = target_groups
     glog.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
-    grading_mtx = feature_utils.extract_data_at_auto_mode(msgs, profiling_conf.driving_mode,
-                                                                profiling_conf.gear_position)
+    grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
+                                                                     profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         glog.warn('no valid element in {} items in group {} for task {}'
                   .format(len(msgs), group_id, target))

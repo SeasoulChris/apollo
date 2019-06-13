@@ -35,7 +35,7 @@ class ControlProfilingMetrics(BasePipeline):
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, 'Road_Test'),
-            os.path.join(origin_prefix, 'Sim_Test')
+            os.path.join(origin_prefix, 'Sim_Test'),
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
@@ -68,7 +68,8 @@ class ControlProfilingMetrics(BasePipeline):
                                                     record_utils.is_bag_file(file)))
          # PairRDD(target_dir, message), control and chassis message
          .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL,
-                                                  record_utils.CHASSIS_CHANNEL]))
+                                                  record_utils.CHASSIS_CHANNEL,
+                                                  record_utils.LOCALIZATION_CHANNEL]))
          # PairRDD(target_dir, (message)s)
          .groupByKey()
          # RDD(target_dir, group_id, group of (message)s), divide messages into groups

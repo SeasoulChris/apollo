@@ -11,10 +11,11 @@ from modules.data.fuel.fueling.control.proto.control_profiling_pb2 import Contro
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 
-from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX
+from fueling.control.control_profiling.conf.control_channel_conf import \
+     FEATURE_IDX, MODE_IDX, POSE_IDX
 
 # Message number in each segment
-MSG_PER_SEGMENT = 1000
+MSG_PER_SEGMENT = 3000
 # Maximum allowed time gap betwee two messages
 MAX_PHASE_DELTA = 0.01
 # Minimum epsilon value used in compare with zero
@@ -70,50 +71,70 @@ def data_matches_config(vehicle_type, controller_type):
         return False
     return True
 
-
-def extract_data_at_auto_mode(msgs, driving_mode, gear_position):
-    """Extract control/chassis data array and filter the control data with selected chassis features"""
+def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
+    """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
+    localization_msgs = collect_message_by_topic(msgs, record_utils.LOCALIZATION_CHANNEL)
     chassis_mtx = np.array([extract_chassis_data_from_msg(msg) for msg in chassis_msgs])
     control_mtx = np.array([extract_control_data_from_msg(msg) for msg in control_msgs])
-    glog.info('The original chassis msgs size is: {} and original control msgs size is: {}'
-              .format(chassis_mtx.shape[0], control_mtx.shape[0]))
-    if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0):
+    localization_mtx = np.array([extract_localization_data_from_msg(msg) for msg in localization_msgs])
+    glog.info('The original msgs size are: chassis {}, control {}, and localization: {}'
+              .format(chassis_mtx.shape[0], control_mtx.shape[0], localization_mtx.shape[0]))
+    if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
+    # First, filter the chassis data with desired driving modes and gear locations
     driving_condition = (chassis_mtx[:, MODE_IDX['driving_mode']] == driving_mode)
     gear_condition =  (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
     for gear_idx in range(1, len(gear_position)):
         gear_condition |= (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[gear_idx])
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
     chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
-    control_idx_filtered = []
+    # Second, filter the control data with existing chassis and localization sequence_num
+    control_idx_by_chassis = np.in1d(control_mtx[:, FEATURE_IDX['chassis_sequence_num']],
+                                     chassis_mtx_filtered[:, MODE_IDX['sequence_num']])
+    control_idx_by_localization = np.in1d(control_mtx[:, FEATURE_IDX['localization_sequence_num']],
+                                          localization_mtx[:, POSE_IDX['sequence_num']])
+    control_mtx_filtered = control_mtx[control_idx_by_chassis & control_idx_by_localization, :]
+    # Third, filter the chassis and localization data with filtered control data
     chassis_idx_refiltered = []
+    localization_idx_filtered = []
     chassis_idx = 0
-    control_idx = 0
-    while (chassis_idx < chassis_mtx_filtered.shape[0]) and (control_idx < control_mtx.shape[0]):
-        if (chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']] -
-            control_mtx[control_idx, FEATURE_IDX['timestamp_sec']]) >= MAX_PHASE_DELTA:
-            control_idx += 1
-        elif (control_mtx[control_idx, FEATURE_IDX['timestamp_sec']] -
-              chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']]) >= MAX_PHASE_DELTA:
+    localization_idx = 0
+    for control_idx in range(control_mtx_filtered.shape[0]):
+        while (control_mtx_filtered[control_idx, FEATURE_IDX['chassis_sequence_num']] !=
+               chassis_mtx_filtered[chassis_idx, MODE_IDX['sequence_num']]):
             chassis_idx += 1
-        else:
-            control_idx_filtered.append(control_idx)
-            chassis_idx_refiltered.append(chassis_idx)
-            chassis_idx += 1
-            control_idx += 1
-    control_mtx_filtered = np.take(control_mtx, control_idx_filtered, axis=0)
+        while (control_mtx_filtered[control_idx, FEATURE_IDX['localization_sequence_num']] !=
+               localization_mtx[localization_idx, POSE_IDX['sequence_num']]):
+            localization_idx +=1
+        chassis_idx_refiltered.append(chassis_idx)
+        localization_idx_filtered.append(localization_idx)
     chassis_mtx_refiltered = np.take(chassis_mtx_filtered, chassis_idx_refiltered, axis=0)
-    glog.info('The filterd chassis msgs size is: {} and filtered control msgs size is: {}'
-              .format(chassis_mtx_refiltered.shape[0], control_mtx_filtered.shape[0]))
-    if (chassis_mtx_refiltered.shape[0] > 0 and
-        control_mtx_filtered.shape[0] > 0 and
-        chassis_mtx_refiltered.shape[1] > MODE_IDX['throttle_chassis'] and
-        chassis_mtx_refiltered.shape[1] > MODE_IDX['brake_chassis']):
-        grading_mtx = np.hstack((control_mtx_filtered,
-                                 chassis_mtx_refiltered[:, [MODE_IDX['throttle_chassis'],
-                                                            MODE_IDX['brake_chassis']]]))
+    localization_mtx_filtered = np.take(localization_mtx, localization_idx_filtered, axis=0)
+    glog.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
+              .format(chassis_mtx_refiltered.shape[0], control_mtx_filtered.shape[0],
+                      localization_mtx_filtered.shape[0]))
+    # Finally, rebuild the grading mtx with the control data combined with chassis and localizaiton data
+    if (control_mtx_filtered.shape[0] > 0):
+        # First, merge the chassis data into control data matrix
+        if (chassis_mtx_refiltered.shape[1] > MODE_IDX['brake_chassis']):
+            grading_mtx = np.hstack((control_mtx_filtered,
+                                     chassis_mtx_refiltered[:, [MODE_IDX['throttle_chassis'],
+                                                                MODE_IDX['brake_chassis']]]))
+        else:
+            grading_mtx = np.hstack((control_mtx_filtered,
+                                     np.zeros((control_mtx_filtered.shape[0], 2))))
+        # Second, merge the localization data into control data matrix
+        pose_heading_num = np.diff(localization_mtx_filtered[:, POSE_IDX['pose_position_y']])
+        pose_heading_den = np.diff(localization_mtx_filtered[:, POSE_IDX['pose_position_x']])
+        sigular_idx = (pose_heading_den < MIN_EPSILON)
+        pose_heading_den[sigular_idx] = 1.0;
+        pose_heading_offset = (np.arctan(np.divide(pose_heading_num, pose_heading_den))
+                              - localization_mtx_filtered[range(localization_mtx_filtered.shape[0]-1),
+                                                          POSE_IDX['pose_heading']])
+        pose_heading_offset[sigular_idx] = 0.0;
+        grading_mtx = np.column_stack((grading_mtx, np.append(pose_heading_offset, [0.0], axis=0)))
     else:
         grading_mtx = control_mtx_filtered
     return grading_mtx
@@ -143,6 +164,7 @@ def extract_control_data_from_msg(msg):
     msg_proto = record_utils.message_to_proto(msg)
     control_latency = msg_proto.latency_stats
     control_header = msg_proto.header
+    input_debug = msg_proto.debug.input_debug
     if get_config_control_profiling().controller_type == 'Lon_Lat_Controller':
         control_lon = msg_proto.debug.simple_lon_debug
         control_lat = msg_proto.debug.simple_lat_debug
@@ -180,8 +202,16 @@ def extract_control_data_from_msg(msg):
             # Features: "Latency" category
             control_latency.total_time_ms,               # 26
             control_latency.total_time_exceeded,         # 27
-            # Features" "Time" category
-            control_header.timestamp_sec                 # 28
+            # Features: "Header" category
+            control_header.timestamp_sec,                # 28
+            control_header.sequence_num,                 # 29
+            # Features: "Input Info" category
+            input_debug.localization_header.timestamp_sec,  # 30
+            input_debug.localization_header.sequence_num,   # 31
+            input_debug.canbus_header.timestamp_sec,        # 32
+            input_debug.canbus_header.sequence_num,         # 33
+            input_debug.trajectory_header.timestamp_sec,    # 34
+            input_debug.trajectory_header.sequence_num      # 35
         ])
     else:
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -219,8 +249,16 @@ def extract_control_data_from_msg(msg):
             # Features: "Latency" category
             control_latency.total_time_ms,               # 26
             control_latency.total_time_exceeded,         # 27
-            # Features" "Time" category
-            control_header.timestamp_sec                 # 28
+            # Features: "Header" category
+            control_header.timestamp_sec,                # 28
+            control_header.sequence_num,                 # 29
+            # Features: "Input Info" category
+            input_debug.localization_header.timestamp_sec,  # 30
+            input_debug.localization_header.sequence_num,   # 31
+            input_debug.canbus_header.timestamp_sec,        # 32
+            input_debug.canbus_header.sequence_num,         # 33
+            input_debug.trajectory_header.timestamp_sec,    # 34
+            input_debug.trajectory_header.sequence_num      # 35
         ])
     return data_array
 
@@ -233,18 +271,36 @@ def extract_chassis_data_from_msg(msg):
             # Features: "Status" category
             msg_proto.driving_mode,                          # 0
             msg_proto.gear_location,                         # 1
-            # Features: "Time" category
+            # Features: "Header" category
             chassis_header.timestamp_sec,                    # 2
+            chassis_header.sequence_num,                     # 3
             # Features: "Action" category
-            msg_proto.throttle_percentage,                   # 3
-            msg_proto.brake_percentage                       # 4
+            msg_proto.throttle_percentage,                   # 4
+            msg_proto.brake_percentage                       # 5
         ])
     else:
         data_array = np.array([
             # Features: "Status" category
             msg_proto.driving_mode,                          # 0
             msg_proto.gear_location,                         # 1
-            # Features: "Time" category
-            chassis_header.timestamp_sec                     # 2
+            # Features: "Header" category
+            chassis_header.timestamp_sec,                    # 2
+            chassis_header.sequence_num                      # 3
         ])
+    return data_array
+
+def extract_localization_data_from_msg(msg):
+    """Extract wanted fields from localization message"""
+    msg_proto = record_utils.message_to_proto(msg)
+    localization_header = msg_proto.header
+    localization_pose = msg_proto.pose
+    data_array = np.array([
+        # Features: "Header" category
+        localization_header.timestamp_sec,                   # 0
+        localization_header.sequence_num,                    # 1
+        # Features: "Pose" category
+        localization_pose.position.x,                        # 2
+        localization_pose.position.y,                        # 3
+        localization_pose.heading                            # 4
+    ])
     return data_array
