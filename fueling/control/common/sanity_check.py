@@ -4,7 +4,7 @@ import collections
 import os
 import math
 
-import colored_glog as glog
+import glog
 import google.protobuf.text_format as text_format
 
 from cyber_py.record import RecordReader
@@ -111,7 +111,7 @@ def missing_message_data(path, channels=CHANNELS):
     return False
 
 
-def sanity_check(input_folder, email_receivers=None):
+def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     err_msg = None
     if missing_file(input_folder):
         err_msg = "One or more files are missing in %s" % input_folder
@@ -124,18 +124,19 @@ def sanity_check(input_folder, email_receivers=None):
     else:
         glog.info("%s Passed sanity check." % input_folder)
         if email_receivers:
-            title = 'Vehicle-calibration data sanity check passed'
+            title = "Vehicle-calibration data sanity check for partner '{0}',  \
+            job '{1}' in input '{2}' passed".format(job_owner, job_id, input_folder)
             content = 'We are processing your job now. Please expect another email with results.'
             email_utils.send_email_info(title, content, email_receivers)
         return True
 
     if email_receivers:
-        title = 'Error occured during vehicle-calibration data sanity check'
+        title = "Error occured during vehicle-calibration data sanity check  for partner \
+        '{0}', job '{1}' in input '{2}".format(job_owner, input_folder)
         email_utils.send_email_error(title, cgi.escape(err_msg), email_receivers)
 
     glog.error(err_msg)
     return False
 
-
-# if __name__ == '__main__':
-#     sanity_check('/apollo/modules/data/fuel/testdata/control/sourceData/SanityCheck')
+#if __name__ == '__main__':
+#    sanity_check('/apollo/modules/data/fuel/testdata/control/sourceData/SanityCheck', "test-owner", "000", email_utils.CONTROL_TEAM + email_utils.DATA_TEAM)

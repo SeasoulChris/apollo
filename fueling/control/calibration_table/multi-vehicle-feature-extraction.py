@@ -166,8 +166,8 @@ class MultiCalibrationTableFeatureExtraction(BasePipeline):
         glog.info("target_prefix: %s" % target_prefix)
 
         # add sanity check
-        if not sanity_check(origin_dir):
-            return
+    #    if not sanity_check(origin_dir):
+    #        return
 
         """ vehicles """
         vehicles = spark_helper.cache_and_log(

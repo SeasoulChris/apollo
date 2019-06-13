@@ -105,10 +105,6 @@ class MultiJobFeatureExtraction(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
 
-        # # add sanity check
-        # if not sanity_check(origin_prefix):
-        #     return
-
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
@@ -173,7 +169,7 @@ class MultiJobFeatureExtraction(BasePipeline):
         email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM
         if partner:
             email_receivers.append(partner.email)
-        if not sanity_check(origin_dir, email_receivers):
+        if not sanity_check(origin_dir, job_owner, job_id, email_receivers):
             return
 
         """ vehicles """
