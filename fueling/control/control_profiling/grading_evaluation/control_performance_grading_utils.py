@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 """ Control performance grading related utils. """
-import os
+import math
 import numpy as np
+import os
 
 from collections import namedtuple
 
@@ -20,7 +21,7 @@ def compute_h5_and_gradings(target_groups):
     glog.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
-                                                                     profiling_conf.gear_position)
+                                                               profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         glog.warn('no valid element in {} items in group {} for task {}'
                   .format(len(msgs), group_id, target))
@@ -66,7 +67,9 @@ def compute_h5_and_gradings(target_groups):
                                   'brake_deadzone_mean',
                                   'total_time_usage',
                                   'total_time_peak',
-                                  'total_time_exceeded_count'])
+                                  'total_time_exceeded_count',
+                                  'pose_heading_offset_std',
+                                  'pose_heading_offset_peak'])
     grading_arguments = namedtuple('grading_arguments',
                                    ['std_filter_name',
                                     'std_filter_value',
@@ -76,6 +79,8 @@ def compute_h5_and_gradings(target_groups):
                                     'std_denorm_weight',
                                     'peak_feature_name',
                                     'peak_threshold',
+                                    'peak_filter_name',
+                                    'peak_filter_value',
                                     'usage_feature_name',
                                     'usage_thold_value',
                                     'usage_threshold',
@@ -198,26 +203,38 @@ def compute_h5_and_gradings(target_groups):
         )),
         station_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='station_error',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.station_error_thold
         )),
         speed_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='speed_error',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.speed_error_thold
         )),
         lateral_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='lateral_error',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.lateral_error_thold
         )),
         lateral_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='lateral_error_rate',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.lateral_error_rate_thold
         )),
         heading_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='heading_error',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.heading_error_thold
         )),
         heading_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='heading_error_rate',
+            peak_filter_name='',
+            peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.heading_error_rate_thold
         )),
         acc_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
@@ -304,6 +321,18 @@ def compute_h5_and_gradings(target_groups):
         )),
         total_time_exceeded_count=compute_count(grading_mtx, grading_arguments(
             count_feature_name='total_time_exceeded'
+        )),
+        pose_heading_offset_std=compute_usage(grading_mtx, grading_arguments(
+            usage_feature_name='pose_heading_offset',
+            usage_thold_value='speed_reference',
+            usage_threshold=profiling_conf.control_metrics.speed_stop,
+            usage_weight=math.pi
+        )),
+        pose_heading_offset_peak=compute_peak(grading_mtx, grading_arguments(
+            peak_feature_name='pose_heading_offset',
+            peak_filter_name='speed_reference',
+            peak_filter_value=profiling_conf.control_metrics.speed_stop,
+            peak_threshold=math.pi
         )))
     return (target, grading_group_result)
 
@@ -330,7 +359,15 @@ def compute_std(grading_mtx, arg):
 
 def compute_peak(grading_mtx, arg):
     """Compute the peak value"""
+    profiling_conf = feature_utils.get_config_control_profiling()
+    if arg.peak_filter_name:
+        grading_mtx = filter_value(grading_mtx,
+                                   FEATURE_IDX[arg.peak_filter_name], arg.peak_filter_value)
     elem_num, _ = grading_mtx.shape
+    if elem_num < profiling_conf.min_sample_size:
+        glog.warn('no enough elements {} for peak computing requirement {}'
+                  .format(elem_num, profiling_conf.min_sample_size))
+        return (0.0, 0)
     return (np.max(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]])) /
             arg.peak_threshold, elem_num)
 
