@@ -12,7 +12,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_NAMES
+from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
+       as feature_utils
 
 
 def generate_segments(h5s):
@@ -71,59 +73,70 @@ def plot_h5_features_hist(data_rdd):
         pdffile = os.path.join(dir_data, vehicle_controller + 'control_data_visualization.pdf')
     else:
         pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
+    profiling_conf = feature_utils.get_config_control_profiling()
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
-            if i < data.shape[1]:
+            if (i < data.shape[1] and
+                (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
                 glog.info('Processing the plots at Column: {}, Feature: {}'
                           .format(i, FEATURE_NAMES[i]))
-                length = data.shape[0]
-                seq = np.argsort(data[:, i])
-                scope = data[seq[length - 1], i] - data[seq[0], i]
-                scope_90 = data[seq[int(length * 0.95 - 1)], i] - data[seq[int(length * 0.05)], i]
-                glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
-                          .format(scope, scope_90))
-                bounds = clean_data(data[:, i], seq)
-                if (bounds[0] == 0 and bounds[1] == 1):
-                    plt.figure(figsize=(4, 3))
-                    plt.hist(data[:, i], bins='auto')
-                    plt.xlabel(FEATURE_NAMES[i])
-                    plt.ylabel('Sample length')
-                    plt.title("Histogram of " + FEATURE_NAMES[i])
-                    xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[length - 1], i], data[seq[0], i]),
-                             color='red', fontsize=8)
-                    plt.tight_layout()
-                    pdf.savefig()
-                    plt.close()
+                if i == FEATURE_IDX["pose_heading_offset"]:
+                    data_plot_idx = np.where((data[:, FEATURE_IDX["speed"]] >
+                                              profiling_conf.control_metrics.speed_stop) &
+                                             (data[:, FEATURE_IDX["curvature_reference"]] <
+                                              profiling_conf.control_metrics.curvature_harsh_limit))[0]
+                    data_plot = np.take(data[:, i], data_plot_idx, axis=0)
                 else:
-                    plt.figure(figsize=(4, 3))
-                    plt.hist(data[seq[int(length * bounds[0]):int(length * bounds[1] - 1)], i],
-                             bins='auto')
-                    plt.xlabel(FEATURE_NAMES[i])
-                    plt.ylabel('Sample length')
-                    plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
-                              + str(int(round((bounds[1] - bounds[0]) * 100))) + "% Data)")
-                    xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[int(length * bounds[1] - 1)], i],
-                                     data[seq[int(length * bounds[0])], i]),
-                             color='red', fontsize=8)
-                    plt.tight_layout()
-                    pdf.savefig()
-                    plt.close()
-                    plt.figure(figsize=(4, 3))
-                    plt.plot(data[:, i])
-                    plt.ylabel(FEATURE_NAMES[i])
-                    plt.xlabel('Sample Number')
-                    plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
-                    xmin, xmax, ymin, ymax = plt.axis()
-                    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                             'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                             .format(data[seq[length - 1], i], data[seq[0], i]),
-                             color='red', fontsize=8)
-                    plt.tight_layout()
-                    pdf.savefig()
-                    plt.close()
+                    data_plot = data[:, i]
+                length = data_plot.shape[0]
+                if length > profiling_conf.min_sample_size:
+                    seq = np.argsort(data_plot)
+                    scope = data_plot[seq[length - 1]] - data_plot[seq[0]]
+                    scope_90 = data_plot[seq[int(length * 0.95 - 1)]] - data_plot[seq[int(length * 0.05)]]
+                    glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
+                              .format(scope, scope_90))
+                    bounds = clean_data(data_plot, seq)
+                    if bounds[0] == 0 and bounds[1] == 1:
+                        plt.figure(figsize=(4, 3))
+                        plt.hist(data_plot, bins='auto')
+                        plt.xlabel(FEATURE_NAMES[i])
+                        plt.ylabel('Sample length')
+                        plt.title("Histogram of " + FEATURE_NAMES[i])
+                        xmin, xmax, ymin, ymax = plt.axis()
+                        plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+                                 'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                                 .format(data_plot[seq[length - 1]], data_plot[seq[0]]),
+                                 color='red', fontsize=8)
+                        plt.tight_layout()
+                        pdf.savefig()
+                        plt.close()
+                    else:
+                        plt.figure(figsize=(4, 3))
+                        plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
+                                 bins='auto')
+                        plt.xlabel(FEATURE_NAMES[i])
+                        plt.ylabel('Sample length')
+                        plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
+                                  + str(int(round((bounds[1] - bounds[0]) * 100))) + "% data)")
+                        xmin, xmax, ymin, ymax = plt.axis()
+                        plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+                                 'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                                 .format(data_plot[seq[int(length * bounds[1] - 1)]],
+                                         data_plot[seq[int(length * bounds[0])]]),
+                                 color='red', fontsize=8)
+                        plt.tight_layout()
+                        pdf.savefig()
+                        plt.close()
+                        plt.figure(figsize=(4, 3))
+                        plt.plot(data_plot)
+                        plt.ylabel(FEATURE_NAMES[i])
+                        plt.xlabel('Sample Number')
+                        plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
+                        xmin, xmax, ymin, ymax = plt.axis()
+                        plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+                                 'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                                 .format(data_plot[seq[length - 1]], data_plot[seq[0]]),
+                                 color='red', fontsize=8)
+                        plt.tight_layout()
+                        pdf.savefig()
+                        plt.close()
