@@ -22,6 +22,8 @@ CONTROL_TEAM = [
     'luoqi06@baidu.com',
     'shujiang@baidu.com',
     'yuwang01@baidu.com',
+    'runxinhe@baidu.com',
+    'jinyunzhou@baidu.com',
 ]
 PREDICTION_TEAM = [
     'hongyisun@baidu.com',
@@ -130,7 +132,7 @@ def get_html_content(title, title_color, content):
               <h1 align="center" style="color:%(title_color)s;">%(title)s</h1>
               <table border="1" cellspacing="0" align="center">
                   %(header)s
-                <tbody> 
+                <tbody>
                   %(html_content)s
                 </tbody>
               </table>
