@@ -42,7 +42,7 @@ class DecodeVideoPipeline(BasePipeline):
         """Run test."""
         root_dir = '/apollo'
         video_dir = 'modules/perception/videos/decoded'
-        decoded_records_dir = 'decoded-records'
+        decoded_records_dir = 'modules/data/video-decoded-records'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
@@ -59,7 +59,7 @@ class DecodeVideoPipeline(BasePipeline):
         """Run prod."""
         root_dir = bos_client.BOS_MOUNT_PATH
         video_dir = 'modules/perception/videos/decoded'
-        decoded_records_dir = 'decoded-records'
+        decoded_records_dir = 'modules/data/public-test-video-decoded'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
@@ -102,6 +102,7 @@ class DecodeVideoPipeline(BasePipeline):
 
         # Replace video frames with the decoded images back to original records
         glog.info('Decoding done, now replacing original records')
+        target_records = target_records.repartition(int(os.environ.get('APOLLO_EXECUTORS', 10)))
         # PairRDD(target_dir, record)
         (target_records
          .foreach(lambda target_record:
