@@ -175,7 +175,7 @@ def decode_videos(message_meta):
     if len(generated_images) != len(meta_list):
         raise ValueError('Mismatch between original frames:{} and generated images:{} for video {}'
                          .format(len(meta_list), len(generated_images), h265_video_file_path))
-    # Rename the generated images to match the original frame name, and remove to overall image dir
+    # Rename the generated images to match the original frame name, and move to overall image dir
     for idx in range(0, len(generated_images)):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
                   os.path.join(image_dir,
