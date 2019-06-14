@@ -474,6 +474,10 @@ class FramePopulator(object):
         self._root_dir = root_dir
         self._task_dir = os.path.join(root_dir, task_dir)
         self._slice_size = slice_size
+        self._pre_pose_x = None
+        self._pre_pose_y = None
+        self._pre_frame_time = None
+        self._frame_num = 0
         file_utils.makedirs(self._task_dir)
 
         pointcloud_128 = PointCloudSensor(channel=SENSOR_PARAMS['lidar_channel'],
@@ -521,15 +525,15 @@ class FramePopulator(object):
         lidar_msg = next(x for x in message_structs
                          if x.message.topic == SENSOR_PARAMS['lidar_channel'])
 
-        # Filter out the frames that lidar-128 has time diff bigger than designed value
-        if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
-            return
-
         lidar_pose = get_interp_pose(lidar_msg.message.timestamp,
                                      lidar_msg.pose_left,
                                      lidar_msg.pose_right)
         frame = frame_pb2.Frame()
         lidar_pose.process(frame)
+
+        if not self.pass_filter_rules(lidar_msg, lidar_pose, message_structs, max_diff):
+            return
+
         if self._stationary_pole is None:
             self._stationary_pole = (lidar_pose.position.x,
                                      lidar_pose.position.y, lidar_pose.position.z)
@@ -558,6 +562,37 @@ class FramePopulator(object):
         with open(file_name, 'w') as outfile:
             outfile.write(json_obj)
         glog.info('dumped json: {}'.format(file_name))
+
+    def pass_filter_rules(self, lidar_msg, lidar_pose, message_structs, max_diff):
+        """Check if the current frame should be filtered out by various of rules"""
+        min_interval = 0.5
+        min_distance = 1.0
+        max_frame_num = 50
+        # Max Diff rule
+        if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
+            return False
+        # Even Interval rule
+        if self._pre_frame_time:
+            interval = (float(lidar_msg.message.timestamp) - self._pre_frame_time) / (10**9)
+            if (interval < min_interval):
+                glog.warn('filtered out by interval rule, interval: {}'.format(interval))
+                return False
+        self._pre_frame_time = float(lidar_msg.message.timestamp)
+        # Car Not Moving rule
+        if self._pre_pose_x and self._pre_pose_y:
+            distance = math.sqrt((float(lidar_pose.position.x) - self._pre_pose_x) ** 2 +
+                                 (float(lidar_pose.position.y) - self._pre_pose_y) ** 2)
+            if distance < min_distance:
+                glog.warn('filtered out by car not moving rule, distance: {}'.format(distance))
+                return False
+        self._pre_pose_x = float(lidar_pose.position.x)
+        self._pre_pose_y = float(lidar_pose.position.y)
+        # Max Frames Number rule
+        self._frame_num += 1
+        if self._frame_num > max_frame_num:
+            glog.warn('filtered out by frame number rule, number: {}'.format(self._frame_num))
+            return False
+        return True
 
     def diff_between_lidar_and_camera(self, lidar_msg, message_structs, max_diff):
         """Check if time diff between lidar and camera is acceptable"""
