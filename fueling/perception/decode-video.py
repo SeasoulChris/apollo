@@ -223,16 +223,15 @@ def replace_images(target_record, root_dir, decoded_records_dir):
 
 def get_image_back(video_dir, message):
     """Actually change the content of message from video bytes to image bytes"""
-    image_dir = os.path.join(video_dir, 'images')
     message_proto = CompressedImage()
     message_proto.ParseFromString(message.message)
     message_id = streaming_utils.get_message_id(
         int(round(message_proto.header.timestamp_sec * (10 ** 9))), message.topic)
-    if not os.path.exists(os.path.join(image_dir, message_id)):
-        glog.error('message {} not found in image dir {}'.format(message_id, image_dir))
+    image_path = os.path.join(video_dir, 'images', message_id)
+    if not os.path.exists(image_path):
+        glog.error('message {} not found'.format(image_path))
         return None
-    message_path = os.path.join(image_dir, message_id)
-    img_bin = cv2.imread(message_path)
+    img_bin = cv2.imread(image_path)
     # Check by using NoneType explicitly to avoid ambitiousness
     if img_bin is None:
         glog.error('failed to read original message: {}'.format(message_path))
