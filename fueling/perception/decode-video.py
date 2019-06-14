@@ -42,7 +42,7 @@ class DecodeVideoPipeline(BasePipeline):
         """Run test."""
         root_dir = '/apollo'
         video_dir = 'modules/perception/videos/decoded'
-        decoded_records_dir = 'decoded_records'
+        decoded_records_dir = 'decoded-records'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
@@ -59,7 +59,7 @@ class DecodeVideoPipeline(BasePipeline):
         """Run prod."""
         root_dir = bos_client.BOS_MOUNT_PATH
         video_dir = 'modules/perception/videos/decoded'
-        decoded_records_dir = 'decoded_records'
+        decoded_records_dir = 'decoded-records'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         glog.info('ToDo tasks: {}'.format(todo_tasks))
@@ -147,7 +147,9 @@ def decode_videos(message_meta):
         glog.error('no video frames for target dir and topic {}'.format(target_topic))
         return
     target_dir, topic = target_topic
+    image_dir = os.path.join(target_dir, 'images')
     file_utils.makedirs(target_dir)
+    file_utils.makedirs(image_dir)
     # Use the first message name in the group as the current group name
     cur_group_name = streaming_utils.get_message_id(meta_list[0][0], topic)
     image_output_path = os.path.join(target_dir, cur_group_name)
@@ -173,10 +175,10 @@ def decode_videos(message_meta):
     if len(generated_images) != len(meta_list):
         raise ValueError('Mismatch between original frames:{} and generated images:{} for video {}'
                          .format(len(meta_list), len(generated_images), h265_video_file_path))
-    # Rename the generated images to match the original frame name
+    # Rename the generated images to match the original frame name, and remove to overall image dir
     for idx in range(0, len(generated_images)):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
-                  os.path.join(image_output_path,
+                  os.path.join(image_dir,
                                streaming_utils.get_message_id(meta_list[idx][0], topic)))
     file_utils.touch(complete_marker)
     glog.info('done with group {}, image path: {}'.format(cur_group_name, image_output_path))
@@ -198,13 +200,12 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     file_utils.makedirs(os.path.dirname(dst_record))
     writer = RecordWriter(0, 0)
     streaming_utils.retry(lambda record: writer.open(record), [dst_record], 3)
-    message_ids = get_all_message_ids(video_dir)
     topic_descs = {}
     counter = 0
     for message in reader.read_messages():
         message_content = message.message
         if message.topic in VIDEO_CHANNELS.values():
-            message_content = get_image_back(video_dir, message, message_ids)
+            message_content = get_image_back(video_dir, message)
             if not message_content:
                 # For any reason it failed to convert, just ignore the message
                 glog.error('failed to convert message {}-{} in record {}'.format(
@@ -218,17 +219,19 @@ def replace_images(target_record, root_dir, decoded_records_dir):
             topic_descs[message.topic] = reader.get_protodesc(message.topic)
             writer.write_channel(message.topic, message.data_type, topic_descs[message.topic])
     writer.close()
+    glog.info('done with replacement, target: {}, dst: {}'.format(target_record, dst_record))
 
-def get_image_back(video_dir, message, message_ids):
+def get_image_back(video_dir, message):
     """Actually change the content of message from video bytes to image bytes"""
+    image_dir = os.path.join(video_dir, 'images')
     message_proto = CompressedImage()
     message_proto.ParseFromString(message.message)
     message_id = streaming_utils.get_message_id(
         int(round(message_proto.header.timestamp_sec * (10 ** 9))), message.topic)
-    if message_id not in message_ids:
-        glog.error('message {} not found in video dir {}'.format(message_id, video_dir))
+    if not os.path.exists(os.path.join(image_dir, message_id)):
+        glog.error('message {} not found in image dir {}'.format(message_id, image_dir))
         return None
-    message_path = message_ids[message_id]
+    message_path = os.path.join(image_dir, message_id)
     img_bin = cv2.imread(message_path)
     # Check by using NoneType explicitly to avoid ambitiousness
     if img_bin is None:
@@ -242,17 +245,6 @@ def get_image_back(video_dir, message, message_ids):
     message_proto.format = '; jpeg compressed bgr8'
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
     return message_proto.SerializeToString()
-
-def get_all_message_ids(target_dir):
-    """Get the mapping of all messages and their paths"""
-    message_ids = {}
-    for group in os.listdir(target_dir):
-        group_dir = os.path.join(target_dir, group)
-        if not os.path.isdir(group_dir):
-            continue
-        for image in os.listdir(group_dir):
-            message_ids[image] = os.path.join(group_dir, image)
-    return message_ids
 
 def locate_target_decoded_record(root_dir, decoded_records_dir, record):
     """Determine the target dir of decoded records"""

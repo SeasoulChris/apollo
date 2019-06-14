@@ -79,34 +79,27 @@ def upload_frames(task, frames, s3_client):
             s3_upload_file(s3_client, frame_src, frame_dst)
     os.mknod(os.path.join(task, 'FRAME-UPLOADED'))
 
-def generate_and_upload_images(task, s3_client):
-    """Generate rgb images based on names/links, and upload to AWS afterwards"""
+def upload_images(task, frames, s3_client):
+    """Upload images to AWS"""
     if os.path.exists(os.path.join(task, 'IMAGE-UPLOADED')):
         glog.info('images for task {} have been uploaded'.format(task))
-        return
+        return True
     image_task = os.path.basename(os.path.dirname(task))
     streaming_image_path = os.path.join(task[:task.index('modules')+len('modules')],
-                                        'streaming/images')
-    images = list_images(streaming_image_path, image_task)
+                                        'perception/videos/decoded', image_task)
     image_links = os.listdir(os.path.join(task, 'images'))
     for image_name in image_links:
         if image_name.endswith('.jpg'):
             # Do not generate again if already existed
             continue
-        image_bin = next((image_bin for image_bin in images
-                          if os.path.basename(image_bin) == image_name), None)
+        image_src = os.path.join(streaming_image_path, image_name) 
         if not image_bin:
-            raise ValueError('no image binary found in {} for the link: {}'
-                             .format(image_task, image_name))
-        jpg_file_path = '{}/{}.jpg'.format(os.path.join(task, 'images'), image_name)
-        with open(image_bin, "rb") as image_bin_file:
-            data = image_bin_file.read()
-            img = np.asarray(bytearray(data), dtype="uint8")
-            img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-            cv2.imwrite(jpg_file_path, img)
+            glog.error('no image found for : {}'.format(image_src))
+            return False
         image_dst = 'images/{}.jpg'.format(image_name)
-        s3_upload_file(s3_client, jpg_file_path, image_dst)
+        s3_upload_file(s3_client, image_src, image_dst)
     os.mknod(os.path.join(task, 'IMAGE-UPLOADED'))
+    return True
 
 def get_uploaded_front6mm_images(task, frames):
     """Get uploaded images for specified task"""
@@ -303,8 +296,9 @@ def main():
             # Upload frames to AWS
             s3_client = create_s3_client()
             upload_frames(task, frames, s3_client)
-            # Generate images and upload to AWS
-            generate_and_upload_images(task, s3_client)
+            # Upload images to AWS
+            if not upload_images(task, s3_client):
+                continue
             scale_access_key = scale_access_key_test
         # Send scale requests and record responses
         lidar_response = send_lidar_request(task, frames, scale_access_key)
