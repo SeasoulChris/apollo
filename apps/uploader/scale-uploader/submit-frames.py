@@ -79,19 +79,16 @@ def upload_frames(task, frames, s3_client):
             s3_upload_file(s3_client, frame_src, frame_dst)
     os.mknod(os.path.join(task, 'FRAME-UPLOADED'))
 
-def upload_images(task, frames, s3_client):
+def upload_images(task, s3_client):
     """Upload images to AWS"""
     if os.path.exists(os.path.join(task, 'IMAGE-UPLOADED')):
         glog.info('images for task {} have been uploaded'.format(task))
         return True
     image_task = os.path.basename(os.path.dirname(task))
     streaming_image_path = os.path.join(task[:task.index('modules')+len('modules')],
-                                        'perception/videos/decoded', image_task)
+                                        'perception/videos/decoded', image_task, 'images')
     image_links = os.listdir(os.path.join(task, 'images'))
     for image_name in image_links:
-        if image_name.endswith('.jpg'):
-            # Do not generate again if already existed
-            continue
         image_src = os.path.join(streaming_image_path, image_name) 
         if not image_bin:
             glog.error('no image found for : {}'.format(image_src))
