@@ -55,6 +55,9 @@ def get_todo_records(root_dir, target_dir=None):
                 record = record.strip()
                 if not record_utils.is_record_file(record):
                     continue
+                module_target = os.path.dirname(locate_target_record(root_dir, target_dir, record))
+                if os.path.exists(os.path.join(module_target, 'COMPLETE')):
+                    continue
                 if is_serialization_completed(root_dir, record):
                     todo_records.append(record)
                     if task_file_path not in todo_tasks:
@@ -217,4 +220,16 @@ def retry(func, params, retry_times):
             if retry_times <= 0:
                 raise Exception(error_msg)
             time.sleep(1)
+
+def locate_target_record(root_dir, module_dir, record):
+    """Determine the target dir of records in particular modules"""
+    if record.find(root_dir) < 0:
+        # It's possible that original record path does not start with root_dir path,
+        # in this case just append the original record to module dir
+        dst_record = os.path.join(root_dir, module_dir, record[1:])
+    else:
+        # Otherwise, replace the exact next sub dir of root_dir and with module_dir
+        dst_record = '{}{}'.format(os.path.join(root_dir, module_dir),
+                                   record[record.find('/', len(root_dir) + 1) : ])
+    return dst_record
 

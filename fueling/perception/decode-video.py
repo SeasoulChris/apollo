@@ -187,7 +187,7 @@ def decode_videos(message_meta):
 def replace_images(target_record, root_dir, decoded_records_dir):
     """Scan messages in original record file, and replace video frames with decoded image frames"""
     video_dir, record = target_record
-    dst_record = locate_target_decoded_record(root_dir, decoded_records_dir, record)
+    dst_record = streaming_utils.locate_target_record(root_dir, decoded_records_dir, record)
     if os.path.exists(os.path.join(os.path.dirname(dst_record), 'COMPLETE')):
         glog.info('target already replaced {}, do nothing'.format(dst_record))
         return
@@ -246,18 +246,6 @@ def get_image_back(video_dir, message):
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
     return message_proto.SerializeToString()
 
-def locate_target_decoded_record(root_dir, decoded_records_dir, record):
-    """Determine the target dir of decoded records"""
-    if record.find(root_dir) < 0:
-        # It's possible that original record path does not start with root_dir path,
-        # in this case just append the original record to decoded records dir
-        dst_record = os.path.join(root_dir, decoded_records_dir, record[1:])
-    else:
-        # Otherwise, replace the exact next sub dir of root_dir and with decoded_records_dir
-        dst_record = '{}{}'.format(os.path.join(root_dir, decoded_records_dir),
-                                   record[record.find('/', len(root_dir) + 1) : ])
-    return dst_record
-
 def mark_video_complete(todo_tasks, video_dir, root_dir):
     """Create COMPLETE file to mark the video decoding part done"""
     for task in todo_tasks:
@@ -271,7 +259,7 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
     """Create COMPLETE file to mark the decoded dir part done"""
     SummaryTuple = collections.namedtuple('Summary',
                                           ['Source', 'SourceRecords', 'Target', 'TargetRecords'])
-    email_title = 'Decode Video Results'
+    email_title = 'Decode Video Results: {}'.format(len(todo_tasks))
     email_message = []
     receivers = email_utils.DATA_TEAM
     for task in todo_tasks:
@@ -280,7 +268,8 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
             glog.warn('no record found for task: {}'.format(task))
             continue
         source_task = os.path.dirname(record)
-        target_task = os.path.dirname(locate_target_decoded_record(root_dir, decoded_dir, record))
+        target_task = os.path.dirname(
+            streaming_utils.locate_target_record(root_dir, decoded_dir, record))
         if not os.path.exists(target_task):
             glog.warn('no decoded dir for task: {}'.format(target_task))
             continue
