@@ -124,8 +124,15 @@ def group_video_frames(message_meta):
     # The initial frame has meta data information shared by the following tens of frames
     initial_frame_type = '1'
     for idx, (timestamp, fields, src_path) in enumerate(meta_list):
-        frame_type = ast.literal_eval(fields).get('frame_type', None)
+        frame_type = None
+        try:
+            frame_type = ast.literal_eval(fields).get('frame_type', None)
+        except ValueError as error:
+            # Skip the problematic frame if for any reason it was not parsed correctly
+            glog.error('invalid meta data: {}'.format(meta_list[idx]))
+            continue
         if not frame_type:
+            # If the frame was parsed fine but no type was specified, means something wrong
             raise ValueError('Invalid frame type for {}'.format(target_topic))
         if frame_type == initial_frame_type or idx == len(meta_list) - 1:
             if frames_group and frames_group[0][1] == initial_frame_type:
@@ -187,6 +194,9 @@ def decode_videos(message_meta):
 def replace_images(target_record, root_dir, decoded_records_dir):
     """Scan messages in original record file, and replace video frames with decoded image frames"""
     video_dir, record = target_record
+    if not os.path.exists(video_dir):
+        glog.error('no video or images generated for target: {}'.format(target_record))
+        return
     dst_record = streaming_utils.locate_target_record(root_dir, decoded_records_dir, record)
     if os.path.exists(os.path.join(os.path.dirname(dst_record), 'COMPLETE')):
         glog.info('target already replaced {}, do nothing'.format(dst_record))
