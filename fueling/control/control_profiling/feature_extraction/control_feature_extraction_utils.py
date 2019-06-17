@@ -93,50 +93,55 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     # Second, filter the control data with existing chassis and localization sequence_num
     control_idx_by_chassis = np.in1d(control_mtx[:, FEATURE_IDX['chassis_sequence_num']],
                                      chassis_mtx_filtered[:, MODE_IDX['sequence_num']])
-    control_idx_by_localization = np.in1d(control_mtx[:, FEATURE_IDX['localization_sequence_num']],
-                                          localization_mtx[:, POSE_IDX['sequence_num']])
-    control_mtx_filtered = control_mtx[control_idx_by_chassis & control_idx_by_localization, :]
+    control_idx_by_localization = np.in1d(['%.3f' % x for x in
+                                           control_mtx[:, FEATURE_IDX['localization_timestamp_sec']]],
+                                          ['%.3f' % x for x in
+                                           localization_mtx[:, POSE_IDX['timestamp_sec']]])
+    control_mtx_rtn = control_mtx[control_idx_by_chassis & control_idx_by_localization, :]
     # Third, filter the chassis and localization data with filtered control data
-    chassis_idx_refiltered = []
-    localization_idx_filtered = []
+    chassis_idx_rtn = []
+    localization_idx_rtn = []
     chassis_idx = 0
     localization_idx = 0
-    for control_idx in range(control_mtx_filtered.shape[0]):
-        while (control_mtx_filtered[control_idx, FEATURE_IDX['chassis_sequence_num']] !=
+    for control_idx in range(control_mtx_rtn.shape[0]):
+        while (control_mtx_rtn[control_idx, FEATURE_IDX['chassis_sequence_num']] !=
                chassis_mtx_filtered[chassis_idx, MODE_IDX['sequence_num']]):
             chassis_idx += 1
-        while (control_mtx_filtered[control_idx, FEATURE_IDX['localization_sequence_num']] !=
-               localization_mtx[localization_idx, POSE_IDX['sequence_num']]):
+        while (['%.3f' % control_mtx_rtn[control_idx, FEATURE_IDX['localization_timestamp_sec']]] !=
+               ['%.3f' % localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]]):
             localization_idx +=1
-        chassis_idx_refiltered.append(chassis_idx)
-        localization_idx_filtered.append(localization_idx)
-    chassis_mtx_refiltered = np.take(chassis_mtx_filtered, chassis_idx_refiltered, axis=0)
-    localization_mtx_filtered = np.take(localization_mtx, localization_idx_filtered, axis=0)
+        chassis_idx_rtn.append(chassis_idx)
+        localization_idx_rtn.append(localization_idx)
+    chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
+    localization_mtx_rtn = np.take(localization_mtx, localization_idx_rtn, axis=0)
     glog.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
-              .format(chassis_mtx_refiltered.shape[0], control_mtx_filtered.shape[0],
-                      localization_mtx_filtered.shape[0]))
+              .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0],
+                      localization_mtx_rtn.shape[0]))
     # Finally, rebuild the grading mtx with the control data combined with chassis and localizaiton data
-    if (control_mtx_filtered.shape[0] > 0):
+    if (control_mtx_rtn.shape[0] > 0):
         # First, merge the chassis data into control data matrix
-        if (chassis_mtx_refiltered.shape[1] > MODE_IDX['brake_chassis']):
-            grading_mtx = np.hstack((control_mtx_filtered,
-                                     chassis_mtx_refiltered[:, [MODE_IDX['throttle_chassis'],
-                                                                MODE_IDX['brake_chassis']]]))
+        if (chassis_mtx_rtn.shape[1] > MODE_IDX['brake_chassis']):
+            grading_mtx = np.hstack((control_mtx_rtn,
+                                     chassis_mtx_rtn[:, [MODE_IDX['throttle_chassis'],
+                                                         MODE_IDX['brake_chassis']]]))
         else:
-            grading_mtx = np.hstack((control_mtx_filtered,
-                                     np.zeros((control_mtx_filtered.shape[0], 2))))
+            grading_mtx = np.hstack((control_mtx_rtn,
+                                     np.zeros((control_mtx_rtn.shape[0], 2))))
         # Second, merge the localization data into control data matrix
-        pose_heading_num = np.diff(localization_mtx_filtered[:, POSE_IDX['pose_position_y']])
-        pose_heading_den = np.diff(localization_mtx_filtered[:, POSE_IDX['pose_position_x']])
+        pose_heading_num = np.diff(localization_mtx_rtn[:, POSE_IDX['pose_position_y']])
+        pose_heading_den = np.diff(localization_mtx_rtn[:, POSE_IDX['pose_position_x']])
         sigular_idx = (pose_heading_den < MIN_EPSILON)
         pose_heading_den[sigular_idx] = 1.0;
         pose_heading_offset = (np.arctan(np.divide(pose_heading_num, pose_heading_den))
-                              - localization_mtx_filtered[range(localization_mtx_filtered.shape[0]-1),
-                                                          POSE_IDX['pose_heading']])
-        pose_heading_offset[sigular_idx] = 0.0;
+                              - localization_mtx_rtn[range(localization_mtx_rtn.shape[0] - 1),
+                                                     POSE_IDX['pose_heading']])
+        if np.sum(np.invert(sigular_idx)) > 0:
+            pose_heading_offset[sigular_idx] = np.median(pose_heading_offset[np.invert(sigular_idx)]);
+        else:
+            pose_heading_offset[sigular_idx] = 0.0
         grading_mtx = np.column_stack((grading_mtx, np.append(pose_heading_offset, [0.0], axis=0)))
     else:
-        grading_mtx = control_mtx_filtered
+        grading_mtx = control_mtx_rtn
     return grading_mtx
 
 
