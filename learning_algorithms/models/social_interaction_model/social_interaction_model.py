@@ -86,6 +86,8 @@ class SimpleLSTM(nn.Module):
                 this_traj = this_traj + this_traj_rel
                 pred_traj[:, t-observation_len, :] = this_traj
 
+            if torch.sum(this_timestamp_mask) == 0:
+                continue
             ht, ct = self.simple_rnn(ht, ct, this_traj_rel, this_timestamp_mask)
 
         return pred_out[is_predictable[:, 0] == 1, :, :], \
