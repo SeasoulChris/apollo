@@ -124,16 +124,18 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     else:
         glog.info("%s Passed sanity check." % input_folder)
         if email_receivers:
-            title = "Vehicle-calibration data sanity check for partner '{0}',  \
-            job '{1}' in input '{2}' passed".format(job_owner, job_id, input_folder)
-            content = 'We are processing your job now. Please expect another email with results.'
+            title = 'Vehicle-calibration data sanity check passed for {}'.format(job_owner)
+            content = 'job_id={} input_folder={}\n' \
+                'We are processing your job now. Please expect another email with results.'.format(
+                    job_id, input_folder)
             email_utils.send_email_info(title, content, email_receivers)
         return True
 
     if email_receivers:
-        title = "Error occured during vehicle-calibration data sanity check  for partner \
-        '{0}', job '{1}' in input '{2}".format(job_owner, input_folder)
-        email_utils.send_email_error(title, cgi.escape(err_msg), email_receivers)
+        title = 'Error occured during vehicle-calibration data sanity check for {}'.format(
+            job_owner)
+        content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))
+        email_utils.send_email_error(title, content, email_receivers)
 
     glog.error(err_msg)
     return False
