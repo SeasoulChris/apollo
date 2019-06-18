@@ -37,8 +37,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = ApolloVehicleRegularRoadDataset(args.train_file, training_mode=True)
-    valid_dataset = ApolloVehicleRegularRoadDataset(args.valid_file, training_mode=False)
+    train_dataset = ApolloVehicleRegularRoadDataset(args.train_file, \
+    	training_mode=True, cutin_augmentation_coeff=2)
+    valid_dataset = ApolloVehicleRegularRoadDataset(args.valid_file, \
+    	training_mode=False, cutin_augmentation_coeff=2)
 
     train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True,\
         num_workers=8, drop_last=True, collate_fn=collate_fn)
@@ -46,7 +48,7 @@ if __name__ == "__main__":
         num_workers=8, drop_last=True, collate_fn=collate_fn)
 
     # Model and training setup
-    model = LaneAttention()
+    model = FastLaneAttention()
     loss = ClassificationLoss()
     print (model)
     learning_rate = 1e-4
@@ -63,4 +65,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=100, save_name='./', print_period=50)
+                           scheduler, epochs=100, save_name='./', print_period=10)
