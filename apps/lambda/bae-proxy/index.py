@@ -13,7 +13,6 @@ import gunicorn.app.base
 
 from modules.tools.fuel_proxy.proto.job_config_pb2 import JobConfig
 
-from fueling.common.partners import partners
 from vehicle_calibration import VehicleCalibration
 
 
@@ -23,6 +22,12 @@ flags.DEFINE_integer('workers', 5, 'Workers to run.')
 
 class FuelJob(flask_restful.Resource):
     """Fuel job restful service"""
+    PARTNERS = {
+        'apollo',
+        'apollo-evangelist',
+        'apollo-qa',
+        'udelv2019',
+    }
 
     def post(self):
         """Accept user request, verify and process."""
@@ -34,7 +39,7 @@ class FuelJob(flask_restful.Resource):
         except json_format.ParseError:
             return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
         # 2. User authentication.
-        if job_config.partner_id not in partners:
+        if job_config.partner_id not in self.PARTNERS:
             msg = 'Sorry, you are not authorized to access this service!'
             return json.dumps({'message': msg}), HTTPStatus.UNAUTHORIZED
         # 3. Dispatch jobs.

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from http import HTTPStatus
+import datetime
 import json
 import os
 import string
+import time
 
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig
-
-import fueling.common.time_utils as time_utils
 
 
 class VehicleCalibration(object):
@@ -18,11 +18,10 @@ class VehicleCalibration(object):
     @staticmethod
     def process(job_config):
         """Accept user request, verify and process."""
-        job_id = time_utils.format_current_time(
-            '%Y-%m-%d-%H-%M-%S' if job_config.partner_id == 'apollo' else '%Y-%m-%d-%H-%M')
+        job_id = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d-%H-%M')
         mnt_path = os.path.join('/mnt', job_config.partner_id, job_id)
         if os.path.exists(mnt_path):
-            msg = 'Please do not submit job too frequently!'
+            msg = 'Please do not submit job too frequently! Only one job allowed per minute.'
             return json.dumps({'message': msg}), HTTPStatus.TOO_MANY_REQUESTS
         os.makedirs(mnt_path)
 
