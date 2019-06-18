@@ -83,8 +83,17 @@ class ApolloPedestrianDataset(Dataset):
             sorted_ped_val = sorted(ped_val, key=lambda tup: tup[0])
             self.ped_id_to_traj_data[ped_id] = sorted_ped_val
 
+        # Normalize large ped_x and ped_y values to smaller ones to avoid possible numerical issues.
+        for ped_id, ped_val in self.ped_id_to_traj_data.items():
+            normalized_ped_val = ped_val
+            for i in range(len(normalized_ped_val)):
+                normalized_ped_val[i] = (normalized_ped_val[i][0], normalized_ped_val[i][1] - normalized_ped_val[-1][1], \
+                    normalized_ped_val[i][2] - normalized_ped_val[-1][2], normalized_ped_val[i][3])
+            #print (normalized_ped_val)
+            self.ped_id_to_traj_data[ped_id] = normalized_ped_val
+
         # Go through every pedestrian:
-        #   a. remove those that are too far away
+        #   a. remove those that are too far away from adc.
         #   b. segment into different ped_ids at timestamp discontinuities.
         new_ped_id_to_traj_data = dict()
         ped_tracking_length = []
