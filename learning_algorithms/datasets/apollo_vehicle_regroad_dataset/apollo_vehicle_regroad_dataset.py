@@ -271,7 +271,8 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
 
 
 class ApolloVehicleRegularRoadDataset(Dataset):
-    def __init__(self, data_dir, is_lane_scanning=True, training_mode=True):
+    def __init__(self, data_dir, is_lane_scanning=True, training_mode=True, \
+                 cutin_augmentation_coeff=1):
         self.obstacle_hist_size = []
         self.obstacle_features = []
         self.backward_lane_points = []
@@ -279,6 +280,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         self.is_self_lane = []
         self.labels = []
         self.is_cutin = []
+        total_num_cutin_data_pt = 0
 
         all_file_paths = GetListOfFiles(data_dir)
         for file_path in all_file_paths:
@@ -291,7 +293,6 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                     continue
 
                 curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
-                print (curr_obs_hist_size)
 
                 curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((int(obs_feature_size/9), 9))
                 curr_obs_feature = np.flip(curr_obs_feature, 0)
@@ -321,19 +322,14 @@ class ApolloVehicleRegularRoadDataset(Dataset):
 
                 curr_is_cutin = data_pt[-1] * np.ones((1, 1))
 
-                if training_mode:
-                    for i, lane_label in enumerate(curr_label):
-                        if lane_label == 1:
-                            self.obstacle_hist_size.append(curr_obs_hist_size)
-                            self.obstacle_features.append(curr_obs_feature)
-                            self.backward_lane_points.append(curr_backward_lane_points)
-                            self.lane_features.append(curr_lane_feature)
-                            self.is_self_lane.append(curr_self_lane_feature)
-                            curr_lane_label = np.zeros((curr_num_lane_sequence, 1))
-                            curr_lane_label[i, 0] = 1
-                            self.labels.append(curr_lane_label)
-                            self.is_cutin.append(curr_is_cutin)
-                            if curr_is_cutin[0,0] != 0:
+                aug_times = 1
+                if curr_is_cutin[0,0]:
+                    aug_times = cutin_augmentation_coeff
+                    total_num_cutin_data_pt += cutin_augmentation_coeff
+                for k in range(aug_times):
+                    if training_mode:
+                        for i, lane_label in enumerate(curr_label):
+                            if lane_label == 1:
                                 self.obstacle_hist_size.append(curr_obs_hist_size)
                                 self.obstacle_features.append(curr_obs_feature)
                                 self.backward_lane_points.append(curr_backward_lane_points)
@@ -343,16 +339,18 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                                 curr_lane_label[i, 0] = 1
                                 self.labels.append(curr_lane_label)
                                 self.is_cutin.append(curr_is_cutin)
-                else:
-                    self.obstacle_hist_size.append(curr_obs_hist_size)
-                    self.obstacle_features.append(curr_obs_feature)
-                    self.backward_lane_points.append(curr_backward_lane_points)
-                    self.lane_features.append(curr_lane_feature)
-                    self.is_self_lane.append(curr_self_lane_feature)
-                    self.labels.append(curr_label.reshape((curr_num_lane_sequence, 1)))
-                    self.is_cutin.append(curr_is_cutin)
+                    else:
+                        self.obstacle_hist_size.append(curr_obs_hist_size)
+                        self.obstacle_features.append(curr_obs_feature)
+                        self.backward_lane_points.append(curr_backward_lane_points)
+                        self.lane_features.append(curr_lane_feature)
+                        self.is_self_lane.append(curr_self_lane_feature)
+                        self.labels.append(curr_label.reshape((curr_num_lane_sequence, 1)))
+                        self.is_cutin.append(curr_is_cutin)
 
         self.total_num_data_pt = len(self.obstacle_features)
+        print ('Total number of data points = {}'.format(self.total_num_data_pt))
+        print ('Total number of cut-in data points = {}'.format(total_num_cutin_data_pt))
 
     def __len__(self):
         return self.total_num_data_pt
