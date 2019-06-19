@@ -14,33 +14,67 @@
 # limitations under the License.
 ###############################################################################
 
-import os
-import math
-
+import cv2 as cv
+import glob
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
-from torch.utils.data import Dataset
+
+def point_to_idx(point_x, point_y):
+    return (int(point_x/0.1 + 400), int(point_y/0.1 + 400))
 
 
-def LabelCleaning(feature_dir, label_dir, pred_len=3.0):
+def plot_img(future_pt, count):
+    # black background
+    img = np.zeros([1000, 800, 3], dtype=np.uint8)
+    # draw boundaries
+    cv.circle(img,(400,400),2,color=[255,255,255], thickness=4)
+    cv.line(img, (0,0), (799,0), color=[255, 255, 255])
+    cv.line(img, (799,0), (799,999), color=[255, 255, 255])
+    cv.line(img, (0,999), (0,0), color=[255, 255, 255])
+    cv.line(img, (799,999), (0,999), color=[255, 255, 255])
+    for ts in range(future_pt.shape[0]):
+        cv.circle(img, point_to_idx(future_pt[ts][0] - future_pt[0][0], future_pt[ts][1] - future_pt[0][1]), radius=3, thickness=2, color=[0,128,128])
+    cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img,0),1))
+
+
+
+def LabelCleaning(feature_dir, label_dir, pred_len=30):
     # From feature_dir, locate those labels of interests.
-
+    label_dict_list = glob.glob(label_dir + '/**/future_status.npy', recursive=True)
+  
     # Get the statistics of all the labels. (histogram of how many left-turns,
     # right-turns, u-turns, go-straight, etc.)
 
     # Go through all labels of interests, filter out those noisy ones and
     # only retain those clean ones.
-        # 1. Only keep pred_len length
-        # 2. Get the scalar acceleration, and angular speed of all points.
-        # 3. Fit a (3rd order?) polynomial to acc and ang-speed.
-        # 4. Those with large residual errors should be removed.
-
+    for label_dict_name in label_dict_list:
+        label_dict = np.load(label_dict_name).item()
+        cleaned_label_dict = {}
+        idx = 0
+        for key, feature_seq in label_dict.items():
+            # 1. Only keep pred_len length
+            if len(feature_seq) < 30:
+                continue
+            obs_pos = np.array([[feature[0], feature[1]] for feature in feature_seq])
+            # 2. Get the scalar acceleration, and angular speed of all points.
+            obs_vel = (obs_pos[1:, :] - obs_pos[:-1, :]) / 0.1
+            linear_vel = np.linalg.norm(obs_vel, axis=1)
+            linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
+            angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
+            # 3. Fit a (3rd order?) polynomial to acc and ang-speed.
+            if np.max(np.abs(linear_acc)) > 100:
+                continue
+            if np.min(angular_vel) < 0.85:
+                continue
+            # plot_img(obs_pos, idx)
+            # print(idx, key)
+            # 4. Those with large residual errors should be removed.
+            idx += 1
+        print("Got " + str(idx) + "/" + str(len(label_dict.keys())) + " labels left!")
     # Get the statistics of the cleaned labels, and do some re-balancing to
     # maintain roughly the same distribution as before.
 
     return
+
+
+if __name__ == '__main__':
+    LabelCleaning('test', '/home/sunhongyi/Downloads/2019-02-20/2019-02-20-14-24-37/')
