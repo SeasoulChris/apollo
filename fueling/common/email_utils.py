@@ -58,11 +58,11 @@ def send_email(title, title_color, content, receivers, attachments=[]):
            ...
        )
        2). a dictionary with keys and values, for example:
-       (
+       {
            'Succeeded': 100,
            'Failed': 2000,
            'Total': 2100
-       )
+       }
        3). a string.
     4. receivers, recepients of the notification. Default should be a group account, but can also
        be specified explicitly.

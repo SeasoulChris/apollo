@@ -66,7 +66,8 @@ class MultiJobTrain(BasePipeline):
                 # PairRDD(vehicle, feature folder)
                 feature_dir
                 # PairRDD(vehicle, throttle/brake train/test feature folder)
-                .mapValues(lambda feature_dir: os.path.join(feature_dir, throttle_or_brake, train_or_test))
+                .mapValues(lambda feature_dir:
+                           os.path.join(feature_dir, throttle_or_brake, train_or_test))
                 # PairRDD(vehicle, all files in throttle train feature folder)
                 .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5')))
                 # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
@@ -194,14 +195,16 @@ class MultiJobTrain(BasePipeline):
             'throttle_data',
             # PairRDD((vehicle, 'throttle'), (x_train_data, y_train_data))
             throttle_train_data
-            # PairRDD((vehicle, 'throttle'), ((x_train_data, y_train_data), (x_test_data, y_test_data)))
+            # PairRDD((vehicle, 'throttle'),
+            #         ((x_train_data, y_train_data), (x_test_data, y_test_data)))
             .join(throttle_test_data))
 
         throttle_train_param = spark_helper.cache_and_log(
             'throttle_train_param',
             # PairRDD(vehicle, train_param)
             conf.mapValues(lambda (vehicle_conf, train_conf):
-                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf, 'throttle'))
+                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
+                                                                      'throttle'))
             # PairRDD((vehicle, 'throttle'), train_param)
             .map(lambda (vehicle, train_param): ((vehicle, 'throttle'), train_param)))
 
@@ -226,15 +229,16 @@ class MultiJobTrain(BasePipeline):
             'brake_data',
             # PairRDD((vehicle, 'brake'), (x_train_data, y_train_data))
             brake_train_data
-            # PairRDD((vehicle, 'brake'), ((x_train_data, y_train_data), (x_test_data,
-            #                                                             y_test_data)))
+            # PairRDD((vehicle, 'brake'),
+            #         ((x_train_data, y_train_data), (x_test_data, y_test_data)))
             .join(brake_test_data))
 
         brake_train_param = spark_helper.cache_and_log(
             'brake_train_param',
             # PairRDD(vehicle, train_param)
             conf.mapValues(lambda (vehicle_conf, train_conf):
-                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf, 'brake'))
+                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
+                                                                      'brake'))
             # PairRDD((vehicle, 'brake'), train_param)
             .map(lambda (vehicle, train_param): ((vehicle, 'brake'), train_param)))
 

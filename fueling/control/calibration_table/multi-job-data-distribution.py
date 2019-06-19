@@ -121,7 +121,7 @@ class MultiJobDataDistribution(BasePipeline):
         if partner:
             receivers.append(partner.email)
         title = 'Your vehicle calibration job is done!'
-        content = ''
+        content = {'Job Owner': job_owner, 'Job ID': job_id}
         origin_dir = bos_client.abs_path(origin_prefix)
         conf_files = glob.glob(os.path.join(target_dir, '*/calibration_table.pb.txt'))
         plots = glob.glob(os.path.join(target_dir, '*/*.pdf'))

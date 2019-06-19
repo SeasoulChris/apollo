@@ -116,9 +116,9 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     if missing_file(input_folder):
         err_msg = "One or more files are missing in %s" % input_folder
     elif parse_error(input_folder):
-        err_msg = "Confige file cannot be parsed in %s" % input_folder
+        err_msg = "Config file cannot be parsed in %s" % input_folder
     elif missing_field(input_folder):
-        err_msg = "One or more field is missing in Confige file %s" % input_folder
+        err_msg = "One or more fields are missing in config file %s" % input_folder
     elif missing_message_data(input_folder):
         err_msg = "Messages are missing in records of %s" % input_folder
     else:
