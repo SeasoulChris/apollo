@@ -90,7 +90,7 @@ def missing_field(path):
         # required field
         fields = [conf.vehicle_param.brake_deadzone,
                   conf.vehicle_param.throttle_deadzone,
-                  #   conf.vehicle_param.max_acceleration,
+                  conf.vehicle_param.max_acceleration,
                   conf.vehicle_param.max_deceleration]
         # for value in conf.vehicle_param:
         # has field is always true since a default value is given
@@ -140,5 +140,5 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     glog.error(err_msg)
     return False
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    sanity_check('/apollo/modules/data/fuel/testdata/control/sourceData/SanityCheck', "test-owner", "000", email_utils.CONTROL_TEAM + email_utils.DATA_TEAM)
