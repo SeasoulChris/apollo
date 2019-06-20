@@ -60,11 +60,16 @@ class CruiseMLP(nn.Module):
 
 
 class FastLaneAttention(nn.Module):
-    def __init__(self):
+    def __init__(self, mode=1):
         super(FastLaneAttention, self).__init__()
+        self.mode = mode
         self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
         self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
-        self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
+        self.lane_aggregate = SimpleAggregation()
+        if mode == 0:
+            self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
+        elif mode == 1:
+            self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=256, mlp_size=[100, 16, 1])
 
     def forward(self, X):
         obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
@@ -82,6 +87,8 @@ class FastLaneAttention(nn.Module):
         lane_enc = torch.cat((lane_enc_1, lane_enc_2), 1)
 
         aggr_enc = cuda(torch.zeros(N, 1))
+        if self.mode >= 1:
+            aggr_enc = self.lane_aggregate(obs_enc, lane_enc, same_obs_mask)
 
         out = self.prediction_layer(obs_enc, lane_enc, aggr_enc, same_obs_mask)
 
@@ -498,6 +505,37 @@ class AttentionalLaneLSTM(nn.Module):
         # Encoding
         out = torch.cat((front_states, back_states, max_states, attentiona_states), 1)
         out = self.encode(out)
+        return out
+
+
+class SimpleAggregation(nn.Module):
+    def __init__(self):
+        super(SimpleAggregation, self).__init__()
+
+    def forward(self, obs_encoding, lane_encoding, same_obs_mask):
+        '''Forward function
+            - obs_encoding: N x input_encoding_size
+            - lane_encoding: M x input_encoding_size
+            - same_obs_mask: M x 1
+
+            output: N x output_size
+        '''
+        N = obs_encoding.size(0)
+        input_encoding_size = obs_encoding.size(1)
+        out = cuda(torch.zeros(N, input_encoding_size*2))
+
+        for obs_id in range(same_obs_mask.max().long().item() + 1):
+            curr_mask = (same_obs_mask[:, 0] == obs_id)
+            curr_num_lane = torch.sum(curr_mask).long().item()
+
+            # (curr_num_lane x input_encoding_size)
+            curr_lane_encoding = lane_encoding[curr_mask, :].view(curr_num_lane, -1)
+            # (1 x input_encoding_size)
+            curr_lane_maxpool, _ = torch.max(curr_lane_encoding, 0, keepdim=True)
+            # (1 x input_encoding_size)
+            curr_lane_avgpool = torch.mean(curr_lane_encoding, 0, keepdim=True)
+            out[obs_id, :] = torch.cat((curr_lane_maxpool, curr_lane_avgpool), 1)
+
         return out
 
 

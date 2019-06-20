@@ -37,7 +37,6 @@ def plot_img(future_pt, count):
     cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img,0),1))
 
 
-
 def LabelCleaning(feature_dir, label_dir, pred_len=30):
     # From feature_dir, locate those labels of interests.
     label_dict_list = glob.glob(label_dir + '/**/future_status.npy', recursive=True)
