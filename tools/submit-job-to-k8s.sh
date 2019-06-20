@@ -31,6 +31,10 @@ PARTNER_BOS_SECRET=""
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
 
+# Node selector, default is CPU if GPU is not explicitly specified
+NODE_SELECTOR_COMPUTE_TYPE="CPU"
+
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --image|-i)
@@ -80,6 +84,9 @@ while [ $# -gt 0 ]; do
     --partner_bos_secret)
       shift
       PARTNER_BOS_SECRET=$1
+      ;;
+    --gpu|-g)
+      NODE_SELECTOR_COMPUTE_TYPE="GPU"
       ;;
     *)
       JOB_FILE=$1
@@ -186,6 +193,8 @@ spark-submit \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+\
+    --conf spark.kubernetes.node.selector.computetype="${NODE_SELECTOR_COMPUTE_TYPE}" \
     ${PARTNER_CONF} \
 \
     "${JOB_FILE}" --running_mode=PROD $@
