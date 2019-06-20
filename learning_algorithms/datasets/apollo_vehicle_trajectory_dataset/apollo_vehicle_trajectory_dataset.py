@@ -14,6 +14,7 @@
 # limitations under the License.
 ###############################################################################
 
+from collections import Counter
 import cv2 as cv
 import glob
 import numpy as np
@@ -46,33 +47,52 @@ def LabelCleaning(feature_dir, label_dir, pred_len=30):
 
     # Go through all labels of interests, filter out those noisy ones and
     # only retain those clean ones.
+    count = Counter()
     for label_dict_name in label_dict_list:
         label_dict = np.load(label_dict_name).item()
         cleaned_label_dict = {}
         idx = 0
         for key, feature_seq in label_dict.items():
             # 1. Only keep pred_len length
-            if len(feature_seq) < 30:
+            if len(feature_seq) < pred_len:
                 continue
-            obs_pos = np.array([[feature[0], feature[1]] for feature in feature_seq])
+            obs_pos = np.array([[feature[0], feature[1]] for feature in feature_seq[:pred_len]])
+            obs_pos = obs_pos - obs_pos[0, :]
             # 2. Get the scalar acceleration, and angular speed of all points.
             obs_vel = (obs_pos[1:, :] - obs_pos[:-1, :]) / 0.1
             linear_vel = np.linalg.norm(obs_vel, axis=1)
             linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
             angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
-            # 3. Fit a (3rd order?) polynomial to acc and ang-speed.
-            if np.max(np.abs(linear_acc)) > 100:
+            turning_ang = (np.arctan2(obs_vel[-1,1], obs_vel[-1,0]) - np.arctan2(obs_vel[0,1], obs_vel[0,0])) % (2*np.pi)
+            turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
+            # 3. Filtered the extream values for acc and ang_vel.
+            if np.max(np.abs(linear_acc)) > 50:
                 continue
             if np.min(angular_vel) < 0.85:
                 continue
             # plot_img(obs_pos, idx)
             # print(idx, key)
+            # idx += 1
             # 4. Those with large residual errors should be removed.
-            idx += 1
-        print("Got " + str(idx) + "/" + str(len(label_dict.keys())) + " labels left!")
-    # Get the statistics of the cleaned labels, and do some re-balancing to
-    # maintain roughly the same distribution as before.
-
+            cleaned_label_dict[key] = feature_seq[:pred_len]
+            # Get the statistics of the cleaned labels, and do some re-balancing to
+            # maintain roughly the same distribution as before.
+            if -np.pi/6 <= turning_ang <= np.pi/6:
+                area = (obs_pos[0,0]*obs_pos[1,1] + obs_pos[1,0]*obs_pos[-1,1] + obs_pos[-1,0]*obs_pos[0,1]
+                       -obs_pos[0,0]*obs_pos[-1,1] - obs_pos[1,0]*obs_pos[0,1] - obs_pos[-1,0]*obs_pos[1,1])
+                if area/(np.linalg.norm(obs_pos[1,:] - obs_pos[0,:]) + 1e-6) >= 3:
+                    count['change_lane'] += 1
+                else:
+                    count['straight'] += 1
+            elif -np.pi/2 <= turning_ang < -np.pi/6:
+                count['right'] += 1
+            elif np.pi/6 < turning_ang <= np.pi/2:
+                count['left'] += 1
+            else:
+                count['uturn'] += 1
+        print("Got " + str(len(cleaned_label_dict.keys())) + "/" + str(len(label_dict.keys())) + " labels left!")
+        print(count)
+        np.save(label_dict_name.replace('future_status.npy', 'cleaned_label.npy'), cleaned_label_dict)
     return
 
 
