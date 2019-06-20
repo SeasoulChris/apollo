@@ -189,21 +189,25 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
 
 def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs, save_name, print_period=None,
-                           early_stop=None):
+                           early_stop=None, save_mode=1):
+    '''
+        -save_mode: 0 - save the best one only
+                    1 - save all models that are better than before
+                    2 - save all
+    '''
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
     for epoch in range(1, epochs+1):
         train_dataloader(train_loader, model, loss, optimizer, epoch, print_period)
         valid_loss = valid_dataloader(valid_loader, model, loss)
-
         scheduler.step(valid_loss)
 
+        # Determine if valid_loss is getting better and if early_stop is needed.
+        is_better_model = False
         if valid_loss < best_valid_loss:
             num_epoch_valid_loss_not_decreasing = 0
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(),\
-                save_name + '/model_epoch{}_valloss{:.6f}.pt'\
-                .format(epoch, valid_loss))
+            is_better_model = True
         else:
             num_epoch_valid_loss_not_decreasing += 1
             # Early stop if enabled and met the criterion
@@ -213,5 +217,20 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                 logging.info('Reached early-stopping criterion. Stop training.')
                 logging.info('Best validation loss = {}'.format(best_valid_loss))
                 break
+
+        # Save model according to the specified mode.
+        if save_mode == 0:
+            if is_better_model:
+                torch.save(model.state_dict(),\
+                    save_name + '/model.pt'.format(epoch, valid_loss))
+        elif save_mode == 1:
+            if is_better_model:
+                torch.save(model.state_dict(),\
+                    save_name + '/model_epoch{}_valloss{:.6f}.pt'\
+                    .format(epoch, valid_loss))
+        elif save_mode == 2:
+            torch.save(model.state_dict(),\
+                save_name + '/model_epoch{}_valloss{:.6f}.pt'\
+                .format(epoch, valid_loss))
 
     return model
