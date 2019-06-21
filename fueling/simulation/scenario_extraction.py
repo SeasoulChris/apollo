@@ -53,7 +53,7 @@ def execute_task(task):
          if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
     if message is not None:
         if record_utils.message_to_proto(message).map_version.startswith('sunnyvale'):
-            map_dir = '/mnt/bos/modules/map/data/sunnyvale_with_two_offices'
+            map_dir = '/mnt/bos/modules/map/data/sunnyvale'
 
     # Invoke logsim_generator binary
     glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))

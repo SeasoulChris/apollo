@@ -15,7 +15,7 @@ import fueling.common.bos_client as bos_client
 
 
 TIME_RANGES = [1.0, 3.0, 8.0]
-REGIONS = ['sunnyvale_with_two_offices', 'san_mateo']
+REGIONS = ['sunnyvale', 'san_mateo']
 
 DISTANCE_THRESHOLD = 1.5
 

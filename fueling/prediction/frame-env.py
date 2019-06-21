@@ -75,7 +75,7 @@ class FrameEnv(BasePipeline):
         dir_map_list = []
         for record_dir, map_name in dir_map_dict.items():
             if "Sunnyvale" in map_name:
-                dir_map_list.append((record_dir, "sunnyvale_with_two_offices"))
+                dir_map_list.append((record_dir, "sunnyvale"))
             if "San Mateo" in map_name:
                 dir_map_list.append((record_dir, "san_mateo"))
         return dir_map_list
