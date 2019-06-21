@@ -1,0 +1,52 @@
+recipients:
+  - name: 'longtao'
+    email: 'longtaolin@baidu.com'
+  - name: 'julian'
+    email: 'habitojulian@baidu.com'
+  - name: 'wesley'
+    email: 'reynoldswesley@baidu.com'
+  - name: 'liccardo'
+    email: 'lliccardo@baidu.com'
+  - name: 'chrisheine'
+    email: 'chrisheineman@baidu.com'
+  - name: 'douglas'
+    email: 'douglaswells@baidu.com'
+  - name: 'zhenni'
+    email: 'wuzhenni01@baidu.com'
+  - name: 'xiaoyong'
+    email: 'yongxiao@baidu.com'
+  - name: 'runxin'
+    email: 'runxinhe@baidu.com'
+
+disks:
+  - label: 'Apollo-2'
+    serial: 'NA9SKKE'
+    type: 'scsi'
+  - label: 'Apollo-3'
+    serial: 'NA9SKKYQ'
+    type: 'scsi'
+  - label: 'Apollo-20'
+    serial: 'NA9SGFYF'
+    type: 'scsi'
+  - label: 'Apollo-21'
+    serial: 'NA9SGJ23'
+    type: 'scsi'
+  - label: 'Apollo-24'
+    serial: 'NA9SGJ3B'
+    type: 'scsi'
+  - label: 'Apollo-9'
+    serial: 'NA9F50BW'
+    type: 'scsi'
+  - label: 'Extreme SSD'
+    serial: '000000123AD2'
+    type: 'sat'
+
+running_freeze: false
+
+remote_user: root
+remoet_ip: 180.76.156.181
+#src_streaming_path: /mnt/cds/modules/streaming
+src_streaming_path: /mnt/bos/modules/streaming
+dst_streaming_path: modules/streaming
+src_sync_script_path: /mnt/cds/modules/data/bos_sync.sh
+video_only: true
