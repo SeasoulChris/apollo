@@ -34,8 +34,8 @@ class BagToRecord(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        src_prefix = 'stale-rosbags'
-        dst_prefix = 'small-records'
+        src_prefix = 'stale-rosbags/2019/'
+        dst_prefix = 'small-records/2019/'
 
         bos = self.bos()
         # PairRDD(src_dir, src_bag)

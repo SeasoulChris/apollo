@@ -27,8 +27,8 @@ class IndexRecords(BasePipeline):
     def run_prod(self):
         """Run prod."""
         prefixes = [
-            'public-test/',
-            'small-records/',
+            'public-test/2019/',
+            'small-records/2019/',
         ]
         bos = self.bos()
         # RDD(record_path)
