@@ -174,7 +174,7 @@ def guess_map_name_from_point(point):
         return 'San Mateo'
     if (37.40293945243735 < point.lat < 37.41830762016944 and
             -122.0285911265343 < point.lon < -121.9994401268334):
-        return 'Sunnyvale With Two Offices'
+        return 'Sunnyvale'
     return None
 
 
