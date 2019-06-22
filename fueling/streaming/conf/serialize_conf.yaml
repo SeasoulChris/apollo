@@ -3,32 +3,62 @@
   topic: '/apollo/sensor/lidar128/compensator/PointCloud2'
 
 ---
-  name: 'front-6mm'
+  name: 'front-6mm-image'
   topic: '/apollo/sensor/camera/front_6mm/image/compressed'
   fields:
     - frame_type
 
 ---
-  name: 'front-12mm'
+  name: 'front-12mm-image'
   topic: '/apollo/sensor/camera/front_12mm/image/compressed'
   fields:
     - frame_type
 
 ---
-  name: 'rear-6mm'
+  name: 'rear-6mm-image'
   topic: '/apollo/sensor/camera/rear_6mm/image/compressed'
   fields:
     - frame_type
 
 ---
-  name: 'left-fisheye'
+  name: 'left-fisheye-image'
   topic: '/apollo/sensor/camera/left_fisheye/image/compressed'
   fields:
     - frame_type
 
 ---
-  name: 'right-fisheye'
+  name: 'right-fisheye-image'
   topic: '/apollo/sensor/camera/right_fisheye/image/compressed'
+  fields:
+    - frame_type
+
+---
+  name: 'front-6mm-video'
+  topic: '/apollo/sensor/camera/front_6mm/video/compressed'
+  fields:
+    - frame_type
+
+---
+  name: 'front-12mm-video'
+  topic: '/apollo/sensor/camera/front_12mm/video/compressed'
+  fields:
+    - frame_type
+
+---
+  name: 'rear-6mm-video'
+  topic: '/apollo/sensor/camera/rear_6mm/video/compressed'
+  fields:
+    - frame_type
+
+---
+  name: 'left-fisheye-video'
+  topic: '/apollo/sensor/camera/left_fisheye/video/compressed'
+  fields:
+    - frame_type
+
+---
+  name: 'right-fisheye-video'
+  topic: '/apollo/sensor/camera/right_fisheye/video/compressed'
   fields:
     - frame_type
 

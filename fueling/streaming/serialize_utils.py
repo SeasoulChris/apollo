@@ -67,6 +67,8 @@ def parse_record(record_file, root_dir):
     try:
         topic_file_handles = build_file_handles(topic_files)
         freader = record.RecordReader(record_file)
+        # Sometimes reading right after opening reader can cause no messages are read
+        time.sleep(2)
         for message in freader.read_messages():
             renamed_topic = streaming_utils.topic_to_file_name(message.topic)
             if renamed_topic in topic_file_handles:

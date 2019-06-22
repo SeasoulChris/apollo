@@ -24,12 +24,37 @@ import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels that have videos we need to decode
-VIDEO_CHANNELS = {
-    'front-6mm': '/apollo/sensor/camera/front_6mm/image/compressed',
-    'front-12mm': '/apollo/sensor/camera/front_12mm/image/compressed',
-    'rear-6mm': '/apollo/sensor/camera/rear_6mm/image/compressed',
-    'left-fisheye': '/apollo/sensor/camera/left_fisheye/image/compressed',
-    'right-fisheye': '/apollo/sensor/camera/right_fisheye/image/compressed'
+IMAGE_FRONT_6MM_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
+IMAGE_FRONT_12MM_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
+IMAGE_REAR_6MM_CHANNEL = '/apollo/sensor/camera/rear_6mm/image/compressed'
+IMAGE_LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/image/compressed'
+IMAGE_RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/image/compressed'
+
+VIDEO_FRONT_6MM_CHANNEL = '/apollo/sensor/camera/front_6mm/video/compressed'
+VIDEO_FRONT_12MM_CHANNEL = '/apollo/sensor/camera/front_12mm/video/compressed'
+VIDEO_REAR_6MM_CHANNEL = '/apollo/sensor/camera/rear_6mm/video/compressed'
+VIDEO_LEFT_FISHEYE_CHANNEL = '/apollo/sensor/camera/left_fisheye/video/compressed'
+VIDEO_RIGHT_FISHEYE_CHANNEL = '/apollo/sensor/camera/right_fisheye/video/compressed'
+
+VIDEO_CHANNELS = [
+    IMAGE_FRONT_6MM_CHANNEL,
+    IMAGE_FRONT_12MM_CHANNEL,
+    IMAGE_REAR_6MM_CHANNEL,
+    IMAGE_LEFT_FISHEYE_CHANNEL,
+    IMAGE_RIGHT_FISHEYE_CHANNEL,
+    VIDEO_FRONT_6MM_CHANNEL,
+    VIDEO_FRONT_12MM_CHANNEL,
+    VIDEO_REAR_6MM_CHANNEL,
+    VIDEO_LEFT_FISHEYE_CHANNEL,
+    VIDEO_RIGHT_FISHEYE_CHANNEL,
+]
+
+VIDEO_IMAGE_MAP = {
+    VIDEO_FRONT_6MM_CHANNEL: IMAGE_FRONT_6MM_CHANNEL,
+    VIDEO_FRONT_12MM_CHANNEL: IMAGE_FRONT_12MM_CHANNEL,
+    VIDEO_REAR_6MM_CHANNEL: IMAGE_REAR_6MM_CHANNEL,
+    VIDEO_LEFT_FISHEYE_CHANNEL: IMAGE_LEFT_FISHEYE_CHANNEL,
+    VIDEO_RIGHT_FISHEYE_CHANNEL: IMAGE_RIGHT_FISHEYE_CHANNEL, 
 }
 
 class DecodeVideoPipeline(BasePipeline):
@@ -84,21 +109,26 @@ class DecodeVideoPipeline(BasePipeline):
             # PairRDD(target_dir, record)
             .flatMapValues(streaming_utils.list_records_for_task))
 
-        # Retrieve video frames from original records, and decode them to images
-        # PairRDD(target_dir, record)
-        (target_records
-         # PairRDD(target_dir, MessageMetaData(topic, timestamp, fields, src_path))
-         .flatMapValues(lambda record: streaming_utils.load_meta_data(
-             root_dir, record, VIDEO_CHANNELS.values()))
-         # PairRDD((target_dir, topic), (timestamp, fields, src_path))
-         .map(lambda (target, (topic, time, fields, src_path)):
-              ((target, topic), (time, fields, src_path)))
-         # PairRDD((target_dir, topic), (timestamp, fields, src_path)s)
-         .groupByKey()
-         # PairRDD((target_dir, topic), (timestamp, fields, src_path)s), cut into smaller groups
-         .flatMap(group_video_frames)
-         # PairRDD((target_dir, topic), (timestamp, fields, src_path)s), actually decoding
-         .foreach(decode_videos))
+        # Retrieve video frames from original records
+        target_groups = spark_helper.cache_and_log(
+            'Target_Groups',
+            # PairRDD(target_dir, record)
+            target_records
+            # PairRDD(target_dir, MessageMetaData(topic, timestamp, fields, src_path))
+            .flatMapValues(lambda record: streaming_utils.load_meta_data(
+                 root_dir, record, VIDEO_CHANNELS))
+            # PairRDD((target_dir, topic), (timestamp, fields, src_path))
+            .map(lambda (target, (topic, time, fields, src_path)):
+                 ((target, topic), (time, fields, src_path)))
+            # PairRDD((target_dir, topic), (timestamp, fields, src_path)s)
+            .groupByKey()
+            # PairRDD((target_dir, topic), (timestamp, fields, src_path)s), cut into smaller groups
+            .flatMap(group_video_frames))
+
+        # Decode video to images
+        # PairRDD((target_dir, topic), (timestamp, fields, src_path)s)
+        target_groups = target_groups.repartition(int(os.environ.get('APOLLO_EXECUTORS', 10)))
+        target_groups.foreach(decode_videos)
 
         # Replace video frames with the decoded images back to original records
         glog.info('Decoding done, now replacing original records')
@@ -213,10 +243,15 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     streaming_utils.retry(lambda record: writer.open(record), [dst_record], 3)
     topic_descs = {}
     counter = 0
+    # Sometimes reading right after opening reader can cause no messages are read
+    time.sleep(2)
     for message in reader.read_messages():
         message_content = message.message
-        if message.topic in VIDEO_CHANNELS.values():
+        message_topic = message.topic
+        if message.topic in VIDEO_CHANNELS:
             message_content = get_image_back(video_dir, message)
+            if message.topic in VIDEO_IMAGE_MAP:
+                message_topic = VIDEO_IMAGE_MAP[message.topic]
             if not message_content:
                 # For any reason it failed to convert, just ignore the message
                 glog.error('failed to convert message {}-{} in record {}'.format(
@@ -225,10 +260,10 @@ def replace_images(target_record, root_dir, decoded_records_dir):
         counter += 1
         if counter % 1000 == 0:
             glog.info('writing {} th message to record {}'.format(counter, dst_record))
-        writer.write_message(message.topic, message_content, message.timestamp)
-        if message.topic not in topic_descs:
-            topic_descs[message.topic] = reader.get_protodesc(message.topic)
-            writer.write_channel(message.topic, message.data_type, topic_descs[message.topic])
+        writer.write_message(message_topic, message_content, message.timestamp)
+        if message_topic not in topic_descs:
+            topic_descs[message_topic] = reader.get_protodesc(message_topic)
+            writer.write_channel(message_topic, message.data_type, topic_descs[message_topic])
     writer.close()
     glog.info('done with replacement, target: {}, dst: {}'.format(target_record, dst_record))
 
