@@ -211,8 +211,8 @@ def decode_videos(message_meta):
         raise ValueError('Failed to execute video2jpg for video {}'.format(h265_video_file_path))
     generated_images = sorted(glob.glob('{}/*.jpg'.format(image_output_path)))
     if len(generated_images) != len(meta_list):
-        raise ValueError('Mismatch between original frames:{} and generated images:{} for video {}'
-                         .format(len(meta_list), len(generated_images), h265_video_file_path))
+        glog.error('Mismatch between original frames:{} and generated images:{} for video {}'
+                   .format(len(meta_list), len(generated_images), h265_video_file_path))
     # Rename the generated images to match the original frame name, and move to overall image dir
     for idx in range(0, len(generated_images)):
         os.rename(os.path.join(image_output_path, generated_images[idx]),
@@ -280,7 +280,7 @@ def get_image_back(video_dir, message):
     img_bin = cv2.imread(image_path)
     # Check by using NoneType explicitly to avoid ambitiousness
     if img_bin is None:
-        glog.error('failed to read original message: {}'.format(message_path))
+        glog.error('failed to read original message: {}'.format(image_path))
         return None
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
     result, encode_img = cv2.imencode('.jpg', img_bin, encode_param)
@@ -317,13 +317,15 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
             streaming_utils.locate_target_record(root_dir, decoded_dir, record))
         if not os.path.exists(target_task):
             glog.warn('no decoded dir for task: {}'.format(target_task))
-            continue
+            # Still mark it completed even if it was not restored,
+            # for avoiding being processed again next time
+            file_utils.makedirs(target_task)        
         mark_complete(target_task)
         email_message.append(SummaryTuple(
             Source=source_task,
-            SourceRecords=len(os.listdir(source_task)),
+            SourceRecords=len(glob.glob(os.path.join(source_task, '*record*'))),
             Target=target_task,
-            TargetRecords=len(os.listdir(target_task))))
+            TargetRecords=len(glob.glob(os.path.join(target_task, '*record*')))))
     email_utils.send_email_info(email_title, email_message, receivers)
 
 def mark_complete(task_path):
