@@ -211,6 +211,7 @@ def decode_videos(message_meta):
         raise ValueError('Failed to execute video2jpg for video {}'.format(h265_video_file_path))
     generated_images = sorted(glob.glob('{}/*.jpg'.format(image_output_path)))
     if len(generated_images) != len(meta_list):
+        # Logging instead of raising to give some tolerance for decoding huge number of frames
         glog.error('Mismatch between original frames:{} and generated images:{} for video {}'
                    .format(len(meta_list), len(generated_images), h265_video_file_path))
     # Rename the generated images to match the original frame name, and move to overall image dir
