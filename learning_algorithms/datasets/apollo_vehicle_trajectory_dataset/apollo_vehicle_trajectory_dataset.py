@@ -480,6 +480,21 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         return out
 
 
+def collate_fn(batch):
+    # batch is a list of tuples.
+    # unzip to form lists of np-arrays.
+    obs_hist_size, obs_pos, obs_pos_rel, future_traj, future_traj_rel = zip(*batch)
+
+    obs_hist_size = np.concatenate(obs_hist_size)
+    obs_pos = np.concatenate(obs_pos)
+    obs_pos_rel = np.concatenate(obs_pos_rel)
+    future_traj = np.concatenate(future_traj)
+    future_traj_rel = np.concatenate(future_traj_rel)
+
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), torch.from_numpy(obs_pos_rel)), \
+           (torch.from_numpy(future_traj), torch.from_numpy(future_traj_rel))
+
+
 if __name__ == '__main__':
     LabelProcessing('/data/labels-future-points/')
     # LabelCleaning('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
