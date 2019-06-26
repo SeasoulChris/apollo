@@ -385,7 +385,7 @@ class DataPreprocessor(object):
                 #   TODO(jiacheng): implement the above one.
                 #   f. add trajectory labels.
                 for i, traj in enumerate(zip(*future_trajectory)):
-                    if i >= 2:
+                    if i >= 3:
                         break
                     curr_data_point += list(traj)
                 #   g. add whether it's cut-in labels.
@@ -414,12 +414,11 @@ class DataPreprocessor(object):
 
 class ApolloVehicleTrajectoryDataset(Dataset):
     def __init__(self, data_dir):
-        self.obstacle_hist_size = []
-        self.obstacle_features = []
-        self.lane_features = []
-        self.is_self_lane = []
+        self.obs_hist_sizes = []
+        self.obs_pos = []
+        self.obs_pos_rel = []
         self.future_traj = []
-        self.is_cutin = []
+        self.future_traj_rel = []
         total_num_cutin_data_pt = 0
 
         all_file_paths = GetListOfFiles(data_dir)
@@ -430,24 +429,44 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             for data_pt in file_content:
                 # Get number of lane-sequences info.
                 curr_num_lane_sequence = int(data_pt[0])
+
                 # Get the size of obstacle state history.
-                curr_obs_hist_size = np.sum(np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
+                curr_obs_hist_size = int(np.sum(np.array(data_pt[1:obs_feature_size+1:9])))
+                if curr_obs_hist_size <= 1:
+                    continue
+                self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
+
                 # Get the obstacle features (organized from past to present).
-                # (if length not enough, then pad tailing zeros)
+                # (if length not enough, then pad heading zeros)
                 curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((int(obs_feature_size/9), 9))
                 curr_obs_feature = np.flip(curr_obs_feature, 0)
-                new_curr_obs_feature = np.zeros((int(obs_feature_size/9), 9))
-                new_curr_obs_feature[:int(curr_obs_hist_size[0][0]), :] = curr_obs_feature[-int(curr_obs_hist_size[0][0]):, :]
-                curr_obs_feature = new_curr_obs_feature.reshape((1, obs_feature_size))
+                curr_obs_pos = np.zeros(1, (int(obs_feature_size/9), 2))
+                # (1 x max_obs_hist_size x 2)
+                curr_obs_pos[0, -curr_obs_hist_size:, :] = curr_obs_feature[-curr_obs_hist_size:, 1:3]
+                self.obs_pos.append(curr_obs_pos)
+                curr_obs_pos_rel =  np.zeros(1, (int(obs_feature_size/9), 2))
+                curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
+                    curr_obs_pos[0, -curr_obs_hist_size+1:, :] - curr_obs_pos[0, -curr_obs_hist_size:-1, :]
+                self.obs_pos_rel.append(curr_obs_pos_rel)
+
                 # TODO(jiacheng): get the lane features.
                 # TODO(jiacheng): get the self-lane features.
 
                 # Get the future trajectory label.
-                curr_future_traj = np.array(data_pt[-61:-1]).reshape((1, 60))
-
-                self.obstacle_hist_size.append(curr_obs_hist_size)
-                self.obstacle_features.append(curr_obs_feature)
-                self.future_traj.append(curr_future_traj)
+                curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
+                curr_future_traj = curr_future_traj.transpose()
+                ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-31]]
+                new_curr_future_traj = np.zeros((1, 30, 2))
+                for i in range(30):
+                    new_coord = world_coord_to_relative_coord(curr_future_traj[i, :], ref_world_coord)
+                    new_curr_future_traj[0, i, 0] = new_coord[0]
+                    new_curr_future_traj[0, i, 1] = new_coord[1]
+                # (1 x 30 x 2)
+                self.future_traj.append(new_curr_future_traj)
+                curr_future_traj_rel = np.zeros((1, 29, 2))
+                curr_future_traj_rel = new_curr_future_traj[:, 1:, :] - new_curr_future_traj[:, :-1, :]
+                # (1 x 29 x 2)
+                self.future_traj_rel.append(curr_future_traj_rel)
 
         self.total_num_data_pt = len(self.obstacle_features)
         print ('Total number of data points = {}'.format(self.total_num_data_pt))
@@ -456,7 +475,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        out = (self.obstacle_hist_size[idx], self.obstacle_features[idx], self.future_traj[idx])
+        out = (self.obs_hist_sizes[idx], self.obs_pos[idx], self.obs_pos_rel[idx], \
+               self.future_traj[idx], self.future_traj_rel[idx])
         return out
 
 
