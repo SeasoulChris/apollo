@@ -417,6 +417,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.obs_hist_sizes = []
         self.obs_pos = []
         self.obs_pos_rel = []
+        self.lane_feature = []
         self.future_traj = []
         self.future_traj_rel = []
         total_num_cutin_data_pt = 0
@@ -449,7 +450,13 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     curr_obs_pos[0, -curr_obs_hist_size+1:, :] - curr_obs_pos[0, -curr_obs_hist_size:-1, :]
                 self.obs_pos_rel.append(curr_obs_pos_rel)
 
-                # TODO(jiacheng): get the lane features.
+                # Get the lane features.
+                # (curr_num_lane_sequence x num_lane_pts x 4)
+                curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1+\
+                                                     (single_lane_feature_size)*curr_num_lane_sequence])\
+                                    .reshape((curr_num_lane_sequence, int(single_lane_feature_size/4, 4)))
+                self.lane_feature.append(curr_lane_feature)
+
                 # TODO(jiacheng): get the self-lane features.
 
                 # Get the future trajectory label.
@@ -475,7 +482,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        out = (self.obs_hist_sizes[idx], self.obs_pos[idx], self.obs_pos_rel[idx], \
+        out = (self.obs_hist_sizes[idx], self.obs_pos[idx], self.obs_pos_rel[idx], self.lane_feature[idx],\
                self.future_traj[idx], self.future_traj_rel[idx])
         return out
 
@@ -483,16 +490,22 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 def collate_fn(batch):
     # batch is a list of tuples.
     # unzip to form lists of np-arrays.
-    obs_hist_size, obs_pos, obs_pos_rel, future_traj, future_traj_rel = zip(*batch)
+    obs_hist_size, obs_pos, obs_pos_rel, lane_features, future_traj, future_traj_rel = zip(*batch)
 
+    same_obstacle_mask = [elem.shape[0] for elem in lane_features]
     obs_hist_size = np.concatenate(obs_hist_size)
     obs_pos = np.concatenate(obs_pos)
     obs_pos_rel = np.concatenate(obs_pos_rel)
+    lane_features = np.concatenate(lane_features)
     future_traj = np.concatenate(future_traj)
     future_traj_rel = np.concatenate(future_traj_rel)
 
-    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), torch.from_numpy(obs_pos_rel)), \
-           (torch.from_numpy(future_traj), torch.from_numpy(future_traj_rel))
+    same_obstacle_mask = [np.ones((length, 1))*i for i, length in enumerate(same_obstacle_mask)]
+    same_obstacle_mask = np.concatenate(same_obstacle_mask)
+
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), torch.from_numpy(obs_pos_rel), \
+            torch.from_numpy(lane_features), torch.from_numpy(same_obstacle_mask)), \
+           (torch.from_numpy(future_traj), torch.from_numpy(future_traj_rel), torch.from_numpy(same_obstacle_mask))
 
 
 if __name__ == '__main__':
