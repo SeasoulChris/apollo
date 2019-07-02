@@ -94,21 +94,24 @@ def partition_data(target_msgs):
 
 def summarize_tasks(tasks, original_prefix, target_prefix):
     """Make summaries to specified tasks"""
-    SummaryTuple = namedtuple('Summary', ['Task', 'Records', 'Target', 'HDF5s', 'Gradings'])
+    SummaryTuple = namedtuple('Summary', ['Task', 'Records', 'HDF5s', 'Profling',
+                                          'Primary_Gradings', 'Sample_Sizes'])
     title = 'Control Profiling Gradings Results'
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     email_content = []
     for task in tasks:
         target_dir = task.replace(original_prefix, target_prefix, 1)
+        target_file = glob.glob(os.path.join(target_dir, '*performance_grading*'))
+        scores, samples = grading_utils.highlight_gradings(task, target_file)
         email_content.append(SummaryTuple(
             Task=task,
             Records=len(glob.glob(os.path.join(task, '*record*'))),
-            Target=target_dir,
             HDF5s=len(glob.glob(os.path.join(target_dir, '*.hdf5'))),
-            Gradings=len(glob.glob(os.path.join(target_dir, '*performance_grading*')))))
+            Profling=len(glob.glob(os.path.join(target_dir, '*performance_grading*'))),
+            Primary_Gradings=scores,
+            Sample_Sizes=samples))
         file_utils.touch(os.path.join(target_dir, 'COMPLETE'))
     email_utils.send_email_info(title, email_content, receivers)
-
 
 if __name__ == '__main__':
     ControlProfilingMetrics().main()

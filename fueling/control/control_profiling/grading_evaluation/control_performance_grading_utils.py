@@ -484,3 +484,38 @@ def output_gradings(target_grading):
                                    .format(name, value[0], value[1]))
             grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
+
+def highlight_gradings(task, grading_file):
+    """extract the highlighted information from gradings and publish them via summarize_tasks"""
+    highlight_std_items = ['station_err_std',
+                           'speed_err_std',
+                           'lateral_err_std',
+                           'heading_err_std']
+    highlight_peak_items =  ['station_err_peak',
+                             'speed_err_peak',
+                             'lateral_err_peak',
+                             'heading_err_peak',
+                             'total_time_peak']
+    std_scores = []
+    peak_scores = []
+    std_samples = []
+    peak_samples = []
+    if not grading_file:
+        glog.warn('No grading files found under the targeted path for task: {}'.format(task))
+        return ([], [])
+    for file in grading_file:
+        glog.info('Loading {}'.format(file))
+        with open(file, 'r') as informations:
+            for information in informations:
+                gradings = information.split()
+                if (len(gradings) > 0):
+                    for idx in range(len(gradings)):
+                        if gradings[idx] in highlight_std_items:
+                            std_scores.append("=".join([gradings[idx], gradings[idx+1]]))
+                            std_samples.append("=".join([gradings[idx], gradings[idx+2]]))
+                        if gradings[idx] in highlight_peak_items:
+                            peak_scores.append("=".join([gradings[idx], gradings[idx+1]]))
+                            peak_samples.append("=".join([gradings[idx], gradings[idx+2]]))
+            highlight_scores = std_scores + ["____________________"] + peak_scores + ["<br />"]
+            highlight_samples = std_samples + ["____________________"] + peak_samples + ["<br />"]
+    return (highlight_scores, highlight_samples)
