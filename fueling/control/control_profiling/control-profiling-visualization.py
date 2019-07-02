@@ -5,6 +5,7 @@
 from collections import namedtuple
 import glob
 import os
+import tarfile
 import time
 
 import colored_glog as glog
@@ -75,15 +76,36 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
     title = 'Control Profiling Visualization Results' + ' _ %s' % timestr
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     email_content = []
+    attachments = []
+    target_dir_daily = None
+    output_filename = None
+    tar = None
     for task in tasks:
         target_dir = task.replace(original_prefix, target_prefix, 1)
+        target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
         email_content.append(SummaryTuple(
             Task=task,
             Target=target_dir,
             HDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
             VisualPlot=len(glob.glob(os.path.join(target_dir, '*visualization*')))))
+        if target_file:
+            if target_dir_daily != os.path.dirname(target_dir):
+                if output_filename and tar:
+                    tar.close()
+                    attachments.append(output_filename)
+                target_dir_daily = os.path.dirname(target_dir)
+                output_filename = os.path.join(target_dir_daily,
+                                               '{}_plots.tar.gz'
+                                               .format(os.path.basename(target_dir_daily)))
+                tar = tarfile.open(output_filename, 'w:gz')
+            task_name = os.path.basename(target_dir)
+            file_name = os.path.basename(target_file[0])
+            tar.add(target_file[0], arcname='{}_{}'.format(task_name, file_name))
         file_utils.touch(os.path.join(target_dir, 'COMPLETE_PLOT'))
-    email_utils.send_email_info(title, email_content, receivers)
+    if tar:
+        tar.close()
+    attachments.append(output_filename)
+    email_utils.send_email_info(title, email_content, receivers, attachments)
 
 
 if __name__ == '__main__':

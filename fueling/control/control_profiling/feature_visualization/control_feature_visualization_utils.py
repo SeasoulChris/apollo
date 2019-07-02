@@ -98,7 +98,7 @@ def plot_h5_features_hist(data_rdd):
                     bounds = clean_data(data_plot, seq)
                     if bounds[0] == 0 and bounds[1] == 1:
                         plt.figure(figsize=(4, 3))
-                        plt.hist(data_plot, bins='auto')
+                        plt.hist(data_plot, bins=100)
                         plt.xlabel(FEATURE_NAMES[i])
                         plt.ylabel('Sample length')
                         plt.title("Histogram of " + FEATURE_NAMES[i])
@@ -113,7 +113,7 @@ def plot_h5_features_hist(data_rdd):
                     else:
                         plt.figure(figsize=(4, 3))
                         plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
-                                 bins='auto')
+                                 bins=100)
                         plt.xlabel(FEATURE_NAMES[i])
                         plt.ylabel('Sample length')
                         plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
