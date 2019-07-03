@@ -20,6 +20,7 @@ dependencies:
   - pytorch
   - scikit-learn
   - torchvision
+  - cudatoolkit=8.0
 
   # Other
   - opencv
