@@ -150,11 +150,18 @@ def gen_data_point(pose, chassis):
     ])
 
 
+def multi_get_data_point(elem):
+    """ extract data from msg """
+    (vehicle, data_dir, timestamp_sec), (chassis, pose_pre) = elem
+    pose = pose_pre.pose
+    return ((vehicle, data_dir, chassis.header.timestamp_sec), gen_data_point(pose, chassis))
+
+
 def get_data_point(elem):
     """ extract data from msg """
-    chassis = elem[1][0]
-    pose = elem[1][1].pose
-    return ((elem[0][0], chassis.header.timestamp_sec), gen_data_point(pose, chassis))
+    (data_dir, timestamp_sec), (chassis, pose_pre) = elem
+    pose = pose_pre.pose
+    return ((data_dir, chassis.header.timestamp_sec), gen_data_point(pose, chassis))
 
 
 def gen_steering_key(steering):
@@ -212,6 +219,56 @@ def gen_reverse_throttle_key(throttle):
         return 1
     else:
         return 2
+
+
+def multi_gen_feature_key(elem):
+    """ generate label for both forward driving"""
+    (vehicle, data_dir, time_stamp), data_point = elem
+    speed = data_point[14]
+    throttle = data_point[15] * 100  # 0 or positive
+    brake = data_point[16] * 100  # 0 or positive
+    steering = data_point[17] * 100
+    gear = data_point[22]
+    gear_key = int(gear)
+
+    # forward driving:
+    if gear_key != 1 and speed <= 0:  # check if it backward driving
+        elem_key = int(10000)
+    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+        elem_key = int(9000)
+    else:
+        steering_key = int(gen_steering_key(steering))
+        brake_key = int(gen_brake_key(brake))
+        speed_key = int(gen_speed_key(speed))
+        throttle_key = int(gen_throttle_key(throttle))
+        elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
+    # ((vehicle, path, feature_key), (time_stamp, paired_data))
+    return ((vehicle, data_dir, elem_key), (time_stamp, data_point))
+
+
+def multi_gen_feature_key_backwards(elem):
+    """ generate label for backward driving"""
+    (vehicle, data_dir, time_stamp), data_point = elem
+    speed = data_point[14]
+    throttle = data_point[15] * 100  # 0 or positive
+    brake = data_point[16] * 100  # 0 or positive
+    steering = data_point[17] * 100
+    gear = data_point[22]
+    gear_key = int(gear)
+
+    if gear_key != 2 and speed <= 0:  # check if it fardward driving
+        elem_key = int(10000)
+    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+        elem_key = int(9000)
+    else:
+        steering_key = int(gen_steering_key(steering))
+        throttle_key = int(gen_throttle_key(throttle))
+        brake_key = int(gen_brake_key(brake))
+        # steering-throttle-brake
+        elem_key = int(steering_key * 100 + throttle_key * 10 + brake_key)
+
+    # ((folder_path, feature_key), (time_stamp, paired_data))
+    return ((vehicle, data_dir, elem_key), (time_stamp, data_point))
 
 
 def gen_feature_key(elem):
@@ -293,7 +350,20 @@ def segment_id(timestamp):
 
 def write_segment_with_key(elem, origin_prefix, target_prefix):
     """write to h5 file, use feature key as file name"""
+    glog.info(elem)
     ((folder_path, key), (segmentID, data_set)) = elem
+    print(elem)
+    folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
+    file_name = str(key) + '_' + str(segmentID)
+    h5_utils.write_h5_single_segment(data_set, folder_path, file_name)
+    return (folder_path, key)
+
+
+def multi_write_segment_with_key(elem, origin_prefix, target_prefix):
+    """write to h5 file, use feature key as file name"""
+    glog.info(elem)
+    ((vehicle, folder_path, key), (segmentID, data_set)) = elem
+    print(elem)
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
     file_name = str(key) + '_' + str(segmentID)
     h5_utils.write_h5_single_segment(data_set, folder_path, file_name)

@@ -107,3 +107,10 @@ imu_scaling = {
 acc_method = {
     "acc_from_IMU": False  # getting acceleration from differential of locationzation
 }
+
+feature_extraction = {
+    "inter_result_folder": "modules/control/tmp/dynamic_model",  # intermediate result folder
+    "output_folder": "modules/control/result/dynamic_model",  # final result folder
+    "incremental_process": False,  # turn on incremental data processing
+    "gear": 1  # 1: gear_drive, 2:gear_reverse
+}
