@@ -565,20 +565,24 @@ def output_gradings(target_grading):
         glog.warn('No grading results written to {}'.format(grading_output_path))
     else:
         with open(grading_output_path, 'w') as grading_file:
-            grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} \n'
-                               .format('Grading Items', 'Grading Values', 'Sampling Size'))
+            grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} {3:<16s}\n'
+                               .format('Grading Items', 'Grading Values', 'Sampling Size',
+                                       'Event Timestamp'))
             for name, value in grading._asdict().iteritems():
                 if not value:
                     glog.warn('grading value for {} is None'.format(name))
                     continue
-                if isinstance(value[0], list):
-                    if 'ending_' in name:
-                        for idx in range(len(value[0][0])):
-                            grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
-                                               .format(name + '_trajectory_' + str(idx),
-                                                       value[0][0][idx], value[1]))
+                # For the ending_XXX_err values, the data are stored in multiple-dimentional list
+                # in the first element of value tuples
+                if isinstance(value[0], list) and 'ending_' in name:
+                    for idx in range(len(value[0][0])):
+                        grading_file.write('Grading_output: \t {0:<32s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
+                                           .format(name + '_trajectory_' + str(idx),
+                                                   value[0][0][idx], value[1], value[0][1][idx]))
+                # For the other values, the data are stored as one float variable in the first
+                # element of value tuples
                 else:
-                    grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
+                    grading_file.write('Grading_output: \t {0:<32s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
             grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
