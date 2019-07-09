@@ -10,7 +10,8 @@ import colored_glog as glog
 import h5py
 import numpy as np
 
-from fueling.control.dynamic_model.conf.model_config import imu_scaling
+
+from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling, pose_output_index
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
@@ -20,6 +21,7 @@ import fueling.control.utils.echo_lincoln as echo_lincoln
 
 from modules.common.configs.proto import vehicle_config_pb2
 import modules.control.proto.control_conf_pb2 as ControlConf
+
 
 # Constants
 PP6_IMU_SCALING = imu_scaling["pp6"]
@@ -110,6 +112,22 @@ def generate_imu_output(segment):
     # angular speed by imu
     output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * PP7_IMU_SCALING
     return output_imu
+
+
+def generate_pose_output(segment):
+    total_len = segment.shape[0]
+    output_pose = np.zeros([total_len, 3])
+    # acceleration by localization
+    output_pose[:, pose_output_index["acceleration"]] = (
+        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]])
+         + segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])))
+    # speed by localization
+    output_pose[:, pose_output_index["speed"]] = (
+        (segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) +
+         segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]])))
+    # angular speed by localization
+    output_pose[:, pose_output_index["w_z"]] = segment[:, segment_index["w_z"]]
+    return output_pose
 
 
 def load_calibration_table():
@@ -212,8 +230,8 @@ def generate_network_output(segment, model_folder, model_name):
             velocity_fnn = segment[k, segment_index["speed"]]
             # Scale the acceleration and angular speed data read from IMU
             output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
+                + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
             output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
         if k >= DIM_SEQUENCE_LENGTH:
@@ -269,7 +287,10 @@ def generate_evaluation_data(dataset_path, model_folder, model_name):
         sys.exit()
     vehicle_state_gps, trajectory_gps = generate_gps_data(segment)
     output_echo_lincoln = echo_lincoln.echo_lincoln_wrapper(dataset_path)
-    output_imu = generate_imu_output(segment)
+    if acc_method["acc_from_IMU"]:
+        output_imu = generate_imu_output(segment)
+    else:
+        output_imu = generate_pose_output(segment)
     output_point_mass = generate_point_mass_output(segment)
     output_fnn = generate_network_output(segment, model_folder, model_name)
     return vehicle_state_gps, output_echo_lincoln, output_imu, output_point_mass, \

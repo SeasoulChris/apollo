@@ -16,6 +16,8 @@ import colored_glog as glog
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+from fueling.control.dynamic_model.conf.model_config import acc_method
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
 
@@ -24,6 +26,7 @@ from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
 USE_GPU = False  # CPU seems to be faster than GPU in this case.
+ALPHA = 0.7  # transparent coef of plot
 
 if USE_TENSORFLOW:
     if not USE_GPU:
@@ -103,8 +106,14 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
             output_echo_lincoln[k - 1, 0:2] * DELTA_T
         vehicle_state_echo_lincoln[k, 1] = normalize_angle(vehicle_state_echo_lincoln[k, 1])
         # vehicle states by imu sensor
-        vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
-        vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
+        if acc_method["acc_from_IMU"]:
+            vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
+            vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
+        else:
+            vehicle_state_imu[k, 0] = output_imu[k, 2]  # get speed directly
+            vehicle_state_imu[k, 1] = vehicle_state_imu[k - 1, 1] + \
+                output_imu[k, 1] * DELTA_T  # integral for heading
+            vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
         # vehicle states by learning-based-model
         vehicle_state_fnn[k, :] = vehicle_state_fnn[k - 1, :] + output_fnn[k, :] * DELTA_T
         vehicle_state_fnn[k, 1] = normalize_angle(vehicle_state_fnn[k, 1])
@@ -229,10 +238,10 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.plot(trajectory_echo_lincoln[-1, 0],
                  trajectory_echo_lincoln[-1, 1], color='black', marker='x')
         # Plot the trajectory calculated by IMU
-        plt.plot(trajectory_imu[:, 0], trajectory_imu[:, 1], color='orange',
+        plt.plot(trajectory_imu[:, 0], trajectory_imu[:, 1], color='orange', alpha=ALPHA,
                  label="Generated Tracjectory by IMU")
         plt.plot(trajectory_imu[-1, 0],
-                 trajectory_imu[-1, 1], color='orange', marker='x')
+                 trajectory_imu[-1, 1], color='orange', alpha=ALPHA, marker='x')
         # Plot the trajectory calculated by learning-based model
         plt.plot(trajectory_fnn[:, 0], trajectory_fnn[:, 1], color='red',
                  label="Tracjectory by learning-based-model")
@@ -252,7 +261,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.title("Vehicle Speed Visualization")
         plt.plot(vehicle_state_gps[:, 0], color='blue', label="Ground-truth Speed")
         plt.plot(vehicle_state_echo_lincoln[:, 0], color='black', label="Echo_lincoln Speed")
-        plt.plot(vehicle_state_imu[:, 0], color='orange', label="IMU Speed")
+        plt.plot(vehicle_state_imu[:, 0], color='orange', alpha=ALPHA, label="IMU Speed")
         plt.plot(vehicle_state_fnn[:, 0], color='red', label="FNN Speed")
         if not IS_BACKWARD:
             plt.plot(vehicle_state_point_mass[:, 0], color='green', label="PointMass Speed")
@@ -277,7 +286,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Acceleration Visualization")
         plt.plot(output_echo_lincoln[:, 0], color='black', label="IMU Acceleration")
-        plt.plot(output_imu[:, 0], color='orange', alpha=0.7, label="IMU Acceleration")
+        plt.plot(output_imu[:, 0], color='orange', alpha=ALPHA, label="IMU Acceleration")
         plt.plot(output_fnn[:, 0], color='red', label="FNN Acceleration")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
@@ -286,7 +295,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         # Plot the angular velocity calculated by fnn and imu
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Angular Speed Visualization")
-        plt.plot(output_imu[:, 1], color='orange', alpha=0.7, label="IMU Angular Speed")
+        plt.plot(output_imu[:, 1], color='orange', alpha=ALPHA, label="IMU Angular Speed")
         plt.plot(output_echo_lincoln[:, 1], color='black', label="IMU Angular Speed")
         plt.plot(output_fnn[:, 1], color='red', label="FNN Angular Speed")
         plt.legend()
@@ -334,7 +343,7 @@ def evaluate(model_info, dataset_info, platform_path):
     # Output the trajectory visualization plots to a pdf file
     pdf_file_path = os.path.join(model_info[1],
                                  'trajectory_visualization_under_%s.pdf' % dataset_info[0])
-    glog.warn(pdf_file_path)
+    glog.info('pdf_file_path: {}'.format(pdf_file_path))
     visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
                                  trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,
                                  trajectory_point_mass, vehicle_state_gps,

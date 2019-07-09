@@ -8,6 +8,7 @@ import colored_glog as glog
 import h5py
 import numpy as np
 
+from fueling.control.dynamic_model.conf.model_config import acc_method
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from fueling.control.dynamic_model.conf.model_config import segment_index
 
@@ -53,6 +54,35 @@ def generate_segment_from_list(hdf5_file_list):
     return segment
 
 
+def differential(first_elem, second_elem, dt):
+    """
+    detrivative
+    """
+    return (second_elem - first_elem) / dt
+
+
+def vect_differential(vect, dt):
+    """
+    calculate detrivative of a vector
+    """
+    ret = np.zeros(vect.shape)
+    print("vect shape", vect.shape)
+    print("vect len", len(vect))
+    for index in range(1, len(vect)):
+        ret[index - 1] = (vect[index] - vect[index - 1]) / dt
+    ret[index] = ret[index - 1]
+    return ret
+
+
+def vect_ddiff(vect, dt):
+    """
+    calculate secondary detrivative of a vector
+    """
+    pre_ret = vect_differential(vect, dt)
+    ret = vect_differential(vect, dt)
+    return ret
+
+
 def feature_preprocessing(segment):
     """
     smooth noisy raw data from IMU by savgol_filter
@@ -66,11 +96,37 @@ def feature_preprocessing(segment):
     # correct the localization outliers
     outlier_data_correction(segment)
 
-    # smooth IMU acceleration data
-    segment[:, segment_index["a_x"]] = savgol_filter(
-        segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
-    segment[:, segment_index["a_y"]] = savgol_filter(
-        segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    # smooth localization position data
+    if not acc_method["acc_from_IMU"]:
+        segment[:, segment_index["x"]] = savgol_filter(
+            segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["y"]] = savgol_filter(
+            segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        # speed
+        tmp_x_v = vect_differential(
+            segment[:, segment_index["x"]], feature_config["delta_t"])
+        tmp_x_v = savgol_filter(
+            tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+        tmp_y_v = vect_differential(
+            segment[:, segment_index["y"]], feature_config["delta_t"])
+        tmp_y_v = savgol_filter(
+            tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+        # acc
+        segment[:, segment_index["a_x"]] = vect_differential(
+            tmp_x_v, feature_config["delta_t"])
+        segment[:, segment_index["a_x"]] = savgol_filter(savgol_filter(
+            segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER), WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["a_y"]] = vect_differential(
+            tmp_y_v, feature_config["delta_t"])
+        segment[:, segment_index["a_y"]] = savgol_filter(savgol_filter(
+            segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER), WINDOW_SIZE, POLYNOMINAL_ORDER)
+    else:
+        # smooth IMU acceleration data
+        segment[:, segment_index["a_x"]] = savgol_filter(
+            segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["a_y"]] = savgol_filter(
+            segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+
     segment[:, segment_index["w_z"]] = savgol_filter(
         segment[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
     return segment

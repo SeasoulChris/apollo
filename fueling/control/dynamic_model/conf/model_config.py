@@ -52,6 +52,13 @@ output_index = {
     "w_z": 1  # pose.angular_velocity.z
 }
 
+
+pose_output_index = {
+    "acceleration": 0,  # a_x * cos(heading) + a_y * sin(heading)
+    "w_z": 1,  # pose.angular_velocity.z
+    "speed": 2
+}
+
 # holistic dynamic model by taking lateral speed and acceleration in account
 holistic_output_index = {
     # a_x * cos(heading) + a_y * sin(heading), longitudinal acceleration in RFU
@@ -95,4 +102,8 @@ imu_scaling = {
     # IMU compensation for localization scaling issue
     "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
     "pp7": 1.085  # scaling rate for acceleration and angular speed on pp7
+}
+
+acc_method = {
+    "acc_from_IMU": False  # getting acceleration from differential of locationzation
 }
