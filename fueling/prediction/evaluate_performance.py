@@ -9,6 +9,7 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
+from modules.prediction.proto import prediction_conf_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
@@ -19,6 +20,9 @@ REGIONS = ['sunnyvale', 'san_mateo']
 
 DISTANCE_THRESHOLD = 1.5
 
+FILTERED_EVALUATOR = None
+FILTERED_PREDICTOR = None
+
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
     def __init__(self):
@@ -27,11 +31,11 @@ class PerformanceEvaluator(BasePipeline):
     def run_test(self):
         """Run test."""
         result_files = self.to_rdd(
-            glob.glob('/apollo/data/mini_data_pipeline/results/*/prediction_result.*.bin'))
+            glob.glob('/apollo/data/prediction/results/*/*/prediction_result.*.bin'))
         for time_range in TIME_RANGES:
-            metrics = self.run(result_files)
+            metrics = self.run(result_files, time_range)
             saved_filename = 'metrics_{}.npy'.format(time_range)
-            save_path = os.path.join('/apollo/data/mini_data_pipeline/results', saved_filename)
+            save_path = os.path.join('/apollo/data/prediction/results', saved_filename)
             np.save(save_path, metrics)
 
     def run_prod(self):
@@ -77,6 +81,12 @@ class PerformanceEvaluator(BasePipeline):
         with open(result_file, 'rb') as f:
             list_prediction_result.ParseFromString(f.read())
         for prediction_result in list_prediction_result.prediction_result:
+            if FILTERED_EVALUATOR is not None and \
+               prediction_result.obstacle_conf.evaluator_type != FILTERED_EVALUATOR:
+                continue
+            if FILTERED_PREDICTOR is not None and \
+               prediction_result.obstacle_conf.predictor_type != FILTERED_PREDICTOR:
+                continue
             portion_correct_predicted, num_obstacle, num_trajectory = \
                 CorrectlyPredictePortion(prediction_result, future_status_dict, time_range)
             portion_correct_predicted_sum += portion_correct_predicted
@@ -110,6 +120,8 @@ def CorrectlyPredictePortion(prediction_result, future_status_dict, time_range):
         return 0.0, 0.0, 0.0
     obstacle_future_status = future_status_dict[dict_key]
     if not obstacle_future_status:
+        return 0.0, 0.0, 0.0
+    if len(prediction_result.trajectory) == 0:
         return 0.0, 0.0, 0.0
 
     portion_correct_predicted = 0.0
