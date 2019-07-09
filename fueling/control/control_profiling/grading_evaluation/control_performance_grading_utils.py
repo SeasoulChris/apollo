@@ -81,6 +81,7 @@ def compute_h5_and_gradings(target_groups):
                                     'std_max_compare',
                                     'std_denorm_weight',
                                     'peak_feature_name',
+                                    'peak_time_name',
                                     'peak_threshold',
                                     'peak_filter_name',
                                     'peak_filter_value',
@@ -211,36 +212,42 @@ def compute_h5_and_gradings(target_groups):
         )),
         station_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='station_error',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.station_error_thold
         )),
         speed_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='speed_error',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.speed_error_thold
         )),
         lateral_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='lateral_error',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.lateral_error_thold
         )),
         lateral_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='lateral_error_rate',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.lateral_error_rate_thold
         )),
         heading_err_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='heading_error',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.heading_error_thold
         )),
         heading_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='heading_error_rate',
+            peak_time_name='timestamp_sec',
             peak_filter_name='',
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.heading_error_rate_thold
@@ -349,6 +356,7 @@ def compute_h5_and_gradings(target_groups):
         )),
         total_time_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='total_time',
+            peak_time_name='timestamp_sec',
             peak_threshold=profiling_conf.control_period * profiling_conf.total_time_factor
         )),
         total_time_exceeded_count=compute_count(grading_mtx, grading_arguments(
@@ -362,6 +370,7 @@ def compute_h5_and_gradings(target_groups):
         )),
         pose_heading_offset_peak=compute_peak(grading_mtx, grading_arguments(
             peak_feature_name='pose_heading_offset',
+            peak_time_name='timestamp_sec',
             peak_filter_name='speed_reference',
             peak_filter_value=profiling_conf.control_metrics.speed_stop,
             peak_threshold=math.pi
@@ -399,9 +408,11 @@ def compute_peak(grading_mtx, arg):
     if elem_num < profiling_conf.min_sample_size:
         glog.warn('no enough elements {} for peak computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
-        return (0.0, 0)
-    return (np.max(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]])) /
-            arg.peak_threshold, elem_num)
+        return ([0.0, 0.0], 0)
+    idx_max = np.argmax(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]]))
+    return ([np.fabs(grading_mtx[idx_max, FEATURE_IDX[arg.peak_feature_name]]) /
+            arg.peak_threshold, grading_mtx[idx_max, FEATURE_IDX[arg.peak_time_name]]],
+            elem_num)
 
 def compute_ending(grading_mtx, arg):
     """Compute the specific value at the final state"""
@@ -414,7 +425,7 @@ def compute_ending(grading_mtx, arg):
     if elem_num < 1:
         glog.warn('no enough elements {} for ending computing requirement {}'
                   .format(elem_num, 1))
-        return ([[0.0], [0.0],[0.0]], 0)
+        return ([[0.0], [0.0], [0.0]], 0)
     grading_mtx = grading_mtx[np.argsort(grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
     static_error = [np.fabs(grading_mtx[0, FEATURE_IDX[arg.ending_feature_name]]) /
                     arg.ending_threshold];
@@ -499,20 +510,26 @@ def combine_gradings(grading_x, grading_y):
     elif not grading_y:
         return grading_x
     grading_group_value = []
+    glog.info('grading_x field length: {}; grading_y field length: {}'.format(len(grading_x._fields), len(grading_y._fields)))
     for idx in range(len(grading_x._fields)):
         val_x, num_x = grading_x[idx]
         val_y, num_y = grading_y[idx]
         # Standard deviation and usage values
         if (grading_x._fields[idx].find('std') >= 0 or
             grading_x._fields[idx].find('usage') >= 0):
+            glog.info('grading_x field: {}; grading_y field: {}'.format(grading_x._fields[idx], grading_y._fields[idx]))
             if num_x + num_y != 0:
+                glog.info('val_x: {}; val_y: {}'.format(val_x, val_y))
                 grading_item_value = ((val_x ** 2 * (num_x - 1) + val_y ** 2 * (num_y - 1))
                                       / (num_x + num_y -1)) ** 0.5
             else:
                 grading_item_value = 0.0
         # Peak values
         elif grading_x._fields[idx].find('peak') >= 0:
-            grading_item_value = max(val_x, val_y)
+            if val_x[0] >= val_y[0]:
+                grading_item_value = val_x
+            else:
+                grading_item_value = val_y
         # Ending error Values
         elif grading_x._fields[idx].find('ending') >= 0:
             if num_x != 0 and num_y != 0:
@@ -565,24 +582,31 @@ def output_gradings(target_grading):
         glog.warn('No grading results written to {}'.format(grading_output_path))
     else:
         with open(grading_output_path, 'w') as grading_file:
-            grading_file.write('Grading_output: \t {0:<32s} {1:<16s} {2:<16s} {3:<16s}\n'
+            grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
                                        'Event Timestamp'))
             for name, value in grading._asdict().iteritems():
                 if not value:
                     glog.warn('grading value for {} is None'.format(name))
                     continue
-                # For the ending_XXX_err values, the data are stored in multiple-dimentional list
-                # in the first element of value tuples
-                if isinstance(value[0], list) and 'ending_' in name:
-                    for idx in range(len(value[0][0])):
-                        grading_file.write('Grading_output: \t {0:<32s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
-                                           .format(name + '_trajectory_' + str(idx),
-                                                   value[0][0][idx], value[1], value[0][1][idx]))
+                # For the ending_XXX values and XXX_peak values, the data are stored in
+                # multiple-dimentional list in the first element of value tuples
+                if isinstance(value[0], list):
+                    if 'ending' in name:
+                        for idx in range(len(value[0][0])):
+                            grading_file.write('Grading_output: \t ' +
+                                               '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
+                                               .format(name + '_trajectory_' + str(idx),
+                                                       value[0][0][idx], value[1],
+                                                       value[0][1][idx]))
+                    if 'peak' in name:
+                        grading_file.write('Grading_output: \t ' +
+                                           '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
+                                           .format(name, value[0][0], value[1], value[0][1]))
                 # For the other values, the data are stored as one float variable in the first
                 # element of value tuples
                 else:
-                    grading_file.write('Grading_output: \t {0:<32s} {1:<16.3%} {2:<16n} \n'
+                    grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
             grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
