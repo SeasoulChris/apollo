@@ -31,8 +31,8 @@ PARTNER_BOS_SECRET=""
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
 
-# Node selector, default is CPU if GPU is not explicitly specified
-NODE_SELECTOR_COMPUTE_TYPE="CPU"
+# Compute type, default is CPU if GPU is not explicitly specified
+COMPUTE_TYPE="CPU"
 
 
 while [ $# -gt 0 ]; do
@@ -86,7 +86,7 @@ while [ $# -gt 0 ]; do
       PARTNER_BOS_SECRET=$1
       ;;
     --gpu|-g)
-      NODE_SELECTOR_COMPUTE_TYPE="GPU"
+      COMPUTE_TYPE="GPU"
       ;;
     *)
       JOB_FILE=$1
@@ -182,9 +182,11 @@ spark-submit \
 \
     --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
+    --conf spark.executorEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
     --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
+    --conf spark.kubernetes.driverEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
@@ -194,7 +196,7 @@ spark-submit \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    --conf spark.kubernetes.node.selector.computetype="${NODE_SELECTOR_COMPUTE_TYPE}" \
+    --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
     ${PARTNER_CONF} \
 \
     "${JOB_FILE}" --running_mode=PROD $@
