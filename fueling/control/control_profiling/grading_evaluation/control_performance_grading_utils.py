@@ -51,6 +51,9 @@ def compute_h5_and_gradings(target_groups):
                                   'lateral_err_rate_peak',
                                   'heading_err_peak',
                                   'heading_err_rate_peak',
+                                  'ending_station_err',
+                                  'ending_lateral_err',
+                                  'ending_heading_err',
                                   'acc_bad_sensation',
                                   'jerk_bad_sensation',
                                   'lateral_acc_bad_sensation',
@@ -81,6 +84,11 @@ def compute_h5_and_gradings(target_groups):
                                     'peak_threshold',
                                     'peak_filter_name',
                                     'peak_filter_value',
+                                    'ending_feature_name',
+                                    'ending_time_name',
+                                    'ending_filter_name',
+                                    'ending_filter_value',
+                                    'ending_threshold',
                                     'usage_feature_name',
                                     'usage_thold_value',
                                     'usage_threshold',
@@ -237,6 +245,30 @@ def compute_h5_and_gradings(target_groups):
             peak_filter_value='',
             peak_threshold=profiling_conf.control_metrics.heading_error_rate_thold
         )),
+        ending_station_err=compute_ending(grading_mtx, grading_arguments(
+            ending_feature_name='station_error',
+            ending_time_name='timestamp_sec',
+            ending_filter_name=['speed','path_remain'],
+            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+                                 profiling_conf.control_metrics.station_error_thold],
+            ending_threshold=profiling_conf.control_metrics.station_error_thold
+        )),
+        ending_lateral_err=compute_ending(grading_mtx, grading_arguments(
+            ending_feature_name='lateral_error',
+            ending_time_name='timestamp_sec',
+            ending_filter_name=['speed','path_remain'],
+            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+                                 profiling_conf.control_metrics.station_error_thold],
+            ending_threshold=profiling_conf.control_metrics.lateral_error_thold
+        )),
+        ending_heading_err=compute_ending(grading_mtx, grading_arguments(
+            ending_feature_name='heading_error',
+            ending_time_name='timestamp_sec',
+            ending_filter_name=['speed','path_remain'],
+            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+                                 profiling_conf.control_metrics.station_error_thold],
+            ending_threshold=profiling_conf.control_metrics.heading_error_thold
+        )),
         acc_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
             beyond_feature_name='acceleration',
             beyond_threshold=profiling_conf.control_metrics.acceleration_thold
@@ -371,6 +403,34 @@ def compute_peak(grading_mtx, arg):
     return (np.max(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]])) /
             arg.peak_threshold, elem_num)
 
+def compute_ending(grading_mtx, arg):
+    """Compute the specific value at the final state"""
+    profiling_conf = feature_utils.get_config_control_profiling()
+    if arg.ending_filter_name:
+        for idx in range(len(arg.ending_filter_name)):
+            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.ending_filter_name[idx]],
+                                       arg.ending_filter_value[idx], 1)
+    elem_num, item_num = grading_mtx.shape
+    if elem_num < 1:
+        glog.warn('no enough elements {} for ending computing requirement {}'
+                  .format(elem_num, 1))
+        return ([[0.0], [0.0],[0.0]], 0)
+    grading_mtx = grading_mtx[np.argsort(grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
+    static_error = [np.fabs(grading_mtx[0, FEATURE_IDX[arg.ending_feature_name]]) /
+                    arg.ending_threshold];
+    static_start_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]];
+    static_stop_timne = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]];
+    for idx in range(1, grading_mtx.shape[0]):
+        if (grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]] -
+            grading_mtx[idx-1, FEATURE_IDX[arg.ending_time_name]] <= 1.0):
+            static_stop_timne[-1] = grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]]
+        else:
+            static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.ending_feature_name]]) /
+                                arg.ending_threshold)
+            static_start_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
+            static_stop_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
+    return ([static_error, static_start_time, static_stop_timne], elem_num)
+
 def compute_usage(grading_mtx, arg):
     """Compute the usage value"""
     profiling_conf = feature_utils.get_config_control_profiling()
@@ -421,10 +481,15 @@ def get_std_value(grading_column):
     """Calculate the standard deviation value"""
     return (sum(val**2 for val in grading_column) / (len(grading_column)-1)) ** 0.5
 
-def filter_value(grading_mtx, column_name, threshold):
+def filter_value(grading_mtx, column_name, threshold, filter_mode=0):
     """Filter the rows out if they do not satisfy threshold values"""
-    return np.delete(grading_mtx,
-                     np.where(np.fabs(grading_mtx[:, column_name]) < threshold), axis=0)
+    if filter_mode == 0:
+        return np.delete(grading_mtx,
+                         np.where(np.fabs(grading_mtx[:, column_name]) < threshold), axis=0)
+    if filter_mode == 1:
+        return np.delete(grading_mtx,
+                         np.where(np.fabs(grading_mtx[:, column_name]) >= threshold), axis=0)
+    return grading_mtx
 
 def combine_gradings(grading_x, grading_y):
     """Reduce gradings by combining the groups with different strategies"""
@@ -448,6 +513,32 @@ def combine_gradings(grading_x, grading_y):
         # Peak values
         elif grading_x._fields[idx].find('peak') >= 0:
             grading_item_value = max(val_x, val_y)
+        # Ending error Values
+        elif grading_x._fields[idx].find('ending') >= 0:
+            if num_x != 0 and num_y != 0:
+                # If the first static_start_time in val_x is earlier than the one in val_y
+                if val_x[1][0] < val_y[1][0]:
+                    grading_item_value = val_x
+                    append_value = val_y
+                else:
+                    grading_item_value = val_y
+                    append_alue = val_x
+                # If the first static_start_time in append_value is close to the last
+                # static_stop_time in grading_item_value
+                if append_value[1][0] - grading_item_value[2][-1] <= 1.0:
+                    grading_item_value[2][-1] = append_value[2][0]
+                    if len(append_value[0]) > 1:
+                        grading_item_value[0].extend(append_value[0][1:])
+                        grading_item_value[1].extend(append_value[1][1:])
+                        grading_item_value[2].extend(append_value[2][1:])
+                else:
+                    grading_item_value[0].extend(append_value[0])
+                    grading_item_value[1].extend(append_value[1])
+                    grading_item_value[2].extend(append_value[2])
+            elif num_x == 0:
+                grading_item_value = val_y
+            else:
+                grading_item_value = val_x
         # Beyond and count values
         elif (grading_x._fields[idx].find('sensation') >= 0 or
               grading_x._fields[idx].find('count') >= 0 or
@@ -480,8 +571,15 @@ def output_gradings(target_grading):
                 if not value:
                     glog.warn('grading value for {} is None'.format(name))
                     continue
-                grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
-                                   .format(name, value[0], value[1]))
+                if isinstance(value[0], list):
+                    if 'ending_' in name:
+                        for idx in range(len(value[0][0])):
+                            grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
+                                               .format(name + '_trajectory_' + str(idx),
+                                                       value[0][0][idx], value[1]))
+                else:
+                    grading_file.write('Grading_output: \t {0:<32s} {1:<16,.3%} {2:<16n} \n'
+                                       .format(name, value[0], value[1]))
             grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
 
