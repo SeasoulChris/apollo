@@ -182,41 +182,42 @@ def extract_control_data_from_msg(msg):
             control_lat.ref_heading_rate,                # 4
             control_lat.curvature,                       # 5
             # Features: "Error" category
-            control_lon.station_error,                   # 6
-            control_lon.speed_error,                     # 7
-            control_lat.lateral_error,                   # 8
-            control_lat.lateral_error_rate,              # 9
-            control_lat.heading_error,                   # 10
-            control_lat.heading_error_rate,              # 11
+            control_lon.path_remain,                     # 6
+            control_lon.station_error,                   # 7
+            control_lon.speed_error,                     # 8
+            control_lat.lateral_error,                   # 9
+            control_lat.lateral_error_rate,              # 10
+            control_lat.heading_error,                   # 11
+            control_lat.heading_error_rate,              # 12
             # Features: "Command" category
-            msg_proto.throttle,                          # 12
-            msg_proto.brake,                             # 13
-            msg_proto.acceleration,                      # 14
-            msg_proto.steering_target,                   # 15
+            msg_proto.throttle,                          # 13
+            msg_proto.brake,                             # 14
+            msg_proto.acceleration,                      # 15
+            msg_proto.steering_target,                   # 16
             # Features: "State" category
-            control_lon.current_station,                 # 16
-            control_lon.current_speed,                   # 17
-            control_lon.current_acceleration,            # 18
-            control_lon.current_jerk,                    # 19
-            control_lat.lateral_acceleration,            # 20
-            control_lat.lateral_jerk,                    # 21
-            control_lat.heading,                         # 22
-            control_lat.heading_rate,                    # 23
-            control_lat.heading_acceleration,            # 24
-            control_lat.heading_jerk,                    # 25
+            control_lon.current_station,                 # 17
+            control_lon.current_speed,                   # 18
+            control_lon.current_acceleration,            # 19
+            control_lon.current_jerk,                    # 20
+            control_lat.lateral_acceleration,            # 21
+            control_lat.lateral_jerk,                    # 22
+            control_lat.heading,                         # 23
+            control_lat.heading_rate,                    # 24
+            control_lat.heading_acceleration,            # 25
+            control_lat.heading_jerk,                    # 26
             # Features: "Latency" category
-            control_latency.total_time_ms,               # 26
-            control_latency.total_time_exceeded,         # 27
+            control_latency.total_time_ms,               # 27
+            control_latency.total_time_exceeded,         # 28
             # Features: "Header" category
-            control_header.timestamp_sec,                # 28
-            control_header.sequence_num,                 # 29
+            control_header.timestamp_sec,                # 29
+            control_header.sequence_num,                 # 30
             # Features: "Input Info" category
-            input_debug.localization_header.timestamp_sec,  # 30
-            input_debug.localization_header.sequence_num,   # 31
-            input_debug.canbus_header.timestamp_sec,        # 32
-            input_debug.canbus_header.sequence_num,         # 33
-            input_debug.trajectory_header.timestamp_sec,    # 34
-            input_debug.trajectory_header.sequence_num      # 35
+            input_debug.localization_header.timestamp_sec,  # 31
+            input_debug.localization_header.sequence_num,   # 32
+            input_debug.canbus_header.timestamp_sec,        # 33
+            input_debug.canbus_header.sequence_num,         # 34
+            input_debug.trajectory_header.timestamp_sec,    # 35
+            input_debug.trajectory_header.sequence_num      # 36
         ])
     else:
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -229,41 +230,42 @@ def extract_control_data_from_msg(msg):
             control_mpc.ref_heading_rate,                # 4
             control_mpc.curvature,                       # 5
             # Features: "Error" category
-            control_mpc.station_error,                   # 6
-            control_mpc.speed_error,                     # 7
-            control_mpc.lateral_error,                   # 8
-            control_mpc.lateral_error_rate,              # 9
-            control_mpc.heading_error,                   # 10
-            control_mpc.heading_error_rate,              # 11
+            control_mpc.path_remain,                     # 6
+            control_mpc.station_error,                   # 7
+            control_mpc.speed_error,                     # 8
+            control_mpc.lateral_error,                   # 9
+            control_mpc.lateral_error_rate,              # 10
+            control_mpc.heading_error,                   # 11
+            control_mpc.heading_error_rate,              # 12
             # Features: "Command" category
-            msg_proto.throttle,                          # 12
-            msg_proto.brake,                             # 13
-            msg_proto.acceleration,                      # 14
-            msg_proto.steering_target,                   # 15
+            msg_proto.throttle,                          # 13
+            msg_proto.brake,                             # 14
+            msg_proto.acceleration,                      # 15
+            msg_proto.steering_target,                   # 16
             # Features: "State" category
-            control_mpc.station_feedback,                # 16
-            control_mpc.speed_feedback,                  # 17
-            control_mpc.acceleration_feedback,           # 18
-            control_mpc.jerk_feedback,                   # 19
-            control_mpc.lateral_acceleration,            # 20
-            control_mpc.lateral_jerk,                    # 21
-            control_mpc.heading,                         # 22
-            control_mpc.heading_rate,                    # 23
-            control_mpc.heading_acceleration,            # 24
-            control_mpc.heading_jerk,                    # 25
+            control_mpc.station_feedback,                # 17
+            control_mpc.speed_feedback,                  # 18
+            control_mpc.acceleration_feedback,           # 19
+            control_mpc.jerk_feedback,                   # 20
+            control_mpc.lateral_acceleration,            # 21
+            control_mpc.lateral_jerk,                    # 22
+            control_mpc.heading,                         # 23
+            control_mpc.heading_rate,                    # 24
+            control_mpc.heading_acceleration,            # 25
+            control_mpc.heading_jerk,                    # 26
             # Features: "Latency" category
-            control_latency.total_time_ms,               # 26
-            control_latency.total_time_exceeded,         # 27
+            control_latency.total_time_ms,               # 27
+            control_latency.total_time_exceeded,         # 28
             # Features: "Header" category
-            control_header.timestamp_sec,                # 28
-            control_header.sequence_num,                 # 29
+            control_header.timestamp_sec,                # 29
+            control_header.sequence_num,                 # 30
             # Features: "Input Info" category
-            input_debug.localization_header.timestamp_sec,  # 30
-            input_debug.localization_header.sequence_num,   # 31
-            input_debug.canbus_header.timestamp_sec,        # 32
-            input_debug.canbus_header.sequence_num,         # 33
-            input_debug.trajectory_header.timestamp_sec,    # 34
-            input_debug.trajectory_header.sequence_num      # 35
+            input_debug.localization_header.timestamp_sec,  # 31
+            input_debug.localization_header.sequence_num,   # 32
+            input_debug.canbus_header.timestamp_sec,        # 33
+            input_debug.canbus_header.sequence_num,         # 34
+            input_debug.trajectory_header.timestamp_sec,    # 35
+            input_debug.trajectory_header.sequence_num      # 36
         ])
     return data_array
 
