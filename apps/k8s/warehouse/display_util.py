@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
 """Utils for displaying."""
+import matplotlib
+matplotlib.use('Agg')
 
 import datetime
 import math
 import pytz
 import sys
+
+import matplotlib.pyplot as plt
+import mpld3
 
 from modules.common.proto.drive_event_pb2 import DriveEvent
 
@@ -87,6 +92,27 @@ def drive_event_type_name(event_type):
     return DriveEvent.Type.Name(event_type)
 
 
+def plot_record(record):
+    """Plot a record as html."""
+    # Standard matplotlib plotting, except animation which is not supported.
+    # To add new subplot, you may need to:
+    # 1. Add necessary fields in fueling/data/proto/record_meta.proto.
+    # 2. Extend fueling/data/record_parser.py to extract data and populate the fields.
+    # 3. Read the fields here and plot properly.
+    fig, ax = plt.subplots()
+    planning_latency = record.stat.planning_stat.latency.latency_hist
+    latency_keys = ["latency_0_10_ms", "latency_20_40_ms", "latency_40_60_ms", "latency_60_80_ms",
+                    "latency_80_100_ms", "latency_100_120_ms", "latency_120_150_ms",
+                    "latency_150_200_ms", "latency_200_up_ms"]
+    latency_values = [planning_latency.get(key, 0) for key in latency_keys]
+    ax.bar(latency_keys, latency_values)
+
+    # Use mpld3 to transform to HTML.
+    # Known issue: The output of `fig_to_html()` is a little different from `plt.show()`. You are
+    # suggested to test it with `plot_record_test.py`.
+    return mpld3.fig_to_html(fig)
+
+
 # To be registered into jinja2 templates.
 utils = {
     'draw_disengagements_on_gmap': draw_disengagements_on_gmap,
@@ -96,4 +122,5 @@ utils = {
     'timestamp_ns_to_time': timestamp_ns_to_time,
     'drive_event_type_name': drive_event_type_name,
     'meter_to_miles': meter_to_miles,
+    'plot_record': plot_record,
 }

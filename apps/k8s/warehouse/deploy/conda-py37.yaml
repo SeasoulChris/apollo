@@ -13,6 +13,8 @@ dependencies:
   - pymongo
 
   # Other
+  - matplotlib
+  - mpld3
   - pytz
 
   - pip:

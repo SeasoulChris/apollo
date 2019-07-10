@@ -213,6 +213,7 @@
         </tr>
       </tbody>
     </table>
+    <div>{{ record | plot_record }}</div>
   </div>
 </div>
 {% endif %}
