@@ -44,7 +44,6 @@ ACC_STEP = FEATURE_KEY.acc_step  # percentage
 STEER_STEP = FEATURE_KEY.steer_step  # percentage
 
 WANTED_VEHICLE = FEATURE_KEY.vehicle_type
-print(WANTED_VEHICLE)
 
 MAX_PHASE_DELTA_SEGMENT = 0.015
 MAX_PHASE_DELTA = 0.005
@@ -56,11 +55,11 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
     Extract HMIStatus.current_vehicle from each dir.
     Convert RDD(dir, record) to RDD(dir, vehicle).
     """
-    glog.info('records: ', dir_to_records_rdd)
+    glog.info('records: {}'.format(dir_to_records_rdd))
 
     def _get_vehicle_from_records(records):
         reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
-        glog.info('records: ', records)
+        glog.info('records: {}'.format(records))
 
         for record in records:
             glog.info('Try getting vehicle name from {}'.format(record))
@@ -154,7 +153,7 @@ def multi_get_data_point(elem):
     """ extract data from msg """
     (vehicle, data_dir, timestamp_sec), (chassis, pose_pre) = elem
     pose = pose_pre.pose
-    return ((vehicle, data_dir, chassis.header.timestamp_sec), gen_data_point(pose, chassis))
+    return (vehicle, (data_dir, chassis.header.timestamp_sec, gen_data_point(pose, chassis)))
 
 
 def get_data_point(elem):
@@ -190,7 +189,7 @@ def gen_speed_key(non_stop_speed):
         return 3
 
 
-def gen_brake_key(brake):
+def gen_brake_key(brake, brake_deadzone=BRAKE_DEADZONE):
     if brake < BRAKE_DEADZONE:
         return 0
     elif BRAKE_DEADZONE <= brake < 20:
@@ -201,7 +200,7 @@ def gen_brake_key(brake):
         return 3
 
 
-def gen_throttle_key(throttle):
+def gen_throttle_key(throttle, throttle_deadzone=THROTTLE_DEADZONE):
     if throttle < THROTTLE_DEADZONE:
         return 0
     elif THROTTLE_DEADZONE <= throttle < 25:
@@ -212,7 +211,7 @@ def gen_throttle_key(throttle):
         return 3
 
 
-def gen_reverse_throttle_key(throttle):
+def gen_reverse_throttle_key(throttle, throttle_deadzone=THROTTLE_DEADZONE):
     if throttle < THROTTLE_DEADZONE:
         return 0
     elif THROTTLE_DEADZONE <= throttle < 20:
@@ -223,7 +222,7 @@ def gen_reverse_throttle_key(throttle):
 
 def multi_gen_feature_key(elem):
     """ generate label for both forward driving"""
-    (vehicle, data_dir, time_stamp), data_point = elem
+    (vehicle, data_dir, time_stamp), (data_point, conf) = elem
     speed = data_point[14]
     throttle = data_point[15] * 100  # 0 or positive
     brake = data_point[16] * 100  # 0 or positive
@@ -234,13 +233,13 @@ def multi_gen_feature_key(elem):
     # forward driving:
     if gear_key != 1 and speed <= 0:  # check if it backward driving
         elem_key = int(10000)
-    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+    elif speed < conf.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
         steering_key = int(gen_steering_key(steering))
-        brake_key = int(gen_brake_key(brake))
+        brake_key = int(gen_brake_key(brake, conf.brake_deadzone))
         speed_key = int(gen_speed_key(speed))
-        throttle_key = int(gen_throttle_key(throttle))
+        throttle_key = int(gen_throttle_key(throttle, conf.throttle_deadzone))
         elem_key = int(speed_key * 1000 + steering_key * 100 + throttle_key * 10 + brake_key)
     # ((vehicle, path, feature_key), (time_stamp, paired_data))
     return ((vehicle, data_dir, elem_key), (time_stamp, data_point))
@@ -248,7 +247,7 @@ def multi_gen_feature_key(elem):
 
 def multi_gen_feature_key_backwards(elem):
     """ generate label for backward driving"""
-    (vehicle, data_dir, time_stamp), data_point = elem
+    (vehicle, data_dir, time_stamp), (data_point, conf) = elem
     speed = data_point[14]
     throttle = data_point[15] * 100  # 0 or positive
     brake = data_point[16] * 100  # 0 or positive
@@ -258,12 +257,12 @@ def multi_gen_feature_key_backwards(elem):
 
     if gear_key != 2 and speed <= 0:  # check if it fardward driving
         elem_key = int(10000)
-    elif speed < VEHICLE_PARAM_CONF.vehicle_param.max_abs_speed_when_stopped:
+    elif speed < conf.max_abs_speed_when_stopped:
         elem_key = int(9000)
     else:
         steering_key = int(gen_steering_key(steering))
-        throttle_key = int(gen_throttle_key(throttle))
-        brake_key = int(gen_brake_key(brake))
+        throttle_key = int(gen_throttle_key(throttle, conf.throttle_deadzone))
+        brake_key = int(gen_brake_key(brake, conf.brake_deadzone))
         # steering-throttle-brake
         elem_key = int(steering_key * 100 + throttle_key * 10 + brake_key)
 
@@ -350,9 +349,7 @@ def segment_id(timestamp):
 
 def write_segment_with_key(elem, origin_prefix, target_prefix):
     """write to h5 file, use feature key as file name"""
-    glog.info(elem)
     ((folder_path, key), (segmentID, data_set)) = elem
-    print(elem)
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
     file_name = str(key) + '_' + str(segmentID)
     h5_utils.write_h5_single_segment(data_set, folder_path, file_name)
@@ -361,9 +358,7 @@ def write_segment_with_key(elem, origin_prefix, target_prefix):
 
 def multi_write_segment_with_key(elem, origin_prefix, target_prefix):
     """write to h5 file, use feature key as file name"""
-    glog.info(elem)
     ((vehicle, folder_path, key), (segmentID, data_set)) = elem
-    print(elem)
     folder_path = folder_path.replace(origin_prefix, target_prefix, 1)
     file_name = str(key) + '_' + str(segmentID)
     h5_utils.write_h5_single_segment(data_set, folder_path, file_name)

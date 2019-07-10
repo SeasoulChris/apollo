@@ -10,11 +10,6 @@ import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-
-from modules.common.configs.proto import vehicle_config_pb2
-from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
-
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_extraction
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
@@ -29,9 +24,6 @@ import fueling.control.features.feature_extraction_rdd_utils as feature_extracti
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 # TODO(SHU): redesign proto
-FILENAME_FEATURE_KEY_CONF = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
-FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
-
 flags.DEFINE_string('input_data_path', 'modules/control/data/records',
                     'Multi-vehicle dynamic model input data path.')
 
@@ -112,7 +104,7 @@ def compare_conf_value(conf_value_x, conf_value_y):
     return (speed_max, throttle_max, brake_max)
 
 
-def write_conf(conf_value, vehicle_param_conf, conf_path, conf=FEATURE_KEY):
+def write_conf(conf_value, vehicle_param_conf, conf_path, conf):
     cur_conf = copy.deepcopy(conf)
     speed_max, throttle_max, brake_max = conf_value
     cur_conf.speed_max = min(speed_max, conf.speed_max)
@@ -170,7 +162,6 @@ class SampleSet(BasePipeline):
                                                    (vehicle, path.replace(origin_prefix,
                                                                           conf_target_prefix, 1)))
         glog.info('target_param_conf: %s' % target_param_conf.collect())
-        print("origin_vehicle_dir.join", origin_vehicle_dir.join(target_param_conf).collect())
 
         # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).cache())
@@ -304,8 +295,12 @@ class SampleSet(BasePipeline):
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
-    def run(self, todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix):
+    def run(self, todo_task_dirs, vehicle_conf_folder, origin_prefix, target_prefix):
         """ processing RDD """
+        # PairRDD(vehicle, vehicle_param)
+        vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)
+        glog.info("vehicle_param_conf: %d", vehicle_param_conf.count())
+
         records = (
             # PairRDD(vehicle, vehicle_folder)
             todo_task_dirs
@@ -335,8 +330,18 @@ class SampleSet(BasePipeline):
         data_segment_rdd = spark_helper.cache_and_log(
             'get_data_point',
             parsed_msgs
-            # PairRDD((vehicle, dir, timestamp_sec), signle data_point)
+            # PairRDD(vehicle, (dir, timestamp_sec, single data_point))
             .map(feature_extraction_utils.multi_get_data_point), 1)
+
+        # join data with conf files
+        data_segment_rdd = spark_helper.cache_and_log(
+            'get_data_point',
+            data_segment_rdd
+            # PairRDD(vehicle, ((dir, timestamp_sec, single data_point), vehicle_param_conf))
+            .join(vehicle_param_conf)
+            # PairRDD((vehicle, dir, timestamp_sec), (single data_point, vehicle_param_conf))
+            .map(lambda (vehicle, ((dir, timestamp_sec, single_data_point), vehicle_param_conf)):
+                 ((vehicle, dir, timestamp_sec), (single_data_point, vehicle_param_conf))), 1)
 
         if GEAR == 1:
             data_segment_rdd = spark_helper.cache_and_log(
@@ -383,6 +388,7 @@ class SampleSet(BasePipeline):
             .distinct()
             # RDD(MARKER files)
             .map(lambda path: os.path.join(path, MARKER))
+            # TODO(SHU): touch path remove job_id and job_owner
             # RDD(MARKER files)
             .map(file_utils.touch))
         return
