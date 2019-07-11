@@ -108,8 +108,10 @@ def plot_record(record):
     ax.bar(latency_keys, latency_values)
 
     # Use mpld3 to transform to HTML.
-    # Known issue: The output of `fig_to_html()` is a little different from `plt.show()`. You are
-    # suggested to test it with `plot_record_test.py`.
+    # Known issues:
+    # 1. Tick labels are not supported: https://github.com/mpld3/mpld3/issues/22
+    #
+    # You are suggested to test the actual output with `plot_record_test.py`.
     return mpld3.fig_to_html(fig)
 
 
