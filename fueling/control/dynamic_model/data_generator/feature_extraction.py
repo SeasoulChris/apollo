@@ -93,42 +93,45 @@ def feature_preprocessing(segment):
     # discard the segments that are too long
     if segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
         return None
-    # correct the localization outliers
-    outlier_data_correction(segment)
 
     # smooth localization position data
     if not acc_method["acc_from_IMU"]:
-        segment[:, segment_index["x"]] = savgol_filter(
-            segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
-        segment[:, segment_index["y"]] = savgol_filter(
-            segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        tmp_x = savgol_filter(segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        tmp_y = savgol_filter(segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+
         # speed
-        tmp_x_v = vect_differential(
-            segment[:, segment_index["x"]], feature_config["delta_t"])
-        tmp_x_v = savgol_filter(
-            tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
-        tmp_y_v = vect_differential(
-            segment[:, segment_index["y"]], feature_config["delta_t"])
-        tmp_y_v = savgol_filter(
-            tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+        tmp_x_v = vect_differential(tmp_x, feature_config["delta_t"])
+        tmp_x_v = savgol_filter(tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+        tmp_y_v = vect_differential(tmp_y, feature_config["delta_t"])
+        tmp_y_v = savgol_filter(tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
         # acc
         segment[:, segment_index["a_x"]] = vect_differential(
             tmp_x_v, feature_config["delta_t"])
         segment[:, segment_index["a_x"]] = savgol_filter(savgol_filter(
-            segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER), WINDOW_SIZE, POLYNOMINAL_ORDER)
+            segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER),
+            WINDOW_SIZE, POLYNOMINAL_ORDER)
+
         segment[:, segment_index["a_y"]] = vect_differential(
             tmp_y_v, feature_config["delta_t"])
         segment[:, segment_index["a_y"]] = savgol_filter(savgol_filter(
-            segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER), WINDOW_SIZE, POLYNOMINAL_ORDER)
+            segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER),
+            WINDOW_SIZE, POLYNOMINAL_ORDER)
+        # heading angle rate
+        # smooth
+        tmp_head_angle = savgol_filter(
+            segment[:, segment_index["heading"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["w_z"]] = vect_differential(
+            tmp_head_angle, feature_config["delta_t"])
     else:
+         # correct the localization outliers
+        outlier_data_correction(segment)
         # smooth IMU acceleration data
         segment[:, segment_index["a_x"]] = savgol_filter(
             segment[:, segment_index["a_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
         segment[:, segment_index["a_y"]] = savgol_filter(
             segment[:, segment_index["a_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
-
-    segment[:, segment_index["w_z"]] = savgol_filter(
-        segment[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+        segment[:, segment_index["w_z"]] = savgol_filter(
+            segment[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
     return segment
 
 

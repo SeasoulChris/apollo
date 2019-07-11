@@ -65,12 +65,12 @@ def generate_mlp_data(segment, total_len):
         # speed mps
         # mlp_input_data[k, input_index["speed"]] = segment[k, segment_index["speed"]]
         mlp_input_data[k, input_index["speed"]] = (
-            segment[k, segment_index["v_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-            segment[k, segment_index["v_y"]] * np.sin(segment[k, segment_index["heading"]]))
+            segment[k, segment_index["v_x"]] * np.cos(segment[k, segment_index["heading"]])
+            + segment[k, segment_index["v_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # acceleration
         mlp_input_data[k, input_index["acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-             segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
+             + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # throttle control from chassis
         mlp_input_data[k, input_index["throttle"]] = segment[k, segment_index["throttle"]]
         # brake control from chassis
@@ -79,10 +79,10 @@ def generate_mlp_data(segment, total_len):
         mlp_input_data[k, input_index["steering"]] = segment[k, segment_index["steering"]]
         # acceleration next
         mlp_output_data[k, output_index["acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] *
-                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) +
-             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] *
-                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
+            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]]
+                * np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
+             + segment[k + DIM_DELAY_STEPS, segment_index["a_y"]]
+                * np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # angular speed next
         mlp_output_data[k, output_index["w_z"]] = PP7_IMU_SCALING * \
             segment[k + DIM_DELAY_STEPS, segment_index["w_z"]]
@@ -94,8 +94,8 @@ def generate_gps_data(segment):
     vehicle_state_gps = np.zeros([total_len, DIM_OUTPUT])
     # speed, heading by gps
     vehicle_state_gps[:, 0] = (
-        segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) +
-        segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]]))
+        segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]])
+        + segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]]))
     vehicle_state_gps[:, 1] = segment[:, segment_index["heading"]]
     # position x, y by gps
     trajectory_gps = segment[:, [segment_index["x"], segment_index["y"]]]
@@ -107,8 +107,8 @@ def generate_imu_output(segment):
     output_imu = np.zeros([total_len, DIM_OUTPUT])
     # acceleration by imu
     output_imu[:, output_index["acceleration"]] = PP7_IMU_SCALING * \
-        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) +
-         segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]]))
+        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]])
+         + segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]]))
     # angular speed by imu
     output_imu[:, output_index["w_z"]] = segment[:, segment_index["w_z"]] * PP7_IMU_SCALING
     return output_imu
@@ -116,15 +116,11 @@ def generate_imu_output(segment):
 
 def generate_pose_output(segment):
     total_len = segment.shape[0]
-    output_pose = np.zeros([total_len, 3])
+    output_pose = np.zeros([total_len, DIM_OUTPUT])
     # acceleration by localization
     output_pose[:, pose_output_index["acceleration"]] = (
-        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]])
-         + segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])))
-    # speed by localization
-    output_pose[:, pose_output_index["speed"]] = (
-        (segment[:, segment_index["v_x"]] * np.cos(segment[:, segment_index["heading"]]) +
-         segment[:, segment_index["v_y"]] * np.sin(segment[:, segment_index["heading"]])))
+        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) +
+         segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]])))
     # angular speed by localization
     output_pose[:, pose_output_index["w_z"]] = segment[:, segment_index["w_z"]]
     return output_pose
@@ -230,8 +226,8 @@ def generate_network_output(segment, model_folder, model_name):
             velocity_fnn = segment[k, segment_index["speed"]]
             # Scale the acceleration and angular speed data read from IMU
             output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
-                + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
+                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
             output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
         if k >= DIM_SEQUENCE_LENGTH:

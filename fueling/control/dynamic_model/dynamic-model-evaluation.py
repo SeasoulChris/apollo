@@ -55,8 +55,7 @@ class DynamicModelEvaluation(BasePipeline):
             self.to_rdd(glob.glob(evaluation_dataset))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
-        # glog.info(evaluation_dataset_rdd.collect())
-        # return
+        glog.info(evaluation_dataset_rdd.collect())
 
         self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)

@@ -106,14 +106,8 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
             output_echo_lincoln[k - 1, 0:2] * DELTA_T
         vehicle_state_echo_lincoln[k, 1] = normalize_angle(vehicle_state_echo_lincoln[k, 1])
         # vehicle states by imu sensor
-        if acc_method["acc_from_IMU"]:
-            vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
-            vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
-        else:
-            vehicle_state_imu[k, 0] = output_imu[k, 2]  # get speed directly
-            vehicle_state_imu[k, 1] = vehicle_state_imu[k - 1, 1] + \
-                output_imu[k, 1] * DELTA_T  # integral for heading
-            vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
+        vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
+        vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
         # vehicle states by learning-based-model
         vehicle_state_fnn[k, :] = vehicle_state_fnn[k - 1, :] + output_fnn[k, :] * DELTA_T
         vehicle_state_fnn[k, 1] = normalize_angle(vehicle_state_fnn[k, 1])
@@ -286,7 +280,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Acceleration Visualization")
         plt.plot(output_echo_lincoln[:, 0], color='black', label="IMU Acceleration")
-        plt.plot(output_imu[:, 0], color='orange', alpha=ALPHA, label="IMU Acceleration")
+        plt.plot(output_imu[:, 0], color='orange', alpha=ALPHA, label="Echo_lincoln Acceleration")
         plt.plot(output_fnn[:, 0], color='red', label="FNN Acceleration")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
@@ -296,7 +290,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Angular Speed Visualization")
         plt.plot(output_imu[:, 1], color='orange', alpha=ALPHA, label="IMU Angular Speed")
-        plt.plot(output_echo_lincoln[:, 1], color='black', label="IMU Angular Speed")
+        plt.plot(output_echo_lincoln[:, 1], color='black', label="Echo_lincoln Angular Speed")
         plt.plot(output_fnn[:, 1], color='red', label="FNN Angular Speed")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
