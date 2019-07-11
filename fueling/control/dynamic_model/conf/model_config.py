@@ -69,7 +69,7 @@ holistic_output_index = {
 
 feature_config = {
     "is_holistic": 0,  # if the current dynamic model is holistic
-    "is_backward": 0,  # if the feature is for backward driving scenario
+    "is_backward": 1,  # if the feature is for backward driving scenario
     "vehicle_id": 'Mkz7',  # the vehicle id for the feature
     "input_dim": 5,  # input feature dimension
     "holistic_input_dim": 8,  # holistic input feature dimension
@@ -105,12 +105,14 @@ imu_scaling = {
 }
 
 acc_method = {
-    "acc_from_IMU": False  # getting acceleration from differential of locationzation
+    "acc_from_IMU": False  # getting acceleration from differential of localization
 }
 
 feature_extraction = {
     "inter_result_folder": "modules/control/tmp/dynamic_model",  # intermediate result folder
     "output_folder": "modules/control/result/dynamic_model",  # final result folder
+    "uniform_output_folder": "modules/control/tmp/uniform",  # uniform distributed data set
     "incremental_process": False,  # turn on incremental data processing
-    "gear": 1  # 1: gear_drive, 2:gear_reverse
+    "gear": 1,  # 1: gear_drive, 2:gear_reverse
+    "sample_size": 6000  # 200 for local test
 }
