@@ -19,12 +19,15 @@ import cv2 as cv
 import glob
 import numpy as np
 
+import scipy
+from scipy.signal import filtfilt
+
 
 def point_to_idx(point_x, point_y):
     return (int(point_x/0.1 + 400), int(point_y/0.1 + 400))
 
 
-def plot_img(future_pt, count):
+def plot_img(future_pt, count, adjusted_future_pt=None):
     # black background
     img = np.zeros([1000, 800, 3], dtype=np.uint8)
     # draw boundaries
@@ -36,13 +39,17 @@ def plot_img(future_pt, count):
     for ts in range(future_pt.shape[0]):
         cv.circle(img, point_to_idx(future_pt[ts][0] - future_pt[0][0], future_pt[ts]
                                     [1] - future_pt[0][1]), radius=3, thickness=2, color=[0, 128, 128])
+    if adjusted_future_pt is not None:
+        for ts in range(adjusted_future_pt.shape[0]):
+            cv.circle(img, point_to_idx(adjusted_future_pt[ts][0] - adjusted_future_pt[0][0], adjusted_future_pt[ts]
+                                        [1] - adjusted_future_pt[0][1]), radius=3, thickness=2, color=[128, 0, 128])
     cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img, 0), 1))
 
 
 def LabelCleaning(feature_dir, label_dir, pred_len=30):
     # From feature_dir, locate those labels of interests.
     label_dict_list = glob.glob(
-        label_dir + '/**/cleaned_label.npy', recursive=True)
+        label_dir + '/**/future_status.npy', recursive=True)
 
     # Get the statistics of all the labels. (histogram of how many left-turns,
     # right-turns, u-turns, go-straight, etc.)
@@ -105,6 +112,53 @@ def LabelCleaning(feature_dir, label_dir, pred_len=30):
         np.save(label_dict_name.replace('cleaned_label.npy',
                                         'future_status.npy'), cleaned_label_dict)
     return
+
+
+def SmoothFeatureSequence(feature_seq):
+    """
+    feature_seq: a sequence of tuples (x, y, v_heading, v, length, width, timestamp, acc)
+    """
+    x_coords = []
+    y_coords = []
+    smoothed_feature_seq = []
+    start_x = feature_seq[0][0]
+    start_y = feature_seq[0][1]
+
+    for feature in feature_seq:
+        x_coords.append(feature[0] - start_x)
+        y_coords.append(feature[1] - start_y)
+
+    b, a = scipy.signal.butter(8, 0.8)
+    smooth_x_coords = filtfilt(b, a, x_coords, method="gust")
+    smooth_y_coords = filtfilt(b, a, y_coords, method="gust")
+
+    for i in range(len(feature_seq)):
+        smoothed_feature = list(feature_seq[i])
+        smoothed_feature[0] = smooth_x_coords[i] + start_x
+        smoothed_feature[1] = smooth_y_coords[i] + start_y
+
+        smoothed_feature_seq.append(tuple(smoothed_feature))
+
+    return smoothed_feature_seq
+
+
+def LabelSmoothing(label_dir):
+    label_dict_file_list = glob.glob(
+        label_dir + '/**/future_status.npy', recursive=True)
+    count = Counter()
+    for label_dict_file in label_dict_file_list:
+        label_dict = np.load(label_dict_file, allow_pickle=True).item()
+        smoothed_label_dict = {}
+        for key, feature_seq in label_dict.items():
+            smoothed_feature_seq = SmoothFeatureSequence(feature_seq)
+            smoothed_label_dict[key] = smoothed_feature_seq
+            count['smooth'] += 1
+            smoothed_obs_pos = np.array([[feature[0], feature[1]] for feature in smoothed_feature_seq])
+            smoothed_obs_pos = smoothed_obs_pos - smoothed_obs_pos[0, :]
+            raw_obs_pos = np.array([[feature[0], feature[1]] for feature in feature_seq])
+            raw_obs_pos = raw_obs_pos - raw_obs_pos[0, :]
+            plot_img(raw_obs_pos, count, smoothed_obs_pos)
+        print("{} is smoothed".format(label_dict_file))
 
 
 if __name__ == '__main__':
