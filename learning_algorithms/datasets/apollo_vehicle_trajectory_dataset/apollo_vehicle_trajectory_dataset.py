@@ -46,72 +46,42 @@ def plot_img(future_pt, count, adjusted_future_pt=None):
     cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img, 0), 1))
 
 
-def LabelCleaning(feature_dir, label_dir, pred_len=30):
-    # From feature_dir, locate those labels of interests.
-    label_dict_list = glob.glob(
-        label_dir + '/**/future_status.npy', recursive=True)
-
-    # Get the statistics of all the labels. (histogram of how many left-turns,
-    # right-turns, u-turns, go-straight, etc.)
-
-    # Go through all labels of interests, filter out those noisy ones and
-    # only retain those clean ones.
-    count = Counter()
-    for label_dict_name in label_dict_list:
-        label_dict = np.load(label_dict_name, allow_pickle=True).item()
-        cleaned_label_dict = {}
-        idx = 0
-        for key, feature_seq in label_dict.items():
-            # 1. Only keep pred_len length
-            if len(feature_seq) < pred_len:
-                continue
-            obs_pos = np.array([[feature[0], feature[1]]
-                                for feature in feature_seq[:pred_len]])
-            obs_pos = obs_pos - obs_pos[0, :]
-            # 2. Get the scalar acceleration, and angular speed of all points.
-            obs_vel = (obs_pos[1:, :] - obs_pos[:-1, :]) / 0.1
-            linear_vel = np.linalg.norm(obs_vel, axis=1)
-            linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
-            angular_vel = np.sum(
-                obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
-            turning_ang = (np.arctan2(
-                obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
-            turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
-            # 3. Filtered the extream values for acc and ang_vel.
-            if np.max(np.abs(linear_acc)) > 50:
-                continue
-            if np.min(angular_vel) < 0.85:
-                continue
-            # plot_img(obs_pos, idx)
-            # print(idx, key)
-            # idx += 1
-            # Get the statistics of the cleaned labels, and do some re-balancing to
-            # maintain roughly the same distribution as before.
-            if -np.pi/6 <= turning_ang <= np.pi/6:
-                if np.max(np.abs(linear_acc)) > 30 or np.min(angular_vel) < 0.9:
-                    continue
-                area = (obs_pos[0, 0]*obs_pos[1, 1] + obs_pos[1, 0]*obs_pos[-1, 1] + obs_pos[-1, 0]*obs_pos[0, 1]
-                        - obs_pos[0, 0]*obs_pos[-1, 1] - obs_pos[1, 0]*obs_pos[0, 1] - obs_pos[-1, 0]*obs_pos[1, 1])
-                if area/(np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
-                    count['change_lane'] += 1
-                else:
-                    count['straight'] += 1
-            elif -np.pi/2 <= turning_ang < -np.pi/6:
-                count['right'] += 1
-            elif np.pi/6 < turning_ang <= np.pi/2:
-                if np.max(np.abs(linear_acc)) > 30:
-                    continue
-                count['left'] += 1
-            else:
-                count['uturn'] += 1
-            # 4. Those with large residual errors should be removed.
-            cleaned_label_dict[key] = feature_seq[:pred_len]
-        print("Got " + str(len(cleaned_label_dict.keys())) +
-              "/" + str(len(label_dict.keys())) + " labels left!")
-        print(count)
-        np.save(label_dict_name.replace('cleaned_label.npy',
-                                        'future_status.npy'), cleaned_label_dict)
-    return
+def LabelValid(feature_seq, pred_len=30):
+    # 1. Only keep pred_len length
+    if len(feature_seq) < pred_len:
+        return None
+    obs_pos = np.array([[feature[0], feature[1]]
+                        for feature in feature_seq[:pred_len]])
+    obs_pos = obs_pos - obs_pos[0, :]
+    # 2. Get the scalar acceleration, and angular speed of all points.
+    obs_vel = (obs_pos[1:, :] - obs_pos[:-1, :]) / 0.1
+    linear_vel = np.linalg.norm(obs_vel, axis=1)
+    linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
+    angular_vel = np.sum(
+        obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
+    turning_ang = (np.arctan2(
+        obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
+    turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
+    # 3. Filtered the extream values for acc and ang_vel.
+    if np.max(np.abs(linear_acc)) > 50:
+        return None
+    if np.min(angular_vel) < 0.85:
+        return None
+    # Get the statistics of the cleaned labels, and do some re-balancing to
+    # maintain roughly the same distribution as before.
+    if -np.pi/6 <= turning_ang <= np.pi/6:
+        area = (obs_pos[0, 0]*obs_pos[1, 1] + obs_pos[1, 0]*obs_pos[-1, 1] + obs_pos[-1, 0]*obs_pos[0, 1]
+                - obs_pos[0, 0]*obs_pos[-1, 1] - obs_pos[1, 0]*obs_pos[0, 1] - obs_pos[-1, 0]*obs_pos[1, 1])
+        if area/(np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
+            return 'change_lane'
+        else:
+            return 'straight'
+    elif -np.pi/2 <= turning_ang < -np.pi/6:
+        return 'right'
+    elif np.pi/6 < turning_ang <= np.pi/2:
+        return 'left'
+    else:
+        return 'uturn'
 
 
 def SmoothFeatureSequence(feature_seq):
@@ -136,30 +106,41 @@ def SmoothFeatureSequence(feature_seq):
         smoothed_feature = list(feature_seq[i])
         smoothed_feature[0] = smooth_x_coords[i] + start_x
         smoothed_feature[1] = smooth_y_coords[i] + start_y
-
         smoothed_feature_seq.append(tuple(smoothed_feature))
 
     return smoothed_feature_seq
 
 
-def LabelSmoothing(label_dir):
+def LabelProcessing(label_dir):
     label_dict_file_list = glob.glob(
         label_dir + '/**/future_status.npy', recursive=True)
     count = Counter()
     for label_dict_file in label_dict_file_list:
         label_dict = np.load(label_dict_file, allow_pickle=True).item()
-        smoothed_label_dict = {}
+        processed_label_dict = {}
+        idx = 0
         for key, feature_seq in label_dict.items():
-            smoothed_feature_seq = SmoothFeatureSequence(feature_seq)
-            smoothed_label_dict[key] = smoothed_feature_seq
-            count['smooth'] += 1
-            smoothed_obs_pos = np.array([[feature[0], feature[1]] for feature in smoothed_feature_seq])
-            smoothed_obs_pos = smoothed_obs_pos - smoothed_obs_pos[0, :]
-            raw_obs_pos = np.array([[feature[0], feature[1]] for feature in feature_seq])
-            raw_obs_pos = raw_obs_pos - raw_obs_pos[0, :]
-            plot_img(raw_obs_pos, count, smoothed_obs_pos)
-        print("{} is smoothed".format(label_dict_file))
+            pred_len = 30
+            turn_type = LabelValid(feature_seq, pred_len)
+            if turn_type:
+                count[turn_type] += 1
+                feature_seq = feature_seq[:pred_len]
+                smoothed_feature_seq = SmoothFeatureSequence(feature_seq)
+                processed_label_dict[key] = smoothed_feature_seq
+                obs_pos = np.array([[feature[0], feature[1]]
+                                    for feature in feature_seq])
+                obs_pos = obs_pos - obs_pos[0, :]
+                smoothed_obs_pos = np.array([[feature[0], feature[1]]
+                                             for feature in smoothed_feature_seq])
+                smoothed_obs_pos = smoothed_obs_pos - smoothed_obs_pos[0, :]
+                # plot_img(obs_pos, idx, smoothed_obs_pos)
+                # idx += 1
+        print("Got " + str(len(processed_label_dict.keys())) +
+              "/" + str(len(label_dict.keys())) + " labels left!")
+        print(count)
+        # np.save(label_dict_name.replace('future_status.npy',
+        #                                 'processed_label.npy'), processed_label_dict)
 
 
 if __name__ == '__main__':
-    LabelCleaning('test', '/home/sunhongyi/Downloads/labels-future-points/')
+    LabelProcessing('/data/labels-future-points/')
