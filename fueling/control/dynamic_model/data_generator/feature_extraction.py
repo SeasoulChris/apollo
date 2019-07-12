@@ -56,14 +56,14 @@ def generate_segment_from_list(hdf5_file_list):
 
 def differential(first_elem, second_elem, dt):
     """
-    detrivative
+    derivative
     """
     return (second_elem - first_elem) / dt
 
 
 def vect_differential(vect, dt):
     """
-    calculate detrivative of a vector
+    calculate derivative of a vector
     """
     ret = np.zeros(vect.shape)
     print("vect shape", vect.shape)
@@ -76,7 +76,7 @@ def vect_differential(vect, dt):
 
 def vect_ddiff(vect, dt):
     """
-    calculate secondary detrivative of a vector
+    calculate secondary derivative of a vector
     """
     pre_ret = vect_differential(vect, dt)
     ret = vect_differential(vect, dt)
@@ -99,11 +99,12 @@ def feature_preprocessing(segment):
         tmp_x = savgol_filter(segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
         tmp_y = savgol_filter(segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
 
-        # speed
+        # speed from localization
         tmp_x_v = vect_differential(tmp_x, feature_config["delta_t"])
         tmp_x_v = savgol_filter(tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
         tmp_y_v = vect_differential(tmp_y, feature_config["delta_t"])
         tmp_y_v = savgol_filter(tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+
         # acc
         segment[:, segment_index["a_x"]] = vect_differential(
             tmp_x_v, feature_config["delta_t"])

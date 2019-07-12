@@ -21,8 +21,7 @@ def generate_training_data(segment):
     extract usable features from the numpy array for model training
     """
     total_len = segment.shape[0] - DIM_DELAY_STEPS
-    total_sequence_num = segment.shape[0] - \
-        DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
+    total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
     glog.info('Total length: {}'.format(total_len))
 
     if IS_HOLISTIC:
