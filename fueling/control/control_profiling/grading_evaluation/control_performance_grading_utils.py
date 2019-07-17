@@ -451,17 +451,17 @@ def compute_ending(grading_mtx, arg):
     static_error = [np.fabs(grading_mtx[0, FEATURE_IDX[arg.ending_feature_name]]) /
                     arg.ending_threshold];
     static_start_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]];
-    static_stop_timne = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]];
+    static_stop_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]];
     for idx in range(1, grading_mtx.shape[0]):
         if (grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]] -
             grading_mtx[idx-1, FEATURE_IDX[arg.ending_time_name]] <= 1.0):
-            static_stop_timne[-1] = grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]]
+            static_stop_time[-1] = grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]]
         else:
             static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.ending_feature_name]]) /
                                 arg.ending_threshold)
             static_start_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
             static_stop_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
-    return ([static_error, static_start_time, static_stop_timne], elem_num)
+    return ([static_error, static_start_time, static_stop_time], elem_num)
 
 def compute_usage(grading_mtx, arg):
     """Compute the usage value"""
