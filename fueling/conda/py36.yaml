@@ -10,17 +10,22 @@ dependencies:
 
   # Google infra
   - absl-py
-  - protobuf
 
   # Data science
   - boto3
+  - cudatoolkit=9.2
   - h5py
+  - keras
   - matplotlib
   - numpy
+  - pymongo
   - pytorch
   - scikit-learn
   - torchvision
-  - cudatoolkit=8.0
+  - tensorflow
+  - tensorflow-gpu
+
+  - protobuf
 
   # Other
   - opencv

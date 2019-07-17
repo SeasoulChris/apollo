@@ -8,7 +8,9 @@ import time
 
 # Third-party packages
 from absl import flags
+from tensorflow.python.client import device_lib
 import colored_glog as glog
+import tensorflow as tf
 import torch
 
 # Apollo-fuel packages
@@ -22,17 +24,48 @@ def check_output(command):
     for line in out_lines:
         glog.info(line.strip())
 
-def print_nvidia_smi():
-    """Print the output of nvidia-smi command"""
-    glog.info('cuda available? {}'.format(torch.cuda.is_available()))
-    glog.info('cuda version: {}'.format(torch.version.cuda))
-    glog.info('gpu device count: {}'.format(torch.cuda.device_count()))
+def run_tensorflow_gpu_function(executor_name):
+    """Run tensorflow training task"""
+    glog.info('current executor: {}'.format(executor_name))
     check_output('nvidia-smi')
+
+    if tf.test.gpu_device_name():
+        glog.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+        glog.info('GPU available? {}'.format(tf.test.is_gpu_available()))
+        glog.info('GPU devices: {}'.format(device_lib.list_local_devices()))
+    else:
+        glog.warn('Please install GPU version of TF')
+
+    time_start = time.time()
+    mnist = tf.keras.datasets.mnist
+
+    (x_train, y_train),(x_test, y_test) = mnist.load_data()
+    x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Flatten(input_shape=(28, 28)),
+        tf.keras.layers.Dense(512, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(10, activation=tf.nn.softmax)])
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    model.fit(x_train, y_train, epochs=5)
+    model.evaluate(x_test, y_test)
+
+    glog.info('Tensorflow GPU function is done, time spent: {}'.format(time.time() - time_start))
+    time.sleep(60 * 3)
 
 def run_torch_gpu_function(executor_name):
     """Run Pytorch training task with GPU option"""
     glog.info('current executor: {}'.format(executor_name))
-    print_nvidia_smi()
+    check_output('nvidia-smi')
+
+    glog.info('cuda available? {}'.format(torch.cuda.is_available()))
+    glog.info('cuda version: {}'.format(torch.version.cuda))
+    glog.info('gpu device count: {}'.format(torch.cuda.device_count()))
+
     time_start = time.time()
 
     dtype = torch.float
@@ -75,7 +108,7 @@ def run_torch_gpu_function(executor_name):
         w2 -= learning_rate * grad_w2
 
     glog.info('Torch GPU function is done, time spent: {}'.format(time.time() - time_start))
-    time.sleep(60 * 5)
+    time.sleep(60 * 3)
 
 class GPUSample(BasePipeline):
     """Demo pipeline."""
@@ -91,10 +124,15 @@ class GPUSample(BasePipeline):
     def run_prod(self):
         """Run prod."""
         glog.info('Running Production')
-        print_nvidia_smi()
+        check_output('nvidia-smi')
         time_start = time.time()
-        (self.to_rdd(['executor-1', 'executor-2', 'executor-3'])
+
+        (self.to_rdd(['executor-pytorch'])
          .foreach(run_torch_gpu_function))
+
+        (self.to_rdd(['executor-tensorflow'])
+         .foreach(run_tensorflow_gpu_function))
+
         glog.info('Done with running Production, time spent: {}'.format(time.time() - time_start))
 
 if __name__ == '__main__':
