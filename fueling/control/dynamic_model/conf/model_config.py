@@ -94,7 +94,7 @@ lstm_model_config = {
 }
 
 mlp_model_config = {
-    "fnn_layers": 3,  # depth of the feed-forward neural nets
+    "fnn_layers": 2,  # depth of the feed-forward neural nets
     "epochs": 30  # training epochs
 }
 
@@ -105,7 +105,10 @@ imu_scaling = {
 }
 
 acc_method = {
-    "acc_from_IMU": False  # getting acceleration from differential of localization
+    "acc_from_IMU": False,  # getting acceleration from differential of localization
+    "acc_from_speed": True,  # getting acceleration from differential of speed
+    "add_smooth_to_speed": True,  # smooth speed before differential
+    "plot_model": False
 }
 
 feature_extraction = {

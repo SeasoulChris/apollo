@@ -19,6 +19,7 @@ import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import acc_method
 from fueling.control.dynamic_model.conf.model_config import feature_config
+from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
 
 from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
@@ -50,6 +51,29 @@ DIM_INPUT = feature_config["input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 DIM_LSTM_LENGTH = feature_config["sequence_length"]
 DELTA_T = feature_config["delta_t"]
+
+
+def heading_angle(scenario_segments, platform_path):
+    (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
+    # generate acc
+    alpha_origin = segment_origin[:, segment_index["heading"]]
+    alpha_integral = alpha_origin
+    for index in range(1, segment_d.shape[0]):
+            # vehicle states by echo_lincoln
+        alpha_integral[index ] = normalize_angle(segment_d[index  - 1, segment_index["heading"]] +
+                                            segment_d[index  - 1, segment_index["w_z"]] * DELTA_T)
+
+    # plot
+    pdf_file_path = os.path.join(platform_path, "acc{}.pdf".format(scenario))
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.plot(alpha_origin, "bx", label="Direct Acceleration")
+        plt.plot(alpha_integral, color="yellow", label="Integrated Acceleration")
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+    return pdf_file_path
 
 
 def evaluate_direct_output(output_imu, output_fnn, output_point_mass, evaluation_results):
@@ -100,21 +124,21 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
     vehicle_state_fnn[0, :] = vehicle_state_gps[0, :]
     vehicle_state_point_mass[0, :] = vehicle_state_gps[0, :]
 
-    for k in range(1, vehicle_state_gps.shape[0]):
+    for index in range(1, vehicle_state_gps.shape[0]):
         # vehicle states by echo_lincoln
-        vehicle_state_echo_lincoln[k, 0:2] = vehicle_state_echo_lincoln[k - 1, 0:2] + \
-            output_echo_lincoln[k - 1, 0:2] * DELTA_T
-        vehicle_state_echo_lincoln[k, 1] = normalize_angle(vehicle_state_echo_lincoln[k, 1])
+        vehicle_state_echo_lincoln[index , 0:2] = vehicle_state_echo_lincoln[index  - 1, 0:2] + \
+            output_echo_lincoln[index  - 1, 0:2] * DELTA_T
+        vehicle_state_echo_lincoln[index , 1] = normalize_angle(vehicle_state_echo_lincoln[index , 1])
         # vehicle states by imu sensor
-        vehicle_state_imu[k, :] = vehicle_state_imu[k - 1, :] + output_imu[k, :] * DELTA_T
-        vehicle_state_imu[k, 1] = normalize_angle(vehicle_state_imu[k, 1])
+        vehicle_state_imu[index , :] = vehicle_state_imu[index  - 1, :] + output_imu[index , :] * DELTA_T
+        vehicle_state_imu[index , 1] = normalize_angle(vehicle_state_imu[index , 1])
         # vehicle states by learning-based-model
-        vehicle_state_fnn[k, :] = vehicle_state_fnn[k - 1, :] + output_fnn[k, :] * DELTA_T
-        vehicle_state_fnn[k, 1] = normalize_angle(vehicle_state_fnn[k, 1])
+        vehicle_state_fnn[index , :] = vehicle_state_fnn[index  - 1, :] + output_fnn[index , :] * DELTA_T
+        vehicle_state_fnn[index , 1] = normalize_angle(vehicle_state_fnn[index , 1])
         # vehicle states by sim_point_mass
-        vehicle_state_point_mass[k, :] = vehicle_state_point_mass[k - 1, :] + \
-            output_point_mass[k, :] * DELTA_T
-        vehicle_state_point_mass[k, 1] = normalize_angle(vehicle_state_point_mass[k, 1])
+        vehicle_state_point_mass[index , :] = vehicle_state_point_mass[index  - 1, :] + \
+            output_point_mass[index , :] * DELTA_T
+        vehicle_state_point_mass[index , 1] = normalize_angle(vehicle_state_point_mass[index , 1])
 
     rmse_imu_speed = sqrt(mean_squared_error(vehicle_state_imu[:, 0], vehicle_state_gps[:, 0]))
     rmse_fnn_speed = sqrt(mean_squared_error(vehicle_state_fnn[:, 0], vehicle_state_gps[:, 0]))
@@ -162,29 +186,29 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_gps, vehicle_state_echo_li
     trajectory_point_mass[0, :] = trajectory_gps[0, :]
     trajectory_length = 0
 
-    for k in range(1, trajectory_gps.shape[0]):
-        trajectory_gps2[k, 0] = trajectory_gps2[k - 1, 0] + vehicle_state_gps[k, 0] * \
-            np.cos(vehicle_state_gps[k, 1]) * DELTA_T
-        trajectory_gps2[k, 1] = trajectory_gps2[k - 1, 1] + vehicle_state_gps[k, 0] * \
-            np.sin(vehicle_state_gps[k, 1]) * DELTA_T
-        trajectory_echo_lincoln[k, 0] = trajectory_echo_lincoln[k - 1, 0] + \
-            vehicle_state_echo_lincoln[k, 0] * np.cos(vehicle_state_echo_lincoln[k, 1]) * DELTA_T
-        trajectory_echo_lincoln[k, 1] = trajectory_echo_lincoln[k - 1, 1] + \
-            vehicle_state_echo_lincoln[k, 0] * np.sin(vehicle_state_echo_lincoln[k, 1]) * DELTA_T
-        trajectory_imu[k, 0] = trajectory_imu[k - 1, 0] + vehicle_state_imu[k, 0] * \
-            np.cos(vehicle_state_imu[k, 1]) * DELTA_T
-        trajectory_imu[k, 1] = trajectory_imu[k - 1, 1] + vehicle_state_imu[k, 0] * \
-            np.sin(vehicle_state_imu[k, 1]) * DELTA_T
-        trajectory_fnn[k, 0] = trajectory_fnn[k - 1, 0] + vehicle_state_fnn[k, 0] * \
-            np.cos(vehicle_state_fnn[k, 1]) * DELTA_T
-        trajectory_fnn[k, 1] = trajectory_fnn[k - 1, 1] + vehicle_state_fnn[k, 0] * \
-            np.sin(vehicle_state_fnn[k, 1]) * DELTA_T
-        trajectory_point_mass[k, 0] = trajectory_point_mass[k - 1, 0] + \
-            vehicle_state_point_mass[k, 0] * np.cos(vehicle_state_point_mass[k, 1]) * DELTA_T
-        trajectory_point_mass[k, 1] = trajectory_point_mass[k - 1, 1] + \
-            vehicle_state_point_mass[k, 0] * np.sin(vehicle_state_point_mass[k, 1]) * DELTA_T
-        trajectory_length += sqrt((trajectory_gps[k, 0] - trajectory_gps[k - 1, 0]) ** 2 + (
-            trajectory_gps[k, 1] - trajectory_gps[k - 1, 1]) ** 2)
+    for index in range(1, trajectory_gps.shape[0]):
+        trajectory_gps2[index , 0] = trajectory_gps2[index  - 1, 0] + vehicle_state_gps[index , 0] * \
+            np.cos(vehicle_state_gps[index , 1]) * DELTA_T
+        trajectory_gps2[index , 1] = trajectory_gps2[index  - 1, 1] + vehicle_state_gps[index , 0] * \
+            np.sin(vehicle_state_gps[index , 1]) * DELTA_T
+        trajectory_echo_lincoln[index , 0] = trajectory_echo_lincoln[index  - 1, 0] + \
+            vehicle_state_echo_lincoln[index , 0] * np.cos(vehicle_state_echo_lincoln[index , 1]) * DELTA_T
+        trajectory_echo_lincoln[index , 1] = trajectory_echo_lincoln[index  - 1, 1] + \
+            vehicle_state_echo_lincoln[index , 0] * np.sin(vehicle_state_echo_lincoln[index , 1]) * DELTA_T
+        trajectory_imu[index , 0] = trajectory_imu[index  - 1, 0] + vehicle_state_imu[index , 0] * \
+            np.cos(vehicle_state_imu[index , 1]) * DELTA_T
+        trajectory_imu[index , 1] = trajectory_imu[index  - 1, 1] + vehicle_state_imu[index , 0] * \
+            np.sin(vehicle_state_imu[index , 1]) * DELTA_T
+        trajectory_fnn[index , 0] = trajectory_fnn[index  - 1, 0] + vehicle_state_fnn[index , 0] * \
+            np.cos(vehicle_state_fnn[index , 1]) * DELTA_T
+        trajectory_fnn[index , 1] = trajectory_fnn[index  - 1, 1] + vehicle_state_fnn[index , 0] * \
+            np.sin(vehicle_state_fnn[index , 1]) * DELTA_T
+        trajectory_point_mass[index , 0] = trajectory_point_mass[index  - 1, 0] + \
+            vehicle_state_point_mass[index , 0] * np.cos(vehicle_state_point_mass[index , 1]) * DELTA_T
+        trajectory_point_mass[index , 1] = trajectory_point_mass[index  - 1, 1] + \
+            vehicle_state_point_mass[index , 0] * np.sin(vehicle_state_point_mass[index , 1]) * DELTA_T
+        trajectory_length += sqrt((trajectory_gps[index , 0] - trajectory_gps[index  - 1, 0]) ** 2 + (
+            trajectory_gps[index , 1] - trajectory_gps[index  - 1, 1]) ** 2)
 
     rmse_imu_trajectory = sqrt(mean_squared_error(trajectory_imu, trajectory_gps))
     rmse_fnn_trajectory = sqrt(mean_squared_error(trajectory_fnn, trajectory_gps))
@@ -279,8 +303,9 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         # Plot the acceleration calculated by fnn and imu
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Acceleration Visualization")
-        plt.plot(output_echo_lincoln[:, 0], color='black', label="IMU Acceleration")
+
         plt.plot(output_imu[:, 0], color='orange', alpha=ALPHA, label="Echo_lincoln Acceleration")
+        plt.plot(output_echo_lincoln[:, 0], color='black', label="IMU Acceleration")
         plt.plot(output_fnn[:, 0], color='red', label="FNN Acceleration")
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
@@ -290,6 +315,7 @@ def visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
         plt.figure(figsize=(4, 3))
         plt.title("Vehicle Angular Speed Visualization")
         plt.plot(output_imu[:, 1], color='orange', alpha=ALPHA, label="IMU Angular Speed")
+        # if PLOT_MODEL:
         plt.plot(output_echo_lincoln[:, 1], color='black', label="Echo_lincoln Angular Speed")
         plt.plot(output_fnn[:, 1], color='red', label="FNN Angular Speed")
         plt.legend()

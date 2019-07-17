@@ -83,6 +83,64 @@ def vect_ddiff(vect, dt):
     return ret
 
 
+def IMU_feature_processing(segment):
+    """
+    smooth noisy raw data from IMU by savgol_filter
+    """
+    # discard the segments that are too short
+    if segment.shape[0] < WINDOW_SIZE or segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
+        return None
+    # discard the segments that are too long
+    if segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
+        return None
+
+    segment_d = segment  # acc from speed
+    segment_dd = segment  # acc from position
+
+    # smooth position data for v
+    smooth_x = savgol_filter(segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    smooth_y = savgol_filter(segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    # get v from dx/dt or dy/dt for segment_dd
+    tmp_dd_v_x = vect_differential(smooth_x, feature_config["delta_t"])
+    tmp_dd_v_y = vect_differential(smooth_y, feature_config["delta_t"])
+    # smooth
+    segment_dd[:, segment_index["v_x"]] = savgol_filter(tmp_dd_v_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
+    segment_dd[:, segment_index["v_y"]] = savgol_filter(tmp_dd_v_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
+    # get acc from d(dx/dt)/dt for segment_dd
+    # a = dv/dt
+    tmp_dd_a_x = vect_differential(tmp_dd_v_x, feature_config["delta_t"])
+    tmp_dd_a_y = vect_differential(tmp_dd_v_y, feature_config["delta_t"])
+    segment_dd[:, segment_index["a_x"]] = savgol_filter(tmp_dd_a_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
+    segment_dd[:, segment_index["a_y"]] = savgol_filter(tmp_dd_a_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    # get acc from dv/dt for segment_d
+    # smooth v_x, v_y
+    smooth_v_x = savgol_filter(segment[:, segment_index["v_x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    smooth_v_y = savgol_filter(segment[:, segment_index["v_y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    # a = dv/dt
+    tmp_a_x = vect_differential(smooth_v_x, feature_config["delta_t"])
+    tmp_a_y = vect_differential(smooth_v_y, feature_config["delta_t"])
+    # smooth a_x, a_y again
+    segment_d[:, segment_index["a_x"]] = savgol_filter(tmp_a_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
+    segment_d[:, segment_index["a_y"]] = savgol_filter(tmp_a_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    # heading angle
+    smooth_head_angle = savgol_filter(
+        segment[:, segment_index["heading"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    segment_d[:, segment_index["w_z"]] = vect_differential(
+        smooth_head_angle, feature_config["delta_t"])
+    segment_dd[:, segment_index["w_z"]] = vect_differential(
+        smooth_head_angle, feature_config["delta_t"])
+
+    segment_d[:, segment_index["w_z"]] = savgol_filter(
+        segment_d[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+    segment_dd[:, segment_index["w_z"]] = savgol_filter(
+        segment_dd[:, segment_index["w_z"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    return (segment, segment_d, segment_dd)
+
+
 def feature_preprocessing(segment):
     """
     smooth noisy raw data from IMU by savgol_filter
@@ -98,13 +156,17 @@ def feature_preprocessing(segment):
     if not acc_method["acc_from_IMU"]:
         tmp_x = savgol_filter(segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
         tmp_y = savgol_filter(segment[:, segment_index["y"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
-
-        # speed from localization
-        tmp_x_v = vect_differential(tmp_x, feature_config["delta_t"])
-        tmp_x_v = savgol_filter(tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
-        tmp_y_v = vect_differential(tmp_y, feature_config["delta_t"])
-        tmp_y_v = savgol_filter(tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
-
+        if not acc_method["acc_from_speed"]:
+            # speed from differential
+            tmp_x_v = vect_differential(tmp_x, feature_config["delta_t"])
+            tmp_y_v = vect_differential(tmp_y, feature_config["delta_t"])
+        else:
+            # speed from localization
+            tmp_x_v = segment[:, segment_index["v_x"]]
+            tmp_y_v = segment[:, segment_index["v_y"]]
+        if acc_method["add_smooth_to_speed"]:
+            tmp_x_v = savgol_filter(tmp_x_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
+            tmp_y_v = savgol_filter(tmp_y_v, WINDOW_SIZE, POLYNOMINAL_ORDER)
         # acc
         segment[:, segment_index["a_x"]] = vect_differential(
             tmp_x_v, feature_config["delta_t"])
