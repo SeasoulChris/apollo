@@ -10,6 +10,7 @@ dependencies:
 
   # Google infra
   - absl-py
+  - protobuf
 
   # Data science
   - boto3
@@ -24,8 +25,6 @@ dependencies:
   - torchvision
   - tensorflow
   - tensorflow-gpu
-
-  - protobuf
 
   # Other
   - opencv
