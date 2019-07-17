@@ -98,7 +98,15 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
                                           ['%.3f' % x for x in
                                            localization_mtx[:, POSE_IDX['timestamp_sec']]])
     control_mtx_rtn = control_mtx[control_idx_by_chassis & control_idx_by_localization, :]
-    # Third, filter the chassis and localization data with filtered control data
+    # Third, delete the control data with inverted-sequence chassis and localization sequence_num
+    # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
+    inv_seq_chassis = (np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_sequence_num']]) < 0)
+    inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
+                            < 0.0)
+    control_idx_inv_seq = np.where(np.insert(inv_seq_chassis, 0, 0) |
+                                   np.insert(inv_seq_localization, 0, 0))[0];
+    control_mtx_rtn = np.delete(control_mtx_rtn, control_idx_inv_seq, axis=0)
+    # Fourth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
     localization_idx_rtn = []
     chassis_idx = 0
@@ -109,7 +117,7 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
             chassis_idx += 1
         while (['%.3f' % control_mtx_rtn[control_idx, FEATURE_IDX['localization_timestamp_sec']]] !=
                ['%.3f' % localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]]):
-            localization_idx +=1
+            localization_idx += 1
         chassis_idx_rtn.append(chassis_idx)
         localization_idx_rtn.append(localization_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
