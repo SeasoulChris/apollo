@@ -20,6 +20,8 @@ import glob
 import numpy as np
 import os
 import math
+import scipy
+from scipy.signal import filtfilt
 
 import torch
 import torch.nn as nn
@@ -33,16 +35,6 @@ import learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_
 from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
-
-
-obs_feature_size = 180
-single_lane_feature_size = 600
-past_lane_feature_size = 200
-future_lane_feature_size = 400
-
-
-import scipy
-from scipy.signal import filtfilt
 
 
 #######################################################################
@@ -69,17 +61,6 @@ def plot_img(future_pt, count, adjusted_future_pt=None):
             cv.circle(img, point_to_idx(adjusted_future_pt[ts][0] - adjusted_future_pt[0][0], adjusted_future_pt[ts]
                                         [1] - adjusted_future_pt[0][1]), radius=3, thickness=2, color=[128, 0, 128])
     cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img, 0), 1))
-
-
-def LoadDataForLearning(filepath):
-    list_of_data_for_learning = \
-        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
-    try:
-        with open(filepath, 'rb') as file_in:
-            list_of_data_for_learning.ParseFromString(file_in.read())
-        return list_of_data_for_learning.data_for_learning
-    except:
-        return None
 
 
 #######################################################################
@@ -249,194 +230,10 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
 
 
 #######################################################################
-# Preprocess the data-for-learning. With cleaned labels, generate
-# training-data ready for torch Dataset.
-#######################################################################
-class DataPreprocessor(object):
-    def __init__(self, pred_len=3.0):
-        self.pred_len = pred_len
-
-    def load_numpy_dict(self, feature_file_path, label_dir='labels_future_trajectory', label_file='cleaner_label.npy'):
-        '''Load the numpy dictionary file for the corresponding feature-file.
-        '''
-        dir_path = os.path.dirname(feature_file_path)
-        label_path = os.path.join(dir_path, label_file)
-        label_path = label_path.replace('features', label_dir)
-        if not os.path.isfile(label_path):
-            return None
-        return np.load(label_path).item()
-
-    def deserialize_and_construct_lane_graph(self, serial_lane_graph):
-        '''Deserialize the serial_lane_graph and construct a lane_graph.
-
-            - return: a lane-graph which is a list of lane_sequences, each lane_sequence is represented by a frozenset.
-        '''
-        if serial_lane_graph[-1] != '|':
-            serial_lane_graph.append('|')
-
-        lane_graph = []
-        lane_sequence = None
-        for lane_seg_id in serial_lane_graph:
-            if lane_seg_id == '|':
-                if lane_sequence is not None:
-                    lane_graph.append(frozenset(lane_sequence))
-                lane_sequence = []
-            else:
-                lane_sequence.append(lane_seg_id)
-        return lane_graph
-
-    def get_lane_sequence_id(self, lane_segment_id, lane_graph):
-        lane_seq_set = set()
-        for i, lane_sequence in enumerate(lane_graph):
-            if lane_segment_id in lane_sequence:
-                lane_seq_set.add(i)
-        return lane_seq_set
-
-    def preprocess_regroad_data(self, feature_dir):
-        # Go through all the data_for_learning file, for each data-point, find
-        # the corresponding label file, merge them.
-        all_file_paths = GetListOfFiles(feature_dir)
-        total_num_data_points = 0
-        total_usable_data_points = 0
-        total_cutin_data_points = 0
-
-        file_count = 0
-        for path in all_file_paths:
-            file_count += 1
-            print ('============================================')
-            print ('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
-            # Load feature and label files.
-            # Load the visited-lane-segments label dict files.
-            visited_lane_segments_labels = self.load_numpy_dict(\
-                path, label_dir='labels-visited-lane-segments', label_file='visited_lane_segment.npy')
-            if visited_lane_segments_labels is None:
-                print ('Failed to read visited_lane_segment label file.')
-                continue
-            # Load the future-trajectory label dict files.
-            future_trajectory_labels = self.load_numpy_dict(\
-                path, label_dir='labels_future_trajectory', label_file='cleaner_label.npy')
-            if future_trajectory_labels is None:
-                print ('Failed to read future_trajectory label file.')
-                continue
-            # Load the feature for learning file.
-            vector_data_for_learning = LoadDataForLearning(path)
-            if vector_data_for_learning is None:
-                print ('Failed to read feature file.')
-                continue
-
-            # Go through the entries in this feature file.
-            total_num_data_points += len(vector_data_for_learning)
-            num_cutin_data_points = 0
-            output_np_array = []
-            for data_for_learning in vector_data_for_learning:
-                # # 0. Skip non-regroad-vehicle data:
-                # if data_for_learning.category != 'cruise':
-                #     continue
-                # curr_data_point = []
-
-                # 1. Find in the dict the corresponding visited lane segments and future trajectory.
-                key = '{}@{:.3f}'.format(data_for_learning.id, data_for_learning.timestamp)
-                if key not in visited_lane_segments_labels or\
-                   key not in future_trajectory_labels:
-                    continue
-                features_for_learning = data_for_learning.features_for_learning
-                serial_lane_graph = data_for_learning.string_features_for_learning
-                visited_lane_segments = visited_lane_segments_labels[key]
-                future_trajectory = future_trajectory_labels[key]
-                # Remove corrupted data points.
-                if (len(features_for_learning) - obs_feature_size) % single_lane_feature_size != 0:
-                    continue
-
-                # 2. Deserialize the lane_graph, and remove data-points with incorrect sizes.
-                # Note that lane_graph only contains lane_segment_ids starting from the vehicle's current position (not including past lane_segment_ids).
-                lane_graph = self.deserialize_and_construct_lane_graph(serial_lane_graph)
-                num_lane_sequence = len(lane_graph)
-                # Remove corrupted data points.
-                if (len(features_for_learning) - obs_feature_size) / single_lane_feature_size != num_lane_sequence:
-                    continue
-                # Get a set of unique future lane-sequences. (If two lanes merged in the past, they will belong to the same future_lane_sequence)
-                unique_future_lane_sequence_set = set()
-                for lane_sequence in lane_graph:
-                    unique_future_lane_sequence_set.add(lane_sequence)
-
-                # 3. Based on the lane graph, figure out what lane-sequence the end-point is in.
-                end_lane_sequences = None
-                for element in visited_lane_segments:
-                    timestamp = element[0]
-                    lane_seg_id = element[1]
-                    if timestamp > self.pred_len + 0.05:
-                        break
-                    end_lane_sequences = self.get_lane_sequence_id(lane_seg_id, lane_graph)
-
-                # 4. Extract the features of whether each lane is the self-lane or not.
-                start_lane_segment_id = visited_lane_segments[0][1]
-                start_lane_sequences = self.get_lane_sequence_id(start_lane_segment_id, lane_graph)
-                self_lane_features = []
-                for i in range(num_lane_sequence):
-                    if i in start_lane_sequences:
-                        self_lane_features.append(1)
-                    else:
-                        self_lane_features.append(0)
-
-                # 5. Label whether the obstacle has stepped out of its original lane-sequence(s).
-                has_stepped_out = 1
-                for i in end_lane_sequences:
-                    if i in start_lane_sequences:
-                        has_stepped_out = 0
-                num_cutin_data_points += has_stepped_out
-
-                # 6. Put everything together.
-                #   a. indicate the number of lane-sequences.
-                curr_data_point = [num_lane_sequence]
-                #   b. include the obstacle historical states features.
-                curr_data_point += features_for_learning[:obs_feature_size]
-                #   c. include the lane_features for each lane.
-                for i in range(num_lane_sequence):
-                    curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:\
-                                                             obs_feature_size+(i+1)*single_lane_feature_size]
-                #   d. add whether it's self-lane feature.
-                curr_data_point += self_lane_features
-                #   e. add the unique future lane info.
-                #   TODO(jiacheng): implement the above one.
-                #   f. add trajectory labels.
-                for i, traj in enumerate(zip(*future_trajectory)):
-                    if i >= 3:
-                        break
-                    curr_data_point += list(traj)
-                #   g. add whether it's cut-in labels.
-                curr_data_point += [has_stepped_out]
-                output_np_array.append(curr_data_point)
-
-            # Save into a local file for training.
-            try:
-                num_usable_data_points = len(output_np_array)
-                print ('Total usable data points: {} out of {}.'.format(\
-                    num_usable_data_points, len(vector_data_for_learning)))
-                print ('Total cut-in data points: {}, which is {}%.'.format(\
-                    num_cutin_data_points, num_cutin_data_points/num_usable_data_points*100))
-                output_np_array = np.array(output_np_array)
-                np.save(path+'.training_data.npy', output_np_array)
-                total_usable_data_points += num_usable_data_points
-                total_cutin_data_points += num_cutin_data_points
-            except:
-                print ('Failed to save output file.')
-
-        print ('There are {} usable data points out of {}.'.format(\
-            total_usable_data_points, total_num_data_points))
-        print ('There are {} cut-in data points, which is {}% of the total data points.'.format(\
-            total_cutin_data_points, total_cutin_data_points/total_usable_data_points*100))
-
-
-#######################################################################
 # Main function.
 #######################################################################
 if __name__ == '__main__':
- #    # 1a. First coarse label cleaning, then smoothing.
+ #    # Option-a. First coarse label cleaning, then smoothing.
  #    LabelCleaningAndSmoothing('/data/labels-future-points/')
- #    # 1b. Only fine label cleaning, no smoothing.
+ #    # Option-b. Only fine label cleaning, no smoothing.
  #    LabelCleaningFine('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
-
- #    # 2. Given cleaned labels, preprocess the data-for-learning and generate
- #    #    training-data ready for torch Dataset.
- #    data_preprocessor = DataPreprocessor()
- #    data_preprocessor.preprocess_regroad_data('/home/jiacheng/work/apollo/data/vehicle_regroad_dataset/features')
