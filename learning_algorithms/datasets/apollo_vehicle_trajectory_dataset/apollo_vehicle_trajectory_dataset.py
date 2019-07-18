@@ -92,7 +92,16 @@ class DataPreprocessor(object):
                 lane_seq_set.add(i)
         return lane_seq_set
 
-    def preprocess_regroad_data(self, feature_dir):
+    def preprocess_data(self, feature_dir, involve_all_relevant_data=False):
+        '''
+        params:
+            - feature_dir: the directory containing all data_for_learn
+            - involve_all_relevant_data:
+                - if False, then only include those data points with clean labels.
+                - if True, then as long as the data point occurs at a timestamp
+                  at which there is a clean label, then this data point, regardless
+                  of whether itself contains clean label, will be put into the train-data.
+        '''
         # Go through all the data_for_learning file, for each data-point, find
         # the corresponding label file, merge them.
         all_file_paths = GetListOfFiles(feature_dir)
@@ -124,6 +133,16 @@ class DataPreprocessor(object):
                 print ('Failed to read feature file.')
                 continue
 
+            # If involve_all_relevant_data, then needs to go through all the
+            # clean labels, find their timestamps, and record them.
+            # Later, all data-point occuring at such timestamps, regardless of
+            # whether they have corresponding clean labels, should go into train-data.
+            key_timestamps = set()
+            if involve_all_relevant_data:
+                for key in future_trajectory_labels.keys():
+                    key_ts = key.split('@')[1]
+                    key_timestamps.add(key_ts)
+
             # Go through the entries in this feature file.
             total_num_data_points += len(vector_data_for_learning)
             num_cutin_data_points = 0
@@ -135,16 +154,27 @@ class DataPreprocessor(object):
                 # curr_data_point = []
 
                 # 1. Find in the dict the corresponding visited lane segments and future trajectory.
+                visited_lane_segments = None
+                future_trajectory = None
                 key = '{}@{:.3f}'.format(data_for_learning.id, data_for_learning.timestamp)
-                if key not in visited_lane_segments_labels or\
-                   key not in future_trajectory_labels:
-                    continue
+                if involve_all_relevant_data:
+                    if key.split('@')[1] not in key_timestamps:
+                        continue
+                else:
+                    if key not in visited_lane_segments_labels or\
+                       key not in future_trajectory_labels:
+                        continue
+                if key in visited_lane_segments_labels and \
+                   key in future_trajectory_labels:
+                    visited_lane_segments = visited_lane_segments_labels[key]
+                    future_trajectory = future_trajectory_labels[key]
                 features_for_learning = data_for_learning.features_for_learning
                 serial_lane_graph = data_for_learning.string_features_for_learning
-                visited_lane_segments = visited_lane_segments_labels[key]
-                future_trajectory = future_trajectory_labels[key]
                 # Remove corrupted data points.
                 if (len(features_for_learning) - obs_feature_size) % single_lane_feature_size != 0:
+                    continue
+                # Remove data points with zero lane-sequence:
+                if (len(features_for_learning) == obs_feature_size):
                     continue
 
                 # 2. Deserialize the lane_graph, and remove data-points with incorrect sizes.
@@ -161,29 +191,34 @@ class DataPreprocessor(object):
 
                 # 3. Based on the lane graph, figure out what lane-sequence the end-point is in.
                 end_lane_sequences = None
-                for element in visited_lane_segments:
-                    timestamp = element[0]
-                    lane_seg_id = element[1]
-                    if timestamp > self.pred_len + 0.05:
-                        break
-                    end_lane_sequences = self.get_lane_sequence_id(lane_seg_id, lane_graph)
+                if visited_lane_segments is not None:
+                    for element in visited_lane_segments:
+                        timestamp = element[0]
+                        lane_seg_id = element[1]
+                        if timestamp > self.pred_len + 0.05:
+                            break
+                        end_lane_sequences = self.get_lane_sequence_id(lane_seg_id, lane_graph)
 
                 # 4. Extract the features of whether each lane is the self-lane or not.
-                start_lane_segment_id = visited_lane_segments[0][1]
-                start_lane_sequences = self.get_lane_sequence_id(start_lane_segment_id, lane_graph)
                 self_lane_features = []
-                for i in range(num_lane_sequence):
-                    if i in start_lane_sequences:
-                        self_lane_features.append(1)
-                    else:
-                        self_lane_features.append(0)
+                start_lane_sequences = None
+                if visited_lane_segments is not None:
+                    start_lane_segment_id = visited_lane_segments[0][1]
+                    start_lane_sequences = self.get_lane_sequence_id(start_lane_segment_id, lane_graph)
+                    for i in range(num_lane_sequence):
+                        if i in start_lane_sequences:
+                            self_lane_features.append(1)
+                        else:
+                            self_lane_features.append(0)
 
                 # 5. Label whether the obstacle has stepped out of its original lane-sequence(s).
-                has_stepped_out = 1
-                for i in end_lane_sequences:
-                    if i in start_lane_sequences:
-                        has_stepped_out = 0
-                num_cutin_data_points += has_stepped_out
+                has_stepped_out = 0
+                if visited_lane_segments is not None:
+                    has_stepped_out = 1
+                    for i in end_lane_sequences:
+                        if i in start_lane_sequences:
+                            has_stepped_out = 0
+                    num_cutin_data_points += has_stepped_out
 
                 # 6. Put everything together.
                 #   a. indicate the number of lane-sequences.
@@ -194,17 +229,19 @@ class DataPreprocessor(object):
                 for i in range(num_lane_sequence):
                     curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:\
                                                              obs_feature_size+(i+1)*single_lane_feature_size]
-                #   d. add whether it's self-lane feature.
-                curr_data_point += self_lane_features
-                #   e. add the unique future lane info.
-                #   TODO(jiacheng): implement the above one.
-                #   f. add trajectory labels.
-                for i, traj in enumerate(zip(*future_trajectory)):
-                    if i >= 3:
-                        break
-                    curr_data_point += list(traj)
-                #   g. add whether it's cut-in labels.
-                curr_data_point += [has_stepped_out]
+                if visited_lane_segments is not None:
+                    #   d. add whether it's self-lane feature.
+                    curr_data_point += self_lane_features
+                    #   e. add the unique future lane info.
+                    #   TODO(jiacheng): implement the above one.
+                    #   f. add trajectory labels.
+                    for i, traj in enumerate(zip(*future_trajectory)):
+                        if i >= 3:
+                            break
+                        curr_data_point += list(traj)
+                    #   g. add whether it's cut-in labels.
+                    curr_data_point += [has_stepped_out]
+
                 output_np_array.append(curr_data_point)
 
             # Save into a local file for training.
@@ -352,4 +389,4 @@ if __name__ == '__main__':
  #    # Given cleaned labels, preprocess the data-for-learning and generate
  #    # training-data ready for torch Dataset.
  #    data_preprocessor = DataPreprocessor()
- #    data_preprocessor.preprocess_regroad_data('/home/jiacheng/work/apollo/data/vehicle_regroad_dataset/features')
+ #    data_preprocessor.preprocess_data('/home/jiacheng/work/apollo/data/vehicle_regroad_dataset/features')
