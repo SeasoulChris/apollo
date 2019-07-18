@@ -12,6 +12,7 @@ from keras.regularizers import l1, l2
 import colored_glog as glog
 import h5py
 import numpy as np
+import tensorflow as tf
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, lstm_model_config
 import fueling.common.file_utils as file_utils
@@ -19,13 +20,17 @@ import fueling.common.file_utils as file_utils
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
-USE_GPU = False  # CPU seems to be faster than GPU in this case.
+USE_GPU = True  # CPU seems to be faster than GPU in this case.
 
 if USE_TENSORFLOW:
-    if not USE_GPU:
+    if USE_GPU:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+        os.environ["KERAS_BACKEND"] = "tensorflow-gpu"
+    else:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    os.environ["KERAS_BACKEND"] = "tensorflow"
+        os.environ["KERAS_BACKEND"] = "tensorflow"
     from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
@@ -72,9 +77,10 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
     lstm_output_split = np.split(lstm_output_data, [split_idx])
 
     model = setup_model(model_name)
-    training_history = model.fit(lstm_input_split[0], lstm_output_split[0],
-                                 validation_data=(lstm_input_split[1], lstm_output_split[1]),
-                                 epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
+    with tf.device('/gpu:0'):
+        training_history = model.fit(lstm_input_split[0], lstm_output_split[0],
+                                     validation_data=(lstm_input_split[1], lstm_output_split[1]),
+                                     epochs=EPOCHS, batch_size=64, verbose=2, shuffle=True)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 

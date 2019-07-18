@@ -12,9 +12,11 @@ dependencies:
   - absl-py
   - protobuf
   - tensorflow
+  - tensorflow-gpu
 
   # Data science
   - boto3
+  - cudatoolkit=9.2
   - h5py
   - keras
   - matplotlib

@@ -5,6 +5,7 @@ from random import shuffle
 from time import time
 import glob
 import os
+import subprocess
 
 from keras.regularizers import l1, l2
 from keras.layers import Dense, Input
@@ -13,10 +14,12 @@ from keras.metrics import mse
 from keras.models import Sequential, Model
 from scipy.signal import savgol_filter
 from sklearn.model_selection import train_test_split
+from tensorflow.python.client import device_lib
 import colored_glog as glog
 import google.protobuf.text_format as text_format
 import h5py
 import numpy as np
+import tensorflow as tf
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
@@ -25,13 +28,19 @@ import fueling.common.file_utils as file_utils
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.
-USE_GPU = False  # CPU seems to be faster than GPU in this case.
+USE_GPU = True  # CPU seems to be faster than GPU in this case.
+
+glog.info('Available devices: {}'.format(device_lib.list_local_devices()))
 
 if USE_TENSORFLOW:
-    if not USE_GPU:
+    if USE_GPU:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+        os.environ["KERAS_BACKEND"] = "tensorflow-gpu"
+    else:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    os.environ["KERAS_BACKEND"] = "tensorflow"
+        os.environ["KERAS_BACKEND"] = "tensorflow"
     from keras.callbacks import TensorBoard
 else:
     os.environ["KERAS_BACKEND"] = "theano"
@@ -50,7 +59,23 @@ EPOCHS = mlp_model_config["epochs"]
 MLP_MODEL_LAYER = mlp_model_config["fnn_layers"]
 
 
+def check_output(command):
+    """Return the output of given system command"""
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    out_lines = proc.stdout.readlines()
+    proc.communicate()
+    for line in out_lines:
+        glog.info(line.strip())
+
+
 def setup_model():
+    """Run tensorflow training task"""
+    check_output('nvidia-smi')
+    if tf.test.gpu_device_name():
+        glog.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+        glog.info('GPU available? {}'.format(tf.test.is_gpu_available()))
+    else:
+        glog.warn('Please install GPU version of TF')
     """
     set up neural network based on keras.Sequential
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
@@ -121,8 +146,9 @@ def mlp_keras(x_data, y_data, param_norm, out_dir):
     glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model()
-    training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS,
-                                 batch_size=32, verbose=2)
+    with tf.device('/gpu:0'):
+        training_history = model.fit(x_train, y_train, shuffle=True, nb_epoch=EPOCHS,
+                                     batch_size=32, verbose=2)
 
     timestr = datetime.now().strftime("%Y%m%d-%H%M%S")
 
