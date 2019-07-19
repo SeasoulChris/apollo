@@ -118,7 +118,7 @@ def SmoothFeatureSequence(feature_seq):
         x_coords.append(feature[0] - start_x)
         y_coords.append(feature[1] - start_y)
 
-    b, a = scipy.signal.butter(8, 0.8)
+    b, a = scipy.signal.butter(2, 0.72)
     smooth_x_coords = filtfilt(b, a, x_coords, method="gust")
     smooth_y_coords = filtfilt(b, a, y_coords, method="gust")
 
@@ -193,9 +193,9 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             turning_ang = (np.arctan2(obs_vel[-1,1], obs_vel[-1,0]) - np.arctan2(obs_vel[0,1], obs_vel[0,0])) % (2*np.pi)
             turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
             # 3. Filtered the extream values for acc and ang_vel.
-            if np.max(np.abs(linear_acc)) > 50:
+            if np.max(np.abs(linear_acc)) > 80:
                 continue
-            if np.min(angular_vel) < 0.85:
+            if np.min(angular_vel) < 0.8:
                 continue
             # plot_img(obs_pos, idx)
             # print(idx, key)
