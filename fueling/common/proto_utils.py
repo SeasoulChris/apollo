@@ -32,6 +32,6 @@ def get_pb_from_file(filename, pb_value):
         try:
             return get_pb_from_text_file(filename, pb_value)
         except text_format.ParseError:
-            print 'Error: Cannot parse %s as binary or text proto' % filename
+            print('Error: Cannot parse {} as binary or text proto'.format(filename))
 
     return None

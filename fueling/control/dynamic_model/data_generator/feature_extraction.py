@@ -29,7 +29,7 @@ def generate_segment(h5_file):
     segment = None
     glog.info('Loading {}'.format(h5_file))
     with h5py.File(h5_file, 'r') as fin:
-        for ds in fin.itervalues():
+        for ds in fin.values():
             if segment is None:
                 segment = np.array(ds)
             else:
