@@ -32,11 +32,11 @@ class IMUEvaluation(BasePipeline):
 
     def run_test(self):
         """run test"""
-        platform_path = '/apollo/modules/data/fuel/testdata/control/'
+        platform_path = "/apollo/modules/data/fuel/testdata/control/"
         if IS_BACKWARD:
-            evaluation_set = 'golden_test_backward'
+            evaluation_set = "golden_test_backward"
 
-        evaluation_dataset = os.path.join(platform_path, evaluation_set, '*/*.hdf5')
+        evaluation_dataset = os.path.join(platform_path, evaluation_set, "*/*.hdf5")
         glog.info("evaluation_dataset: {}".format(evaluation_dataset))
         glog.info("files in evaluation_dataset: {}".format(glob.glob(evaluation_dataset)))
 
@@ -60,10 +60,14 @@ class IMUEvaluation(BasePipeline):
             .mapValues(feature_extraction.generate_segment)
             # processing segment
             # PairRDD(driving_scenario, (segment, segment_d, segment_dd))
-            .mapValues(feature_extraction.IMU_feature_processing)
+            .mapValues(feature_extraction.IMU_feature_processing), 1)
+
+        location = spark_helper.cache_and_log(
+            "location",
+            results_rdd
             # PairRDD(driving_scenario, (segment, segment_d, segment_dd))
-            .map(lambda scenario_segments: evaluator.heading_angle(
-                scenario_segments, platform_path)), 1)
+            .map(lambda scenario_segments: evaluator.location(
+                 scenario_segments, platform_path)), 1)
 
 
 if __name__ == '__main__':

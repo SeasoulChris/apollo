@@ -66,8 +66,6 @@ def vect_differential(vect, dt):
     calculate derivative of a vector
     """
     ret = np.zeros(vect.shape)
-    print("vect shape", vect.shape)
-    print("vect len", len(vect))
     for index in range(1, len(vect)):
         ret[index - 1] = (vect[index] - vect[index - 1]) / dt
     ret[index] = ret[index - 1]
@@ -87,6 +85,7 @@ def IMU_feature_processing(segment):
     """
     smooth noisy raw data from IMU by savgol_filter
     """
+    glog.info("smooth noisy raw data from IMU by savgol_filter")
     # discard the segments that are too short
     if segment.shape[0] < WINDOW_SIZE or segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
         return None
@@ -94,8 +93,8 @@ def IMU_feature_processing(segment):
     if segment.shape[0] > MAXIMUM_SEGMENT_LENGTH:
         return None
 
-    segment_d = segment  # acc from speed
-    segment_dd = segment  # acc from position
+    segment_d = np.zeros(segment.shape)  # acc from speed
+    segment_dd = np.zeros(segment.shape)  # acc from position
 
     # smooth position data for v
     smooth_x = savgol_filter(segment[:, segment_index["x"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
@@ -106,6 +105,9 @@ def IMU_feature_processing(segment):
     # smooth
     segment_dd[:, segment_index["v_x"]] = savgol_filter(tmp_dd_v_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
     segment_dd[:, segment_index["v_y"]] = savgol_filter(tmp_dd_v_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    glog.info("max speed difference: {}".format(
+        max(segment_dd[:, segment_index["v_x"]] - segment[:, segment_index["v_x"]])))
     # get acc from d(dx/dt)/dt for segment_dd
     # a = dv/dt
     tmp_dd_a_x = vect_differential(tmp_dd_v_x, feature_config["delta_t"])
@@ -123,6 +125,9 @@ def IMU_feature_processing(segment):
     # smooth a_x, a_y again
     segment_d[:, segment_index["a_x"]] = savgol_filter(tmp_a_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
     segment_d[:, segment_index["a_y"]] = savgol_filter(tmp_a_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
+
+    segment_d[:, segment_index["v_x"]] = segment[:, segment_index["v_x"]]
+    segment_d[:, segment_index["v_y"]] = segment[:, segment_index["v_y"]]
 
     # heading angle
     smooth_head_angle = savgol_filter(

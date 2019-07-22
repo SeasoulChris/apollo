@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-from fueling.control.dynamic_model.conf.model_config import acc_method
+from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
@@ -54,22 +54,182 @@ DELTA_T = feature_config["delta_t"]
 
 
 def heading_angle(scenario_segments, platform_path):
+    """ plot heading angles """
     (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
-    # generate acc
     alpha_origin = segment_origin[:, segment_index["heading"]]
-    alpha_integral = alpha_origin
+    alpha_integral = np.zeros(alpha_origin.shape)
+    segment_d[0, segment_index["heading"]] = segment_origin[0, segment_index["heading"]]
+    segment_dd[0, segment_index["heading"]] = segment_origin[0, segment_index["heading"]]
     for index in range(1, segment_d.shape[0]):
-            # vehicle states by echo_lincoln
-        alpha_integral[index ] = normalize_angle(segment_d[index  - 1, segment_index["heading"]] +
-                                            segment_d[index  - 1, segment_index["w_z"]] * DELTA_T)
-
+        segment_d[index, segment_index["heading"]] = normalize_angle(
+            segment_d[index - 1, segment_index["heading"]] +
+            segment_d[index - 1, segment_index["w_z"]] * DELTA_T)
+        segment_dd[index,segment_index["heading"]] = normalize_angle(
+            segment_dd[index - 1, segment_index["heading"]] +
+            segment_dd[index - 1, segment_index["w_z"]] * DELTA_T)
     # plot
-    pdf_file_path = os.path.join(platform_path, "acc{}.pdf".format(scenario))
+    pdf_file_path = os.path.join(platform_path, "heading_angle{}.pdf".format(scenario))
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
-        plt.plot(alpha_origin, "bx", label="Direct Acceleration")
-        plt.plot(alpha_integral, color="yellow", label="Integrated Acceleration")
+        plt.plot(alpha_origin, "b--", label="Origin Heading Angle", linewidth=1)
+        plt.plot(segment_d[:,segment_index["heading"]], color="red",
+                 label="Integrated Heading Angle", linewidth=0.5)
         plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+    return pdf_file_path
+
+def location(scenario_segments, platform_path):
+    """ plot location """
+    speed(scenario_segments, platform_path)
+    (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
+    location_x = segment_origin[:, segment_index["x"]]
+    location_y = segment_origin[:, segment_index["y"]]
+    segment_d[0, segment_index["x"]] = segment_origin[0, segment_index["x"]]
+    segment_d[0, segment_index["y"]] = segment_origin[0, segment_index["y"]]
+    segment_dd[0, segment_index["x"]] = segment_origin[0, segment_index["x"]]
+    segment_dd[0, segment_index["y"]] = segment_origin[0, segment_index["y"]]
+    # integration from IMU
+    tmp_x = np.zeros(location_x.shape)
+    tmp_y = np.zeros(location_y.shape)
+    tmp_x[0] = segment_origin[0, segment_index["x"]]
+    tmp_y[0] = segment_origin[0, segment_index["y"]]
+    for index in range(1, len(location_x)):
+        # location from speed (acc from speed)
+        segment_d[index, segment_index["x"]] = (
+            segment_d[index-1, segment_index["x"]] +
+            segment_d[index-1, segment_index["v_x"]] * DELTA_T)
+        segment_d[index, segment_index["y"]] = (
+            segment_d[index-1, segment_index["y"]] +
+            segment_d[index-1, segment_index["v_y"]] * DELTA_T)
+        # location from acc(speed)
+        segment_dd[index, segment_index["x"]] = \
+            segment_dd[index-1, segment_index["x"]] + segment_dd[index-1, segment_index["v_x"]] * DELTA_T
+        segment_dd[index, segment_index["y"]] = \
+            segment_dd[index-1, segment_index["y"]] + segment_dd[index-1, segment_index["v_y"]] * DELTA_T
+        # location from origin IMU
+        tmp_v_x = segment_origin[index-1, segment_index["v_x"]]
+        tmp_v_y = segment_origin[index-1, segment_index["v_y"]]
+        glog.info("tmp_v_x: {}".format(tmp_v_x))
+        tmp_x[index] = tmp_x[index-1] + tmp_v_x * DELTA_T +\
+            1/2 * imu_scaling["pp7"] * segment_origin[index-1, segment_index["a_x"]] * DELTA_T * DELTA_T
+        tmp_y[index] = tmp_y[index-1] + tmp_v_y * DELTA_T +\
+            1/2 * imu_scaling["pp7"] * segment_origin[index-1, segment_index["a_y"]] * DELTA_T * DELTA_T
+    pdf_file_path = os.path.join(platform_path, "location{}.pdf".format(scenario))
+    glog.info("tmp_x shape {}".format(tmp_x.shape))
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.plot(segment_origin[:, segment_index["x"]], segment_origin[:,segment_index["y"]], "y--",
+                 alpha=ALPHA, label="Direct location", linewidth=1)
+        plt.plot(segment_d[:, segment_index["x"]], segment_d[:,segment_index["y"]], color="blue",
+                 alpha=ALPHA, label="location_1", linewidth=1)
+        plt.plot(segment_dd[:, segment_index["x"]], segment_dd[:,segment_index["y"]], "r--",
+                 label="location_2", linewidth=0.3)
+        plt.plot(tmp_x[:], tmp_y[:], "g--", label="location_3", linewidth=0.4)
+        plt.legend()
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+    return pdf_file_path
+
+
+def speed(scenario_segments, platform_path):
+    """ plot speed """
+    acceleration(scenario_segments, platform_path)
+    (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
+    v_origin = np.zeros(segment_origin[:, segment_index["v_x"]].shape)
+    v_d = np.zeros(segment_origin[:, segment_index["v_x"]].shape)
+    v_dd = np.zeros(segment_origin[:, segment_index["v_x"]].shape)
+    for index in range(0, len(v_origin) - 1):
+        # origin speed
+        v_origin[index] = (segment_origin[index, segment_index["v_x"]] *
+                           np.cos(normalize_angle(segment_origin[index, segment_index["heading"]])) +
+                           segment_origin[index, segment_index["v_y"]] *
+                           np.sin(normalize_angle(segment_origin[index , segment_index["heading"]])))
+        # differential from location
+        if index == 0:
+            segment_d[index, segment_index["v_x"]] = segment_origin[index, segment_index["v_x"]]
+            segment_dd[index, segment_index["v_x"]] = segment_origin[index, segment_index["v_x"]]
+            segment_d[index, segment_index["v_y"]] = segment_origin[index, segment_index["v_y"]]
+            segment_dd[index, segment_index["v_y"]] = segment_origin[index, segment_index["v_y"]]
+            v_d[index] = (segment_d[index, segment_index["v_x"]] *
+                          np.cos(normalize_angle(segment_d[index, segment_index["heading"]])) +
+                          segment_d[index, segment_index["v_y"]] *
+                          np.sin(normalize_angle(segment_d[index , segment_index["heading"]])))
+            v_dd[index] = (segment_dd[index, segment_index["v_x"]] *
+                           np.cos(normalize_angle(segment_dd[index, segment_index["heading"]])) +
+                           segment_dd[index, segment_index["v_y"]] *
+                           np.sin(normalize_angle(segment_dd[index , segment_index["heading"]])))
+        else:
+            segment_dd[index, segment_index["v_x"]] = (
+                segment_dd[index-1, segment_index["v_x"]] +
+                segment_dd[index-1, segment_index["a_x"]] * DELTA_T)
+            segment_dd[index, segment_index["v_y"]] = (
+                segment_dd[index-1, segment_index["v_y"]] +
+                segment_dd[index-1, segment_index["a_y"]] * DELTA_T)
+
+            a_d = (segment_d[index-1, segment_index["a_x"]] *
+                   np.cos(normalize_angle(segment_d[index-1, segment_index["heading"]])) +
+                   segment_d[index-1, segment_index["a_y"]] *
+                   np.sin(normalize_angle(segment_d[index-1, segment_index["heading"]])))
+            v_d[index] = v_d[index-1] + a_d * DELTA_T
+
+            a_dd = (segment_dd[index - 1, segment_index["a_x"]] *
+                    np.cos(normalize_angle(segment_dd[index, segment_index["heading"]]))+
+                    segment_dd[index - 1, segment_index["a_y"]] *
+                    np.sin(normalize_angle(segment_dd[index , segment_index["heading"]])))
+            v_dd[index] = v_dd[index-1] + a_dd * DELTA_T
+
+    # plot
+    pdf_file_path = os.path.join(platform_path, "speed{}.pdf".format(scenario))
+    glog.info("max: {}".format(max(abs(v_origin - v_d))))
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.plot(v_origin, "y--", alpha=ALPHA, label="Direct Speed", linewidth=1)
+        plt.plot(v_d, color="blue", label="Speed_1", linewidth=0.5)
+        plt.plot(v_dd, "r--", alpha=ALPHA, label="Speed_2", linewidth=0.3)
+        plt.legend()
+        legend = plt.legend(loc='upper right', fontsize='small')
+        pdf_file.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+    return pdf_file_path
+
+def acceleration(scenario_segments, platform_path):
+    """ plot acc """
+    heading_angle(scenario_segments, platform_path)
+    (scenario, (segment_origin, segment_d, segment_dd)) = scenario_segments
+    acc_origin = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
+    acc_d = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
+    acc_dd = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
+    glog.info("max: {}".format(
+        max(abs(segment_origin[:, segment_index["a_x"]] - segment_d[:, segment_index["a_x"]]))))
+    # origin
+    for index in range(0, len(acc_origin)):
+        acc_origin[index] = (segment_origin[index, segment_index["a_x"]] *
+                            np.cos(normalize_angle(segment_origin[index, segment_index["heading"]])) +
+                            segment_origin[index, segment_index["a_y"]] *
+                             np.sin(normalize_angle(segment_origin[index , segment_index["heading"]])))
+        # acc from speed
+        acc_d[index] = (segment_d[index, segment_index["a_x"]] *
+                        np.cos(normalize_angle(segment_d[index, segment_index["heading"]])) +
+                        segment_d[index, segment_index["a_y"]] *
+                        np.sin(normalize_angle(segment_d[index , segment_index["heading"]])))
+        # acc from location
+        acc_dd[index] = (segment_dd[index, segment_index["a_x"]] *
+                         np.cos(normalize_angle(segment_dd[index, segment_index["heading"]]))+
+                         segment_dd[index, segment_index["a_y"]] *
+                         np.sin(normalize_angle(segment_dd[index , segment_index["heading"]])))
+    # plot
+    pdf_file_path = os.path.join(platform_path, "acc{}.pdf".format(scenario))
+    glog.info("max: {}".format(max(abs(acc_origin - acc_d))))
+    with PdfPages(pdf_file_path) as pdf_file:
+        plt.figure(figsize=(4, 3))
+        plt.plot(acc_origin, "y--", alpha=ALPHA * 0.5, label="Direct Acceleration", linewidth=1)
+        plt.plot(acc_d, color="blue", label="Acc_1", linewidth=0.5)
+        plt.plot(acc_dd, "r--", alpha=ALPHA, label="Acc_2", linewidth=0.3)
+        plt.legend()
+        legend = plt.legend(loc='upper right', fontsize='small')
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()
 
@@ -126,19 +286,21 @@ def evaluate_vehicle_state(vehicle_state_gps, output_echo_lincoln, output_imu, o
 
     for index in range(1, vehicle_state_gps.shape[0]):
         # vehicle states by echo_lincoln
-        vehicle_state_echo_lincoln[index , 0:2] = vehicle_state_echo_lincoln[index  - 1, 0:2] + \
-            output_echo_lincoln[index  - 1, 0:2] * DELTA_T
-        vehicle_state_echo_lincoln[index , 1] = normalize_angle(vehicle_state_echo_lincoln[index , 1])
+        vehicle_state_echo_lincoln[index, 0:2] = vehicle_state_echo_lincoln[index - 1, 0:2] + \
+            output_echo_lincoln[index - 1, 0:2] * DELTA_T
+        vehicle_state_echo_lincoln[index, 1] = normalize_angle(vehicle_state_echo_lincoln[index, 1])
         # vehicle states by imu sensor
-        vehicle_state_imu[index , :] = vehicle_state_imu[index  - 1, :] + output_imu[index , :] * DELTA_T
-        vehicle_state_imu[index , 1] = normalize_angle(vehicle_state_imu[index , 1])
+        vehicle_state_imu[index, :] = vehicle_state_imu[index - 1, :] + \
+            output_imu[index, :] * DELTA_T
+        vehicle_state_imu[index, 1] = normalize_angle(vehicle_state_imu[index, 1])
         # vehicle states by learning-based-model
-        vehicle_state_fnn[index , :] = vehicle_state_fnn[index  - 1, :] + output_fnn[index , :] * DELTA_T
-        vehicle_state_fnn[index , 1] = normalize_angle(vehicle_state_fnn[index , 1])
+        vehicle_state_fnn[index, :] = vehicle_state_fnn[index - 1, :] + \
+            output_fnn[index, :] * DELTA_T
+        vehicle_state_fnn[index, 1] = normalize_angle(vehicle_state_fnn[index, 1])
         # vehicle states by sim_point_mass
-        vehicle_state_point_mass[index , :] = vehicle_state_point_mass[index  - 1, :] + \
-            output_point_mass[index , :] * DELTA_T
-        vehicle_state_point_mass[index , 1] = normalize_angle(vehicle_state_point_mass[index , 1])
+        vehicle_state_point_mass[index, :] = vehicle_state_point_mass[index - 1, :] + \
+            output_point_mass[index, :] * DELTA_T
+        vehicle_state_point_mass[index, 1] = normalize_angle(vehicle_state_point_mass[index, 1])
 
     rmse_imu_speed = sqrt(mean_squared_error(vehicle_state_imu[:, 0], vehicle_state_gps[:, 0]))
     rmse_fnn_speed = sqrt(mean_squared_error(vehicle_state_fnn[:, 0], vehicle_state_gps[:, 0]))
@@ -187,28 +349,32 @@ def evaluate_trajectory(trajectory_gps, vehicle_state_gps, vehicle_state_echo_li
     trajectory_length = 0
 
     for index in range(1, trajectory_gps.shape[0]):
-        trajectory_gps2[index , 0] = trajectory_gps2[index  - 1, 0] + vehicle_state_gps[index , 0] * \
-            np.cos(vehicle_state_gps[index , 1]) * DELTA_T
-        trajectory_gps2[index , 1] = trajectory_gps2[index  - 1, 1] + vehicle_state_gps[index , 0] * \
-            np.sin(vehicle_state_gps[index , 1]) * DELTA_T
-        trajectory_echo_lincoln[index , 0] = trajectory_echo_lincoln[index  - 1, 0] + \
-            vehicle_state_echo_lincoln[index , 0] * np.cos(vehicle_state_echo_lincoln[index , 1]) * DELTA_T
-        trajectory_echo_lincoln[index , 1] = trajectory_echo_lincoln[index  - 1, 1] + \
-            vehicle_state_echo_lincoln[index , 0] * np.sin(vehicle_state_echo_lincoln[index , 1]) * DELTA_T
-        trajectory_imu[index , 0] = trajectory_imu[index  - 1, 0] + vehicle_state_imu[index , 0] * \
-            np.cos(vehicle_state_imu[index , 1]) * DELTA_T
-        trajectory_imu[index , 1] = trajectory_imu[index  - 1, 1] + vehicle_state_imu[index , 0] * \
-            np.sin(vehicle_state_imu[index , 1]) * DELTA_T
-        trajectory_fnn[index , 0] = trajectory_fnn[index  - 1, 0] + vehicle_state_fnn[index , 0] * \
-            np.cos(vehicle_state_fnn[index , 1]) * DELTA_T
-        trajectory_fnn[index , 1] = trajectory_fnn[index  - 1, 1] + vehicle_state_fnn[index , 0] * \
-            np.sin(vehicle_state_fnn[index , 1]) * DELTA_T
-        trajectory_point_mass[index , 0] = trajectory_point_mass[index  - 1, 0] + \
-            vehicle_state_point_mass[index , 0] * np.cos(vehicle_state_point_mass[index , 1]) * DELTA_T
-        trajectory_point_mass[index , 1] = trajectory_point_mass[index  - 1, 1] + \
-            vehicle_state_point_mass[index , 0] * np.sin(vehicle_state_point_mass[index , 1]) * DELTA_T
-        trajectory_length += sqrt((trajectory_gps[index , 0] - trajectory_gps[index  - 1, 0]) ** 2 + (
-            trajectory_gps[index , 1] - trajectory_gps[index  - 1, 1]) ** 2)
+        trajectory_gps2[index, 0] = trajectory_gps2[index - 1, 0] + vehicle_state_gps[index, 0] * \
+            np.cos(vehicle_state_gps[index, 1]) * DELTA_T
+        trajectory_gps2[index, 1] = trajectory_gps2[index - 1, 1] + vehicle_state_gps[index, 0] * \
+            np.sin(vehicle_state_gps[index, 1]) * DELTA_T
+        trajectory_echo_lincoln[index, 0] = trajectory_echo_lincoln[index - 1, 0] + \
+            vehicle_state_echo_lincoln[index, 0] * \
+            np.cos(vehicle_state_echo_lincoln[index, 1]) * DELTA_T
+        trajectory_echo_lincoln[index, 1] = trajectory_echo_lincoln[index - 1, 1] + \
+            vehicle_state_echo_lincoln[index, 0] * \
+            np.sin(vehicle_state_echo_lincoln[index, 1]) * DELTA_T
+        trajectory_imu[index, 0] = trajectory_imu[index - 1, 0] + vehicle_state_imu[index, 0] * \
+            np.cos(vehicle_state_imu[index, 1]) * DELTA_T
+        trajectory_imu[index, 1] = trajectory_imu[index - 1, 1] + vehicle_state_imu[index, 0] * \
+            np.sin(vehicle_state_imu[index, 1]) * DELTA_T
+        trajectory_fnn[index, 0] = trajectory_fnn[index - 1, 0] + vehicle_state_fnn[index, 0] * \
+            np.cos(vehicle_state_fnn[index, 1]) * DELTA_T
+        trajectory_fnn[index, 1] = trajectory_fnn[index - 1, 1] + vehicle_state_fnn[index, 0] * \
+            np.sin(vehicle_state_fnn[index, 1]) * DELTA_T
+        trajectory_point_mass[index, 0] = trajectory_point_mass[index - 1, 0] + \
+            vehicle_state_point_mass[index, 0] * \
+            np.cos(vehicle_state_point_mass[index, 1]) * DELTA_T
+        trajectory_point_mass[index, 1] = trajectory_point_mass[index - 1, 1] + \
+            vehicle_state_point_mass[index, 0] * \
+            np.sin(vehicle_state_point_mass[index, 1]) * DELTA_T
+        trajectory_length += sqrt((trajectory_gps[index, 0] - trajectory_gps[index - 1, 0]) ** 2 + (
+            trajectory_gps[index, 1] - trajectory_gps[index - 1, 1]) ** 2)
 
     rmse_imu_trajectory = sqrt(mean_squared_error(trajectory_imu, trajectory_gps))
     rmse_fnn_trajectory = sqrt(mean_squared_error(trajectory_fnn, trajectory_gps))
