@@ -18,7 +18,6 @@ import cv2 as cv
 import glob
 import numpy as np
 import os
-import sys
 
 import torch
 import torch.nn as nn
@@ -29,9 +28,8 @@ from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
 
-sys.path.append('../../utilities')
+from learning_algorithms.utilities.helper_utils import *
 
-from helper_utils import *
 
 '''
 ========================================================================

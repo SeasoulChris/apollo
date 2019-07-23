@@ -10,7 +10,8 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
-from social_lstm_model import *
+from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
+
 
 grid_size = 2
 embed_size = 64

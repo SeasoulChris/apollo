@@ -31,8 +31,11 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset, DataLoader
 
-import learning_algorithms.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset as apollo_vehicle_regroad_dataset
-from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset as ApolloVehicleRegularRoadDataset
+import learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset \
+       as apollo_vehicle_regroad_dataset
+
+from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset \
+     as ApolloVehicleRegularRoadDataset
 from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
 
 

@@ -29,10 +29,11 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-import learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
-from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
+from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
+     import *
 from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
+import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 obs_feature_size = 180

@@ -18,9 +18,10 @@ import os
 import shutil
 import numpy as np
 import cv2 as cv
-import common.proto_utils as proto_utils
+
 from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import semantic_map_config_pb2
+import modules.tools.common.proto_utils as proto_utils
 
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""

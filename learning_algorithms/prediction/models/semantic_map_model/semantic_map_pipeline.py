@@ -19,14 +19,11 @@ import argparse
 import logging
 import numpy as np
 import os
-import sys
 import torch
 
-from semantic_map_model import *
+from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
+from learning_algorithms.utilities.train_utils import *
 
-sys.path.append('../../utilities')
-
-from train_utils import *
 
 if __name__ == "__main__":
 

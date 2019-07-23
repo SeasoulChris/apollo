@@ -17,7 +17,6 @@
 import math
 import numpy as np
 import os
-import sys
 
 import torch
 import torch.nn as nn
@@ -27,12 +26,10 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-sys.path.append('../../../../utilities')
-
-from helper_utils import *
-from IO_utils import *
-from loss_utils import *
-from network_utils import *
+from learning_algorithms.utilities.helper_utils import *
+from learning_algorithms.utilities.IO_utils import *
+from learning_algorithms.utilities.loss_utils import *
+from learning_algorithms.utilities.network_utils import *
 
 
 #########################################################

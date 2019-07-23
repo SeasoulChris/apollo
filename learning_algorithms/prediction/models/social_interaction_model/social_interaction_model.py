@@ -28,6 +28,7 @@ from torch.utils.data import Dataset
 
 from learning_algorithms.utilities.train_utils import *
 
+
 class SocialInteraction(nn.Module):
     def __init__(self, pred_len=12, grid_size=2, area_span=2.0):
         # Spatial processing

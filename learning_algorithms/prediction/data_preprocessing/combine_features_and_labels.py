@@ -18,7 +18,7 @@ import argparse
 import os
 import re
 
-from features_labels_utils import *
+from learning_algorithms.prediction.data_preprocessing.features_labels_utils import *
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Merge all label_dicts in each'\

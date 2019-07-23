@@ -20,14 +20,11 @@ import h5py
 import logging
 import numpy as np
 import os
-import sys
 import torch
 
-from interaction_model import *
+from learning_algorithms.prediction.models.interaction_model.interaction_model import *
+from learning_algorithms.utilities.train_utils import *
 
-sys.path.append('../../utilities')
-
-from train_utils import *
 
 delta = 0.5
 epochs = 5

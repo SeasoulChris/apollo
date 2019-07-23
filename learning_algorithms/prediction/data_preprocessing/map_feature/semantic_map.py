@@ -18,10 +18,9 @@ import cv2 as cv
 import numpy as np
 import os
 
-import common.proto_utils as proto_utils
 from modules.map.proto import map_pb2
 from modules.prediction.proto import semantic_map_config_pb2
-
+import modules.tools.common.proto_utils as proto_utils
 
 class SemanticMap(object):
     """class to get a semantic map"""

@@ -20,14 +20,11 @@ import h5py
 import logging
 import numpy as np
 import os
-import sys
 import torch
 
-from junction_mlp_model import *
+from learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_model import *
+from learning_algorithms.utilities.train_utils import *
 
-sys.path.append('../../utilities')
-
-from train_utils import *
 
 dim_input = 114
 dim_output = 12

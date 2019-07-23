@@ -18,15 +18,13 @@ import argparse
 import logging
 import numpy as np
 import os
-import sys
 import torch
 import sklearn
 
-sys.path.append('../../utilities')
+from learning_algorithms.prediction.models.lane_scanning_model.lane_scanning_model import *
+from learning_algorithms.utilities.IO_utils import *
+from learning_algorithms.utilities.train_utils import *
 
-from lane_scanning_model import *
-from IO_utils import *
-from train_utils import *
 
 cuda_is_available = torch.cuda.is_available()
 
