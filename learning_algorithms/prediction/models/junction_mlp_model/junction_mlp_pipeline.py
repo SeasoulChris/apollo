@@ -56,7 +56,8 @@ def do_training(source_save_paths):
     source_path, save_dir_path = source_save_paths 
 
     data = load_h5(source_path)
-    if not data:
+    # Explicitly check None
+    if data is None:
         logging.error("Failed to load data from {}".format(source_path))
         return
 

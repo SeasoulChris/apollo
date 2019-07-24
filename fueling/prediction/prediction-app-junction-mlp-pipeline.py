@@ -9,8 +9,6 @@ import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pip
 
 from fueling.common.base_pipeline import BasePipeline
 
-def do_training(src):
-    pass
 
 class JunctionMlpPipeline(BasePipeline):
     """Junction mlp pipeline."""
