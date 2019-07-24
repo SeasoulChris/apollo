@@ -34,14 +34,14 @@ def load_h5(filename):
     if not os.path.exists(filename):
         logging.error("file: {}, does not exist".format(filename))
         return None
-    if os.path.splitext(filename)[1] != '.h5':
+    if os.path.splitext(filename)[1] != ".h5":
         logging.error("file: {} is not an hdf5 file".format(filename))
         return None
     samples = dict()
-    h5_file = h5py.File(filename, 'r')
+    h5_file = h5py.File(filename, "r")
     for key in h5_file.keys():
         samples[key] = h5_file[key][:]
-    return samples['data']
+    return samples["data"]
 
 def data_preprocessing(data):
     """Preprocessing"""
@@ -60,7 +60,7 @@ def do_training(source_save_paths):
         logging.error("Failed to load data from {}".format(source_path))
         return
 
-    logging.info("Data load success, with data shape: " + str(data.shape))
+    logging.info("Data load success, with data shape: {}".format(str(data.shape)))
     train_data, test_data = train_test_split(data, test_size=0.2)
     X_train, Y_train = data_preprocessing(train_data)
     X_test, Y_test = data_preprocessing(test_data)
@@ -73,7 +73,7 @@ def do_training(source_save_paths):
     learning_rate = 1e-3
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.3, patience=2, min_lr=1e-8, verbose=True, mode='min')
+        optimizer, factor=0.3, patience=2, min_lr=1e-8, verbose=True, mode="min")
     epochs = 20
 
     # CUDA setup:
@@ -89,7 +89,7 @@ def do_training(source_save_paths):
 
     # Model training
     model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss,
-        optimizer, scheduler, epochs, 'junction_mlp_model.pt', train_batch=1024)
+        optimizer, scheduler, epochs, "junction_mlp_model.pt", train_batch=1024)
     traced_script_module = torch.jit.trace(model, X_train[0:1])
     traced_script_module.save(os.path.join(save_dir_path, "junction_mlp_model.pt"))
 
@@ -100,11 +100,11 @@ if __name__ == "__main__":
 
     # data parser:
     parser = argparse.ArgumentParser(
-        description='semantic_map model training pipeline')
+        description="semantic_map model training pipeline")
 
-    parser.add_argument('--data', type=str, help='training data filename')
-    parser.add_argument('-s', '--savepath', type=str, default='./',
-                        help='Specify the directory to save trained models.')
+    parser.add_argument("--data", type=str, help="training data filename")
+    parser.add_argument("-s", "--savepath", type=str, default="./",
+                        help="Specify the directory to save trained models.")
 
     args = parser.parse_args()
 
