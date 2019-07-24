@@ -9,6 +9,8 @@ import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pip
 
 from fueling.common.base_pipeline import BasePipeline
 
+def do_training(src):
+    pass
 
 class JunctionMlpPipeline(BasePipeline):
     """Junction mlp pipeline."""
@@ -19,15 +21,21 @@ class JunctionMlpPipeline(BasePipeline):
     def run_test(self):
         """Run test."""
         glog.info('Running Test for mlp pipeline')
+
         source_path = '/apollo/modules/data/fuel/testdata/prediction/junciton_small.h5'
         save_dir_path = '/apollo/modules/data/fuel/testdata/prediction'
-        self.to_add([(source_path, save_dir_path)]).foreach(junction_mlp.do_training)
+
+        # PairRDD(source_file, save_dir)
+        self.to_rdd([(source_path, save_dir_path)]).foreach(junction_mlp.do_training)
+
         glog.info('Done with running Test')
 
     def run_prod(self):
         """Run prod."""
         glog.info('Running Production for mlp pipeline')
+
         # TODO(All), add real data for training in Prod
+
         glog.info('Done with running Production')
 
 if __name__ == '__main__':
