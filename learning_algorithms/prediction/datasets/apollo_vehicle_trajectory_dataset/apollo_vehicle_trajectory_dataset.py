@@ -29,6 +29,7 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
+from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 from learning_algorithms.utilities.IO_utils import *
@@ -303,7 +304,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue
-            file_content = np.load(file_path).tolist()
+            file_content = np.load(file_path, allow_pickle=True).tolist()
             for scene in file_content:
                 self.start_idx.append(accumulated_data_pt)
                 for data_pt in scene:
@@ -384,11 +385,22 @@ class ApolloVehicleTrajectoryDataset(Dataset):
     def __getitem__(self, idx):
         if self.img_mode:
             world_coord = self.reference_world_coord[idx]
-            obs_pos = self.obs_pos[idx]
+            obs_hist_size = self.obs_hist_sizes[idx]
+            obs_pos = np.array(self.obs_pos[idx])[0]
             obs_future_traj = self.future_traj[idx]
+            polygon_points = np.zeros([20,20,2])
+            for i in range(1, len(obs_pos)):
+                pos_point = np.dot(np.array([[np.cos(world_coord[2]), -np.sin(world_coord[2])], [np.sin(world_coord[2]), np.cos(world_coord[2])]]),np.array([obs_pos[i, 0], obs_pos[i,1]])) + world_coord[0:2]
+                # use mkz default width and length for now
+                w, l = 2.11, 4.93
+                theta = np.arctan2(obs_pos[i,1] - obs_pos[i-1, 1], obs_pos[i,0] - obs_pos[i-1, 0]) + world_coord[2]
+                points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), \
+                            np.array([[l/2, l/2, -l/2, -l/2], [w/2, -w/2, -w/2, w/2]])).T + pos_point
+                polygon_points[i, 0:4, :] = points
             # TODO(Hongyi): process and draw images.
-            img = self.drawing(world_coord, obs_pos, obs_future_traj)
-            return None
+            obs_mapping = ObstacleMapping("san_mateo", world_coord, [polygon_points])
+            img = obs_mapping.crop_by_history(polygon_points)
+            return img
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
