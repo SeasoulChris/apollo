@@ -29,11 +29,10 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
-     import *
+import learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
+from learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
-import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 obs_feature_size = 180
@@ -57,12 +56,14 @@ class DataPreprocessor(object):
     def __init__(self, pred_len=3.0):
         self.pred_len = pred_len
 
-    def load_numpy_dict(self, feature_file_path, label_dir='labels_future_trajectory', label_file='cleaner_label.npy'):
+    def load_numpy_dict(self, feature_file_path, label_dir='labels_future_trajectory', label_file='future_status_clean.npy'):
         '''Load the numpy dictionary file for the corresponding feature-file.
         '''
         dir_path = os.path.dirname(feature_file_path)
         label_path = os.path.join(dir_path, label_file)
         label_path = label_path.replace('features', label_dir)
+        if label_path.find('sunnyvale_with_two_offices') != -1:
+            label_path = label_path.replace('sunnyvale_with_two_offices', 'sunnyvale')
         if not os.path.isfile(label_path):
             return None
         return np.load(label_path).item()
@@ -116,15 +117,17 @@ class DataPreprocessor(object):
             print ('============================================')
             print ('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
             # Load feature and label files.
-            # Load the visited-lane-segments label dict files.
-            visited_lane_segments_labels = self.load_numpy_dict(\
-                path, label_dir='labels-visited-lane-segments', label_file='visited_lane_segment.npy')
-            if visited_lane_segments_labels is None:
-                print ('Failed to read visited_lane_segment label file.')
-                continue
+
+            # # Load the visited-lane-segments label dict files.
+            # visited_lane_segments_labels = self.load_numpy_dict(\
+            #     path, label_dir='labels-visited-lane-segments', label_file='visited_lane_segment.npy')
+            # if visited_lane_segments_labels is None:
+            #     print ('Failed to read visited_lane_segment label file.')
+            #     continue
+
             # Load the future-trajectory label dict files.
             future_trajectory_labels = self.load_numpy_dict(\
-                path, label_dir='labels_future_trajectory', label_file='cleaner_label.npy')
+                path, label_dir='labels_future_trajectory', label_file='future_status.npy')
             if future_trajectory_labels is None:
                 print ('Failed to read future_trajectory label file.')
                 continue
@@ -162,12 +165,13 @@ class DataPreprocessor(object):
                     if key.split('@')[1] not in key_ts_to_data_pt.keys():
                         continue
                 else:
-                    if key not in visited_lane_segments_labels or\
-                       key not in future_trajectory_labels:
+                    if key not in future_trajectory_labels:# or \
+                       # key not in visited_lane_segments_labels:
                         continue
-                if key in visited_lane_segments_labels and \
-                   key in future_trajectory_labels:
-                    visited_lane_segments = visited_lane_segments_labels[key]
+                if key in future_trajectory_labels:# and \
+                   # key in visited_lane_segments_labels:
+                    # visited_lane_segments = visited_lane_segments_labels[key]
+                    #print (key)
                     future_trajectory = future_trajectory_labels[key]
                 features_for_learning = data_for_learning.features_for_learning
                 serial_lane_graph = data_for_learning.string_features_for_learning
@@ -230,18 +234,18 @@ class DataPreprocessor(object):
                 for i in range(num_lane_sequence):
                     curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:\
                                                              obs_feature_size+(i+1)*single_lane_feature_size]
-                if visited_lane_segments is not None:
-                    #   d. add whether it's self-lane feature.
-                    curr_data_point += self_lane_features
-                    #   e. add the unique future lane info.
-                    #   TODO(jiacheng): implement the above one.
-                    #   f. add trajectory labels.
-                    for i, traj in enumerate(zip(*future_trajectory)):
-                        if i >= 3:
-                            break
-                        curr_data_point += list(traj)
-                    #   g. add whether it's cut-in labels.
-                    curr_data_point += [has_stepped_out]
+                # if visited_lane_segments is not None:
+                #     #   d. add whether it's self-lane feature.
+                #     curr_data_point += self_lane_features
+                #     #   e. add the unique future lane info.
+                #     #   TODO(jiacheng): implement the above one.
+                #     #   f. add trajectory labels.
+                for i, traj in enumerate(zip(*future_trajectory)):
+                    if i >= 3:
+                        break
+                    curr_data_point += list(traj)
+                #   g. add whether it's cut-in labels.
+                curr_data_point += [has_stepped_out]
 
                 if involve_all_relevant_data:
                     key_ts_to_data_pt[key.split('@')[1]] = \
@@ -276,7 +280,8 @@ class DataPreprocessor(object):
 
 
 class ApolloVehicleTrajectoryDataset(Dataset):
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, img_mode=False):
+        self.img_mode = img_mode
         self.obs_hist_sizes = []
         self.obs_pos = []
         self.obs_pos_rel = []
@@ -286,8 +291,13 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.is_predictable = []
         self.start_idx = []
         self.end_idx = []
+
+        self.reference_world_coord = []
         total_num_cutin_data_pt = 0
         accumulated_data_pt = 0
+
+        # TODO(Hongyi): add the drawing class here.
+        self.drawing = None
 
         all_file_paths = GetListOfFiles(data_dir)
         for file_path in all_file_paths:
@@ -342,7 +352,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.lane_feature.append(curr_lane_feature)
 
                     # Skip getting label data for those without labels at all.
-                    if len(data_pt) > obs_feature_size+1+(single_lane_feature_size)*curr_num_lane_sequence:
+                    if len(data_pt) < obs_feature_size+1+(single_lane_feature_size)*curr_num_lane_sequence:
                         self.is_predictable.append(np.zeros((1, 1)))
                         continue
                     self.is_predictable.append(np.ones((1, 1)))
@@ -350,6 +360,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
                     ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-31]]
+                    self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, 30, 2))
                     for i in range(30):
                         new_coord = world_coord_to_relative_coord(curr_future_traj[i, :], ref_world_coord)
@@ -371,17 +382,25 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        s_idx = self.start_idx[idx]
-        e_idx = self.end_idx[idx]
-        out = (np.concatenate(self.obs_hist_sizes[s_idx:e_idx]), \
-               np.concatenate(self.obs_pos[s_idx:e_idx]), \
-               np.concatenate(self.obs_pos_rel[s_idx:e_idx]), \
-               np.concatenate(self.lane_feature[s_idx:e_idx]), \
-               np.concatenate(self.future_traj[s_idx:e_idx]), \
-               np.concatenate(self.future_traj_rel[s_idx:e_idx]), \
-               np.concatenate(self.is_predictable[s_idx:e_idx]),
-               (e_idx-s_idx)*np.ones(1,1))
-        return out
+        if self.img_mode:
+            world_coord = self.reference_world_coord[idx]
+            obs_pos = self.obs_pos[idx]
+            obs_future_traj = self.future_traj[idx]
+            # TODO(Hongyi): process and draw images.
+            img = self.drawing(world_coord, obs_pos, obs_future_traj)
+            return None
+        else:
+            s_idx = self.start_idx[idx]
+            e_idx = self.end_idx[idx]
+            out = (np.concatenate(self.obs_hist_sizes[s_idx:e_idx]), \
+                   np.concatenate(self.obs_pos[s_idx:e_idx]), \
+                   np.concatenate(self.obs_pos_rel[s_idx:e_idx]), \
+                   np.concatenate(self.lane_feature[s_idx:e_idx]), \
+                   np.concatenate(self.future_traj[s_idx:e_idx]), \
+                   np.concatenate(self.future_traj_rel[s_idx:e_idx]), \
+                   np.concatenate(self.is_predictable[s_idx:e_idx]),
+                   (e_idx-s_idx)*np.ones((1,1)))
+            return out
 
 def collate_fn(batch):
     '''
@@ -419,7 +438,7 @@ def collate_fn(batch):
 
 
 if __name__ == '__main__':
- #    # Given cleaned labels, preprocess the data-for-learning and generate
- #    # training-data ready for torch Dataset.
- #    data_preprocessor = DataPreprocessor()
- #    data_preprocessor.preprocess_data('/home/jiacheng/work/apollo/data/vehicle_regroad_dataset/features')
+    # Given cleaned labels, preprocess the data-for-learning and generate
+    # training-data ready for torch Dataset.
+    data_preprocessor = DataPreprocessor()
+    data_preprocessor.preprocess_data('/home/jiacheng/large-data/data_preprocessing/features/')
