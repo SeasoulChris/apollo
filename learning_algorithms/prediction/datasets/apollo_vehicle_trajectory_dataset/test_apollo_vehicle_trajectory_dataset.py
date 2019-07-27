@@ -69,10 +69,10 @@ def plot_img(obs_features, lane_features, labels, count):
 
 
 if __name__ == '__main__':
+    # Unit test without image
     dataset_path = '/home/jiacheng/large-data/data_preprocessing/training_data/features/san_mateo/2018/2018-10-01'
     test_dataset = ApolloVehicleTrajectoryDataset(dataset_path)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=collate_fn)
-
     count = 0
     for i, (X, y) in enumerate(test_dataloader):
         if count == 10:
@@ -83,3 +83,15 @@ if __name__ == '__main__':
         # print (y[2])
         plot_img(X[1].numpy().reshape(-1), X[3].numpy(), y[0].numpy().reshape(-1), count)
         count += 1
+
+    # Unit test with image
+    dataset_path = '/data/test_img_drawing/'
+    test_dataset = ApolloVehicleTrajectoryDataset(dataset_path, True)
+    test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=8)
+    count = 0
+    for i, img in enumerate(test_dataloader):
+        if count == 10:
+            break
+        # cv.imwrite("test{}.png".format(i),np.array(img.view(224,224,3)))
+        count += 1
+        print(count, img.size())
