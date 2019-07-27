@@ -21,4 +21,4 @@ function DeletePod() {
 }
 
 DeletePod 'Completed' '12 hours ago'
-DeletePod 'Error'     '24 hours ago'
+DeletePod 'Error'     '14 days ago'
