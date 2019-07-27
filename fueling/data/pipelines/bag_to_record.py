@@ -99,7 +99,7 @@ class BagToRecord(BasePipeline):
         record = bag_to_record[1]
         file_utils.makedirs(os.path.dirname(record))
 
-        cmd = '"{}" "{}" "{}"'.format(BINARY, bag, record)
+        cmd = '"{}" "{}" "{}" --small-channels'.format(BINARY, bag, record)
         ret = os.system(cmd)
         msg = 'SHELL[{}]: {}'.format(ret, cmd)
         if ret != 0:
