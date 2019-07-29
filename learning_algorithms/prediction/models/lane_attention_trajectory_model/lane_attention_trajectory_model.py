@@ -89,3 +89,44 @@ class SelfLSTM(nn.Module):
             ct[ts_obs_mask, :] = ct_new.view(curr_N, -1)
 
         return pred_out, pred_traj
+
+
+class ProbablisticTrajectoryLoss:
+    def loss_fn(self, y_pred_tuple, y_true):
+        y_pred, y_traj = y_pred_tuple
+        if y_pred is None:
+            return cuda(torch.tensor(0))
+        # y_pred: N x pred_len x 5
+        # y_true: (pred_traj, pred_traj_rel)  N x pred_len x 2
+        mux, muy, sigma_x, sigma_y, corr = y_pred[:,:,0], y_pred[:,:,1],\
+            y_pred[:,:,2], y_pred[:,:,3], y_pred[:,:,4]
+        is_predictable = y_true[2].long()
+        x, y = y_true[1][is_predictable[:,0]==1,:,0].float(), \
+               y_true[1][is_predictable[:,0]==1,:,1].float()
+        N = y_pred.size(0)
+        if N == 0:
+            return cuda(torch.tensor(0))
+
+        eps = 1e-4
+
+        corr = torch.clamp(corr, min=-1+eps, max=1-eps)
+        z = (x-mux)**2/(sigma_x**2+eps) + (y-muy)**2/(sigma_y**2+eps) - \
+            2*corr*(x-mux)*(y-muy)/(torch.sqrt((sigma_x*sigma_y)**2)+eps)
+        z = torch.clamp(z, min=eps)
+
+        P = 1/(2*np.pi*torch.sqrt((sigma_x*sigma_y)**2)*torch.sqrt(1-corr**2)+eps) \
+            * torch.exp(-z/(2*(1-corr**2)))
+
+        loss = torch.clamp(P, min=eps)
+        loss = -loss.log()
+
+        return torch.sum(loss)/N
+
+    def loss_info(self, y_pred_tuple, y_true):
+        y_pred, y_pred_traj = y_pred_tuple
+        is_predictable = y_true[2].long()
+
+        loss = nn.MSELoss()
+
+        out = loss(y_pred_traj, y_true[0][is_predictable[:,0]==1,1:,:].float())
+        return out
