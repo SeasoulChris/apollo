@@ -36,7 +36,9 @@ from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
 
 
-obs_feature_size = 180
+obs_hist_size = 20
+obs_unit_feature_size = 40 + 9
+obs_feature_size = obs_hist_size * obs_unit_feature_size
 single_lane_feature_size = 600
 past_lane_feature_size = 200
 future_lane_feature_size = 400
@@ -110,21 +112,12 @@ class DataPreprocessor(object):
         all_file_paths = GetListOfFiles(feature_dir)
         total_num_data_points = 0
         total_usable_data_points = 0
-        total_cutin_data_points = 0
 
         file_count = 0
         for path in all_file_paths:
             file_count += 1
             print ('============================================')
             print ('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
-            # Load feature and label files.
-
-            # # Load the visited-lane-segments label dict files.
-            # visited_lane_segments_labels = self.load_numpy_dict(\
-            #     path, label_dir='labels-visited-lane-segments', label_file='visited_lane_segment.npy')
-            # if visited_lane_segments_labels is None:
-            #     print ('Failed to read visited_lane_segment label file.')
-            #     continue
 
             # Load the future-trajectory label dict files.
             future_trajectory_labels = self.load_numpy_dict(\
@@ -150,29 +143,24 @@ class DataPreprocessor(object):
 
             # Go through the entries in this feature file.
             total_num_data_points += len(vector_data_for_learning)
-            num_cutin_data_points = 0
             output_np_array = []
             for data_for_learning in vector_data_for_learning:
                 curr_data_point = []
-                # # 0. Skip non-regroad-vehicle data:
-                # if data_for_learning.category != 'cruise':
-                #     continue
+                # 0. Skip non-vehicle data:
+                if data_for_learning.category != 'vehicle_cruise' and \
+                   data_for_learning.category != 'vehicle_junction':
+                    continue
 
-                # 1. Find in the dict the corresponding visited lane segments and future trajectory.
-                visited_lane_segments = None
+                # 1. Find in the dict the corresponding future trajectory.
                 future_trajectory = None
                 key = '{}@{:.3f}'.format(data_for_learning.id, data_for_learning.timestamp)
                 if involve_all_relevant_data:
                     if key.split('@')[1] not in key_ts_to_data_pt.keys():
                         continue
                 else:
-                    if key not in future_trajectory_labels:# or \
-                       # key not in visited_lane_segments_labels:
+                    if key not in future_trajectory_labels:
                         continue
-                if key in future_trajectory_labels:# and \
-                   # key in visited_lane_segments_labels:
-                    # visited_lane_segments = visited_lane_segments_labels[key]
-                    #print (key)
+                if key in future_trajectory_labels:
                     future_trajectory = future_trajectory_labels[key]
                 features_for_learning = data_for_learning.features_for_learning
                 serial_lane_graph = data_for_learning.string_features_for_learning
@@ -195,38 +183,7 @@ class DataPreprocessor(object):
                 for lane_sequence in lane_graph:
                     unique_future_lane_sequence_set.add(lane_sequence)
 
-                # 3. Based on the lane graph, figure out what lane-sequence the end-point is in.
-                end_lane_sequences = None
-                if visited_lane_segments is not None:
-                    for element in visited_lane_segments:
-                        timestamp = element[0]
-                        lane_seg_id = element[1]
-                        if timestamp > self.pred_len + 0.05:
-                            break
-                        end_lane_sequences = self.get_lane_sequence_id(lane_seg_id, lane_graph)
-
-                # 4. Extract the features of whether each lane is the self-lane or not.
-                self_lane_features = []
-                start_lane_sequences = None
-                if visited_lane_segments is not None:
-                    start_lane_segment_id = visited_lane_segments[0][1]
-                    start_lane_sequences = self.get_lane_sequence_id(start_lane_segment_id, lane_graph)
-                    for i in range(num_lane_sequence):
-                        if i in start_lane_sequences:
-                            self_lane_features.append(1)
-                        else:
-                            self_lane_features.append(0)
-
-                # 5. Label whether the obstacle has stepped out of its original lane-sequence(s).
-                has_stepped_out = 0
-                if visited_lane_segments is not None:
-                    has_stepped_out = 1
-                    for i in end_lane_sequences:
-                        if i in start_lane_sequences:
-                            has_stepped_out = 0
-                    num_cutin_data_points += has_stepped_out
-
-                # 6. Put everything together.
+                # 3. Put everything together.
                 #   a. indicate the number of lane-sequences.
                 curr_data_point = [num_lane_sequence]
                 #   b. include the obstacle historical states features.
@@ -235,19 +192,15 @@ class DataPreprocessor(object):
                 for i in range(num_lane_sequence):
                     curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:\
                                                              obs_feature_size+(i+1)*single_lane_feature_size]
-                # if visited_lane_segments is not None:
-                #     #   d. add whether it's self-lane feature.
-                #     curr_data_point += self_lane_features
-                #     #   e. add the unique future lane info.
-                #     #   TODO(jiacheng): implement the above one.
-                #     #   f. add trajectory labels.
-                for i, traj in enumerate(zip(*future_trajectory)):
-                    if i >= 3:
-                        break
-                    curr_data_point += list(traj)
-                #   g. add whether it's cut-in labels.
-                curr_data_point += [has_stepped_out]
+                #   d. include the future_status labels.
+                if future_trajectory is not None:
+                    for i, traj in enumerate(zip(*future_trajectory)):
+                        # (only use pos_x, pos_y, and vel_heading)
+                        if i >= 3:
+                            break
+                        curr_data_point += list(traj)
 
+                # 4. Update into the output_np_array.
                 if involve_all_relevant_data:
                     key_ts_to_data_pt[key.split('@')[1]] = \
                         key_ts_to_data_pt[key.split('@')[1]].append(curr_data_point)
@@ -265,31 +218,32 @@ class DataPreprocessor(object):
                 num_usable_data_points = len(output_np_array)
                 print ('Total usable data points: {} out of {}.'.format(\
                     num_usable_data_points, len(vector_data_for_learning)))
-                print ('Total cut-in data points: {}, which is {}%.'.format(\
-                    num_cutin_data_points, num_cutin_data_points/num_usable_data_points*100))
                 output_np_array = np.array(output_np_array)
                 np.save(path+'.training_data.npy', output_np_array)
                 total_usable_data_points += num_usable_data_points
-                total_cutin_data_points += num_cutin_data_points
             except:
                 print ('Failed to save output file.')
 
         print ('There are {} usable data points out of {}.'.format(\
             total_usable_data_points, total_num_data_points))
-        print ('There are {} cut-in data points, which is {}% of the total data points.'.format(\
-            total_cutin_data_points, total_cutin_data_points/total_usable_data_points*100))
 
 
 class ApolloVehicleTrajectoryDataset(Dataset):
     def __init__(self, data_dir, img_mode=False):
         self.img_mode = img_mode
+
         self.obs_hist_sizes = []
         self.obs_pos = []
         self.obs_pos_rel = []
+        self.obs_polygon = []
+
         self.lane_feature = []
+
         self.future_traj = []
         self.future_traj_rel = []
+
         self.is_predictable = []
+
         self.start_idx = []
         self.end_idx = []
 
@@ -314,7 +268,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     curr_num_lane_sequence = int(data_pt[0])
 
                     # Get the size of obstacle state history.
-                    curr_obs_hist_size = int(np.sum(np.array(data_pt[1:obs_feature_size+1:9])))
+                    curr_obs_hist_size = int(np.sum(np.array(data_pt[1:obs_feature_size+1:obs_unit_feature_size])))
                     if curr_obs_hist_size <= 1:
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
@@ -358,9 +312,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                         continue
                     self.is_predictable.append(np.ones((1, 1)))
                     # Get the future trajectory label.
-                    curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
+                    curr_future_traj = np.array(data_pt[-90:-30]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
-                    ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-31]]
+                    ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-30]]
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, 30, 2))
                     for i in range(30):
