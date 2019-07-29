@@ -287,7 +287,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.obs_pos_rel.append(curr_obs_pos_rel)
 
                     # Get the obstacle polygon features (organized from past to present).
-                    curr_obs_polygon = curr_obs_feature[:, -40:].reshape((1, obs_hist_size, 10, 2))
+                    curr_obs_polygon = curr_obs_feature[:, -40:].reshape((1, obs_hist_size, 20, 2))
                     self.obs_polygon.append(curr_obs_polygon)
 
                     # Get the lane features.
@@ -320,9 +320,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.is_predictable.append(np.ones((1, 1)))
 
                     # Get the future trajectory label.
-                    curr_future_traj = np.array(data_pt[-90:-30]).reshape((2, 30))
+                    curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
-                    ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-30]]
+                    ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-31]]
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, 30, 2))
                     for i in range(30):
