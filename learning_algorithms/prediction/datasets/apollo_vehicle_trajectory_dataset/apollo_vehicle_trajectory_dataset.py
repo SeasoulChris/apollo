@@ -273,18 +273,22 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
 
-                    # Get the obstacle features (organized from past to present).
+                    # Get the obstacle position features (organized from past to present).
                     # (if length not enough, then pad heading zeros)
-                    curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((int(obs_feature_size/9), 9))
+                    curr_obs_feature = np.array(data_pt[1:obs_feature_size+1]).reshape((obs_hist_size, obs_unit_feature_size))
                     curr_obs_feature = np.flip(curr_obs_feature, 0)
-                    curr_obs_pos = np.zeros((1, int(obs_feature_size/9), 2))
+                    curr_obs_pos = np.zeros((1, obs_hist_size, 2))
                     # (1 x max_obs_hist_size x 2)
                     curr_obs_pos[0, -curr_obs_hist_size:, :] = curr_obs_feature[-curr_obs_hist_size:, 1:3]
                     self.obs_pos.append(curr_obs_pos)
-                    curr_obs_pos_rel =  np.zeros((1, int(obs_feature_size/9), 2))
+                    curr_obs_pos_rel =  np.zeros((1, obs_hist_size, 2))
                     curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
                         curr_obs_pos[0, -curr_obs_hist_size+1:, :] - curr_obs_pos[0, -curr_obs_hist_size:-1, :]
                     self.obs_pos_rel.append(curr_obs_pos_rel)
+
+                    # Get the obstacle polygon features (organized from past to present).
+                    curr_obs_polygon = curr_obs_feature[:, -40:].reshape((1, obs_hist_size, 10, 2))
+                    self.obs_polygon.append(curr_obs_polygon)
 
                     # Get the lane features.
                     # (curr_num_lane_sequence x num_lane_pts x 4)
@@ -307,10 +311,14 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.lane_feature.append(curr_lane_feature)
 
                     # Skip getting label data for those without labels at all.
-                    if len(data_pt) < obs_feature_size+1+(single_lane_feature_size)*curr_num_lane_sequence:
+                    if len(data_pt) <= obs_feature_size+1+(single_lane_feature_size)*curr_num_lane_sequence:
                         self.is_predictable.append(np.zeros((1, 1)))
+                        self.reference_world_coord.append([0.0, 0.0, 0.0])
+                        self.future_traj.append(np.zeros((1, 30, 2)))
+                        self.future_traj_rel.append(np.zeros((1, 29, 2)))
                         continue
                     self.is_predictable.append(np.ones((1, 1)))
+
                     # Get the future trajectory label.
                     curr_future_traj = np.array(data_pt[-90:-30]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
@@ -330,7 +338,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
                 self.end_idx.append(accumulated_data_pt)
 
-        self.total_num_data_pt = len(self.obs_pos)
+        self.total_num_data_pt = len(self.start_idx)
         print ('Total number of data points = {}'.format(self.total_num_data_pt))
 
     def __len__(self):
@@ -338,6 +346,19 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.img_mode:
+            s_idx = self.start_idx[idx]
+            e_idx = self.end_idx[idx]
+            obs_hist_sizes = np.concatenate(self.obs_hist_sizes[s_idx:e_idx])
+            obs_polygons = np.concatenate(self.obs_polygons[s_idx:e_idx])
+
+            predictable_prob = np.concatenate(self.is_predictable[s_idx:e_idx])
+            predictable_prob = predictable_prob.reshape((-1))
+            predictable_prob = predictable_prob / np.sum(predictable_prob)
+            predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)
+            world_coord = self.reference_world_coord[s_idx + predicting_idx]
+            obs_future_traj = self.future_traj[s_idx + predicting_idx]
+            # TODO(Hongyi): modify the following part to include multiple obstacles.
+
             world_coord = self.reference_world_coord[idx]
             obs_hist_size = self.obs_hist_sizes[idx]
             obs_pos = np.array(self.obs_pos[idx])[0]
