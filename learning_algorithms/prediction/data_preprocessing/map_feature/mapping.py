@@ -25,12 +25,12 @@ class Mapping(object):
         """contruct function to init Mapping object"""
         self.region = region
         if (self.region == "san_mateo"):
-            self.GRID = [10000, 12000]
-            self.base_point = np.array([559000, 4156860])
+            self.GRID = [11000, 14000]
+            self.base_point = np.array([558980, 4156780])
             self.resolution = 0.1
         if (self.region == "sunnyvale_with_two_offices"):
-            self.GRID = [26000, 18000]
-            self.base_point = np.array([585950, 4140000])
+            self.GRID = [28000, 20000]
+            self.base_point = np.array([585870, 4139900])
             self.resolution = 0.1
 
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
@@ -45,8 +45,8 @@ class Mapping(object):
         print("Loading map from file: " + map_path)
         with open(map_path, 'rb') as file_in:
             self.hd_map.ParseFromString(file_in.read())
-        # p_min, p_max = self._get_map_base_point()
-        # print(p_min, p_max)
+        p_min, p_max = self._get_map_base_point()
+        print(p_min, p_max)
 
     def _draw_base_map(self):
         self._draw_road()

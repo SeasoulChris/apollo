@@ -29,11 +29,11 @@ class ObstacleMapping(object):
         if region=="san_mateo" and os.path.exists("san_mateo.png"):
             base_map = cv.imread("san_mateo.png")
             print("san_mateo.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-559000)/0.1)), int(12000-np.round((center_point[1]-4156860)/0.1))]
+            center_idx = [int(np.round((center_point[0]-558980)/0.1)), int(14000-np.round((center_point[1]-4156780)/0.1))]
         elif region=="sunnyvale_with_two_offices" and os.path.exists("sunnyvale_with_two_offices.png"):
             base_map = cv.imread("sunnyvale_with_two_offices.png")
             print("sunnyvale_with_two_offices.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-585950)/0.1)), int(18000-np.round((center_point[1]-4140000)/0.1))]
+            center_idx = [int(np.round((center_point[0]-585870)/0.1)), int(20000-np.round((center_point[1]-4139900)/0.1))]
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map
