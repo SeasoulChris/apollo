@@ -18,7 +18,7 @@ import os
 import shutil
 import numpy as np
 import cv2 as cv
-from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
+# from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
 
 
 class ObstacleMapping(object):
@@ -28,11 +28,11 @@ class ObstacleMapping(object):
         center_point = world_coord[0:2]
         if region=="san_mateo" and os.path.exists("san_mateo.png"):
             base_map = cv.imread("san_mateo.png")
-            print("san_mateo.png exist, read it directly!")
+            # print("san_mateo.png exist, read it directly!")
             center_idx = [int(np.round((center_point[0]-558980)/0.1)), int(14000-np.round((center_point[1]-4156780)/0.1))]
         elif region=="sunnyvale_with_two_offices" and os.path.exists("sunnyvale_with_two_offices.png"):
             base_map = cv.imread("sunnyvale_with_two_offices.png")
-            print("sunnyvale_with_two_offices.png exist, read it directly!")
+            # print("sunnyvale_with_two_offices.png exist, read it directly!")
             center_idx = [int(np.round((center_point[0]-585870)/0.1)), int(20000-np.round((center_point[1]-4139900)/0.1))]
         else:
             mapping = Mapping(region)

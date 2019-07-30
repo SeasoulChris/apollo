@@ -28,6 +28,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
@@ -231,6 +232,10 @@ class DataPreprocessor(object):
 class ApolloVehicleTrajectoryDataset(Dataset):
     def __init__(self, data_dir, img_mode=False):
         self.img_mode = img_mode
+        self.img_transform = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                             std=[0.229, 0.224, 0.225])])
 
         self.obs_hist_sizes = []
         self.obs_pos = []
@@ -243,6 +248,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.future_traj_rel = []
 
         self.is_predictable = []
+        self.map_region = []
 
         self.start_idx = []
         self.end_idx = []
@@ -362,8 +368,10 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             world_coord = self.reference_world_coord[s_idx + predicting_idx]
             obs_future_traj = self.future_traj[s_idx + predicting_idx]
             # TODO(Hongyi): modify the following part to include multiple obstacles.
-            obs_mapping = ObstacleMapping("san_mateo", world_coord, obs_polygons)
+            obs_mapping = ObstacleMapping("sunnyvale_with_two_offices", world_coord, obs_polygons)
             img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
+            if self.img_transform:
+                img = self.img_transform(img)
             return img, obs_future_traj
         else:
             s_idx = self.start_idx[idx]

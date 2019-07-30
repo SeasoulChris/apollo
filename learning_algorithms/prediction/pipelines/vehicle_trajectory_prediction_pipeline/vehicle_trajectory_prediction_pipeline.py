@@ -23,6 +23,7 @@ import torch
 from learning_algorithms.utilities.train_utils import *
 from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset import *
 from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
+from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
 
 if __name__ == "__main__":
@@ -36,18 +37,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file)
-    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file)
+    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file, True)
+    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file, True)
 
-    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=1024, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True,\
+        num_workers=8, drop_last=True)
+    valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=True,\
+        num_workers=8, drop_last=True)
 
     # Model and training setup
-    model = SelfLSTM()
-    loss = ProbablisticTrajectoryLoss()
-    print (model)
+    model = SemanticMapModel(30)
+    loss = SemanticMapLoss()
+    # print(model)
     learning_rate = 3e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
