@@ -20,6 +20,7 @@ import glob
 import numpy as np
 import os
 import math
+import random
 import scipy
 from scipy.signal import filtfilt
 
@@ -230,6 +231,34 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
     return
 
 
+def LabelBalance(label_dir, straight_remain_rate=0.25):
+    label_dict_file_list = glob.glob(
+        label_dir + '/**/future_status_clean.npy', recursive=True)
+    count = Counter()
+    for label_dict_file in label_dict_file_list:
+        label_dict = np.load(label_dict_file, allow_pickle=True).item()
+        processed_label_dict = {}
+        idx = 0
+        for key, feature_seq in label_dict.items():
+            pred_len = 30
+            turn_type = LabelCleaningCoarse(feature_seq, pred_len)
+            if turn_type:
+                select = True
+                if turn_type == 'straight':
+                    chance = random.uniform(0, 1)
+                    if chance > straight_remain_rate:
+                        continue
+                count[turn_type] += 1
+                feature_seq = feature_seq[:pred_len]
+                processed_label_dict[key] = feature_seq
+
+        print("Got " + str(len(processed_label_dict.keys())) +
+              "/" + str(len(label_dict.keys())) + " labels left!")
+        print(count)
+        np.save(label_dict_file.replace('future_status_clean.npy',
+                                        'future_status_clean_balance.npy'), processed_label_dict)
+
+
 #######################################################################
 # Main function.
 #######################################################################
@@ -238,3 +267,4 @@ if __name__ == '__main__':
  #    LabelCleaningAndSmoothing('/data/labels-future-points/')
  #    # Option-b. Only fine label cleaning, no smoothing.
  #    LabelCleaningFine('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
+ #    LabelBalance('/home/xukecheng/labels', 0.21)
