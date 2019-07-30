@@ -146,7 +146,7 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch,
         train_loss = loss.loss_fn(pred, y)
         loss_history.append(train_loss.item())
         train_loss.backward()
-        torch.nn.utils.clip_grad_norm(model.parameters(), 10)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 10)
         optimizer.step()
 
         if print_period is None:
