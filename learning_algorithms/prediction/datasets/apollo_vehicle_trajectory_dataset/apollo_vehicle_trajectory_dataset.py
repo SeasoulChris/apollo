@@ -235,7 +235,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.obs_hist_sizes = []
         self.obs_pos = []
         self.obs_pos_rel = []
-        self.obs_polygon = []
+        self.obs_polygons = []
 
         self.lane_feature = []
 
@@ -289,7 +289,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
                     # Get the obstacle polygon features (organized from past to present).
                     curr_obs_polygon = curr_obs_feature[:, -40:].reshape((1, obs_hist_size, 20, 2))
-                    self.obs_polygon.append(curr_obs_polygon)
+                    self.obs_polygons.append(curr_obs_polygon)
 
                     # Get the lane features.
                     # (curr_num_lane_sequence x num_lane_pts x 4)
@@ -358,28 +358,13 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             predictable_prob = np.concatenate(self.is_predictable[s_idx:e_idx])
             predictable_prob = predictable_prob.reshape((-1))
             predictable_prob = predictable_prob / np.sum(predictable_prob)
-            predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)
+            predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)[0]
             world_coord = self.reference_world_coord[s_idx + predicting_idx]
             obs_future_traj = self.future_traj[s_idx + predicting_idx]
             # TODO(Hongyi): modify the following part to include multiple obstacles.
-
-            world_coord = self.reference_world_coord[idx]
-            obs_hist_size = self.obs_hist_sizes[idx]
-            obs_pos = np.array(self.obs_pos[idx])[0]
-            obs_future_traj = self.future_traj[idx]
-            polygon_points = np.zeros([20,20,2])
-            for i in range(1, len(obs_pos)):
-                pos_point = np.dot(np.array([[np.cos(world_coord[2]), -np.sin(world_coord[2])], [np.sin(world_coord[2]), np.cos(world_coord[2])]]),np.array([obs_pos[i, 0], obs_pos[i,1]])) + world_coord[0:2]
-                # use mkz default width and length for now
-                w, l = 2.11, 4.93
-                theta = np.arctan2(obs_pos[i,1] - obs_pos[i-1, 1], obs_pos[i,0] - obs_pos[i-1, 0]) + world_coord[2]
-                points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), \
-                            np.array([[l/2, l/2, -l/2, -l/2], [w/2, -w/2, -w/2, w/2]])).T + pos_point
-                polygon_points[i, 0:4, :] = points
-            # TODO(Hongyi): process and draw images.
-            obs_mapping = ObstacleMapping("san_mateo", world_coord, [polygon_points])
-            img = obs_mapping.crop_by_history(polygon_points)
-            return img
+            obs_mapping = ObstacleMapping("san_mateo", world_coord, obs_polygons)
+            img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
+            return img, obs_future_traj
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
