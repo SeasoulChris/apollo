@@ -176,7 +176,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         if valid_loss_info is not None:
             #print ('Validation avg displacement = {}'.format(valid_loss_info))
             #logging.info('Validation avg displacement = {}'.format(valid_loss_info))
-            loss_info_history.append(valid_loss_info)
+            loss_info_history.append(valid_loss_info.item())
         if analyzer is not None:
             analyzer.process(X, y, pred)
 
@@ -199,7 +199,8 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
     num_epoch_valid_loss_not_decreasing = 0
     for epoch in range(1, epochs+1):
         train_dataloader(train_loader, model, loss, optimizer, epoch, print_period)
-        valid_loss = valid_dataloader(valid_loader, model, loss)
+        with torch.no_grad():
+            valid_loss = valid_dataloader(valid_loader, model, loss)
         scheduler.step(valid_loss)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
