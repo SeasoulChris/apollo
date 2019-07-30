@@ -88,7 +88,7 @@ Model definition
 ========================================================================
 '''
 class SemanticMapModel(nn.Module):
-    def __init__(self, num_pred_points,
+    def __init__(self, num_pred_points, num_history_points,
                  cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapModel, self).__init__()
 
@@ -97,10 +97,10 @@ class SemanticMapModel(nn.Module):
         fc_in_features = self.cnn.fc.in_features
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         for param in self.cnn.parameters():
-            param.requires_grad = False
+            param.requires_grad = True
 
         self.fc = nn.Sequential(
-            nn.Linear(fc_in_features, 500),
+            nn.Linear(fc_in_features + num_history_points * 2, 500),
             nn.Dropout(0.3),
             nn.Linear(500, 120),
             nn.Dropout(0.3),
@@ -108,9 +108,11 @@ class SemanticMapModel(nn.Module):
         )
 
     def forward(self, X):
-        img = X
+        img, obs_pos = X
         out = self.cnn(img)
         out = out.view(out.size(0), -1)
+        obs_pos = obs_pos.view(obs_pos.size(0), -1)
+        out = torch.cat([out, obs_pos], -1)
         out = self.fc(out)
         out = out.view(out.size(0), self.num_pred_points, 2)
         return out
@@ -118,9 +120,9 @@ class SemanticMapModel(nn.Module):
 class SemanticMapLoss():
     def loss_fn(self, y_pred, y_true):
         loss_func = nn.MSELoss()
-        return loss_func(y_pred.float(), y_true.float())
+        return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-        out = y_pred.float() - y_true.float()
+        out = y_pred - y_true
         out = torch.mean(out ** 2)
         return out

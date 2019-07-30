@@ -27,6 +27,8 @@ from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model
 
 
 if __name__ == "__main__":
+    # Set-up the GPU to use
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
@@ -46,7 +48,7 @@ if __name__ == "__main__":
         num_workers=8, drop_last=True)
 
     # Model and training setup
-    model = SemanticMapModel(30)
+    model = SemanticMapModel(30, 20)
     loss = SemanticMapLoss()
     # print(model)
     learning_rate = 3e-4

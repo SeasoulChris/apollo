@@ -233,9 +233,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
     def __init__(self, data_dir, img_mode=False):
         self.img_mode = img_mode
         self.img_transform = transforms.Compose([
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])])
+                             transforms.ToTensor(),
+                             transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                  std=[0.229, 0.224, 0.225])])
 
         self.obs_hist_sizes = []
         self.obs_pos = []
@@ -372,7 +372,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
             if self.img_transform:
                 img = self.img_transform(img)
-            return img, obs_future_traj
+            obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
+            obs_pos = obs_positions[predicting_idx, :, :]
+            return (img, torch.from_numpy(obs_pos).float()), torch.from_numpy(obs_future_traj).float()
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
