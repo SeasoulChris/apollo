@@ -270,6 +270,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     # Get the size of obstacle state history.
                     curr_obs_hist_size = int(np.sum(np.array(data_pt[1:obs_feature_size+1:obs_unit_feature_size])))
                     if curr_obs_hist_size <= 1:
+                        accumulated_data_pt -= 1
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
 
@@ -337,6 +338,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.future_traj_rel.append(curr_future_traj_rel)
 
                 self.end_idx.append(accumulated_data_pt)
+                if self.end_idx[-1] == self.start_idx[-1]:
+                    self.end_idx.pop()
+                    self.start_idx.pop()
 
         self.total_num_data_pt = len(self.start_idx)
         print ('Total number of data points = {}'.format(self.total_num_data_pt))
