@@ -258,7 +258,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         accumulated_data_pt = 0
 
         # TODO(Hongyi): add the drawing class here.
-        self.drawing = None
+        self.base_map = {"sunnyvale":cv.imread("sunnyvale_with_two_offices.png"), "san_mateo":cv.imread("san_mateo.png")}
 
         all_file_paths = GetListOfFiles(data_dir)
         for file_path in all_file_paths:
@@ -269,6 +269,12 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                 self.start_idx.append(accumulated_data_pt)
                 for data_pt in scene:
                     accumulated_data_pt += 1
+                    if file_path.find("sunnyvale")!=-1:
+                        self.map_region.append("sunnyvale")
+                    elif file_path.find("san_mateo")!=-1:
+                        self.map_region.append("san_mateo")
+                    else:
+                        self.map_region.append("unknown")
 
                     # Get number of lane-sequences info.
                     curr_num_lane_sequence = int(data_pt[0])
@@ -367,8 +373,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)[0]
             world_coord = self.reference_world_coord[s_idx + predicting_idx]
             obs_future_traj = self.future_traj[s_idx + predicting_idx]
+            region = self.map_region[s_idx + predicting_idx]
             # TODO(Hongyi): modify the following part to include multiple obstacles.
-            obs_mapping = ObstacleMapping("sunnyvale_with_two_offices", world_coord, obs_polygons)
+            obs_mapping = ObstacleMapping(region, self.base_map[region], world_coord, obs_polygons)
             img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
             if self.img_transform:
                 img = self.img_transform(img)
