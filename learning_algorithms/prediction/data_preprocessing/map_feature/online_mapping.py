@@ -46,7 +46,7 @@ class ObstacleMapping(object):
         self.base_point = np.array(center_point) - 100
         self.GRID = [2000, 2000]
         self.resolution = 0.1
-        self.feature_map = base_map[center_idx[1]-1000:center_idx[1]+1000, center_idx[0]-1000:center_idx[0]+1000]
+        self.feature_map = base_map[center_idx[1]-1000:center_idx[1]+1000, center_idx[0]-1000:center_idx[0]+1000].copy()
         self.draw_obstacles_history()
 
     def get_trans_point(self, p):

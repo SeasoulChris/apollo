@@ -372,10 +372,10 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             predictable_prob = predictable_prob / np.sum(predictable_prob)
             predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)[0]
             world_coord = self.reference_world_coord[s_idx + predicting_idx]
-            obs_future_traj = self.future_traj[s_idx + predicting_idx]
+            obs_future_traj = self.future_traj[s_idx + predicting_idx][0,:,:]
             region = self.map_region[s_idx + predicting_idx]
             # TODO(Hongyi): modify the following part to include multiple obstacles.
-            obs_mapping = ObstacleMapping(region, self.base_map[region].copy(), world_coord, obs_polygons)
+            obs_mapping = ObstacleMapping(region, self.base_map[region], world_coord, obs_polygons)
             img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
             # cv.imwrite("./test/img{}.png".format(idx), img)
             if self.img_transform:
