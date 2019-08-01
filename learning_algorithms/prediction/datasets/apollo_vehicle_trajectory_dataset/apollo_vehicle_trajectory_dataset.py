@@ -269,12 +269,6 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                 self.start_idx.append(accumulated_data_pt)
                 for data_pt in scene:
                     accumulated_data_pt += 1
-                    if file_path.find("sunnyvale")!=-1:
-                        self.map_region.append("sunnyvale")
-                    elif file_path.find("san_mateo")!=-1:
-                        self.map_region.append("san_mateo")
-                    else:
-                        self.map_region.append("unknown")
 
                     # Get number of lane-sequences info.
                     curr_num_lane_sequence = int(data_pt[0])
@@ -285,6 +279,14 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                         accumulated_data_pt -= 1
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
+
+                    # Get map_region
+                    if file_path.find("sunnyvale")!=-1:
+                        self.map_region.append("sunnyvale")
+                    elif file_path.find("san_mateo")!=-1:
+                        self.map_region.append("san_mateo")
+                    else:
+                        self.map_region.append("unknown")
 
                     # Get the obstacle position features (organized from past to present).
                     # (if length not enough, then pad heading zeros)
