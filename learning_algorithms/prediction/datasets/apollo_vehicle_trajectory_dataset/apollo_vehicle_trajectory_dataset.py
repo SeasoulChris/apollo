@@ -382,7 +382,12 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                 img = self.img_transform(img)
             obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
             obs_pos = obs_positions[predicting_idx, :, :]
-            return (img, torch.from_numpy(obs_pos).float()), torch.from_numpy(obs_future_traj).float()
+            obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
+            return ((img, \
+                     torch.from_numpy(obs_pos).float(), \
+                     torch.from_numpy(obs_hist_sizes).float(), \
+                     torch.from_numpy(obs_pos_rel).float()), \
+                    torch.from_numpy(obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
