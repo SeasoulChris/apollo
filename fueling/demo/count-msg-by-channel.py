@@ -1,4 +1,10 @@
-"""A simple demo PySpark job."""
+"""
+A simple demo PySpark job to stat messages by channel.
+
+Prerequisite:
+    cd /apollo/docs/demo_guide
+    python rosbag_helper.py demo_3.5.record
+"""
 #!/usr/bin/env python
 
 # Standard packages
@@ -29,8 +35,6 @@ class CountMsgByChannel(BasePipeline):
         pprint.PrettyPrinter().pprint(
             # RDD(record_path)
             self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
-            # RDD(record_path), just sleep.
-            .map(self.sleep)
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
             # PairRDD(topic, 1)
@@ -43,13 +47,6 @@ class CountMsgByChannel(BasePipeline):
     def run_prod(self):
         """For this demo, prod and test are the same."""
         return self.run_test()
-
-    def sleep(self, input):
-        """Dummy process to run longer so you can access Spark UI or check logs."""
-        for i in range(self.FLAGS.get('sleep_time', 0)):
-            glog.info('Tick {}'.format(i))
-            time.sleep(1)
-        return input
 
 
 if __name__ == '__main__':
