@@ -1,4 +1,10 @@
-"""A simple demo PySpark job."""
+"""
+A simple demo PySpark job with GPU training.
+
+Run with:
+    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 8 --memory 100g --gpu \
+        fueling/demo/gpu-sample.py
+"""
 #!/usr/bin/env python
 
 # Standard packages
@@ -15,6 +21,7 @@ import torch
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+
 
 def check_output(command):
     """Return the output of given system command"""
