@@ -24,7 +24,7 @@ import fueling.common.record_utils as record_utils
 
 
 class StatMileageByVehicle(BasePipeline):
-    """pipeline to stat mileage in 2018 with vehicle"""
+    """pipeline to stat mileage with vehicle"""
 
     def __init__(self):
         BasePipeline.__init__(self, 'stat-mileage-by-vehicle')
@@ -35,24 +35,45 @@ class StatMileageByVehicle(BasePipeline):
         demo_record_dir = '/apollo/docs/demo_guide/'
         control_records_bags_dir = '/apollo/modules/data/fuel/testdata/control/control_profiling'
 
-        result = (
-            # RDD(record_dirs)
+        test_dirs = (
+            # RDD(record_dir)
             self.to_rdd(
                 [demo_record_dir,
                  os.path.join(control_records_bags_dir, 'Road_Test'),
                  os.path.join(control_records_bags_dir, 'Sim_Test'), ])
-            # PairRDD(record_dir, record_file), the map of record dir and record file
-            .keyBy(lambda source: source)
-            # PairRDD(record_dir, record_file)
-            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
-                           glob.glob(os.path.join(task, '*bag*')))
-            # PairRDD(record_dir, record_file), filter out unqualified files
-            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
-                                          record_utils.is_bag_file(file)))
-            # PairRDD(record_dir, auto_mileage)
-            .mapValues(self.calculate)
+            .cache()
+        )
+        result = self.run(test_dirs)
+
+        glog.info('Calculated auto mileage in test mode is:{}'.format(result))
+
+    def run_prod(self):
+        """Run prod."""
+
+        origin_prefix = 'small-records/2018'
+
+        todo_dirs = (
+            # RDD(record_dir)
+            self.to_rdd(self.bos().list_files(origin_prefix))
+            .cache()
+        )
+
+        prod_mileage = self.run(todo_dirs)
+
+        glog.info(
+            'Calculated auto mileage in production mode is :{}'.format(prod_mileage))
+
+    def run(self, dirs):
+        result = (
+            dirs
+            # RDD(record_file)
+            .flatMap(lambda dir: glob.glob(os.path.join(dir, '*record*')) +
+                     glob.glob(os.path.join(dir, '*bag*')))
+            # RDD(record_file), filter out unqualified files
+            .filter(lambda file: record_utils.is_record_file(file) or
+                    record_utils.is_bag_file(file))
             # RDD(auto_mileage)
-            .values()
+            .map(self.calculate)
             # float sum auto_mileage
             .sum()
         )
@@ -61,35 +82,7 @@ class StatMileageByVehicle(BasePipeline):
             glog.info("Nothing to be processed, everything is under control!")
             return
 
-        glog.info('Calculated auto mileage in test mode is:{}'.format(
-            result))
-
-    def run_prod(self):
-        """Run prod."""
-
-        origin_prefix = 'small-records/2018'
-
-        prod_mileage = (
-            # RDD(file), start with origin_prefix
-            self.to_rdd(self.bos().list_files(origin_prefix))
-            # PairRDD(record_dir, record_file), the map of record dir and record file
-            .keyBy(lambda source: source)
-            # PairRDD(record_dir, record_file)
-            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
-                           glob.glob(os.path.join(task, '*bag*')))
-            # PairRDD(record_dir, record_file), filter out unqualified files
-            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
-                                          record_utils.is_bag_file(file)))
-            # PairRDD(record_dir, auto_mileage)
-            .mapValues(self.calculate)
-            # RDD(auto_mileage)
-            .values()
-            # float sum auto_mileage
-            .sum()
-        )
-
-        glog.info(
-            'Calculated auto mileage in production mode is :{}'.format(prod_mileage))
+        return result
 
     def calculate(self, record):
         """Calculate mileage"""
