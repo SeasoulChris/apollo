@@ -1,12 +1,11 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 
-import pprint
-import time
 import collections
+import glob
 import math
 import os
-import glob
-
+import pprint
+import time
 
 # Third-party packages
 from absl import flags
@@ -15,7 +14,6 @@ import pyspark_utils.op as spark_op
 
 # Apollo packages
 from cyber_py.record import RecordReader
-
 from modules.canbus.proto import chassis_pb2
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto import localization_pb2
@@ -43,17 +41,19 @@ class StatMileageByVehicle(BasePipeline):
                 [demo_record_dir,
                  os.path.join(control_records_bags_dir, 'Road_Test'),
                  os.path.join(control_records_bags_dir, 'Sim_Test'), ])
-            # PairRDD(record_dir, task), the map of target dirs and source dirs
+            # PairRDD(record_dir, record_file), the map of record dir and record file
             .keyBy(lambda source: source)
-            # PairRDD(record_dirs, record_file)
-            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) + glob.glob(os.path.join(task, '*bag*')))
+            # PairRDD(record_dir, record_file)
+            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
+                           glob.glob(os.path.join(task, '*bag*')))
             # PairRDD(record_dir, record_file), filter out unqualified files
-            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or record_utils.is_bag_file(file)))
-            # PairRDD(record)
-            .mapValues(lambda record: self.calculate(record))
+            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
+                                          record_utils.is_bag_file(file)))
+            # PairRDD(record_dir, auto_mileage)
+            .mapValues(self.calculate)
             # RDD(auto_mileage)
-            .map(lambda x: x[1])
-            # RDD(auto_mileages)
+            .values()
+            # float sum auto_mileage
             .sum()
         )
 
@@ -61,9 +61,8 @@ class StatMileageByVehicle(BasePipeline):
             glog.info("Nothing to be processed, everything is under control!")
             return
 
-        pprint.PrettyPrinter().pprint(result)
-
-        glog.info('calculated auto mileage in test is:{}'.format(result))
+        glog.info('Calculated auto mileage in test mode is:{}'.format(
+            result))
 
     def run_prod(self):
         """Run prod."""
@@ -73,22 +72,24 @@ class StatMileageByVehicle(BasePipeline):
         prod_mileage = (
             # RDD(file), start with origin_prefix
             self.to_rdd(self.bos().list_files(origin_prefix))
-            # PairRDD(record_dir, task), the map of target dirs and source dirs
+            # PairRDD(record_dir, record_file), the map of record dir and record file
             .keyBy(lambda source: source)
-            # PairRDD(record_dirs, record_file)
-            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) + glob.glob(os.path.join(task, '*bag*')))
+            # PairRDD(record_dir, record_file)
+            .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
+                           glob.glob(os.path.join(task, '*bag*')))
             # PairRDD(record_dir, record_file), filter out unqualified files
-            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or record_utils.is_bag_file(file)))
-            # PairRDD(record)
-            .mapValues(lambda record: self.calculate(record))
+            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
+                                          record_utils.is_bag_file(file)))
+            # PairRDD(record_dir, auto_mileage)
+            .mapValues(self.calculate)
             # RDD(auto_mileage)
-            .map(lambda x: x[1])
-            # RDD(auto_mileage)
+            .values()
+            # float sum auto_mileage
             .sum()
         )
 
         glog.info(
-            'calculated auto mileage in production is :{}'.format(prod_mileage))
+            'Calculated auto mileage in production mode is :{}'.format(prod_mileage))
 
     def calculate(self, record):
         """Calculate mileage"""
