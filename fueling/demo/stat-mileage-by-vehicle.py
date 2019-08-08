@@ -13,7 +13,6 @@ import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 # Apollo packages
-from cyber_py.record import RecordReader
 from modules.canbus.proto import chassis_pb2
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto import localization_pb2
@@ -41,7 +40,6 @@ class StatMileageByVehicle(BasePipeline):
                 [demo_record_dir,
                  os.path.join(control_records_bags_dir, 'Road_Test'),
                  os.path.join(control_records_bags_dir, 'Sim_Test'), ])
-            .cache()
         )
         result = self.run(test_dirs)
 
@@ -51,12 +49,8 @@ class StatMileageByVehicle(BasePipeline):
         """Run prod."""
 
         origin_prefix = 'small-records/2018'
-
-        todo_dirs = (
-            # RDD(record_dir)
-            self.to_rdd(self.bos().list_files(origin_prefix))
-            .cache()
-        )
+        # RDD(record_dir)
+        todo_dirs = self.to_rdd(self.bos().list_files(origin_prefix))
 
         prod_mileage = self.run(todo_dirs)
 
@@ -80,7 +74,7 @@ class StatMileageByVehicle(BasePipeline):
 
         if not result:
             glog.info("Nothing to be processed, everything is under control!")
-            return
+            return None
 
         return result
 
