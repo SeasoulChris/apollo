@@ -25,6 +25,13 @@ message PlanningStat {
   optional Latency latency = 1;
 }
 
+message ModuleStat {
+  message Values {
+    repeated float values = 1;
+  }
+  map<string, Values> fields = 1;
+}
+
 // Rich metadata for a Cyber record, which contains useful information for
 // warehousing needs.
 message RecordMeta {
@@ -59,7 +66,20 @@ message RecordMeta {
     // A downsampled position point list which forms a driving path.
     repeated apollo.common.PointLLH driving_path = 2;
 
-    optional PlanningStat planning_stat = 3;
+    optional PlanningStat planning_stat = 3 [deprecated];
+
+    // General metrics stat, for example:
+    // {
+    //   "planning" : fields {
+    //     "latency": {values: [0.11, 0.12, 0.1, ...]},
+    //   },
+    //   "control" : fields {
+    //     "lateral_error": {values: [0.11, 0.12, 0.1, ...]},
+    //     "speed_error": {values: [0.11, 0.12, 0.1, ...]},
+    //   },
+    // }
+    // Please try to make the field keys more structured and readable, such as "A.B.C".
+    map<string, ModuleStat> module_stats = 4;
   }
   optional Stat stat = 8;
 }
