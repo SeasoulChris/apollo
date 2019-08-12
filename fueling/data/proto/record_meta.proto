@@ -66,7 +66,7 @@ message RecordMeta {
     // A downsampled position point list which forms a driving path.
     repeated apollo.common.PointLLH driving_path = 2;
 
-    optional PlanningStat planning_stat = 3 [deprecated];
+    optional PlanningStat planning_stat = 3 [deprecated = true];
 
     // General metrics stat, for example:
     // {
