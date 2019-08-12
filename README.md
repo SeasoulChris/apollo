@@ -18,6 +18,7 @@
 
 1. [Install miniconda](https://docs.conda.io/en/latest/miniconda.html).
    If it's already installed, update it to the latest.
+   (DO NOT RUN THIS IF YOU ARE USING PY27-CYBER)
 
    ```bash
    sudo /usr/local/miniconda/bin/conda update -n base -c defaults conda
