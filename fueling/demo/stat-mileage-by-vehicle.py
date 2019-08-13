@@ -20,6 +20,7 @@ from modules.localization.proto import localization_pb2
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.record_utils as record_utils
+import fueling.data.record_parser as record_parser
 
 
 class StatMileageByVehicle(BasePipeline):
@@ -114,11 +115,9 @@ class StatMileageByVehicle(BasePipeline):
                 localization = record_utils.message_to_proto(msg)
                 cur_pos = localization.pose.position
                 if last_pos:
-                    # Accumulate mileage, from xyz-distance(m) to miles.
-                    mileage[last_mode] += 0.000621371 * math.sqrt(
-                        (cur_pos.x - last_pos.x) ** 2 +
-                        (cur_pos.y - last_pos.y) ** 2 +
-                        (cur_pos.z - last_pos.z) ** 2)
+                    # Accumulate mileage, from meters to miles.
+                    mileage[last_mode] += 0.000621371 * \
+                        record_parser.pose_distance_m(cur_pos, last_pos)
                 last_pos = cur_pos
 
         auto_mileage += mileage[Chassis.COMPLETE_AUTO_DRIVE]
