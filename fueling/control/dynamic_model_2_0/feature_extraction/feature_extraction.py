@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import glob
 import os
 
@@ -9,15 +11,15 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+import fueling.common.bos_client as bos_client
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 
-# channels = [record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL]
-SEGMENT_LEN = 6000 * 2  # 1 min msgs of chassis and localization
-SEGMENT_INTERVAL = 2000 * 2  # 20 secs msgs of chassis and localization
-# Maximum allowed time gap betwee two messages
-MAX_PHASE_DELTA = 0.01 / 2
+SEGMENT_LEN = 600 * 2  # 1 min msgs of chassis and localization
+SEGMENT_INTERVAL = 200 * 2  # 20 secs msgs of chassis and localization
+PROD_INPUT_DIR = 'modules/control/data/records/Mkz7/2019-04-25'
+PROD_TARGET_DIR = 'modules/control/DM2/test'
 
 
 def write_segment(elem):
@@ -28,7 +30,7 @@ def write_segment(elem):
 
 
 def count_msgs(dir_msgRDD):
-    """Count Msgs from chassis and localization topic"""
+    """Count messages from chassis and localization topic"""
     folder, messages = dir_msgRDD
     count_chassis = 0
     count_localization = 0
@@ -39,8 +41,9 @@ def count_msgs(dir_msgRDD):
             count_localization += 1
     glog.info('{} chassis messages for record folder {}'.format(count_chassis, folder))
     glog.info('{} localization messages for record folder {}'.format(count_localization, folder))
-    return (folder, (count_chassis, count_localization))
-    # return count_chassis > SEGMENT_LEN / 2 and count_localization > SEGMENT_LEN / 2
+    if count_chassis < SEGMENT_LEN / 2 or count_localization < SEGMENT_LEN / 2:
+        return (folder, [])
+    return dir_msgRDD
 
 
 def partition_data(target_msgs):
@@ -77,6 +80,22 @@ class FeatureExtraction(BasePipeline):
         task = self.to_rdd([test_data_dirs])
         self.run(task, test_data_dirs, target_dir)
 
+    def run_prod(self):
+        """Run prod."""
+        # get subfolder of all records
+        task = self.to_rdd([PROD_INPUT_DIR])
+        task = spark_helper.cache_and_log(
+            'todo_jobs',
+            # RDD(relative_path_to_vehicle_type)
+            task
+            # RDD(files)
+            .flatMap(self.bos().list_files)
+            # RDD(folders)
+            .map(os.path.dirname)
+            # RDD(distinct folders)
+            .distinct(), 1)
+        self.run(task, PROD_INPUT_DIR, PROD_TARGET_DIR)
+
     def run(self, task, original_prefix, target_prefix):
         # configurable segments
         dir_msgs_rdd = spark_helper.cache_and_log(
@@ -93,28 +112,16 @@ class FeatureExtraction(BasePipeline):
             .flatMapValues(record_utils.read_record([record_utils.CHASSIS_CHANNEL,
                                                      record_utils.LOCALIZATION_CHANNEL]))
             # PairRDD(target_dir, (message)s)
-            .groupByKey(), 1)
-
-        # RDD(valid dirs)
-        valid_dirs = spark_helper.cache_and_log(
-            'write_datapoint_to_hdf5',
-            dir_msgs_rdd
-            # PairRDD(target_dir, (chassis_msg_numbers, localization_msg_numbers))
-            .map(count_msgs)
-            # PairRDD(valid target_dir, (chassis_msg_numbers, localization_msg_numbers))
-            .filter(lambda (_, (count_chassis, count_localization)):
-                    count_chassis >= SEGMENT_LEN / 2
-                    and count_localization >= SEGMENT_LEN / 2)
-            # PairRDD(valid target_dir)
-            .keys(), 1)
-
-        # PairRDD(valid target_dir, (message)s)
-        valid_msg_dir = spark_op.filter_keys(dir_msgs_rdd, valid_dirs)
+            .groupByKey(), 0)
 
         hdf5_dir = spark_helper.cache_and_log(
             'write_datapoint_to_hdf5',
             # PairRDD(valid target_dir, (message)s)
-            valid_msg_dir
+            dir_msgs_rdd
+            # PairRDD(valid target_dir, (message)s or [])
+            .map(count_msgs)
+            # PairRDD(valid target_dir, (message)s)
+            .filter(spark_op.filter_value(lambda msgs: len(msgs) > 0))
             # RDD(target_dir, segment_id, group of (message)s), divide messages into groups
             .flatMap(partition_data)
             # PairRDD((target_dir, segment_id), (message)s)
