@@ -82,13 +82,5 @@ class_map = {'Car': 0,
              'Traffic-cone': 5,
              'Bicyclist': 6,
              'Motorcyclist': 7}
-#             'Tricyclist': 8,
-#             'Trolley': 9,
-#             'Unknown-movable': 10,
-#             'Unknown-unmovable': 11,
-#             'Vehicle-ignore': 12,
-#             'Person-ignore': 13,
-#             'Other-ignore': 14, 
-#             'Misc': 15}
 assert num_classes == len(class_map), "num_classes must be equal to len(class_map)"
 
