@@ -49,7 +49,7 @@ class StatMileageByVehicle(BasePipeline):
     def run_prod(self):
         """Run prod."""
 
-        origin_prefix = 'small-records/2018'
+        origin_prefix = 'small-records/2018/2018-04-03'
         # RDD(record_dir)
         todo_dirs = self.to_rdd(self.bos().list_files(origin_prefix))
 
