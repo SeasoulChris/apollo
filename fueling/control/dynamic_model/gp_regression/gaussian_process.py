@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+from pyro.contrib.gp.parameterized import Parameterized
+import numpy as np
+import pyro
+import pyro.contrib.gp as gp
+import pyro.infer as infer
+import pyro.optim as optim
+
+
+class GaussianProcess(Parameterized):
+    """Gaussian process"""
+    name = 'GaussianProcess'
+
+    def __init__(self, args, gp_f, dataset):
+        """GP initialization"""
+        super(GaussianProcess, self).__init__()
+        self.gp_f = gp_f
+        self.dataset = dataset
+
+    def model(self):
+        """Gaussian process model"""
+        pyro.module("GaussianProcess", self)
+        return self.gp_f.model()
+
+    def guide(self):
+        """Gaussian process guide"""
+        pyro.module("GaussianProcess", self)
+        return self.gp_f.guide()
+    
+    def set_data(self, feature, label):
+        """Set data for Gaussian process model"""
+        # TODO(Jiaxuan): Implement proper feature setting
+        self.gp_f.set_data(feature, label)
