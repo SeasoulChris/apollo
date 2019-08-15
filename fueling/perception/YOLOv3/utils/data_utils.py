@@ -73,8 +73,7 @@ def filter_classes(element):
     Input element: should be the output of function 
       'process_data'.
     """
-    image_data, y_true, cls_box_map, objs, calib = \
-        element
+    image_data, y_true, cls_box_map, objs, calib = element
     if CLS_TO_CONSIDER is not None:
         # Zero out elements in y_true
         for i, scale_label in enumerate(y_true):
@@ -82,17 +81,17 @@ def filter_classes(element):
                 np.where(scale_label[..., 5:5+cfg.num_classes])
 
             mask = ~np.isin(cls, cfg.classes_to_consider)
-            y_true[i][bat[mask], cell_rows[mask], \
+            y_true[i][bat[mask], cell_rows[mask],
               cell_cols[mask], anchors[mask]] = 0.0
 
         # Pop elements out of cls_box_map.
         keys = []
-        for k, v in cls_box_map.items(): 
+        for key, value in cls_box_map.items(): 
             # cls_box_map: class_id to a list of 2d boxes
             # [xmin, ymin, xmax, ymax]
-            if k not in CLS_TO_CONSIDER:
-                keys.append(k)
-        for k in keys:
-            cls_box_map.pop(k)
+            if key not in CLS_TO_CONSIDER:
+                keys.append(key)
+        for key in keys:
+            cls_box_map.pop(key)
     return (image_data, y_true, cls_box_map, objs, calib)
 
