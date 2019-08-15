@@ -8,9 +8,7 @@ import pprint
 import time
 
 # Third-party packages
-from absl import flags
 import colored_glog as glog
-import pyspark_utils.op as spark_op
 
 # Apollo packages
 from modules.canbus.proto import chassis_pb2
@@ -25,7 +23,6 @@ import fueling.data.record_parser as record_parser
 
 class StatMileageByVehicle(BasePipeline):
     """pipeline to stat mileage with vehicle"""
-
     def __init__(self):
         BasePipeline.__init__(self, 'stat-mileage-by-vehicle')
 
@@ -37,11 +34,14 @@ class StatMileageByVehicle(BasePipeline):
 
         test_dirs = (
             # RDD(record_dir)
-            self.to_rdd(
-                [demo_record_dir,
-                 os.path.join(control_records_bags_dir, 'Road_Test'),
-                 os.path.join(control_records_bags_dir, 'Sim_Test'), ])
-        )
+            self.to_rdd([
+                demo_record_dir,
+                os.path.join(control_records_bags_dir, 'Road_Test'),
+                os.path.join(control_records_bags_dir, 'Sim_Test'),
+            ])
+            # RDD(record_file)
+            .flatMap(lambda dir: glob.glob(os.path.join(dir, '*record*')) +
+                     glob.glob(os.path.join(dir, '*bag*'))))
         result = self.run(test_dirs)
 
         glog.info('Calculated auto mileage in test mode is:{}'.format(result))
@@ -50,20 +50,21 @@ class StatMileageByVehicle(BasePipeline):
         """Run prod."""
 
         origin_prefix = 'small-records/2018/2018-04-03'
-        # RDD(record_dir)
-        todo_dirs = self.to_rdd(self.bos().list_files(origin_prefix))
+        # RDD(record_file)
+        todo_dirs = (
+            self.to_rdd(self.bos().list_files(origin_prefix))
+            # RDD(record_file)
+            .map(lambda dir: glob.glob(os.path.join(dir, '*record*')) + glob.
+                 glob(os.path.join(dir, '*bag*'))))
 
         prod_mileage = self.run(todo_dirs)
 
-        glog.info(
-            'Calculated auto mileage in production mode is :{}'.format(prod_mileage))
+        glog.info('Calculated auto mileage in production mode is :{}'.format(
+            prod_mileage))
 
     def run(self, dirs):
         result = (
             dirs
-            # RDD(record_file)
-            .flatMap(lambda dir: glob.glob(os.path.join(dir, '*record*')) +
-                     glob.glob(os.path.join(dir, '*bag*')))
             # RDD(record_file), filter out unqualified files
             .filter(lambda file: record_utils.is_record_file(file) or
                     record_utils.is_bag_file(file))
