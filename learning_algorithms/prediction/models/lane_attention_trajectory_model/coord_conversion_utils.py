@@ -264,3 +264,67 @@ class SLToXY(nn.Module):
         XY = pt_before + s_actual * line_seg_vec_unit
 
         return XY
+
+
+class BroadcastObstaclesToLanes(nn.Module):
+    '''There are N obstacles and M corresponding lanes (N <= M).
+       We need to broadcast the number of obstacles to be M.
+    '''
+    def __init__(self):
+        super(BroadcastObstaclesToLanes, self).__init__()
+
+    def forward(self, obs_pos, same_obs_mask):
+        '''
+        params:
+            - obs_pos: N x 2
+            - same_obs_mask: M x 1
+        return:
+            - repeated_obs_pos: M x 2
+        '''
+        M = same_obs_mask.size(0)
+        # (M x 2)
+        repeated_obs_pos = cuda(torch.zeros(M, 2))
+
+        for obs_id in range(same_obs_mask.max().long().item() + 1):
+            curr_mask = (same_obs_mask[:, 0] == obs_id)
+            curr_num_lane = torch.sum(curr_mask).long().item()
+            # (curr_num_lane x 2)
+            curr_obs_pos = obs_pos[obs_id, :].view(1, 2)
+            curr_obs_pos = curr_obs_pos.repeat(curr_num_lane, 1)
+            repeated_obs_pos[curr_mask, :] = curr_obs_pos.float()
+
+        return repeated_obs_pos
+
+
+class ObstacleToLaneRelation(nn.Module):
+    '''Calculate the distance of an obstacle to a certain lane.
+    '''
+    def __init__(self):
+        super(ObstacleToLaneRelation, self).__init__()
+        self.broadcasting = BroadcastObstaclesToLanes()
+        self.get_projection_point = PointToLineProjection()
+        self.find_the_closest_two_points = FindClosestLineSegmentFromLineToPoint()
+
+    def forward(self, lane_features, obs_pos, same_obs_mask):
+        '''
+        params:
+            - lane_features: M x 150 x 4
+            - obs_pos: N x 2
+            - same_obs_mask: M x 1
+        return:
+            - projected_points: M x 2
+            - idx_before and idx_after: M x 2
+        '''
+        N = obs_pos.size(0)
+        M = lane_features.size(0)
+        lane_features = lane_features.float()
+        # (M x 2)
+        repeated_obs_pos = self.broadcasting(obs_pos, same_obs_mask)
+        # (M)
+        idx_before, idx_after = self.find_the_closest_two_points(lane_features, repeated_obs_pos)
+        indices = torch.cat((idx_before.view(M,1), idx_after.view(M,1)), 1)
+        # (M x 2)
+        proj_pt, _ = self.get_projection_point(\
+            lane_features[torch.arange(M),idx_before,:2], lane_features[torch.arange(M),idx_after,:2], repeated_obs_pos)
+
+        return proj_pt, indices, repeated_obs_pos
