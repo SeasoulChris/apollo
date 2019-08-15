@@ -30,6 +30,10 @@ from learning_algorithms.utilities.train_utils import *
 from learning_algorithms.utilities.network_utils import *
 
 
+################################################################################
+# Overall Big Models
+################################################################################
+
 class SelfLSTM(nn.Module):
     def __init__(self, pred_len=29, embed_size=64, hidden_size=128):
         super(SelfLSTM, self).__init__()
@@ -90,6 +94,133 @@ class SelfLSTM(nn.Module):
 
         return pred_out, pred_traj
 
+
+################################################################################
+# Sub-Models
+################################################################################
+
+class LaneLSTM(nn.Module):
+    def __init__(self, embed_size=32, hidden_size=64):
+        super(LaneLSTM, self).__init__()
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+
+        self.embed = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+
+        self.h0, self.c0 = generate_lstm_states(hidden_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True)
+
+    def forward(self, lane_points):
+        '''
+        params:
+            - lane_points: N x num_lane_pt x 2
+        return:
+            - encoding: N x hidden_size
+        '''
+        N = lane_points.size(0)
+        num_lane_pt = lane_points.size(1)
+
+        # Embed the lane-points.
+        # (N*num_lane_pt x 2)
+        lane_embed_input = lane_points.view(N*num_lane_pt, 2)
+        # (N x num_lane_pt x embed_size)
+        lane_embed = self.embed(lane_embed_input).view(N, num_lane_pt, -1)
+
+        # Go through RNN.
+        h0, c0 = self.h0.view(1,1,-1).repeat(1, N, 1), self.c0.view(1,1,-1).repeat(1, N, 1)
+        # (N x num_lane_pt x hidden_size)
+        lane_states, _ = self.lstm(lane_embed, (h0, c0))
+
+        # (N x hidden_size)
+        return lane_states[:, -1, :]
+
+
+class LaneFutureEncoding(nn.Module):
+    '''
+    Given a lane and an obstacle, first extract the lane's future-shape
+    starting from the obstacle's position, then encode it as the lane's
+    future-encoding.
+    '''
+    def __init__(self, window_size=10, delta_s=0.5,
+                 rnn_encoding=True, debug_mode=False):
+        super(LaneFutureEncoding, self).__init__()
+        self.window_size = window_size
+        self.delta_s = delta_s
+        self.rnn_encoding = rnn_encoding
+        self.debug_mode = debug_mode
+
+        self.find_the_closest_two_points = FindClosestLineSegmentFromLineToPoint()
+        self.get_projection_point = PointToLineProjection()
+        self.proj_pt_to_sl = ProjPtToSL()
+        self.sl_to_xy = SLToXY()
+
+        if rnn_encoding:
+            self.lane_lstm = LaneLSTM(embed_size=32, hidden_size=64)
+        else:
+            self.lane_enc = torch.nn.Sequential(
+                nn.Linear(window_size*2, 64),
+                nn.ReLU(),
+            )
+
+    def forward(self, lane_features, obs_pos):
+        '''
+        params:
+            - selected lane_features of interest: N x 150 x 4
+            - obs_pos: N x 2
+        return:
+            - encoded lane future: N x enc_size
+        '''
+        N = obs_pos.size(0)
+        # Get lane's relative distance to obstacle
+        idx_before, idx_after = self.find_the_closest_two_points(lane_features, obs_pos)
+        proj_pt, _ = self.get_projection_point(\
+            lane_features[torch.arange(N),idx_before,:2], lane_features[torch.arange(N),idx_after,:2], obs_pos)
+
+        # Get obstalces' SL-coord
+        # (N x 2)
+        sl_coord = self.proj_pt_to_sl(proj_pt, proj_pt-obs_pos, idx_before,\
+            idx_after, lane_features)
+
+        # Increment every delta_s=0.5 and get a new sequence of SL
+        sl_coord[:, 1] = cuda(torch.zeros(N))
+        sl_coord = sl_coord.view(N, 1, 2)
+        # (N x 2)
+        delta_sl = torch.cat((cuda(torch.ones(N, 1))*self.delta_s, cuda(torch.zeros(N, 1))), 1)
+        # (N x window_size+1 x 2)
+        delta_sl = delta_sl.view(N, 1, 2).repeat(1, self.window_size+1, 1)
+        delta_sl[:, 0, :] = cuda(torch.zeros(N, 2))
+        cum_sl = torch.cumsum(delta_sl, 1)
+        # (N x window_size+1 x 2)
+        sl_coord_new = sl_coord.repeat(1, self.window_size+1, 1) + cum_sl
+
+        # Convert that SL back to XY and get delta_X, delta_Y
+        xy_coord = self.sl_to_xy(\
+            lane_features.view(N, 1, 150, 4).repeat(1, self.window_size+1, 1, 1).view(N*(self.window_size+1), 150, 4), \
+            sl_coord_new.view(N*(self.window_size+1), 2))
+        if self.debug_mode:
+            return xy_coord
+        # (N x window_size+1 x 2)
+        xy_coord = xy_coord.view(N, self.window_size+1, 2)
+        # (N x window_size x 2)
+        delta_xy = xy_coord[:, 1:, :] - xy_coord[:, :-1, :]
+
+        if self.rnn_encoding:
+            # Feed that delta_X and delta_Y through RNN and get encoding
+            # (N x enc_size)
+            enc = self.lane_lstm(delta_xy)
+            return enc
+        else:
+            # (N x window_size*2)
+            enc = self.lane_enc(delta_xy.view(N, -1))
+            return enc
+
+
+################################################################################
+# Loss Functions
+################################################################################
 
 class ProbablisticTrajectoryLoss:
     def loss_fn(self, y_pred_tuple, y_true):

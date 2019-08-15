@@ -150,3 +150,117 @@ class FindClosestLineSegmentFromLineToPoint(nn.Module):
         idx_before, _ = torch.min(min_indices, dim=1)
         idx_after, _ = torch.max(min_indices, dim=1)
         return idx_before, idx_after
+
+
+class ProjPtToSL(nn.Module):
+    def __init__(self):
+        super(ProjPtToSL, self).__init__()
+
+    def forward(self, proj_pt, dist, idx_before, idx_after, lane_features):
+        '''
+        params:
+            - proj_pt: N x 2
+            - dist: N x 2
+            - idx_before: N
+            - idx_after: N
+            - lane_features: N x 150 x 4
+        '''
+        N = lane_features.size(0)
+        num_lane_pt = lane_features.size(1)
+
+        # Get the distance of each lane-pt w.r.t. the 0th one.
+        # (N x 150) 
+        lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
+        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(\
+            (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
+        # (N x 150) The distance of each lane-pt w.r.t. the 0th one.
+        lane_pt_dist = torch.cumsum(lane_pt_spacing, 1)
+
+        # Get the distance of the proj_pt to the pt of idx_before.
+        # (N x 2)
+        pt_before = lane_features[torch.arange(N),idx_before,:2].float()
+        pt_after = lane_features[torch.arange(N),idx_after,:2].float()
+        # (N x 2)
+        line_seg_vec = pt_after - pt_before
+        # (N x 1)
+        line_seg_vec_mag = torch.sqrt(torch.sum(line_seg_vec**2, 1)).view(N, 1)
+        # (N x 2)
+        line_seg_vec_unit = line_seg_vec / line_seg_vec_mag.repeat(1, 2)
+        # (N)
+        dist_to_pt_before = torch.sum((proj_pt - pt_before) * line_seg_vec_unit, 1)
+
+        # Get the S-coord.
+        # (N x 1)
+        S = (lane_pt_dist[torch.arange(N), idx_before] + dist_to_pt_before).view(N, 1)
+
+        # Get the L-coord.
+        # (N x 1)
+        L = (dist[:, 0] * line_seg_vec_unit[:, 1] - dist[:, 1] * line_seg_vec_unit[:, 0]).view(N, 1)
+
+        # (N x 2)
+        SL = torch.cat((S, L), 1)
+        return SL
+
+
+class SLToXY(nn.Module):
+    def __init__(self):
+        super(SLToXY, self).__init__()
+
+    def forward(self, lane_features, pt_sl):
+        '''
+        params:
+            - lane_features: N x 150 x 4
+            - pt_sl: N x 2 (for now, assume l=0, TODO: eliminate this assumption)
+        return:
+            - XY: N x 2
+        '''
+        N = lane_features.size(0)
+        num_lane_pt = lane_features.size(1)
+        # Get the distance of each lane-pt w.r.t. the 0th one.
+        # (N x 150)
+        lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
+        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(\
+            (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
+        lane_pt_dist = torch.cumsum(lane_pt_spacing, 1)
+
+        # Get the idx_before and idx_after
+        # (N)
+        mask_front = (pt_sl[:, 0] < lane_pt_dist[:, 1])
+        mask_back = (pt_sl[:, 0] > lane_pt_dist[:, -2])
+        mask_middle = (mask_front == 0) * (mask_back == 0)
+        idx_before = cuda(torch.zeros(N))
+        if torch.sum(mask_back).long() != 0:
+            idx_before[mask_back] = ((num_lane_pt - 2) * cuda(torch.ones(N)))[mask_back]
+        S = pt_sl[:, 0].view(N, 1)
+        S_repeated = S.repeat(1, num_lane_pt)
+        # (N x 150)
+        s_mask = S_repeated < lane_pt_dist
+        # (N x 149)
+        s_mask = s_mask[:, 1:].long() - s_mask[:, :-1].long()
+        # (N)
+        s_mask = torch.argmax(s_mask, dim=1)
+        idx_before[mask_middle] = s_mask[mask_middle].float()
+        idx_before = idx_before.long()
+        idx_after = idx_before + 1
+
+        # Get the pt_before and pt_after.
+        # (N x 2)
+        pt_before = lane_features[torch.arange(N),idx_before,:2]
+        pt_after = lane_features[torch.arange(N),idx_after,:2]
+
+        # Get the actual s w.r.t. each line-segment of interest.
+        # (N)
+        s_actual = S - lane_pt_dist[torch.arange(N), idx_before].view(N, 1)
+
+        # Get the unit vector of (pt_before, pt_after)
+        # (N x 2)
+        line_seg_vec = pt_after - pt_before
+        # (N x 1)
+        line_seg_vec_mag = torch.sqrt(torch.sum(line_seg_vec**2, 1)).view(N, 1)
+        # (N x 2)
+        line_seg_vec_unit = line_seg_vec / line_seg_vec_mag.repeat(1, 2)
+
+        # Get the actual XY point
+        XY = pt_before + s_actual * line_seg_vec_unit
+
+        return XY
