@@ -11,21 +11,10 @@ Before running the code package, a series of preparation work need to be conduct
 1. Set up the correct Conda environment:
 
       ```bash
-      $ conda env update --prune -f fueling/conda/py36.yaml
-      $ conda activate fuel-py36
+      $ conda env update --prune -f fueling/conda/py36-pyro.yaml
+      $ conda activate fuel-py36-pyro.yaml
       ```
-
-2. Install some necessary third-party-package via Pypi:
-
-      ```bash
-      $ pip install progressbar2
-
-      $ pip install future
-
-      $ pip install pyro-ppl (or pip3 install pyro-ppl for Python 3)
-
-      $ pip install git+https://github.com/utiasSTARS/liegroups.git
-      ```
+    Note: the `fuel-py36-pyro` is a little different from the regualr `fuel-py36` environment. The former one includes some special version setting which matches the current `pyro-ppl` version.     
 
 ## Download Sensor and Groundtruth Data
 
@@ -121,7 +110,7 @@ The Main Codes are included in the lwoi_main.py.
 
 (The same as out-of-docker situation)
 
-Note: Possible code dump or errors happened inside docker
+## Note: Possible code dump or errors happened inside docker
 
 1. Core Dump due to Nvidia-docker issue:
 
@@ -147,8 +136,20 @@ Note: Possible code dump or errors happened inside docker
 
    `.../miniconda2/envs/fuel-py36/lib/python3.6/site-packages/torch/lib/libtorch.so.1: undefined symbol:_ZN5torch27GetEmptyStringAlreadyInitedB5cxx11Ev`
 
+   or, sometimes if a core dump emerges only with information
+
+    `Segmentation fault (core dumped)`
+
    , then please run the following code to solve the problem:  
 
-         $ export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64
+         $ export LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
    here, `cuda` may need to be replaced by `cuda-9.0` or `cuda-10.0`, depends on the specific directory in your docker environment
+
+4. Error Message:
+   During running inside-docker, if some error message emerges similar to:
+
+   `ERROR: ld.so: object 'libcaffe2_gpu.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+   ERROR: ld.so: object 'libcaffe2_gpu.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.`
+
+   Please just ignore them temporarily since they will not interfere with the operation of the codes.
