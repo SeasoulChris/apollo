@@ -47,7 +47,7 @@ future_lane_feature_size = 400
 
 def LoadDataForLearning(filepath):
     list_of_data_for_learning = \
-        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
+        learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
     try:
         with open(filepath, 'rb') as file_in:
             list_of_data_for_learning.ParseFromString(file_in.read())
@@ -122,7 +122,7 @@ class DataPreprocessor(object):
 
             # Load the future-trajectory label dict files.
             future_trajectory_labels = self.load_numpy_dict(\
-                path, label_dir='labels_future_trajectory', label_file='future_status.npy')
+                path, label_dir='labels_future_trajectory', label_file='future_status_clean.npy')
             if future_trajectory_labels is None:
                 print ('Failed to read future_trajectory label file.')
                 continue
@@ -203,20 +203,24 @@ class DataPreprocessor(object):
 
                 # 4. Update into the output_np_array.
                 if involve_all_relevant_data:
-                    key_ts_to_data_pt[key.split('@')[1]] = \
-                        key_ts_to_data_pt[key.split('@')[1]].append(curr_data_point)
+                    curr_list = key_ts_to_data_pt[key.split('@')[1]]
+                    curr_list.append(curr_data_point)
+                    key_ts_to_data_pt[key.split('@')[1]] = curr_list
                 else:
                     output_np_array.append([curr_data_point])
 
+            num_usable_data_points = 0
             if involve_all_relevant_data:
                 # Every scene is a list of data_points, with every data_point
                 # being a list of features & labels (optional).
                 for _, scene in key_ts_to_data_pt.items():
                     output_np_array.append(scene)
+                    num_usable_data_points += len(scene)
+            else:
+                num_usable_data_points = len(output_np_array)
 
             # Save into a local file for training.
             try:
-                num_usable_data_points = len(output_np_array)
                 print ('Total usable data points: {} out of {}.'.format(\
                     num_usable_data_points, len(vector_data_for_learning)))
                 output_np_array = np.array(output_np_array)
@@ -421,13 +425,23 @@ def collate_fn(batch):
     obs_hist_size, obs_pos, obs_pos_rel, lane_features, future_traj, future_traj_rel, is_predictable, same_scene_mask = zip(*batch)
 
     same_obstacle_mask = [elem.shape[0] for elem in lane_features]
-    obs_hist_size = np.concatenate(obs_hist_size)
-    obs_pos = np.concatenate(obs_pos)
-    obs_pos_rel = np.concatenate(obs_pos_rel)
-    lane_features = np.concatenate(lane_features)
-    future_traj = np.concatenate(future_traj)
-    future_traj_rel = np.concatenate(future_traj_rel)
 
+    N = len(same_obstacle_mask)
+    num_lanes = np.asarray(same_obstacle_mask).reshape((-1))
+    num_lanes_accumulated = np.cumsum(num_lanes)
+    if num_lanes_accumulated[-1] < 450:
+        end_idx = N
+    else:
+        num_lanes_accepted = (num_lanes_accumulated < 450)
+        end_idx = np.cumsum(num_lanes_accepted)[-1]
+
+    obs_hist_size = np.concatenate(obs_hist_size[:end_idx])
+    obs_pos = np.concatenate(obs_pos[:end_idx])
+    obs_pos_rel = np.concatenate(obs_pos_rel[:end_idx])
+    lane_features = np.concatenate(lane_features[:end_idx])
+    future_traj = np.concatenate(future_traj[:end_idx])
+    future_traj_rel = np.concatenate(future_traj_rel[:end_idx])
+    same_obstacle_mask = same_obstacle_mask[:end_idx]
     same_obstacle_mask = [np.ones((length, 1))*i for i, length in enumerate(same_obstacle_mask)]
     same_obstacle_mask = np.concatenate(same_obstacle_mask)
 
@@ -442,4 +456,4 @@ if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate
     # training-data ready for torch Dataset.
     data_preprocessor = DataPreprocessor()
-    data_preprocessor.preprocess_data('/home/jiacheng/large-data/data_preprocessing/features/')
+    data_preprocessor.preprocess_data('/home/jiacheng/large-data/data_preprocessing/features/', involve_all_relevant_data=True)
