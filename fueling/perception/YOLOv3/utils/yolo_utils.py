@@ -146,7 +146,8 @@ def draw_boxes(boxes, img, cls_names, detection_size,
     objs = []
     for cls, bboxs in boxes.items():
         color = (0, 0, 255)
-        #font = ImageFont.truetype("arial.ttf", 8)
+        # TODO[KaWai]: uncomment below for writing classes of bbox on images
+        # font = ImageFont.truetype("arial.ttf", 8)
         for box_o, score, cshwl in bboxs:
             box = convert_to_original_size(box_o, np.array(detection_size),
                                            np.array(img.size),
@@ -174,10 +175,12 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                     ratio = np.array(img.size) / np.array([original_width, original_height])
                     image_points = image_points.transpose() * ratio #(n, 2)
                     draw_3d_box(img, image_points)
+                    # TODO[KaWai]: uncomment below to offset the T, e.g. in KITTI dataset
                     #obj.t = tuple(np.array(translation) - interactor.offset.reshape((3,)) )
                 objs.append(obj) 
        
             draw.rectangle(box, outline=color)
+            # TODO[KaWai]: uncomment below to write class name and score for each bbox.
             #draw.text(box[:2], '{} {:.2f}%'.format(
             #    cls_names[cls], score * 100), fill=color, font=font)
     
@@ -271,6 +274,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     else:
         i = 0
         for obj in objs:
+            # TODO[KaWai]: Uncomment below for data augmentation
             #if flip_switch:
             #    new_box = flip_bbox_lr(box[0][3:7], origin_image_size[0])
             #else:
@@ -283,6 +287,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
             #    new_box = random_jitter(new_box, jitter=jitter_percentage)
 
             if i < max_boxes: 
+                # TODO[KaWai]: uncomment belwo for data augmentation
                 #if new_box != None:
                 #    boxes[i, 0:5] = np.array(new_box + [box[1]])
                 #    boxes[i, 0] = max(0, min(image_size[0]-1, boxes[i, 0]))
