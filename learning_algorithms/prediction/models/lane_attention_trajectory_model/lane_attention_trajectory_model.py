@@ -214,6 +214,134 @@ class LanePooling_LSTM(nn.Module):
         return pred_out, pred_traj
 
 
+class LaneAttention_LSTM(nn.Module):
+    def __init__(self, pred_len=29, lane_future_mode=2, soft_argmax_degree=1.0,\
+                 obs_embed_size=32, obs_hidden_size=64,\
+                 lane_embed_size=32, lane_hidden_size=64,\
+                 all_embed_size=256, all_hidden_size=256,\
+                 lane_info_enc_size=64,\
+                 pred_mlp_param=[64, 5]):
+        super(LaneAttention_LSTM, self).__init__()
+        self.pred_len = pred_len
+        self.lane_future_mode = lane_future_mode
+        self.soft_argmax_degree = soft_argmax_degree
+
+        # For obstacle LSTM encoding.
+        self.obs_embed = torch.nn.Sequential(
+            nn.Linear(2, obs_embed_size),
+            nn.ReLU(),
+        )
+        self.obs_h0, self.obs_c0 = generate_lstm_states(obs_hidden_size)
+        self.obs_lstm = nn.LSTM(obs_embed_size, obs_hidden_size, num_layers=1, batch_first=True)
+
+        # For lane encoding.
+        self.lane_h0, self.lane_c0 = generate_lstm_states(lane_hidden_size)
+        if lane_future_mode == 0:
+            self.obs2lane_lstm = ObstacleToLaneEncoding(mode=0)
+        elif lane_future_mode == 1:
+            self.obs2lane_lstm = ObstacleToLaneEncoding(\
+                embed_size=lane_embed_size, hidden_size=lane_hidden_size,\
+                info_enc_size=lane_hidden_size, future_enc_size=lane_hidden_size,\
+                simple_mode=True)
+        elif lane_future_mode == 2:
+            self.obs2lane_lstm = ObstacleToLaneEncoding(\
+                embed_size=lane_embed_size, hidden_size=lane_hidden_size,\
+                info_enc_size=lane_hidden_size, future_enc_size=lane_hidden_size)
+
+        # For lane-aggregating
+        if lane_future_mode == 0:
+            self.aggregation = GetAggregatedLaneEnc(soft_argmax_degree=soft_argmax_degree, lane_info_enc_size=64, lane_future_enc_size=0, aggr_enc_size=128)
+        elif lane_future_mode == 1:
+            self.aggregation = GetAggregatedLaneEnc(soft_argmax_degree=soft_argmax_degree, lane_info_enc_size=64, lane_future_enc_size=64, aggr_enc_size=192)
+        elif lane_future_mode == 2:
+            self.aggregation = GetAggregatedLaneEnc(soft_argmax_degree=soft_argmax_degree)
+
+        # For overall LSTM encoding.
+        self.all_h0, self.all_c0 = generate_lstm_states(all_hidden_size)
+        self.all_lstm = nn.LSTM(all_embed_size, all_hidden_size, num_layers=1, batch_first=True)
+
+        # For output prediction
+        self.pred_layer = generate_mlp([all_hidden_size] + pred_mlp_param,\
+            dropout=0.0, last_layer_nonlinear=False)
+
+    def forward(self, X):
+        '''
+            - obs_hist_size: N x 1
+            - obs_pos: N x 20 x 2
+            - obs_pos_rel: N x 20 x 2
+            - lane_features: M x 150 x 4
+            - same_obstacle_mask: M x 1
+        '''
+        obs_hist_size, obs_pos, obs_pos_rel, lane_features, same_obstacle_mask = X
+        N = obs_pos.size(0)
+        M = lane_features.size(0)
+        observation_len = obs_pos.size(1)
+        obs_ht, obs_ct = self.obs_h0.repeat(N, 1), self.obs_c0.repeat(N, 1)
+        lane_ht, lane_ct = self.lane_h0.repeat(M, 1), self.lane_c0.repeat(M, 1)
+        all_ht, all_ct = self.all_h0.repeat(N, 1), self.all_c0.repeat(N, 1)
+        Ht = None
+
+        pred_mask = cuda(torch.ones(N))
+        pred_out = cuda(torch.zeros(N, self.pred_len, 5))
+        pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
+        this_timestamp_mask, this_obs_pos, this_obs_pos_rel = None, None, None
+        for t in range(1, observation_len+self.pred_len):
+            # Select the proper input data
+            if t < observation_len:
+                this_timestamp_mask = (obs_hist_size > observation_len-t).long().view(-1)
+                this_obs_pos_rel = obs_pos_rel[:, t, :].float()
+                this_obs_pos = obs_pos[:, t, :].float()
+            else:
+                this_timestamp_mask = pred_mask
+                pred_out[:, t-observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
+                this_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                this_obs_pos = this_obs_pos + this_obs_pos_rel
+                pred_traj[:, t-observation_len, :] = this_obs_pos.clone()
+
+            curr_N = torch.sum(this_timestamp_mask).long().item()
+            if curr_N == 0:
+                continue
+            this_timestamp_mask = (this_timestamp_mask == 1)
+
+            # Do obstacle LSTM.
+            obs_embedding = self.obs_embed((this_obs_pos_rel[this_timestamp_mask,:]).clone()).view(curr_N, 1, -1)
+            _, (obs_ht_new, obs_ct_new) = self.obs_lstm(obs_embedding, \
+                (obs_ht[this_timestamp_mask, :].view(1, curr_N, -1), obs_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+            # (N x 64)
+            obs_ht[this_timestamp_mask, :] = obs_ht_new.view(curr_N, -1)
+            obs_ct[this_timestamp_mask, :] = obs_ct_new.view(curr_N, -1)
+
+            # Do lane LSTM.
+            # (M x 64), (M x 64), (curr_M x 64), (curr_M x 64)
+            if self.lane_future_mode == 0:
+                lane_ht, lane_ct, lane_info_enc, lane_mask = self.obs2lane_lstm(\
+                    lane_features, this_obs_pos, same_obstacle_mask, this_timestamp_mask, lane_ht, lane_ct)
+            else:
+                lane_ht, lane_ct, lane_info_enc, lane_future_enc, lane_mask = self.obs2lane_lstm(\
+                    lane_features, this_obs_pos, same_obstacle_mask, this_timestamp_mask, lane_ht, lane_ct)
+
+            # Do lane_ht, lane_info_enc, and lane_future_enc attentional aggregation.
+            if self.lane_future_mode == 0: 
+                lane_total_enc = self.aggregation(lane_ht[lane_mask, :], lane_info_enc,\
+                    _, same_obstacle_mask[lane_mask, :])
+            else:
+                lane_total_enc = self.aggregation(lane_ht[lane_mask, :], lane_info_enc,\
+                    lane_future_enc, same_obstacle_mask[lane_mask, :])
+
+            # Get the overall encoding.
+            # (curr_N x 256)
+            all_enc = torch.cat((obs_ht[this_timestamp_mask, :], lane_total_enc), 1)
+
+            # Go through overall-LSTM.
+            _, (all_ht_new, all_ct_new) = self.all_lstm(all_enc.view(curr_N, 1, -1),\
+                (all_ht[this_timestamp_mask, :].view(1, curr_N, -1), all_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+            all_ht[this_timestamp_mask, :] = all_ht_new.view(curr_N, -1)
+            all_ct[this_timestamp_mask, :] = all_ct_new.view(curr_N, -1)
+            Ht = all_ht
+
+        return pred_out, pred_traj
+
+
 ################################################################################
 # Sub-Models
 ################################################################################
@@ -476,6 +604,79 @@ class LanePoolingSimple(nn.Module):
         lane_of_interest_mask = (lane_of_interest_mask > 0)
 
         return lane_of_interest_mask
+
+
+class GetAggregatedLaneEnc(nn.Module):
+    def __init__(self, soft_argmax_degree = 1.0,\
+                 lane_hidden_size=64, lane_info_enc_size=64, \
+                 lane_future_enc_size=64, aggr_enc_size=192):
+        super(GetAggregatedLaneEnc, self).__init__()
+        self.soft_argmax_degree = soft_argmax_degree
+        self.lane_hidden_size = lane_hidden_size
+        self.lane_info_enc_size = lane_info_enc_size
+        self.lane_future_enc_size = lane_future_enc_size
+        self.aggr_enc_size = aggr_enc_size
+
+        self.lane_scoring_mlp = generate_mlp(\
+            [lane_hidden_size+lane_info_enc_size] + [16, 1], dropout=0.0, last_layer_nonlinear=False)
+        self.softmax_layer = nn.Softmax()
+
+    def forward(self, lane_ht, lane_info_enc, lane_future_enc, same_obstacle_mask):
+        '''
+        params:
+            - lane_ht: M x hidden_size
+            - lane_info_enc: M x info_enc_size
+            - lane_future_enc: M x future_enc_size
+            - same_obstacle_mask: M x 1
+        return:
+            - lane_aggr_enc: N x aggr_enc_size
+        '''
+        M = lane_ht.size(0)
+        N = torch.unique(same_obstacle_mask).size(0)
+
+        lane_aggr_enc = cuda(torch.zeros(N, self.aggr_enc_size))
+        count = 0
+
+        # (M x N)
+        same_obs_mask_repeated = same_obstacle_mask.repeat(1, N).float()
+        # (1 x N)
+        id_mask = torch.unique(same_obstacle_mask).view(1, N)
+        # (M x N)
+        id_mask = id_mask.repeat(M, 1).float()
+        # (M x N)
+        special_mask = (id_mask == same_obs_mask_repeated).float()
+
+        # (M x (hidden_size + info_enc_size))
+        lane_score_input = torch.cat((lane_ht, lane_info_enc), 1)
+        # (M x 1)
+        lane_score = self.lane_scoring_mlp(lane_score_input).view(M, 1)
+        lane_score = lane_score * self.soft_argmax_degree
+        # (M x N)
+        lane_score = lane_score.repeat(1, N) * special_mask
+        anti_special_mask = -1 * (special_mask - 1)
+        lane_score_min, _ = torch.min(lane_score, 0)
+        lane_score_min = lane_score_min.view(1, N).repeat(M, 1)
+        lane_score = lane_score + lane_score_min * anti_special_mask
+        lane_score_max, _ = torch.max(lane_score, 0)
+        lane_score_max = lane_score_max.view(1, N).repeat(M, 1)
+        lane_score = (lane_score - lane_score_max) * special_mask
+        lane_score_numerator = torch.exp(lane_score) * special_mask
+        lane_score_denominator = torch.sum(lane_score_numerator, 0).view(1, N).repeat(M, 1)
+        # (M x N)
+        lane_prob = lane_score_numerator / lane_score_denominator * special_mask
+
+        if self.lane_future_enc_size != 0:
+            lane_total_enc = torch.cat((lane_ht, lane_info_enc, lane_future_enc), 1)
+        else:
+            lane_total_enc = torch.cat((lane_ht, lane_info_enc), 1)
+
+        lane_total_enc_size = lane_total_enc.size(1)
+        lane_total_enc = lane_total_enc.view(M, 1, lane_total_enc_size).repeat(1, N, 1)
+        lane_total_enc = lane_total_enc * lane_prob.view(M, N, 1).repeat(1, 1, lane_total_enc_size)
+        # (N x lane_total_enc_size)
+        lane_total_enc = torch.sum(lane_total_enc, 0)
+
+        return lane_total_enc
 
 
 ################################################################################
