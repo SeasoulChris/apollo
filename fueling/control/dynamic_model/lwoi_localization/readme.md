@@ -23,18 +23,8 @@ Before running the code package, a series of preparation work need to be conduct
       $ pip install future
 
       $ pip install pyro-ppl (or pip3 install pyro-ppl for Python 3)
-      ```
 
-3. Install the liegroups package from source:
-
-      Because Pypi does not include the liegroups package, we have to manually downland and install the package from source: (TODO: merge the related liegroups into the learning algorithm codes)
-
-      ```bash
-      $ git clone git://github.com/utiasSTARS/liegroups.git
-      ```
-      And then, cd into the repository directory (the one with setup.py) and run:
-      ```bash
-      $ pip install .
+      $ pip install git+https://github.com/utiasSTARS/liegroups.git
       ```
 
 ## Download Sensor and Groundtruth Data
@@ -60,11 +50,11 @@ So far the lwoi_localization package only supports the NCLT data downloading and
    .../apollo-fuel/testdata/control/lwoi_localization/sensor_data/nclt/cross_validation/2012-10-28/(data)
    .../apollo-fuel/testdata/control/lwoi_localization/sensor_data/nclt/test/2012-12-01/(data)
 
-   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/groundtruth_2012-01-08.csv
-   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/groundtruth_2012-01-15.csv
-   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/groundtruth_2012-01-22.csv
-   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/groundtruth_2012-10-28.csv
-   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/groundtruth_2012-12-01.csv
+   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/nclt/groundtruth_2012-01-08.csv
+   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/nclt/groundtruth_2012-01-15.csv
+   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/nclt/groundtruth_2012-01-22.csv
+   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/nclt/groundtruth_2012-10-28.csv
+   .../apollo-fuel/testdata/control/lwoi_localization/ground_truth/nclt/groundtruth_2012-12-01.csv
    ```
 
    Note:
@@ -110,6 +100,55 @@ The Main Codes are included in the lwoi_main.py.
    the test m-ATE results will be real-time displayed on screen
 
 
+
  # Running Codes with Docker Conda Environment
 
-    (under construction)
+ ## Environment Setup
+
+ Before running the code package, a series of preparation work need to be conducted as follows:
+
+ 1. Set up the correct Conda environment:
+
+       ```bash
+       $ conda env update --prune -f fueling/conda/py36-pyro.yaml
+       $ conda activate fuel-py36-pyro.yaml
+       ```
+## Download Sensor and Groundtruth Data
+
+(The same as out-of-docker situation)
+
+## Run the trainning and test codes
+
+(The same as out-of-docker situation)
+
+Note: Possible code dump or errors happened inside docker
+
+1. Core Dump due to Nvidia-docker issue:
+
+   During running inside-docker, if a core dump emerges with information like
+
+    `Segmentation fault (core dumped)`
+
+    , then please first check whether the Nvidia-Docker2 is well installed outside the docker.
+    The detailed installation guidance please follow:
+
+   https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0)
+
+2. Core Dump due to version incompatibility:
+
+   The usage of the fuel-py36-pyro.yaml (instead of fuel-py36.yaml) is due to the incompatibility between the by-default pytorch version (`pytorch==1.1.0`, currently) and the stable version of pyro tool (`pyro-ppl==0.3.3`). This incompatibility will lead to some core-dump with information
+
+   `Illegal instruction (core dumped)`
+
+   when the pyro.infer module is called. Thus, in fuel-py36-pyro.yaml, `torch==1.1.0` (which is not equivalent to `pytorch=1.10`) is uploaded.  
+
+3. Error Message:
+   During running inside-docker, if a error message emerges similar to
+
+   `.../miniconda2/envs/fuel-py36/lib/python3.6/site-packages/torch/lib/libtorch.so.1: undefined symbol:_ZN5torch27GetEmptyStringAlreadyInitedB5cxx11Ev`
+
+   , then please run the following code to solve the problem:  
+
+         $ export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64
+
+   here, `cuda` may need to be replaced by `cuda-9.0` or `cuda-10.0`, depends on the specific directory in your docker environment
