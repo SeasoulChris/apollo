@@ -39,22 +39,23 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file, True)
-    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file, True)
+    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file)
+    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file)
 
-    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True,\
-        num_workers=8, drop_last=True)
-    valid_loader = DataLoader(valid_dataset, batch_size=16, shuffle=True,\
-        num_workers=8, drop_last=True)
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True,\
+        num_workers=8, drop_last=True, collate_fn=collate_fn)
+    valid_loader = DataLoader(valid_dataset, batch_size=64, shuffle=True,\
+        num_workers=8, drop_last=True, collate_fn=collate_fn)
 
     # Model and training setup
-    model = SemanticMapSelfLSTMModel(30, 20)
-    loss = SemanticMapLoss()
+    model = SelfLSTM()
+    loss = ProbablisticTrajectoryLoss()
+
     # print(model)
     learning_rate = 3e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.3, patience=4, min_lr=1e-9, verbose=True, mode='min')
+        optimizer, factor=0.3, patience=3, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:
     if (torch.cuda.is_available()):
@@ -65,4 +66,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name='./', print_period=10)
+                           scheduler, epochs=50, save_name='./', print_period=50)

@@ -241,8 +241,10 @@ class DataPreprocessor(object):
 
 
 class ApolloVehicleTrajectoryDataset(Dataset):
-    def __init__(self, data_dir, img_mode=False):
+    def __init__(self, data_dir, img_mode=False, pred_len=30):
+        self.pred_len = pred_len
         self.img_mode = img_mode
+        self.map_region = []
         self.img_transform = transforms.Compose([
                              transforms.ToTensor(),
                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -259,7 +261,6 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.future_traj_rel = []
 
         self.is_predictable = []
-        self.map_region = []
 
         self.start_idx = []
         self.end_idx = []
@@ -346,26 +347,26 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     if len(data_pt) <= obs_feature_size+1+(single_lane_feature_size)*curr_num_lane_sequence:
                         self.is_predictable.append(np.zeros((1, 1)))
                         self.reference_world_coord.append([0.0, 0.0, 0.0])
-                        self.future_traj.append(np.zeros((1, 30, 2)))
-                        self.future_traj_rel.append(np.zeros((1, 29, 2)))
+                        self.future_traj.append(np.zeros((1, self.pred_len, 2)))
+                        self.future_traj_rel.append(np.zeros((1, self.pred_len-1, 2)))
                         continue
                     self.is_predictable.append(np.ones((1, 1)))
 
                     # Get the future trajectory label.
-                    curr_future_traj = np.array(data_pt[-90:-30]).reshape((2, 30))
+                    curr_future_traj = np.array(data_pt[-90:-90+self.pred_len*2]).reshape((2, self.pred_len))
                     curr_future_traj = curr_future_traj.transpose()
                     ref_world_coord = [curr_obs_feature[-1, 1], curr_obs_feature[-1, 2], curr_obs_feature[-1, 7]]
                     self.reference_world_coord.append(ref_world_coord)
-                    new_curr_future_traj = np.zeros((1, 30, 2))
-                    for i in range(30):
+                    new_curr_future_traj = np.zeros((1, self.pred_len, 2))
+                    for i in range(self.pred_len):
                         new_coord = world_coord_to_relative_coord(curr_future_traj[i, :], ref_world_coord)
                         new_curr_future_traj[0, i, 0] = new_coord[0]
                         new_curr_future_traj[0, i, 1] = new_coord[1]
-                    # (1 x 30 x 2)
+                    # (1 x self.pred_len x 2)
                     self.future_traj.append(new_curr_future_traj)
-                    curr_future_traj_rel = np.zeros((1, 29, 2))
+                    curr_future_traj_rel = np.zeros((1, self.pred_len-1, 2))
                     curr_future_traj_rel = new_curr_future_traj[:, 1:, :] - new_curr_future_traj[:, :-1, :]
-                    # (1 x 29 x 2)
+                    # (1 x self.pred_len-1 x 2)
                     self.future_traj_rel.append(curr_future_traj_rel)
 
                 self.end_idx.append(accumulated_data_pt)
