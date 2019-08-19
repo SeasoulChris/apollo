@@ -258,19 +258,24 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.end_idx = []
 
         self.reference_world_coord = []
+        self.same_scene_mask = []
+
         total_num_cutin_data_pt = 0
         accumulated_data_pt = 0
 
         # TODO(Hongyi): add the drawing class here.
         self.base_map = {"sunnyvale":cv.imread("sunnyvale_with_two_offices.png"), "san_mateo":cv.imread("san_mateo.png")}
 
+        scene_id = -1
         all_file_paths = GetListOfFiles(data_dir)
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue
             file_content = np.load(file_path, allow_pickle=True).tolist()
+
             for scene in file_content:
                 self.start_idx.append(accumulated_data_pt)
+                scene_id += 1
                 for data_pt in scene:
                     accumulated_data_pt += 1
 
@@ -283,6 +288,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                         accumulated_data_pt -= 1
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
+                    self.same_scene_mask.append(scene_id * np.ones((1, 1)))
 
                     # Get map_region
                     if file_path.find("sunnyvale")!=-1:
