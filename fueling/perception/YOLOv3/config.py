@@ -34,15 +34,17 @@ nms_iou_threshold = 0.3
 #===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True        #Set to False for training and True for inference
 
-restore_training = True
+restore_training = False
 start_from_coco = True
+restore_path = "./"
+model_output_path = "./"
 
 train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this variable to None
                         "yolo-v3/Conv_14",
                         "yolo-v3/Conv_22",
                         "BatchNorm/beta",
                         "BatchNorm/gamma"]
-gpu = "3"
+gpu = "0"
 learning_rate = 0.0001
 decay_steps = 35000
 decay_rate = 0.5
