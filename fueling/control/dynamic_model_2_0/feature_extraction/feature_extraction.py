@@ -16,8 +16,9 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 
-SEGMENT_LEN = 600 * 2  # 1 min msgs of chassis and localization
-SEGMENT_INTERVAL = 200 * 2  # 20 secs msgs of chassis and localization
+SEGMENT_LEN = 100 * 2
+SEGMENT_INTERVAL = 10 * 2  # 90% overlaping
+FINAL_SEGMENT_LEN = 100
 PROD_INPUT_DIR = 'modules/control/data/records/Mkz7/2019-04-25'
 PROD_TARGET_DIR = 'modules/control/DM2/test'
 
@@ -46,13 +47,13 @@ def count_msgs(dir_msgRDD):
     return dir_msgRDD
 
 
-def partition_data(target_msgs):
+def partition_data(target_msgs, segment_len=SEGMENT_LEN, segment_int=SEGMENT_INTERVAL):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
     glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
-    msgs = sorted(msgs, key=lambda msg: msg.timestamp)
-    msgs_groups = [msgs[idx: idx + SEGMENT_LEN]
-                   for idx in range(0, len(msgs), SEGMENT_INTERVAL)]
+    msgs = sorted(msgs, key=lambda msgs: msgs.timestamp)
+    msgs_groups = [msgs[idx: idx + segment_len]
+                   for idx in range(0, len(msgs), segment_int)]
     return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
 
 
@@ -64,6 +65,13 @@ def get_datapoints(elem):
     data_point = gen_data_point(pose, chassis)
     # added time as a dimension
     return np.hstack((data_point, time_stamp / 10**9))
+
+
+def count_pair_msgs(elem):
+    """ count paired msgs """
+    (segment_dir, group_id), data_list = elem
+    glog.info('{} data points for record folder {} segment {}'.format(
+        len(data_list), segment_dir, group_id))
 
 
 class FeatureExtraction(BasePipeline):
@@ -135,12 +143,19 @@ class FeatureExtraction(BasePipeline):
             .flatMapValues(pair_cs_pose)
             # PairRDD(target_dir, group_id, a data point),
             .mapValues(get_datapoints)
-            # PairRDD((vehicle, dir, feature_key), data_point RDD)
+            # PairRDD((target_dir, group_id), data_point RDD)
             .groupByKey()
-            # PairRDD((vehicle, dir, feature_key), list of data_point)
-            .mapValues(list)
-            # PairRDD((vehicle, dir, feature_key), data_point RDD)
-            .map(write_segment), 1)
+            # PairRDD((target_dir, group_id), list of data_point)
+            .mapValues(list), 0)
+
+        # PairRDD((target_dir, group_id), len of list)
+        hdf5_dir_count = hdf5_dir.foreach(count_pair_msgs)
+
+        (hdf5_dir
+         # PairRDD((target_dir, group_id), list of data_point)
+         .filter(spark_op.filter_value(lambda msgs: len(msgs) == FINAL_SEGMENT_LEN))
+         # RDD(hdf5 file dir)
+         .map(write_segment)).count()
 
 
 if __name__ == '__main__':
