@@ -14,9 +14,12 @@ from fueling.perception.YOLOv3.utils.object_utils import Calibration
 
 
 def read_txt(path):
+    """
+    Read a txt file and parse it into lines.
+    """
     with open(path) as handle:
         lines = handle.readlines()
-    if len(lines)>0 and lines[-1] == '\n':
+    if len(lines) > 0 and lines[-1] == '\n':
         return lines[:-1]
     else:
         return lines
@@ -252,7 +255,7 @@ class kitti_obj_cam_interaction(Camera):
         x_axis = np.array([[1],[0],[0]])
         cos = np.dot(bbox_direction_on_xz.transpose(), x_axis) / \
                 (np.linalg.norm(bbox_direction_on_xz, ord=2))
-        side = x_axis[0]*bbox_direction_on_xz[2] - x_axis[2]*bbox_direction_on_xz[0]
+        side = x_axis[0] * bbox_direction_on_xz[2] - x_axis[2] * bbox_direction_on_xz[0]
         if side > 0:  #bbox_direction is on left of x_axis
             alpha = math.degrees(math.acos(cos))
         else:
@@ -286,7 +289,7 @@ class kitti_obj_cam_interaction(Camera):
         Return:
         The 8 points of the 3d bbox. (n, 3)
         """
-        if local_angle and obj.ry==None:
+        if local_angle and obj.ry == None:
             alpha = self.local_angle_to_car_yaw(local_angle, obj)
             obj.ry = math.radians(alpha)
         points = self.transform_obj_to_camera(obj)
@@ -325,13 +328,13 @@ class kitti_obj_cam_interaction(Camera):
         RY0 = np.dot(R, Y0)
         RY1 = np.dot(R, Y1)
         A[0, 0], A[0, 2], A[0, 3] = \
-            self.fx, self.cx-xmin, self.fx*(RX0[0]) - xmin*(RX0[2]) + self.cx*(RX0[2])
+            self.fx, self.cx - xmin, self.fx * (RX0[0]) - xmin * (RX0[2]) + self.cx * (RX0[2])
         A[1, 0], A[1, 2], A[1, 3] = \
-            self.fx, self.cx-xmax, self.fx*(RX1[0]) - xmax*(RX1[2]) + self.cx*(RX1[2])
+            self.fx, self.cx - xmax, self.fx * (RX1[0]) - xmax * (RX1[2]) + self.cx * (RX1[2])
         A[2, 1], A[2, 2], A[2, 3] = \
-            self.fy, self.cy-ymin, self.fy*(RY0[1]) - ymin*(RY0[2]) + self.cy*(RY0[2])
+            self.fy, self.cy - ymin, self.fy * (RY0[1]) - ymin * (RY0[2]) + self.cy * (RY0[2])
         A[3, 1], A[3, 2], A[3, 3] = \
-            self.fy, self.cy-ymax, self.fy*(RY1[1]) - ymax*(RY1[2]) + self.cy*(RY1[2])
+            self.fy, self.cy - ymax, self.fy * (RY1[1]) - ymax * (RY1[2]) + self.cy * (RY1[2])
 
         b = -A[:, 3]
         A = A[:4, :3]
@@ -360,7 +363,7 @@ class kitti_obj_cam_interaction(Camera):
         points = self.object_3d_points_in_obj_coor(obj) #(8, 3)
         left_idx, right_idx, up_idx, bottom_idx = self.find_2d_3d_correspondence(obj)
         
-        # TODO[KaWai]: uncomment below to go through all possible correspondence.
+        # TODO(KaWai): uncomment below to go through all possible correspondence.
         #up_idx = [0, 1, 4, 5]
         #bottom_idx = [2, 3, 6, 7]
         #left_idx = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -379,14 +382,14 @@ class kitti_obj_cam_interaction(Camera):
                     RX1 = np.dot(R, X1)
                     RY0 = np.dot(R, Y0)
                     RY1 = np.dot(R, Y1)
-                    A[0, 0], A[0, 2], A[0, 3] = self.fx, self.cx-xmin, \
-                        self.fx*(RX0[0]) - xmin*(RX0[2]) + self.cx*(RX0[2])
-                    A[1, 0], A[1, 2], A[1, 3] = self.fx, self.cx-xmax, \
-                        self.fx*(RX1[0]) - xmax*(RX1[2]) + self.cx*(RX1[2])
-                    A[2, 1], A[2, 2], A[2, 3] = self.fy, self.cy-ymin, \
-                        self.fy*(RY0[1]) - ymin*(RY0[2]) + self.cy*(RY0[2])
-                    A[3, 1], A[3, 2], A[3, 3] = self.fy, self.cy-ymax, \
-                        self.fy*(RY1[1]) - ymax*(RY1[2]) + self.cy*(RY1[2])
+                    A[0, 0], A[0, 2], A[0, 3] = self.fx, self.cx - xmin, \
+                        self.fx * (RX0[0]) - xmin * (RX0[2]) + self.cx * (RX0[2])
+                    A[1, 0], A[1, 2], A[1, 3] = self.fx, self.cx - xmax, \
+                        self.fx * (RX1[0]) - xmax * (RX1[2]) + self.cx * (RX1[2])
+                    A[2, 1], A[2, 2], A[2, 3] = self.fy, self.cy - ymin, \
+                        self.fy * (RY0[1]) - ymin * (RY0[2]) + self.cy * (RY0[2])
+                    A[3, 1], A[3, 2], A[3, 3] = self.fy, self.cy - ymax, \
+                        self.fy * (RY1[1]) - ymax * (RY1[2]) + self.cy * (RY1[2])
                     b = -A[:, 3]
                     A = A[:4, :3]
                     sol = np.linalg.lstsq(A, b)
@@ -423,7 +426,7 @@ def draw_3d_box(img, points):
     
     # 8th point is location, 9th point is the forward direction,
     # 10th is the back-projected direction,
-    # TODO[KaWai]: uncomment code below to draw the forward direction.
+    # TODO(KaWai): uncomment code below to draw the forward direction.
     #draw.line([tuple(points[8, :]), tuple(points[9, :])], fill=(0,255,255), width=3)
     #draw.line([tuple(points[8, :]), tuple(points[10, :])], fill=(0,255,255), width=3)
     return np.array(img, dtype=np.uint8)
