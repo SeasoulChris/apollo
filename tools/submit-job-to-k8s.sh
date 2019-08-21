@@ -139,7 +139,7 @@ if [ -z ${FUELING_PKG} ]; then
   REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
 
   pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
-    LOCAL_FUELING_PKG="deploy/fueling.zip"
+    LOCAL_FUELING_PKG="/tmp/fueling.zip"
     rm -f "${LOCAL_FUELING_PKG}"
     zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
     "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 

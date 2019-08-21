@@ -74,10 +74,13 @@ def send_email(title, title_color, content, receivers, attachments=[]):
     base64_attachments = {}
     attachment_size = 0
     for attachment in attachments:
-        with open(attachment, 'rb') as fin:
-            base64_content = binascii.b2a_base64(fin.read())
-            base64_attachments[os.path.basename(attachment)] = base64_content
-            attachment_size += len(base64_content)
+        try:
+            with open(attachment, 'rb') as fin:
+                base64_content = binascii.b2a_base64(fin.read())
+                base64_attachments[os.path.basename(attachment)] = base64_content
+                attachment_size += len(base64_content)
+        except Exception as err:
+            glog.error('Failed to add attachment {}: {}'.format(attachment, err))
     glog.info('Attached {} files with {} bytes of base64 content from {}'.format(
         len(base64_attachments), attachment_size, attachments))
 

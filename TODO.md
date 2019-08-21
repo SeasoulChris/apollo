@@ -34,13 +34,6 @@
 1. 可自研白盒度量标准和工具
 1. 可调研Kubernetes、Spark其他的黑盒度量工具
 
-### 核心环境更新升级
-1. Ubuntu、Conda、Python 2.7等依赖于上游Apollo环境的升级，持续跟踪
-1. Kubernetes集群依赖于百度云的升级，持续跟踪
-1. PySpark、Python3环境可自由升级，但依赖于新版本对上述环境的依赖和冲突，已知问题：
-1. PySpark 2.4.3与Cyber的Numpy 1.8.2冲突，需维持2.4.0并等待上游升级
-1. 模型训练所需的torchvision库暂不支持Python 3.7，需维持3.6并等待上游升级
-
 ### Driving Path噪音消除
 1. 我们会在ETL流水线里对车辆定位信息进行采样：https://github.com/ApolloAuto/apollo-fuel/blob/master/fueling/data/record_parser.py#L160
 1. 然后在Dashboard上绘制，例如：http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/task/mnt/bos/small-records/2019/2019-08-06/2019-08-06-20-04-00
