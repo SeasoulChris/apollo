@@ -122,7 +122,7 @@ class DataPreprocessor(object):
 
             # Load the future-trajectory label dict files.
             future_trajectory_labels = self.load_numpy_dict(\
-                path, label_dir='labels_future_trajectory', label_file='future_status_clean.npy')
+                path, label_dir='labels', label_file='future_status_clean.npy')
             if future_trajectory_labels is None:
                 print ('Failed to read future_trajectory label file.')
                 continue
@@ -137,10 +137,12 @@ class DataPreprocessor(object):
             # Later, all data-point occuring at such timestamps, regardless of
             # whether they have corresponding clean labels, should go into train-data.
             key_ts_to_data_pt = dict()
+            key_ts_to_valid_data = dict()
             if involve_all_relevant_data:
                 for key in future_trajectory_labels.keys():
                     key_ts = key.split('@')[1]
                     key_ts_to_data_pt[key_ts] = []
+                    key_ts_to_valid_data[key_ts] = False
 
             # Go through the entries in this feature file.
             total_num_data_points += len(vector_data_for_learning)
@@ -155,8 +157,9 @@ class DataPreprocessor(object):
                 # 1. Find in the dict the corresponding future trajectory.
                 future_trajectory = None
                 key = '{}@{:.3f}'.format(data_for_learning.id, data_for_learning.timestamp)
+                key_ts = key.split('@')[1]
                 if involve_all_relevant_data:
-                    if key.split('@')[1] not in key_ts_to_data_pt.keys():
+                    if key_ts not in key_ts_to_data_pt.keys():
                         continue
                 else:
                     if key not in future_trajectory_labels:
@@ -195,6 +198,7 @@ class DataPreprocessor(object):
                                                              obs_feature_size+(i+1)*single_lane_feature_size]
                 #   d. include the future_status labels.
                 if future_trajectory is not None:
+                    key_ts_to_valid_data[key_ts] = True
                     for i, traj in enumerate(zip(*future_trajectory)):
                         # (only use pos_x, pos_y, and vel_heading)
                         if i >= 3:
@@ -203,9 +207,9 @@ class DataPreprocessor(object):
 
                 # 4. Update into the output_np_array.
                 if involve_all_relevant_data:
-                    curr_list = key_ts_to_data_pt[key.split('@')[1]]
+                    curr_list = key_ts_to_data_pt[key_ts]
                     curr_list.append(curr_data_point)
-                    key_ts_to_data_pt[key.split('@')[1]] = curr_list
+                    key_ts_to_data_pt[key_ts] = curr_list
                 else:
                     output_np_array.append([curr_data_point])
 
@@ -213,7 +217,10 @@ class DataPreprocessor(object):
             if involve_all_relevant_data:
                 # Every scene is a list of data_points, with every data_point
                 # being a list of features & labels (optional).
-                for _, scene in key_ts_to_data_pt.items():
+                for key, scene in key_ts_to_data_pt.items():
+                    # Valid check to scene
+                    if not key_ts_to_valid_data[key]:
+                        continue
                     output_np_array.append(scene)
                     num_usable_data_points += len(scene)
             else:
@@ -347,7 +354,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     # Get the future trajectory label.
                     curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
-                    ref_world_coord = [curr_future_traj[0, 0], curr_future_traj[0, 1], data_pt[-31]]
+                    ref_world_coord = [curr_obs_feature[-1, -8], curr_obs_feature[-1, -7], curr_obs_feature[-1, -2]]
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, 30, 2))
                     for i in range(30):
@@ -409,8 +416,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                    np.concatenate(self.lane_feature[s_idx:e_idx]), \
                    np.concatenate(self.future_traj[s_idx:e_idx]), \
                    np.concatenate(self.future_traj_rel[s_idx:e_idx]), \
-                   np.concatenate(self.is_predictable[s_idx:e_idx]),
-                   (e_idx-s_idx)*np.ones((1,1)))
+                   np.concatenate(self.is_predictable[s_idx:e_idx]), \
+                   np.concatenate(self.same_scene_mask[s_idx:e_idx]))
             return out
 
 def collate_fn(batch):
@@ -462,4 +469,4 @@ if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate
     # training-data ready for torch Dataset.
     data_preprocessor = DataPreprocessor()
-    data_preprocessor.preprocess_data('/home/jiacheng/large-data/data_preprocessing/features/', involve_all_relevant_data=True)
+    data_preprocessor.preprocess_data('/home/xukecheng/work/data/features/', involve_all_relevant_data=True)
