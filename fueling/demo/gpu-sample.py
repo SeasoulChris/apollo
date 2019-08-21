@@ -1,19 +1,18 @@
+#!/usr/bin/env python
 """
 A simple demo PySpark job with GPU training.
 
 Run with:
-    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 8 --memory 100g --gpu \
+    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 2 --memory 20g \
+        --gpu --env fuel-py36 \
         fueling/demo/gpu-sample.py
 """
-#!/usr/bin/env python
 
 # Standard packages
-import os
 import subprocess
 import time
 
 # Third-party packages
-from absl import flags
 from tensorflow.python.client import device_lib
 import colored_glog as glog
 import tensorflow as tf
@@ -31,6 +30,7 @@ def check_output(command):
     for line in out_lines:
         glog.info(line.strip())
 
+
 def run_tensorflow_gpu_function(executor_name):
     """Run tensorflow training task"""
     glog.info('current executor: {}'.format(executor_name))
@@ -46,7 +46,7 @@ def run_tensorflow_gpu_function(executor_name):
     time_start = time.time()
     mnist = tf.keras.datasets.mnist
 
-    (x_train, y_train),(x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = mnist.load_data('/mnt/bos/test/datasets/mnist.npz')
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
     model = tf.keras.models.Sequential([
@@ -64,6 +64,7 @@ def run_tensorflow_gpu_function(executor_name):
     glog.info('Tensorflow GPU function is done, time spent: {}'.format(time.time() - time_start))
     time.sleep(60 * 3)
 
+
 def run_torch_gpu_function(executor_name):
     """Run Pytorch training task with GPU option"""
     glog.info('current executor: {}'.format(executor_name))
@@ -76,9 +77,9 @@ def run_torch_gpu_function(executor_name):
     time_start = time.time()
 
     dtype = torch.float
-    # device = torch.device("cpu")
-    device = torch.device("cuda:0") # Uncomment this to run on GPU
-        
+    # Or use 'cpu' for CPU training.
+    device = torch.device('cuda:0')
+
     # N is batch size; D_in is input dimension;
     # H is hidden dimension; D_out is output dimension.
     N, D_in, H, D_out = 64, 1000, 100, 10
@@ -113,9 +114,8 @@ def run_torch_gpu_function(executor_name):
         # Update weights using gradient descent
         w1 -= learning_rate * grad_w1
         w2 -= learning_rate * grad_w2
-
     glog.info('Torch GPU function is done, time spent: {}'.format(time.time() - time_start))
-    time.sleep(60 * 3)
+
 
 class GPUSample(BasePipeline):
     """Demo pipeline."""
@@ -134,13 +134,10 @@ class GPUSample(BasePipeline):
         check_output('nvidia-smi')
         time_start = time.time()
 
-        (self.to_rdd(['executor-pytorch'])
-         .foreach(run_torch_gpu_function))
-
-        (self.to_rdd(['executor-tensorflow'])
-         .foreach(run_tensorflow_gpu_function))
-
+        self.to_rdd(['executor-pytorch']).foreach(run_torch_gpu_function)
+        self.to_rdd(['executor-tensorflow']).foreach(run_tensorflow_gpu_function)
         glog.info('Done with running Production, time spent: {}'.format(time.time() - time_start))
+
 
 if __name__ == '__main__':
     GPUSample().main()
