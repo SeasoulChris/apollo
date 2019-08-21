@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+This pipeline needs old Ubuntu 14.04 environment. Please run it with
+    ./tools/submit-job-to-k8s.sh --image hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0 ...
+"""
 import fnmatch
 import os
 

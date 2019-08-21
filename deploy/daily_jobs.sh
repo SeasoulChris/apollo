@@ -9,6 +9,10 @@ set -e
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # Job: Data jobs.
+JOB="fueling/data/pipelines/bag_to_record.py"
+./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 \
+    --image hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0 ${JOB}
+
 JOB="fueling/data/daily-data-jobs.py"
 ./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 ${JOB}
 
