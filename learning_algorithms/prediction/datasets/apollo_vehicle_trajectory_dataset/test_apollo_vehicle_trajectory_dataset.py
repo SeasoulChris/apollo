@@ -85,14 +85,14 @@ if __name__ == '__main__':
         count += 1
 
     # Unit test with image
-    dataset_path = '/data/2019-02-20/'
+    dataset_path = '/data/san_mateo/'
     test_dataset = ApolloVehicleTrajectoryDataset(dataset_path, True)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
     count = 0
-    for i, (img, traj) in enumerate(test_dataloader):
+    for i, ((img,_,_,_), traj) in enumerate(test_dataloader):
         # if count == 10:
         #     break
         print(traj)
-        cv.imwrite("test/test{}.png".format(i),np.array(img.view(224,224,3)))
+        # cv.imwrite("test/test{}.png".format(i),np.array(img.view(224,224,3)))
         count += 1
         print(count, img.size())

@@ -354,7 +354,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     # Get the future trajectory label.
                     curr_future_traj = np.array(data_pt[-91:-31]).reshape((2, 30))
                     curr_future_traj = curr_future_traj.transpose()
-                    ref_world_coord = [curr_obs_feature[-1, -8], curr_obs_feature[-1, -7], curr_obs_feature[-1, -2]]
+                    ref_world_coord = [curr_obs_feature[-1, 1], curr_obs_feature[-1, 2], curr_obs_feature[-1, 7]]
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, 30, 2))
                     for i in range(30):
