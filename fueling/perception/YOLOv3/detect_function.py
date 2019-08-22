@@ -79,7 +79,7 @@ def yolo_head(feature_maps, anchors, num_classes,
     channel_idx_begin = num_anchors*(5+num_classes*4)
     channel_idx_end = num_anchors*(5+num_classes*4+num_angle_bins)
     feature_cs_conf_reshape = \
-          tf.reshape(feature_maps[:, :, :, channel_idx_begin, channel_idx_end],
+          tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end],
                      [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins])
 
     channel_idx_begin = num_anchors*(5+num_classes*4+num_angle_bins)
