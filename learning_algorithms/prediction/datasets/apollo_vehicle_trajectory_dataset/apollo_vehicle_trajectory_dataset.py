@@ -402,21 +402,22 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
             obs_pos = obs_positions[predicting_idx, :, :]
             obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
-            return ((img, \
-                     torch.from_numpy(obs_pos).float(), \
-                     torch.from_numpy(obs_hist_sizes).float(), \
-                     torch.from_numpy(obs_pos_rel).float()), \
+            obs_hist_size = obs_hist_sizes[predicting_idx]
+            return ((img,
+                     torch.from_numpy(obs_pos).float(),
+                     torch.from_numpy(obs_hist_size).float(),
+                     torch.from_numpy(obs_pos_rel).float()),
                     torch.from_numpy(obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
-            out = (np.concatenate(self.obs_hist_sizes[s_idx:e_idx]), \
-                   np.concatenate(self.obs_pos[s_idx:e_idx]), \
-                   np.concatenate(self.obs_pos_rel[s_idx:e_idx]), \
-                   np.concatenate(self.lane_feature[s_idx:e_idx]), \
-                   np.concatenate(self.future_traj[s_idx:e_idx]), \
-                   np.concatenate(self.future_traj_rel[s_idx:e_idx]), \
-                   np.concatenate(self.is_predictable[s_idx:e_idx]), \
+            out = (np.concatenate(self.obs_hist_sizes[s_idx:e_idx]),
+                   np.concatenate(self.obs_pos[s_idx:e_idx]),
+                   np.concatenate(self.obs_pos_rel[s_idx:e_idx]),
+                   np.concatenate(self.lane_feature[s_idx:e_idx]),
+                   np.concatenate(self.future_traj[s_idx:e_idx]),
+                   np.concatenate(self.future_traj_rel[s_idx:e_idx]),
+                   np.concatenate(self.is_predictable[s_idx:e_idx]),
                    np.concatenate(self.same_scene_mask[s_idx:e_idx]))
             return out
 
