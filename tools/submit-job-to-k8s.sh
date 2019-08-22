@@ -27,8 +27,9 @@ if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
       -v "$(pwd)":/fuel \
       -e IN_CLIENT_DOCKER=true \
       -e SUBMITTER=${USER} \
+      -w="/fuel" \
       apolloauto/fuel-client:20190821_1718 \
-      bash /fuel/tools/submit-job-to-k8s.sh $@
+      bash tools/submit-job-to-k8s.sh $@
   exit $?
 fi
 
