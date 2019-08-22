@@ -1,4 +1,0 @@
-name: fuel-tool-0
-dependencies:
-  - python = 3.6
-  - pyspark = 2.4.0

@@ -11,6 +11,31 @@
 #    Ephemeral Storage: 25TB
 # Show current cluster resource usage with "kubectl top nodes".
 
+# Quick check.
+if [ ! -f ${HOME}/.kube/config ]; then
+  echo "You must run on host and have valid k8s config."
+  exit 1
+fi
+if [ ! -d "./fueling" ]; then
+  echo "You must run from apollo-fuel root folder."
+  exit 1
+fi
+
+if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
+  docker run --rm --net host \
+      -v "${HOME}/.kube":/root/.kube \
+      -v "$(pwd)":/fuel \
+      -e IN_CLIENT_DOCKER=true \
+      -e SUBMITTER=${USER} \
+      apolloauto/fuel-client:20190821_1718 \
+      bash /fuel/tools/submit-job-to-k8s.sh $@
+  exit $?
+fi
+
+# Now we are inside the client docker.
+set -e
+cd /fuel
+
 # Default value for configurable arguments.
 JOB_FILE=""
 FUELING_PKG=""
@@ -106,27 +131,12 @@ fi
 # Generally fixed config.
 K8S="https://180.76.98.43:6443"
 DRIVER_MEMORY=2g
-FUEL_PATH="$( dirname "${BASH_SOURCE[0]}" )/.."
-BOS_FSTOOL_EXECUTABLE="${FUEL_PATH}/apps/local/bos_fstool"
+BOS_FSTOOL_EXECUTABLE="./apps/local/bos_fstool"
 BOS_MOUNT_PATH="/mnt/bos"
 EVENTS_LOG_PATH=${BOS_MOUNT_PATH}/modules/data/spark/spark-events
 # End of config.
 
-# Prepare env.
-TOOL_ENV="fuel-tool-0"
-source activate ${TOOL_ENV}
-if [ $? -ne 0 ]; then
-  conda env update -f "${FUEL_PATH}/tools/tool-env.yaml"
-  source activate ${TOOL_ENV}
-fi
-
-set -e
-
-# Add kubernetes package to the spark-submit tool.
-rsync -aht --size-only "${FUEL_PATH}/apps/local/spark-kubernetes_2.11-2.4.0.jar" \
-    ${CONDA_PREFIX}/lib/python3.6/site-packages/pyspark/jars/
-
-REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M%S)_${USER}"
+REMOTE_JOB_PATH="modules/data/jobs/$(date +%Y%m%d-%H%M%S)_${SUBMITTER}"
 if [ -f ${JOB_FILE} ]; then
   # Upload local job file to remote.
   REMOTE_JOB_FILE="${REMOTE_JOB_PATH}/$(basename ${JOB_FILE})"
@@ -137,14 +147,11 @@ fi
 if [ -z ${FUELING_PKG} ]; then
   # Upload local fueling package to remote.
   REMOTE_FUELING_PKG="${REMOTE_JOB_PATH}/fueling.zip"
-
-  pushd "$( dirname "${BASH_SOURCE[0]}" )/.."
-    LOCAL_FUELING_PKG="/tmp/fueling.zip"
-    rm -f "${LOCAL_FUELING_PKG}"
-    zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
-    "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
-    FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
-  popd
+  LOCAL_FUELING_PKG="/tmp/fueling.zip"
+  rm -f "${LOCAL_FUELING_PKG}"
+  zip -r "${LOCAL_FUELING_PKG}" ./fueling -x *.pyc */__pycache__
+  "${BOS_FSTOOL_EXECUTABLE}" -s "${LOCAL_FUELING_PKG}" -d "${REMOTE_FUELING_PKG}" 
+  FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 fi
 
 # Add partner config.
