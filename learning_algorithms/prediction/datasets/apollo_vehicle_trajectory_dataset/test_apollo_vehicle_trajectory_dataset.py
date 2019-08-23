@@ -34,12 +34,14 @@ from torch.utils.data import Dataset, DataLoader
 import learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset as apollo_vehicle_trajectory_dataset
 from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset as ApolloVehicleTrajectoryDataset
 from apollo_vehicle_trajectory_dataset import collate_fn as collate_fn
+from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
+from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
 
 def point_to_idx(point_x, point_y):
         return (int((point_x + 40)/0.1), int((point_y + 40)/0.1))
 
-def plot_img(obs_features, lane_features, labels, count):
+def plot_img(obs_features, lane_features, labels, pred, count):
     # black background
     img = np.zeros([1000, 800, 3], dtype=np.uint8)
 
@@ -64,6 +66,7 @@ def plot_img(obs_features, lane_features, labels, count):
 
     for obs_future_pt in range(30):
         cv.circle(img, point_to_idx(labels[1+obs_future_pt*2], labels[obs_future_pt*2]), radius=3, color=[128,128,0])
+        cv.circle(img, point_to_idx(pred[1+obs_future_pt*2], pred[obs_future_pt*2]), radius=3, color=[0,128,128])
 
     cv.imwrite('img={}__laneseq={}.png'.format(count, num_lane_seq), cv.flip(cv.flip(img,0),1))
 
@@ -81,7 +84,16 @@ if __name__ == '__main__':
         # print (y[0])
         # print (y[1])
         # print (y[2])
-        plot_img(X[1].numpy().reshape(-1), X[3].numpy(), y[0].numpy().reshape(-1), count)
+        model = SemanticMapSelfLSTMModel(30, 20)
+        model_path = "/home/sunhongyi/Documents/apollo-fuel/learning_algorithms/prediction/pipelines/vehicle_trajectory_prediction_pipeline/model_epoch1_valloss8798324149956.923828.pt"
+        model.load_state_dict(torch.load(model_path))
+        model.cuda().eval()
+        pred = model.forward(cuda(X))
+        obs_features = X[1].detach().numpy().reshape(-1)
+        lane_features = X[1].detach().numpy().reshape(-1)
+        labels = y.numpy().reshape(-1)
+        pred = pred.cpu().detach().numpy().reshape(-1)
+        plot_img(obs_features, lane_features, labels, pred, count)
         count += 1
 
     # Unit test with image
