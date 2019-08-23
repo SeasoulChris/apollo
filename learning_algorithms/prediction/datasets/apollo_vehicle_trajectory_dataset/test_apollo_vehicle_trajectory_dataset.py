@@ -32,10 +32,9 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset, DataLoader
 
 import learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset as apollo_vehicle_trajectory_dataset
+import learning_algorithms.prediction.models.semantic_map_model.semantic_map_model as semantic_map_model
 from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset as ApolloVehicleTrajectoryDataset
 from apollo_vehicle_trajectory_dataset import collate_fn as collate_fn
-from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
 
 def point_to_idx(point_x, point_y):
@@ -84,7 +83,7 @@ if __name__ == '__main__':
         # print (y[0])
         # print (y[1])
         # print (y[2])
-        model = SemanticMapSelfLSTMModel(30, 20)
+        model = semantic_map_model.SemanticMapSelfLSTMModel(30, 20)
         model_path = "/home/sunhongyi/Documents/apollo-fuel/learning_algorithms/prediction/pipelines/vehicle_trajectory_prediction_pipeline/model_epoch1_valloss8798324149956.923828.pt"
         model.load_state_dict(torch.load(model_path))
         model.cuda().eval()

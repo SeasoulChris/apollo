@@ -401,7 +401,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                 img = self.img_transform(img)
             obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
             obs_pos = obs_positions[predicting_idx, :, :]
-            obs_pos = obs_pos - obs_pos[-1,:]
+            obs_pos = obs_pos - obs_pos[-1, :]
             obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
             obs_hist_size = obs_hist_sizes[predicting_idx]
             return ((img,
