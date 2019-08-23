@@ -20,6 +20,12 @@ if [ ! -d "./fueling" ]; then
   echo "You must run from apollo-fuel root folder."
   exit 1
 fi
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  echo "./tools/submit-job-to-k8s.sh [options] <job.py> [job-gflags]"
+  echo "Options are:"
+  grep "^    --" "${BASH_SOURCE[0]}"
+  exit 0
+fi
 
 if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
   docker run --rm --net host \
@@ -63,56 +69,56 @@ COMPUTE_TYPE="CPU"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --image|-i)
+    --image|-i)            # Docker image: "-i hub.baidubce.com/apollo/spark:latest"
       shift
       IMAGE=$1
       ;;
-    --env|-e)
+    --env|-e)              # Conda environment: "-e fuel-py36"
       shift
       CONDA_ENV=$1
       ;;
-    --workers|-w)
+    --workers|-w)          # Worker count: "-w 8"
       shift
       EXECUTORS=$1
       ;;
-    --cpu|-c)
+    --cpu|-c)              # CPU count per worker: "-c 2"
       shift
       EXECUTOR_CORES=$1
       ;;
-    --memory|-m)
+    --gpu|-g)              # Whether to use GPU worker.
+      COMPUTE_TYPE="GPU"
+      ;;
+    --memory|-m)           # Memory per worker: "-m 24g"
       shift
       EXECUTOR_MEMORY=$1
       ;;
-    --memory-overhead)
+    --memory-overhead)     # Non JVM memory per worker: "--memory-overhead 0"
       shift
       MEMORY_OVERHEAD_FACTOR=$1
       ;;
-    --disk|-d)
+    --disk|-d)             # Disk size in GB per worker: "-d 50"
       shift
       EXECUTOR_DISK_GB=$1
       ;;
-    --fueling)
+    --fueling)             # Pre packaged fueling folder to avoid uploading.
       shift
       FUELING_PKG=$1
       ;;
-    --partner_bos_region)
+    --partner_bos_region)  # Partner BOS region.
       shift
       PARTNER_BOS_REGION=$1
       ;;
-    --partner_bos_bucket)
+    --partner_bos_bucket)  # Partner BOS bucket.
       shift
       PARTNER_BOS_BUCKET=$1
       ;;
-    --partner_bos_access)
+    --partner_bos_access)  # Partner BOS access key.
       shift
       PARTNER_BOS_ACCESS=$1
       ;;
-    --partner_bos_secret)
+    --partner_bos_secret)  # Partner BOS secret key.
       shift
       PARTNER_BOS_SECRET=$1
-      ;;
-    --gpu|-g)
-      COMPUTE_TYPE="GPU"
       ;;
     *)
       JOB_FILE=$1
@@ -171,40 +177,40 @@ fi
 
 # Submit job with fueling package.
 spark-submit \
-    --master "k8s://${K8S}" \
-    --deploy-mode cluster \
-    --conf spark.default.parallelism="${EXECUTORS}" \
-    --conf spark.driver.memory="${DRIVER_MEMORY}" \
-    --conf spark.eventLog.enabled=true \
-    --conf spark.eventLog.dir=file:${EVENTS_LOG_PATH} \
-    --conf spark.executor.instances="${EXECUTORS}" \
-    --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
-    --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
+  --master "k8s://${K8S}" \
+  --deploy-mode cluster \
+  --conf spark.default.parallelism="${EXECUTORS}" \
+  --conf spark.driver.memory="${DRIVER_MEMORY}" \
+  --conf spark.eventLog.enabled=true \
+  --conf spark.eventLog.dir=file:${EVENTS_LOG_PATH} \
+  --conf spark.executor.instances="${EXECUTORS}" \
+  --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
+  --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
 \
-    --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
-    --conf spark.kubernetes.container.image="${IMAGE}" \
-    --conf spark.kubernetes.container.image.pullPolicy="Always" \
-    --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
-    --conf spark.kubernetes.executor.ephemeralStorageGB="${EXECUTOR_DISK_GB}" \
-    --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
+  --conf spark.kubernetes.container.image="${IMAGE}" \
+  --conf spark.kubernetes.container.image.pullPolicy="Always" \
+  --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
+  --conf spark.kubernetes.executor.ephemeralStorageGB="${EXECUTOR_DISK_GB}" \
+  --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
 \
-    --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
-    --conf spark.executorEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-    --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
-    --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+  --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
+  --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
+  --conf spark.executorEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
+  --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
+  --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
+  --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
+  --conf spark.kubernetes.driverEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
+  --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
+  --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
+  --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
+  --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+  --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
+  --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
+  --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
+  --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
-    ${PARTNER_CONF} \
+  --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
+  ${PARTNER_CONF} \
 \
-    "${JOB_FILE}" --running_mode=PROD $@
+  "${JOB_FILE}" --running_mode=PROD $@
