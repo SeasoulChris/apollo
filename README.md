@@ -112,7 +112,11 @@ practices are:
 ### Test your pipeline at local
 
 ```bash
-tools/submit-job-to-local.sh /path/to/spark/job.py <gflags>
+# Get to know the options.
+./tools/submit-job-to-local.sh -h
+
+# Start a local job.
+./tools/submit-job-to-local.sh [options] /path/to/spark/job.py [job-gflags]
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
 
@@ -124,13 +128,14 @@ If you are pretty familliar with the infra, please:
 1. Then run:
 
    ```bash
-   tools/submit-job-to-k8s.sh \
-       --env <python_env> \
-       --worker <workers_count>  \
-       --cpu <worker_cpu_count>  \
-       --memory <worker_memory>  \
-       --disk <worker_disk_GB>   \
-       /path/to/spark/job.py <gflags>
+   # Get to know the options.
+   ./tools/submit-job-to-k8s.sh -h
+
+   # Start a cloud job.
+   ./tools/submit-job-to-k8s.sh [options] /path/to/spark/job.py [job-gflags]
+ 
+   # Find your job and access its Spark UI.
+   ./tools/access-service-on-k8s.sh 4040
    ```
 
 1. Monitor jobs with general `kubectl` commands.
