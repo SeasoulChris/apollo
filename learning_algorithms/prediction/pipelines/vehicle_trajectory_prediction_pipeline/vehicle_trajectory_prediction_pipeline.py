@@ -48,7 +48,7 @@ if __name__ == "__main__":
         num_workers=8, drop_last=True)
 
     # Model and training setup
-    model = SemanticMapModel(30, 20)
+    model = SemanticMapSelfLSTMModel(30, 20)
     loss = SemanticMapLoss()
     # print(model)
     learning_rate = 3e-4
