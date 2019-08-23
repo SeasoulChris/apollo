@@ -9,20 +9,10 @@
               | - apollo
               | - apollo-fuel      # Mounted as /apollo/modules/data/fuel
               | - apollo-internal
-              | - apollo-prophet   # Mounted as /apollo/modules/data/prophet
-              | - replay-engine
    ```
 
    `bstart`, `binto` and build Apollo as usual. Then you'll see the repo mounted
    at /apollo/modules/data/fuel, as a part of the whole apollo workspace.
-
-1. [Install miniconda](https://docs.conda.io/en/latest/miniconda.html).
-   If it's already installed, update it to the latest.
-   (DO NOT RUN THIS IF YOU ARE USING PY27-CYBER)
-
-   ```bash
-   sudo /usr/local/miniconda/bin/conda update -n base -c defaults conda
-   ```
 
 1. Install env and activate.
 
@@ -42,8 +32,8 @@
 ### Ongoing efforts
 
 1. `fuel-py27` is in deprecation along with Python 2.7 retiring. Any new jobs
-   should NOT depend on it.
-1. `fuel-py27-cyber` is in deprecation along with Cyber wrapper upgrade.
+   should try to use Python 3.
+1. `fuel-py27-cyber` is in deprecation along with Cyber wrapper upgrading.
    * If the upcoming Python3 wrapper is compatible with the standard env， we'll
      unify everything into `fuel-py36`.
    * If the upcoming Python3 wrapper still has strong restrictions on lib
@@ -109,6 +99,13 @@ practices are:
 
    To access flag values, you need to call `self.FLAGS[KEY]` from an instance of
    `BasePipeline`.
+1. For Apollo data access, we use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya)
+   to mount Apollo's BOS storage at `/mnt/bos`, which can be used as a POSIX
+   file system. But if you want to list many files under a folder, a better way
+   is to call [`a_BasePipeline_instance.bos().list_files(...)`](fueling/common/bos_client.py#L74)
+   which leverages [boto3](https://cloud.baidu.com/doc/BOS/s/ojwvyq973#aws-sdk-for-python)
+   to do efficient S3-style queries. Please read these documents carefully,
+   which will improve your pipeline a lot.
 1. To learn more about PySpark APIs, please go to
    [Spark Docs](https://spark.apache.org/docs/latest/api/python/pyspark.html).
 
