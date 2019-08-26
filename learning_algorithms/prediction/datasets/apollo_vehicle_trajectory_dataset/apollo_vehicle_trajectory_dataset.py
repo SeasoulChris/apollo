@@ -353,7 +353,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.is_predictable.append(np.ones((1, 1)))
 
                     # Get the future trajectory label.
-                    curr_future_traj = np.array(data_pt[-90:-90+self.pred_len*2]).reshape((2, self.pred_len))
+                    curr_future_traj = np.array(data_pt[-90:-30]).reshape((2, 30))
+                    curr_future_traj = curr_future_traj[:, :self.pred_len]
                     curr_future_traj = curr_future_traj.transpose()
                     ref_world_coord = [curr_obs_feature[-1, 1], curr_obs_feature[-1, 2], curr_obs_feature[-1, 7]]
                     self.reference_world_coord.append(ref_world_coord)
