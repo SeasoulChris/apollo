@@ -28,6 +28,8 @@ import fueling.common.record_utils as record_utils
 # Configs
 POS_SAMPLE_MIN_DURATION_SEC = 2
 POS_SAMPLE_MIN_DISTANCE_METER = 3
+POS_SAMPLE_MAX_DISTANCE_METER = 60  # planning upper speed 30m/s * 2
+
 
 def pose_distance_m(pos0, pos1):
     """Return distance of pos0 and pos1 in meters."""
@@ -48,7 +50,8 @@ class RecordParser(object):
         record = parser.record
         # If we have the driving_path but no map info, try guessing it.
         if record.stat.driving_path and not record.hmi_status.current_map:
-            guessed_map = record_utils.guess_map_name_from_driving_path(record.stat.driving_path)
+            guessed_map = record_utils.guess_map_name_from_driving_path(
+                record.stat.driving_path)
             if guessed_map:
                 record.hmi_status.current_map = guessed_map
         # planning metrics
@@ -62,7 +65,8 @@ class RecordParser(object):
 
     def __init__(self, record_file):
         """Init input reader and output record."""
-        self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
+        self.record = RecordMeta(
+            path=record_file, dir=os.path.dirname(record_file))
 
         self._reader = RecordReader(record_file)
         # State during processing messages.
@@ -87,7 +91,7 @@ class RecordParser(object):
             glog.error('No message found in record')
             return False
         if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL) and
-            not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
+                not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
             glog.info('Get pose from GPS as the localization channel is missing.')
             self._get_pose_from_gps = True
         return True
@@ -126,7 +130,7 @@ class RecordParser(object):
             return
         # Save disengagement.
         if (self._current_driving_mode == Chassis.COMPLETE_AUTO_DRIVE and
-            chassis.driving_mode == Chassis.EMERGENCY_MODE):
+                chassis.driving_mode == Chassis.EMERGENCY_MODE):
             glog.info('Disengagement found at {}'.format(timestamp))
             disengagement = self.record.disengagements.add(time=timestamp)
             pos = self._last_position
@@ -150,7 +154,8 @@ class RecordParser(object):
         if self._last_position is not None:
             driving_mode = 'UNKNOWN'
             if self._current_driving_mode:
-                driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
+                driving_mode = Chassis.DrivingMode.Name(
+                    self._current_driving_mode)
             meters = pose_distance_m(self._last_position, position)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
@@ -158,9 +163,10 @@ class RecordParser(object):
                 self.record.stat.mileages[driving_mode] = meters
 
         # Sample driving path.
+        sample_meters = pose_distance_m(self._last_position_sampled, position)
         if (self._last_position_sampled is None or
             (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
+             sample_meters > POS_SAMPLE_MIN_DISTANCE_METER and sample_meters < POS_SAMPLE_MAX_DISTANCE_METER)):
             try:
                 lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
@@ -175,14 +181,17 @@ class RecordParser(object):
         """Process Localization, stat mileages and save driving path."""
         localization = LocalizationEstimate()
         localization.ParseFromString(msg)
-        self._process_position(localization.header.timestamp_sec, localization.pose.position)
+        self._process_position(
+            localization.header.timestamp_sec, localization.pose.position)
 
     def ProcessGnssOdometry(self, msg):
         """Process GPS, stat mileages and save driving path."""
         if self._get_pose_from_gps:
             gps = Gps()
             gps.ParseFromString(msg)
-            self._process_position(gps.header.timestamp_sec, gps.localization.position)
+            self._process_position(
+                gps.header.timestamp_sec, gps.localization.position)
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 0:
