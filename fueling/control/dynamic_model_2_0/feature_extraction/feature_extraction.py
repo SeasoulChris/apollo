@@ -11,9 +11,9 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
-import fueling.common.bos_client as bos_client
 import fueling.common.h5_utils as h5_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 
 SEGMENT_LEN = 100 * 2

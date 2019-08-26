@@ -17,10 +17,10 @@ from cyber_py.record import RecordReader, RecordWriter
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.bos_client as bos_client
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 
 # The compressed channels that have videos we need to decode

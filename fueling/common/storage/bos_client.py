@@ -12,6 +12,8 @@ import botocore.client
 import botocore.exceptions
 import colored_glog as glog
 
+from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
+
 
 # Configs.
 flags.DEFINE_string('bos_bucket', 'apollo-platform', 'BOS bucket.')
@@ -32,20 +34,29 @@ def abs_path(object_key): return os.path.join(BOS_MOUNT_PATH, object_key)
 def partner_abs_path(object_key): return os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
 
 
-class BosClient(object):
-    """A BOS client."""
+class BosClient(BaseObjectStorageClient):
+    """A Baidu BOS client."""
 
     def __init__(self, region, bucket, ak, sk, mnt_path=BOS_MOUNT_PATH):
+        BaseObjectStorageClient.__init__(self, mnt_path)
         self.region = region
         self.bucket = bucket
         self.access_key = ak
         self.secret_key = sk
-        self.mnt_path = mnt_path
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
             glog.error('Failed to get BOS config.')
             return None
 
+    # Override
+    def list_keys(self, prefix):
+        """
+        Get a list of files with given prefix and suffix.
+        Return absolute paths if to_abs_path is True else keys.
+        """
+        return [obj['Key'] for obj in self.list_objects(prefix) if not obj['Key'].endswith('/')]
+
     def client(self):
+        """Get a boto3 client."""
         return boto3.client('s3',
                             endpoint_url='http://s3.{}.bcebos.com'.format(self.region),
                             region_name=self.region,
@@ -67,18 +78,6 @@ class BosClient(object):
         for page in page_iterator:
             for obj in page.get('Contents', []):
                 yield obj
-
-    def abs_path(self, key):
-        return os.path.join(self.mnt_path, key)
-
-    def list_files(self, prefix, suffix='', to_abs_path=True):
-        """Get a RDD of files with given prefix and suffix."""
-        files = [obj['Key'] for obj in self.list_objects(prefix) if not obj['Key'].endswith('/')]
-        if suffix:
-            files = [path for path in files if path.endswith(suffix)]
-        if to_abs_path:
-            files = map(self.abs_path, files)
-        return files
 
     def list_dirs(self, prefix, to_abs_path=True):
         """Get a RDD of dirs with given prefix."""
@@ -133,17 +132,3 @@ class BosClient(object):
         # Actually upload
         self.client().upload_file(local_path, self.bucket, remote_path,
                                   ExtraArgs={"Metadata": meta_data})
-
-    def download_file(self, remote_path, local_path):
-        """Download a file from BOS to local"""
-        # Support download a dir with all files under it
-        if os.path.isdir(local_path):
-            for obj in self.list_objects(remote_path):
-                remote_file = obj['Key']
-                # aws_skip the folder itself
-                if remote_file == remote_path or remote_file == remote_path + '/':
-                    continue
-                local_file = os.path.join(local_path, os.path.basename(remote_file))
-                self.client().download_file(self.bucket, remote_file, local_file)
-        else:
-            self.client().download_file(self.bucket, remote_path, local_path)

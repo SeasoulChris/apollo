@@ -19,8 +19,8 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 from fueling.common.partners import partners
-import fueling.common.bos_client as bos_client
 import fueling.common.email_utils as email_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 

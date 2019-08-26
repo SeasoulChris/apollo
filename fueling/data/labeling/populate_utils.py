@@ -23,8 +23,8 @@ from modules.drivers.proto.conti_radar_pb2 import ContiRadar
 from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
-import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 
 # Map channels to processing functions

@@ -12,9 +12,9 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.control.dynamic_model.conf.model_config as model_config
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils

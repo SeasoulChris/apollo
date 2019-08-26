@@ -6,7 +6,7 @@ import os
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.bos_client as bos_client
+import fueling.common.storage.bos_client as bos_client
 
 
 # TODO: To be retired. Please use bos_client.BosClient.list_files() directly.

@@ -16,11 +16,11 @@ from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
-import fueling.common.bos_client as bos_client
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.storage.bos_client as bos_client
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils

@@ -8,7 +8,7 @@ from pyspark import SparkConf, SparkContext
 import colored_glog as glog
 
 from fueling.common.mongo_utils import Mongo
-import fueling.common.bos_client as bos_client
+import fueling.common.storage.bos_client as bos_client
 import fueling.common.time_utils as time_utils
 
 

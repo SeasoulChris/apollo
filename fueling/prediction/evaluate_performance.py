@@ -12,7 +12,7 @@ from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import prediction_conf_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.bos_client as bos_client
+import fueling.common.storage.bos_client as bos_client
 
 
 TIME_RANGES = [1.0, 3.0, 8.0]
