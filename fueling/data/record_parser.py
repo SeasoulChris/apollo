@@ -163,10 +163,10 @@ class RecordParser(object):
                 self.record.stat.mileages[driving_mode] = meters
 
         # Sample driving path.
-        sample_meters = pose_distance_m(self._last_position_sampled, position)
         if (self._last_position_sampled is None or
             (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             sample_meters > POS_SAMPLE_MIN_DISTANCE_METER and sample_meters < POS_SAMPLE_MAX_DISTANCE_METER)):
+             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER and
+             pose_distance_m(self._last_position_sampled, position) < POS_SAMPLE_MAX_DISTANCE_METER)):
             try:
                 lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
