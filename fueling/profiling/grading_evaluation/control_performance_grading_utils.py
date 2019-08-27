@@ -11,8 +11,7 @@ import colored_glog as glog
 import fueling.common.h5_utils as h5_utils
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
-import fueling.profiling.feature_extraction.control_feature_extraction_utils \
-       as feature_utils
+import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
 
 def compute_h5_and_gradings(target_groups):
