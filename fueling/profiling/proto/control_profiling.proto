@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package apollo_fuel.fueling.control.proto.control_profiling;
+package apollo_fuel.fueling.profiling.proto.control_profiling;
 
 
 message ControlMetrics {

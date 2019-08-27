@@ -15,10 +15,10 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.control.control_profiling.common.dir_utils as dir_utils
-import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
+import fueling.profiling.common.dir_utils as dir_utils
+import fueling.profiling.feature_extraction.control_feature_extraction_utils \
        as feature_utils
-import fueling.control.control_profiling.grading_evaluation.control_performance_grading_utils \
+import fueling.profiling.grading_evaluation.control_performance_grading_utils \
        as grading_utils
 
 

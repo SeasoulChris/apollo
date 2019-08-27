@@ -12,9 +12,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
-import fueling.control.control_profiling.feature_extraction.control_feature_extraction_utils \
-       as feature_utils
+from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
 
 def generate_segments(h5s):

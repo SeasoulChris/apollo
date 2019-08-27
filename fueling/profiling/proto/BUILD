@@ -1,10 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
-    name = "data_pipeline_control_lib",
+    name = "data_pipeline_control_profiling_lib",
     srcs = [
-        "feature_key.proto",
-        "calibration_table.proto",
+        "control_profiling.proto",
     ],
     deps = [
         "//modules/common/proto:drive_state_proto_lib",

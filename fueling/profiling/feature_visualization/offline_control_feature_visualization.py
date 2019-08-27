@@ -16,7 +16,7 @@ import numpy as np
 
 # Need to add the local path into the sys.path if running in the local computer
 # sys.path.append('/home/yuwang01/Documents/Apollo_Local/apollo-fuel/')
-# from fueling.control.control_profiling.conf.control_channel_conf import FEATURE_NAMES
+# from fueling.profiling.conf.control_channel_conf import FEATURE_NAMES
 
 FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
                  "curvature_reference", "station_error", "speed_error", "lateral_error", "lateral_error_rate", "heading_error",

@@ -15,8 +15,8 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
-import fueling.control.control_profiling.common.dir_utils as dir_utils
-import fueling.control.control_profiling.feature_visualization.control_feature_visualization_utils \
+import fueling.profiling.common.dir_utils as dir_utils
+import fueling.profiling.feature_visualization.control_feature_visualization_utils \
        as visual_utils
 
 
