@@ -60,6 +60,12 @@ PARTNER_BOS_REGION=""
 PARTNER_BOS_BUCKET=""
 PARTNER_BOS_ACCESS=""
 PARTNER_BOS_SECRET=""
+
+# Partner Azure config.
+AZURE_STORAGE_ACCOUNT=""
+AZURE_STORAGE_ACCESS_KEY=""
+AZURE_BLOB_CONTAINER=""
+
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
@@ -70,56 +76,68 @@ COMPUTE_TYPE="CPU"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --image|-i)            # Docker image: "-i hub.baidubce.com/apollo/spark:latest"
+    --image|-i)                   # Docker image: "-i hub.baidubce.com/apollo/spark:latest"
       shift
       IMAGE=$1
       ;;
-    --env|-e)              # Conda environment: "-e fuel-py36"
+    --env|-e)                     # Conda environment: "-e fuel-py36"
       shift
       CONDA_ENV=$1
       ;;
-    --workers|-w)          # Worker count: "-w 8"
+    --workers|-w)                 # Worker count: "-w 8"
       shift
       EXECUTORS=$1
       ;;
-    --cpu|-c)              # CPU count per worker: "-c 2"
+    --cpu|-c)                     # CPU count per worker: "-c 2"
       shift
       EXECUTOR_CORES=$1
       ;;
-    --gpu|-g)              # Whether to use GPU worker.
+    --gpu|-g)                     # Whether to use GPU worker.
       COMPUTE_TYPE="GPU"
       ;;
-    --memory|-m)           # Memory per worker: "-m 24g"
+    --memory|-m)                  # Memory per worker: "-m 24g"
       shift
       EXECUTOR_MEMORY=$1
       ;;
-    --memory-overhead)     # Non JVM memory per worker: "--memory-overhead 0"
+    --memory-overhead)            # Non JVM memory per worker: "--memory-overhead 0"
       shift
       MEMORY_OVERHEAD_FACTOR=$1
       ;;
-    --disk|-d)             # Disk size in GB per worker: "-d 50"
+    --disk|-d)                    # Disk size in GB per worker: "-d 50"
       shift
       EXECUTOR_DISK_GB=$1
       ;;
-    --fueling)             # Pre packaged fueling folder to avoid uploading.
+    --fueling)                    # Pre packaged fueling folder to avoid uploading.
       shift
       FUELING_PKG=$1
       ;;
-    --partner_bos_region)  # Partner BOS region.
+    --partner_bos_region)         # Partner BOS region.
       shift
       PARTNER_BOS_REGION=$1
       ;;
-    --partner_bos_bucket)  # Partner BOS bucket.
+    --partner_bos_bucket)         # Partner BOS bucket.
       shift
       PARTNER_BOS_BUCKET=$1
       ;;
-    --partner_bos_access)  # Partner BOS access key.
+    --partner_bos_access)         # Partner BOS access key.
       shift
       PARTNER_BOS_ACCESS=$1
       ;;
-    --partner_bos_secret)  # Partner BOS secret key.
+    --partner_bos_secret)         # Partner BOS secret key.
       shift
       PARTNER_BOS_SECRET=$1
+      ;;
+    --azure_storage_account)      # Azure storage account.
+      shift
+      AZURE_STORAGE_ACCOUNT=$1
+      ;;
+    --azure_storage_access_key)   # Azure storage access key.
+      shift
+      AZURE_STORAGE_ACCESS_KEY=$1
+      ;;
+    --azure_blob_container)       # Partner BOS access key.
+      shift
+      AZURE_BLOB_CONTAINER=$1
       ;;
     *)
       JOB_FILE=$1
@@ -162,20 +180,6 @@ if [ -z ${FUELING_PKG} ]; then
   FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 fi
 
-# Add partner config.
-PARTNER_CONF=""
-if [ ! -z "${PARTNER_BOS_BUCKET}" ]; then
-  PARTNER_CONF="
-      --conf spark.kubernetes.driverEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION}
-      --conf spark.kubernetes.driverEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
-      --conf spark.kubernetes.driverEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
-      --conf spark.kubernetes.driverEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}
-      --conf spark.executorEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION}
-      --conf spark.executorEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}
-      --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}
-      --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}"
-fi
-
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \
@@ -187,6 +191,7 @@ spark-submit \
     --conf spark.executor.instances="${EXECUTORS}" \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
     --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
+    --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
@@ -202,16 +207,31 @@ spark-submit \
     --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
     --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
     --conf spark.kubernetes.driverEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
+\
     --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-   --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
+\
+    --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
+    --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
+    --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
 \
-    --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
-    ${PARTNER_CONF} \
+    --conf spark.kubernetes.driverEnv.AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT} \
+    --conf spark.kubernetes.driverEnv.AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY} \
+    --conf spark.kubernetes.driverEnv.AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER} \
+    --conf spark.executorEnv.AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT} \
+    --conf spark.executorEnv.AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY} \
+    --conf spark.executorEnv.AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER} \
+\
+    --conf spark.kubernetes.driverEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION} \
+    --conf spark.kubernetes.driverEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET} \
+    --conf spark.kubernetes.driverEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
+    --conf spark.kubernetes.driverEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
+    --conf spark.executorEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION} \
+    --conf spark.executorEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET} \
+    --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
+    --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
 \
     "${JOB_FILE}" --running_mode=PROD $@

@@ -1,5 +1,6 @@
 """Azure Blob utils."""
 #!/usr/bin/env python
+import os
 
 from azure.storage.blob import BlockBlobService
 
@@ -12,11 +13,14 @@ class BlobClient(BaseObjectStorageClient):
     Refer doc at https://azure-storage.readthedocs.io
     """
 
-    def __init__(self, container_name, account_name, account_key, mnt_path='/mnt/blob'):
+    def __init__(self, mnt_path='/mnt/blob'):
         BaseObjectStorageClient.__init__(self, mnt_path)
-        self.container_name = container_name
-        self.account_name = account_name
-        self.account_key = account_key
+        self.account_name = os.environ.get('AZURE_STORAGE_ACCOUNT')
+        self.account_key = os.environ.get('AZURE_STORAGE_ACCESS_KEY')
+        self.container_name = os.environ.get('AZURE_BLOB_CONTAINER')
+        if not self.account_name or not self.account_key or not self.container_name:
+            glog.error('Failed to get Azure config.')
+            return None
 
     # Override
     def list_keys(self, prefix):
