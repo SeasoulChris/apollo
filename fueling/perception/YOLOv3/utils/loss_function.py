@@ -49,7 +49,7 @@ def convert_raw_output_to_box(yolo_outputs, anchors):
              [tf.reshape(e, 
                 shape=(-1, 
                        len(anchor_mask[l])*K.shape(yolo_outputs[l])[1]*K.shape(yolo_outputs[l])[2],
-                       10+cfg.num_classes))
+                       10 + cfg.num_classes))
               for l, e in enumerate(xy_wh_conf)], 
            axis=1) 
 
@@ -97,13 +97,13 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         # (1, 1, 1, num_anchors)
         anc_idx = tf.cast(tf.reshape(tf.range(0, num_anchors), [1, 1, 1, -1]), dtype=tf.int32)
         # (bs, cel_row, cel_col, num_anchors)
-        bs_row_col_anc = bs_idx*grid_shape[0]*grid_shape[1]*num_anchors + \
-                         row_idx*grid_shape[1]*num_anchors + col_idx*num_anchors + anc_idx
+        bs_row_col_anc = bs_idx * grid_shape[0] * grid_shape[1] * num_anchors + \
+                         row_idx * grid_shape[1] * num_anchors + col_idx * num_anchors + anc_idx
         
         # (bs, cel_row, cel_col, anchors_per_cel, 1)
         object_mask = y_true[l][..., 4:5]
         # (bs, cel_row, cel_col, anchors_per_cel, num_cls)
-        true_class_probs = y_true[l][..., 5:5+num_classes]
+        true_class_probs = y_true[l][..., 5:5 + num_classes]
         
         # get YOLO output
         grid, raw_pred, pred_xy, pred_wh, pred_cs_conf, pred_cs, _ = \
@@ -129,9 +129,10 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         raw_true_wh = y_true[l][..., 2:4]
         
         # for 3D
-        raw_true_cs_conf = y_true[l][..., (5+4*num_classes):(5+4*num_classes+num_angle_bins)]
+        raw_true_cs_conf = \
+            y_true[l][..., (5 + 4 * num_classes):(5 + 4 * num_classes+num_angle_bins)]
         # (bs, cel_row, cel_col, anchors_per_cel, 2*num_angle_bins) 
-        raw_true_cs = y_true[l][..., (5+4*num_classes+num_angle_bins):] 
+        raw_true_cs = y_true[l][..., (5 + 4 * num_classes+num_angle_bins):] 
         
         # grab the hwl 
         # (bs, cel_row, cel_col, anchors_per_cel)
@@ -140,11 +141,11 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         flat_idx = tf.cast(bs_row_col_anc, dtype=tf.int32) * num_classes * 3 \
                    + tf.cast(c, dtype=tf.int32) * 3
         flat_idx = tf.reshape(flat_idx, (bs, grid_shape[0], grid_shape[1], num_anchors, 1))
-        flat_idx = tf.concat([flat_idx, flat_idx+1, flat_idx+2], axis=-1) 
+        flat_idx = tf.concat([flat_idx, flat_idx + 1, flat_idx + 2], axis=-1) 
         # (bs, cel_row, cel_col, anchors_per_cel, 3)
         flat_idx = tf.reshape(flat_idx, [-1]) 
         # (bs*cel_row*cel_col*anchors_per_cel*3)
-        y_true_flat = tf.reshape(y_true[l][..., 5+num_classes:5+4*num_classes], [-1]) 
+        y_true_flat = tf.reshape(y_true[l][..., 5 + num_classes:5 + 4 * num_classes], [-1]) 
         # (bs*cel_row*cel_col*anchors_per_cel*n)
         raw_true_hwl = tf.reshape(tf.gather(y_true_flat, flat_idx), 
                           [bs, grid_shape[0], grid_shape[1], num_anchors, 3])
@@ -213,7 +214,7 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         raw_true_cs = tf.reshape(raw_true_cs, 
                          [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins, 2])
         # to consider float value representation error
-        cs_mask = tf.greater(tf.abs(raw_true_cs-0.0), 0.00001)
+        cs_mask = tf.greater(tf.abs(raw_true_cs - 0.0), 0.00001)
         # (bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins, 1)
         cs_mask = tf.logical_or(cs_mask[..., 0:1], cs_mask[..., 1:])
         # (bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins*2)
