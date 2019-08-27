@@ -393,7 +393,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             predictable_prob = predictable_prob / np.sum(predictable_prob)
             predicting_idx = np.random.choice(predictable_prob.shape[0], 1, p=predictable_prob)[0]
             world_coord = self.reference_world_coord[s_idx + predicting_idx]
-            obs_future_traj = self.future_traj[s_idx + predicting_idx][0,:,:]
+            target_obs_future_traj = self.future_traj[s_idx + predicting_idx][0,:,:]
             region = self.map_region[s_idx + predicting_idx]
             # TODO(Hongyi): modify the following part to include multiple obstacles.
             obs_mapping = ObstacleMapping(region, self.base_map[region], world_coord, obs_polygons)
@@ -401,16 +401,26 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             # cv.imwrite("./test/img{}.png".format(idx), img)
             if self.img_transform:
                 img = self.img_transform(img)
-            obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
-            obs_pos = obs_positions[predicting_idx, :, :]
-            obs_pos = obs_pos - obs_pos[-1, :]
-            obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
-            obs_hist_size = obs_hist_sizes[predicting_idx]
+            all_obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
+
+            # Target obstacle's historical information
+            target_obs_pos = all_obs_positions[predicting_idx, :, :]
+            target_obs_pos_rel = target_obs_pos - target_obs_pos[-1, :]
+            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
+            target_obs_hist_size = obs_hist_sizes[predicting_idx]
+
+            # Nearby obstacles' historical information
+            num_obs = all_obs_positions.shape[0]
+            nearby_obs_mask = [True for i in range(num_obs)]
+            nearby_obs_mask[predicting_idx] = False
+            nearby_obs_pos = all_obs_positions[nearby_obs_mask]
+            nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask]
+
             return ((img,
-                     torch.from_numpy(obs_pos).float(),
-                     torch.from_numpy(obs_hist_size).float(),
-                     torch.from_numpy(obs_pos_rel).float()),
-                    torch.from_numpy(obs_future_traj).float())
+                     torch.from_numpy(target_obs_rel_positions).float(),
+                     torch.from_numpy(target_obs_hist_size).float(),
+                     torch.from_numpy(all_obs_pos_rel).float()),
+                    torch.from_numpy(target_obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]
             e_idx = self.end_idx[idx]
