@@ -50,8 +50,7 @@ class RecordParser(object):
         record = parser.record
         # If we have the driving_path but no map info, try guessing it.
         if record.stat.driving_path and not record.hmi_status.current_map:
-            guessed_map = record_utils.guess_map_name_from_driving_path(
-                record.stat.driving_path)
+            guessed_map = record_utils.guess_map_name_from_driving_path(record.stat.driving_path)
             if guessed_map:
                 record.hmi_status.current_map = guessed_map
         # planning metrics
@@ -65,8 +64,7 @@ class RecordParser(object):
 
     def __init__(self, record_file):
         """Init input reader and output record."""
-        self.record = RecordMeta(
-            path=record_file, dir=os.path.dirname(record_file))
+        self.record = RecordMeta(path=record_file, dir=os.path.dirname(record_file))
 
         self._reader = RecordReader(record_file)
         # State during processing messages.
@@ -154,8 +152,7 @@ class RecordParser(object):
         if self._last_position is not None:
             driving_mode = 'UNKNOWN'
             if self._current_driving_mode:
-                driving_mode = Chassis.DrivingMode.Name(
-                    self._current_driving_mode)
+                driving_mode = Chassis.DrivingMode.Name(self._current_driving_mode)
             meters = pose_distance_m(self._last_position, position)
             if driving_mode in self.record.stat.mileages:
                 self.record.stat.mileages[driving_mode] += meters
@@ -181,16 +178,17 @@ class RecordParser(object):
         """Process Localization, stat mileages and save driving path."""
         localization = LocalizationEstimate()
         localization.ParseFromString(msg)
-        self._process_position(
-            localization.header.timestamp_sec, localization.pose.position)
+        self._process_position(localization.header.timestamp_sec, localization.pose.position)
 
     def ProcessGnssOdometry(self, msg):
         """Process GPS, stat mileages and save driving path."""
         if self._get_pose_from_gps:
             gps = Gps()
             gps.ParseFromString(msg)
-            self._process_position(
-                gps.header.timestamp_sec, gps.localization.position)
+            # localization initialization feature
+            if gps.localization.position.z == 0:
+                return
+            self._process_position(gps.header.timestamp_sec, gps.localization.position)
 
 
 if __name__ == '__main__':
