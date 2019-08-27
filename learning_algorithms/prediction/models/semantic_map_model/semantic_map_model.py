@@ -199,3 +199,53 @@ class SemanticMapSelfLSTMModel(nn.Module):
             ct[ts_obs_mask, :] = ct_new.view(curr_N, -1)
 
         return pred_traj
+
+
+class SemanticMapSocialAttentionModel(nn.Module):
+    '''
+    Semantic map model with social attention
+    '''
+    def __init__(self, pred_len, num_history_points,
+                 embed_size=64, edge_hidden_size=256, node_hidden_size=128, attention_dim=64,
+                 cnn_net=models.resnet50, pretrained=True):
+        super(SemanticMapSocialAttentionModel, self).__init__()
+        self.pred_len = pred_len
+
+        # CNN
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = self.cnn.fc.in_features
+        fc_in_features = self.cnn.fc.in_features
+        self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
+
+        # Target hidden state
+        target_edge_h0 = torch.zeros(1, node_hidden_size)
+        target_edge_c0 = torch.zeros(1, node_hidden_size)
+        nn.init.xavier_normal_(target_edge_h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(target_edge_c0, gain=nn.init.calculate_gain('relu'))
+        self.target_edge_h0 = nn.Parameter(target_edge_h0, requires_grad=True)
+        self.target_edge_c0 = nn.Parameter(target_edge_c0, requires_grad=True)
+
+        # Target RNN flow
+        self.target_rel_disp_embedding = nn.Linear(2, embed_size)
+        self.target_lstm = nn.LSTM(self.cnn_out_size + embed_size, node_hidden_size,
+                                   num_layers=1, batch_first=True)
+        self.target_attention_embedding = nn.Linear(node_hidden_size, attention_dim)
+
+        # Nearby hidden state
+        nearby_edge_h0 = torch.zeros(1, 1, edge_hidden_size)
+        nearby_edge_c0 = torch.zeros(1, 1, edge_hidden_size)
+        nn.init.xavier_normal_(nearby_edge_h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(nearby_edge_c0, gain=nn.init.calculate_gain('relu'))
+        self.nearby_edge_h0 = nn.Parameter(nearby_edge_h0, requires_grad=True)
+        self.nearby_edge_c0 = nn.Parameter(nearby_edge_c0, requires_grad=True)
+
+        # Nearby RNN flow
+        self.nearby_rel_disp_embedding = nn.Linear(2, embed_size)
+        self.nearby_lstm = nn.LSTM(embed_size, edge_hidden_size, num_layers=1, batch_first=True)
+        self.nearby_attention_embedding = nn.Linear(edge_hidden_size, attention_dim)
+
+    def forward(self, X):
+        img, target_obs_pos, target_obs_hist_size, all_obs_pos_rel, \
+             nearby_obs_pos, nearby_obs_hist_sizes, nearby_obs_pos_rel = X
+
+        # TODO(kechxu) implement

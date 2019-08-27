@@ -425,6 +425,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             # nearby_obs_pos = all_obs_positions[nearby_obs_mask]
             # nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask]
 
+            # TODO(kechxu) add nearby obstacle info into output
             return ((img,
                      torch.from_numpy(target_obs_pos_rel).float(),
                      torch.from_numpy(target_obs_hist_size).float(),
