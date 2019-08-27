@@ -58,35 +58,35 @@ def yolo_head(feature_maps, anchors, num_classes,
         # (1, 1, 1, num_anchors)
         anc_idx = tf.reshape(tf.range(0, num_anchors), [1, 1, 1, -1])
         # (bs, cel_row, cel_col, num_anchors)
-        bs_row_col_anc = bs_idx*grid_shape[0]*grid_shape[1]*num_anchors + \
-            row_idx*grid_shape[1]*num_anchors + col_idx*num_anchors + anc_idx
+        bs_row_col_anc = bs_idx * grid_shape[0] * grid_shape[1] * num_anchors + \
+            row_idx * grid_shape[1] * num_anchors + col_idx * num_anchors + anc_idx
         
-    feature_xy_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s*4:s*4+2]
+    feature_xy_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s * 4:s * 4 + 2]
                                                for s in range(num_anchors)], axis=-1), 
                               [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
-    feature_wh_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s*4+2:s*4+4]
+    feature_wh_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s * 4 + 2:s * 4 + 4]
                                                for s in range(num_anchors)], axis=-1), 
                               [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
-    feature_conf_reshape = tf.reshape(feature_maps[:, :, :, num_anchors*(4):num_anchors*(5)], 
+    feature_conf_reshape = tf.reshape(feature_maps[:, :, :, num_anchors * (4):num_anchors * (5)], 
                                 [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
     feature_cls_reshape = tf.reshape(feature_maps[:, :, :, 
-                                                  num_anchors*(5):num_anchors*(5+num_classes)], 
+                                                num_anchors * 5:num_anchors * (5 + num_classes)], 
                                [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes])
     feature_hwl_reshape = tf.reshape(feature_maps[:, :, :,
-                                       num_anchors*(5+num_classes):num_anchors*(5+num_classes*4)], 
-                               [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes*3])
+                             num_anchors * (5 + num_classes):num_anchors * (5 + num_classes * 4)], 
+                               [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes * 3])
 
-    channel_idx_begin = num_anchors*(5+num_classes*4)
-    channel_idx_end = num_anchors*(5+num_classes*4+num_angle_bins)
+    channel_idx_begin = num_anchors * (5 + num_classes * 4)
+    channel_idx_end = num_anchors * (5 + num_classes * 4 + num_angle_bins)
     feature_cs_conf_reshape = \
           tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end],
                      [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins])
 
-    channel_idx_begin = num_anchors*(5+num_classes*4+num_angle_bins)
-    channel_idx_end = num_anchors*(5+num_classes*4+num_angle_bins*3)
+    channel_idx_begin = num_anchors * (5 + num_classes * 4 + num_angle_bins)
+    channel_idx_end = num_anchors * (5 + num_classes * 4 + num_angle_bins * 3)
     feature_cs_reshape = \
         tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end], 
-                   [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins*2])
+                   [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins * 2])
 
     with tf.name_scope('top_feature_maps'):
         # ======================= Get feature values ==========================
@@ -124,7 +124,7 @@ def yolo_head(feature_maps, anchors, num_classes,
                    tf.cast(c, dtype=tf.int32) * 3
         flat_idx = tf.reshape(flat_idx, (bs, grid_shape[0], grid_shape[1], num_anchors, 1))
         # (bs, cel_row, cel_col, anchors_per_cel, 3)
-        flat_idx = tf.concat([flat_idx, flat_idx+1, flat_idx+2], axis=-1)
+        flat_idx = tf.concat([flat_idx, flat_idx + 1, flat_idx + 2], axis=-1)
         # (bs*cel_row*cel_col*anchors_per_cel*3)
         flat_idx = tf.reshape(flat_idx, [-1])
         # (bs*cel_row*cel_col*anchors_per_cel*n)

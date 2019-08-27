@@ -48,8 +48,8 @@ def convert_raw_output_to_box(yolo_outputs, anchors):
         tf.concat(
              [tf.reshape(e, 
                 shape=(-1, 
-                       len(anchor_mask[l])*K.shape(yolo_outputs[l])[1]*K.shape(yolo_outputs[l])[2],
-                       10 + cfg.num_classes))
+                   len(anchor_mask[l]) * K.shape(yolo_outputs[l])[1] * K.shape(yolo_outputs[l])[2],
+                   10 + cfg.num_classes))
               for l, e in enumerate(xy_wh_conf)], 
            axis=1) 
 
@@ -130,9 +130,9 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         
         # for 3D
         raw_true_cs_conf = \
-            y_true[l][..., (5 + 4 * num_classes):(5 + 4 * num_classes+num_angle_bins)]
+            y_true[l][..., (5 + 4 * num_classes):(5 + 4 * num_classes + num_angle_bins)]
         # (bs, cel_row, cel_col, anchors_per_cel, 2*num_angle_bins) 
-        raw_true_cs = y_true[l][..., (5 + 4 * num_classes+num_angle_bins):] 
+        raw_true_cs = y_true[l][..., (5 + 4 * num_classes + num_angle_bins):] 
         
         # grab the hwl 
         # (bs, cel_row, cel_col, anchors_per_cel)
