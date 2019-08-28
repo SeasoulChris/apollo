@@ -28,7 +28,6 @@ import fueling.common.record_utils as record_utils
 # Configs
 POS_SAMPLE_MIN_DURATION_SEC = 2
 POS_SAMPLE_MIN_DISTANCE_METER = 3
-POS_SAMPLE_MAX_DISTANCE_METER = 60  # planning upper speed 30m/s * 2
 
 
 def pose_distance_m(pos0, pos1):
@@ -162,8 +161,7 @@ class RecordParser(object):
         # Sample driving path.
         if (self._last_position_sampled is None or
             (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER and
-             pose_distance_m(self._last_position_sampled, position) < POS_SAMPLE_MAX_DISTANCE_METER)):
+             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
                 lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
