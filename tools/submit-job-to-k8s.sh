@@ -36,8 +36,9 @@ if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
       -e SUBMITTER=${USER} \
       -w="/fuel" \
       apolloauto/fuel-client:20190821_1718 \
-      bash tools/submit-job-to-k8s.sh $@
-  exit $?
+      bash tools/submit-job-to-k8s.sh $@ | tee /tmp/spark-submit.log
+  grep 'Exit code: ' /tmp/spark-submit.log > /tmp/spark-submit.ret
+  exit $(awk '{print $3}' /tmp/spark-submit.ret)
 fi
 
 # Now we are inside the client docker.
@@ -200,6 +201,7 @@ spark-submit \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
     --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
     --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
+    --conf spark.kubernetes.node.selector.ip="192.168.32.44" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
@@ -246,7 +248,4 @@ spark-submit \
     --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
     --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
 \
-    "${JOB_FILE}" --running_mode=PROD $@ | tee /tmp/spark-submit.log
-
-grep 'Exit code: ' /tmp/spark-submit.log > /tmp/spark-submit.ret
-exit $(awk '{print $3}' /tmp/spark-submit.ret)
+    "${JOB_FILE}" --running_mode=PROD $@
