@@ -3,8 +3,10 @@
 """Extracting and processing dataset"""
 import glob
 import os
+import pickle
 import sys
 
+from liegroups.torch import SO3
 from torch.utils.data.dataset import Dataset
 import colored_glog as glog
 import h5py
@@ -34,7 +36,7 @@ class GPDataSet(Dataset):
         """
         Generate training data from a list of labeled data
         """
-        datasets = glob.glob(os.path.join(self.data_path, '*.hdf5'))
+        datasets = glob.glob(os.path.join(self.data_path, '*.h5'))
         input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
         output_data = torch.zeros(DIM_OUTPUT, 0)
         for h5_file in datasets:
