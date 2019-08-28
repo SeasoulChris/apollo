@@ -12,7 +12,7 @@ from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import prediction_conf_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.storage.bos_client as bos_client
+from fueling.common.storage.bos_client import BosClient
 
 
 TIME_RANGES = [1.0, 3.0, 8.0]
@@ -39,6 +39,7 @@ class PerformanceEvaluator(BasePipeline):
             np.save(save_path, metrics)
 
     def run_prod(self):
+        bos_client = BosClient()
         for time_range in TIME_RANGES:
             for region in REGIONS:
                 """Run prod."""

@@ -53,7 +53,11 @@ EXECUTORS=8
 EXECUTOR_CORES=2
 EXECUTOR_MEMORY=24g
 EXECUTOR_DISK_GB=50
+COMPUTE_TYPE="CPU"
+# Configurable but rarely change.
 MEMORY_OVERHEAD_FACTOR=0
+BOS_REGION="bj"
+BOS_BUCKET="apollo-platform"
 
 # Partner BOS config.
 PARTNER_BOS_REGION=""
@@ -69,10 +73,6 @@ AZURE_BLOB_CONTAINER=""
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
-
-# Compute type, default is CPU if GPU is not explicitly specified
-COMPUTE_TYPE="CPU"
-
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -110,6 +110,14 @@ while [ $# -gt 0 ]; do
     --fueling)                    # Pre packaged fueling folder to avoid uploading.
       shift
       FUELING_PKG=$1
+      ;;
+    --bos_region)                 # Our BOS region.
+      shift
+      BOS_REGION=$1
+      ;;
+    --bos_bucket)                 # Our BOS bucket.
+      shift
+      BOS_BUCKET=$1
       ;;
     --partner_bos_region)         # Partner BOS region.
       shift
@@ -210,8 +218,12 @@ spark-submit \
 \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
     --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
+    --conf spark.kubernetes.driverEnv.BOS_REGION="${BOS_REGION}" \
+    --conf spark.kubernetes.driverEnv.BOS_BUCKET="${BOS_BUCKET}" \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
     --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
+    --conf spark.executorEnv.BOS_REGION="${BOS_REGION}" \
+    --conf spark.executorEnv.BOS_BUCKET="${BOS_BUCKET}" \
 \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
     --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
@@ -234,4 +246,7 @@ spark-submit \
     --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
     --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
 \
-    "${JOB_FILE}" --running_mode=PROD $@
+    "${JOB_FILE}" --running_mode=PROD $@ | tee /tmp/spark-submit.log
+
+grep 'Exit code: ' /tmp/spark-submit.log > /tmp/spark-submit.ret
+exit $(awk '{print $3}' /tmp/spark-submit.ret)

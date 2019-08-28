@@ -4,7 +4,8 @@
 
 import os
 
-import fueling.common.s3_utils as s3_utils
+from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 
 
 def get_todo_tasks(origin_prefix, target_prefix,
@@ -23,10 +24,9 @@ def get_todo_tasks(origin_prefix, target_prefix,
 # Helper function
 def list_completed_dirs(prefix, marker):
     """List directories that contains COMPLETE mark up files"""
-    bucket = 'apollo-platform'
     # RDD(files in prefix folders)
-    return (s3_utils.list_files(bucket, prefix)
-            # RDD(files_end_with_marker)
-            .filter(lambda path: path.endswith(marker))
-            # RDD(dirs_of_file_end_with_marker)
-            .map(os.path.dirname))
+    return (
+        # RDD(files_end_with_marker)
+        BasePipeline.context().parallelize(BosClient().list_files(prefix, marker))
+        # RDD(dirs_of_file_end_with_marker)
+        .map(os.path.dirname))

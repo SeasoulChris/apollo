@@ -15,10 +15,10 @@ import pyspark_utils.helper as spark_helper
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
 from fueling.common.partners import partners
+from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.email_utils as email_utils
-import fueling.common.storage.bos_client as bos_client
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
@@ -43,6 +43,7 @@ class MultiJobResultVisualization(BasePipeline):
         # results in output folder
         origin_prefix = os.path.join(output_folder, job_owner, job_id)
 
+        bos_client = BosClient()
         origin_dir = bos_client.abs_path(origin_prefix)
         conf_dir = bos_client.abs_path(conf_prefix)
 

@@ -16,11 +16,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.partners import partners
+from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
-from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
-import fueling.common.storage.bos_client as bos_client
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
@@ -89,6 +89,7 @@ class MultiJobDataDistribution(BasePipeline):
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
+        bos_client = BosClient()
         glog.info("job_id: %s" % job_id)
         # intermediate result folder
         origin_prefix = os.path.join(inter_result_folder, job_owner, job_id)

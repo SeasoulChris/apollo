@@ -8,6 +8,7 @@ from pyspark import SparkConf, SparkContext
 import colored_glog as glog
 
 from fueling.common.mongo_utils import Mongo
+import fueling.common.storage.blob_client as blob_client
 import fueling.common.storage.bos_client as bos_client
 import fueling.common.time_utils as time_utils
 
@@ -55,27 +56,24 @@ class BasePipeline(object):
         """Get a mongo client."""
         return Mongo(self.FLAGS)
 
+    # TODO(xiaoxq): Retire later.
     def bos(self):
         """Get a BOS client."""
-        return bos_client.BosClient(self.FLAGS.get('bos_region'), self.FLAGS.get('bos_bucket'),
-                                    os.environ.get('AWS_ACCESS_KEY_ID'),
-                                    os.environ.get('AWS_SECRET_ACCESS_KEY'),
-                                    bos_client.BOS_MOUNT_PATH)
+        return bos_client.BosClient()
 
     @staticmethod
     def has_partner():
         """Test if we have partner bos."""
-        return os.environ.get('PARTNER_BOS_REGION') is not None
+        return os.environ.get('PARTNER_BOS_REGION') or os.environ.get('AZURE_STORAGE_ACCOUNT')
 
     @staticmethod
-    def partner_bos():
-        """Get a BOS client."""
-        if BasePipeline.has_partner():
-            return bos_client.BosClient(os.environ.get('PARTNER_BOS_REGION'),
-                                        os.environ.get('PARTNER_BOS_BUCKET'),
-                                        os.environ.get('PARTNER_BOS_ACCESS'),
-                                        os.environ.get('PARTNER_BOS_SECRET'),
-                                        bos_client.PARTNER_BOS_MOUNT_PATH)
+    def partner_object_storage():
+        """Get partner's object storage client."""
+        if os.environ.get('PARTNER_BOS_REGION'):
+            is_partner = True
+            return bos_client.BosClient(is_partner)
+        elif os.environ.get('AZURE_STORAGE_ACCOUNT'):
+            return blob_client.BlobClient()
         return None
 
     def __main__(self, argv):

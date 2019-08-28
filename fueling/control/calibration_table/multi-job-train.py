@@ -11,11 +11,11 @@ import numpy as np
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.storage.bos_client as bos_client
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
@@ -110,6 +110,7 @@ class MultiJobTrain(BasePipeline):
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
+        bos_client = BosClient()
 
         # intermediate result folder
         origin_prefix = os.path.join(inter_result_folder, job_owner, job_id)

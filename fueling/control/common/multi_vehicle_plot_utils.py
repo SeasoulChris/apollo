@@ -16,7 +16,7 @@ import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 import fueling.common.proto_utils as proto_utils
-import fueling.common.s3_utils as s3_utils
+
 
 DIM_INPUT = 3
 cali_input_index = {

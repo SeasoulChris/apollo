@@ -9,9 +9,11 @@ set -e
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # Job: Data jobs.
-JOB="fueling/data/pipelines/bag_to_record.py"
+# The bag-to-record job is code-freezed.
 ./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 \
-    --image hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0 ${JOB}
+    --image "hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0" \
+    --fueling "/mnt/bos/modules/data/jobs/deploy/fueling-20190828.zip" \
+    "/apollo/modules/data/fuel/fueling/data/pipelines/bag_to_record.py"
 
 JOB="fueling/data/daily-data-jobs.py"
 ./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 ${JOB}

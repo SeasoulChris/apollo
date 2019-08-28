@@ -15,10 +15,10 @@ from pyspark.sql import SQLContext
 import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.storage.bos_client as bos_client
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
@@ -213,7 +213,8 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        root_dir = bos_client.BOS_MOUNT_PATH
+        bos_client = BosClient()
+        root_dir = bos_client.mnt_path
         target_dir = 'modules/data/labeling/generated'
         file_utils.makedirs(bos_client.abs_path(target_dir))
         glog.info('Running PROD, target_dir: {}'.format(bos_client.abs_path(target_dir)))

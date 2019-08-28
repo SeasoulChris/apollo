@@ -51,7 +51,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
         # prefix = 'modules/control/data/results/UniformDistributed/Mkz7'
         prefix = 'modules/control/data/results/SampleSet/Mkz7'
         # file path to save visualization results
-        output_dir = bos_client.abs_path(prefix)
+        output_dir = bos_client.BosClient().abs_path(prefix)
         timestr = time.strftime('%Y%m%d-%H%M%S')
         file_name = ('dataset_distribution_%s.pdf' % timestr)
         result_file = os.path.join(output_dir, file_name)

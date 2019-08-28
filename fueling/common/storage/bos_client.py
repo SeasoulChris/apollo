@@ -2,11 +2,8 @@
 #!/usr/bin/env python
 
 import os
-import shutil
 import string
-import tempfile
 
-from absl import flags
 import boto3
 import botocore.client
 import botocore.exceptions
@@ -15,34 +12,28 @@ import colored_glog as glog
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
 
 
-# Configs.
-flags.DEFINE_string('bos_bucket', 'apollo-platform', 'BOS bucket.')
-flags.DEFINE_string('bos_region', 'bj', 'BOS region.')
-
 # Constants
 BOS_MOUNT_PATH = '/mnt/bos'
 PARTNER_BOS_MOUNT_PATH = '/mnt/partner'
-# for test
-# PARTNER_BOS_MOUNT_PATH = '/mnt/bos'
-
-# Helpers.
-
-
-def abs_path(object_key): return os.path.join(BOS_MOUNT_PATH, object_key)
-
-
-def partner_abs_path(object_key): return os.path.join(PARTNER_BOS_MOUNT_PATH, object_key)
 
 
 class BosClient(BaseObjectStorageClient):
     """A Baidu BOS client."""
 
-    def __init__(self, region, bucket, ak, sk, mnt_path=BOS_MOUNT_PATH):
-        BaseObjectStorageClient.__init__(self, mnt_path)
-        self.region = region
-        self.bucket = bucket
-        self.access_key = ak
-        self.secret_key = sk
+    def __init__(self, is_partner=False):
+        if is_partner:
+            BaseObjectStorageClient.__init__(self, PARTNER_BOS_MOUNT_PATH)
+            self.region = os.environ.get('PARTNER_BOS_REGION')
+            self.bucket = os.environ.get('PARTNER_BOS_BUCKET')
+            self.access_key = os.environ.get('PARTNER_BOS_ACCESS')
+            self.secret_key = os.environ.get('PARTNER_BOS_SECRET')
+        else:
+            BaseObjectStorageClient.__init__(self, BOS_MOUNT_PATH)
+            self.region = os.environ.get('BOS_REGION')
+            self.bucket = os.environ.get('BOS_BUCKET')
+            self.access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+            self.secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
             glog.error('Failed to get BOS config.')
             return None

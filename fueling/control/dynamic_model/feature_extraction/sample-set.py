@@ -11,12 +11,12 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 from fueling.control.dynamic_model.conf.model_config import feature_extraction
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.storage.bos_client as bos_client
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.dir_utils as dir_utils
@@ -189,13 +189,13 @@ class SampleSet(BasePipeline):
 
         # extract features to intermediate result folder
         target_prefix = os.path.join(INTER_FOLDER, job_owner, job_id)
-        target_dir = bos_client.abs_path(target_prefix)
+        our_bos = BosClient()
+        target_dir = our_bos.abs_path(target_prefix)
         glog.info('target_dir %s' % target_dir)
 
-        if self.has_partner():
-            origin_dir = bos_client.partner_abs_path(origin_prefix)
-        else:
-            origin_dir = bos_client.abs_path(origin_prefix)
+        # Access partner's storage if provided.
+        object_storage = self.partner_object_storage() or our_bos
+        origin_dir = object_storage.abs_path(origin_prefix)
 
         glog.info("origin_dir: %s" % origin_dir)
         glog.info("target_prefix: %s" % target_prefix)
@@ -252,20 +252,12 @@ class SampleSet(BasePipeline):
             .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type)))
 
         """ get to do jobs """
-        if self.has_partner():
-            todo_task_dirs = spark_helper.cache_and_log(
-                'todo_jobs',
-                # PairRDD(vehicle_type, relative_path_to_vehicle_type)
-                origin_vehicle_dir
-                # PairRDD(vehicle_type, files)
-                .flatMapValues(self.partner_bos().list_files))
-        else:
-            todo_task_dirs = spark_helper.cache_and_log(
-                'todo_jobs',
-                # PairRDD(vehicle_type, relative_path_to_vehicle_type)
-                origin_vehicle_dir
-                # PairRDD(vehicle_type, files)
-                .flatMapValues(self.bos().list_files))
+        todo_task_dirs = spark_helper.cache_and_log(
+            'todo_jobs',
+            # PairRDD(vehicle_type, relative_path_to_vehicle_type)
+            origin_vehicle_dir
+            # PairRDD(vehicle_type, files)
+            .flatMapValues(object_storage.list_files))
 
         todo_task_dirs = spark_helper.cache_and_log(
             'todo_jobs',

@@ -95,7 +95,7 @@ def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
     if yaml_file_name is None:
         return None
-    yaml_file_name = bos_client.abs_path(yaml_file_name)
+    yaml_file_name = bos_client.BosClient().abs_path(yaml_file_name)
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 

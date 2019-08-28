@@ -7,14 +7,18 @@ from azure.storage.blob import BlockBlobService
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
 
 
+# Constants
+BLOB_MOUNT_PATH = '/mnt/blob'
+
+
 class BlobClient(BaseObjectStorageClient):
     """
     An Azure Blob client.
     Refer doc at https://azure-storage.readthedocs.io
     """
 
-    def __init__(self, mnt_path='/mnt/blob'):
-        BaseObjectStorageClient.__init__(self, mnt_path)
+    def __init__(self):
+        BaseObjectStorageClient.__init__(self, BLOB_MOUNT_PATH)
         self.account_name = os.environ.get('AZURE_STORAGE_ACCOUNT')
         self.account_key = os.environ.get('AZURE_STORAGE_ACCESS_KEY')
         self.container_name = os.environ.get('AZURE_BLOB_CONTAINER')
