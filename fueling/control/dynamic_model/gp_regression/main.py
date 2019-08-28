@@ -22,10 +22,8 @@ def launch(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
-    parser.add_argument('--data_path', type=str,
-                        default="testdata/control/gaussian_process/data/test/")
-    parser.add_argument('--model_path', type=str,
-                        default="testdata/control/gaussian_process/data/")
+    parser.add_argument('--labeled_data_path', type=str,
+                        default="testdata/control/gaussian_process/dataset/label_generation/")
     parser.add_argument('--result_path', type=str,
                         default="testdata/control/gaussian_process/results/")
 

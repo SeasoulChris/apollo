@@ -27,8 +27,8 @@ segment_index = {
 }
 
 feature_config = {
-    "input_dim": 5, # Input dimension
-    "output_dim": 2, # Output dimension
+    "input_dim": 5,  # Input dimension
+    "output_dim": 2,  # Output dimension
     "delta_t": 0.01,  # updating cycle delta_t for input data
     "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "window_size": 51,  # window_size for savgol_filter
