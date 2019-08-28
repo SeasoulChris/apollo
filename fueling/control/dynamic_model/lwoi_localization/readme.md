@@ -11,7 +11,7 @@ Before running the code package, a series of preparation work need to be conduct
 1. Set up the correct Conda environment:
 
       ```bash
-      $ conda env update --prune -f fueling/conda/py36-pyro.yaml
+      $ conda env update --prune -f /apollo/modules/data/fuel/fueling/conda/py36-pyro.yaml
       $ conda activate fuel-py36-pyro.yaml
       ```
     Note: the `fuel-py36-pyro` is a little different from the regualr `fuel-py36` environment. The former one includes some special version setting which matches the current `pyro-ppl` version.     
@@ -23,8 +23,8 @@ So far the lwoi_localization package only supports the NCLT data downloading and
 1. Download the NCLT sensor and groundtruth data with the downloader.py:
 
       ```bash
-      $ python fueling/control/dynamic_model/lwoi_localization/downloader.py --sen
-      $ python fueling/control/dynamic_model/lwoi_localization/downloader.py --gt
+      $ python /apollo/modules/data/fuel/fueling/control/dynamic_model/lwoi_localization/downloader.py --sen
+      $ python /apollo/modules/data/fuel/fueling/control/dynamic_model/lwoi_localization/downloader.py --gt
       ```
       The compressed data package will be download into the current directory
 
@@ -66,7 +66,7 @@ The Main Codes are included in the lwoi_main.py.
 1. Simply run the codes to process data, learning model, test resuls :
 
       ```bash
-      $ python fueling/control/dynamic_model/lwoi_localization/main_lwoi.py
+      $ python /apollo/modules/data/fuel/fueling/control/dynamic_model/lwoi_localization/main_lwoi.py
       ```
 
 2. Advanced setting for input arguments (refer to the lwoi_main.py):
@@ -99,7 +99,7 @@ The Main Codes are included in the lwoi_main.py.
  1. Set up the correct Conda environment:
 
        ```bash
-       $ conda env update --prune -f fueling/conda/py36-pyro.yaml
+       $ conda env update --prune -f /apollo/modules/data/fuel/fueling/conda/py36-pyro.yaml
        $ conda activate fuel-py36-pyro.yaml
        ```
 ## Download Sensor and Groundtruth Data
