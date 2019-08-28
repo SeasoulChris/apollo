@@ -41,9 +41,8 @@ if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
   exit $(awk '{print $3}' /tmp/spark-submit.ret)
 fi
 
-# Now we are inside the client docker.
+# Now we are inside the client docker, and working dir is the fuel root.
 set -e
-cd /fuel
 
 # Default value for configurable arguments.
 JOB_FILE=""

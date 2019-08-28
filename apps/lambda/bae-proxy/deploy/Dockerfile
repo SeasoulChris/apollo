@@ -1,4 +1,7 @@
-FROM ubuntu:18.04
+FROM apolloauto/fuel-client:20190821_1718
+
+ENV IN_CLIENT_DOCKER=true
+ENV SUBMITTER=bae-proxy
 
 RUN apt-get update -y && \
     apt-get install -y openjdk-11-jre rsync wget zip && \
@@ -7,9 +10,8 @@ RUN apt-get update -y && \
     rm install.sh
 
 COPY apps/lambda/bae-proxy/deploy/conda-py37.yaml /tmp/conda-py37.yaml
-COPY tools/tool-env.yaml /tmp/tool-env.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
-    /usr/local/miniconda/bin/conda env update -f /tmp/tool-env.yaml
+    /usr/local/miniconda/bin/conda clean -a -y
 
 COPY py_proto /apollo/py_proto
 COPY apps/local /apollo/modules/data/fuel/apps/local
