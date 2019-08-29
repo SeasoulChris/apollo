@@ -23,9 +23,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
     parser.add_argument('--labeled_data_path', type=str,
-                        default="testdata/control/gaussian_process/dataset/label_generation/")
+                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/label_generation")
     parser.add_argument('--result_path', type=str,
-                        default="testdata/control/gaussian_process/results/")
+                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)

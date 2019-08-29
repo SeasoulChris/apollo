@@ -6,7 +6,6 @@ import os
 import pickle
 import sys
 
-from liegroups.torch import SO3
 from torch.utils.data.dataset import Dataset
 import colored_glog as glog
 import h5py
@@ -40,11 +39,12 @@ class GPDataSet(Dataset):
         input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
         output_data = torch.zeros(DIM_OUTPUT, 0)
         for h5_file in datasets:
+            glog.info(os.path.join(h5_file))
             with h5py.File(h5_file, 'r') as model_norms_file:
                 input_segment = torch.tensor(np.array(model_norms_file.get('input_segment')))
                 output_segment = torch.tensor(np.array(model_norms_file.get('output_segment')))
                 input_segment = input_segment.view(1, INPUT_LENGTH, DIM_INPUT)
                 output_segment = output_segment.view(DIM_OUTPUT, 1)
-                input_data = torch.cat((input_data, input_segment), 0)
-                output_data = torch.cat((output_data, output_segment), 1)
+                input_data = torch.cat((input_data, input_segment.float()), 0)
+                output_data = torch.cat((output_data, output_segment.float()), 1)
         return (input_data, output_data)

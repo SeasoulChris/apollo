@@ -49,8 +49,12 @@ def preprocessing(args, dataset, gp):
 
 
 def save_gp(args, gp_model, kernel_net):
-    # TODO(Jiaxuan): Implement model saving module
-    glog.info("Model saved")
+    """Save the learned results for Gaussian process"""
+    torch.save(gp_model.gp_f.state_dict(), os.path.join(args.result_path, "gp_f.p"))
+    torch.save(gp_model.gp_f.kernel.state_dict(), os.path.join(args.result_path, "kernel.p"))
+    torch.save(gp_model.gp_f.likelihood.state_dict(),
+               os.path.join(args.result_path, "likelihood.p"))
+    torch.save(kernel_net.state_dict(), os.path.join(args.result_path, "fnet.p"))
 
 
 def train_gp(args, dataset, gp_class):
@@ -76,12 +80,12 @@ def train_gp(args, dataset, gp_class):
     Xu = feature[torch.arange(0, feature.shape[0],
                               step=int(feature.shape[0] / args.num_inducing_point)).long()]
     # The Pyro core of Gaussian Process training through variational inference
-    gp_model = gp.models.VariationalSparseGP(feature, label, kernel, Xu,
-                                             num_data=feature.shape[0], likelihood=likelihood,
-                                             mean_function=None, whiten=True, jitter=1e-3)
+    gp_f = gp.models.VariationalSparseGP(feature, label, kernel, Xu,
+                                         num_data=feature.shape[0], likelihood=likelihood,
+                                         mean_function=None, whiten=True, jitter=1e-3)
     # TODO(Jiaxuan): Define the cooresponding GP class
     # Instantiate a Gaussian Process object
-    gp_instante = gp_class(args, gp_model, dataset)
+    gp_instante = gp_class(args, gp_f, dataset)
     # args.mate = preprocessing(args, dataset, gp_instante)
     # Pyro Adam opitmizer
     optimizer = optim.ClippedAdam({"lr": args.lr, "lrd": args.lr_decay})
@@ -96,4 +100,5 @@ def train_gp(args, dataset, gp_class):
         glog.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss))
         if epoch == 10:
             gp_instante.gp_f.jitter = 1e-4
-        save_gp(args, gp_instante, deep_encoding_net)
+    
+    save_gp(args, gp_instante, deep_encoding_net)
