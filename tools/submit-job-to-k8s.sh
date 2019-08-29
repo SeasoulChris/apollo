@@ -200,7 +200,6 @@ spark-submit \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
     --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
     --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
-    --conf spark.kubernetes.node.selector.ip="192.168.32.44" \
 \
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
