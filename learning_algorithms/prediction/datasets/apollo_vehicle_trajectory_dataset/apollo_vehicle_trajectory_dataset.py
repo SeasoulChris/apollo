@@ -410,14 +410,14 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             target_obs_hist_size = obs_hist_sizes[predicting_idx]
 
             # Nearby obstacles' historical information
-            num_obs = all_obs_positions.shape[0]
-            nearby_obs_mask = [True for i in range(num_obs)]
-            nearby_obs_mask[predicting_idx] = False
-            nearby_obs_pos = all_obs_positions[nearby_obs_mask]
-            nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask]
+            # num_obs = all_obs_positions.shape[0]
+            # nearby_obs_mask = [True for i in range(num_obs)]
+            # nearby_obs_mask[predicting_idx] = False
+            # nearby_obs_pos = all_obs_positions[nearby_obs_mask]
+            # nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask]
 
             return ((img,
-                     torch.from_numpy(target_obs_rel_positions).float(),
+                     torch.from_numpy(target_obs_pos_rel).float(),
                      torch.from_numpy(target_obs_hist_size).float(),
                      torch.from_numpy(all_obs_pos_rel).float()),
                     torch.from_numpy(target_obs_future_traj).float())
