@@ -3,15 +3,8 @@ FROM apolloauto/fuel-client:20190821_1718
 ENV IN_CLIENT_DOCKER=true
 ENV SUBMITTER=bae-proxy
 
-RUN apt-get update -y && \
-    apt-get install -y openjdk-11-jre rsync wget zip && \
-    wget -O install.sh "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" && \
-    bash install.sh -b -p /usr/local/miniconda && \
-    rm install.sh
-
-COPY apps/lambda/bae-proxy/deploy/conda-py37.yaml /tmp/conda-py37.yaml
-RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
-    /usr/local/miniconda/bin/conda clean -a -y
+COPY apps/lambda/bae-proxy/deploy/py3-requirement.txt /tmp/py3-requirement.txt
+RUN python3 -m pip install -r /tmp/py3-requirement.txt
 
 COPY py_proto /apollo/py_proto
 COPY apps/local /apollo/modules/data/fuel/apps/local

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-BASH_ARGS=$1
-PY_ARGS=$2
-INPUT_DATA_PATH=$3
+INPUT_DATA_PATH=$1
+BASH_ARGS=$2
+PY_ARGS=$3
+
+set -e
 
 export PATH=/usr/local/miniconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 cd /apollo/modules/data/fuel

@@ -13,7 +13,7 @@ import gunicorn.app.base
 
 from modules.tools.fuel_proxy.proto.job_config_pb2 import JobConfig
 
-from vehicle_calibration import VehicleCalibration
+from job_processor import JobProcessor
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
@@ -22,30 +22,17 @@ flags.DEFINE_integer('workers', 5, 'Workers to run.')
 
 class FuelJob(flask_restful.Resource):
     """Fuel job restful service"""
-    PARTNERS = {
-        'apollo',
-        'apollo-evangelist',
-        'apollo-qa',
-        'udelv2019',
-    }
-
     def post(self):
         """Accept user request, verify and process."""
-        # 1. Parse request.
         try:
             request = flask.request.get_json()
             parser = json_format.Parse if isinstance(request, str) else json_format.ParseDict
             job_config = parser(request, JobConfig())
+            http_code, msg = JobProcessor(job_config).process()
         except json_format.ParseError:
-            return json.dumps({'message': 'job_config format error!'}), HTTPStatus.BAD_REQUEST
-        # 2. User authentication.
-        if job_config.partner_id not in self.PARTNERS:
-            msg = 'Sorry, you are not authorized to access this service!'
-            return json.dumps({'message': msg}), HTTPStatus.UNAUTHORIZED
-        # 3. Dispatch jobs.
-        if job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
-            return VehicleCalibration.process(job_config)
-        return json.dumps({'message': 'Unsupported job type'}), HTTPStatus.BAD_REQUEST
+            http_code = HTTPStatus.BAD_REQUEST
+            msg = 'job_config format error!'
+        return json.dumps({'message': msg}), http_code
 
 
 app = flask.Flask(__name__)

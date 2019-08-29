@@ -1,0 +1,9 @@
+# Google infra
+absl-py
+protobuf
+
+# Web
+flask
+gunicorn
+pyopenssl
+flask-restful
