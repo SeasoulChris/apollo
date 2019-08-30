@@ -3,5 +3,5 @@
 dim = {
     "pose": 17,
     "chassis": 5,
-    "timesteps": 20 # 0.2s
+    "timesteps": 20  # 0.2s
 }

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+
 class NCLTFilter():
     """Desing EKF filter for the data in the NCLT format"""
 
@@ -20,25 +21,25 @@ class NCLTFilter():
         self.path_results = args.path_results
         self.calibration_parameters = dataset.calibration_parameters
 
-        self.Q = torch.diag(torch.Tensor([0.7 ** 2, # sigma_v_r
-                                          0.2 ** 2, # sigma_v_l
-                                          0.001 ** 2, # sigma_v_z
-                                          (0.005 / 180) ** 2, # sigma_delta_psi
-                                          (1 / 180) ** 2, # sigma_phi
-                                          (1 / 180) ** 2, # sigma_theta
-                                          (1 / 180) ** 2, # sigma_p
-                                          (1 / 180) ** 2, # sigma_q
-                                          (1 / 180) ** 2, # sigma_r
+        self.Q = torch.diag(torch.Tensor([0.7 ** 2,  # sigma_v_r
+                                          0.2 ** 2,  # sigma_v_l
+                                          0.001 ** 2,  # sigma_v_z
+                                          (0.005 / 180) ** 2,  # sigma_delta_psi
+                                          (1 / 180) ** 2,  # sigma_phi
+                                          (1 / 180) ** 2,  # sigma_theta
+                                          (1 / 180) ** 2,  # sigma_p
+                                          (1 / 180) ** 2,  # sigma_q
+                                          (1 / 180) ** 2,  # sigma_r
                                           ]))
 
-        self.R = torch.diag(torch.Tensor([(2 / 180) ** 2, # gyro
-                                          (2 / 180) ** 2, # gyro
-                                          (2 / 180) ** 2, # gyro
-                                          0.1 ** 2, # accelerometer
-                                          0.1 ** 2, # accelerometer
-                                          0.1 ** 2, # accelerometer
-                                          0.7 ** 2, # odo
-                                          0.2 ** 2, # odo
+        self.R = torch.diag(torch.Tensor([(2 / 180) ** 2,  # gyro
+                                          (2 / 180) ** 2,  # gyro
+                                          (2 / 180) ** 2,  # gyro
+                                          0.1 ** 2,  # accelerometer
+                                          0.1 ** 2,  # accelerometer
+                                          0.1 ** 2,  # accelerometer
+                                          0.7 ** 2,  # odo
+                                          0.2 ** 2,  # odo
                                           ]))
 
         # Jacobian, where constant part are pre-computed
@@ -49,10 +50,10 @@ class NCLTFilter():
 
         # noise propagation Jacobian
         self.G = torch.zeros(self.F.shape[0], self.Q.shape[0])
-        self.G[2, 2] = torch.eye(1) * args.delta_t # v_z
-        self.G[5, 3] = torch.eye(1) * args.delta_t # delta_psi
-        self.G[3:5, 4:6] = torch.eye(2) * args.delta_t # phi, theta
-        self.G[6:9, 6:9] = torch.eye(3) * args.delta_t # p, q, r
+        self.G[2, 2] = torch.eye(1) * args.delta_t  # v_z
+        self.G[5, 3] = torch.eye(1) * args.delta_t  # delta_psi
+        self.G[3:5, 4:6] = torch.eye(2) * args.delta_t  # phi, theta
+        self.G[6:9, 6:9] = torch.eye(3) * args.delta_t  # p, q, r
 
         # state measurement Jacobian
         self.H = torch.zeros(9, self.F.shape[0])
@@ -79,7 +80,7 @@ class NCLTFilter():
     def update(self, u_imu, u_odo):
         """Update state of trained model during test run"""
         y = self.h_imu(u_imu)
-        #integrated measurement
+        # integrated measurement
         if self.gp_imu:
             y_cor, J_cor = self.gp_imu.correct(u_imu)
             y = y + y_cor
@@ -186,7 +187,7 @@ class NCLTFilter():
         A[1, 1] = self.x[3].cos()
         A[1, 2] = -self.x[3].sin()
         F[3:5, 6:9] = A * dt
-        B = torch.Tensor([[1/2, 1/2], # v_l, v_r to v_forward
+        B = torch.Tensor([[1/2, 1/2],  # v_l, v_r to v_forward
                           [0, 0]])
         F[3, 3] = 1 + self.x[7] * self.x[3].sin() * self.x[4].tan() * dt
         F[3, 4] = ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos()) *
@@ -206,7 +207,7 @@ class NCLTFilter():
         H = self.H
 
         Rot_prev = SO3.from_rpy(self.x_prev[3:6]).as_matrix()
-        Rot_new =  SO3.from_rpy(self.x[3:6]).as_matrix()
+        Rot_new = SO3.from_rpy(self.x[3:6]).as_matrix()
 
         # speed is not in state
         J[0, 3:6, 6:] = -Rot_prev.t()[:3, :2]
@@ -214,7 +215,7 @@ class NCLTFilter():
         J[0, 6:9, 6:] = J[0, 6:9, 6:] * self.Delta_t
 
         v = torch.Tensor([1/2 * (u_odo[0][0] + u_odo[0][1]), 0, 0])
-        H[:3, 3:6] =  -Rot_prev.t().mm(Rot_new)
+        H[:3, 3:6] = -Rot_prev.t().mm(Rot_new)
         H[:3, 9:12] = -Rot_prev.t()
         H[3:6, 9:12] = -Rot_prev.t().mm(self.skew(self.x[:3] - self.x_prev[:3] -
                                                   v * self.Delta_t -
@@ -243,12 +244,12 @@ class NCLTFilter():
         # *Joseph form* of covariance update for numerical stability.
         self.P = (ImKH.mm(self.P).mm(ImKH.transpose(-1, -2)) +
                   K_prefix.mm(torch.gesv((K_prefix.mm(torch.gesv(R, S)[0]))
-                                        .transpose(-1, -2), S)[0]))
+                                         .transpose(-1, -2), S)[0]))
         return K_prefix, S
 
     def update_state(self, K_prefix, S, dy):
         """Update states during the test run"""
-        dx = K_prefix.mm(torch.gesv(dy, S)[0]).squeeze(1) # K*dy
+        dx = K_prefix.mm(torch.gesv(dy, S)[0]).squeeze(1)  # K*dy
         self.x[:3] += dx[:3]
         self.x[3:6] += (SO3.exp(dx[3:6]).dot(SO3.from_rpy(self.x[3:6]))).to_rpy()
         self.x[6:9] += dx[6:9]
@@ -347,7 +348,7 @@ class KAISTFilter(NCLTFilter):
         F = self.F
         G = self.G
         v, _ = self.encoder2speed(u_odo, dt)
-        J = torch.Tensor([[0, 1],[-1, 0]])
+        J = torch.Tensor([[0, 1], [-1, 0]])
         Rot = torch.Tensor([[self.x[5].cos(), self.x[5].sin()],
                             [-self.x[5].sin(), self.x[5].cos()]])
         F[:2, 5] = J.mv(Rot.mv(torch.Tensor([v * dt, 0])))
@@ -359,7 +360,7 @@ class KAISTFilter(NCLTFilter):
         A[1, 1] = self.x[3].cos()
         A[1, 2] = -self.x[3].sin()
         F[3:5, 6:9] = A * dt
-        B = torch.Tensor([[1/2, 1/2], # v_l, v_r to v_forward
+        B = torch.Tensor([[1/2, 1/2],  # v_l, v_r to v_forward
                           [0, 0]])
         F[3, 3] = 1 + self.x[7] * self.x[3].sin() * self.x[4].tan() * dt
         F[3, 4] = 1 + ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos())

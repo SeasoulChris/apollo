@@ -21,6 +21,7 @@ def get_todo_tasks(origin_prefix, target_prefix,
     # RDD(dir_of_to_do_tasks)
     return origin_dirs.subtract(processed_dirs)
 
+
 def get_todo_records(todo_tasks):
     """Get to be processed record files in rdd format"""
     # RDD(record_dir)
@@ -33,6 +34,8 @@ def get_todo_records(todo_tasks):
             .filter(spark_op.filter_value(record_utils.is_record_file)))
 
 # Helper function
+
+
 def list_completed_dirs(prefix, marker):
     """List directories that contains COMPLETE mark up files"""
     # RDD(files in prefix folders)

@@ -31,6 +31,7 @@ def generate_segments(h5s):
     print('Segments length is: ', len(segments))
     return segments
 
+
 def generate_data(segments):
     """generate data array from the given data segments"""
     data = []
@@ -42,6 +43,7 @@ def generate_data(segments):
         data = np.vstack([data, segments[i]])
     print('Data_Set length is: ', len(data))
     return data
+
 
 def clean_data(data, seq):
     """clean the data until the distribution matches the given standard"""
@@ -57,6 +59,7 @@ def clean_data(data, seq):
             return [0.05 * i, 1 - 0.05 * i]
     return [0.05 * i, 1 - 0.05 * i]
 
+
 def plot_h5_features_hist(data_rdd):
     """plot the histogram of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
@@ -68,7 +71,7 @@ def plot_h5_features_hist(data_rdd):
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
         vehicle_controller = os.path.basename(grading_dir[0]).replace(
-                                             'control_performance_grading.txt', '')
+            'control_performance_grading.txt', '')
         pdffile = os.path.join(dir_data, vehicle_controller + 'control_data_visualization.pdf')
     else:
         pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
@@ -76,7 +79,7 @@ def plot_h5_features_hist(data_rdd):
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
             if (i < data.shape[1] and
-                (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
+                    (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
                 glog.info('Processing the plots at Column: {}, Feature: {}'
                           .format(i, FEATURE_NAMES[i]))
                 if i == FEATURE_IDX["pose_heading_offset"]:
@@ -91,7 +94,8 @@ def plot_h5_features_hist(data_rdd):
                 if length > profiling_conf.min_sample_size:
                     seq = np.argsort(data_plot)
                     scope = data_plot[seq[length - 1]] - data_plot[seq[0]]
-                    scope_90 = data_plot[seq[int(length * 0.95 - 1)]] - data_plot[seq[int(length * 0.05)]]
+                    scope_90 = data_plot[seq[int(length * 0.95 - 1)]] - \
+                        data_plot[seq[int(length * 0.05)]]
                     glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
                               .format(scope, scope_90))
                     bounds = clean_data(data_plot, seq)

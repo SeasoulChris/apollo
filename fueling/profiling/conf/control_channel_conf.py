@@ -13,7 +13,7 @@ MODE_IDX = {
     "brake_chassis": 5,
 }
 
-FEATURE_IDX= {
+FEATURE_IDX = {
     # Features extracted from Control Channel
     "station_reference": 0,
     "speed_reference": 1,
@@ -67,7 +67,7 @@ POSE_IDX = {
     "pose_heading": 4,
 }
 
-FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
+FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference", "heading_reference", "heading_rate_reference",
                  "curvature_reference", "path_remain", "station_error", "speed_error", "lateral_error", "lateral_error_rate",
                  "heading_error", "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station",
                  "speed", "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",

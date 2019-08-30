@@ -20,6 +20,7 @@ WANTED_VEHICLE = feature_extraction_utils.WANTED_VEHICLE
 MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteGeneralSet'
 
+
 class GeneralFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
 
@@ -37,7 +38,7 @@ class GeneralFeatureExtraction(BasePipeline):
         todo_tasks = self.to_rdd([origin_prefix])
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
+                                                  dir_utils.get_todo_records(todo_tasks))
         self.run(todo_records, origin_prefix, target_prefix)
 
     def run_prod(self):
@@ -49,7 +50,7 @@ class GeneralFeatureExtraction(BasePipeline):
         todo_tasks = dir_utils.get_todo_tasks(origin_prefix, target_prefix, 'COMPLETE', MARKER)
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
-            dir_utils.get_todo_records(todo_tasks))
+                                                  dir_utils.get_todo_records(todo_tasks))
         self.run(todo_records, origin_prefix, target_prefix)
 
     def run(self, dir_to_records_rdd, origin_prefix, target_prefix):

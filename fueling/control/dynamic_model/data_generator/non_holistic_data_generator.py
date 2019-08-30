@@ -84,7 +84,7 @@ def generate_mlp_data(segment, total_len):
         mlp_output_data[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
             segment[k + DIM_DELAY_STEPS, segment_index["a_x"]]
             * np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
-             + segment[k + DIM_DELAY_STEPS, segment_index["a_y"]]
+            + segment[k + DIM_DELAY_STEPS, segment_index["a_y"]]
             * np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # angular speed next
         mlp_output_data[k, output_index["w_z"]] = PP7_IMU_SCALING * \

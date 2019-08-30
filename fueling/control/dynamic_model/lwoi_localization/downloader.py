@@ -33,19 +33,22 @@ dates = ['2012-01-08',
          '2012-12-01',
          '2013-01-10',
          '2013-02-23',
-         '2013-04-05'];
+         '2013-04-05']
+
 
 def ensure_output_dir(out_dir):
     """Check if the output direction is valid"""
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-def main (args):
+
+def main(args):
     """Execute the batch downloading from nclt database"""
     getopt = argparse.ArgumentParser(description='Download NCLT dataset')
     getopt.add_argument('--all', action='store_true', help='Download all data types')
     getopt.add_argument('--lb3', action='store_true', help='Download Ladybug3 Images')
-    getopt.add_argument('--sen', action='store_true', help='Download sensor data (includes odometry)')
+    getopt.add_argument('--sen', action='store_true',
+                        help='Download sensor data (includes odometry)')
     getopt.add_argument('--vel', action='store_true', help='Download velodyne data')
     getopt.add_argument('--hokuyo', action='store_true', help='Download hokuyo data')
     getopt.add_argument('--gt', action='store_true', help='Download ground truth')
@@ -54,7 +57,7 @@ def main (args):
     args = getopt.parse_args()
 
     if (not args.all and not args.lb3 and not args.sen and not args.vel and
-        not args.gt and not args.gt_cov):
+            not args.gt and not args.gt_cov):
         print("No data type specified. Use --help to see options.")
 
     for date in dates:
@@ -107,4 +110,4 @@ def main (args):
 
 
 if __name__ == '__main__':
-    sys.exit (main(sys.argv))
+    sys.exit(main(sys.argv))

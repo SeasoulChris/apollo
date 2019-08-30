@@ -14,12 +14,13 @@ import numpy as np
 # speed_max = 25; speed_step = 5; min_speed_key = 1
 # (0~5) (5~10) (10~15) (15~20) (20~25) 5
 # steering_max = 100; steering_min = -100; step = 20; min_key = 0
-# (-100~-80) (-80~-60) (-60~-40) (-40~-20) (-20~0) 
+# (-100~-80) (-80~-60) (-60~-40) (-40~-20) (-20~0)
 # (0 ~ 20) (20 ~ 40) (40 ~ 60)
 # (0~20) (20~40) () 10
 # throttle_max = 45; step 5; min_key = 0
 # (dead_zone - dead_zone+5) (dead_zone+5 - dead_zone+10) (dead_zone+10 - dead_zone+15) ... 6
 # brake ... 5
+
 
 def all_key(speed_num, steering_num, throttle_num, brake_num):
     """ generate key """
@@ -46,8 +47,8 @@ def read_hdf5(folder):
     load h5 file to a numpy array
     """
     segment = None
-    # for filename in glob.iglob(os.path.join(folder, '**/*.hdf5'), recursive=True): 
-    for filename in glob.glob('./*.hdf5'): 
+    # for filename in glob.iglob(os.path.join(folder, '**/*.hdf5'), recursive=True):
+    for filename in glob.glob('./*.hdf5'):
         with h5py.File(filename, 'r') as fin:
             for value in fin.value():
                 if segment is None:
@@ -56,19 +57,22 @@ def read_hdf5(folder):
                     segment = np.concatenate((segment, np.array(value)), axis=0)
     return segment
 
+
 def gen_feature(data):
     return data[:, (14, 15, 16, 17)]
+
 
 def plot_feature_hist(fearure):
     timestr = time.strftime("%Y%m%d-%H%M%S")
     pdf_file = ('./Dataset_Distribution_%s.pdf' % timestr)
     with PdfPages(pdf_file) as pdf:
         for j in range(DIM_INPUT):
-            plt.figure(figsize=(4,3))
-            plt.hist(fearure[:,j],bins ='auto')
-            plt.title ("Histogram of the " + list(input_index)[j])
+            plt.figure(figsize=(4, 3))
+            plt.hist(fearure[:, j], bins='auto')
+            plt.title("Histogram of the " + list(input_index)[j])
             pdf.savefig()  # saves the current figure into a pdf page
             plt.close()
+
 
 DIM_INPUT = 4
 

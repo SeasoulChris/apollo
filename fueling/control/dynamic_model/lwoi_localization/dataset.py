@@ -9,6 +9,7 @@ from liegroups.torch import SO3
 from torch.utils.data.dataset import Dataset
 import torch
 
+
 class KAISTDataset(Dataset):
     """"Transfer the uploaded raw data in the KAIST format into the customized dataset """
 
@@ -39,7 +40,7 @@ class KAISTDataset(Dataset):
         """Extract the names of the datasets stored in the saved data path"""
         self.datasets = []
         for dataset in os.listdir(self.path_data_save):
-            self.datasets.append(dataset[:-2]) # take just name
+            self.datasets.append(dataset[:-2])  # take just name
         self.divide_datasets()
 
     def divide_datasets(self):
@@ -49,7 +50,7 @@ class KAISTDataset(Dataset):
         self.datasets_train = []
         for dataset in self.datasets:
             if ((not dataset in self.datasets_test) and
-                (not dataset in self.datasets_validation)):
+                    (not dataset in self.datasets_validation)):
                 self.datasets_train.append(dataset)
 
     def dataset_name(self, idx):
@@ -83,11 +84,11 @@ class KAISTDataset(Dataset):
         """Get the test data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
         dataset = self.datasets_test[idx] if type(idx) == int else idx
-        pickle_dict =  self[self.datasets.index(dataset)]
+        pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]
         u = self.normalize(u, "u_" + var)
-        if u[0].norm() == 0: #(Urban00-05 and campus00)
+        if u[0].norm() == 0:  # (Urban00-05 and campus00)
             u = torch.zeros(0, u.shape[1], u.shape[2])
             y = torch.zeros(0, y.shape[1])
         return u, y
@@ -96,11 +97,11 @@ class KAISTDataset(Dataset):
         """Get the cross validation data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
         dataset = self.datasets_validation[idx] if type(idx) == int else idx
-        pickle_dict =  self[self.datasets.index(dataset)]
+        pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]
         u = self.normalize(u, "u_" + var)
-        if u[0].norm() == 0: # (Urban00-05 and campus00)
+        if u[0].norm() == 0:  # (Urban00-05 and campus00)
             u = torch.zeros(0, u.shape[1], u.shape[2])
             y = torch.zeros(0, y.shape[1])
         return u, y
@@ -109,11 +110,11 @@ class KAISTDataset(Dataset):
         """Get the training data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
         dataset = self.datasets_train[idx] if type(idx) == int else idx
-        pickle_dict =  self[self.datasets.index(dataset)]
+        pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]
         u = self.normalize(u, "u_" + var)
-        if u[0].norm() == 0: # (Urban00-05 and campus00)
+        if u[0].norm() == 0:  # (Urban00-05 and campus00)
             u = torch.zeros(0, u.shape[1], u.shape[2])
             y = torch.zeros(0, y.shape[1])
         return u, y
@@ -185,6 +186,7 @@ class KAISTDataset(Dataset):
 
 class NCLTDataset(KAISTDataset):
     """"Transfer the uploaded raw data in the NCLT format into the customized dataset"""
+
     def __init__(self, args):
         super(NCLTDataset, self).__init__(args)
         # Transformation frame for NCLT dataset

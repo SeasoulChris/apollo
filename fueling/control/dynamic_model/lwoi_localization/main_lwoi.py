@@ -20,6 +20,7 @@ from dataset import NCLTDataset, KAISTDataset
 from filter import KAISTFilter, NCLTFilter
 from train import train_gp, GpOdoFog, GpImu, FNET, HNET
 
+
 def read_data_nclt(args):
     """Read the raw data in the NCLT format"""
 
@@ -44,11 +45,11 @@ def read_data_nclt(args):
         x_int = np.zeros((t.shape[0], x.shape[1]))
         x_int[:, 0] = t
         for i in range(1, x.shape[1]):
-                x_int[:, i] = np.interp(t, (x[:, 0] - t0) / time_factor, x[:, i])
+            x_int[:, i] = np.interp(t, (x[:, 0] - t0) / time_factor, x[:, i])
         return x_int
 
-    time_factor = 1e6 # ms -> s
-    g = torch.Tensor([0, 0, 9.81]) # gravity vector
+    time_factor = 1e6  # ms -> s
+    g = torch.Tensor([0, 0, 9.81])  # gravity vector
 
     datasets = glob.glob(os.path.join(args.path_data_base, 'sensor_data',
                                       args.dataset_name, '*/*'))
@@ -86,12 +87,12 @@ def read_data_nclt(args):
             while fog_t[i_fog] < t[j]:
                 i_fog += 1
 
-            if np.abs(gt_t[i_gt] - t[j]) <  np.abs(gt_t[i_gt - 1] - t[j]):
+            if np.abs(gt_t[i_gt] - t[j]) < np.abs(gt_t[i_gt - 1] - t[j]):
                 gt_new[j, :] = gt[i_gt, :]
             else:
                 gt_new[j, :] = gt[i_gt - 1, :]
 
-            if np.abs(fog_t[i_fog] - t[j]) <  np.abs(fog_t[i_fog + 1] - t[j]):
+            if np.abs(fog_t[i_fog] - t[j]) < np.abs(fog_t[i_fog + 1] - t[j]):
                 fog_new[j, 3] = fog_unwrap[i_fog] - fog_unwrap[i_fog_prev]
                 i_fog_prev = i_fog
             else:
@@ -128,7 +129,7 @@ def read_data_nclt(args):
             v_gt[1:, j] = (p_gt_smooth[1:] - p_gt_smooth[:-1]) / args.delta_t
 
         N_max = torch.ceil(torch.Tensor([t.shape[0] / k])).int().item()
-        chi =  torch.eye(4).repeat(N_max, 1, 1)
+        chi = torch.eye(4).repeat(N_max, 1, 1)
         y_odo_fog = torch.eye(4).repeat(N_max, 1, 1)
         u_odo_fog = torch.zeros(N_max, k, 3)
         u_imu = torch.zeros(N_max, k, 6)
@@ -142,7 +143,7 @@ def read_data_nclt(args):
                                       fog[i_odo:i_odo + k, 2].unsqueeze(-1)), 1)
             u_imu[i] = imu[i_odo: i_odo + k]
             chi_end = gt2chi(gt[i_odo + k])
-            chi[i] =  gt2chi(gt[i_odo])
+            chi[i] = gt2chi(gt[i_odo])
             chi_i = chi[i]
 
             y_odo_fog[i] = SE3.from_matrix(chi_i).inv().dot(SE3.from_matrix(chi_end)).as_matrix()
@@ -150,12 +151,11 @@ def read_data_nclt(args):
             v_i = v_gt[i_odo]
             v_end = v_gt[i_odo + k]
 
-            y_imu[i]  =  torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
-                                    chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
-                                    chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
-                                                         v_i * args.Delta_t -
-                                                         1/2 * g * args.Delta_t ** 2))
-                                   , 0)
+            y_imu[i] = torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
+                                  chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
+                                  chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
+                                                       v_i * args.Delta_t -
+                                                       1/2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
@@ -172,9 +172,10 @@ def read_data_nclt(args):
 
         bar_dataset.update(idx_i)
         print("\nNumber of points: {}".format(i))
-        with open(os.path.join(args.path_data_save, args.dataset_name, dataset_i) +".p",
+        with open(os.path.join(args.path_data_save, args.dataset_name, dataset_i) + ".p",
                   "wb") as file_pi:
             pickle.dump(mondict, file_pi)
+
 
 def read_data_kaist(args):
     """Read the raw data in the KAIST format"""
@@ -204,9 +205,9 @@ def read_data_kaist(args):
             x_int[:, i] = t if i == 0 else np.interp(t, (x[:, 0] - t0) / time_factor, x[:, i])
         return x_int
 
-    time_factor = 1e9 # ns -> s
-    g = torch.Tensor([0, 0, -9.81]) # gravity vector
-    threshold_odo = 30 # for removing outlier
+    time_factor = 1e9  # ns -> s
+    g = torch.Tensor([0, 0, -9.81])  # gravity vector
+    threshold_odo = 30  # for removing outlier
 
     datasets = glob.glob(os.path.join(args.path_data_base, 'sensor_data',
                                       args.dataset_name, '*/*'))
@@ -252,12 +253,12 @@ def read_data_kaist(args):
             while fog_t[i_fog] < t[j]:
                 i_fog += 1
 
-            if np.abs(gt_t[i_gt] - t[j]) <  np.abs(gt_t[i_gt - 1] - t[j]):
+            if np.abs(gt_t[i_gt] - t[j]) < np.abs(gt_t[i_gt - 1] - t[j]):
                 gt_new[j, :] = gt[i_gt, :]
             else:
                 gt_new[j, :] = gt[i_gt - 1, :]
 
-            if np.abs(fog_t[i_fog] - t[j]) <  np.abs(fog_t[i_fog + 1] - t[j]):
+            if np.abs(fog_t[i_fog] - t[j]) < np.abs(fog_t[i_fog + 1] - t[j]):
                 fog_new[j, 1:] = np.sum(fog[i_fog_prev:i_fog, 1:], axis=0)
             else:
                 fog_new[j, 1:] = np.sum(fog[i_fog_prev:i_fog + 1, 1:], axis=0)
@@ -290,7 +291,7 @@ def read_data_kaist(args):
         print("outliers in odometer: {:.2f}%".format(len(idx_outlier[0]) / diff_odo.shape[0]))
         while len(idx_outlier[0]) > 0:
             for idx in idx_outlier[0]:
-                diff_odo[idx] = (diff_odo[idx + 1] + diff_odo[idx -1]) / 2
+                diff_odo[idx] = (diff_odo[idx + 1] + diff_odo[idx - 1]) / 2
             idx_outlier = np.where(np.abs(diff_odo) > threshold_odo)
 
         # offset position to 0
@@ -314,7 +315,7 @@ def read_data_kaist(args):
 
         # max number of measurements for this dataset
         N_max = torch.ceil(torch.Tensor([t.shape[0] / k])).int().item()
-        chi =  torch.eye(4).repeat(N_max, 1, 1)
+        chi = torch.eye(4).repeat(N_max, 1, 1)
         y_odo_fog = torch.eye(4).repeat(N_max, 1, 1)
         u_odo_fog = torch.zeros(N_max, k, 3)
         u_imu = torch.zeros(N_max, k, 6)
@@ -337,12 +338,11 @@ def read_data_kaist(args):
                 v_i = v_gt[i_odo]
                 v_end = v_gt[i_odo + k]
 
-                y_imu[i] =  torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
-                                       chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
-                                       chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
-                                                            v_i * args.Delta_t -
-                                                            1/2 * g * args.Delta_t ** 2))
-                                      , 0)
+                y_imu[i] = torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
+                                      chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
+                                      chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
+                                                           v_i * args.Delta_t -
+                                                           1/2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
@@ -358,14 +358,15 @@ def read_data_kaist(args):
                    'name': dataset_i}
         bar_dataset.update(idx_i)
         print("\nNumber of points: {}\n".format(i))
-        with open(os.path.join(args.path_data_save, args.dateset_name, dataset_i) +".p",
+        with open(os.path.join(args.path_data_save, args.dateset_name, dataset_i) + ".p",
                   "wb") as file_pi:
             pickle.dump(mondict, file_pi)
+
 
 def set_gp_imu(args, dataset):
     """Set Gaussian process for IMU signal"""
     path_gp_imu = os.path.join(args.path_temp, args.dataset_name, "gp_imu")
-    if args.nclt: # this is just for correct dimension
+    if args.nclt:  # this is just for correct dimension
         u, y = dataset.get_train_data(1, gp_name='GpImu')
     else:
         u, y = dataset.get_test_data(1, gp_name='GpImu')
@@ -377,6 +378,7 @@ def set_gp_imu(args, dataset):
 
     hnet = HNET(args, u.shape[2], args.kernel_dim)
     hnet.load_state_dict(hnet_dict)
+
     def hnet_fn(x):
         return pyro.module("HNET", hnet)(x)
 
@@ -397,10 +399,11 @@ def set_gp_imu(args, dataset):
     gp_imu.normalize_factors = torch.load(os.path.join(path_gp_imu, "normalize_factors.p"))
     return gp_imu
 
+
 def set_gp_odo_fog(args, dataset):
     """Set the Gaussian process for odometry and fiber optic gyro"""
     path_gp_odo_fog = os.path.join(args.path_temp, args.dataset_name, "gp_odo_fog")
-    if args.nclt: # this is just for correct dimension
+    if args.nclt:  # this is just for correct dimension
         u, y = dataset.get_train_data(1, gp_name='GpOdoFog')
     else:
         u, y = dataset.get_test_data(1, gp_name='GpOdoFog')
@@ -412,6 +415,7 @@ def set_gp_odo_fog(args, dataset):
 
     fnet = FNET(args, u.shape[2], args.kernel_dim)
     fnet.load_state_dict(fnet_dict)
+
     def fnet_fn(x):
         return pyro.module("FNET", fnet)(x)
 
@@ -432,6 +436,7 @@ def set_gp_odo_fog(args, dataset):
     gp_odo_fog.normalize_factors = torch.load(os.path.join(path_gp_odo_fog,
                                                            "normalize_factors.p"))
     return gp_odo_fog
+
 
 def post_tests(args, dataset, filter_original):
     """Run Tests with the learning models"""
@@ -475,6 +480,7 @@ def post_tests(args, dataset, filter_original):
               args.compare + ": {:.2f})".format(error_original['mate rotation'] * 180 / np.pi))
         bar_dataset.update(i)
 
+
 def launch(args):
     """Launch the learning procedure with the given arguments"""
     if args.nclt:
@@ -485,15 +491,15 @@ def launch(args):
         args.dataset_name = "Kaist"
 
     args.cross_validation_sequences = os.listdir(os.path.join(args.path_data_base,
-                                                 'sensor_data',
-                                                 args.dataset_name,
-                                                 'cross_validation'))
+                                                              'sensor_data',
+                                                              args.dataset_name,
+                                                              'cross_validation'))
     args.test_sequences = os.listdir(os.path.join(args.path_data_base,
                                                   'sensor_data',
                                                   args.dataset_name,
                                                   'test'))
 
-    ### What to do
+    # What to do
     args.read_data = True
     args.train_gp_odo_fog = True
     args.train_gp_imu = True

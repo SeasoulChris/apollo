@@ -12,7 +12,7 @@ import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 
 from fueling.profiling.conf.control_channel_conf import \
-     FEATURE_IDX, MODE_IDX, POSE_IDX
+    FEATURE_IDX, MODE_IDX, POSE_IDX
 
 # Message number in each segment
 MSG_PER_SEGMENT = 3000
@@ -71,6 +71,7 @@ def data_matches_config(vehicle_type, controller_type):
         return False
     return True
 
+
 def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
@@ -78,14 +79,15 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     localization_msgs = collect_message_by_topic(msgs, record_utils.LOCALIZATION_CHANNEL)
     chassis_mtx = np.array([extract_chassis_data_from_msg(msg) for msg in chassis_msgs])
     control_mtx = np.array([extract_control_data_from_msg(msg) for msg in control_msgs])
-    localization_mtx = np.array([extract_localization_data_from_msg(msg) for msg in localization_msgs])
+    localization_mtx = np.array([extract_localization_data_from_msg(msg)
+                                 for msg in localization_msgs])
     glog.info('The original msgs size are: chassis {}, control {}, and localization: {}'
               .format(chassis_mtx.shape[0], control_mtx.shape[0], localization_mtx.shape[0]))
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
     # First, filter the chassis data with desired driving modes and gear locations
     driving_condition = (chassis_mtx[:, MODE_IDX['driving_mode']] == driving_mode)
-    gear_condition =  (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
+    gear_condition = (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
     for gear_idx in range(1, len(gear_position)):
         gear_condition |= (chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[gear_idx])
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
@@ -104,7 +106,7 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
                             < 0.0)
     control_idx_inv_seq = np.where(np.insert(inv_seq_chassis, 0, 0) |
-                                   np.insert(inv_seq_localization, 0, 0))[0];
+                                   np.insert(inv_seq_localization, 0, 0))[0]
     control_mtx_rtn = np.delete(control_mtx_rtn, control_idx_inv_seq, axis=0)
     # Fourth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
@@ -139,12 +141,13 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
         pose_heading_num = np.diff(localization_mtx_rtn[:, POSE_IDX['pose_position_y']])
         pose_heading_den = np.diff(localization_mtx_rtn[:, POSE_IDX['pose_position_x']])
         sigular_idx = (pose_heading_den < MIN_EPSILON)
-        pose_heading_den[sigular_idx] = 1.0;
+        pose_heading_den[sigular_idx] = 1.0
         pose_heading_offset = (np.arctan(np.divide(pose_heading_num, pose_heading_den))
-                              - localization_mtx_rtn[range(localization_mtx_rtn.shape[0] - 1),
-                                                     POSE_IDX['pose_heading']])
+                               - localization_mtx_rtn[range(localization_mtx_rtn.shape[0] - 1),
+                                                      POSE_IDX['pose_heading']])
         if np.sum(np.invert(sigular_idx)) > 0:
-            pose_heading_offset[sigular_idx] = np.median(pose_heading_offset[np.invert(sigular_idx)]);
+            pose_heading_offset[sigular_idx] = np.median(
+                pose_heading_offset[np.invert(sigular_idx)])
         else:
             pose_heading_offset[sigular_idx] = 0.0
         grading_mtx = np.column_stack((grading_mtx, np.append(pose_heading_offset, [0.0], axis=0)))
@@ -277,6 +280,7 @@ def extract_control_data_from_msg(msg):
         ])
     return data_array
 
+
 def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
@@ -303,6 +307,7 @@ def extract_chassis_data_from_msg(msg):
             chassis_header.sequence_num                      # 3
         ])
     return data_array
+
 
 def extract_localization_data_from_msg(msg):
     """Extract wanted fields from localization message"""

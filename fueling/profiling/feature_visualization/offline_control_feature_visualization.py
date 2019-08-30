@@ -18,7 +18,7 @@ import numpy as np
 # sys.path.append('/home/yuwang01/Documents/Apollo_Local/apollo-fuel/')
 # from fueling.profiling.conf.control_channel_conf import FEATURE_NAMES
 
-FEATURE_NAMES = ["station_reference","speed_reference","acceleration_reference","heading_reference","heading_rate_reference",
+FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference", "heading_reference", "heading_rate_reference",
                  "curvature_reference", "station_error", "speed_error", "lateral_error", "lateral_error_rate", "heading_error",
                  "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station", "speed",
                  "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",
@@ -43,6 +43,7 @@ def generate_segments(h5s):
     print('Segments length is: ', len(segments))
     return segments
 
+
 def generate_data(segments):
     """generate data array from the given data segments"""
     data = segments[0]
@@ -50,6 +51,7 @@ def generate_data(segments):
         data = np.vstack([data, segments[i]])
     print('Data_Set length is: ', len(data))
     return data
+
 
 def plot_h5_features_hist(data, pdffile):
     """plot the histogram of all the variables in the data array"""

@@ -21,10 +21,14 @@ from utils import jacobian
 pyro.enable_validation(True)
 
 # batch matrix vector multiplication
-bmv = lambda bM, bv: bM.matmul(bv.unsqueeze(-1)).squeeze()
+
+
+def bmv(bM, bv): return bM.matmul(bv.unsqueeze(-1)).squeeze()
+
 
 class FNET(nn.Module):
     """F Network"""
+
     def __init__(self, args, u_dim, kernel_dim):
         """Newwork Initialization"""
         super(FNET, self).__init__()
@@ -41,6 +45,7 @@ class FNET(nn.Module):
 
 class HNET(FNET):
     """H Network"""
+
     def __init__(self, args, u_dim, kernel_dim):
         """Newwork Initialization"""
         super(HNET, self).__init__(args, u_dim, kernel_dim)
@@ -52,6 +57,7 @@ class HNET(FNET):
 class GpOdoFog(Parameterized):
     """Gaussian process of odometry and fiber optic gyro"""
     name = 'GpOdoFog'
+
     def __init__(self, args, gp_f, dataset):
         """GP initialization"""
         super(GpOdoFog, self).__init__()
@@ -66,13 +72,13 @@ class GpOdoFog(Parameterized):
         """Un-normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x_normalized)
         x_std = self.normalize_factors[var + "_std"].expand_as(x_normalized)
-        return x_normalized*x_std  + x_loc # x
+        return x_normalized*x_std + x_loc  # x
 
     def normalize(self, x, var="u_odo_fog"):
         """Normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x)
         x_std = self.normalize_factors[var + "_std"].expand_as(x)
-        return (x-x_loc)/x_std # x_normalized
+        return (x-x_loc)/x_std  # x_normalized
 
     def model(self):
         """Gaussian process model"""
@@ -85,7 +91,7 @@ class GpOdoFog(Parameterized):
         y_diff = self.box_minus(y, y_pred)
         # remove outlier
         idx = (y_diff**2).mean(dim=1).sqrt() < self.y_diff_threshold
-        y_diff_normalized =  self.normalize(y_diff, var="y_odo_fog")
+        y_diff_normalized = self.normalize(y_diff, var="y_odo_fog")
         self.gp_f.set_data(u[idx], y_diff_normalized[idx].t())
 
     def guide(self):
@@ -114,7 +120,7 @@ class GpOdoFog(Parameterized):
         G_cor = self.correct_cov(u_odo_fog, y_cor, compute_G)
         u_odo_fog.requires_grad = False
         y_cor = y_cor.detach()
-        y_cor[[3, 4]] = 0 # pitch and roll corrections are set to 0
+        y_cor[[3, 4]] = 0  # pitch and roll corrections are set to 0
         G_cor[[3, 4], :] = 0
         Rot = SO3.from_rpy(x[3:6]).as_matrix()
         # correct state
@@ -201,7 +207,7 @@ class GpImu(Parameterized):
         """Un-normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x_normalized)
         x_std = self.normalize_factors[var + "_std"].expand_as(x_normalized)
-        x = x_normalized*x_std  + x_loc
+        x = x_normalized*x_std + x_loc
         return x
 
     def normalize(self, x, var="u_imu"):
@@ -222,7 +228,7 @@ class GpImu(Parameterized):
         y_diff = y - y_pred
         # remove outlier
         idx = (y_diff ** 2).mean(dim=1).sqrt() < self.y_diff_threshold
-        y_diff_normalized =  self.normalize(y_diff, var="y_imu")
+        y_diff_normalized = self.normalize(y_diff, var="y_imu")
         self.gp_h.set_data(u[idx], y_diff_normalized[idx].t())
 
     def guide(self):
@@ -238,7 +244,7 @@ class GpImu(Parameterized):
         y_cor = self.unnormalize(y_cor_nor.t(), var="y_imu").squeeze()
         J_cor = self.correct_cov(u_imu, y_cor)
         y_cor = y_cor.detach()
-        y_cor[[1, 2]] = 0 # pitch and roll corrections are set to 0
+        y_cor[[1, 2]] = 0  # pitch and roll corrections are set to 0
         J_cor[[1, 2], :] = 0
         u_imu.requires_grad = False
         return y_cor, J_cor
@@ -279,7 +285,8 @@ def preprocessing(args, dataset, gp):
     test_length = 0
     num_train = 0
     if gp.name == "GpOdoFog":
-        y_odo_fog_loc = torch.zeros(6) # mean has to be set to zero
+        y_odo_fog_loc = torch.zeros(6)  # mean has to be set to zero
+
         def get_error(i, type_dataset='train'):
             if type_dataset == 'train':
                 u, y = dataset.get_train_data(i, gp.name)
@@ -333,7 +340,7 @@ def preprocessing(args, dataset, gp):
         print("End of preprocessing " + dataset.name + ", " + gp.name)
         return mate
     else:
-        y_imu_loc = torch.zeros(9) # mean has to be set to zero
+        y_imu_loc = torch.zeros(9)  # mean has to be set to zero
 
         def get_error(i, type_dataset='train'):
             if type_dataset == 'train':
@@ -397,6 +404,7 @@ def preprocessing(args, dataset, gp):
         print("End of preprocessing " + dataset.name + ", " + gp.name)
         return rmse
 
+
 def train_loop(dataset, gp, svi, epoch):
     """Training loop"""
     if epoch == 1:
@@ -410,6 +418,7 @@ def train_loop(dataset, gp, svi, epoch):
     loss = svi.step()
     print('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss))
 
+
 def specific_to_kaist_imu(dataset, gp, u, y):
     """Specific function for the KAIST IMU"""
     if dataset.name == "Kaist" and gp.name == "GpImu":
@@ -422,6 +431,7 @@ def specific_to_kaist_imu(dataset, gp, u, y):
         u = u[u_true]
         y = y[u_true]
     return u, y
+
 
 def save_gp(args, gp_model, kernel_net):
     """Save the learned results for Gaussian process"""
@@ -453,6 +463,7 @@ def save_gp(args, gp_model, kernel_net):
 
     print(gp_model.name + " saved")
 
+
 def train_gp(args, dataset, gp_class):
     """Train the dataset with Gaussian process assumption"""
     # this is only to have a correct dimension
@@ -461,6 +472,7 @@ def train_gp(args, dataset, gp_class):
 
     if gp_class.name == 'GpOdoFog':
         fnet = FNET(args, u.shape[2], args.kernel_dim)
+
         def fnet_fn(x):
             return pyro.module("FNET", fnet)(x)
 
@@ -472,13 +484,14 @@ def train_gp(args, dataset, gp_class):
         kernel = gp.kernels.Warping(kernel_origin, iwarping_fn=fnet_fn)
         Xu = u[torch.arange(0, u.shape[0], step=int(u.shape[0] / args.num_inducing_point)).long()]
         gp_model = gp.models.VariationalSparseGP(u, torch.zeros(6, u.shape[0]), kernel, Xu,
-                                             num_data=dataset.num_data, likelihood=lik,
-                                             mean_function=None, whiten=True, jitter=1e-3)
+                                                 num_data=dataset.num_data, likelihood=lik,
+                                                 mean_function=None, whiten=True, jitter=1e-3)
     else:
         hnet = HNET(args, u.shape[2], args.kernel_dim)
+
         def hnet_fn(x):
             return pyro.module("HNET", hnet)(x)
-        lik = gp.likelihoods.Gaussian(variance = 0.1 * torch.ones(9, 1))
+        lik = gp.likelihoods.Gaussian(variance=0.1 * torch.ones(9, 1))
         # lik = MultiVariateGaussian(name='lik_h', dim=9)
         # if lower_triangular_constraint is implemented
         kernel_origin = gp.kernels.Matern52(input_dim=args.kernel_dim,
@@ -486,8 +499,8 @@ def train_gp(args, dataset, gp_class):
         kernel = gp.kernels.Warping(kernel_origin, iwarping_fn=hnet_fn)
         Xu = u[torch.arange(0, u.shape[0], step=int(u.shape[0] / args.num_inducing_point)).long()]
         gp_model = gp.models.VariationalSparseGP(u, torch.zeros(9, u.shape[0]), kernel, Xu,
-                                             num_data=dataset.num_data, likelihood=lik,
-                                             mean_function=None, whiten=True, jitter=1e-4)
+                                                 num_data=dataset.num_data, likelihood=lik,
+                                                 mean_function=None, whiten=True, jitter=1e-4)
 
     gp_instante = gp_class(args, gp_model, dataset)
     args.mate = preprocessing(args, dataset, gp_instante)

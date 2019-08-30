@@ -17,9 +17,9 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.feature_extraction.control_feature_extraction_utils \
-       as feature_utils
+    as feature_utils
 import fueling.profiling.grading_evaluation.control_performance_grading_utils \
-       as grading_utils
+    as grading_utils
 
 
 class ControlProfilingMetrics(BasePipeline):
@@ -48,7 +48,7 @@ class ControlProfilingMetrics(BasePipeline):
         target_prefix = 'modules/control/control_profiling_hf5'
         # RDD(tasks), the task dirs
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
-            dir_utils.get_todo_tasks(original_prefix, target_prefix))
+                                                dir_utils.get_todo_tasks(original_prefix, target_prefix))
         self.run(todo_tasks, original_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         glog.info('Control Profiling: All Done, PROD')
@@ -63,10 +63,10 @@ class ControlProfilingMetrics(BasePipeline):
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # PairRDD(target_dir, record_file)
          .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
-                                     glob.glob(os.path.join(task, '*bag*')))
+                        glob.glob(os.path.join(task, '*bag*')))
          # PairRDD(target_dir, record_file), filter out unqualified files
          .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
-                                                    record_utils.is_bag_file(file)))
+                                       record_utils.is_bag_file(file)))
          # PairRDD(target_dir, message), control and chassis message
          .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                   record_utils.CHASSIS_CHANNEL,
@@ -133,6 +133,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
         tar.close()
     attachments.append(output_filename)
     email_utils.send_email_info(title, email_content, receivers, attachments)
+
 
 if __name__ == '__main__':
     ControlProfilingMetrics().main()

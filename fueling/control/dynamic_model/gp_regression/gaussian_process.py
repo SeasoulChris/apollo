@@ -27,7 +27,7 @@ class GaussianProcess(Parameterized):
         """Gaussian process guide"""
         pyro.module("GaussianProcess", self)
         return self.gp_f.guide()
-    
+
     def set_data(self, feature, label):
         """Set data for Gaussian process model"""
         # TODO(Jiaxuan): Implement proper feature setting
