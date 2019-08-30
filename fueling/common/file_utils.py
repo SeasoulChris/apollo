@@ -19,6 +19,7 @@ def makedirs(dir_path):
             raise
     return dir_path
 
+
 def touch(file_path):
     """Touch file."""
     makedirs(os.path.dirname(file_path))

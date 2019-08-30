@@ -23,6 +23,7 @@ def lookup_existing_records(records, collection):
     fields = {'path': 1}
     return [doc['path'] for doc in collection.find(query, fields)]
 
+
 def lookup_header_for_records(records, collection):
     """[record] -> {record: record_header}"""
     query = {'path': {'$in': records}}
@@ -30,12 +31,14 @@ def lookup_header_for_records(records, collection):
     docs = collection.find(query, fields)
     return {doc['path']: Mongo.doc_to_pb(doc, RecordMeta()).header for doc in docs}
 
+
 def lookup_stat_for_records(records, collection):
     """[record] -> {record: RecordMeta.Stat}"""
     query = {'path': {'$in': records}}
     fields = {'path': 1, 'stat': 1}
     docs = collection.find(query, fields)
     return {doc['path']: Mongo.doc_to_pb(doc, RecordMeta()).stat for doc in docs}
+
 
 def lookup_map_for_dirs(record_dirs, collection):
     """[record_dir] -> {record_dir: map_name}."""
@@ -46,6 +49,7 @@ def lookup_map_for_dirs(record_dirs, collection):
     fields = {'dir': 1, 'hmi_status.current_map': 1}
     docs = collection.find(query, fields)
     return {doc['dir']: doc['hmi_status']['current_map'] for doc in docs}
+
 
 def lookup_vehicle_for_dirs(record_dirs, collection):
     """[record_dir] -> {record_dir: vehicle_name}."""

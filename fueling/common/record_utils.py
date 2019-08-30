@@ -58,9 +58,11 @@ def is_record_file(path):
     """Naive check if a path is a record."""
     return path.endswith('.record') or fnmatch.fnmatch(path, '*.record.?????')
 
+
 def is_bag_file(path):
     """Naive check if a path is a bag."""
     return path.endswith('.bag')
+
 
 def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615):
     """record_path -> [PyBagMessage, ...] or [] if error occurs."""

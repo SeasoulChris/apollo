@@ -93,7 +93,8 @@ class BosClient(BaseObjectStorageClient):
 
         allowed_chars = set(string.ascii_letters + string.digits + '/' + '-' + '_')
         if set(remote_path) > allowed_chars:
-            raise ValueError('Only ascii digits dash and underscore characters are allowed in paths')
+            raise ValueError(
+                'Only ascii digits dash and underscore characters are allowed in paths')
 
         max_path_length = 1024
         if len(remote_path) > max_path_length:
@@ -112,12 +113,12 @@ class BosClient(BaseObjectStorageClient):
         maximal_sub_path_len = 256
         if (len(sub_paths) < minimal_path_depth or
             len(sub_paths) > maximal_path_depth or
-            any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths)):
+                any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths)):
             raise ValueError('Destination path is either too short or too long')
 
         overwrite_whitelist = ('modules/control/control_conf/mkz7/',)
         if (self.file_exists(remote_path) and
-            not any(remote_path.startswith(x) for x in overwrite_whitelist)):
+                not any(remote_path.startswith(x) for x in overwrite_whitelist)):
             raise ValueError('Destination already exists')
 
         # Actually upload

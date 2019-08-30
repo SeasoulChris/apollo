@@ -24,6 +24,7 @@ flags.DEFINE_string('mongo_record_collection_name', 'records', 'MongoDB record c
 
 class Mongo(object):
     """MongoDB util"""
+
     def __init__(self, flags_dict=None):
         if flags_dict is None:
             flags_dict = flags.FLAGS.flag_values_dict()

@@ -36,13 +36,16 @@ def send_email_info(title, content, receivers, attachments=[]):
     """Send email with normal information"""
     send_email(title, 'blue', content, receivers, attachments)
 
+
 def send_email_warn(title, content, receivers, attachments=[]):
     """Send email with warning information"""
     send_email(title, 'yellow', content, receivers, attachments)
 
+
 def send_email_error(title, content, receivers, attachments=[]):
     """Send email with error information"""
     send_email(title, 'red', content, receivers, attachments)
+
 
 def send_email(title, title_color, content, receivers, attachments=[]):
     """
@@ -98,6 +101,7 @@ def send_email(title, title_color, content, receivers, attachments=[]):
         glog.error('Failed to send email to {}, status={}, content={}'.format(
             receivers, request.status_code, request.content))
 
+
 def get_html_content(title, title_color, content):
     """Help function to constuct HTML message body"""
     if not content:
@@ -143,8 +147,8 @@ def get_html_content(title, title_color, content):
             </body>
             </html>
         ''' % {
-            'title_color': title_color,
-            'title': title,
-            'header': header or '',
-            'html_content': html_content
-        }
+        'title_color': title_color,
+        'title': title,
+        'header': header or '',
+        'html_content': html_content
+    }
