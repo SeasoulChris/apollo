@@ -27,6 +27,7 @@ import torch.optim as optim
 dim_input = 3
 dim_output = 1
 
+
 class InteractionModel(nn.Module):
     def __init__(self, feature_size, delta):
         super(InteractionModel, self).__init__()
@@ -49,7 +50,7 @@ class InteractionLoss():
         return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-    	# TODO(kechxu) fix the following error
+        # TODO(kechxu) fix the following error
         # y_pred = y_pred.cpu()
         # loss = y_pred.type(torch.float).mean().item()
         # print("Loss is {:.3f} %".format(loss))

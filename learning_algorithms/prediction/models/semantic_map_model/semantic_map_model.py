@@ -38,6 +38,7 @@ Dataset set-up
 ========================================================================
 '''
 
+
 class SemanticMapDataset(Dataset):
     def __init__(self, dir, transform=None, verbose=False):
         self.items = glob.glob(dir+"/**/*.png", recursive=True)
@@ -45,14 +46,14 @@ class SemanticMapDataset(Dataset):
             self.transform = transform
         else:
             self.transform = transforms.Compose([
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])])
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])])
         self.verbose = verbose
 
     def __len__(self):
         return len(self.items)
-    
+
     def __getitem__(self, idx):
         img_name = self.items[idx]
         sample_img = cv.imread(img_name)
@@ -63,10 +64,11 @@ class SemanticMapDataset(Dataset):
 
         # TODO(jiacheng): implement this.
         try:
-            key = os.path.basename(img_name).replace(".png","")
-            pos_dict = np.load(os.path.join(os.path.dirname(img_name),'obs_pos.npy')).item()
+            key = os.path.basename(img_name).replace(".png", "")
+            pos_dict = np.load(os.path.join(os.path.dirname(img_name), 'obs_pos.npy')).item()
             past_pos = pos_dict[key]
-            label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","features-san-mateo-new").replace("image-valid","features-san-mateo-new"),'future_status.npy')).item()
+            label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(
+                "image-feature", "features-san-mateo-new").replace("image-valid", "features-san-mateo-new"), 'future_status.npy')).item()
             future_pos = label_dict[key]
             origin = future_pos[0]
             past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
@@ -88,6 +90,8 @@ class SemanticMapDataset(Dataset):
 Model definition
 ========================================================================
 '''
+
+
 class SemanticMapModel(nn.Module):
     def __init__(self, num_pred_points, num_history_points,
                  cnn_net=models.resnet50, pretrained=True):
@@ -186,10 +190,11 @@ class SemanticMapSelfLSTMModel(nn.Module):
                 continue
 
             ts_obs_mask = (ts_obs_mask == 1)
-            disp_embedding = self.disp_embed((curr_obs_pos_rel[ts_obs_mask,:]).clone()).view(curr_N, 1, -1)
+            disp_embedding = self.disp_embed(
+                (curr_obs_pos_rel[ts_obs_mask, :]).clone()).view(curr_N, 1, -1)
 
             _, (ht_new, ct_new) = self.lstm(
-                disp_embedding, (ht[ts_obs_mask, :].view(1,curr_N,-1), ct[ts_obs_mask, :].view(1,curr_N,-1)))
+                disp_embedding, (ht[ts_obs_mask, :].view(1, curr_N, -1), ct[ts_obs_mask, :].view(1, curr_N, -1)))
             ht[ts_obs_mask, :] = ht_new.view(curr_N, -1)
             ct[ts_obs_mask, :] = ct_new.view(curr_N, -1)
 

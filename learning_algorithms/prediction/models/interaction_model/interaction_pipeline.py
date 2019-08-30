@@ -32,6 +32,7 @@ epochs = 5
 dim_input = 3
 dim_output = 1
 
+
 def data_preprocessing(data):
     X = data[:, dim_input:] - data[:, :dim_input]
 
@@ -82,9 +83,9 @@ if __name__ == '__main__':
         print ("Not using CUDA.")
 
     # Model training:
-    model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss, \
-                        optimizer, scheduler, epochs, 'interaction_model.pt', \
-                        train_batch=65536)
+    model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss,
+                                optimizer, scheduler, epochs, 'interaction_model.pt',
+                                train_batch=65536)
     for p in model.parameters():
         print(p)
     savepath = args.savepath + "interaction_model.pt"

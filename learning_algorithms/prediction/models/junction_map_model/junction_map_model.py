@@ -37,6 +37,7 @@ Dataset set-up
 ========================================================================
 '''
 
+
 class JunctionMapDataset(Dataset):
     def __init__(self, dir, transform=None, verbose=False):
         self.items = glob.glob(dir+"/**/*.png", recursive=True)
@@ -44,14 +45,14 @@ class JunctionMapDataset(Dataset):
             self.transform = transform
         else:
             self.transform = transforms.Compose([
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])])
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])])
         self.verbose = verbose
 
     def __len__(self):
         return len(self.items)
-    
+
     def __getitem__(self, idx):
         img_name = self.items[idx]
         sample_img = cv.imread(img_name)
@@ -60,20 +61,20 @@ class JunctionMapDataset(Dataset):
         if self.transform:
             sample_img = self.transform(sample_img)
 
-
         try:
-            key = os.path.basename(img_name).replace(".png","")
+            key = os.path.basename(img_name).replace(".png", "")
             # pos_dict = np.load(os.path.join(os.path.dirname(img_name),'obs_pos.npy')).item()
             # past_pos = pos_dict[key]
             # label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","features-san-mateo-new"),'future_status.npy')).item()
             # future_pos = label_dict[key]
             # origin = future_pos[0]
-            junction_label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","labels-san-mateo"),'junction_label.npy')).item()
+            junction_label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(
+                "image-feature", "labels-san-mateo"), 'junction_label.npy')).item()
             # past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
             # future_pos = [world_coord_to_relative_coord(pos, origin) for pos in future_pos]
             # sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
             junction_label = junction_label_dict[key]
-            if len(junction_label)!=24:
+            if len(junction_label) != 24:
                 return self.__getitem__(idx+1)
             sample_mask = torch.FloatTensor(junction_label[-12:]).view(-1)
             sample_label = torch.FloatTensor(junction_label[:12]).view(-1)
@@ -91,6 +92,8 @@ class JunctionMapDataset(Dataset):
 Model definition
 ========================================================================
 '''
+
+
 class JunctionMapModel(nn.Module):
     def __init__(self, obs_feature_size, output_dim,
                  cnn_net=models.resnet50, pretrained=True):
@@ -112,7 +115,7 @@ class JunctionMapModel(nn.Module):
             nn.Linear(60, output_dim),
             # nn.Softmax()
         )
-    
+
     def forward(self, X):
         img, obs_mask = X
         out = self.cnn(img)
@@ -121,6 +124,7 @@ class JunctionMapModel(nn.Module):
         out = torch.mul(out, obs_mask)
         out = F.softmax(out)
         return out
+
 
 class JunctionMapLoss():
     def loss_fn(self, y_pred, y_true):

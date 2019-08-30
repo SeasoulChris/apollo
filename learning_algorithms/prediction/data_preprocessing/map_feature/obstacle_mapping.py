@@ -23,11 +23,14 @@ from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import semantic_map_config_pb2
 import modules.tools.common.proto_utils as proto_utils
 
+
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
+
     def __init__(self, region, frame_env):
         """contruct function to init ObstacleMapping object"""
-        center_point = np.array([frame_env.ego_history.feature[0].position.x, frame_env.ego_history.feature[0].position.y])
+        center_point = np.array([frame_env.ego_history.feature[0].position.x,
+                                 frame_env.ego_history.feature[0].position.y])
         map_dir = "/apollo/modules/map/data/" + region + "/"
         base_map = cv.imread(map_dir + "semantic_map.png")
         config = semantic_map_config_pb2.SemanticMapConfig()
@@ -49,36 +52,38 @@ class ObstacleMapping(object):
         point = np.round((p - self.base_point) / self.resolution)
         return [int(point[0]), self.GRID[1] - int(point[1])]
 
-    def _draw_rectangle(self, feature_map, feature, color=(0,255,255)):
+    def _draw_rectangle(self, feature_map, feature, color=(0, 255, 255)):
         pos_x = feature.position.x
         pos_y = feature.position.y
         w, l = feature.width, feature.length
         theta = feature.theta
-        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), \
+        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]),
                         np.array([[l/2, l/2, -l/2, -l/2], [w/2, -w/2, -w/2, w/2]])).T + np.array([pos_x, pos_y])
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
-    def _draw_polygon(self, feature_map, feature, color=(0,255,255)):
-        points = np.zeros((0,2))
+    def _draw_polygon(self, feature_map, feature, color=(0, 255, 255)):
+        points = np.zeros((0, 2))
         for polygon_point in feature.polygon_point:
             point = self.get_trans_point([polygon_point.x, polygon_point.y])
             points = np.vstack((points, point))
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
-    def draw_history(self, feature_map, history, color=(0,255,255)):
+    def draw_history(self, feature_map, history, color=(0, 255, 255)):
         # draw obstacle_history in reverse order
         for i in range(len(history.feature)-1, -1, -1):
             feature = history.feature[i]
             if feature.id == -1:
-                self._draw_rectangle(feature_map, feature, tuple(c*(1-self.timestamp+feature.timestamp) for c in color))
+                self._draw_rectangle(feature_map, feature, tuple(
+                    c*(1-self.timestamp+feature.timestamp) for c in color))
             else:
-                self._draw_polygon(feature_map, feature, tuple(c*(1-self.timestamp+feature.timestamp) for c in color))
+                self._draw_polygon(feature_map, feature, tuple(
+                    c*(1-self.timestamp+feature.timestamp) for c in color))
 
-    def draw_frame(self, color=(0,255,255)):
+    def draw_frame(self, color=(0, 255, 255)):
         for history in self.frame_env.obstacles_history:
-            self.draw_history(self.feature_map, history, (0,255,255))
-        self.draw_history(self.feature_map, self.frame_env.ego_history, (0,255,255))
+            self.draw_history(self.feature_map, history, (0, 255, 255))
+        self.draw_history(self.feature_map, self.frame_env.ego_history, (0, 255, 255))
 
     def crop_area(self, feature_map, center_point, heading):
         center = tuple(self.get_trans_point(center_point))
@@ -86,14 +91,13 @@ class ObstacleMapping(object):
         M = cv.getRotationMatrix2D(center, 90-heading_angle, 1.0)
         rotated = cv.warpAffine(feature_map, M, tuple(self.GRID))
         output = rotated[center[1]-300:center[1]+100, center[0]-200:center[0]+200]
-        return cv.resize(output, (224,224))
+        return cv.resize(output, (224, 224))
 
-    def crop_by_history(self, history, color=(0,0,255)):
+    def crop_by_history(self, history, color=(0, 0, 255)):
         feature_map = self.feature_map.copy()
         self.draw_history(feature_map, history, color)
         curr_feature = history.feature[0]
         return self.crop_area(feature_map, [curr_feature.position.x, curr_feature.position.y], curr_feature.theta)
-
 
 
 if __name__ == '__main__':

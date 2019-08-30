@@ -36,6 +36,8 @@ from learning_algorithms.utilities.helper_utils import *
 Model definition
 ========================================================================
 '''
+
+
 class MapLSTMHybridModel(nn.Module):
     def __init__(self):
         # TODO(all): implement

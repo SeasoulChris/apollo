@@ -24,6 +24,8 @@ import os
 Read a single dataforlearn.bin file and output a list of DataForLearning
 that is contained in that file.
 '''
+
+
 def LoadDataForLearning(filepath):
     list_of_data_for_learning = \
         offline_features_pb2.ListDataForLearning()
@@ -31,24 +33,33 @@ def LoadDataForLearning(filepath):
         list_of_data_for_learning.ParseFromString(file_in.read())
     return list_of_data_for_learning.data_for_learning
 
+
 '''
 Read a single .npy dictionary file and get its content.
 '''
+
+
 def LoadLabels(filepath):
     mydict = np.load(filepath).item()
     return mydict
 
+
 '''
 Merge two dictionary into a single one and return.
 '''
+
+
 def MergeTwoDicts(dict1, dict2):
     newdict = dict1.copy()
     newdict.update(dict2)
     return newdict
 
+
 '''
 Merge all dictionaries directly under a directory
 '''
+
+
 def MergeDicts(dirpath):
     list_of_files = os.listdir(dirpath)
     dict_merged = None
@@ -65,11 +76,14 @@ def MergeDicts(dirpath):
     np.save(dirpath + '/labels.npy', dict_merged)
     return dict_merged
 
+
 '''
 Go through every entry of data_for_learn proto and get the corresponding labels.
 Save the output file into h5 format (array of lists with each list being a data
 point for training/validating).
 '''
+
+
 def CombineFeaturesAndLabels(feature_path, label_path):
     list_of_data_for_learning = LoadDataForLearning(feature_path)
     dict_labels = LoadLabels(label_path)
@@ -90,20 +104,22 @@ def CombineFeaturesAndLabels(feature_path, label_path):
         if len(dict_labels[key]['obs_traj']) < 30:
             continue
         future_traj = \
-            dict_labels[(data_for_learning.id, data_for_learning.timestamp)]\
-            ['obs_traj'][:30]
+            dict_labels[(data_for_learning.id, data_for_learning.timestamp)]['obs_traj'][:30]
 
         list_curr = [len(features_for_learning)] + features_for_learning + \
-                    future_traj
+            future_traj
         output_np_array.append(list_curr)
 
     output_np_array = np.array(output_np_array)
 
     np.save(feature_path + '.labels.npy', output_np_array)
 
+
 '''
 Merge all files of features+labels into a single one
 '''
+
+
 def MergeCombinedFeaturesAndLabels(dirpath):
     list_of_files = os.listdir(dirpath)
 
@@ -118,12 +134,15 @@ def MergeCombinedFeaturesAndLabels(dirpath):
 
     np.save(dirpath + '/training_data.npy', np.array(features_labels_merged))
 
+
 '''
 It takes terminal folder as input, then
 1. Merge all label dicts.
 2. Go through every data_for_learn proto, and find the corresponding label
 3. Merge all features+labels files into a single one: data.npy
 '''
+
+
 def PrepareDataForTraining(dirpath):
     MergeDicts(dirpath)
 

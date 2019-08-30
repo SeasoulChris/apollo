@@ -84,10 +84,11 @@ class LaneScanningDataset(Dataset):
         return self.length
 
     def __getitem__(self, idx):
-        return (self.obs_features[idx], \
-                self.lane_features[idx], \
-                self.lane_features[idx].shape[0], \
+        return (self.obs_features[idx],
+                self.lane_features[idx],
+                self.lane_features[idx].shape[0],
                 self.traj_labels[idx])
+
 
 def collate_with_padding(batch):
     # batch is a list of tuples, so unzip to form lists of np-arrays.
@@ -115,22 +116,22 @@ def collate_with_padding(batch):
     traj_labels = traj_labels[idx_new]
 
     # Convert to torch tensors.
-    return (torch.from_numpy(obs_features).view(N, 45), \
-            torch.from_numpy(lane_features_padded).view(N, max_num_laneseq, 400), \
+    return (torch.from_numpy(obs_features).view(N, 45),
+            torch.from_numpy(lane_features_padded).view(N, max_num_laneseq, 400),
             torch.from_numpy(num_lanes).float()),\
-           torch.from_numpy(traj_labels).view(N, 20)
+        torch.from_numpy(traj_labels).view(N, 20)
 
 
 #########################################################
 # Network
 #########################################################
 class lane_scanning_model(torch.nn.Module):
-    def __init__(self,\
-                 dim_cnn=[4, 10, 16, 25],\
-                 hidden_size = 128,\
-                 dim_lane_fc = [128*8, 700, 456, 230],\
-                 dim_obs_fc = [45, 38, 32],\
-                 dim_traj_fc = [262, 120, 40]):
+    def __init__(self,
+                 dim_cnn=[4, 10, 16, 25],
+                 hidden_size=128,
+                 dim_lane_fc=[128*8, 700, 456, 230],
+                 dim_obs_fc=[45, 38, 32],
+                 dim_traj_fc=[262, 120, 40]):
         super(lane_scanning_model, self).__init__()
         self.dim_obs_fc = dim_obs_fc
 
@@ -163,14 +164,14 @@ class lane_scanning_model(torch.nn.Module):
             bidirectional=True,
             batch_first=True)
 
-        self.multi_lane_fc = generate_mlp(\
+        self.multi_lane_fc = generate_mlp(
             dim_lane_fc, dropout=0.0)
 
-        self.obs_feature_fc = generate_mlp(\
+        self.obs_feature_fc = generate_mlp(
             dim_obs_fc, dropout=0.0)
 
-        self.traj_fc = generate_mlp(dim_traj_fc, \
-            last_layer_nonlinear=False, dropout=0.0)
+        self.traj_fc = generate_mlp(dim_traj_fc,
+                                    last_layer_nonlinear=False, dropout=0.0)
 
     def forward(self, X):
         obs_fea, lane_fea, num_laneseq = X
@@ -193,7 +194,7 @@ class lane_scanning_model(torch.nn.Module):
         # (N * max_num_laneseq) x 200
         lane_fea = lane_fea.view(N, max_num_laneseq, embed_dim)
         # N x max_num_laneseq x 200
-        lane_fea = lane_fea + lane_fea_original[:,:2,:].view(N, max_num_laneseq, 200)
+        lane_fea = lane_fea + lane_fea_original[:, :2, :].view(N, max_num_laneseq, 200)
 
         obs_fea_original = obs_fea
         obs_fea = self.obs_feature_fc(obs_fea.float())
@@ -213,13 +214,13 @@ class lane_scanning_model(torch.nn.Module):
         static_fea_maxpool, _ = pad_packed_sequence(
             static_fea_states, batch_first=True, padding_value=min_val.item()-0.1)
         static_fea_maxpool, _ = torch.max(static_fea_maxpool, 1)
-        static_fea_avgpool = torch.sum(static_fea, 1) / num_laneseq.reshape(N,1)
-        static_fea_front = static_fea[:,0]
+        static_fea_avgpool = torch.sum(static_fea, 1) / num_laneseq.reshape(N, 1)
+        static_fea_front = static_fea[:, 0]
         idx_1 = np.arange(N).tolist()
         idx_2 = (num_laneseq-1).int().data.tolist()
         static_fea_back = static_fea[idx_1, idx_2]
-        static_fea_all = torch.cat((static_fea_maxpool, static_fea_avgpool, \
-            static_fea_front, static_fea_back), 1)
+        static_fea_all = torch.cat((static_fea_maxpool, static_fea_avgpool,
+                                    static_fea_front, static_fea_back), 1)
         # N x (256 * 4) = N x 1024
 
         static_fea_final = self.multi_lane_fc(static_fea_all)
@@ -241,14 +242,14 @@ class lane_scanning_model(torch.nn.Module):
 #########################################################
 class lane_scanning_loss:
     def loss_fn(self, y_pred, y_true):
-        #TODO(jiacheng): elaborate on this (e.g. consider final displacement error, etc.)
+        # TODO(jiacheng): elaborate on this (e.g. consider final displacement error, etc.)
         y_true = y_true.float()
         return multi_modal_loss(y_pred, y_true)
 
     def loss_helper(self, y_pred, y_true):
         loss_func = nn.MSELoss(reduction='none')
         loss_result = loss_func(y_pred, y_true)
-        loss_result = torch.mean(loss_result,dim=1)
+        loss_result = torch.mean(loss_result, dim=1)
 
     def loss_info(self, y_pred, y_true):
         return None

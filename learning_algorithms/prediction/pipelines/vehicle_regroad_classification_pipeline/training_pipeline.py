@@ -21,7 +21,7 @@ import os
 import torch
 
 from learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset \
-     import *
+    import *
 from learning_algorithms.prediction.models.lane_attention_model.lane_attention_model import *
 from learning_algorithms.utilities.network_utils import *
 from learning_algorithms.utilities.train_utils import *
@@ -29,14 +29,14 @@ from learning_algorithms.utilities.train_utils import *
 
 def train_using_given_model_and_params(model_params, train_file, valid_file):
     # Set-up data-loader
-    train_dataset = ApolloVehicleRegularRoadDataset(train_file, \
-        training_mode=True, cutin_augmentation_coeff=2)
-    valid_dataset = ApolloVehicleRegularRoadDataset(valid_file, \
-        training_mode=False, cutin_augmentation_coeff=2)
-    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=256, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
+    train_dataset = ApolloVehicleRegularRoadDataset(train_file,
+                                                    training_mode=True, cutin_augmentation_coeff=2)
+    valid_dataset = ApolloVehicleRegularRoadDataset(valid_file,
+                                                    training_mode=False, cutin_augmentation_coeff=2)
+    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True,
+                              num_workers=8, drop_last=True, collate_fn=collate_fn)
+    valid_loader = DataLoader(valid_dataset, batch_size=256, shuffle=True,
+                              num_workers=8, drop_last=True, collate_fn=collate_fn)
 
     # Set-up model, optimizer, and scheduler
     model = FastLaneAttention(*model_params)

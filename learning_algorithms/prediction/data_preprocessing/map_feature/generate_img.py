@@ -23,7 +23,7 @@ import cv2 as cv
 from modules.prediction.proto import offline_features_pb2
 
 from learning_algorithms.prediction.data_preprocessing.map_feature.obstacle_mapping \
-     import ObstacleMapping
+    import ObstacleMapping
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate imgs for a folder of frame_env.x.bin')
@@ -58,7 +58,8 @@ if __name__ == '__main__':
                     img = obstacle_mapping.crop_by_history(history)
                     filename = "/" + key + ".png"
                     cv.imwrite(os.path.join(output_dir + filename), img)
-                    obs_pos_dict[key] = [(feature.position.x, feature.position.y) for feature in history.feature]
+                    obs_pos_dict[key] = [(feature.position.x, feature.position.y)
+                                         for feature in history.feature]
                     # print("Writing to: " + os.path.join(output_dir + filename))
             except:
                 print("Possible error on frame: " + str(idx) + "/" + str(len(list_frame.frame_env)))

@@ -17,6 +17,7 @@ grid_size = 2
 embed_size = 64
 hidden_size = 128
 
+
 class SingleLSTM(nn.Module):
     def __init__(self, embed_size, hidden_size):
         super(SingleLSTM, self).__init__()
@@ -27,10 +28,10 @@ class SingleLSTM(nn.Module):
 
     def forward(self, X):
         et_at = X[:, : 2 * self.embed_size]
-        ht = X[:, -2 * self.hidden_size : -self.hidden_size]
-        ct = X[:, -self.hidden_size :]
+        ht = X[:, -2 * self.hidden_size: -self.hidden_size]
+        ct = X[:, -self.hidden_size:]
         _, (out_ht, out_ct) = self.lstm(et_at.view(1, 1, -1),
-        	                           (ht.view(1, 1, -1), ct.view(1, 1, -1)))
+                                        (ht.view(1, 1, -1), ct.view(1, 1, -1)))
         return out_ht, out_ct
 
 

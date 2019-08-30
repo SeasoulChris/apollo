@@ -92,7 +92,7 @@ class SimpleLSTM(nn.Module):
             ht, ct = self.simple_rnn(ht, ct, this_traj_rel, this_timestamp_mask)
 
         return pred_out[is_predictable[:, 0] == 1, :, :], \
-               pred_traj[is_predictable[:, 0] == 1, :, :]
+            pred_traj[is_predictable[:, 0] == 1, :, :]
 
 
 class SocialLSTM(nn.Module):
@@ -158,7 +158,7 @@ class SocialLSTM(nn.Module):
 
             # Step through RNN
             _, (curr_ht, curr_ct) = self.lstm(
-                torch.cat((et, at), 1).view(curr_N, 1, -1), 
+                torch.cat((et, at), 1).view(curr_N, 1, -1),
                 (curr_ht.view(1, curr_N, -1), curr_ct.view(1, curr_N, -1)))
             ht[curr_mask, :, :], ct[curr_mask, :, :] = \
                 curr_ht.view(curr_N, 1, -1), curr_ct.view(curr_N, 1, -1)
@@ -194,12 +194,13 @@ class SocialLSTM(nn.Module):
         pred_traj_all = cuda(torch.zeros(N, self.pred_len, 2))
         pred_traj_all[pred_mask, :, :] = pred_traj
         return pred_out_all[is_predictable[:, 0] == 1, :, :],\
-               pred_traj_all[is_predictable[:, 0] == 1, :, :]
+            pred_traj_all[is_predictable[:, 0] == 1, :, :]
 
 
 class SocialPooling(nn.Module):
     '''The social-pooling module used in the paper of Social-LSTM.
     '''
+
     def __init__(self, grid_size=2, area_span=1.6):
         super(SocialPooling, self).__init__()
         self.grid_size = grid_size
@@ -215,8 +216,8 @@ class SocialPooling(nn.Module):
 
         # For this matrix (N x N x 2), the (i,j) element indicates the relative
         # position of agent j w.r.t. agent i.
-        rel_pos_matrix = torch.transpose(curr_pos_t.repeat(1, N ,1), 0, 1) -\
-                         curr_pos_t.repeat(1, N, 1)
+        rel_pos_matrix = torch.transpose(curr_pos_t.repeat(1, N, 1), 0, 1) -\
+            curr_pos_t.repeat(1, N, 1)
 
         # (N x N) matrix of mask, the (i,j) element indicates whether agent j
         # is within pooling area of agent i. (note that agent i is not within
@@ -232,7 +233,7 @@ class SocialPooling(nn.Module):
         # (N x N) matrix of mask, the (i,j) element indicates which grid that
         # agent j falls in w.r.t. agent i.
         mask_grid_id = torch.floor(
-            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) / \
+            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) /
             torch.tensor(self.area_span / self.grid_size))
         mask_grid_id = mask_grid_id[:, :, 0] * self.grid_size + mask_grid_id[:, :, 1]
         mask_grid_id *= mask_within_pooling_area
@@ -259,9 +260,9 @@ class SocialPooling(nn.Module):
         for scene_id in all_scene_ids:
             # 1. get the ht and pos_t for this scene_id:
             # (curr_N x 1 x hidden_size)
-            curr_ht = ht[same_scene_mask[:,0] == scene_id, :, :]
+            curr_ht = ht[same_scene_mask[:, 0] == scene_id, :, :]
             # (curr_N x 1 x 2)
-            curr_pos_t = pos_t[same_scene_mask[:,0] == scene_id, :, :]
+            curr_pos_t = pos_t[same_scene_mask[:, 0] == scene_id, :, :]
             curr_N = curr_ht.size(0)
             if (curr_N == 0):
                 continue
@@ -288,13 +289,14 @@ class SocialPooling(nn.Module):
             # 5. Update the pooled Ht.
             ht_pooled[N_filled:N_filled+curr_N, :, :] = curr_ht_pooled
             N_filled += curr_N
-        
+
         return ht_pooled
 
 
 class SocialAttention(nn.Module):
     '''The social-attention model
     '''
+
     def __init__(self, embed_size=64, edge_hidden_size=256, node_hidden_size=128, pred_len=12):
         super(SocialAttention, self).__init__()
 
@@ -347,7 +349,7 @@ class SocialAttention(nn.Module):
         s_edge_ht_list = []
         s_edge_ct_list = []
         for i in range(same_scene_mask.max().long().item()+1):
-            curr_dim = torch.sum(same_scene_mask==i).item()
+            curr_dim = torch.sum(same_scene_mask == i).item()
             s_edge_ht_list.append(self.s_edge_h0.repeat(curr_dim, curr_dim, 1))
             s_edge_ct_list.append(self.s_edge_c0.repeat(curr_dim, curr_dim, 1))
         # Create a vector of hidden-states for temporal edges. (h_{vv})
@@ -380,24 +382,24 @@ class SocialAttention(nn.Module):
                 pred_traj[:, t-observation_len, :] = this_traj
 
             # 1. Do spatial-edge (h_{uv}) RNN.
-            s_edge_ht_list, s_edge_ct_list = self.spatial_edge_rnn(\
+            s_edge_ht_list, s_edge_ct_list = self.spatial_edge_rnn(
                 s_edge_ht_list, s_edge_ct_list, this_traj, this_timestamp_mask, same_scene_mask)
 
             # 2. Do temporal-edge (h_{vv}) RNN.
-            t_edge_ht_list, t_edge_ct_list = self.temporal_edge_rnn(\
+            t_edge_ht_list, t_edge_ct_list = self.temporal_edge_rnn(
                 t_edge_ht_list, t_edge_ct_list, this_traj_rel, this_timestamp_mask)
 
             # 3. Do EdgeToNodeAttention.
             #Ht = self.edge_to_node(s_edge_ht_list, t_edge_ht_list)
-            Ht = self.edge_to_node(\
-                s_edge_ht_list, t_edge_ht_list,this_timestamp_mask, same_scene_mask)
+            Ht = self.edge_to_node(
+                s_edge_ht_list, t_edge_ht_list, this_timestamp_mask, same_scene_mask)
 
             # 4. Aggregate and update nodes (h_v).
-            node_ht_list, node_ct_list = self.node_rnn(\
+            node_ht_list, node_ct_list = self.node_rnn(
                 Ht, t_edge_ht_list, this_traj_rel, node_ht_list, node_ct_list, this_timestamp_mask)
 
         return pred_out[is_predictable[:, 0] == 1, :, :],\
-               pred_traj[is_predictable[:, 0] == 1, :, :]
+            pred_traj[is_predictable[:, 0] == 1, :, :]
 
 
 class SpatialEdgeRNN(nn.Module):
@@ -425,9 +427,9 @@ class SpatialEdgeRNN(nn.Module):
         for scene_id in all_scene_ids:
             curr_ht = ht_list[scene_id]
             curr_ct = ct_list[scene_id]
-            curr_mask = (same_scene_mask[:,0] == scene_id)
+            curr_mask = (same_scene_mask[:, 0] == scene_id)
             # (curr_N x 2)
-            curr_traj = traj[curr_mask==1, :]
+            curr_traj = traj[curr_mask == 1, :]
             curr_N = curr_traj.size(0)
             # (curr_N x 1) -- e.g. [1, 1, 1, 0, 1]
             curr_timestamp_mask = (timestamp_mask[curr_mask, 0] == 1)
@@ -453,25 +455,25 @@ class SpatialEdgeRNN(nn.Module):
             curr_xt_1 = curr_traj[curr_timestamp_mask, :].view(curr_existing_N, 1, 2)
             # (curr_existing_N x curr_existing_N x 2)
             curr_xt_1 = torch.transpose(curr_xt_1.repeat(1, curr_existing_N, 1), 0, 1).float() -\
-                        curr_xt_1.repeat(1, curr_existing_N, 1).float()
+                curr_xt_1.repeat(1, curr_existing_N, 1).float()
 
             # Process with LSTM.
             # (curr_existing_N**2, embed_size)
             e_uv = self.embed(curr_xt_1.view(curr_existing_N**2, 2))
-            _, (curr_ht_1, curr_ct_1) = self.lstm(e_uv.view(curr_existing_N**2, 1, -1), \
-                (curr_ht_1.view(1, curr_existing_N**2, -1), curr_ct_1.view(1, curr_existing_N**2, -1)))
+            _, (curr_ht_1, curr_ct_1) = self.lstm(e_uv.view(curr_existing_N**2, 1, -1),
+                                                  (curr_ht_1.view(1, curr_existing_N**2, -1), curr_ct_1.view(1, curr_existing_N**2, -1)))
             curr_ht_1 = curr_ht_1.view(curr_existing_N, curr_existing_N, -1)
             curr_ct_1 = curr_ct_1.view(curr_existing_N, curr_existing_N, -1)
 
             # Scatter back to the original matrices.
             curr_ht_0 = curr_ht_0.scatter(
-                1, curr_timestamp_idx.view(1,curr_existing_N,1).repeat(curr_existing_N,1,self.hidden_size), curr_ht_1)
+                1, curr_timestamp_idx.view(1, curr_existing_N, 1).repeat(curr_existing_N, 1, self.hidden_size), curr_ht_1)
             curr_ht = curr_ht.scatter(
-                0, curr_timestamp_idx.view(curr_existing_N,1,1).repeat(1,curr_N,self.hidden_size), curr_ht_0)
+                0, curr_timestamp_idx.view(curr_existing_N, 1, 1).repeat(1, curr_N, self.hidden_size), curr_ht_0)
             curr_ct_0 = curr_ct_0.scatter(
-                1, curr_timestamp_idx.view(1,curr_existing_N,1).repeat(curr_existing_N,1,self.hidden_size), curr_ct_1)
+                1, curr_timestamp_idx.view(1, curr_existing_N, 1).repeat(curr_existing_N, 1, self.hidden_size), curr_ct_1)
             curr_ct = curr_ct.scatter(
-                0, curr_timestamp_idx.view(curr_existing_N,1,1).repeat(1,curr_N,self.hidden_size), curr_ct_0)
+                0, curr_timestamp_idx.view(curr_existing_N, 1, 1).repeat(1, curr_N, self.hidden_size), curr_ct_0)
 
             # Update the list of ht/ct:
             ht_list[scene_id] = curr_ht
@@ -537,7 +539,7 @@ class EdgeToNodeAttention(nn.Module):
             temporal_ht_list: (N x edge_hidden_size))
         '''
         # same size as spatial_ht_list
-        attention_score_list = self.attention_score(\
+        attention_score_list = self.attention_score(
             spatial_ht_list, temporal_ht_list, ts_mask, same_scene_mask)
         spatial_ht_summary = []
         for i in range(len(spatial_ht_list)):
@@ -569,15 +571,15 @@ class EdgeAttentionScore(nn.Module):
         timestamp_mask = (ts_mask[:, 0] == 1)
         attention_score_list = []
         all_scene_ids = torch.unique(same_scene_mask.long()).cpu().numpy().tolist()
-        
+
         for scene_id in all_scene_ids:
             # (curr_N x curr_N x edge_hidden_size)
             curr_spatial_ht = spatial_ht_list[scene_id]
             # (curr_N x edge_hidden_size)
-            curr_temporal_ht = temporal_ht_list[same_scene_mask[:,0]==scene_id, :]
+            curr_temporal_ht = temporal_ht_list[same_scene_mask[:, 0] == scene_id, :]
             curr_N = curr_temporal_ht.size(0)\
-            # (curr_N x 1)
-            curr_timestamp_mask = (timestamp_mask[same_scene_mask[:,0]==scene_id] == 1)
+                # (curr_N x 1)
+            curr_timestamp_mask = (timestamp_mask[same_scene_mask[:, 0] == scene_id] == 1)
             curr_timestamp_idx = torch.nonzero(curr_timestamp_mask.view(-1)).view(-1)
             curr_existing_N = torch.sum(curr_timestamp_mask).item()
 
@@ -602,7 +604,9 @@ class EdgeAttentionScore(nn.Module):
 
             # (curr_existing_N x curr_existing_N)
             curr_score_mat = torch.sum((curr_spatial_ht_proj * curr_temporal_ht_proj), 2)
-            curr_score_mat = curr_score_mat * cuda(torch.tensor(curr_existing_N)) / cuda(torch.sqrt(torch.tensor(self.attention_dim).float()))
+            curr_score_mat = curr_score_mat * \
+                cuda(torch.tensor(curr_existing_N)) / \
+                cuda(torch.sqrt(torch.tensor(self.attention_dim).float()))
             curr_score_mat_numerator = torch.exp(curr_score_mat) * \
                 cuda(torch.ones(curr_existing_N, curr_existing_N) - torch.eye(curr_existing_N))
             curr_score_mat_denominator = torch.sum(curr_score_mat_numerator, 1)
@@ -637,7 +641,7 @@ class EdgeToNodeAverage(nn.Module):
         for m in spatial_ht_list:
             mask = cuda(torch.ones(m.size(0), m.size(0)) - torch.eye(m.size(0)))
             mask = mask.view(m.size(0), m.size(0), 1).repeat(1, 1, m.size(2))
-            spatial_ht_summary.append(torch.mean(mask*m, 1).view(m.size(0),m.size(2)))
+            spatial_ht_summary.append(torch.mean(mask*m, 1).view(m.size(0), m.size(2)))
 
         return torch.cat(spatial_ht_summary, 0)
 
@@ -689,11 +693,11 @@ class ProbablisticTrajectoryLoss:
             return cuda(torch.tensor(0))
         # y_pred: N x pred_len x 5
         # y_true: (pred_traj, pred_traj_rel)  N x pred_len x 2
-        mux, muy, sigma_x, sigma_y, corr = y_pred[:,:,0], y_pred[:,:,1],\
-            y_pred[:,:,2], y_pred[:,:,3], y_pred[:,:,4]
+        mux, muy, sigma_x, sigma_y, corr = y_pred[:, :, 0], y_pred[:, :, 1],\
+            y_pred[:, :, 2], y_pred[:, :, 3], y_pred[:, :, 4]
         is_predictable = y_true[2].long()
-        x, y = y_true[1][is_predictable[:,0]==1,:,0].float(), \
-               y_true[1][is_predictable[:,0]==1,:,1].float()
+        x, y = y_true[1][is_predictable[:, 0] == 1, :, 0].float(), \
+            y_true[1][is_predictable[:, 0] == 1, :, 1].float()
         N = y_pred.size(0)
         if N == 0:
             return cuda(torch.tensor(0))
@@ -720,9 +724,9 @@ class ProbablisticTrajectoryLoss:
 
         loss = nn.MSELoss()
         #y_pred_traj = y_true[0][is_predictable[:,0]==1,:,:].float()
-        #for i in range(1, y_pred_traj.size(1)):
+        # for i in range(1, y_pred_traj.size(1)):
         #    y_pred_traj[:, i, :] = y_pred_traj[:, i-1, :] + y_pred[:, i, :2]
-        out = loss(y_pred_traj, y_true[0][is_predictable[:,0]==1,:,:].float())
+        out = loss(y_pred_traj, y_true[0][is_predictable[:, 0] == 1, :, :].float())
         return out
 
         # out = y_pred[:, :, :2].float() - y_true[1][is_predictable[:,0]==1,:,:].float()

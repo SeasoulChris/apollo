@@ -39,6 +39,8 @@ def cuda(x):
     return x.cuda() if torch.cuda.is_available() else x
 
 # TODO(jiacheng): implement this
+
+
 def save_checkpoint():
     #filepath = os.path.join(checkpoint_dir, filename)
     #torch.save(state, filepath)
@@ -47,6 +49,8 @@ def save_checkpoint():
 #########################################################
 # Vanilla training and validating
 #########################################################
+
+
 def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
                   batch_preprocess=None, batch_size=1024, print_period=100):
     model.train()
@@ -83,6 +87,7 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
     print('Training Loss: {}'.format(train_loss))
     loss.loss_info(pred_y, train_y)
 
+
 def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
                   batch_size=1024):
     model.eval()
@@ -110,6 +115,7 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
 
     return valid_loss
 
+
 def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimizer,
                         scheduler, epochs, save_name, batch_preprocess=None,
                         train_batch=1024, print_period=100, valid_batch=1024):
@@ -132,6 +138,8 @@ def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimiz
 #########################################################
 # Training and validating using data-loader
 #########################################################
+
+
 def train_dataloader(train_loader, model, loss, optimizer, epoch,
                      print_period=None):
     model.train()
@@ -161,6 +169,7 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch,
     logging.info('Training loss: {}'.format(train_loss))
     print('Training Loss: {}'.format(train_loss))
 
+
 def valid_dataloader(valid_loader, model, loss, analyzer=None):
     model.eval()
 
@@ -171,7 +180,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
         pred = model(X)
         valid_loss = loss.loss_fn(pred, y)
         loss_history.append(valid_loss.item())
-        
+
         valid_loss_info = loss.loss_info(pred, y)
         if valid_loss_info is not None:
             #print ('Validation avg displacement = {}'.format(valid_loss_info))
@@ -186,6 +195,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
     print ('Validation accuracy = {}'.format(np.mean(loss_info_history)))
 
     return valid_loss
+
 
 def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs, save_name, print_period=None,
@@ -222,16 +232,16 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
         # Save model according to the specified mode.
         if save_mode == 0:
             if is_better_model:
-                torch.save(model.state_dict(),\
-                    save_name + '/model.pt'.format(epoch, valid_loss))
+                torch.save(model.state_dict(),
+                           save_name + '/model.pt'.format(epoch, valid_loss))
         elif save_mode == 1:
             if is_better_model:
-                torch.save(model.state_dict(),\
-                    save_name + '/model_epoch{}_valloss{:.6f}.pt'\
-                    .format(epoch, valid_loss))
+                torch.save(model.state_dict(),
+                           save_name + '/model_epoch{}_valloss{:.6f}.pt'
+                           .format(epoch, valid_loss))
         elif save_mode == 2:
-            torch.save(model.state_dict(),\
-                save_name + '/model_epoch{}_valloss{:.6f}.pt'\
-                .format(epoch, valid_loss))
+            torch.save(model.state_dict(),
+                       save_name + '/model_epoch{}_valloss{:.6f}.pt'
+                       .format(epoch, valid_loss))
 
     return model

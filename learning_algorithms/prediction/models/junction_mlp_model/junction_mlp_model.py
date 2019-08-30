@@ -32,6 +32,8 @@ dim_output = 12
 Model definition
 ========================================================================
 '''
+
+
 class JunctionMLPModel(nn.Module):
     def __init__(self, feature_size):
         super(JunctionMLPModel, self).__init__()
@@ -46,12 +48,13 @@ class JunctionMLPModel(nn.Module):
             nn.Linear(30, 12),
             # nn.Softmax()
         )
-    
+
     def forward(self, X):
         out = self.mlp(X)
-        out = torch.mul(out, X[:,18:114:8])
+        out = torch.mul(out, X[:, 18:114:8])
         out = F.softmax(out)
         return out
+
 
 class JunctionMLPLoss():
     def loss_fn(self, y_pred, y_true):

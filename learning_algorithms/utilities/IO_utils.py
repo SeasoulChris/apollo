@@ -16,6 +16,7 @@
 
 import os
 
+
 def GetListOfFiles(dirpath):
     list_of_files = os.listdir(dirpath)
     all_files = []

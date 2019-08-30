@@ -33,6 +33,7 @@ from learning_algorithms.utilities.network_utils import *
 class PointToLineProjection(nn.Module):
     '''Get the projection point from a given point to a given line-segment.
     '''
+
     def __init__(self):
         super(PointToLineProjection, self).__init__()
 
@@ -73,6 +74,7 @@ class FindClosestNodeFromLineToPoint(nn.Module):
     '''Given a line(consisting of multiple nodes), find the node with the
        shortest distance to a given point.
     '''
+
     def __init__(self):
         super(FindClosestNodeFromLineToPoint, self).__init__()
 
@@ -92,7 +94,7 @@ class FindClosestNodeFromLineToPoint(nn.Module):
 
         # Calculate the L2 distance between every lane-points to the point.
         # (N x num_node-2 x 2)
-        distances = nodes - point.view(N,1,2).repeat(1,num_node-2,1).float()
+        distances = nodes - point.view(N, 1, 2).repeat(1, num_node-2, 1).float()
         distances = distances ** 2
         # (N x num_node-2)
         distances = torch.sum(distances, 2)
@@ -146,7 +148,7 @@ class FindClosestLineSegmentFromLineToPoint(nn.Module):
             min_idx_2nd[idx_to_be_modified] = min_idx_next[idx_to_be_modified]
 
         # Return the correct order
-        min_indices = torch.cat((min_idx.view(N,1), min_idx_2nd.view(N,1)), 1)
+        min_indices = torch.cat((min_idx.view(N, 1), min_idx_2nd.view(N, 1)), 1)
         idx_before, _ = torch.min(min_indices, dim=1)
         idx_after, _ = torch.max(min_indices, dim=1)
         return idx_before, idx_after
@@ -169,17 +171,17 @@ class ProjPtToSL(nn.Module):
         num_lane_pt = lane_features.size(1)
 
         # Get the distance of each lane-pt w.r.t. the 0th one.
-        # (N x 150) 
+        # (N x 150)
         lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
-        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(\
+        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(
             (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
         # (N x 150) The distance of each lane-pt w.r.t. the 0th one.
         lane_pt_dist = torch.cumsum(lane_pt_spacing, 1)
 
         # Get the distance of the proj_pt to the pt of idx_before.
         # (N x 2)
-        pt_before = lane_features[torch.arange(N),idx_before,:2].float()
-        pt_after = lane_features[torch.arange(N),idx_after,:2].float()
+        pt_before = lane_features[torch.arange(N), idx_before, :2].float()
+        pt_after = lane_features[torch.arange(N), idx_after, :2].float()
         # (N x 2)
         line_seg_vec = pt_after - pt_before
         # (N x 1)
@@ -219,7 +221,7 @@ class SLToXY(nn.Module):
         # Get the distance of each lane-pt w.r.t. the 0th one.
         # (N x 150)
         lane_pt_spacing = cuda(torch.zeros(N, num_lane_pt))
-        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(\
+        lane_pt_spacing[:, 1:] = torch.sqrt(torch.sum(
             (lane_features[:, 1:, :2] - lane_features[:, :-1, :2]) ** 2, 2))
         lane_pt_dist = torch.cumsum(lane_pt_spacing, 1)
 
@@ -245,8 +247,8 @@ class SLToXY(nn.Module):
 
         # Get the pt_before and pt_after.
         # (N x 2)
-        pt_before = lane_features[torch.arange(N),idx_before,:2]
-        pt_after = lane_features[torch.arange(N),idx_after,:2]
+        pt_before = lane_features[torch.arange(N), idx_before, :2]
+        pt_after = lane_features[torch.arange(N), idx_after, :2]
 
         # Get the actual s w.r.t. each line-segment of interest.
         # (N)
@@ -270,6 +272,7 @@ class BroadcastObstaclesToLanes(nn.Module):
     '''There are N obstacles and M corresponding lanes (N <= M).
        We need to broadcast the number of obstacles to be M.
     '''
+
     def __init__(self):
         super(BroadcastObstaclesToLanes, self).__init__()
 
@@ -299,6 +302,7 @@ class BroadcastObstaclesToLanes(nn.Module):
 class ObstacleToLaneRelation(nn.Module):
     '''Calculate the distance of an obstacle to a certain lane.
     '''
+
     def __init__(self):
         super(ObstacleToLaneRelation, self).__init__()
         self.broadcasting = BroadcastObstaclesToLanes()
@@ -322,9 +326,9 @@ class ObstacleToLaneRelation(nn.Module):
         repeated_obs_pos = self.broadcasting(obs_pos, same_obs_mask)
         # (M)
         idx_before, idx_after = self.find_the_closest_two_points(lane_features, repeated_obs_pos)
-        indices = torch.cat((idx_before.view(M,1), idx_after.view(M,1)), 1)
+        indices = torch.cat((idx_before.view(M, 1), idx_after.view(M, 1)), 1)
         # (M x 2)
-        proj_pt, _ = self.get_projection_point(\
-            lane_features[torch.arange(M),idx_before,:2], lane_features[torch.arange(M),idx_after,:2], repeated_obs_pos)
+        proj_pt, _ = self.get_projection_point(
+            lane_features[torch.arange(M), idx_before, :2], lane_features[torch.arange(M), idx_after, :2], repeated_obs_pos)
 
         return proj_pt, indices, repeated_obs_pos

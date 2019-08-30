@@ -18,11 +18,16 @@ import torch
 import torch.nn as nn
 
 '''  '''
+
+
 def generate_cnn1d(dim_list):
     return
 
+
 '''  '''
-def generate_mlp(dim_list, last_layer_nonlinear=True ,dropout=0.0):
+
+
+def generate_mlp(dim_list, last_layer_nonlinear=True, dropout=0.0):
     layers = []
     for dim_in, dim_out in zip(dim_list[:-1], dim_list[1:]):
         layers.append(nn.Linear(dim_in, dim_out))
@@ -33,7 +38,10 @@ def generate_mlp(dim_list, last_layer_nonlinear=True ,dropout=0.0):
     else:
         return nn.Sequential(*layers[:-2])
 
+
 '''  '''
+
+
 def generate_lstm_states(hidden_size, bilateral=False):
     h0 = torch.zeros(1, hidden_size)
     c0 = torch.zeros(1, hidden_size)
@@ -43,7 +51,10 @@ def generate_lstm_states(hidden_size, bilateral=False):
     c0 = nn.Parameter(c0, requires_grad=True)
     return h0, c0
 
+
 '''  '''
+
+
 def generate_lstm(input_size, hidden_size, bilateral=False):
     h0 = torch.zeros(1, hidden_size)
     c0 = torch.zeros(1, hidden_size)

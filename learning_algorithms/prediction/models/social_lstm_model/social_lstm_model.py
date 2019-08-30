@@ -21,6 +21,8 @@ Dataset set-up
 Read files that contain training data line by line.
 Within each line, use "delim" as the deliminator.
 '''
+
+
 def read_file(_path, delim='\t'):
     data = []
     if delim == 'tab':
@@ -33,6 +35,7 @@ def read_file(_path, delim='\t'):
             line = [float(i) for i in line]
             data.append(line)
     return np.asarray(data)
+
 
 class HumanTrajectoryDataset(Dataset):
     def __init__(self, data_dir, obs_len=8, pred_len=12, skip=1,
@@ -49,7 +52,7 @@ class HumanTrajectoryDataset(Dataset):
         # Go through all the files that contain data
         for path in all_files:
             data = read_file(path, delim)
-            
+
             # Organize the data in the following way:
             # All obstacles belonging to the same timestamp are clustered
             # together; timestamp is sorted.
@@ -136,6 +139,7 @@ class HumanTrajectoryDataset(Dataset):
                self.is_predictable[start:end])
         return out
 
+
 def collate_scenes(batch):
     # batch is a list of tuples
     # unzip to form list of np-arrays
@@ -156,11 +160,11 @@ def collate_scenes(batch):
         [np.ones((length, 1))*i for i, length in enumerate(same_scene_mask)]
     same_scene_mask = np.concatenate(same_scene_mask)
 
-    return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel), \
-            torch.from_numpy(past_traj_timestamp_mask),\
+    return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel),
+            torch.from_numpy(past_traj_timestamp_mask),
             torch.from_numpy(is_predictable), torch.from_numpy(same_scene_mask)),\
-           (torch.from_numpy(pred_traj), torch.from_numpy(pred_traj_rel),\
-            torch.from_numpy(is_predictable))
+        (torch.from_numpy(pred_traj), torch.from_numpy(pred_traj_rel),
+         torch.from_numpy(is_predictable))
 
 
 '''
@@ -168,6 +172,7 @@ def collate_scenes(batch):
 Model definition
 ========================================================================
 '''
+
 
 class SocialPooling(nn.Module):
     def __init__(self, grid_size=2, area_span=1.6):
@@ -179,8 +184,8 @@ class SocialPooling(nn.Module):
         N = curr_pos_t.size(0)
 
         # N x N x 2
-        rel_pos_matrix = torch.transpose(curr_pos_t.repeat(1, N ,1), 0, 1) -\
-                         curr_pos_t.repeat(1, N, 1)
+        rel_pos_matrix = torch.transpose(curr_pos_t.repeat(1, N, 1), 0, 1) -\
+            curr_pos_t.repeat(1, N, 1)
         # N x N
         eps = 1e-2
         mask_within_pooling_area = \
@@ -190,10 +195,10 @@ class SocialPooling(nn.Module):
             (rel_pos_matrix[:, :, 1] > -self.area_span / 2.0+eps)
         mask_within_pooling_area = mask_within_pooling_area.float()
         mask_within_pooling_area -= torch.eye(N).cuda()
-        
+
         # N x N
         mask_grid_id = torch.floor(
-            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) / \
+            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) /
             torch.tensor(self.area_span / self.grid_size))
         mask_grid_id = mask_grid_id[:, :, 0] * self.grid_size + \
             mask_grid_id[:, :, 1]
@@ -212,15 +217,15 @@ class SocialPooling(nn.Module):
         for scene_id in all_scene_ids:
             # N x 1 x hidden_size
             #print (ht.shape)
-            curr_ht = ht[same_scene_mask[:,0] == scene_id, :, :]
+            curr_ht = ht[same_scene_mask[:, 0] == scene_id, :, :]
             #print (curr_ht.shape)
             # N x 1 x 2
-            curr_pos_t = pos_t[same_scene_mask[:,0] == scene_id, :, :]
+            curr_pos_t = pos_t[same_scene_mask[:, 0] == scene_id, :, :]
             curr_N = curr_ht.size(0)
             if (curr_N == 0):
                 continue
             curr_ht = curr_ht.view(curr_N, 1, -1)
-        
+
             mask_within_pooling_area, mask_grid_id = self.decide_grid(curr_pos_t)
             #print (mask_within_pooling_area)
             #print (mask_grid_id)
@@ -244,7 +249,7 @@ class SocialPooling(nn.Module):
 
             ht_pooled[N_filled:N_filled+curr_N, :, :] = curr_ht_pooled
             N_filled += curr_N
-        
+
         return ht_pooled
 
 
@@ -315,7 +320,7 @@ class SocialLSTM(nn.Module):
 
             # Step through RNN
             _, (curr_ht, curr_ct) = self.lstm(
-                torch.cat((et, at), 1).view(curr_N, 1, -1), \
+                torch.cat((et, at), 1).view(curr_N, 1, -1),
                 (curr_ht.view(1, curr_N, -1), curr_ct.view(1, curr_N, -1)))
             ht[curr_mask, :, :], ct[curr_mask, :, :] = \
                 curr_ht.view(curr_N, 1, -1), curr_ct.view(curr_N, 1, -1)
@@ -323,7 +328,7 @@ class SocialLSTM(nn.Module):
         # Predict future traj
         pred_mask = (time_mask[:, -1] == 1)
         pred_N = torch.sum(pred_mask).item()
-        if(pred_N==0):
+        if(pred_N == 0):
             return None
         pred_same_scene_mask = same_scene_mask[pred_mask]
         pred_point = traj[pred_mask, -1, :].float().reshape(pred_N, 1, 2)
@@ -342,12 +347,13 @@ class SocialLSTM(nn.Module):
             et = self.pos_embedding(pred_point_rel)
             at = self.social_embedding(Ht.view(pred_N, -1))
             _, (pred_ht, pred_ct) = self.lstm(
-                torch.cat((et, at), 1).view(pred_N, 1, -1), \
+                torch.cat((et, at), 1).view(pred_N, 1, -1),
                 (pred_ht.view(1, pred_N, -1), pred_ct.view(1, pred_N, -1)))
             pred_ht = pred_ht.view(pred_N, 1, -1)
         pred_out_all = torch.zeros(N, self.pred_len, 5).cuda()
         pred_out_all[pred_mask, :, :] = pred_out
-        return pred_out_all[is_predictable_mask[:,0]==1, :, :]
+        return pred_out_all[is_predictable_mask[:, 0] == 1, :, :]
+
 
 class ProbablisticTrajectoryLoss:
     def loss_fn(self, y_pred, y_true):
@@ -355,11 +361,11 @@ class ProbablisticTrajectoryLoss:
             return 0
         # y_pred: N x pred_len x 5
         # y_true: (pred_traj, pred_traj_rel)  N x pred_len x 2
-        mux, muy, sigma_x, sigma_y, corr = y_pred[:,:,0], y_pred[:,:,1],\
-            y_pred[:,:,2], y_pred[:,:,3], y_pred[:,:,4]
+        mux, muy, sigma_x, sigma_y, corr = y_pred[:, :, 0], y_pred[:, :, 1],\
+            y_pred[:, :, 2], y_pred[:, :, 3], y_pred[:, :, 4]
         is_predictable = y_true[2].long()
-        x, y = y_true[1][is_predictable[:,0]==1,:,0].float(), \
-               y_true[1][is_predictable[:,0]==1,:,1].float()
+        x, y = y_true[1][is_predictable[:, 0] == 1, :, 0].float(), \
+            y_true[1][is_predictable[:, 0] == 1, :, 1].float()
         N = y_pred.size(0)
         if N == 0:
             return 0
@@ -371,7 +377,7 @@ class ProbablisticTrajectoryLoss:
         #print (z)
         P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
             torch.exp(-z/(2*(1-corr**2)))
-        
+
         loss = torch.clamp(P, min=eps)
         #print (loss)
         loss = -loss.log()
@@ -381,12 +387,12 @@ class ProbablisticTrajectoryLoss:
         loss = nn.MSELoss()
 
         is_predictable = y_true[2].long()
-        out = loss(y_pred[:, :, :2], y_true[1][is_predictable[:,0]==1,:,:].float())
+        out = loss(y_pred[:, :, :2], y_true[1][is_predictable[:, 0] == 1, :, :].float())
         return out
 
     def loss_info(self, y_pred, y_true):
         is_predictable = y_true[2].long()
-        out = y_pred[:, :, :2] - y_true[1][is_predictable[:,0]==1,:,:].float()
+        out = y_pred[:, :, :2] - y_true[1][is_predictable[:, 0] == 1, :, :].float()
         out = out ** 2
         out = torch.sum(out, 2)
         out = torch.sqrt(out)

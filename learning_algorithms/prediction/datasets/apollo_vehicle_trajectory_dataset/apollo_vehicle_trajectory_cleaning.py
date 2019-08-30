@@ -33,7 +33,7 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
-     import *
+    import *
 from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
@@ -170,7 +170,7 @@ def LabelCleaningAndSmoothing(label_dir):
 def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
     # From feature_dir, locate those labels of interests.
     label_dict_list = glob.glob(label_dir + '/**/cleaned_label.npy', recursive=True)
-  
+
     # Go through all labels of interests, filter out those noisy ones and
     # only retain those clean ones.
     count = Counter()
@@ -191,8 +191,10 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             obs_vel = (obs_pos[1:, :] - obs_pos[:-1, :]) / 0.1
             linear_vel = np.linalg.norm(obs_vel, axis=1)
             linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
-            angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
-            turning_ang = (np.arctan2(obs_vel[-1,1], obs_vel[-1,0]) - np.arctan2(obs_vel[0,1], obs_vel[0,0])) % (2*np.pi)
+            angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / \
+                ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
+            turning_ang = (np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0]) -
+                           np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
             turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
             # 3. Filtered the extream values for acc and ang_vel.
             if np.max(np.abs(linear_acc)) > 80:
@@ -208,9 +210,9 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             if -np.pi/6 <= turning_ang <= np.pi/6:
                 if np.min(angular_vel) < 0.9 or np.max(np.abs(linear_acc)) > 30:
                     continue
-                area = (obs_pos[0,0]*obs_pos[1,1] + obs_pos[1,0]*obs_pos[-1,1] + obs_pos[-1,0]*obs_pos[0,1]
-                       -obs_pos[0,0]*obs_pos[-1,1] - obs_pos[1,0]*obs_pos[0,1] - obs_pos[-1,0]*obs_pos[1,1])
-                if area/(np.linalg.norm(obs_pos[1,:] - obs_pos[0,:]) + 1e-6) >= 3:
+                area = (obs_pos[0, 0]*obs_pos[1, 1] + obs_pos[1, 0]*obs_pos[-1, 1] + obs_pos[-1, 0]*obs_pos[0, 1]
+                        - obs_pos[0, 0]*obs_pos[-1, 1] - obs_pos[1, 0]*obs_pos[0, 1] - obs_pos[-1, 0]*obs_pos[1, 1])
+                if area/(np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
                     count['change_lane'] += 1
                 else:
                     count['straight'] += 1
@@ -224,7 +226,8 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
                 count['uturn'] += 1
             cleaned_label_dict[key] = feature_seq[:pred_len]
 
-        print("Got " + str(len(cleaned_label_dict.keys())) + "/" + str(len(label_dict.keys())) + " labels left!")
+        print("Got " + str(len(cleaned_label_dict.keys())) +
+              "/" + str(len(label_dict.keys())) + " labels left!")
         print(count)
         np.save(label_dict_name.replace('cleaned_label.npy', 'cleaner_label.npy'), cleaned_label_dict)
     print(count)

@@ -32,6 +32,8 @@ from torch.utils.data import Dataset
     use "delim" as the deliminator. It will return a 2d-nparray that contains
     all the training data.
 '''
+
+
 def read_file(_path, delim='\t'):
     data = []
     if delim == 'tab':
@@ -67,7 +69,7 @@ class HumanTrajectoryDataset(Dataset):
         # Go through all the files that contain data
         for path in all_file_paths:
             data = read_file(path, delim)
-            
+
             # Organize the data in the following way:
             #   All obstacles belonging to the same timestamp are clustered
             #   together; timestamp is sorted.
@@ -113,18 +115,21 @@ class HumanTrajectoryDataset(Dataset):
                     rel_time_begin = (self.extra_sample + 1) * rel_time_begin
                     rel_time_end = (rel_time_end - 1) * (self.extra_sample + 1) + 1
                     curr_ped = curr_ped[:, 2:]
-                    curr_ped_aug = np.zeros(((curr_ped.shape[0] - 1) * (self.extra_sample + 1) + 1, 2))
+                    curr_ped_aug = np.zeros(
+                        ((curr_ped.shape[0] - 1) * (self.extra_sample + 1) + 1, 2))
                     for j in range(curr_ped.shape[0]-1):
                         xy_diff = curr_ped[j+1, :] - curr_ped[j, :]
                         for k in range(self.extra_sample+1):
-                            curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j, :] + xy_diff*k/(self.extra_sample+1)
+                            curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j,
+                                                                                  :] + xy_diff*k/(self.extra_sample+1)
                     curr_ped_aug[curr_ped_aug.shape[0]-1, :] = curr_ped[curr_ped.shape[0]-1, :]
                     curr_ped = curr_ped_aug
                     # 2. Add noise to the observed trajectory (no noise added
                     #    to the ground-truth label).
                     if noise_std_dev != 0.0 and rel_time_begin < augmented_obs_len:
                         curr_ped[:min(augmented_obs_len, rel_time_end) - rel_time_begin, :] += \
-                            np.random.normal(0.0, noise_std_dev, (min(augmented_obs_len, rel_time_end) - rel_time_begin, 2))
+                            np.random.normal(0.0, noise_std_dev, (min(
+                                augmented_obs_len, rel_time_end) - rel_time_begin, 2))
                         curr_ped = np.around(curr_ped, decimals=4)
                     # Get the coordinates of positions and make them relative.
                     # (relative position contains 1 fewer data-point, because, for
@@ -137,7 +142,8 @@ class HumanTrajectoryDataset(Dataset):
                     # Update into curr_scene matrix.
                     curr_scene[i, rel_time_begin:rel_time_end, :] = curr_ped
                     curr_scene_rel[i, rel_time_begin:rel_time_end, :] = curr_ped_rel
-                    curr_scene_timestamp_mask[i, rel_time_begin:rel_time_end] = curr_ped_timestamp_mask
+                    curr_scene_timestamp_mask[i,
+                                              rel_time_begin:rel_time_end] = curr_ped_timestamp_mask
                     curr_scene_is_predictable[i] = curr_ped_is_predictable
                     num_peds_considered += 1
 
@@ -151,7 +157,8 @@ class HumanTrajectoryDataset(Dataset):
         if verbose:
             print ('Statistics:')
             print ('Average # of pedestrians in a scene = {}'.format(np.average(num_peds_in_scene)))
-            print ('Standard deviation of # of pedestrians in a scene = {}'.format(np.std(num_peds_in_scene)))
+            print ('Standard deviation of # of pedestrians in a scene = {}'.format(
+                np.std(num_peds_in_scene)))
             print ('Max # of pedestrians in a scene = {}'.format(np.max(num_peds_in_scene)))
             print ('Min # of pedestrians in a scene = {}'.format(np.min(num_peds_in_scene)))
             print ('Median # of pedestrians in a scene = {}'.format(np.median(num_peds_in_scene)))
@@ -175,7 +182,8 @@ def collate_scenes(batch):
     # unzip to form list of np-arrays
     # TODO(jiacheng): set a max. limit in case the collated data exceeds the limit
     #                 of graphics memory of NVIDIA.
-    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = zip(*batch)
+    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = zip(
+        *batch)
 
     same_scene_mask = [scene.shape[0] for scene in past_traj]
     past_traj = np.concatenate(past_traj)
@@ -188,7 +196,7 @@ def collate_scenes(batch):
     same_scene_mask = [np.ones((length, 1))*i for i, length in enumerate(same_scene_mask)]
     same_scene_mask = np.concatenate(same_scene_mask)
 
-    return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel), \
+    return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel),
             torch.from_numpy(past_traj_timestamp_mask), torch.from_numpy(is_predictable), torch.from_numpy(same_scene_mask)),\
-           (torch.from_numpy(pred_traj), torch.from_numpy(pred_traj_rel),\
-            torch.from_numpy(is_predictable))
+        (torch.from_numpy(pred_traj), torch.from_numpy(pred_traj_rel),
+         torch.from_numpy(is_predictable))

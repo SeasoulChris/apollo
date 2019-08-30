@@ -27,7 +27,7 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
-     import *
+    import *
 from learning_algorithms.utilities.IO_utils import *
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
@@ -88,8 +88,8 @@ class ApolloPedestrianDataset(Dataset):
         for ped_id, ped_val in self.ped_id_to_traj_data.items():
             normalized_ped_val = ped_val
             for i in range(len(normalized_ped_val)):
-                normalized_ped_val[i] = (normalized_ped_val[i][0], normalized_ped_val[i][1] - normalized_ped_val[-1][1], \
-                    normalized_ped_val[i][2] - normalized_ped_val[-1][2], normalized_ped_val[i][3])
+                normalized_ped_val[i] = (normalized_ped_val[i][0], normalized_ped_val[i][1] - normalized_ped_val[-1][1],
+                                         normalized_ped_val[i][2] - normalized_ped_val[-1][2], normalized_ped_val[i][3])
             #print (normalized_ped_val)
             self.ped_id_to_traj_data[ped_id] = normalized_ped_val
 
@@ -112,12 +112,16 @@ class ApolloPedestrianDataset(Dataset):
             clean_ped_timestamp = np.asarray(clean_ped_timestamp)
             seg_id = 0
             ped_discontinuity_idx = \
-                np.argwhere(clean_ped_timestamp[1:] - clean_ped_timestamp[:-1] > threshold_discontinuity)
-            ped_discontinuity_idx = [0] + (ped_discontinuity_idx.reshape(-1) + 1).tolist() + [len(clean_ped_val)]
+                np.argwhere(clean_ped_timestamp[1:] -
+                            clean_ped_timestamp[:-1] > threshold_discontinuity)
+            ped_discontinuity_idx = [
+                0] + (ped_discontinuity_idx.reshape(-1) + 1).tolist() + [len(clean_ped_val)]
             for i in range(len(ped_discontinuity_idx)-1):
                 if ped_discontinuity_idx[i+1] - ped_discontinuity_idx[i] > pred_len + 1:
-                    new_ped_id_to_traj_data[str(ped_id)+'_'+str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i+1]]
-                    ped_tracking_length.append(ped_discontinuity_idx[i+1] - ped_discontinuity_idx[i])
+                    new_ped_id_to_traj_data[str(
+                        ped_id)+'_'+str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i+1]]
+                    ped_tracking_length.append(
+                        ped_discontinuity_idx[i+1] - ped_discontinuity_idx[i])
                     seg_id += 1
         self.ped_id_to_traj_data = new_ped_id_to_traj_data
         ped_tracking_length = np.asarray(ped_tracking_length)
@@ -131,8 +135,9 @@ class ApolloPedestrianDataset(Dataset):
                 curr_scene_rel = np.zeros((1, seq_len, 2))
                 curr_scene_timestamp_mask = np.zeros((1, seq_len))
 
-                curr_scene[0, -len(ped_val): ,:] = np.asarray(ped_val)
-                curr_scene_rel[0, -len(ped_val)+1: ,:] = np.asarray(ped_val)[1:, :] - np.asarray(ped_val)[:-1, :]
+                curr_scene[0, -len(ped_val):, :] = np.asarray(ped_val)
+                curr_scene_rel[0, -len(ped_val)+1:, :] = np.asarray(ped_val)[1:,
+                                                                             :] - np.asarray(ped_val)[:-1, :]
                 curr_scene_timestamp_mask[0, -len(ped_val):] = np.ones((len(ped_val)))
 
                 self.scene_list.append(curr_scene)
@@ -141,9 +146,11 @@ class ApolloPedestrianDataset(Dataset):
                 self.scene_is_predictable_list.append(np.ones((1, 1)))
             else:
                 for i in range(len(ped_val)-seq_len+1):
-                    self.scene_list.append(np.asarray(ped_val[i:i+seq_len]).reshape((1, seq_len, 2)))
+                    self.scene_list.append(np.asarray(
+                        ped_val[i:i+seq_len]).reshape((1, seq_len, 2)))
                     curr_scene_rel = np.zeros((1, seq_len, 2))
-                    curr_scene_rel[0, 1: ,:] = np.asarray(ped_val[i:i+seq_len])[1:, :] - np.asarray(ped_val[i:i+seq_len])[:-1, :]
+                    curr_scene_rel[0, 1:, :] = np.asarray(
+                        ped_val[i:i+seq_len])[1:, :] - np.asarray(ped_val[i:i+seq_len])[:-1, :]
                     self.scene_rel_list.append(curr_scene_rel)
                     self.scene_timestamp_mask.append(np.ones((1, seq_len)))
                     self.scene_is_predictable_list.append(np.ones((1, 1)))
@@ -153,7 +160,7 @@ class ApolloPedestrianDataset(Dataset):
             print ('Dataset size = {}'.format(self.num_scene))
             print ('Total number of usable pedestrians: {}'.format(len(self.ped_id_to_traj_data)))
             print ('Number of data with tracking length >= seq_len = {}'.format(
-                       np.sum((ped_tracking_length - pred_len - obs_len) >= 0)))
+                np.sum((ped_tracking_length - pred_len - obs_len) >= 0)))
             print ('Average tracking length = {}'.format(np.average(ped_tracking_length)))
             print ('Median tracking length = {}'.format(np.median(ped_tracking_length)))
             print ('Max tracking length = {}'.format(np.max(ped_tracking_length)))

@@ -29,6 +29,7 @@ from learning_algorithms.utilities.train_utils import *
 dim_input = 114
 dim_output = 12
 
+
 def load_h5(filename):
     """Load the data from h5 file to the format of numpy"""
     if not os.path.exists(filename):
@@ -43,17 +44,19 @@ def load_h5(filename):
         samples[key] = h5_file[key][:]
     return samples["data"]
 
+
 def data_preprocessing(data):
     """Preprocessing"""
     X = data[:, :dim_input]
     Y = data[:, -dim_output:]
     return torch.FloatTensor(X), torch.FloatTensor(Y)
 
+
 def do_training(source_save_paths):
     """Run training job"""
     logging.info("Start training job with paths: {}".format(source_save_paths))
 
-    source_path, save_dir_path = source_save_paths 
+    source_path, save_dir_path = source_save_paths
 
     data = load_h5(source_path)
     # Explicitly check None
@@ -79,18 +82,18 @@ def do_training(source_save_paths):
 
     # CUDA setup:
     if torch.cuda.is_available():
-       logging.info("Using CUDA to speed up training.")
-       model.cuda()
-       X_train = X_train.cuda()
-       Y_train = Y_train.cuda()
-       X_test = X_test.cuda()
-       Y_test = Y_test.cuda()
+        logging.info("Using CUDA to speed up training.")
+        model.cuda()
+        X_train = X_train.cuda()
+        Y_train = Y_train.cuda()
+        X_test = X_test.cuda()
+        Y_test = Y_test.cuda()
     else:
-       logging.info("Not using CUDA.")
+        logging.info("Not using CUDA.")
 
     # Model training
     model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss,
-        optimizer, scheduler, epochs, "junction_mlp_model.pt", train_batch=1024)
+                                optimizer, scheduler, epochs, "junction_mlp_model.pt", train_batch=1024)
     traced_script_module = torch.jit.trace(model, X_train[0:1])
     traced_script_module.save(os.path.join(save_dir_path, "junction_mlp_model.pt"))
 
@@ -110,4 +113,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     do_training((args.data, args.savepath))
-

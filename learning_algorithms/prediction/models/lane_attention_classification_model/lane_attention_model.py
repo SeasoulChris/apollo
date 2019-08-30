@@ -35,7 +35,8 @@ class CruiseMLP(nn.Module):
         super(CruiseMLP, self).__init__()
         self.vehicle_encoding = VehicleLSTM(embed_size=64, hidden_size=128, encode_size=128)
         self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
-        self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
+        self.prediction_layer = DistributionalScoring(
+            obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
 
     def forward(self, X):
         obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
@@ -67,9 +68,11 @@ class FastLaneAttention(nn.Module):
         self.lane_encoding = LaneLSTM(embed_size=64, hidden_size=128, encode_size=127)
         self.lane_aggregate = SimpleAggregation()
         if mode == 0:
-            self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
+            self.prediction_layer = DistributionalScoring(
+                obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
         elif mode == 1:
-            self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=128, aggr_enc_size=256, mlp_size=[100, 16, 1])
+            self.prediction_layer = DistributionalScoring(
+                obs_enc_size=128, lane_enc_size=128, aggr_enc_size=256, mlp_size=[100, 16, 1])
 
     def forward(self, X):
         obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
@@ -99,10 +102,13 @@ class LaneAttention(nn.Module):
     def __init__(self):
         super(LaneAttention, self).__init__()
         self.vehicle_encoding = VehicleDynamicLSTM(embed_size=64, hidden_size=128, encode_size=128)
-        self.backward_lane_encoding = BackwardLaneLSTM(embed_size=16, hidden_size=64, encode_size=64)
-        self.lane_encoding = AttentionalLaneLSTM(embed_size=64, hidden_size=128, encode_size=126, obs_encode_size=128)
+        self.backward_lane_encoding = BackwardLaneLSTM(
+            embed_size=16, hidden_size=64, encode_size=64)
+        self.lane_encoding = AttentionalLaneLSTM(
+            embed_size=64, hidden_size=128, encode_size=126, obs_encode_size=128)
         self.lane_aggregation = AttentionalAggregation(input_encoding_size=128, output_size=256)
-        self.prediction_layer = DistributionalScoring(obs_enc_size=128, lane_enc_size=192, aggr_enc_size=512, mlp_size=[33, 1])
+        self.prediction_layer = DistributionalScoring(
+            obs_enc_size=128, lane_enc_size=192, aggr_enc_size=512, mlp_size=[33, 1])
 
     def forward(self, X):
         '''
@@ -126,7 +132,8 @@ class LaneAttention(nn.Module):
         obs_enc = self.vehicle_encoding(obs_features, obs_hist_size)
 
         # M x 64
-        backward_enc = self.backward_lane_encoding(backward_lane_points, obs_hist_size, same_obs_mask)
+        backward_enc = self.backward_lane_encoding(
+            backward_lane_points, obs_hist_size, same_obs_mask)
 
         lane_enc_1 = self.lane_encoding(lane_features, obs_enc, same_obs_mask)
         lane_enc_2 = lane_features[:, 0].view(M, 1)
@@ -163,7 +170,8 @@ class VehicleLSTM(nn.Module):
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
         self.c0 = nn.Parameter(c0, requires_grad=True)
-        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1,
+                                   batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
             nn.Linear(hidden_size*8, encode_size),
@@ -190,8 +198,8 @@ class VehicleLSTM(nn.Module):
         vel_heading = obs_features[:, 7::9].view(N, 20, 1)
         vel_heading_changing_rate = obs_features[:, 8::9].view(N, 20, 1)
         # (N x 20 x 8)
-        obs_position = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y, \
-            vel_heading, vel_heading_changing_rate), 2).float()
+        obs_position = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y,
+                                  vel_heading, vel_heading_changing_rate), 2).float()
         # (N x 20 x embed_size)
         obs_embed = self.embed(obs_position.view(N*20, 8)).view(N, 20, self.embed_size)
 
@@ -256,8 +264,8 @@ class VehicleDynamicLSTM(nn.Module):
         vel_heading = obs_features[:, 7::9].view(N, 20, 1)
         vel_heading_changing_rate = obs_features[:, 8::9].view(N, 20, 1)
         # (N x 20 x 8)
-        obs_fea = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y, \
-            vel_heading, vel_heading_changing_rate), 2).float()
+        obs_fea = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y,
+                             vel_heading, vel_heading_changing_rate), 2).float()
 
         # Sort based on dscending sequence lengths.
         # original_idx = torch.arange(N)                                # [0, 1, 2, 3, 4]
@@ -279,8 +287,8 @@ class VehicleDynamicLSTM(nn.Module):
         # (N x 20 x hidden_size)
         obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
         min_val = torch.min(obs_states)
-        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,\
-            padding_value=min_val.item()-0.1)
+        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,
+                                                        padding_value=min_val.item()-0.1)
         # (N x hidden_size)
         final_states = ht.view(N, self.hidden_size)
         max_states, _ = torch.max(obs_states_for_maxpool, 1)
@@ -314,7 +322,8 @@ class BackwardLaneLSTM(nn.Module):
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
         self.c0 = nn.Parameter(c0, requires_grad=True)
-        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=False)
+        self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1,
+                                   batch_first=True, bidirectional=False)
 
         self.encode = torch.nn.Sequential(
             nn.Linear(hidden_size*3, encode_size),
@@ -359,8 +368,8 @@ class BackwardLaneLSTM(nn.Module):
         # (M x 20 x hidden_size)
         obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
         min_val = torch.min(obs_states)
-        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,\
-            padding_value=min_val.item()-0.1)
+        obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,
+                                                        padding_value=min_val.item()-0.1)
         # (M x hidden_size)
         final_states = ht.view(M, self.hidden_size)
         max_states, _ = torch.max(obs_states_for_maxpool, 1)
@@ -394,7 +403,8 @@ class LaneLSTM(nn.Module):
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
         self.c0 = nn.Parameter(c0, requires_grad=True)
-        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size,
+                                       num_layers=1, batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
             nn.Linear(hidden_size*8, encode_size),
@@ -458,7 +468,8 @@ class AttentionalLaneLSTM(nn.Module):
         nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
         self.h0 = nn.Parameter(h0, requires_grad=True)
         self.c0 = nn.Parameter(c0, requires_grad=True)
-        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True, bidirectional=True)
+        self.single_lane_rnn = nn.LSTM(embed_size, hidden_size,
+                                       num_layers=1, batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
             nn.Linear(hidden_size*8, encode_size),
@@ -479,7 +490,8 @@ class AttentionalLaneLSTM(nn.Module):
         # Input embedding.
         # (M x 150 x embed_size)
         forward_lane_features = lane_features[:, -400:].contiguous()
-        lane_embed = self.embed(forward_lane_features.float().view(M*100, 4)).view(M, 100, self.embed_size)
+        lane_embed = self.embed(forward_lane_features.float().view(M*100, 4)
+                                ).view(M, 100, self.embed_size)
 
         # obs_feature attention.
         # (N x 100)
@@ -488,7 +500,8 @@ class AttentionalLaneLSTM(nn.Module):
         for obs_id in range(same_obs_mask.max().long().item() + 1):
             curr_mask = (same_obs_mask[:, 0] == obs_id)
             curr_N = torch.sum(curr_mask).item()
-            new_attention_scores[curr_mask, :] = attention_scores[obs_id, :].view(1, 100).repeat(curr_N, 1)
+            new_attention_scores[curr_mask, :] = attention_scores[obs_id, :].view(
+                1, 100).repeat(curr_N, 1)
         # (M x 100 x hidden_size)
         attention_scores = new_attention_scores.view(M, 100, 1).repeat(1, 1, self.hidden_size*2)
 
@@ -582,7 +595,7 @@ class AttentionalAggregation(nn.Module):
 class DistributionalScoring(nn.Module):
     def __init__(self, obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[600, 100, 16, 1]):
         super(DistributionalScoring, self).__init__()
-        self.mlp = generate_mlp(\
+        self.mlp = generate_mlp(
             [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
         self.softmax_layer = nn.Softmax()
 

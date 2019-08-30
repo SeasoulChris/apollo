@@ -42,10 +42,10 @@ if __name__ == "__main__":
     train_dataset = ApolloVehicleTrajectoryDataset(args.train_file)
     valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file)
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=64, shuffle=True,\
-        num_workers=8, drop_last=True, collate_fn=collate_fn)
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True,
+                              num_workers=8, drop_last=True, collate_fn=collate_fn)
+    valid_loader = DataLoader(valid_dataset, batch_size=64, shuffle=True,
+                              num_workers=8, drop_last=True, collate_fn=collate_fn)
 
     # Model and training setup
     model = SelfLSTM()
