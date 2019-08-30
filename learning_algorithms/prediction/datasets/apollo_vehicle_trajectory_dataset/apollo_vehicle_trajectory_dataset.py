@@ -292,7 +292,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
                     # Get the size of obstacle state history.
                     curr_obs_hist_size = int(np.sum(np.array(data_pt[1:obs_feature_size+1:obs_unit_feature_size])))
-                    if curr_obs_hist_size <= 1:
+                    if curr_obs_hist_size <= 0:
                         accumulated_data_pt -= 1
                         continue
                     self.obs_hist_sizes.append(curr_obs_hist_size * np.ones((1, 1)))
@@ -312,11 +312,12 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     curr_obs_feature = np.flip(curr_obs_feature, 0)
                     curr_obs_pos = np.zeros((1, obs_hist_size, 2))
                     # (1 x max_obs_hist_size x 2)
-                    curr_obs_pos[0, -curr_obs_hist_size:, :] = curr_obs_feature[-curr_obs_hist_size:, 1:3]
                     self.obs_pos.append(curr_obs_pos)
                     curr_obs_pos_rel =  np.zeros((1, obs_hist_size, 2))
-                    curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
-                        curr_obs_pos[0, -curr_obs_hist_size+1:, :] - curr_obs_pos[0, -curr_obs_hist_size:-1, :]
+                    if curr_obs_hist_size > 1:
+                        curr_obs_pos[0, -curr_obs_hist_size:, :] = curr_obs_feature[-curr_obs_hist_size:, 1:3]
+                        curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
+                            curr_obs_pos[0, -curr_obs_hist_size+1:, :] - curr_obs_pos[0, -curr_obs_hist_size:-1, :]
                     self.obs_pos_rel.append(curr_obs_pos_rel)
 
                     # Get the obstacle polygon features (organized from past to present).
