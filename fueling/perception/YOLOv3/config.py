@@ -14,17 +14,17 @@ PR_curve_height = 960
 channels = 3  # RBG
 num_classes = 8
 num_angle_bins = 1
-bin_overlap_fraction = 1 / 6   # The final overlap will be 2*bin_overlap_fraction 
-num_output_layers = 5 + 4 * num_classes + 3 * num_angle_bins 
+bin_overlap_fraction = 1 / 6   # The final overlap will be 2*bin_overlap_fraction
+num_output_layers = 5 + 4 * num_classes + 3 * num_angle_bins
 
 #=================== DATA FILTER SETTINGS =====================
 truncation_rate = 10    # objs with truncation rate higher than this will be filtered out
 occlusion = 5           # objs with occlusion code higher than this will be filtered out
 
-anchors = np.array([[120, 80], [180, 150], [310, 240], #[116,90], [156, 198], [373, 326],
-                    [40, 85], [75, 45], [65, 110], #[30, 61], [62, 45], [59, 119],
-                    [18, 35], [29, 17], [8, 8]]) #[10, 13], [16, 30], [33, 23]])
-anchor_mask = [[0,1,2], [3,4,5], [6,7,8]]
+anchors = np.array([[120, 80], [180, 150], [310, 240],  # [116,90], [156, 198], [373, 326],
+                    [40, 85], [75, 45], [65, 110],  # [30, 61], [62, 45], [59, 119],
+                    [18, 35], [29, 17], [8, 8]])  # [10, 13], [16, 30], [33, 23]])
+anchor_mask = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 num_anchor_boxes_per_scale = len(anchor_mask[0])
 
 #========= NMS SETTINGS ============
@@ -32,7 +32,7 @@ nms_confidence_threshold = 0.90
 nms_iou_threshold = 0.3
 
 #===================== TRAINING AND INFERENCE SETTINGS ======================
-inference = True        #Set to False for training and True for inference
+inference = True  # Set to False for training and True for inference
 
 restore_training = False
 start_from_coco = True
@@ -85,4 +85,3 @@ class_map = {'Car': 0,
              'Bicyclist': 6,
              'Motorcyclist': 7}
 assert num_classes == len(class_map), "num_classes must be equal to len(class_map)"
-

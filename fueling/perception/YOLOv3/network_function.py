@@ -10,6 +10,7 @@ np.random.seed(101)
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 slim = tf.contrib.slim
 
+
 @tf.contrib.framework.add_arg_scope
 def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
     """
@@ -39,6 +40,7 @@ def _fixed_padding(inputs, kernel_size, *args, mode='CONSTANT', **kwargs):
         padded_inputs = tf.pad(inputs, [[0, 0], [pad_beg, pad_end],
                                         [pad_beg, pad_end], [0, 0]], mode=mode)
     return padded_inputs
+
 
 class YOLOv3(object):
     """Structure of reseau neural YOLO3"""
@@ -77,7 +79,7 @@ class YOLOv3(object):
 
         inputs = inputs + shortcut
         return inputs
-    
+
     def darknet53(self, inputs):
         """
         Builds Darknet-53 model.
@@ -166,7 +168,7 @@ class YOLOv3(object):
         }
 
         # Set activation_fn and parameters for conv2d, batch_norm.
-        with slim.arg_scope([slim.conv2d, slim.batch_norm, _fixed_padding], 
+        with slim.arg_scope([slim.conv2d, slim.batch_norm, _fixed_padding],
                             data_format=data_format, reuse=None, scope=None):
             with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm,
                                 normalizer_params=batch_norm_params,
@@ -185,7 +187,7 @@ class YOLOv3(object):
                                                          num_layers, num_anchors_per_cell)
                         # (bs, cel_row, cel_col, num_anchors_per_cel*n)
                         detect_1 = tf.identity(detect_1, name='detect_1')
-                    
+
                         # scale2
                         inputs = self._conv2d_fixed_padding(route, 256, 1)
                         upsample_size = route_2.get_shape().as_list()
@@ -199,7 +201,7 @@ class YOLOv3(object):
                                                          num_layers, num_anchors_per_cell)
                         # (bs, cel_row, cel_col, num_anchors_per_cel*(10 + num_classes))
                         detect_2 = tf.identity(detect_2, name='detect_2')
-   
+
                         # scale3
                         inputs = self._conv2d_fixed_padding(route, 128, 1)
                         upsample_size = route_1.get_shape().as_list()

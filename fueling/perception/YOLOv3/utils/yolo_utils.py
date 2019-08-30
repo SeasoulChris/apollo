@@ -34,6 +34,7 @@ def letter_box_pos_to_original_pos(letter_pos, current_size, ori_image_size):
     to_return_pos = (letter_pos - pad) / final_ratio
     return to_return_pos
 
+
 def convert_to_original_size(box, size, original_size, is_letter_box_image):
     if is_letter_box_image:
         box = box.reshape(2, 2)
@@ -43,6 +44,7 @@ def convert_to_original_size(box, size, original_size, is_letter_box_image):
         ratio = original_size / size
         box = box.reshape(2, 2) * ratio
     return list(box.reshape(-1))
+
 
 def _iou(box1, box2):
     """
@@ -69,6 +71,7 @@ def _iou(box1, box2):
     iou = int_area / (b1_area + b2_area - int_area + 1e-05)
     return iou
 
+
 def non_max_suppression(predictions_with_boxes, confidence_threshold=0.9, iou_threshold=0.4):
     """
     Applies Non-max suppression to prediction boxes.
@@ -80,27 +83,27 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold=0.9, iou_th
     :return: dict: class -> [(box, score)]
     """
     conf_mask = np.expand_dims(
-        (predictions_with_boxes[:, :, 4] > confidence_threshold), -1) # (bs, ...+...+..., 1)
+        (predictions_with_boxes[:, :, 4] > confidence_threshold), -1)  # (bs, ...+...+..., 1)
     # The line below "non_zero_idxs = np.nonzero(image_pred)" assums predictions are all non-zero,
     # so add 1e-10 here
-    predictions = (predictions_with_boxes + 1e-10) * conf_mask # (bs, ...+...+..., 5+num_cls)
+    predictions = (predictions_with_boxes + 1e-10) * conf_mask  # (bs, ...+...+..., 5+num_cls)
 
     results = []
     for i, image_pred in enumerate(predictions):
         result = {}
-        shape = image_pred.shape # [x, 5+num_cls]
-        non_zero_idxs = np.nonzero(image_pred) 
-        image_pred = image_pred[non_zero_idxs] # (...)
-        image_pred = image_pred.reshape(-1, shape[-1]) # (x, 5+num_cls)
+        shape = image_pred.shape  # [x, 5+num_cls]
+        non_zero_idxs = np.nonzero(image_pred)
+        image_pred = image_pred[non_zero_idxs]  # (...)
+        image_pred = image_pred.reshape(-1, shape[-1])  # (x, 5+num_cls)
 
         bbox_attrs = image_pred[:, :10]
         classes = image_pred[:, 10:]
-        classes = np.argmax(classes, axis=-1) # (x, )
+        classes = np.argmax(classes, axis=-1)  # (x, )
 
         unique_classes = list(set(classes.reshape(-1)))
 
         for cls in unique_classes:
-            cls_mask = classes == cls # (x, )
+            cls_mask = classes == cls  # (x, )
             cls_boxes = bbox_attrs[np.nonzero(cls_mask)]
             cls_boxes = cls_boxes[cls_boxes[:, 4].argsort()[::-1]]
             cls_scores = cls_boxes[:, 4]
@@ -125,6 +128,7 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold=0.9, iou_th
         results.append(result)
 
     return results
+
 
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib, is_letter_box_image, cls_box_map=None):
@@ -153,11 +157,11 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                                            np.array(img.size),
                                            is_letter_box_image)
             if len(bboxs) < 20:
-                obj = Object([cls_names[cls], None, None, None, 
-                              box_o[0]*original_width/detection_size[0], 
-                              box_o[1]*original_height/detection_size[1], 
-                              box_o[2]*original_width/detection_size[0], 
-                              box_o[3]*original_height/detection_size[1], 
+                obj = Object([cls_names[cls], None, None, None,
+                              box_o[0]*original_width/detection_size[0],
+                              box_o[1]*original_height/detection_size[1],
+                              box_o[2]*original_width/detection_size[0],
+                              box_o[3]*original_height/detection_size[1],
                               cshwl[2], cshwl[3], cshwl[4],
                               None, None, None, None])
                 obj.score = score
@@ -173,17 +177,17 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                     image_points = \
                         interactor.project_to_image(points_cam, point_in_ref_cam=False)
                     ratio = np.array(img.size) / np.array([original_width, original_height])
-                    image_points = image_points.transpose() * ratio #(n, 2)
+                    image_points = image_points.transpose() * ratio  # (n, 2)
                     draw_3d_box(img, image_points)
                     # TODO[KaWai]: uncomment below to offset the T, e.g. in KITTI dataset
                     #obj.t = tuple(np.array(translation) - interactor.offset.reshape((3,)) )
-                objs.append(obj) 
-       
+                objs.append(obj)
+
             draw.rectangle(box, outline=color)
             # TODO[KaWai]: uncomment below to write class name and score for each bbox.
-            #draw.text(box[:2], '{} {:.2f}%'.format(
+            # draw.text(box[:2], '{} {:.2f}%'.format(
             #    cls_names[cls], score * 100), fill=color, font=font)
-    
+
     if cls_box_map:
         color = (255, 255, 0)
         for cls, bboxs in cls_box_map.items():
@@ -192,8 +196,9 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                                                np.array(img.size),
                                                is_letter_box_image)
                 draw.rectangle(box, outline=color)
-   
+
     return objs
+
 
 def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
                        cls_name_id_map, num_classes, num_angle_bins,
@@ -228,11 +233,11 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     elif os.path.exists(image_png_path):
         image_path = image_png_path
     else:
-        raise RuntimeError("Image file path : {}/png does not exist.".format(image_jpg_path)) 
+        raise RuntimeError("Image file path : {}/png does not exist.".format(image_jpg_path))
     image_temp = Image.open(image_path)
     image = image_temp.copy()
     origin_image_size = image.size
-    image_temp.close()   
+    image_temp.close()
 
     calib_path = os.path.join(calib_dir, os.path.basename(file_path).split('.')[0]+".txt")
     if not os.path.exists(calib_path):
@@ -259,42 +264,42 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     box_data = []
     # 9 -> x_min, y_min, x_max, y_max, class_id, alpha, 3d_h, 3d_w, 3d_l
     boxes = np.zeros((max_boxes, 9), dtype=np.float)
-    input_shape = np.array(input_shape)[::-1] #  hw -> wh 
+    input_shape = np.array(input_shape)[::-1]  # hw -> wh
     image_size = np.array(image.size)
     with open(file_path) as handle:
         objs = [Label_Object(line, cls_name_id_map)
                 for line in handle.readlines()
                 if line.split(' ')[0] in cls_name_id_map.keys()]
         # TODO[Kawai]: remove following to include truncation
-        objs = [obj for obj in objs if (obj.truncation<=0.0001 and obj.occlusion<5)]
+        objs = [obj for obj in objs if (obj.truncation <= 0.0001 and obj.occlusion < 5)]
     # correct the BBs to the image resize
     cls_box_map = collections.defaultdict(list)
-    if len(objs)==0:  # if there is no object in this image
+    if len(objs) == 0:  # if there is no object in this image
         box_data.append(boxes)
     else:
         i = 0
         for obj in objs:
             # TODO[KaWai]: Uncomment below for data augmentation
-            #if flip_switch:
+            # if flip_switch:
             #    new_box = flip_bbox_lr(box[0][3:7], origin_image_size[0])
-            #else:
+            # else:
             #    new_box = box[0][3:7]
 
-            #if random_crop_ and new_box!=None:
+            # if random_crop_ and new_box!=None:
             #    new_box = random_crop_bbox(new_box, start_x, start_y, crop_width, crop_height)
 
-            #if random_jitter_ and new_box!=None and random.uniform(0.0, 1.0) < jitter_chance:
+            # if random_jitter_ and new_box!=None and random.uniform(0.0, 1.0) < jitter_chance:
             #    new_box = random_jitter(new_box, jitter=jitter_percentage)
 
-            if i < max_boxes: 
+            if i < max_boxes:
                 # TODO[KaWai]: uncomment belwo for data augmentation
-                #if new_box != None:
+                # if new_box != None:
                 #    boxes[i, 0:5] = np.array(new_box + [box[1]])
                 #    boxes[i, 0] = max(0, min(image_size[0]-1, boxes[i, 0]))
                 #    boxes[i, 2] = max(0, min(image_size[0]-1, boxes[i, 2]))
                 #    boxes[i, 1] = max(0, min(image_size[1]-1, boxes[i, 1]))
                 #    boxes[i, 3] = max(0, min(image_size[1]-1, boxes[i, 3]))
-                #else:
+                # else:
                 #    continue
                 boxes[i, 0:5] = np.array([obj.xmin, obj.ymin, obj.xmax, obj.ymax, obj.type_id])
                 boxes[i, 0] = max(0, min(image_size[0]-1, boxes[i, 0]))
@@ -325,6 +330,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
                                    bin_overlap_frac, num_output_layers)
     return image_data, y_true, cls_box_map, objs, calib
 
+
 def letterbox_image(image, size):
     """resize image, not keeping the aspect ratio. No padding
     :param: size: (input_width, input_height)
@@ -336,11 +342,12 @@ def letterbox_image(image, size):
     image_shape = np.array([image_h, image_w])
     w, h = size
     resized_image = image.resize((w, h), Image.BICUBIC)
-    
+
     boxed_image = Image.new('RGB', size, (128, 128, 128))
     boxed_image.paste(resized_image)
 
     return boxed_image, image_shape
+
 
 def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                           num_angle_bins, bin_overlap_frac, num_output_layers):
@@ -361,7 +368,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                          cos(alpha), sin(alpha)
     """
     assert (true_boxes[..., 4] < num_classes).all(), 'class id must be less than num_classes'
-    anchor_mask = cfg.anchor_mask # different anchors are assigned to different scales (3, 3)
+    anchor_mask = cfg.anchor_mask  # different anchors are assigned to different scales (3, 3)
     # (bs, max_box, 9)  0:4 -> (x_min, y_min, x_max, y_max)
     true_boxes = np.array(true_boxes, dtype=np.float32)
 
@@ -405,11 +412,11 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
     for b in (range(BS)):  # for all of BS image
         # Discard zero rows.
         wh = boxes_wh[b, valid_mask[b]]  # (?, 2)
-        valid_objs = true_boxes[b, valid_mask[b]] # (?, 9)
+        valid_objs = true_boxes[b, valid_mask[b]]  # (?, 9)
         # Expand dim to apply broadcasting.
-        if len(wh)==0:
+        if len(wh) == 0:
             continue
-        wh = np.expand_dims(wh, -2) # (?, 1, 2)
+        wh = np.expand_dims(wh, -2)  # (?, 1, 2)
         box_maxes = wh / 2.         # (?, 1, 2)
         box_mins = -box_maxes       # (?, 1, 2)
 
@@ -429,8 +436,8 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
         # Find best anchor for each true box
         # (?, )
         best_anchor = np.argmax(iou, axis=-1)
-        
-        for t, n in enumerate(best_anchor): # t, also the t-th obj in valid_objs
+
+        for t, n in enumerate(best_anchor):  # t, also the t-th obj in valid_objs
             for l in range(len(grid_shapes)):  # 1 in 3 scale
                 # choose the corresponding mask: best_anchor in [0, 1, 2]or[3, 4, 5]or[6, 7, 8]
                 if n in anchor_mask[l]:
@@ -448,9 +455,9 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                     y_true[l][b, j, i, k, 0:4] = valid_objs[t, 0:4]
                     y_true[l][b, j, i, k, 4] = 1.0  # score = 1
                     # for 3D
-                    y_true[l][b, j, i, k, 5 + c] = 1.0 
+                    y_true[l][b, j, i, k, 5 + c] = 1.0
                     y_true[l][b, j, i, k, 5+int(num_classes)+3*c:5+int(num_classes)+3*c+3] = \
-                        valid_objs[t, 6:9] 
+                        valid_objs[t, 6:9]
 
                     # angles
                     if valid_objs[t, 5] < 0.0:
@@ -460,15 +467,15 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                     angle_mask = np.logical_and(lower_mask, upper_mask)
                     angle_mask[0] = np.logical_or(lower_mask[0], upper_mask[0])
                     angle_mask[-1] = np.logical_or(lower_mask[-1], upper_mask[-1])
-                    assert (np.sum(angle_mask)<=2,
-                               "obj angles should not fall into more than 2 angle bins.")
-                    bins = np.where(angle_mask==True)[0]
-                    regression_angles = np.array([valid_objs[t, 5] - \
+                    assert (np.sum(angle_mask) <= 2,
+                            "obj angles should not fall into more than 2 angle bins.")
+                    bins = np.where(angle_mask == True)[0]
+                    regression_angles = np.array([valid_objs[t, 5] -
                                                   (idx*principle_angle+(principle_angle/2))
                                                   for idx in bins])
                     min_idx = np.argmin([abs(ang) for ang in regression_angles])
                     primary_bin = bins[min_idx]
-                    
+
                     y_true[l][b, j, i, k, 5+4*int(num_classes) + primary_bin] = 1.0
                     for bin_idx, reg_ang in zip(bins, regression_angles):
                         y_true[l][b, j, i, k,

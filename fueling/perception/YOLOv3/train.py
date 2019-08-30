@@ -60,6 +60,7 @@ SAVE_INTERVAL = cfg.save_interval
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU
 slim = tf.contrib.slim
 
+
 class training:
 
     def __init__(self, start_step=0, num_gpu=1):
@@ -75,31 +76,31 @@ class training:
         """
         placeholders = {}
         placeholders['input_image'] = tf.placeholder(tf.float32,
-                                          shape=[BATCH_SIZE, INPUT_HEIGHT,
-                                                 INPUT_WIDTH, CHANNELS],
-                                          name='Input')
-        placeholders['visual_image'] = tf.placeholder(tf.float32, 
-                                           shape=[1, INPUT_HEIGHT * VISUAL_SCALE, 
-                                                  INPUT_WIDTH * VISUAL_SCALE, CHANNELS],
-                                           name="visual_image")
+                                                     shape=[BATCH_SIZE, INPUT_HEIGHT,
+                                                            INPUT_WIDTH, CHANNELS],
+                                                     name='Input')
+        placeholders['visual_image'] = tf.placeholder(tf.float32,
+                                                      shape=[1, INPUT_HEIGHT * VISUAL_SCALE,
+                                                             INPUT_WIDTH * VISUAL_SCALE, CHANNELS],
+                                                      name="visual_image")
         placeholders['is_train_placeholder'] = tf.placeholder(tf.bool, shape=[])
         with tf.name_scope("Target"):
-            
+
             placeholders['label_scale1'] = \
-              tf.placeholder(tf.float32,
-                             shape=[BATCH_SIZE, INPUT_HEIGHT / 32, INPUT_WIDTH / 32,
-                                    NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                             name='target_S1')
+                tf.placeholder(tf.float32,
+                               shape=[BATCH_SIZE, INPUT_HEIGHT / 32, INPUT_WIDTH / 32,
+                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                               name='target_S1')
             placeholders['label_scale2'] = \
-              tf.placeholder(tf.float32,
-                             shape=[BATCH_SIZE, INPUT_HEIGHT / 16, INPUT_WIDTH / 16,
-                                    NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                             name='target_S2')
+                tf.placeholder(tf.float32,
+                               shape=[BATCH_SIZE, INPUT_HEIGHT / 16, INPUT_WIDTH / 16,
+                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                               name='target_S2')
             placeholders['label_scale3'] = \
-              tf.placeholder(tf.float32,
-                             shape=[BATCH_SIZE, INPUT_HEIGHT / 8, INPUT_WIDTH / 8,
-                                    NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                             name='target_S3')
+                tf.placeholder(tf.float32,
+                               shape=[BATCH_SIZE, INPUT_HEIGHT / 8, INPUT_WIDTH / 8,
+                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                               name='target_S3')
         return placeholders
 
     def _config_graph(self, input_tensor, is_training=True, reuse=False):
@@ -108,19 +109,19 @@ class training:
         """
         scale1, scale2, scale3, feature1, feature2, feature3 = \
             YOLOv3(input_tensor, ANCHORS, NUM_CLASSES, is_training)\
-            .yolo_v3(num_layers=NUM_OUTPUT_LAYERS, 
+            .yolo_v3(num_layers=NUM_OUTPUT_LAYERS,
                      num_anchors_per_cell=NUM_ANCHOR_BOXES_PER_SCALE,
                      weight_decay=WEIGHT_DECAY,
                      reuse=reuse)
         return scale1, scale2, scale3, feature1, feature2, feature3
-        
+
     def _compute_loss(self, gt_placeholder, scale1, scale2, scale3):
         """
         compute the loss.
         """
         with tf.name_scope("Loss_and_Detect"):
             # Label
-            y_gt = [gt_placeholder["label_scale1"], 
+            y_gt = [gt_placeholder["label_scale1"],
                     gt_placeholder["label_scale2"],
                     gt_placeholder["label_scale3"]]
             # Calculate loss
@@ -154,22 +155,22 @@ class training:
         Initialize a saver to save/restore model
         """
         saver = tf.train.Saver(max_to_keep=None)
-        return saver 
-   
+        return saver
+
     def _restore_from_checkpoint(self, sess):
         """
         Restore training from a checkpoint.
         """
         if START_FROM_COCO:
-           variables = [v for v in tf.global_variables() if ("Adam" not in v.name and 
-                                                             "global_step" not in v.name and 
-                                                             "Optimizer" not in v.name and
-                                                             "yolo-v3/Conv_14" not in v.name and
-                                                             "yolo-v3/Conv_22" not in v.name and
-                                                             "yolo-v3/Conv_6" not in v.name and 
-                  "beta1_power" not in v.name and "beta2_power" not in v.name)]
-           #print ([v.name for v in variables])
-           restore_saver = tf.train.Saver(var_list=variables)
+            variables = [v for v in tf.global_variables() if ("Adam" not in v.name and
+                                                              "global_step" not in v.name and
+                                                              "Optimizer" not in v.name and
+                                                              "yolo-v3/Conv_14" not in v.name and
+                                                              "yolo-v3/Conv_22" not in v.name and
+                                                              "yolo-v3/Conv_6" not in v.name and
+                                                              "beta1_power" not in v.name and "beta2_power" not in v.name)]
+            #print ([v.name for v in variables])
+            restore_saver = tf.train.Saver(var_list=variables)
         else:
             variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
             restore_saver = tf.train.Saver(var_list=variables)
@@ -194,27 +195,27 @@ class training:
         Add image summray.
         """
         boxes = self._non_max_suppression(xy_wh_conf_value)
-        cls_names = {v:k for k, v in CLASS_MAP.items()}
+        cls_names = {v: k for k, v in CLASS_MAP.items()}
         images = []
         for i in range(image_batch.shape[0]):
             img = Image.fromarray(np.uint8(image_batch[i, ...]))
             draw_boxes(boxes[i], img, cls_names,
-                                   (INPUT_WIDTH, INPUT_HEIGHT),
-                                   (ORIGINAL_WIDTH, ORIGINAL_HEIGHT),
-                                   calib_list[i],
-                                   False, cls_box_map=cls_box_map[i] if cls_box_map else None)
-            img = img.resize((INPUT_WIDTH * VISUAL_SCALE, 
+                       (INPUT_WIDTH, INPUT_HEIGHT),
+                       (ORIGINAL_WIDTH, ORIGINAL_HEIGHT),
+                       calib_list[i],
+                       False, cls_box_map=cls_box_map[i] if cls_box_map else None)
+            img = img.resize((INPUT_WIDTH * VISUAL_SCALE,
                               INPUT_HEIGHT * VISUAL_SCALE),
                              Image.BILINEAR)
-            images.append(np.uint8(np.array(img)))  
+            images.append(np.uint8(np.array(img)))
         return images
 
     def _init_summary_writer(self, suffix):
         """
-	Initialize a summary writer.
+        Initialize a summary writer.
         """
-        return tf.summary.FileWriter(os.path.join(MODEL_OUTPUT_PATH, suffix))   
-    
+        return tf.summary.FileWriter(os.path.join(MODEL_OUTPUT_PATH, suffix))
+
     def _add_to_summary(self, tensor, name, _type='scalar'):
         """
         Write tensor to summary.
@@ -225,7 +226,7 @@ class training:
             return tf.summary.image(name=name, tensor=tensor)
         else:
             raise RuntimeError("Currently only support scaler and image.")
-    
+
     def _add_all_scalar_summary(self, tensor_name_map):
         """
         Add all the tensors in tensor_nam_map into summary as scalars.
@@ -243,7 +244,7 @@ class training:
         for n, t in name_tensor_map.items():
             tensor_list.append(self._add_to_summary(t, n, _type="image"))
         return tf.summary.merge(tensor_list)
-    
+
     def _accumulate_obj(self, xy_wh_conf_value, original_images,
                         image_names, gt_obj_batch=None, calib_batch=None):
         """
@@ -251,26 +252,26 @@ class training:
         or raw string KITTI format.
         """
         def obj2string(gt=None, dt=None):
-            if gt==None and dt==None:
+            if gt == None and dt == None:
                 raise RuntimeError("Both gt and dt are None. Either gt or dt must be provides.")
             if dt != None:
                 line = dt.type + " 0 0 0 " + \
-                       (' ').join([str(round(x, 2)) for x in dt.box2d]) + ' ' + \
-                       (' ').join([str(dt.h), str(dt.w), str(dt.l)]) + ' ' + \
-                       (' ').join([str(x) for x in list(dt.t)]) + ' ' + \
-                       str(dt.ry) + \
-                       ' ' + str(round(dt.score, 2))
+                    (' ').join([str(round(x, 2)) for x in dt.box2d]) + ' ' + \
+                    (' ').join([str(dt.h), str(dt.w), str(dt.l)]) + ' ' + \
+                    (' ').join([str(x) for x in list(dt.t)]) + ' ' + \
+                    str(dt.ry) + \
+                    ' ' + str(round(dt.score, 2))
             elif gt != None:
-                 line = gt.type + " " + str(gt.truncation) + " " + \
-                       str(gt.occlusion) + " " + str(gt.alpha) + " " + \
-                       (' ').join([str(round(x, 2)) for x in gt.box2d]) + ' ' + \
-                       (' ').join([str(gt.h), str(gt.w), str(gt.l)]) + ' ' + \
-                       (' ').join([str(x) for x in list(gt.t)]) + ' ' + \
-                       str(gt.ry)
+                line = gt.type + " " + str(gt.truncation) + " " + \
+                    str(gt.occlusion) + " " + str(gt.alpha) + " " + \
+                    (' ').join([str(round(x, 2)) for x in gt.box2d]) + ' ' + \
+                    (' ').join([str(gt.h), str(gt.w), str(gt.l)]) + ' ' + \
+                    (' ').join([str(x) for x in list(gt.t)]) + ' ' + \
+                    str(gt.ry)
             return line
 
         boxes = self._non_max_suppression(xy_wh_conf_value)
-        cls_names = {v:k for k, v in CLASS_MAP.items()}
+        cls_names = {v: k for k, v in CLASS_MAP.items()}
         json_list = []
         detection_string_list_batch = []
         for i in range(BATCH_SIZE):
@@ -284,9 +285,9 @@ class training:
                                                    False)
 
                     obj = Object([cls_names[cls_id], None, None, None,
-                                 box[0], box[1], box[2], box[3],
-                                 cshwl[2], cshwl[3], cshwl[4],
-                                 None, None, None, None])
+                                  box[0], box[1], box[2], box[3],
+                                  cshwl[2], cshwl[3], cshwl[4],
+                                  None, None, None, None])
                     obj.score = score
                     local_angle = math.degrees(np.arctan2(cshwl[1], cshwl[0]))
                     beta = interactor.local_angle_to_car_yaw(local_angle, obj)
@@ -297,23 +298,23 @@ class training:
                     line = obj2string(gt=None, dt=obj)
                     detection_string_list_image.append(line)
 
-                    json_list.append({'bbox' : [round(box[0], 2),
-                                                round(box[1], 2),
-                                                round(box[2] - box[0], 2),
-                                                round(box[3] - box[1], 2)],
-                                      'category_id' : cls_id,
-                                      'image_id' : self.image_id_map[image_names[i]],
-                                      'score' : score})
+                    json_list.append({'bbox': [round(box[0], 2),
+                                               round(box[1], 2),
+                                               round(box[2] - box[0], 2),
+                                               round(box[3] - box[1], 2)],
+                                      'category_id': cls_id,
+                                      'image_id': self.image_id_map[image_names[i]],
+                                      'score': score})
             detection_string_list_batch.append(detection_string_list_image)
         if gt_obj_batch != None:
-            gt_string_list_batch = [] 
+            gt_string_list_batch = []
             for objs_image in gt_obj_batch:
                 lines = [obj2string(gt=obj, dt=None) for obj in objs_image]
-                gt_string_list_batch.append(lines) # list of list of obj strings
-            return json_list, detection_string_list_batch, gt_string_list_batch        
+                gt_string_list_batch.append(lines)  # list of list of obj strings
+            return json_list, detection_string_list_batch, gt_string_list_batch
 
         return json_list, detection_string_list_batch
-        
+
     def _average_gradients(self, tower_grads):
         """Calculate the average gradient for each shared variable across all towers.
         Note that this function provides a synchronization point across all towers.
@@ -354,9 +355,9 @@ class training:
         Start training.
         """
         with tf.device("/cpu:0"):
-	    # Set random seed
+            # Set random seed
             tf.set_random_seed(2)
-            
+
             self.gpu_placeholders = []
             tower_grads = []
             reuse = False
@@ -366,21 +367,21 @@ class training:
                     if i == self.num_gpu - 1:
                         output_scale1, output_scale2, output_scale3, feature1, feature2, feature3 \
                             = tf.cond(e_placeholders['is_train_placeholder'],
-                                true_fn=lambda: self._config_graph(e_placeholders['input_image'],
-                                                                   is_training=True,
-                                                                   reuse=reuse),
-                                false_fn=lambda: self._config_graph(e_placeholders['input_image'],
-                                                                    is_training=False,
-                                                                    reuse=True))
+                                      true_fn=lambda: self._config_graph(e_placeholders['input_image'],
+                                                                         is_training=True,
+                                                                         reuse=reuse),
+                                      false_fn=lambda: self._config_graph(e_placeholders['input_image'],
+                                                                          is_training=False,
+                                                                          reuse=True))
                     else:
                         output_scale1, output_scale2, output_scale3, feature1, feature2, feature3 \
-                            =self._config_graph(e_placeholders['input_image'], 
-                                                is_training=True, reuse=reuse)
+                            = self._config_graph(e_placeholders['input_image'],
+                                                 is_training=True, reuse=reuse)
                     reuse = True
 
                     loss, xy_loss, wh_loss, positive_conf_loss, \
-			negative_conf_loss, cls_loss, alpha_loss, \
-			hwl_loss = self._compute_loss(e_placeholders, output_scale1,
+                        negative_conf_loss, cls_loss, alpha_loss, \
+                        hwl_loss = self._compute_loss(e_placeholders, output_scale1,
                                                       output_scale2, output_scale3)
                     regularization_loss = tf.add_n(slim.losses.get_regularization_losses())
 
@@ -391,21 +392,21 @@ class training:
                             temp = [v for v in tf.global_variables() if (n in v.name)]
                             variables_to_train = variables_to_train.union(set(temp))
                         variables_to_train = list(variables_to_train)
-                        print ("=======Number of variables to train : {}========"\
+                        print ("=======Number of variables to train : {}========"
                                .format(len(variables_to_train)))
 
                     grads, optimizer = self._init_optimizer(loss+regularization_loss,
-		                                            start_learning_rate=LEARNING_RATE,
-			       		                    decay_steps=DECAY_STEPS,
-					                    decay_rate=DECAY_RATE,
+                                                            start_learning_rate=LEARNING_RATE,
+                                                            decay_steps=DECAY_STEPS,
+                                                            decay_rate=DECAY_RATE,
                                                             variable_list=variables_to_train)
                     self.xy_wh_conf = \
-                      convert_raw_output_to_box([output_scale1, output_scale2, output_scale3],
-                                                ANCHORS)
+                        convert_raw_output_to_box([output_scale1, output_scale2, output_scale3],
+                                                  ANCHORS)
                     tower_grads.append(grads)
                     self.gpu_placeholders.append(e_placeholders)
             average_grads = self._average_gradients(tower_grads)
-   
+
             # TODO[KaWai]: this is just an approximation of the real batch norm across multiple GPU.
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
@@ -413,37 +414,36 @@ class training:
 
             self.saver = self._init_model_saver()
 
-	    # ====================All summaries ====================
+            # ====================All summaries ====================
             self.summary_writer_train = self._init_summary_writer("training")
-	    
+
             summary_tensor_map_train = {loss: "TRAIN_total_loss",
                                         xy_loss: "TRAIN_xy_loss",
-					wh_loss: "TRAIN_wh_loss",
-					positive_conf_loss: "TRAIN_positive_confidence_loss",
-					negative_conf_loss: "TRAIN_negative_confidence_loss",
-					cls_loss: "TRAIN_class_loss",
-					alpha_loss: "TRAIN_alpha_loss",
-					hwl_loss: "TRAIN_hwl_loss"}
+                                        wh_loss: "TRAIN_wh_loss",
+                                        positive_conf_loss: "TRAIN_positive_confidence_loss",
+                                        negative_conf_loss: "TRAIN_negative_confidence_loss",
+                                        cls_loss: "TRAIN_class_loss",
+                                        alpha_loss: "TRAIN_alpha_loss",
+                                        hwl_loss: "TRAIN_hwl_loss"}
             self.summary_op_train = self._add_all_scalar_summary(summary_tensor_map_train)
             self.image_summary_op = self._add_to_summary(e_placeholders["visual_image"],
-                                                    "TRAIN_visualization",
-                                                    _type="image")
+                                                         "TRAIN_visualization",
+                                                         _type="image")
 
-	    #  start session and train
+            #  start session and train
             config = tf.ConfigProto(allow_soft_placement=True)
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
             self.sess.run(tf.local_variables_initializer(),
-              feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
+                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
             self.sess.run(tf.global_variables_initializer(),
-              feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
-      
+                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
+
             if RESTORE_TRAINING:
                 self._restore_from_checkpoint(self.sess)
-  
+
             self.ops = [xy_loss, wh_loss, positive_conf_loss, negative_conf_loss,
                         cls_loss, loss, alpha_loss, hwl_loss, train_op]
-
 
     def step(self, data):
         """
@@ -451,11 +451,11 @@ class training:
         """
         feed_dict = {self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
-	    cls_box_map_lists, objs_list, calib_list = data
+            cls_box_map_lists, objs_list, calib_list = data
         feed_dict.update({
             self.gpu_placeholders[self.num_gpu - 1]["input_image"]: (image_batch / 255.),
-	    self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
-	    self.gpu_placeholders[self.num_gpu - 1]["label_scale2"]: label_batch_scale2,
+            self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
+            self.gpu_placeholders[self.num_gpu - 1]["label_scale2"]: label_batch_scale2,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale3"]: label_batch_scale3})
         xy_, wh_, positive_conf_, negative_conf_, cls_, loss_train, alpha_, hwl_, _ = \
             self.sess.run(self.ops, feed_dict=feed_dict)
@@ -469,19 +469,19 @@ class training:
                 np.expand_dims(image_np, axis=0)
             summary_train, summary_image = \
                 self.sess.run([self.summary_op_train, self.image_summary_op],
-            		      feed_dict=feed_dict)
+                              feed_dict=feed_dict)
             self.summary_writer_train.add_summary(summary_train, global_step=self.cur_step)
-            self.summary_writer_train.add_summary(summary_image, global_step=self.cur_step) 
-			
+            self.summary_writer_train.add_summary(summary_image, global_step=self.cur_step)
+
         if self.cur_step % PRINT_INTERVAL == 0:
             print ("step = {}, Loss = {}".format(self.cur_step, loss_train))
             print ("xy_loss = {}, wh_loss = {}, \
                     positive_conf_loss = {}, \
                     negative_conf_loss = {}, \
-                    cls_loss = {}, alpha_loss = {}, hwl_loss = {}."\
+                    cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
                    .format(xy_, wh_, positive_conf_,
                            negative_conf_, cls_, alpha_, hwl_))
- 
+
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0:
             self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)

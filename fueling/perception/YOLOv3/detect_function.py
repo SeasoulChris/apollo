@@ -24,7 +24,7 @@ def yolo_head(feature_maps, anchors, num_classes,
         box_cs:  [bs, cel_row, cel_col, anchors_per_box, 2], cos(alpha), sin(alpha)
         box_hwl:  [bs, cel_row, cel_col, anchors_per_box, 3], 3d hwl
     """
-    num_anchors = len(anchors)  
+    num_anchors = len(anchors)
     # Reshape to batch, height, width, num_anchors, box_params
     # (anchors_per_cell, 2)
     anchors_tensor = tf.cast(anchors, dtype=feature_maps.dtype)
@@ -60,32 +60,32 @@ def yolo_head(feature_maps, anchors, num_classes,
         # (bs, cel_row, cel_col, num_anchors)
         bs_row_col_anc = bs_idx * grid_shape[0] * grid_shape[1] * num_anchors + \
             row_idx * grid_shape[1] * num_anchors + col_idx * num_anchors + anc_idx
-        
+
     feature_xy_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s * 4:s * 4 + 2]
-                                               for s in range(num_anchors)], axis=-1), 
-                              [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
+                                               for s in range(num_anchors)], axis=-1),
+                                    [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
     feature_wh_reshape = tf.reshape(tf.concat([feature_maps[:, :, :, s * 4 + 2:s * 4 + 4]
-                                               for s in range(num_anchors)], axis=-1), 
-                              [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
-    feature_conf_reshape = tf.reshape(feature_maps[:, :, :, num_anchors * (4):num_anchors * (5)], 
-                                [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
-    feature_cls_reshape = tf.reshape(feature_maps[:, :, :, 
-                                                num_anchors * 5:num_anchors * (5 + num_classes)], 
-                               [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes])
+                                               for s in range(num_anchors)], axis=-1),
+                                    [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
+    feature_conf_reshape = tf.reshape(feature_maps[:, :, :, num_anchors * (4):num_anchors * (5)],
+                                      [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
+    feature_cls_reshape = tf.reshape(feature_maps[:, :, :,
+                                                  num_anchors * 5:num_anchors * (5 + num_classes)],
+                                     [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes])
     feature_hwl_reshape = tf.reshape(feature_maps[:, :, :,
-                             num_anchors * (5 + num_classes):num_anchors * (5 + num_classes * 4)], 
-                               [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes * 3])
+                                                  num_anchors * (5 + num_classes):num_anchors * (5 + num_classes * 4)],
+                                     [bs, grid_shape[0], grid_shape[1], num_anchors, num_classes * 3])
 
     channel_idx_begin = num_anchors * (5 + num_classes * 4)
     channel_idx_end = num_anchors * (5 + num_classes * 4 + num_angle_bins)
     feature_cs_conf_reshape = \
-          tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end],
-                     [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins])
+        tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end],
+                   [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins])
 
     channel_idx_begin = num_anchors * (5 + num_classes * 4 + num_angle_bins)
     channel_idx_end = num_anchors * (5 + num_classes * 4 + num_angle_bins * 3)
     feature_cs_reshape = \
-        tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end], 
+        tf.reshape(feature_maps[:, :, :, channel_idx_begin:channel_idx_end],
                    [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins * 2])
 
     with tf.name_scope('top_feature_maps'):
@@ -103,10 +103,10 @@ def yolo_head(feature_maps, anchors, num_classes,
         box_cs_conf = tf.nn.softmax(feature_cs_conf_reshape)
         # (bs, cel_row, cel_col, anchors_per_cel, num_angle_bins, 2)
         box_cs = tf.nn.l2_normalize(
-                   tf.reshape(feature_cs_reshape,
+            tf.reshape(feature_cs_reshape,
                        [bs, grid_shape[0], grid_shape[1], num_anchors, num_angle_bins, 2]),
-                   dim=-1)
-        
+            dim=-1)
+
         # ====================== Convert to usable scales =========================
         # Adjust predictions to each spatial grid point and anchor size.
         # Note: YOLO iterates over height index before width index.
@@ -121,7 +121,7 @@ def yolo_head(feature_maps, anchors, num_classes,
         c = tf.argmax(box_class_probs, axis=-1)
         # (bs, cel_row, cel_col, anchors_per_cel)
         flat_idx = tf.cast(bs_row_col_anc, dtype=tf.int32) * num_classes * 3 + \
-                   tf.cast(c, dtype=tf.int32) * 3
+            tf.cast(c, dtype=tf.int32) * 3
         flat_idx = tf.reshape(flat_idx, (bs, grid_shape[0], grid_shape[1], num_anchors, 1))
         # (bs, cel_row, cel_col, anchors_per_cel, 3)
         flat_idx = tf.concat([flat_idx, flat_idx + 1, flat_idx + 2], axis=-1)
@@ -130,50 +130,45 @@ def yolo_head(feature_maps, anchors, num_classes,
         # (bs*cel_row*cel_col*anchors_per_cel*n)
         feature_flat = tf.reshape(box_hwl, [-1])
         box_hwl = tf.reshape(tf.gather(feature_flat, flat_idx),
-                       [bs, grid_shape[0], grid_shape[1], num_anchors, 3])
+                             [bs, grid_shape[0], grid_shape[1], num_anchors, 3])
         box_hwl = tf.exp(tf.clip_by_value(box_hwl, -10, 5))
-      
+
         # Grap the corresponding cos, sin of alpha angle
         # (bs, cel_row, cel_col, anchors_per_cel)
         bins = tf.argmax(box_cs_conf, axis=-1)
         # (bs, cel_row, cel_col, anchors_per_cel)
         flat_idx_bin = tf.cast(bs_row_col_anc, dtype=tf.int32) * num_angle_bins * 2 + \
-                       tf.cast(bins, dtype=tf.int32) * 2
+            tf.cast(bins, dtype=tf.int32) * 2
         flat_idx_bin = tf.reshape(flat_idx_bin,
-                            [bs, grid_shape[0], grid_shape[1], num_anchors, 1]) 
+                                  [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
         # (bs, cel_row, cel_col, anchors_per_cel, 2)
         flat_idx_bin = tf.concat([flat_idx_bin, flat_idx_bin+1], axis=-1)
-        # (bs*cel_row*cel_col*anchors_per_cel*2) 
+        # (bs*cel_row*cel_col*anchors_per_cel*2)
         flat_idx_bin = tf.reshape(flat_idx_bin, [-1])
         feature_flat_cs = tf.reshape(box_cs, [-1])
         box_cs = tf.reshape(tf.gather(feature_flat_cs, flat_idx_bin),
-                      [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
+                            [bs, grid_shape[0], grid_shape[1], num_anchors, 2])
         # Convert to obj local angle from angle offset
         # (bs, cel_row, cel_col, anchors, 1)
         box_atan = tf.atan2(box_cs[..., 1:], box_cs[..., 0:1])
         principle_angle = 2 * np.pi / num_angle_bins
         box_angle = box_atan + \
-                    tf.reshape(tf.add(tf.scalar_mul(principle_angle, tf.to_float(bins)), 
-                                    principle_angle/2),
-                         [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
+            tf.reshape(tf.add(tf.scalar_mul(principle_angle, tf.to_float(bins)),
+                              principle_angle/2),
+                       [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
         box_cs = tf.concat([tf.cos(box_angle), tf.sin(box_angle)], axis=-1)
 
     if calc_loss == True:
         return grid, \
-               [feature_xy_reshape, 
-                feature_wh_reshape, 
-                feature_conf_reshape, 
-                feature_cls_reshape, 
-                feature_hwl_reshape, 
-                feature_cs_conf_reshape, 
+            [feature_xy_reshape,
+                feature_wh_reshape,
+                feature_conf_reshape,
+                feature_cls_reshape,
+                feature_hwl_reshape,
+                feature_cs_conf_reshape,
                 feature_cs_reshape], \
-               box_xy, box_wh, \
-               box_cs_conf, \
-               box_cs, \
-               box_hwl
+            box_xy, box_wh, \
+            box_cs_conf, \
+            box_cs, \
+            box_hwl
     return box_xy, box_wh, box_confidence, box_class_probs, box_cs_conf, box_cs, box_hwl
-
-
-
-
-

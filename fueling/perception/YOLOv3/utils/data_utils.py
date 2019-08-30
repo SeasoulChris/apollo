@@ -26,6 +26,7 @@ JITTER_CHANCE = cfg.jitter_chance
 JITTER_PERCENTAGE = cfg.jitter_percentage
 CLS_TO_CONSIDER = cfg.classes_to_consider
 
+
 def get_all_paths(label_path):
     """
     From label path to get both image directory path and
@@ -40,6 +41,7 @@ def get_all_paths(label_path):
     image_dir = os.path.join(os.path.join(data_dir, "images"))
     calib_dir = os.path.join(os.path.join(data_dir, "calib"))
     return (id, (label_path, image_dir, calib_dir))
+
 
 def process_data(paths):
     """
@@ -68,7 +70,8 @@ def process_data(paths):
                            jitter_chance=JITTER_CHANCE,
                            jitter_percentage=JITTER_PERCENTAGE)
     return (id, (image_data, y_true, cls_box_map, objs, calib))
-  
+
+
 def filter_classes(element):
     """
     Filter out classes that are not to be considered for
@@ -86,11 +89,11 @@ def filter_classes(element):
 
             mask = ~np.isin(cls, cfg.classes_to_consider)
             y_true[i][bat[mask], cell_rows[mask],
-              cell_cols[mask], anchors[mask]] = 0.0
+                      cell_cols[mask], anchors[mask]] = 0.0
 
         # Pop elements out of cls_box_map.
         keys = []
-        for key, value in cls_box_map.items(): 
+        for key, value in cls_box_map.items():
             # cls_box_map: class_id to a list of 2d boxes
             # [xmin, ymin, xmax, ymax]
             if key not in CLS_TO_CONSIDER:
@@ -98,4 +101,3 @@ def filter_classes(element):
         for key in keys:
             cls_box_map.pop(key)
     return (id, (image_data, y_true, [cls_box_map], [objs], [calib]))
-
