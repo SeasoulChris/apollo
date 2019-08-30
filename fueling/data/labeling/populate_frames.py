@@ -29,17 +29,19 @@ flags.DEFINE_integer('diff', 30, 'Max diff allowed between lidar and camera, in 
 
 # The channels we need to populate
 WANTED_CHANNELS = {
-    'lidar-128':'/apollo/sensor/lidar128/compensator/PointCloud2',
-    'front-6mm':'/apollo/sensor/camera/front_6mm/image/compressed',
-    'front-12mm':'/apollo/sensor/camera/front_12mm/image/compressed',
-    'rear-6mm':'/apollo/sensor/camera/rear_6mm/image/compressed',
-    'left-fisheye':'/apollo/sensor/camera/left_fisheye/image/compressed',
-    'right-fisheye':'/apollo/sensor/camera/right_fisheye/image/compressed',
-    'front-radar':'/apollo/sensor/radar/front',
-    'rear-radar':'/apollo/sensor/radar/rear'
+    'lidar-128': '/apollo/sensor/lidar128/compensator/PointCloud2',
+    'front-6mm': '/apollo/sensor/camera/front_6mm/image/compressed',
+    'front-12mm': '/apollo/sensor/camera/front_12mm/image/compressed',
+    'rear-6mm': '/apollo/sensor/camera/rear_6mm/image/compressed',
+    'left-fisheye': '/apollo/sensor/camera/left_fisheye/image/compressed',
+    'right-fisheye': '/apollo/sensor/camera/right_fisheye/image/compressed',
+    'front-radar': '/apollo/sensor/radar/front',
+    'rear-radar': '/apollo/sensor/radar/rear'
 }
 
 # Helper functions
+
+
 def are_all_channels_available(todo_target, root_dir):
     """Filter record files out if they do not have required channels or simply not readable"""
     _, record_file = todo_target
@@ -54,19 +56,23 @@ def are_all_channels_available(todo_target, root_dir):
             return False
     return True
 
+
 def record_to_partition(target_record, slice_size):
     """Shard source record file to a certain partition."""
     target_partition, record_file = target_record
     record_fileparts = os.path.basename(record_file).split('.')
-    target_partition += '/{}#SS{}'.format(record_fileparts[0], int(record_fileparts[2]) / slice_size)
+    target_partition += '/{}#SS{}'.format(record_fileparts[0],
+                                          int(record_fileparts[2]) / slice_size)
     return (target_partition, record_file)
+
 
 def create_dataframe(sql_context, msgs_rdd, topics):
     """Create DataFrame for specified topics"""
     return sql_context.createDataFrame(
-        msgs_rdd \
-        .filter(lambda (_1, _2, topic): topic in operator.itemgetter(*topics)(WANTED_CHANNELS)) \
+        msgs_rdd
+        .filter(lambda (_1, _2, topic): topic in operator.itemgetter(*topics)(WANTED_CHANNELS))
         .map(lambda x: Row(target=x[0], time=x[1], topic=x[2])))
+
 
 def get_next_message(msg, msg_map, msgs_iterator):
     """Judiciously decide what the next message is"""
@@ -75,11 +81,12 @@ def get_next_message(msg, msg_map, msgs_iterator):
             msg.topic != WANTED_CHANNELS['lidar-128']:
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
         return msg
-    msg = msgs_iterator.next(lambda x: x.topic in WANTED_CHANNELS.values() and \
-                            '{}-{}'.format(x.topic, x.timestamp) in msg_map)
+    msg = msgs_iterator.next(lambda x: x.topic in WANTED_CHANNELS.values() and
+                             '{}-{}'.format(x.topic, x.timestamp) in msg_map)
     if msg is not None:
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
     return msg
+
 
 def construct_frames(root_dir, frames, slice_size, agent, diff):
     """Construct the frame by using given messages.
@@ -87,9 +94,9 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
     target_dir, msgs = frames
     glog.info('Now executors start the hard working.  target_dir: {}'.format(target_dir))
 
-    #target_dir looks like:
+    # target_dir looks like:
     #'modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05/20181113152909#SS0
-    #msgs like:
+    # msgs like:
     #(
     #  'lidar_1_topic-lidar_1_time',
     #  'camera_1_topic-camera_1_time',
@@ -131,14 +138,15 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
             builder_manager.throw_to_pool(message_struct, agent, diff)
             msg_new = get_next_message(msg, msg_map, msgs_iterator)
             while msg_new is not None and msg_new.timestamp == msg.timestamp \
-                 and msg_new.topic == msg.topic:
+                    and msg_new.topic == msg.topic:
                 builder_manager.throw_to_pool(populate_utils.MessageStruct(message_struct.message,
-                    message_struct.pose_left, message_struct.pose_right), agent, diff)
+                                                                           message_struct.pose_left, message_struct.pose_right), agent, diff)
                 msg_new = get_next_message(msg, msg_map, msgs_iterator)
             msg = msg_new
             message_struct = populate_utils.MessageStruct(msg, None, None)
 
     glog.info('Done with target: {}'.format(target_dir))
+
 
 def get_sql_query(sql_context, msgs_rdd):
     """Get SQL statements for performing the query."""
@@ -149,10 +157,10 @@ def get_sql_query(sql_context, msgs_rdd):
         [x for x in WANTED_CHANNELS if x != 'lidar-128'])
     table_name = 'all_sensor_table'
     lidar_df \
-        .join(other_sensor_df \
-                .withColumnRenamed('time', 'btime') \
-                .withColumnRenamed('topic', 'btopic'), \
-            lidar_df.target == other_sensor_df.target) \
+        .join(other_sensor_df
+              .withColumnRenamed('time', 'btime')
+              .withColumnRenamed('topic', 'btopic'),
+              lidar_df.target == other_sensor_df.target) \
         .drop(other_sensor_df.target) \
         .registerTempTable(table_name)
     return textwrap.dedent("""
@@ -164,9 +172,10 @@ def get_sql_query(sql_context, msgs_rdd):
             GROUP BY target, time, topic, btopic
         ) B on A.target=B.target AND A.time=B.time AND A.topic=B.topic
         WHERE ABS(A.time-A.btime)=B.mindiff
-        """%{
-            'table_name': table_name
-            })
+        """ % {
+        'table_name': table_name
+    })
+
 
 def mark_complete(todo_tasks, target_dir, root_dir):
     """Create COMPLETE file to mark the job done"""
@@ -178,6 +187,7 @@ def mark_complete(todo_tasks, target_dir, root_dir):
             continue
         streaming_utils.write_to_file(
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
+
 
 class PopulateFramesPipeline(BasePipeline):
     """PopulateFrames pipeline."""
@@ -273,7 +283,7 @@ class PopulateFramesPipeline(BasePipeline):
          # PairRDD(target, (topic-time-pair)s), process every partition with frames belonging to it
          .map(lambda frames:
               (construct_frames(root_dir, frames, self.FLAGS.get('slice_size'),
-               self.FLAGS.get('labeling_agent'), self.FLAGS.get('diff'))))
+                                self.FLAGS.get('labeling_agent'), self.FLAGS.get('diff'))))
          # Simply trigger action
          .count())
 

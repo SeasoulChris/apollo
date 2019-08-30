@@ -12,6 +12,7 @@ import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.serialize_utils as serialize_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
+
 class DeserializeRecordsPipeline(BasePipeline):
     """Deserialize records pipeline."""
 
@@ -55,6 +56,7 @@ class DeserializeRecordsPipeline(BasePipeline):
         glog.info('stream processing time: {}'.format(stime))
         glog.info('rdd partitions: {}'.format(records_rdd.getNumPartitions()))
         records_rdd.map(lambda record: serialize_utils.parse_record(record, self._root_dir)).count()
+
 
 if __name__ == '__main__':
     DeserializeRecordsPipeline().main()

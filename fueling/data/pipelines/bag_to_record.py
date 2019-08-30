@@ -24,6 +24,7 @@ MARKER = 'COMPLETE'
 
 class BagToRecord(BasePipeline):
     """BagToRecord pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'bag-to-record')
 
@@ -70,20 +71,20 @@ class BagToRecord(BasePipeline):
     def run(self, bag_to_record):
         """Run the pipeline with given arguments."""
         spark_helper.cache_and_log('FinishedJobs',
-            # PairRDD(src_bag, dst_record)
-            spark_helper.cache_and_log('SrcBagToDstRecord', bag_to_record)
-            # RDD(dst_record|None)
-            .map(self.process_file)
-            # RDD(dst_record)
-            .filter(spark_op.not_none)
-            # RDD(dst_dir)
-            .map(os.path.dirname)
-            # RDD(unique_dst_dir)
-            .distinct()
-            # RDD(dst_MARKER)
-            .map(lambda path: os.path.join(path, MARKER))
-            # RDD(dst_MARKER), which is created
-            .map(file_utils.touch))
+                                   # PairRDD(src_bag, dst_record)
+                                   spark_helper.cache_and_log('SrcBagToDstRecord', bag_to_record)
+                                   # RDD(dst_record|None)
+                                   .map(self.process_file)
+                                   # RDD(dst_record)
+                                   .filter(spark_op.not_none)
+                                   # RDD(dst_dir)
+                                   .map(os.path.dirname)
+                                   # RDD(unique_dst_dir)
+                                   .distinct()
+                                   # RDD(dst_MARKER)
+                                   .map(lambda path: os.path.join(path, MARKER))
+                                   # RDD(dst_MARKER), which is created
+                                   .map(file_utils.touch))
 
     @staticmethod
     def bag_name_to_record_name(bag_path):
@@ -111,6 +112,7 @@ class BagToRecord(BasePipeline):
             return None
         glog.info(msg)
         return record
+
 
 if __name__ == '__main__':
     BagToRecord().main()

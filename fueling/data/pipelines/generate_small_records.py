@@ -61,6 +61,7 @@ MARKER = 'COMPLETE'
 
 class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'generate-small-records')
 
@@ -83,7 +84,7 @@ class GenerateSmallRecords(BasePipeline):
         dst_files = self.to_rdd(bos.list_files(dst_prefix)).cache()
         # Only process those COMPLETE folders.
 
-        is_marker = lambda path: path.endswith(MARKER)
+        def is_marker(path): return path.endswith(MARKER)
         # PairRDD(src_dir, src_record)
         src_dir_and_records = spark_op.filter_keys(
             # PairRDD(src_dir, src_record)
@@ -107,20 +108,20 @@ class GenerateSmallRecords(BasePipeline):
 
             # Mark dst_dirs which have finished.
             spark_helper.cache_and_log('SupplementMarkers',
-                # RDD(src_dir)
-                src_dir_and_records.keys()
-                # RDD(src_dir), which is unique.
-                .distinct()
-                # RDD(src_dir), which in src_dirs but not in todo_dirs.
-                .subtract(todo_records.map(os.path.dirname).distinct())
-                # RDD(dst_dir)
-                .map(lambda path: path.replace(src_prefix, dst_prefix, 1))
-                # RDD(dst_MARKER)
-                .map(lambda path: os.path.join(path, MARKER))
-                # RDD(dst_MARKER), which doesn't exist.
-                .subtract(dst_files.filter(is_marker))
-                # RDD(dst_MARKER), which is touched.
-                .map(file_utils.touch))
+                                       # RDD(src_dir)
+                                       src_dir_and_records.keys()
+                                       # RDD(src_dir), which is unique.
+                                       .distinct()
+                                       # RDD(src_dir), which in src_dirs but not in todo_dirs.
+                                       .subtract(todo_records.map(os.path.dirname).distinct())
+                                       # RDD(dst_dir)
+                                       .map(lambda path: path.replace(src_prefix, dst_prefix, 1))
+                                       # RDD(dst_MARKER)
+                                       .map(lambda path: os.path.join(path, MARKER))
+                                       # RDD(dst_MARKER), which doesn't exist.
+                                       .subtract(dst_files.filter(is_marker))
+                                       # RDD(dst_MARKER), which is touched.
+                                       .map(file_utils.touch))
 
         spark_helper.cache_and_log('TodoRecords', todo_records)
         self.run(todo_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
@@ -128,14 +129,14 @@ class GenerateSmallRecords(BasePipeline):
     def run(self, todo_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         output_records = spark_helper.cache_and_log('OutputRecords',
-            # RDD(todo_src_record)
-            todo_records
-            # PairRDD(src_record, dst_record)
-            .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
-            # RDD(dst_record)
-            .map(spark_op.do_tuple(self.process_file))
-            # RDD(dst_record)
-            .filter(bool))
+                                                    # RDD(todo_src_record)
+                                                    todo_records
+                                                    # PairRDD(src_record, dst_record)
+                                                    .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
+                                                    # RDD(dst_record)
+                                                    .map(spark_op.do_tuple(self.process_file))
+                                                    # RDD(dst_record)
+                                                    .filter(bool))
 
         # RDD(dst_dir)
         finished_dirs = spark_helper.cache_and_log('FinishedDirs',

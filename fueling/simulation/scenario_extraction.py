@@ -26,11 +26,13 @@ def list_end_files(target_dir):
     glog.info('end_files: {}'.format(end_files))
     return end_files
 
+
 def list_completed_dirs(prefix, list_func):
     """List directories that contains COMPLETE mark up files"""
     return list_func(prefix) \
-                     .filter(lambda path: path.endswith('/COMPLETE')) \
-                     .map(os.path.dirname)
+        .filter(lambda path: path.endswith('/COMPLETE')) \
+        .map(os.path.dirname)
+
 
 def get_todo_tasks(original_prefix, target_prefix, list_func):
     """Get todo tasks in rdd format."""
@@ -38,6 +40,7 @@ def get_todo_tasks(original_prefix, target_prefix, list_func):
     processed_dirs = list_completed_dirs(target_prefix, list_func).map(
         lambda path: path.replace(target_prefix, original_prefix, 1))
     return original_dirs.subtract(processed_dirs)
+
 
 def execute_task(task):
     """Execute task by task"""
@@ -50,7 +53,7 @@ def execute_task(task):
         return
     map_dir = '/mnt/bos/modules/map/data/san_mateo'
     message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages()
-         if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
+                    if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
     if message is not None:
         if record_utils.message_to_proto(message).map_version.startswith('sunnyvale'):
             map_dir = '/mnt/bos/modules/map/data/sunnyvale'
@@ -66,13 +69,14 @@ def execute_task(task):
         glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
         # Print log here only, since rerunning will probably fail again.
         # Need people intervention instead
-        #return
+        # return
 
     # Mark complete
     complete_file = os.path.join(dest_dir, 'COMPLETE')
     glog.info('Touching complete file {}'.format(complete_file))
     if not os.path.exists(complete_file):
         os.mknod(complete_file)
+
 
 class ScenarioExtractionPipeline(BasePipeline):
     """Extract logsim scenarios from records and save the bag/json pair"""
@@ -117,6 +121,7 @@ class ScenarioExtractionPipeline(BasePipeline):
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # Execute each task
          .foreach(execute_task))
+
 
 if __name__ == '__main__':
     ScenarioExtractionPipeline().run_test()

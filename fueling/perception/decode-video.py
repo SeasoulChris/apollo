@@ -54,8 +54,9 @@ VIDEO_IMAGE_MAP = {
     VIDEO_FRONT_12MM_CHANNEL: IMAGE_FRONT_12MM_CHANNEL,
     VIDEO_REAR_6MM_CHANNEL: IMAGE_REAR_6MM_CHANNEL,
     VIDEO_LEFT_FISHEYE_CHANNEL: IMAGE_LEFT_FISHEYE_CHANNEL,
-    VIDEO_RIGHT_FISHEYE_CHANNEL: IMAGE_RIGHT_FISHEYE_CHANNEL, 
+    VIDEO_RIGHT_FISHEYE_CHANNEL: IMAGE_RIGHT_FISHEYE_CHANNEL,
 }
+
 
 class DecodeVideoPipeline(BasePipeline):
     """PopulateFrames pipeline."""
@@ -116,7 +117,7 @@ class DecodeVideoPipeline(BasePipeline):
             target_records
             # PairRDD(target_dir, MessageMetaData(topic, timestamp, fields, src_path))
             .flatMapValues(lambda record: streaming_utils.load_meta_data(
-                 root_dir, record, VIDEO_CHANNELS))
+                root_dir, record, VIDEO_CHANNELS))
             # PairRDD((target_dir, topic), (timestamp, fields, src_path))
             .map(lambda (target, (topic, time, fields, src_path)):
                  ((target, topic), (time, fields, src_path)))
@@ -139,6 +140,8 @@ class DecodeVideoPipeline(BasePipeline):
                   replace_images(target_record, root_dir, decoded_records_dir)))
 
 # Helper functions
+
+
 def group_video_frames(message_meta):
     """Divide the video frames into groups, one group is a frame I leading multiple frames P"""
     target_topic, meta_values = message_meta
@@ -172,6 +175,7 @@ def group_video_frames(message_meta):
         frames_group.append((timestamp, frame_type, src_path))
     glog.info('total groups count:{}'.format(len(groups)))
     return [(target_topic, group) for group in groups]
+
 
 def decode_videos(message_meta):
     """
@@ -222,6 +226,7 @@ def decode_videos(message_meta):
     file_utils.touch(complete_marker)
     glog.info('done with group {}, image path: {}'.format(cur_group_name, image_output_path))
 
+
 def replace_images(target_record, root_dir, decoded_records_dir):
     """Scan messages in original record file, and replace video frames with decoded image frames"""
     video_dir, record = target_record
@@ -268,6 +273,7 @@ def replace_images(target_record, root_dir, decoded_records_dir):
     writer.close()
     glog.info('done with replacement, target: {}, dst: {}'.format(target_record, dst_record))
 
+
 def get_image_back(video_dir, message):
     """Actually change the content of message from video bytes to image bytes"""
     message_proto = CompressedImage()
@@ -292,6 +298,7 @@ def get_image_back(video_dir, message):
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
     return message_proto.SerializeToString()
 
+
 def mark_video_complete(todo_tasks, video_dir, root_dir):
     """Create COMPLETE file to mark the video decoding part done"""
     for task in todo_tasks:
@@ -300,6 +307,7 @@ def mark_video_complete(todo_tasks, video_dir, root_dir):
             glog.warn('no video decoded for task: {}'.format(task_path))
             continue
         mark_complete(task_path)
+
 
 def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
     """Create COMPLETE file to mark the decoded dir part done"""
@@ -320,7 +328,7 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
             glog.warn('no decoded dir for task: {}'.format(target_task))
             # Still mark it completed even if it was not restored,
             # for avoiding being processed again next time
-            file_utils.makedirs(target_task)        
+            file_utils.makedirs(target_task)
         mark_complete(target_task)
         email_message.append(SummaryTuple(
             Source=source_task,
@@ -329,10 +337,12 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
             TargetRecords=len(glob.glob(os.path.join(target_task, '*record*')))))
     email_utils.send_email_info(email_title, email_message, receivers)
 
+
 def mark_complete(task_path):
     """Create COMPLETE file to mark the job done"""
     streaming_utils.write_to_file(
         os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
+
 
 if __name__ == '__main__':
     DecodeVideoPipeline().main()

@@ -91,6 +91,7 @@ SENSOR_PARAMS = {
     'https://s3-us-west-1.amazonaws.com/scale-labeling/images'
 }
 
+
 def load_yaml_settings(yaml_file_name):
     """Load settings from YAML config file."""
     if yaml_file_name is None:
@@ -99,6 +100,7 @@ def load_yaml_settings(yaml_file_name):
     yaml_file = open(yaml_file_name)
     return yaml.safe_load(yaml_file)
 
+
 def dump_img_name(output_dir, image_name):
     """Write image file name only"""
     file_utils.makedirs(output_dir)
@@ -106,11 +108,13 @@ def dump_img_name(output_dir, image_name):
     if not os.path.exists(image_file_path):
         os.mknod(image_file_path)
 
+
 def point3d_to_matrix(point):
     """Convert a 3-items array to 4*1 matrix."""
     mat = np.zeros(shape=(4, 1), dtype=float)
     mat = np.array([[point.x], [point.y], [point.z], [1]])
     return mat
+
 
 def quaternion_to_roation(qtn):
     """Convert quaternion vector to 3x3 rotation matrix."""
@@ -126,6 +130,7 @@ def quaternion_to_roation(qtn):
     rotation_mat[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
     return rotation_mat
 
+
 def rotation_to_quaternion(rot):
     """Convert 3x3 rottation matrix to quaternion vector."""
     qtn = Quaternion()
@@ -137,6 +142,7 @@ def rotation_to_quaternion(rot):
         np.sign(rot[1][0]-rot[0][1]) * 0.5
     qtn.qw = np.sqrt(1 - qtn.qx * qtn.qx - qtn.qy * qtn.qy - qtn.qz * qtn.qz)
     return qtn
+
 
 def generate_transform(qtn, dev):
     """Generate a matrix with rotation and deviation/translation."""
@@ -156,6 +162,7 @@ def generate_transform(qtn, dev):
     tranform[3] = [0, 0, 0, 1]
     return tranform
 
+
 def get_rotation_from_tranform(transform):
     """Extract rotation matrix out from transform matrix."""
     rotation = np.zeros(shape=(3, 3), dtype=float)
@@ -170,6 +177,7 @@ def get_rotation_from_tranform(transform):
     rotation[2][2] = transform[2][2]
     return rotation
 
+
 def transform_coordinate(point, transform):
     """Transform coordinate system according to rotation and translation."""
     point_mat = point3d_to_matrix(point)
@@ -180,6 +188,7 @@ def transform_coordinate(point, transform):
     trans_point.z = point_mat[2][0]
     return trans_point
 
+
 def multiply_quaternion(qtn1, qtn2):
     """Multiple two quaternions. qtn1 is the rotation applied AFTER qtn2."""
     qtn = Quaternion()
@@ -189,11 +198,13 @@ def multiply_quaternion(qtn1, qtn2):
     qtn.qz = qtn1.qw*qtn2.qz + qtn1.qx*qtn2.qy - qtn1.qy*qtn2.qx + qtn1.qz*qtn2.qw
     return qtn
 
+
 def get_world_coordinate(transform, pose):
     """Get world coordinate by using transform matrix (imu pose)"""
     pose_transform = generate_transform(pose.orientation, pose.position)
     transform = np.dot(pose_transform, transform)
     return transform
+
 
 def convert_to_world_coordinate(point, transform, stationary_pole):
     """
@@ -207,6 +218,7 @@ def convert_to_world_coordinate(point, transform, stationary_pole):
     trans_point.z -= stationary_pole[2]
     return trans_point
 
+
 def euler_to_quaternion(roll, pitch, yaw):
     """Euler to Quaternion"""
     qtnx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - \
@@ -218,6 +230,7 @@ def euler_to_quaternion(roll, pitch, yaw):
     qtnw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + \
         np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
     return [qtnx, qtny, qtnz, qtnw]
+
 
 def quaternion_to_euler(qtnx, qtny, qtnz, qtnw):
     """Quaternion to Euler"""
@@ -232,6 +245,7 @@ def quaternion_to_euler(qtnx, qtny, qtnz, qtnw):
     tfour = +1.0 - 2.0 * (qtny * qtny + qtnz * qtnz)
     yaw = math.atan2(tthree, tfour)
     return [yaw, pitch, roll]
+
 
 def get_interp_pose(timestamp, pose_left, pose_right):
     """Get mean value of two poses"""
@@ -274,10 +288,12 @@ def get_interp_pose(timestamp, pose_left, pose_right):
     sensor_pose_interp.orientation.qw = pyqt_interp.w
     return sensor_pose_interp
 
+
 def read_messages_func(record_file):
     """Define a util function to read messages from record file"""
     freader = record.RecordReader(record_file)
     return freader.read_messages()
+
 
 def get_messages_number(record_file, channels):
     """Return a set of message numbers for specified channels"""
@@ -290,8 +306,10 @@ def get_messages_number(record_file, channels):
         return None
     return message_numbers
 
+
 class Sensor(object):
     """Sensor class representing various of sensors."""
+
     def __init__(self, channel, intrinsics, extrinsics):
         """Constructor."""
         self._channel = channel
@@ -319,8 +337,10 @@ class Sensor(object):
         """Add a new transform"""
         self.transform = np.dot(transform, self.transform)
 
+
 class PointCloudSensor(Sensor):
     """Lidar sensor that hold pointcloud data."""
+
     def process(self, message, timestamp, frame, pose, stationary_pole):
         """Process PointCloud message."""
         point_cloud = PointCloud()
@@ -347,8 +367,10 @@ class PointCloudSensor(Sensor):
         rotation = get_rotation_from_tranform(transform)
         qtn = rotation_to_quaternion(rotation)
 
+
 class RadarSensor(Sensor):
     """Radar sensor that hold radar data."""
+
     def __init__(self, channel, intrinsics, extrinsics):
         """Initialization."""
         super(RadarSensor, self).__init__(channel, intrinsics, extrinsics)
@@ -388,8 +410,10 @@ class RadarSensor(Sensor):
             radar_frame = frame.radar_points.add()
             radar_frame.CopyFrom(radar_point)
 
+
 class ImageSensor(Sensor):
     """Image sensor that hold camera data."""
+
     def __init__(self, channel, intrinsics, extrinsics):
         """Initialization."""
         super(ImageSensor, self).__init__(channel, intrinsics, extrinsics)
@@ -440,8 +464,10 @@ class ImageSensor(Sensor):
         image_frame = frame.images.add()
         image_frame.CopyFrom(camera_image)
 
+
 class GpsSensor(object):
     """GPS sensor that hold pose data."""
+
     def __init__(self, message):
         """Initialization."""
         self.position = None
@@ -467,8 +493,10 @@ class GpsSensor(object):
         gps_pose.qz = self.orientation.qz
         frame.device_gps_pose.CopyFrom(gps_pose)
 
+
 class FramePopulator(object):
     """Extract sensors data from record file, and populate to JSON."""
+
     def __init__(self, root_dir, task_dir, slice_size):
         self._stationary_pole = None
         self._root_dir = root_dir
@@ -614,11 +642,11 @@ class FramePopulator(object):
     def construct_bj_frames(self, message_structs, frame_counter, max_diff):
         """Construct frames for labeling pcd/cameras only"""
         channel_map = {
-            '/apollo/sensor/camera/front_6mm/image/compressed':'front6mm',
-            '/apollo/sensor/camera/front_12mm/image/compressed':'front12mm',
-            '/apollo/sensor/camera/left_fisheye/image/compressed':'leftfisheye',
-            '/apollo/sensor/camera/right_fisheye/image/compressed':'rightfisheye',
-            '/apollo/sensor/camera/rear_6mm/image/compressed':'rear6mm'
+            '/apollo/sensor/camera/front_6mm/image/compressed': 'front6mm',
+            '/apollo/sensor/camera/front_12mm/image/compressed': 'front12mm',
+            '/apollo/sensor/camera/left_fisheye/image/compressed': 'leftfisheye',
+            '/apollo/sensor/camera/right_fisheye/image/compressed': 'rightfisheye',
+            '/apollo/sensor/camera/rear_6mm/image/compressed': 'rear6mm'
         }
         pcd_dir = os.path.join(self._task_dir, 'PCD')
         img_dir = os.path.join(self._task_dir, 'images')
@@ -632,7 +660,7 @@ class FramePopulator(object):
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
             glog.warn('keep this frame anyways, and let agent do the filtering per requirement')
-            #return
+            # return
 
         pcd_file_name = os.path.join(pcd_dir, 'velodyne128-{}.pcd'.format(frame_counter))
         if os.path.exists(pcd_file_name):
@@ -649,7 +677,7 @@ class FramePopulator(object):
         for point in point_cloud.point:
             pcd_points.append([point.x, point.y, point.z, point.intensity, pcd_time])
         pcd_data = np.array(pcd_points)
-        meta_data={}
+        meta_data = {}
         meta_data['version'] = '0.7'
         meta_data['fields'] = ['x', 'y', 'z', 'intensity', 'timestamp']
         meta_data['size'] = [4, 4, 4, 1, 4]
@@ -683,7 +711,7 @@ class FramePopulator(object):
                 cv2.imwrite(os.path.join(img_dir, image_name), img)
                 image_name_in_log = '{}_{}'.format(channel_map[channel], image_name)
                 if channel == '/apollo/sensor/camera/front_6mm/image/compressed':
-                    image_name_in_log = '{:.9f}#{}'.format(float(timestamp) / (10**9), 
+                    image_name_in_log = '{:.9f}#{}'.format(float(timestamp) / (10**9),
                                                            image_name_in_log)
                 params.append(image_name_in_log)
         self.format_output(image_file_name, params, 3)
@@ -701,25 +729,27 @@ class FramePopulator(object):
         qtn = rotation_to_quaternion(rotation)
         if not os.path.exists(pose_file_name):
             with open(pose_file_name, 'w') as pose_file:
-                line = (' ' * 4).join([str(i) for i in 
-                    ['SEQ','TIME','X','Y','Z','QW','QX','QY','QZ']])
+                line = (' ' * 4).join([str(i) for i in
+                                       ['SEQ', 'TIME', 'X', 'Y', 'Z', 'QW', 'QX', 'QY', 'QZ']])
                 pose_file.write('{}\n'.format(line))
         params = [frame_counter, lidar_time_str, transform[0][3], transform[1][3], transform[2][3],
                   qtn.qw, qtn.qx, qtn.qy, qtn.qz]
         self.format_output(pose_file_name, params, 2)
 
-        #TIMESTAMP
+        # TIMESTAMP
         stamp_file_name = os.path.join(pcd_dir, 'stamp.txt')
         record_file_name = os.path.basename(self._task_dir)
         if not os.path.exists(stamp_file_name):
             with open(stamp_file_name, 'w') as stamp_file:
-                line = (' ' * 8).join([str(i) for i in ['RECORD_FILE','SEQ','TIME']])
+                line = (' ' * 8).join([str(i) for i in ['RECORD_FILE', 'SEQ', 'TIME']])
                 stamp_file.write('{}\n'.format(line))
         params = [record_file_name, frame_counter, lidar_time_str]
         self.format_output(stamp_file_name, params, 2)
 
+
 class DataStream(object):
     """Logic data buffer to manage data reading from different kinds of sources."""
+
     def __init__(self, data_source, load_func):
         """Initialization. Load the initial data from source"""
         self._data_source = data_source
@@ -761,8 +791,10 @@ class DataStream(object):
             iterator.update_index(item_number_released+1)
         return item_number_released+1
 
+
 class DataStreamIterator(object):
     """DataStream iterator for accessing the DataStream object."""
+
     def __init__(self, data_stream):
         """Initialization."""
         self._data_stream = data_stream
@@ -786,15 +818,19 @@ class DataStreamIterator(object):
         self._index += 1
         return item
 
+
 class MessageStruct(object):
     """Data structure representing messages with left and right poses."""
+
     def __init__(self, msg, pose_left, pose_right):
         self.message = msg
         self.pose_left = pose_left
         self.pose_right = pose_right
 
+
 class Builder(object):
     """Used for building objects with specific sequences and properties."""
+
     def __init__(self, message_struct, rules):
         self._guide_lines = {}
         for rule in rules:
@@ -809,7 +845,7 @@ class Builder(object):
             if all(self._guide_lines[x] is not None for x in self._guide_lines):
                 return 1, None  # means message accepted and builder done
             return 0, None   # means message accepted
-        return 0, message_struct # means message not accepted
+        return 0, message_struct  # means message not accepted
 
     def complete(self, frame_populator, frame_counter, agent, diff):
         """Builder complete, and send messages to framepopulator in this case"""
@@ -820,8 +856,10 @@ class Builder(object):
         elif agent == "bj":
             frame_populator.construct_bj_frames(messages, frame_counter, diff)
 
+
 class BuilderManager(object):
     """Builder management pool."""
+
     def __init__(self, rules, frame_populator):
         self._builder_list = []
         self._rules = rules

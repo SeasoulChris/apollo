@@ -14,13 +14,15 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 
+
 def build_file_handles(topic_file_paths):
     """Build a map between topic file and its handle"""
     handles = {}
     for topic_file in topic_file_paths:
-        func = lambda file_path: open(file_path, 'w+')
+        def func(file_path): return open(file_path, 'w+')
         handles[os.path.basename(topic_file)] = streaming_utils.retry(func, [topic_file], 3)
     return handles
+
 
 def build_meta_with_fields(fields, message):
     """Combine the fields values with timestamp to form the complete metadata"""
@@ -37,6 +39,7 @@ def build_meta_with_fields(fields, message):
         field_suffix += '"{}":"{}"'.format(field, value)
     field_suffix += '}'
     return header_time, '{},{}'.format(header_time, field_suffix)
+
 
 def parse_record(record_file, root_dir):
     """
@@ -61,8 +64,8 @@ def parse_record(record_file, root_dir):
     if os.path.exists(os.path.join(record_dir, 'COMPLETE')):
         glog.info('target has been generated, do nothing')
         return
-    topic_files = [os.path.join(record_dir, \
-        streaming_utils.topic_to_file_name(x.get('topic'))) for x in settings]
+    topic_files = [os.path.join(record_dir,
+                                streaming_utils.topic_to_file_name(x.get('topic'))) for x in settings]
     topic_file_handles = {}
     try:
         topic_file_handles = build_file_handles(topic_files)
@@ -73,7 +76,7 @@ def parse_record(record_file, root_dir):
             renamed_topic = streaming_utils.topic_to_file_name(message.topic)
             if renamed_topic in topic_file_handles:
                 fields = next(x for x in settings if x.get('topic') == message.topic)\
-                         .get('fields')
+                    .get('fields')
                 header_time, meta = build_meta_with_fields(fields, message)
                 topic_file_handles[renamed_topic].write('{}\n'.format(meta))
                 streaming_utils.write_message_obj(record_dir, renamed_topic, message, header_time)

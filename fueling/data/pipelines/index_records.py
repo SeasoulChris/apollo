@@ -82,13 +82,13 @@ class IndexRecords(BasePipeline):
         url_prefix = '{}/api/v1/namespaces/default/services/{}/proxy/task'.format(proxy, service)
 
         msgs = (new_indexed_records
-            # RDD(imported_task_dir)
-            .map(os.path.dirname)
-            # RDD(imported_task_dir), which is unique
-            .distinct()
-            # RDD(SummaryTuple)
-            .map(lambda task_dir: SummaryTuple(Path=task_dir, URL=url_prefix + task_dir))
-            .cache())
+                # RDD(imported_task_dir)
+                .map(os.path.dirname)
+                # RDD(imported_task_dir), which is unique
+                .distinct()
+                # RDD(SummaryTuple)
+                .map(lambda task_dir: SummaryTuple(Path=task_dir, URL=url_prefix + task_dir))
+                .cache())
         msg_count = msgs.count()
         if msg_count == 0:
             glog.error('No record was imported')
