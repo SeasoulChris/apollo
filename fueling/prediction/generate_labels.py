@@ -10,8 +10,10 @@ from fueling.prediction.common.online_to_offline import LabelGenerator
 
 SKIP_EXISTING_DST_FILE = False
 
+
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'generate-labels')
 
@@ -28,7 +30,7 @@ class GenerateLabels(BasePipeline):
         # RDD(bin_files)
         bin_files = (
             self.to_rdd(self.bos().list_files(source_prefix)).filter(
-            spark_op.filter_path(['*feature.*.bin'])))
+                spark_op.filter_path(['*feature.*.bin'])))
         labeled_bin_files = (
             # RDD(label_files)
             self.to_rdd(self.bos().list_files(source_prefix, '.bin.future_status.npy'))

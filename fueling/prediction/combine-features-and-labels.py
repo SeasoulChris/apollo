@@ -13,6 +13,7 @@ from fueling.common.base_pipeline import BasePipeline
 
 class FeaturesAndLabelsCombine(BasePipeline):
     """Records to DataForLearning proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'combine-features-and-labels')
 
@@ -83,7 +84,7 @@ def CombineFeaturesAndLabels(feature_path, label_path, dict_name='future_status'
             labels = dict_labels[key]
             list_curr = [len(features_for_learning)] + features_for_learning + \
                         [len(string_features_for_learning)] + string_features_for_learning + \
-                        labels + [len(labels)]
+                labels + [len(labels)]
         elif dict_name == 'cruise_label':
             lane_seq_id = data_for_learning.lane_sequence_id
             if lane_seq_id not in dict_labels[key]:

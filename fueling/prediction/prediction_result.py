@@ -11,6 +11,7 @@ import fueling.common.record_utils as record_utils
 
 class PredictionResult(BasePipeline):
     """Records to PredictionResult proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'prediction-result')
 

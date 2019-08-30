@@ -16,6 +16,7 @@ COLLISION_COST_EXP_COEFFICIENT = 1.0
 
 class DataForTuningLabelsCombine(BasePipeline):
     """Records to DataForTuning proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'combine-data-for-tuning-and-labels')
 
@@ -125,7 +126,7 @@ def ComputeCentripetalAccCost(future_status):
     future_status_index = 1
     start_timestamp = future_status[0][6]
     while future_status_index < len(future_status) and \
-          time_stop_index < len(time_stops):
+            time_stop_index < len(time_stops):
         future_point = future_status[future_status_index]
         relative_time = future_point[6] - start_timestamp
         if relative_time > time_stops[time_stop_index]:
@@ -149,7 +150,7 @@ def ComputeCollisionWithEgoVehicleCost(future_status, adc_trajectory):
     future_status_index = 0
     start_timestamp = future_status[0][6]
     while future_status_index < len(future_status) and \
-          adc_point_index < len(adc_trajectory):
+            adc_point_index < len(adc_trajectory):
         future_point = future_status[future_status_index]
         relative_time = future_point[6] - start_timestamp
         if relative_time > adc_trajectory[adc_point_index].relative_time:

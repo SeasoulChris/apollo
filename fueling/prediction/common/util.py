@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def segment_overlap(a, b, x, y):
     return b >= x and a <= y
 

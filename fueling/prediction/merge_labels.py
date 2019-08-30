@@ -10,8 +10,10 @@ from fueling.common.base_pipeline import BasePipeline
 
 SKIP_EXISTING_DST_FILE = False
 
+
 class MergeLabels(BasePipeline):
     """Records to MergeLabels proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'merge-labels')
 
@@ -94,6 +96,7 @@ def merge_dicts(dirpath, dict_name='future_status'):
             dict_merged.update(dict_curr)
     np.save(os.path.join(dirpath, dict_name + '.npy'), dict_merged)
     return dict_merged
+
 
 if __name__ == '__main__':
     MergeLabels().main()

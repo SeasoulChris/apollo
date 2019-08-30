@@ -5,7 +5,7 @@
 import colored_glog as glog
 
 import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pipeline \
-       as junction_mlp
+    as junction_mlp
 
 from fueling.common.base_pipeline import BasePipeline
 
@@ -36,6 +36,6 @@ class JunctionMlpPipeline(BasePipeline):
 
         glog.info('Done with running Production')
 
+
 if __name__ == '__main__':
     JunctionMlpPipeline().main()
-

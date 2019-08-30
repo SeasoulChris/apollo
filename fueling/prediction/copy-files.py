@@ -10,8 +10,10 @@ import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 
+
 class CopyFiles(BasePipeline):
     """Records to feature proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'copy-files')
 
@@ -21,7 +23,6 @@ class CopyFiles(BasePipeline):
         records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide/'
         target_prefix = '/apollo/data/prediction/test/'
-
 
     def run_prod(self):
         """Run prod."""
@@ -52,6 +53,7 @@ class CopyFiles(BasePipeline):
         glog.info('Finishing copy ' + str(result.count()) + ' files: '
                   + origin_prefix + ' -> ' + target_prefix)
         glog.info('Everything is under control!')
+
 
 if __name__ == '__main__':
     CopyFiles().main()

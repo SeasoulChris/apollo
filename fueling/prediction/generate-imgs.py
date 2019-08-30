@@ -16,6 +16,7 @@ import fueling.common.file_utils as file_utils
 
 class GenerateImgs(BasePipeline):
     """generate imgs from FrameEnv."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'generate-imgs')
 

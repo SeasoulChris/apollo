@@ -11,6 +11,7 @@ from fueling.common.base_pipeline import BasePipeline
 
 class MatchImgLabel(BasePipeline):
     """Records to MatchImgLabel proto pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'match-img-label')
 
@@ -37,7 +38,7 @@ class MatchImgLabel(BasePipeline):
     def process_file(src_file):
         """Call prediction python code to generate labels."""
         try:
-            key = os.path.basename(src_file).replace(".png","")
+            key = os.path.basename(src_file).replace(".png", "")
             junction_label_dict = np.load(os.path.join(
                 os.path.dirname(src_file).replace("junction_img", "labels"),
                 'junction_label.npy')).item()

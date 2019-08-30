@@ -23,8 +23,10 @@ DISTANCE_THRESHOLD = 1.5
 FILTERED_EVALUATOR = None
 FILTERED_PREDICTOR = None
 
+
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'evaluate-performance')
 
@@ -104,7 +106,7 @@ def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
     for predicted_traj in prediction_result.trajectory:
         i = 0
         while i + 1 < len(predicted_traj.trajectory_point) and \
-              predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
+                predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
             i += 1
         predicted_x = predicted_traj.trajectory_point[i].path_point.x
         predicted_y = predicted_traj.trajectory_point[i].path_point.y
