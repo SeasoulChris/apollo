@@ -78,7 +78,7 @@ def train_gp(args, dataset, gp_class):
     kernel = gp.kernels.Warping(kernelization, iwarping_fn=_encoded_feature)
     # Define the inducing points of Gaussian Process
     Xu = feature[torch.arange(0, feature.shape[0],
-                              step=int(feature.shape[0] / args.num_inducing_point)).long()]
+                              step=int(max(feature.shape[0] / args.num_inducing_point, 1))).long()]
     # The Pyro core of Gaussian Process training through variational inference
     gp_f = gp.models.VariationalSparseGP(feature, label, kernel, Xu,
                                          num_data=feature.shape[0], likelihood=likelihood,
@@ -100,5 +100,5 @@ def train_gp(args, dataset, gp_class):
         glog.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss))
         if epoch == 10:
             gp_instante.gp_f.jitter = 1e-4
-    
+
     save_gp(args, gp_instante, deep_encoding_net)
