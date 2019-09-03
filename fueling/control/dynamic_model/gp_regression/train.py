@@ -49,13 +49,16 @@ def preprocessing(args, dataset, gp):
 
 
 def save_gp(args, gp_model, kernel_net):
-    """Save the learned results for Gaussian process"""
+    """Save the learned models for Gaussian process"""
     timestr = time.strftime('%Y%m%d-%H%M%S')
-    torch.save(gp_model.gp_f.state_dict(), os.path.join(args.result_path, 'gp_f_%s.p' % timestr))
-    torch.save(gp_model.gp_f.kernel.state_dict(), os.path.join(args.result_path, 'kernel_%s.p' % timestr))
+    model_saving_path = os.path.join(args.gp_model_path, timestr)
+    if not os.path.exists(model_saving_path):
+        os.makedirs(model_saving_path)
+    torch.save(gp_model.gp_f.state_dict(), os.path.join(model_saving_path, "gp_f.p"))
+    torch.save(gp_model.gp_f.kernel.state_dict(), os.path.join(model_saving_path, "kernel.p"))
     torch.save(gp_model.gp_f.likelihood.state_dict(),
-               os.path.join(args.result_path, 'likelihood_%s.p' % timestr))
-    torch.save(kernel_net.state_dict(), os.path.join(args.result_path, 'fnet_%s.p' % timestr))
+               os.path.join(model_saving_path, "likelihood.p"))
+    torch.save(kernel_net.state_dict(), os.path.join(model_saving_path, "fnet.p"))
 
 
 def train_gp(args, dataset, gp_class):

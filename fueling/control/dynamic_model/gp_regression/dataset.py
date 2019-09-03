@@ -29,17 +29,18 @@ class GPDataSet(Dataset):
         """
         Initialization
         """
-        self.data_path = args.labeled_data_path
+        self.training_data_path = args.training_data_path
+        self.testing_data_path = args.testing_data_path
 
     def get_train_data(self):
         """
         Generate training data from a list of labeled data
         """
-        datasets = glob.glob(os.path.join(self.data_path, '*.h5'))
+        datasets = glob.glob(os.path.join(self.training_data_path, '*.h5'))
         input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
         output_data = torch.zeros(DIM_OUTPUT, 0)
         for h5_file in datasets:
-            glog.info(os.path.join(h5_file))
+            glog.debug(os.path.join(h5_file))
             with h5py.File(h5_file, 'r') as model_norms_file:
                 input_segment = torch.tensor(np.array(model_norms_file.get('input_segment')))
                 output_segment = torch.tensor(np.array(model_norms_file.get('output_segment')))
@@ -48,3 +49,21 @@ class GPDataSet(Dataset):
                 input_data = torch.cat((input_data, input_segment.float()), 0)
                 output_data = torch.cat((output_data, output_segment.float()), 1)
         return (input_data, output_data)
+
+    def get_test_data(self):
+        """
+        Generate testing data from a list of labeled data
+        """
+        datasets = glob.glob(os.path.join(self.testing_data_path, '*.h5'))
+        input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
+        gt_data = torch.zeros(0, DIM_OUTPUT)
+        for h5_file in datasets:
+            glog.debug(os.path.join(h5_file))
+            with h5py.File(h5_file, 'r') as model_norms_file:
+                input_segment = torch.tensor(np.array(model_norms_file.get('input_segment')))
+                gt_res_error = torch.tensor(np.array(model_norms_file.get('output_segment')))
+                input_segment = input_segment.view(1, INPUT_LENGTH, DIM_INPUT)
+                gt_res_error = gt_res_error.view(1, DIM_OUTPUT)
+                input_data = torch.cat((input_data, input_segment.float()), 0)
+                gt_data = torch.cat((gt_data, gt_res_error.float()), 0)
+        return (input_data, gt_data)

@@ -7,24 +7,33 @@ import pickle
 from dataset import GPDataSet
 from gaussian_process import GaussianProcess
 from train import train_gp
+from evaluation import test_gp
 
 
 def launch(args):
     # tasks
     args.train_gp = True
-    args.post_tests = False
+    args.test_gp = True
 
     dataset = GPDataSet(args)
-    # train propagation Gaussian process
-    train_gp(args, dataset, GaussianProcess)
+    if args.train_gp:
+        # train Gaussian process model
+        train_gp(args, dataset, GaussianProcess)
+    if args.test_gp:
+        # train Gaussian process model
+        test_gp(args, dataset, GaussianProcess)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
-    parser.add_argument('--labeled_data_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/label_generation")
-    parser.add_argument('--result_path', type=str,
+    parser.add_argument('--training_data_path', type=str,
+                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/training")
+    parser.add_argument('--testing_data_path', type=str,
+                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/testing")
+    parser.add_argument('--gp_model_path', type=str,
+                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
+    parser.add_argument('--eval_result_path', type=str,
                         default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
 
     # model parameters
