@@ -419,17 +419,22 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             target_obs_hist_size = obs_hist_sizes[predicting_idx]
 
             # Nearby obstacles' historical information
-            # num_obs = all_obs_positions.shape[0]
-            # nearby_obs_mask = [True for i in range(num_obs)]
-            # nearby_obs_mask[predicting_idx] = False
-            # nearby_obs_pos = all_obs_positions[nearby_obs_mask]
-            # nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask]
+            num_obs = all_obs_positions.shape[0]
+            nearby_obs_mask = np.ones(num_obs)
+            nearby_obs_mask[predicting_idx] = 0
+            nearby_obs_mask = np.array(nearby_obs_mask == 1)
+            nearby_obs_pos = all_obs_positions[nearby_obs_mask, :]
+            nearby_obs_hist_sizes = obs_hist_sizes[nearby_obs_mask, :]
+            nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask, :]
 
-            # TODO(kechxu) add nearby obstacle info into output
             return ((img,
                      torch.from_numpy(target_obs_pos_rel).float(),
                      torch.from_numpy(target_obs_hist_size).float(),
-                     torch.from_numpy(all_obs_pos_rel).float()),
+                     torch.from_numpy(all_obs_pos_rel).float(),
+                     torch.from_numpy(target_obs_pos).float(),
+                     torch.from_numpy(nearby_obs_pos).float(),
+                     torch.from_numpy(nearby_obs_hist_sizes).float(),
+                     torch.from_numpy(nearby_obs_pos_rel).float()),
                     torch.from_numpy(target_obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]

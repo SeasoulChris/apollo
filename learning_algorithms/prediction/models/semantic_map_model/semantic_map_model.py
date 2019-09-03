@@ -161,7 +161,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
         )
 
     def forward(self, X):
-        img, obs_pos, obs_hist_size, obs_pos_rel = X
+        img, obs_pos, obs_hist_size, obs_pos_rel, _, _, _, _ = X
         N = obs_pos.size(0)
         observation_len = obs_pos.size(1)
         ht, ct = self.h0.repeat(N, 1), self.h0.repeat(N, 1)
@@ -216,6 +216,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.cnn_out_size = self.cnn.fc.in_features
         fc_in_features = self.cnn.fc.in_features
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
+        self.edge_hidden_size = edge_hidden_size
 
         # Target hidden state
         target_h0 = torch.zeros(1, node_hidden_size)
@@ -227,9 +228,9 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
         # Target RNN flow
         self.target_rel_disp_embedding = nn.Linear(2, embed_size)
-        self.target_lstm = nn.LSTM(self.cnn_out_size + embed_size, node_hidden_size,
+        self.target_lstm = nn.LSTM(embed_size, node_hidden_size,
                                    num_layers=1, batch_first=True)
-        self.target_attention_embedding = nn.Linear(node_hidden_size, attention_dim)
+        self.target_attention_embedding = nn.Linear(2, attention_dim)
 
         # Nearby hidden state
         nearby_h0 = torch.zeros(1, 1, edge_hidden_size)
@@ -242,7 +243,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         # Nearby RNN flow
         self.nearby_rel_disp_embedding = nn.Linear(2, embed_size)
         self.nearby_lstm = nn.LSTM(embed_size, edge_hidden_size, num_layers=1, batch_first=True)
-        self.nearby_attention_embedding = nn.Linear(edge_hidden_size, attention_dim)
+        self.nearby_attention_embedding = nn.Linear(2, attention_dim)
 
         self.attention_dim = attention_dim
 
@@ -250,42 +251,46 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.pred_layer = nn.Linear(node_hidden_size + self.cnn_out_size + edge_hidden_size, 2)
 
     def forward(self, X):
-        img, target_obs_pos, target_obs_hist_size, all_obs_pos_rel, \
-             nearby_obs_pos, nearby_obs_hist_sizes, nearby_obs_pos_rel = X
+        img, target_obs_pos_rel, target_obs_hist_size, all_obs_pos_rel, \
+             target_obs_pos, nearby_obs_pos, nearby_obs_hist_sizes, nearby_obs_pos_rel = X
 
         observation_len = target_obs_pos.size(1)
-        num_nearby_obs = nearby_obs_pos.size(0)
-        # Initialize CNN
+        num_nearby_obs = nearby_obs_pos.size(1)
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
         # Initialize target RNN
         target_ht = self.target_h0
         target_ct = self.target_c0
         # Initialize nearby RNN
-        nearby_ht_list = self.nearby_h0.repeat(num_nearby_obs, 1)
-        nearby_ct_list = self.nearby_c0.repeat(num_nearby_obs, 1)
+        if num_nearby_obs >= 1:
+            nearby_ht_list = self.nearby_h0.repeat(num_nearby_obs, 1, 1)
+            nearby_ct_list = self.nearby_c0.repeat(num_nearby_obs, 1, 1)
+        else:
+            nearby_ht_list = self.nearby_h0
+            nearby_ct_list = self.nearby_c0
 
         pred_mask = cuda(torch.ones(1))
         pred_out = cuda(torch.zeros(1, self.pred_len, 2))
         pred_traj = cuda(torch.zeros(1, self.pred_len, 2))
 
+        Ht = self.nearby_h0
+
         for t in range(1, observation_len+self.pred_len):
             if t < observation_len:
                 target_ts_obs_mask = target_obs_hist_size > observation_len - t
-                curr_target_obs_pos = target_obs_pos[t, :]
-                curr_target_obs_pos_rel = target_obs_pos_rel[t, :]
-                nearby_ts_obs_mask = (nearby_obs_hist_sizes > observation_len-t).long().view(-1)
-                curr_nearby_obs_pos = nearby_obs_pos[:, t, :].float()
-                curr_nearby_obs_pos_rel = nearby_obs_pos_rel[:, t, :].float()
-                prev_nearby_ts_obs_mask = \
-                    (nearby_obs_hist_sizes > observation_len-t + 1).long().view(-1)
+                curr_target_obs_pos = target_obs_pos[0, t, :]
+                curr_target_obs_pos_rel = target_obs_pos_rel[0, t, :]
+                nearby_ts_obs_mask = (nearby_obs_hist_sizes > observation_len-t).view(-1)
+                curr_nearby_obs_pos = nearby_obs_pos[:, :, t, :].float()
+                curr_nearby_obs_pos_rel = nearby_obs_pos_rel[:, :, t, :].float()
             else:
                 target_ts_obs_mask = pred_mask
-                pred_input = torch.cat((target_ht.clone(), img_embedding, Ht), 1)
+                nearby_ts_obs_mask = (nearby_obs_hist_sizes > -1).view(-1)
+                pred_input = torch.cat((target_ht.clone(), img_embedding, Ht.view(1, -1)), 1)
                 pred_out[:, t-observation_len, :] = self.pred_layer(pred_input).float().clone()
-                curr_obs_pos_rel = pred_out[:, t-observation_len, :2]
-                curr_obs_pos = curr_obs_pos + curr_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = curr_obs_pos.clone()
+                curr_target_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                curr_target_obs_pos = curr_target_obs_pos + curr_target_obs_pos_rel
+                pred_traj[:, t-observation_len, :] = curr_target_obs_pos.clone()
 
             # Target obstacles forward
             if target_ts_obs_mask:
@@ -298,33 +303,37 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
             # Nearby obstacles forward
             curr_N = torch.sum(nearby_ts_obs_mask).long().item()
-            nearby_disp_embedding = self.nearby_rel_disp_embedding(
-                (curr_nearby_obs_pos_rel[nearby_ts_obs_mask,:]).clone()) \
-                .view(curr_N, 1, -1)
+            if curr_N >= 1:
+                nearby_disp_embedding = self.nearby_rel_disp_embedding(
+                    (curr_nearby_obs_pos_rel[:, nearby_ts_obs_mask,:].view(1, curr_N, -1)).clone()) \
+                    .view(curr_N, 1, -1)
 
-            _, (ht_new_n, ct_new_n) = self.nearby_lstm(nearby_disp_embedding,
-                (nearby_ht_list[nearby_ts_obs_mask, :].view(1, curr_N, -1),
-                 nearby_ct_list[nearby_ts_obs_mask, :].view(1, curr_N, -1)))
-            nearby_ht_list[nearby_ts_obs_mask, :] = ht_new_n.view(curr_N, -1)
-            nearby_ct_list[nearby_ts_obs_mask, :] = ct_new_n.view(curr_N, -1)
+                _, (ht_new_n, ct_new_n) = self.nearby_lstm(nearby_disp_embedding,
+                    (nearby_ht_list[nearby_ts_obs_mask, :].view(1, curr_N, -1),
+                     nearby_ct_list[nearby_ts_obs_mask, :].view(1, curr_N, -1)))
 
-            # Attention
-            curr_nearby_pos = curr_nearby_obs_pos[nearby_ts_obs_mask, :]
-            curr_target_pos = curr_target_obs_pos.repeate(curr_N, 1)
-            curr_tn_rel_pos = curr_target_pos - curr_nearby_pos
-            att_nearby_embedding = self.nearby_attention_embedding(
-                curr_tn_rel_pos.clone()).view(1, curr_N, -1)
+                nearby_ht_list[nearby_ts_obs_mask, :] = ht_new_n.view(curr_N, 1, -1)
+                nearby_ct_list[nearby_ts_obs_mask, :] = ct_new_n.view(curr_N, 1, -1)
 
-            att_target_embedding = self.target_attention_embedding(
-                curr_target_obs_pos_rel.clone()).view(1, 1, -1)
-            att_scores = torch.sum((att_nearby_embedding * att_target_embedding), 2)
-            att_scores = att_scores * torch.tensor(curr_N) / \
-                         torch.sqrt(torch.tensor(self.attention_dim).float())
-            att_scores_numerator = torch.exp(att_scores)
-            att_scores_denominator = torch.sum(att_scores_numerator, 1)
-            att_scores = att_scores_numerator / att_scores_denominator
-            att_scores = att_scores.view(att_scores.size(0), -1)
+                # Attention
+                curr_nearby_pos = curr_nearby_obs_pos[:, nearby_ts_obs_mask, :]
+                curr_target_pos = curr_target_obs_pos.repeat(1, curr_N, 1)
+                curr_tn_rel_pos = curr_target_pos - curr_nearby_pos
 
-            Ht = (torch.sum((ht_new_n.view(curr_N, -1) * att_scores), 0)).view(1, -1)
+                att_nearby_embedding = self.nearby_attention_embedding(
+                    curr_tn_rel_pos.clone()).view(1, curr_N, -1)
 
-            return pred_traj
+                att_target_embedding = self.target_attention_embedding(
+                    curr_target_obs_pos_rel.clone()).view(1, 1, -1)
+                att_scores = torch.sum((att_nearby_embedding * att_target_embedding), 2)
+                att_scores = att_scores * torch.tensor(curr_N) / \
+                             torch.sqrt(torch.tensor(self.attention_dim).float())
+                att_scores_numerator = torch.exp(att_scores)
+                att_scores_denominator = torch.sum(att_scores_numerator, 1)
+                att_scores = att_scores_numerator / att_scores_denominator
+                att_scores = att_scores.view(att_scores.size(1), -1)
+
+                Ht = (torch.sum((ht_new_n.view(curr_N, -1) * att_scores), 0)).view(1, -1)
+
+        print(pred_out)
+        return pred_out
