@@ -19,6 +19,10 @@
    ```bash
    conda env update --prune -f fueling/conda/py27-cyber.yaml
    source activate fuel-py27-cyber
+
+   # Sometimes we encounter PYTHONPATH issue, you may need to run something like
+   # this to hard-reset:
+   export PYTHONPATH=$(python -m site --user-site):/apollo/modules/data/fuel:${PYTHONPATH}
    ```
 
    Available envs are:
@@ -29,23 +33,13 @@
    Use the Cyber compatible env if you need to read, write Cyber records, or
    call Cyber functions. Otherwise, please use the standard envs.
 
-### Ongoing efforts
-
-1. `fuel-py27` is in deprecation along with Python 2.7 retiring. Any new jobs
-   should try to use Python 3.
-1. `fuel-py27-cyber` is in deprecation along with Cyber wrapper upgrading.
-   * If the upcoming Python3 wrapper is compatible with the standard env， we'll
-     unify everything into `fuel-py36`.
-   * If the upcoming Python3 wrapper still has strong restrictions on lib
-     versions, we'll maintain a new `fuel-py36-cyber`.
-
 ## Develop pipeline jobs
 
 We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good
 practices are:
 
 1. Put all Python modules in ./fueling/ folder, and import them with full path
-   like `import fueling.common.s3_utils`.
+   like `import fueling.common.file_utils`.
 1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your
    own `run_test()` and `run_prod()` functions. Generally they should share most
    procedures and only differ in input and output locations or scale.
@@ -125,6 +119,7 @@ practices are:
 If you are pretty familliar with the infra, please:
 1. Loop the data team in to have your job well reviewed and setup local k8s
    client.
+
 1. Then run:
 
    ```bash
