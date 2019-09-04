@@ -32,9 +32,9 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - colored-glog >= 1.3.0
+    - colored-glog
     - pyro-ppl == 0.3.3
-    - pyspark-utils >= 1.7.1
+    - pyspark-utils
     - scaleapi
     - torch == 1.1.0
     - torchvision == 0.2.1
