@@ -4,10 +4,10 @@ import argparse
 import os
 import pickle
 
-from dataset import GPDataSet
-from gaussian_process import GaussianProcess
-from train import train_gp
-from evaluation import test_gp
+from fueling.control.dynamic_model.gp_regression.dataset import GPDataSet
+from fueling.control.dynamic_model.gp_regression.evaluation import test_gp
+from fueling.control.dynamic_model.gp_regression.gaussian_process import GaussianProcess
+from fueling.control.dynamic_model.gp_regression.train import train_gp
 
 
 def launch(args):

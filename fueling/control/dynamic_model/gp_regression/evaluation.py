@@ -13,8 +13,8 @@ import pyro
 import pyro.contrib.gp as gp
 import torch
 
-from dataset import GPDataSet
-from train import train_gp, DeepEncodingNet
+from fueling.control.dynamic_model.gp_regression.dataset import GPDataSet
+from fueling.control.dynamic_model.gp_regression.train import train_gp, DeepEncodingNet
 
 
 def test_gp(args, dataset, GaussianProcess):
