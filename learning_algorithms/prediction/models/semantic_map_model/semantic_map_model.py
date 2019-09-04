@@ -130,7 +130,8 @@ class SemanticMapLoss():
 
     def loss_info(self, y_pred, y_true):
         out = y_pred - y_true
-        out = torch.mean(out ** 2)
+        out = torch.sqrt(torch.sum(out ** 2, 2))
+        out = torch.mean(out)
         return out
 
 
