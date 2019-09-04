@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 import os
-import sys
 
-from keras.models import load_model
-from scipy import interpolate
-from scipy.signal import savgol_filter
 import colored_glog as glog
 import h5py
 import numpy as np
+from keras.models import load_model
+from scipy import interpolate
 
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
