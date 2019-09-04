@@ -1,30 +1,12 @@
-###############################################################################
-# Copyright 2019 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
+#!/usr/bin/env python
+"""Network utils."""
 
 import torch
 import torch.nn as nn
 
-'''  '''
-
 
 def generate_cnn1d(dim_list):
     return
-
-
-'''  '''
 
 
 def generate_mlp(dim_list, last_layer_nonlinear=True, dropout=0.0):
@@ -39,9 +21,6 @@ def generate_mlp(dim_list, last_layer_nonlinear=True, dropout=0.0):
         return nn.Sequential(*layers[:-2])
 
 
-'''  '''
-
-
 def generate_lstm_states(hidden_size, bilateral=False):
     h0 = torch.zeros(1, hidden_size)
     c0 = torch.zeros(1, hidden_size)
@@ -50,9 +29,6 @@ def generate_lstm_states(hidden_size, bilateral=False):
     h0 = nn.Parameter(h0, requires_grad=True)
     c0 = nn.Parameter(c0, requires_grad=True)
     return h0, c0
-
-
-'''  '''
 
 
 def generate_lstm(input_size, hidden_size, bilateral=False):

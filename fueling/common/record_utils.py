@@ -1,5 +1,5 @@
-"""Cyber records related utils."""
 #!/usr/bin/env python
+"""Cyber records related utils."""
 
 import collections
 import fnmatch

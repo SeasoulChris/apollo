@@ -1,5 +1,5 @@
-"""Time related utils."""
 #!/usr/bin/env python
+"""Time related utils."""
 
 import datetime
 import time

@@ -1,5 +1,5 @@
-"""Partners."""
 #!/usr/bin/env python
+"""Partners."""
 
 import collections
 

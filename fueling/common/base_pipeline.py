@@ -1,5 +1,6 @@
-"""Fueling base pipeline."""
 #!/usr/bin/env python
+"""Fueling base pipeline."""
+
 import os
 import sys
 

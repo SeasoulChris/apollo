@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Protobuf utils."""
 
 import google.protobuf.text_format as text_format

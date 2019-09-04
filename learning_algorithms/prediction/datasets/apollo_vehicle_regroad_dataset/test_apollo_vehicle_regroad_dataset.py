@@ -1,41 +1,11 @@
-###############################################################################
-# Copyright 2019 The Apollo Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-###############################################################################
+#!/usr/bin/env python
 
-import argparse
 import cv2 as cv
-import logging
-import numpy as np
-import os
-import torch
-import math
 import numpy as np
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset, DataLoader
 
-import learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset \
-    as apollo_vehicle_regroad_dataset
-
-from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset \
-    as ApolloVehicleRegularRoadDataset
+from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset as ApolloVehicleRegularRoadDataset
 from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
 
 

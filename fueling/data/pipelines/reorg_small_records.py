@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Reorg small records."""
+
 import collections
 import os
 

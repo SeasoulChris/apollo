@@ -1,5 +1,5 @@
-"""Baidu BOS utils."""
 #!/usr/bin/env python
+"""Baidu BOS utils."""
 
 import os
 import string

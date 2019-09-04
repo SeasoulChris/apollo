@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """This script generates video files from records and decode them into images"""
 
 import ast

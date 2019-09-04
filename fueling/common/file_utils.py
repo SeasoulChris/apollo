@@ -1,5 +1,5 @@
-"""File related utils."""
 #!/usr/bin/env python
+"""File related utils."""
 
 import errno
 import os

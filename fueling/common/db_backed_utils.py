@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 DB-backed utils.
 
@@ -9,9 +10,6 @@ DB-backed utils.
 4. The output is generally a dict which may NOT contain all elements. You should
    handle missing data by yourself.
 """
-#!/usr/bin/env python
-
-import colored_glog as glog
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta

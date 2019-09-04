@@ -1,14 +1,9 @@
+#!/usr/bin/env python
+
 import copy
-import numpy as np
-import os
-import math
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
 from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
 

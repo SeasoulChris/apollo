@@ -13,11 +13,9 @@ Run with:
 
 # Standard packages
 import pprint
-import time
 
 # Third-party packages
 from absl import flags
-import colored_glog as glog
 
 # Apollo packages
 from cyber_py.record import RecordReader

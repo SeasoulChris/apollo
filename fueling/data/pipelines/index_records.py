@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Index records."""
+
 import collections
 import os
 

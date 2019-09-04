@@ -1,11 +1,8 @@
-"""Email notifications utils."""
 #!/usr/bin/env python
+"""Email notifications utils."""
 
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import binascii
 import os
-import smtplib
 
 import colored_glog as glog
 import requests

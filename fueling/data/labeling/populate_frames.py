@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """This script extracts sensor messages for labeling"""
 
 from collections import Counter

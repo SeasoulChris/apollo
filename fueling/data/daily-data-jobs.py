@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Wrapper of daily jobs."""
+
 from absl import app
 
 from fueling.data.pipelines.generate_small_records import GenerateSmallRecords

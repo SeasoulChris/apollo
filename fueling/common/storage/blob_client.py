@@ -1,5 +1,6 @@
-"""Azure Blob utils."""
 #!/usr/bin/env python
+"""Azure Blob utils."""
+
 import os
 
 from azure.storage.blob import BlockBlobService

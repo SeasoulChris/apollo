@@ -1,5 +1,5 @@
-"""H5 utils."""
 #!/usr/bin/env python
+"""H5 utils."""
 
 import h5py
 import numpy as np

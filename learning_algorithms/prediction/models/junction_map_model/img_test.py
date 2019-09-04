@@ -1,7 +1,5 @@
-import argparse
-import logging
-import numpy as np
-import os
+#!/usr/bin/env python
+
 import torch
 
 from learning_algorithms.prediction.models.junction_map_model.junction_map_model import *

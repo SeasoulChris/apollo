@@ -5,7 +5,6 @@ This is a module to run perception benchmark on lidar data
 
 import datetime
 import os
-import time
 
 import colored_glog as glog
 

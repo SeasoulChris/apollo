@@ -1,5 +1,6 @@
-"""Common object storage client utils."""
 #!/usr/bin/env python
+"""Common object storage client utils."""
+
 import os
 
 

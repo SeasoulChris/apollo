@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Utils classes and functions to support populating frames"""
 
 import gc
