@@ -4,9 +4,10 @@
 # Usage:
 #   tools/autopep8.sh [path]
 
+CMD="autopep8 --in-place --max-line-length 100"
+
 function FixDir {
-  find "$1" -type f -name '*.py' -exec \
-      autopep8 --in-place --max-line-length 100 '{}' \;
+  find "$1" -type f -name '*.py' -exec ${CMD} '{}' \;
 }
 
 PATH_ARG=$1
@@ -16,5 +17,5 @@ if [ -z "${PATH_ARG}" ]; then
 elif [ -d "${PATH_ARG}" ]; then
   FixDir "${PATH_ARG}"
 else
-  autopep8 --in-place --max-line-length 100 "${PATH_ARG}"
+  ${CMD} "${PATH_ARG}"
 fi

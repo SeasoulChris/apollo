@@ -59,7 +59,7 @@ class KAISTDataset(Dataset):
 
     def get_filter_data(self, idx):
         """Get the filter data from the dataset"""
-        if type(idx) != int:
+        if not isinstance(idx, int):
             idx = self.datasets.index(idx)
         pickle_dict = self[idx]
         t = pickle_dict['t']
@@ -77,13 +77,13 @@ class KAISTDataset(Dataset):
 
     def get_ground_truth_data(self, idx):
         """Get the ground truth data from the dataset"""
-        pickle_dict = self[self.datasets.index(idx) if type(idx) != int else idx]
+        pickle_dict = self[self.datasets.index(idx) if not isinstance(idx, int) else idx]
         return pickle_dict['t'], pickle_dict['chi']
 
     def get_test_data(self, idx, gp_name):
         """Get the test data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
-        dataset = self.datasets_test[idx] if type(idx) == int else idx
+        dataset = self.datasets_test[idx] if isinstance(idx, int) else idx
         pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]
@@ -96,7 +96,7 @@ class KAISTDataset(Dataset):
     def get_validation_data(self, idx, gp_name):
         """Get the cross validation data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
-        dataset = self.datasets_validation[idx] if type(idx) == int else idx
+        dataset = self.datasets_validation[idx] if isinstance(idx, int) else idx
         pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]
@@ -109,7 +109,7 @@ class KAISTDataset(Dataset):
     def get_train_data(self, idx, gp_name):
         """Get the training data from the dataset"""
         var = "odo_fog" if gp_name == "GpOdoFog" else "imu"
-        dataset = self.datasets_train[idx] if type(idx) == int else idx
+        dataset = self.datasets_train[idx] if isinstance(idx, int) else idx
         pickle_dict = self[self.datasets.index(dataset)]
         u = pickle_dict["u_" + var]
         y = pickle_dict["y_" + var]

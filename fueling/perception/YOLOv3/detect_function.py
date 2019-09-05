@@ -14,7 +14,7 @@ def yolo_head(feature_maps, anchors, num_classes,
     :param anchors: num of anchors for each scale shape=(k,2)
     :param num_classes: integer
     :param input_shape: shape of input tensor to the network
-    :return: 
+    :return:
         grid: (cel_row, cel_col, 1, 2)
         feature_maps_reshape: (bs, cel_row, cel_col, anchors_per_box, 10+num_cls)
         box_xy:  [bs, cel_row, cel_col, anchors_per_box, 2], 2: x,y center point of BB
@@ -142,7 +142,7 @@ def yolo_head(feature_maps, anchors, num_classes,
         flat_idx_bin = tf.reshape(flat_idx_bin,
                                   [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
         # (bs, cel_row, cel_col, anchors_per_cel, 2)
-        flat_idx_bin = tf.concat([flat_idx_bin, flat_idx_bin+1], axis=-1)
+        flat_idx_bin = tf.concat([flat_idx_bin, flat_idx_bin + 1], axis=-1)
         # (bs*cel_row*cel_col*anchors_per_cel*2)
         flat_idx_bin = tf.reshape(flat_idx_bin, [-1])
         feature_flat_cs = tf.reshape(box_cs, [-1])
@@ -154,7 +154,7 @@ def yolo_head(feature_maps, anchors, num_classes,
         principle_angle = 2 * np.pi / num_angle_bins
         box_angle = box_atan + \
             tf.reshape(tf.add(tf.scalar_mul(principle_angle, tf.to_float(bins)),
-                              principle_angle/2),
+                              principle_angle / 2),
                        [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
         box_cs = tf.concat([tf.cos(box_angle), tf.sin(box_angle)], axis=-1)
 

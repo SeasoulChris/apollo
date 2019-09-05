@@ -67,7 +67,7 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
                                   (bs,h//16,w//16,anchors_per_cel, 10+numclass),
                                   (bs,h//8,w//8, anchors_per_cel, 10+numclass)]
     :param anchors: array, shape=(T, 2), wh
-    :param num_classes: 
+    :param num_classes:
     :param ignore_thresh:float, the iou threshold whether to ignore object confidence loss
     :return: loss
     """
@@ -343,7 +343,7 @@ def box_IoU(b1, b2):
 
     with tf.name_scope('Intersection'):
         """
-        Calculate 2 corners: {left bottom, right top} 
+        Calculate 2 corners: {left bottom, right top}
         based on BB1, BB2 and area of this box
         """
         # (x,x,3,1,2), (1,n,2)->(x, x, 3, n, 2)

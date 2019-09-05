@@ -13,9 +13,9 @@ def random_hsv_shift(img, low=0.8, high=1.2):
     """
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     hsv[:, :, 1] = (np.minimum(np.floor(hsv[:, :, 1] * random.uniform(low, high)), 255))\
-                   .astype(dtype=np.uint8)
+        .astype(dtype=np.uint8)
     hsv[:, :, 2] = (np.minimum(np.floor(hsv[:, :, 2] * random.uniform(low, high)), 255))\
-                   .astype(dtype=np.uint8)
+        .astype(dtype=np.uint8)
     return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
 
 
@@ -23,7 +23,7 @@ def random_crop(img, low=0.8):
     """
     Randomly crop the image up to the range of (low, 1) of the original image size.
     Input:
-    img: a numpy array image 
+    img: a numpy array image
     """
     crop_scale = random.uniform(0.8, 1)
     crop_width = np.floor(img.shape[1] * crop_scale).astype(np.int32)
@@ -36,7 +36,7 @@ def random_crop(img, low=0.8):
 
 def random_crop_bbox(box, start_x, start_y, crop_width, crop_height):
     """
-    Crop a bounding box according to the crop of the image. 
+    Crop a bounding box according to the crop of the image.
     Input:
     box: a numpy array of box [x0, y0, x1, y1]
     start_x: the top_left x of the crop.
@@ -44,7 +44,7 @@ def random_crop_bbox(box, start_x, start_y, crop_width, crop_height):
     crop_width: the crop wdith.
     crop_height: the crop height.
     Return:
-    None if the bbox is invalid after cropping. 
+    None if the bbox is invalid after cropping.
     list -> [x0, y0, x1, y1] of the new cropped bbox.
     """
     x0, y0, x1, y1 = box
@@ -62,13 +62,13 @@ def random_crop_bbox(box, start_x, start_y, crop_width, crop_height):
 
 def random_jitter(box, jitter=0.1):
     """
-    Randomly jitter the bbounding box. 
+    Randomly jitter the bbounding box.
     Input:
     box: a numpy array of box [x0, y0, x1, y1]
     jitter: upper bound of box jittering.
     Return:
     The jittered box [x0, y0, x1, y1], note they may go below 0 or beyond dimensions of image
-    """     
+    """
     x0, y0, x1, y1 = box
     jitter_width = (x1 - x0 + 1) * jitter
     jitter_height = (y1 - y0 + 1) * jitter
@@ -78,7 +78,7 @@ def random_jitter(box, jitter=0.1):
     x1_var = random.uniform(-jitter_width / 2.0, jitter_width / 2.0)
     y1_var = random.uniform(-jitter_height / 2.0, jitter_height / 2.0)
     return [x0 + x0_var, y0 + y0_var, x1 + x1_var, y1 + y1_var]
-    
+
 
 def flip_image_lr(image):
     """

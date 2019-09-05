@@ -72,13 +72,13 @@ class GpOdoFog(Parameterized):
         """Un-normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x_normalized)
         x_std = self.normalize_factors[var + "_std"].expand_as(x_normalized)
-        return x_normalized*x_std + x_loc  # x
+        return x_normalized * x_std + x_loc  # x
 
     def normalize(self, x, var="u_odo_fog"):
         """Normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x)
         x_std = self.normalize_factors[var + "_std"].expand_as(x)
-        return (x-x_loc)/x_std  # x_normalized
+        return (x - x_loc) / x_std  # x_normalized
 
     def model(self):
         """Gaussian process model"""
@@ -163,7 +163,7 @@ class GpOdoFog(Parameterized):
     def integrate_odo_fog(self, u_odo, u_fog, delta_t):
         """Integrate the odometry and fiber optic gyro"""
         if self.nclt:
-            v = 1/2 * (u_odo[:, 0] + u_odo[:, 1])
+            v = 1 / 2 * (u_odo[:, 0] + u_odo[:, 1])
         else:
             v, _ = self.encoder2speed(u_odo, delta_t)
         xi = u_odo.new_zeros(u_odo.shape[0], 6)
@@ -183,7 +183,7 @@ class GpOdoFog(Parameterized):
         d_r = np.pi * r_r * u_odo[:, 1] / res
         lin_speed = (d_l + d_r) / 2
         ang_speed = (d_l - d_r) / a
-        return lin_speed/delta_t, ang_speed/delta_t
+        return lin_speed / delta_t, ang_speed / delta_t
 
     def box_minus(self, chi_1, chi_2):
         """Box minus operation"""
@@ -207,14 +207,14 @@ class GpImu(Parameterized):
         """Un-normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x_normalized)
         x_std = self.normalize_factors[var + "_std"].expand_as(x_normalized)
-        x = x_normalized*x_std + x_loc
+        x = x_normalized * x_std + x_loc
         return x
 
     def normalize(self, x, var="u_imu"):
         """Normalize the data"""
         x_loc = self.normalize_factors[var + "_loc"].expand_as(x)
         x_std = self.normalize_factors[var + "_std"].expand_as(x)
-        x_normalized = (x-x_loc)/x_std
+        x_normalized = (x - x_loc) / x_std
         return x_normalized
 
     def model(self):
@@ -315,7 +315,7 @@ def preprocessing(args, dataset, gp):
         mate_translation = mate_translation / validation_length
         mate_rotation = mate_rotation / validation_length
         mate_validation = {'mate_translation': mate_translation,
-                           'mate_rotation':  mate_rotation}
+                           'mate_rotation': mate_rotation}
 
         mate_translation = 0
         mate_rotation = 0
@@ -327,7 +327,7 @@ def preprocessing(args, dataset, gp):
         mate_translation = mate_translation / test_length
         mate_rotation = mate_rotation / test_length
         mate_test = {'mate_translation': mate_translation,
-                     'mate_rotation':  mate_rotation}
+                     'mate_rotation': mate_rotation}
 
         y_odo_fog_std = y_odo_fog_std.mean(dim=0).sqrt()
         y_odo_fog_std[y_odo_fog_std == 0] = 1
@@ -385,9 +385,9 @@ def preprocessing(args, dataset, gp):
             rmse_delta_v += (y_diff[:, 3:6] ** 2).sum()
             rmse_delta_p += (y_diff[:, 6:9] ** 2).sum()
             test_length += y_diff.shape[0]
-        rmse_delta_R = (rmse_delta_R/test_length).sqrt()
-        rmse_delta_v = (rmse_delta_v/test_length).sqrt()
-        rmse_delta_p = (rmse_delta_p/test_length).sqrt()
+        rmse_delta_R = (rmse_delta_R / test_length).sqrt()
+        rmse_delta_v = (rmse_delta_v / test_length).sqrt()
+        rmse_delta_p = (rmse_delta_p / test_length).sqrt()
         rmse_test = {'rmse_delta_R': rmse_delta_R,
                      'rmse_delta_v': rmse_delta_v,
                      'rmse_delta_p': rmse_delta_p}
@@ -476,7 +476,7 @@ def train_gp(args, dataset, gp_class):
         def fnet_fn(x):
             return pyro.module("FNET", fnet)(x)
 
-        lik = gp.likelihoods.Gaussian(variance=0.1*torch.ones(6, 1))
+        lik = gp.likelihoods.Gaussian(variance=0.1 * torch.ones(6, 1))
         # lik = MultiVariateGaussian(name='lik_f', dim=6)
         # if lower_triangular_constraint is implemented
         kernel_origin = gp.kernels.Matern52(input_dim=args.kernel_dim,

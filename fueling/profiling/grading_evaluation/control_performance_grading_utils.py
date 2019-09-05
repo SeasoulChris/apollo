@@ -455,7 +455,7 @@ def compute_ending(grading_mtx, arg):
     static_stop_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]]
     for idx in range(1, grading_mtx.shape[0]):
         if (grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]] -
-                grading_mtx[idx-1, FEATURE_IDX[arg.ending_time_name]] <= 1.0):
+                grading_mtx[idx - 1, FEATURE_IDX[arg.ending_time_name]] <= 1.0):
             static_stop_time[-1] = grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]]
         else:
             static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.ending_feature_name]]) /
@@ -519,7 +519,7 @@ def compute_mean(grading_mtx, arg):
 
 def get_std_value(grading_column):
     """Calculate the standard deviation value"""
-    return (sum(val**2 for val in grading_column) / (len(grading_column)-1)) ** 0.5
+    return (sum(val**2 for val in grading_column) / (len(grading_column) - 1)) ** 0.5
 
 
 def filter_value(grading_mtx, column_name, threshold, filter_mode=0):
@@ -667,11 +667,11 @@ def highlight_gradings(task, grading_file):
                 if (len(gradings) > 0):
                     for idx in range(len(gradings)):
                         if gradings[idx] in highlight_std_items:
-                            std_scores.append("=".join([gradings[idx], gradings[idx+1]]))
-                            std_samples.append("=".join([gradings[idx], gradings[idx+2]]))
+                            std_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
+                            std_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
                         if gradings[idx] in highlight_peak_items:
-                            peak_scores.append("=".join([gradings[idx], gradings[idx+1]]))
-                            peak_samples.append("=".join([gradings[idx], gradings[idx+2]]))
+                            peak_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
+                            peak_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
             highlight_scores = std_scores + ["____________________"] + peak_scores + ["<br />"]
             highlight_samples = std_samples + ["____________________"] + peak_samples + ["<br />"]
     return (highlight_scores, highlight_samples)

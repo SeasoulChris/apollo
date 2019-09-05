@@ -42,8 +42,8 @@ def execute_task(source_dir):
     command = '{} --cloud={} --result={} --groundtruth={} \
                --loading_thread_num=4 --evaluation_thread_num=4 --parallel_processing_num=4 \
                --is_folder {} --reserve="{}" 2>&1 | tee /apollo/{}'.format(
-                   executable_bin, pcd_file_path, saved_file_path, label_file_path, 
-                   "false", "JACCARD:0.5", date_time)
+        executable_bin, pcd_file_path, saved_file_path, label_file_path,
+        "false", "JACCARD:0.5", date_time)
     glog.info('perception executable command is {}'.format(command))
     return_code = os.system(command)
     glog.info("return code for benchmark is {}".format(return_code))

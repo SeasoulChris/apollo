@@ -252,16 +252,16 @@ class training:
         or raw string KITTI format.
         """
         def obj2string(gt=None, dt=None):
-            if gt == None and dt == None:
+            if gt is None and dt is None:
                 raise RuntimeError("Both gt and dt are None. Either gt or dt must be provides.")
-            if dt != None:
+            if dt is not None:
                 line = dt.type + " 0 0 0 " + \
                     (' ').join([str(round(x, 2)) for x in dt.box2d]) + ' ' + \
                     (' ').join([str(dt.h), str(dt.w), str(dt.l)]) + ' ' + \
                     (' ').join([str(x) for x in list(dt.t)]) + ' ' + \
                     str(dt.ry) + \
                     ' ' + str(round(dt.score, 2))
-            elif gt != None:
+            elif gt is not None:
                 line = gt.type + " " + str(gt.truncation) + " " + \
                     str(gt.occlusion) + " " + str(gt.alpha) + " " + \
                     (' ').join([str(round(x, 2)) for x in gt.box2d]) + ' ' + \
@@ -293,7 +293,7 @@ class training:
                     beta = interactor.local_angle_to_car_yaw(local_angle, obj)
                     obj.ry = math.radians(beta)
                     translation = interactor.compute_translation(obj)
-                    if translation != None:
+                    if translation is not None:
                         obj.t = translation
                     line = obj2string(gt=None, dt=obj)
                     detection_string_list_image.append(line)
@@ -306,7 +306,7 @@ class training:
                                       'image_id': self.image_id_map[image_names[i]],
                                       'score': score})
             detection_string_list_batch.append(detection_string_list_image)
-        if gt_obj_batch != None:
+        if gt_obj_batch is not None:
             gt_string_list_batch = []
             for objs_image in gt_obj_batch:
                 lines = [obj2string(gt=obj, dt=None) for obj in objs_image]
@@ -395,7 +395,7 @@ class training:
                         print ("=======Number of variables to train : {}========"
                                .format(len(variables_to_train)))
 
-                    grads, optimizer = self._init_optimizer(loss+regularization_loss,
+                    grads, optimizer = self._init_optimizer(loss + regularization_loss,
                                                             start_learning_rate=LEARNING_RATE,
                                                             decay_steps=DECAY_STEPS,
                                                             decay_rate=DECAY_RATE,

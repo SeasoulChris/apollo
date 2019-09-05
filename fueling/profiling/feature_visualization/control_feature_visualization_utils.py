@@ -52,7 +52,7 @@ def clean_data(data, seq):
         idx_h = seq[int(length * (1 - 0.05 * i) - 1)]
         idx_l = seq[int(length * (0.05 * i))]
         scope = data[idx_h] - data[idx_l]
-        idx_h_partial = seq[int(length * (1-0.05 * (i + 1)) - 1)]
+        idx_h_partial = seq[int(length * (1 - 0.05 * (i + 1)) - 1)]
         idx_l_partial = seq[int(length * (0.05 * (i + 1)))]
         scope_partial = data[idx_h_partial] - data[idx_l_partial]
         if (scope <= 2 * scope_partial):

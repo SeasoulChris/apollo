@@ -310,7 +310,8 @@ class LabelGenerator(object):
                                     lane_sequence.label = 4
                                     lane_sequence.time_to_lane_edge = -1.0
                                     lane_sequence.time_to_lane_center = -1.0
-                                # Obstacle is following this original lane but is never at lane-center:
+                                # Obstacle is following this original lane but is never at
+                                # lane-center:
                                 else:
                                     lane_sequence.label = 2
                                     lane_sequence.time_to_lane_edge = -1.0

@@ -64,7 +64,8 @@ class ControlProfilingVisualization(BasePipeline):
          .mapValues(lambda task: glob.glob(os.path.join(task, '*.hdf5')))
          # PairRDD(target_dir, list of data_array),
          .mapValues(visual_utils.generate_segments)
-         # PairRDD(target_dir, data_array), by merging the arraies within the "segments" into one array
+         # PairRDD(target_dir, data_array), by merging the arraies within the
+         # "segments" into one array
          .mapValues(visual_utils.generate_data)
          # PairRDD(target_dir, data_array)
          .foreach(visual_utils.plot_h5_features_hist))

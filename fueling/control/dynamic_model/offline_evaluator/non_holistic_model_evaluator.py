@@ -98,28 +98,28 @@ def location(scenario_segments, platform_path):
     for index in range(1, len(location_x)):
         # location from speed (acc from speed)
         segment_d[index, segment_index["x"]] = (
-            segment_d[index-1, segment_index["x"]] +
-            segment_d[index-1, segment_index["v_x"]] * DELTA_T)
+            segment_d[index - 1, segment_index["x"]] +
+            segment_d[index - 1, segment_index["v_x"]] * DELTA_T)
         segment_d[index, segment_index["y"]] = (
-            segment_d[index-1, segment_index["y"]] +
-            segment_d[index-1, segment_index["v_y"]] * DELTA_T)
+            segment_d[index - 1, segment_index["y"]] +
+            segment_d[index - 1, segment_index["v_y"]] * DELTA_T)
         # location from acc(speed)
         segment_dd[index, segment_index["x"]] = \
-            segment_dd[index-1, segment_index["x"]] + \
-            segment_dd[index-1, segment_index["v_x"]] * DELTA_T
+            segment_dd[index - 1, segment_index["x"]] + \
+            segment_dd[index - 1, segment_index["v_x"]] * DELTA_T
         segment_dd[index, segment_index["y"]] = \
-            segment_dd[index-1, segment_index["y"]] + \
-            segment_dd[index-1, segment_index["v_y"]] * DELTA_T
+            segment_dd[index - 1, segment_index["y"]] + \
+            segment_dd[index - 1, segment_index["v_y"]] * DELTA_T
         # location from origin IMU
-        tmp_v_x = segment_origin[index-1, segment_index["v_x"]]
-        tmp_v_y = segment_origin[index-1, segment_index["v_y"]]
+        tmp_v_x = segment_origin[index - 1, segment_index["v_x"]]
+        tmp_v_y = segment_origin[index - 1, segment_index["v_y"]]
         glog.info("tmp_v_x: {}".format(tmp_v_x))
-        tmp_x[index] = tmp_x[index-1] + tmp_v_x * DELTA_T +\
-            1/2 * imu_scaling["pp7"] * segment_origin[index -
-                                                      1, segment_index["a_x"]] * DELTA_T * DELTA_T
-        tmp_y[index] = tmp_y[index-1] + tmp_v_y * DELTA_T +\
-            1/2 * imu_scaling["pp7"] * segment_origin[index -
-                                                      1, segment_index["a_y"]] * DELTA_T * DELTA_T
+        tmp_x[index] = tmp_x[index - 1] + tmp_v_x * DELTA_T +\
+            1 / 2 * imu_scaling["pp7"] * segment_origin[index -
+                                                        1, segment_index["a_x"]] * DELTA_T * DELTA_T
+        tmp_y[index] = tmp_y[index - 1] + tmp_v_y * DELTA_T +\
+            1 / 2 * imu_scaling["pp7"] * segment_origin[index -
+                                                        1, segment_index["a_y"]] * DELTA_T * DELTA_T
     pdf_file_path = os.path.join(platform_path, "location{}.pdf".format(scenario))
     glog.info("tmp_x shape {}".format(tmp_x.shape))
     with PdfPages(pdf_file_path) as pdf_file:
@@ -167,23 +167,23 @@ def speed(scenario_segments, platform_path):
                            np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
         else:
             segment_dd[index, segment_index["v_x"]] = (
-                segment_dd[index-1, segment_index["v_x"]] +
-                segment_dd[index-1, segment_index["a_x"]] * DELTA_T)
+                segment_dd[index - 1, segment_index["v_x"]] +
+                segment_dd[index - 1, segment_index["a_x"]] * DELTA_T)
             segment_dd[index, segment_index["v_y"]] = (
-                segment_dd[index-1, segment_index["v_y"]] +
-                segment_dd[index-1, segment_index["a_y"]] * DELTA_T)
+                segment_dd[index - 1, segment_index["v_y"]] +
+                segment_dd[index - 1, segment_index["a_y"]] * DELTA_T)
 
-            a_d = (segment_d[index-1, segment_index["a_x"]] *
-                   np.cos(normalize_angle(segment_d[index-1, segment_index["heading"]])) +
-                   segment_d[index-1, segment_index["a_y"]] *
-                   np.sin(normalize_angle(segment_d[index-1, segment_index["heading"]])))
-            v_d[index] = v_d[index-1] + a_d * DELTA_T
+            a_d = (segment_d[index - 1, segment_index["a_x"]] *
+                   np.cos(normalize_angle(segment_d[index - 1, segment_index["heading"]])) +
+                   segment_d[index - 1, segment_index["a_y"]] *
+                   np.sin(normalize_angle(segment_d[index - 1, segment_index["heading"]])))
+            v_d[index] = v_d[index - 1] + a_d * DELTA_T
 
             a_dd = (segment_dd[index - 1, segment_index["a_x"]] *
                     np.cos(normalize_angle(segment_dd[index, segment_index["heading"]])) +
                     segment_dd[index - 1, segment_index["a_y"]] *
                     np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
-            v_dd[index] = v_dd[index-1] + a_dd * DELTA_T
+            v_dd[index] = v_dd[index - 1] + a_dd * DELTA_T
 
     # plot
     pdf_file_path = os.path.join(platform_path, "speed{}.pdf".format(scenario))

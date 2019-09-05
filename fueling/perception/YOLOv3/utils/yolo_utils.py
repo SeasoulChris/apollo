@@ -28,7 +28,7 @@ def letter_box_pos_to_original_pos(letter_pos, current_size, ori_image_size):
     letter_pos = np.asarray(letter_pos, dtype=np.float)
     current_size = np.asarray(current_size, dtype=np.float)
     ori_image_size = np.asarray(ori_image_size, dtype=np.float)
-    final_ratio = min(current_size[0]/ori_image_size[0], current_size[1]/ori_image_size[1])
+    final_ratio = min(current_size[0] / ori_image_size[0], current_size[1] / ori_image_size[1])
     pad = 0.5 * (current_size - final_ratio * ori_image_size)
     pad = pad.astype(np.int32)
     to_return_pos = (letter_pos - pad) / final_ratio
@@ -62,7 +62,7 @@ def _iou(box1, box2):
     int_x1 = min(b1_x1, b2_x1)
     int_y1 = min(b1_y1, b2_y1)
 
-    int_area = max(int_x1-int_x0, 0) * max(int_y1-int_y0, 0)
+    int_area = max(int_x1 - int_x0, 0) * max(int_y1 - int_y0, 0)
 
     b1_area = (b1_x1 - b1_x0) * (b1_y1 - b1_y0)
     b2_area = (b2_x1 - b2_x0) * (b2_y1 - b2_y0)
@@ -136,11 +136,11 @@ def draw_boxes(boxes, img, cls_names, detection_size,
     boxes: dictionary cls_id -> list of objests. objects: (2d bbox, confidence, cshwl);
              2d bbox:xmin,ymin,xmax,ymax; cshwl: cos(local_angle), sin(local_angle), h, w, l.
     img: PIL img to plot boxes on
-    cls_names: dict cls_id -> class name. 
+    cls_names: dict cls_id -> class name.
     detection_size: network input image size. (width, height)
     orig_size: original image size. (width, height)
-    calib: a KITTI Calibration object 
-    is_letter_box_image: 
+    calib: a KITTI Calibration object
+    is_letter_box_image:
     cls_box_map: dict cls_id->list of 2d bbox of ground truth objects.
     """
     draw = ImageDraw.Draw(img)
@@ -158,10 +158,10 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                                            is_letter_box_image)
             if len(bboxs) < 20:
                 obj = Object([cls_names[cls], None, None, None,
-                              box_o[0]*original_width/detection_size[0],
-                              box_o[1]*original_height/detection_size[1],
-                              box_o[2]*original_width/detection_size[0],
-                              box_o[3]*original_height/detection_size[1],
+                              box_o[0] * original_width / detection_size[0],
+                              box_o[1] * original_height / detection_size[1],
+                              box_o[2] * original_width / detection_size[0],
+                              box_o[3] * original_height / detection_size[1],
                               cshwl[2], cshwl[3], cshwl[4],
                               None, None, None, None])
                 obj.score = score
@@ -169,7 +169,7 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                 beta = interactor.local_angle_to_car_yaw(local_angle, obj)
                 obj.ry = math.radians(beta)
                 translation = interactor.compute_translation(obj)
-                if translation != None:
+                if translation is not None:
                     obj.t = translation
                     points_cam = \
                         interactor.bbox_from_local_angle_translation_dimension(obj, local_angle)
@@ -205,15 +205,15 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
                        bin_overlap_frac, num_output_layers,
                        random_color_shift=False, color_shift_percentage=0.5,
                        random_crop_=False, random_flip=False,
-                       flip_chance=0.5,  random_jitter_=False,
-                       jitter_chance=0.5, jitter_percentage=0.1,  max_boxes=100):
+                       flip_chance=0.5, random_jitter_=False,
+                       jitter_chance=0.5, jitter_percentage=0.1, max_boxes=100):
     """
     params:
     file_path: path to txt label file. Each line in the file should be a bbox->
                (class_name, x*3, x_min, y_min, x_max, y_max, x*8, class_id, x*8)
-               [0:truncated, 1:occluded, 2:alpha, 3:x0, 4:y0, 5:x1, 6:y1, 
+               [0:truncated, 1:occluded, 2:alpha, 3:x0, 4:y0, 5:x1, 6:y1,
                 7:h, 8:w, 9:l, 10:X, 11:Y, 12:Z, 13:rotation_y]
-    image_dir: path to directory that contains all the images. The label txt file name 
+    image_dir: path to directory that contains all the images. The label txt file name
                should be the same with image names inside image_dir.
     input_shape: network input shape -> (input_height, input_width)
     anchors: array of shape (9 anchors, 2->w,h)
@@ -224,8 +224,8 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
               (0:4)-> xywh normalized w.r.t input width and height, objectness,
                       cos(alpha), sin(alpha), 3d_h, 3d_w, 3d_l, + probability_of_classes
     """
-    image_jpg_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0]+".jpg")
-    image_png_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0]+".png")
+    image_jpg_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0] + ".jpg")
+    image_png_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0] + ".png")
     if not os.path.exists(file_path):
         raise RuntimeError("Label file path : {} does not exist.".format(file_path))
     if os.path.exists(image_jpg_path):
@@ -239,7 +239,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     origin_image_size = image.size
     image_temp.close()
 
-    calib_path = os.path.join(calib_dir, os.path.basename(file_path).split('.')[0]+".txt")
+    calib_path = os.path.join(calib_dir, os.path.basename(file_path).split('.')[0] + ".txt")
     if not os.path.exists(calib_path):
         raise RuntimeError("Calibration file path : {} does not exist.".format(calib_path))
     calib = read_camera_params(calib_path)
@@ -249,8 +249,8 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     start_x, start_y, crop_width, crop_height = None, None, None, None
     flip_switch = random_flip and random.uniform(0.0, 1.0) < flip_chance
     if random_color_shift:
-        image_np = random_hsv_shift(image_np, low=1-color_shift_percentage,
-                                    high=1+color_shift_percentage)
+        image_np = random_hsv_shift(image_np, low=1 - color_shift_percentage,
+                                    high=1 + color_shift_percentage)
     if flip_switch:
         image_np = flip_image_lr(image_np)
     if random_crop_:
@@ -302,20 +302,20 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
                 # else:
                 #    continue
                 boxes[i, 0:5] = np.array([obj.xmin, obj.ymin, obj.xmax, obj.ymax, obj.type_id])
-                boxes[i, 0] = max(0, min(image_size[0]-1, boxes[i, 0]))
-                boxes[i, 2] = max(0, min(image_size[0]-1, boxes[i, 2]))
-                boxes[i, 1] = max(0, min(image_size[1]-1, boxes[i, 1]))
-                boxes[i, 3] = max(0, min(image_size[1]-1, boxes[i, 3]))
+                boxes[i, 0] = max(0, min(image_size[0] - 1, boxes[i, 0]))
+                boxes[i, 2] = max(0, min(image_size[0] - 1, boxes[i, 2]))
+                boxes[i, 1] = max(0, min(image_size[1] - 1, boxes[i, 1]))
+                boxes[i, 3] = max(0, min(image_size[1] - 1, boxes[i, 3]))
                 boxes[i, 5] = math.radians(interactor.angle_btw_car_and_2d_bbox(obj))
                 boxes[i, 6:9] = np.array([obj.h, obj.w, obj.l])
             else:
                 break
 
             # Convert 2d boxes to network input shape scale
-            boxes[i, 0] = (boxes[i, 0]*input_shape[0]/image_size[0]).astype(np.int32)
-            boxes[i, 2] = (boxes[i, 2]*input_shape[0]/image_size[0]).astype(np.int32)
-            boxes[i, 1] = (boxes[i, 1]*input_shape[1]/image_size[1]).astype(np.int32)
-            boxes[i, 3] = (boxes[i, 3]*input_shape[1]/image_size[1]).astype(np.int32)
+            boxes[i, 0] = (boxes[i, 0] * input_shape[0] / image_size[0]).astype(np.int32)
+            boxes[i, 2] = (boxes[i, 2] * input_shape[0] / image_size[0]).astype(np.int32)
+            boxes[i, 1] = (boxes[i, 1] * input_shape[1] / image_size[1]).astype(np.int32)
+            boxes[i, 3] = (boxes[i, 3] * input_shape[1] / image_size[1]).astype(np.int32)
             assert (np.array(boxes)[i, 0] < input_shape[0]).all()
             assert (np.array(boxes)[i, 2] < input_shape[0]).all()
             assert (np.array(boxes)[i, 1] < input_shape[1]).all()
@@ -353,7 +353,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                           num_angle_bins, bin_overlap_frac, num_output_layers):
     """
     Preprocess true boxes to training input format
-    :param true_boxes: array, shape=(bs, max_num_boxes, 9) 
+    :param true_boxes: array, shape=(bs, max_num_boxes, 9)
                        9-> (0:x_min, 1:y_min, 2:x_max, 3:y_max, 4:class_id, 5:ry, 6:h, 7:w, 8:l)
     :param input_shape: network input shape, array, wh, multiples of 32, shape = (2,)
     :param anchors: array, shape=(9 arches per cell, 2 -> w,h)
@@ -402,7 +402,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
         lower_bound = np.array([0.0])
         upper_bound = np.array([2 * np.pi])
     else:
-        lower_bound = np.array([x*principle_angle for x in range(num_angle_bins)])
+        lower_bound = np.array([x * principle_angle for x in range(num_angle_bins)])
         upper_bound = lower_bound + principle_angle
         lower_bound = lower_bound - principle_angle * bin_overlap_frac
         upper_bound = upper_bound + principle_angle * bin_overlap_frac
@@ -456,7 +456,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                     y_true[l][b, j, i, k, 4] = 1.0  # score = 1
                     # for 3D
                     y_true[l][b, j, i, k, 5 + c] = 1.0
-                    y_true[l][b, j, i, k, 5+int(num_classes)+3*c:5+int(num_classes)+3*c+3] = \
+                    y_true[l][b, j, i, k, 5 + int(num_classes) + 3 * c:5 + int(num_classes) + 3 * c + 3] = \
                         valid_objs[t, 6:9]
 
                     # angles
@@ -471,18 +471,18 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                             "obj angles should not fall into more than 2 angle bins.")
                     bins = np.where(angle_mask == True)[0]
                     regression_angles = np.array([valid_objs[t, 5] -
-                                                  (idx*principle_angle+(principle_angle/2))
+                                                  (idx * principle_angle + (principle_angle / 2))
                                                   for idx in bins])
                     min_idx = np.argmin([abs(ang) for ang in regression_angles])
                     primary_bin = bins[min_idx]
 
-                    y_true[l][b, j, i, k, 5+4*int(num_classes) + primary_bin] = 1.0
+                    y_true[l][b, j, i, k, 5 + 4 * int(num_classes) + primary_bin] = 1.0
                     for bin_idx, reg_ang in zip(bins, regression_angles):
                         y_true[l][b, j, i, k,
-                                  5+4*int(num_classes)+int(num_angle_bins)+2*bin_idx] = \
+                                  5 + 4 * int(num_classes) + int(num_angle_bins) + 2 * bin_idx] = \
                             np.cos(reg_ang)
                         y_true[l][b, j, i, k,
-                                  5+4*int(num_classes)+int(num_angle_bins)+2*bin_idx+1] = \
+                                  5 + 4 * int(num_classes) + int(num_angle_bins) + 2 * bin_idx + 1] = \
                             np.sin(reg_ang)
                     break
     return y_true

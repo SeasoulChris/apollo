@@ -64,7 +64,7 @@ class GenerateLabels(BasePipeline):
             label_gen.Label()
             glog.info('Successfuly labeled {}'.format(src_file))
             return 1
-        except:
+        except BaseException:
             glog.error('Failed to process {}'.format(src_file))
         return 0
 

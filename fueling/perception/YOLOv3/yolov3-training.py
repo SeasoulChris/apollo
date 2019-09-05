@@ -14,6 +14,7 @@ import fueling.common.bos_client as bos_client
 
 MAX_ITER = cfg.max_iter
 
+
 class Yolov3Training(BasePipeline):
     def __init__(self):
         BasePipeline.__init__(self, 'yolov3')
@@ -50,12 +51,12 @@ class Yolov3Training(BasePipeline):
 
         for i in range(MAX_ITER):
             data_temp = data.lookup(i)
-            image_data, y_true, cls_box_map, objs, calib = \
-              data_temp[0]
+            image_data, y_true, cls_box_map, objs, calib = data_temp[0]
             scale1, scale2, scale3 = y_true
             image_data = np.expand_dims(image_data, axis=0)
             temp_data = (image_data, scale1, scale2, scale3, cls_box_map, objs, calib)
             engine.step(temp_data)
+
 
 if __name__ == '__main__':
     Yolov3Training().main()

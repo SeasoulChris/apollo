@@ -87,7 +87,7 @@ class NCLTFilter():
         else:
             J_cor = torch.zeros(u_imu.shape[0], 9, 6)
         K_prefix, S = self.update_cov(J_cor, u_imu)
-        self.update_state(K_prefix, S, y-self.h_hat(u_odo))
+        self.update_state(K_prefix, S, y - self.h_hat(u_odo))
 
     def h_imu(self, u):
         """
@@ -103,9 +103,9 @@ class NCLTFilter():
             self.J[k, :3, :3] = delta_R_prev * self.delta_t
             self.J[k, 3:6, :3] = -delta_R_prev.mm(self.skew(u[k, 3:])) * self.delta_t
             self.J[k, 3:6, 3:6] = delta_R_prev * self.delta_t
-            self.J[k, 3:6, :3] = (-1/2 * delta_R_prev.mm(self.skew(u[k, 3:])) *
+            self.J[k, 3:6, :3] = (-1 / 2 * delta_R_prev.mm(self.skew(u[k, 3:])) *
                                   (self.delta_t ** 2))
-            self.J[k, 6:9, 3:6] = 1/2 * delta_R_prev * (self.delta_t ** 2)
+            self.J[k, 6:9, 3:6] = 1 / 2 * delta_R_prev * (self.delta_t ** 2)
             delta_R = delta_R_prev.mm(SO3.exp(u[k, :3] * self.delta_t).as_matrix())
             delta_v = delta_v_prev + delta_R.mv(u[k, 3:] * self.delta_t)
             delta_p = (delta_p_prev + delta_v * self.delta_t +
@@ -119,7 +119,7 @@ class NCLTFilter():
     def h_hat(self, u_odo):
         """Estimate the H value"""
         def odo2speed(u):
-            v = 1/2 * (u[0] + u[1])
+            v = 1 / 2 * (u[0] + u[1])
             return torch.Tensor([v * torch.cos(self.x_prev[5]),
                                  v * torch.sin(self.x_prev[5]),
                                  0])
@@ -137,7 +137,7 @@ class NCLTFilter():
         delta_R = SO3.from_matrix(R0.t().mm(Rend)).log()
         delta_v = R0.t().mv(v_end - v0 - self.g * self.Delta_t)
         delta_p = R0.t().mv(p_end - p0 - v0 * self.Delta_t -
-                            1/2 * self.g * (self.Delta_t ** 2))
+                            1 / 2 * self.g * (self.Delta_t ** 2))
 
         return torch.cat((delta_R, delta_v, delta_p), 0)
 
@@ -158,7 +158,7 @@ class NCLTFilter():
 
     def integrate_odo_fog(self, u_odo, u_fog, dt):
         """Integrate the odometry and fiber optic gyro data"""
-        v = 1/2 * (u_odo[0]+u_odo[1])
+        v = 1 / 2 * (u_odo[0] + u_odo[1])
         self.x[0] += v * torch.cos(self.x[5]) * dt
         self.x[1] += v * torch.sin(self.x[5]) * dt
         self.x[5] += u_fog.squeeze()
@@ -174,7 +174,7 @@ class NCLTFilter():
         """Porpagate covance matrix"""
         F = self.F
         G = self.G
-        v = 1/2 * (u_odo[0] + u_odo[1])
+        v = 1 / 2 * (u_odo[0] + u_odo[1])
         J = torch.Tensor([[0, 1], [-1, 0]])
         Rot = torch.Tensor([[self.x[5].cos(), self.x[5].sin()],
                             [-self.x[5].sin(), self.x[5].cos()]])
@@ -187,7 +187,7 @@ class NCLTFilter():
         A[1, 1] = self.x[3].cos()
         A[1, 2] = -self.x[3].sin()
         F[3:5, 6:9] = A * dt
-        B = torch.Tensor([[1/2, 1/2],  # v_l, v_r to v_forward
+        B = torch.Tensor([[1 / 2, 1 / 2],  # v_l, v_r to v_forward
                           [0, 0]])
         F[3, 3] = 1 + self.x[7] * self.x[3].sin() * self.x[4].tan() * dt
         F[3, 4] = ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos()) *
@@ -214,16 +214,16 @@ class NCLTFilter():
         J[-1, 3:6, 6:] = -J[0, 3:6, 6:]
         J[0, 6:9, 6:] = J[0, 6:9, 6:] * self.Delta_t
 
-        v = torch.Tensor([1/2 * (u_odo[0][0] + u_odo[0][1]), 0, 0])
+        v = torch.Tensor([1 / 2 * (u_odo[0][0] + u_odo[0][1]), 0, 0])
         H[:3, 3:6] = -Rot_prev.t().mm(Rot_new)
         H[:3, 9:12] = -Rot_prev.t()
         H[3:6, 9:12] = -Rot_prev.t().mm(self.skew(self.x[:3] - self.x_prev[:3] -
                                                   v * self.Delta_t -
-                                                  1/2 * self.g * self.Delta_t ** 2))
+                                                  1 / 2 * self.g * self.Delta_t ** 2))
         H[6:9, :3] = Rot_prev.t()
         H[6:9, 12:15] = -Rot_prev.t()
         H[6:9, 9:12] = self.skew(self.x[:3] - self.x_prev[:3] -
-                                 v * self.Delta_t - 1/2 * self.g * self.Delta_t ** 2)
+                                 v * self.Delta_t - 1 / 2 * self.g * self.Delta_t ** 2)
         return H, J
 
     def update_cov(self, J_cor, u_odo):
@@ -360,7 +360,7 @@ class KAISTFilter(NCLTFilter):
         A[1, 1] = self.x[3].cos()
         A[1, 2] = -self.x[3].sin()
         F[3:5, 6:9] = A * dt
-        B = torch.Tensor([[1/2, 1/2],  # v_l, v_r to v_forward
+        B = torch.Tensor([[1 / 2, 1 / 2],  # v_l, v_r to v_forward
                           [0, 0]])
         F[3, 3] = 1 + self.x[7] * self.x[3].sin() * self.x[4].tan() * dt
         F[3, 4] = 1 + ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos())

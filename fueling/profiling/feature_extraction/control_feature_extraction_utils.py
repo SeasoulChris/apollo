@@ -127,7 +127,8 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     glog.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
               .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0],
                       localization_mtx_rtn.shape[0]))
-    # Finally, rebuild the grading mtx with the control data combined with chassis and localizaiton data
+    # Finally, rebuild the grading mtx with the control data combined with
+    # chassis and localizaiton data
     if (control_mtx_rtn.shape[0] > 0):
         # First, merge the chassis data into control data matrix
         if (chassis_mtx_rtn.shape[1] > MODE_IDX['brake_chassis']):

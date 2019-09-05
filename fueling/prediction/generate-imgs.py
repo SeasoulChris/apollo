@@ -77,7 +77,7 @@ class GenerateImgs(BasePipeline):
                 cv.imwrite(filename, img)
                 glog.info('Successfuly write img to: ' + filename)
             return 1
-        except:
+        except BaseException:
             glog.error('Failed to process this frame.')
         return 0
 

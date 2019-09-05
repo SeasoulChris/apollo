@@ -76,7 +76,7 @@ def filter_classes(element):
     """
     Filter out classes that are not to be considered for
     training.
-    Input element: should be the output of function 
+    Input element: should be the output of function
       'process_data'.
     """
     id, element = element
@@ -85,7 +85,7 @@ def filter_classes(element):
         # Zero out elements in y_true
         for i, scale_label in enumerate(y_true):
             bat, cell_rows, cell_cols, anchors, cls = \
-                np.where(scale_label[..., 5:5+cfg.num_classes])
+                np.where(scale_label[..., 5:5 + cfg.num_classes])
 
             mask = ~np.isin(cls, cfg.classes_to_consider)
             y_true[i][bat[mask], cell_rows[mask],

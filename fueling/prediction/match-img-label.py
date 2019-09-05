@@ -46,7 +46,7 @@ class MatchImgLabel(BasePipeline):
             if len(sample_label) == 24:
                 glog.info("Keeping image: " + src_file)
                 return 1
-        except:
+        except BaseException:
             pass
         glog.info("Removing image: " + src_file)
         os.remove(src_file)

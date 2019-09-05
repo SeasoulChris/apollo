@@ -31,7 +31,7 @@ def read_camera_params(path):
 
 def read_kitti_label(path, class_name_id_map):
     """
-    [0:truncated, 1:occluded, 2:alpha, 3:x0, 4:y0, 5:x1, 6:y1, 
+    [0:truncated, 1:occluded, 2:alpha, 3:x0, 4:y0, 5:x1, 6:y1,
      7:h, 8:w, 9:l, 10:X, 11:Y, 12:Z, 13:rotation_y]
     """
     lines = read_txt(path)
@@ -70,7 +70,7 @@ class Camera(object):
 
     def translation_vector(self, X, Y, Z):
         """
-        Get the (3-by-1) translation vector. 
+        Get the (3-by-1) translation vector.
         X,Y,Z: the location of the object in the cam coor.
         Return: the translation to express points of obj coor in cam coor. shape = (3, 1)
                 obj_point in obj-coor + translation = obj_point expressed in cam-coor.
@@ -105,7 +105,7 @@ class Camera(object):
         """
         Project a point in cam coor to image plane.
         intrinsic: intrinsic matrix, shape=(3, 3)
-        points: points in cam coor, shape=(n, 3) 
+        points: points in cam coor, shape=(n, 3)
         return: xy coor in image, shape=(n, 2)
         """
         assert points.shape[1] == 3, "Shape of points must be (n, 3)"
@@ -119,7 +119,7 @@ class Camera(object):
     def back_project(self, pix_coor):
         """
         Compute the vector backprojected from camera thru a pixel coordiante.
-        pix_coor: np.array([[x], 
+        pix_coor: np.array([[x],
                             [y]]) of the pixel coordinate on the image plane. shape=(2, n)
         return: a direction vector of the back-projection. Have not been normalized. shape=(3, 1)
         """
@@ -143,7 +143,7 @@ class kitti_obj_cam_interaction(Camera):
     def object_3d_points_in_obj_coor(self, obj):
         """
         From the h,w,l of the obj, compute the coordinates of the
-            8 3d bbox points in the obj coor. 
+            8 3d bbox points in the obj coor.
         In the obj coor, x:forward, y:down, z:left.
             Origin at the center of the bottom of the object.
         Return: [front top left, top right, bottom right, bottom left,
@@ -151,10 +151,10 @@ class kitti_obj_cam_interaction(Camera):
                 shape = (8, 3)
         """
         h, w, l = obj.h, obj.w, obj.l
-        return np.array([[l/2, -h, w/2], [l/2, -h, -w/2],
-                         [l/2, 0, -w/2], [l/2, 0, w/2],
-                         [-l/2, -h, w/2], [-l/2, -h, -w/2],
-                         [-l/2, 0, -w/2], [-l/2, 0, w/2]])
+        return np.array([[l / 2, -h, w / 2], [l / 2, -h, -w / 2],
+                         [l / 2, 0, -w / 2], [l / 2, 0, w / 2],
+                         [-l / 2, -h, w / 2], [-l / 2, -h, -w / 2],
+                         [-l / 2, 0, -w / 2], [-l / 2, 0, w / 2]])
 
     def rotate_aboutY(self, angle, p):
         """
@@ -239,8 +239,8 @@ class kitti_obj_cam_interaction(Camera):
         cos = np.dot(bbox_direction_on_xz.transpose(), car_direction_on_xz) /\
             (np.linalg.norm(bbox_direction_on_xz, ord=2) *
              np.linalg.norm(car_direction_on_xz, ord=2))
-        side = car_direction_on_xz[0]*bbox_direction_on_xz[2] - \
-            car_direction_on_xz[2]*bbox_direction_on_xz[0]
+        side = car_direction_on_xz[0] * bbox_direction_on_xz[2] - \
+            car_direction_on_xz[2] * bbox_direction_on_xz[0]
         if side > 0:  # bbox_direction is on left of car_direction
             theta = 360 - math.degrees(math.acos(cos))
         else:
@@ -292,7 +292,7 @@ class kitti_obj_cam_interaction(Camera):
         Return:
         The 8 points of the 3d bbox. (n, 3)
         """
-        if local_angle and obj.ry == None:
+        if local_angle and obj.ry is None:
             alpha = self.local_angle_to_car_yaw(local_angle, obj)
             obj.ry = math.radians(alpha)
         points = self.transform_obj_to_camera(obj)
@@ -358,7 +358,7 @@ class kitti_obj_cam_interaction(Camera):
         """
         Compute translation of obj from 2d bbox, 3d bbox dimension and yaw.
         """
-        if (np.all([obj.h, obj.w, obj.l, obj.xmin, obj.ymin, obj.xmax, obj.ymax, obj.ry]) == None):
+        if np.all([obj.h, obj.w, obj.l, obj.xmin, obj.ymin, obj.xmax, obj.ymax, obj.ry]) is None:
             raise RuntimeError("obj need to have valid hwl, 2d bbox and ry")
 
         xmin, ymin, xmax, ymax = obj.box2d

@@ -27,17 +27,17 @@ class Object(object):
 
     def __init__(self, data):
         """
-        data: [0:obj_type, 1:truncation, 2:occlusion, 3:alpha, 
+        data: [0:obj_type, 1:truncation, 2:occlusion, 3:alpha,
                4:xmin, 5:ymin, 6:xmax, 7:ymax, 8:h, 9:w, 10:l,
                11:X, 12:Y, 13:Z, 14:ry, 15:score]
               obj_type -> string, other can be float or None.
         """
-        data[1:] = list(map(lambda x: float(x) if x != None else None, data[1:]))
+        data[1:] = list(map(lambda x: float(x) if x is not None else None, data[1:]))
         # extract label, truncation, occlusion
         self.type = data[0]  # 'Car', 'Pedestrian', ...
         self.truncation = data[1]  # truncated pixel ratio [0..1]
         # 0=visible, 1=partly occluded, 2=fully occluded, 3=unknown
-        self.occlusion = int(data[2]) if data[2] != None else None
+        self.occlusion = int(data[2]) if data[2] is not None else None
         self.alpha = data[3]  # object observation angle [-pi..pi]
 
         # extract 2d bounding box in 0-based coordinates
@@ -121,8 +121,8 @@ class Calibration(object):
         self.c_v = self.P[1, 2]
         self.f_u = self.P[0, 0]
         self.f_v = self.P[1, 1]
-        self.b_x = self.P[0, 3]/(-self.f_u)  # relative
-        self.b_y = self.P[1, 3]/(-self.f_v)
+        self.b_x = self.P[0, 3] / (-self.f_u)  # relative
+        self.b_y = self.P[1, 3] / (-self.f_v)
 
     def read_calib_file(self, filepath):
         ''' Read in a calibration file and parse into a dictionary.

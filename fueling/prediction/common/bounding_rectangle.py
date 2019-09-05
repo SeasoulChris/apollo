@@ -32,7 +32,7 @@ class BoundingRectangle:
             range_self = self.project(v0, v1)
             range_other = rect.project(v0, v1)
 
-            if segment_overlap(range_self[0], range_self[1], range_other[0], range_other[1]) == False:
+            if not segment_overlap(range_self[0], range_self[1], range_other[0], range_other[1]):
                 return False
 
         for i in range(4):
@@ -42,7 +42,7 @@ class BoundingRectangle:
             range_self = self.project(v0, v1)
             range_other = rect.project(v0, v1)
 
-            if segment_overlap(range_self[0], range_self[1], range_other[0], range_other[1]) == False:
+            if not segment_overlap(range_self[0], range_self[1], range_other[0], range_other[1]):
                 return False
 
         return True

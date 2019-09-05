@@ -25,6 +25,7 @@ DIM_OUTPUT = feature_config["output_dim"]
 WINDOW_SIZE = feature_config["window_size"]
 POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 
+
 class GPDataSet(Dataset):
 
     def __init__(self, args):

@@ -122,7 +122,7 @@ def record_to_stream_path(record_path, root_dir, sub_folder_name):
     """Convert absolute path to the corresponding stream path"""
     sub_folder = os.path.join(STREAMING_PATH, sub_folder_name)
     if record_path.startswith(root_dir):
-        relative_path = record_path.replace(root_dir+'/', '', 1).strip()
+        relative_path = record_path.replace(root_dir + '/', '', 1).strip()
     else:
         relative_path = record_path.strip('/ \n')
     return os.path.join(os.path.join(root_dir, sub_folder), relative_path)
@@ -132,9 +132,9 @@ def stream_to_record_path(stream_path, root_dir, sub_folder_name):
     """Convert stream path to the corresponding record path"""
     sub_folder = os.path.join(STREAMING_PATH, sub_folder_name)
     if stream_path.startswith(root_dir):
-        relative_path = stream_path.replace(root_dir+'/', '', 1).replace(sub_folder+'/', '', 1)
+        relative_path = stream_path.replace(root_dir + '/', '', 1).replace(sub_folder + '/', '', 1)
         return os.path.join(root_dir, relative_path)
-    relative_path = stream_path.strip('/ \n').replace(sub_folder+'/', '', 1)
+    relative_path = stream_path.strip('/ \n').replace(sub_folder + '/', '', 1)
     return os.path.join('/', relative_path)
 
 
@@ -151,7 +151,7 @@ def target_partition_to_records(root_dir, target_partition, slice_size):
     task_id = os.path.basename(os.path.dirname(target_partition))
     src_records = list_records_for_task(
         os.path.join(get_streaming_records(root_dir), task_id))
-    seq_range = ['{:05d}'.format(rec) for rec in range(seq * slice_size, (seq+1) * slice_size)]
+    seq_range = ['{:05d}'.format(rec) for rec in range(seq * slice_size, (seq + 1) * slice_size)]
     for ret_record in src_records:
         ret_record = ret_record.strip()
         if record_utils.is_record_file(ret_record) and ret_record.rsplit('.', 1)[1] in seq_range:
@@ -171,7 +171,7 @@ def get_streaming_records(root_dir):
 
 def get_message_id(timestamp, topic):
     """
-    Form a message ID by using timestamp and topic name, 
+    Form a message ID by using timestamp and topic name,
     which combined together should be able to represent an unique message
     """
     return '{}{}'.format(timestamp, topic_to_file_name(topic))

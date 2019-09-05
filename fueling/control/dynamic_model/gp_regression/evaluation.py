@@ -36,7 +36,7 @@ def test_gp(args, dataset, GaussianProcess):
             return pyro.module("DeepEncodingNet", deep_encoding_net)(original_feature)
 
         Xu = input_data[torch.arange(0, input_data.shape[0],
-                        step=int(max(input_data.shape[0] / args.num_inducing_point, 1))).long()]
+                                     step=int(max(input_data.shape[0] / args.num_inducing_point, 1))).long()]
         likelihood = gp.likelihoods.Gaussian(variance=torch.ones(2, 1))
         likelihood.load_state_dict(lik_dict)
 
@@ -58,11 +58,11 @@ def test_gp(args, dataset, GaussianProcess):
             predicted_mean, predicted_var = gp_model.gp_f(input_data[i].unsqueeze(0), full_cov=True)
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
-                                                     predicted_mean[1]]).unsqueeze(0)), 0)
+                                                      predicted_mean[1]]).unsqueeze(0)), 0)
             glog.info("predicted mean:{}".format(predicted_mean))
             glog.info("predicted variance:{}".format(predicted_var))
             glog.info("ground-truth residual error:{}".format(gt_data[i]))
-        
+
         input_data = input_data.numpy()
 
         '''
@@ -87,8 +87,8 @@ def test_gp(args, dataset, GaussianProcess):
         predicted_data = predicted_data.numpy()
         plt.figure(figsize=(4, 3))
         plt.title("Result Visualization")
-        plt.plot(gt_data[: , 0], gt_data[: , 1], 'o', color='blue')
-        plt.plot(predicted_data[: , 0], predicted_data[: , 1], 'o', color='red')
-        plt.plot([gt_data[: , 0], predicted_data[: , 0]], [gt_data[: , 1],
-                 predicted_data[: , 1]], 'g:')
+        plt.plot(gt_data[:, 0], gt_data[:, 1], 'o', color='blue')
+        plt.plot(predicted_data[:, 0], predicted_data[:, 1], 'o', color='red')
+        plt.plot([gt_data[:, 0], predicted_data[:, 0]], [gt_data[:, 1],
+                                                         predicted_data[:, 1]], 'g:')
         plt.show()

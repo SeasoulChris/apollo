@@ -53,7 +53,7 @@ def read_data_nclt(args):
 
     datasets = glob.glob(os.path.join(args.path_data_base, 'sensor_data',
                                       args.dataset_name, '*/*'))
-    k = int(args.Delta_t/args.delta_t)
+    k = int(args.Delta_t / args.delta_t)
     bar_dataset = progressbar.ProgressBar(max_value=len(datasets))
     for idx_i, datasetpath_i in enumerate(datasets):
         dataset_i = os.path.basename(datasetpath_i)
@@ -121,7 +121,7 @@ def read_data_nclt(args):
         odo = odo.float()
         gt = gt.float()
         # offset position to 0
-        gt[:, :3] = gt[:, :3]-gt[0, :3]
+        gt[:, :3] = gt[:, :3] - gt[0, :3]
 
         v_gt = torch.zeros(gt.shape[0], 3)
         for j in range(3):
@@ -155,7 +155,7 @@ def read_data_nclt(args):
                                   chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
                                   chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
                                                        v_i * args.Delta_t -
-                                                       1/2 * g * args.Delta_t ** 2)), 0)
+                                                       1 / 2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
@@ -342,7 +342,7 @@ def read_data_kaist(args):
                                       chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
                                       chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
                                                            v_i * args.Delta_t -
-                                                           1/2 * g * args.Delta_t ** 2)), 0)
+                                                           1 / 2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
