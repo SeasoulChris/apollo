@@ -27,8 +27,9 @@ segment_index = {
 }
 
 feature_config = {
-    "input_dim": 5,  # Input dimension
+    "input_dim": 6,  # Input dimension of DM 2.0
     "output_dim": 2,  # Output dimension
+    "mlp_input_dim": 5,  # Input dimension of DM 1.0
     "delta_t": 0.01,  # updating cycle delta_t for input data
     "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "window_size": 51,  # window_size for savgol_filter
@@ -42,7 +43,8 @@ input_index = {
     "a": 1,  # a_x * cos(heading) + a_y * sin(heading)
     "u_1": 2,  # chassis.throttle_percentage/100.0
     "u_2": 3,  # chassis.brake_percentage/100.0
-    "u_3": 4  # chassis.steering_percentage/100.
+    "u_3": 4,  # chassis.steering_percentage/100.
+    "phi": 5  # pose.heading, ENU
 }
 
 output_index = {

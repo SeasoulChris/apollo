@@ -22,6 +22,7 @@ import fueling.common.file_utils as file_utils
 # INPUT_LENGTH = feature_config["DELTA_T"] / feature_config["delta_t"]
 INPUT_LENGTH = 100
 DIM_INPUT = feature_config["input_dim"]
+MLP_DIM_INPUT = feature_config["mlp_input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
 
@@ -76,10 +77,11 @@ def generate_gp_data(args, segment):
         input_segment[k, input_index["u_1"]] = segment[k, segment_index["throttle"]]
         input_segment[k, input_index["u_2"]] = segment[k, segment_index["brake"]]
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
+        input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]]
 
         # TODO(Jiaxuan): Solve the keras error and get the MLP model's (x,y) prediction
-        predicted_a, predicted_w = generate_mlp_output(input_segment[k, :].reshape(1, 5),
-                                                       model, norms)
+        predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0 : MLP_DIM_INPUT].reshape(
+                                                       1, MLP_DIM_INPUT), model, norms)
         # Calculate the model prediction on current speed and heading
         predicted_v += predicted_a * feature_config["delta_t"]
         predicted_heading += predicted_w * feature_config["delta_t"]
@@ -104,9 +106,10 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     # Prediction on acceleration and angular speed by MLP
     output_fnn = np.zeros([1, 2])
     # Normalization for MLP model's input/output
-    mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
+    normalized_mlp_input = np.zeros([1, MLP_DIM_INPUT])
+    normalized_mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
     # glog.info("Model Input {}".format(mlp_input))
-    output_fnn[0, :] = model.predict(mlp_input)
+    output_fnn[0, :] = model.predict(normalized_mlp_input)
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
     # glog.info("Model Output {}".format(output_fnn))
     # Update the vehicle speed based on predicted acceleration
@@ -126,15 +129,15 @@ def get_train_data(args):
     Generate labeled data from a list of h5 files (unlabled data)
     """
     datasets = glob.glob(os.path.join(args.unlabeled_dataset_path, '*.hdf5'))
-    file_idx = 0
     file_utils.makedirs(args.labeled_dataset_path)
+    path_suffix = ".hdf5"
 
     for h5_file in datasets:
-        file_idx += 1
-        glog.info("File idx: {}".format(file_idx))
+        file_name = h5_file.split(args.unlabeled_dataset_path)[1].split(path_suffix)[0]
+        glog.info("File name: {}".format(file_name))
         segment = generate_segment(h5_file)
         input_segment, output_segment = generate_gp_data(args, segment)
-        file_name = os.path.join(args.labeled_dataset_path, str(file_idx) + '.h5')
+        file_name = os.path.join(args.labeled_dataset_path, file_name + '.h5')
         # save the generated label dataset
         with h5py.File(file_name, 'w') as h5_file:
             h5_file.create_dataset('input_segment', data=input_segment)
@@ -148,7 +151,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Label')
     # paths
     parser.add_argument('--unlabeled_dataset_path', type=str,
-                        default="testdata/control/gaussian_process/dataset/bigloop_1/")
+                        default="testdata/control/gaussian_process/dataset/unlabeled_dataset/bigloop_1/")
     parser.add_argument('--model_path', type=str,
                         default="testdata/control/gaussian_process/mlp_model/forward/")
     parser.add_argument('--labeled_dataset_path', type=str,
