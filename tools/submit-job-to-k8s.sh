@@ -163,7 +163,7 @@ if [ -z "${JOB_FILE}" ]; then
 fi
 
 # Generally fixed config.
-K8S="https://180.76.98.43:6443"
+K8S=$(grep 'server:' ~/.kube/config | awk '{print $2}')
 DRIVER_MEMORY=2g
 BOS_FSTOOL_EXECUTABLE="./apps/local/bos_fstool"
 BOS_MOUNT_PATH="/mnt/bos"
@@ -229,8 +229,6 @@ for i in ${SECRET_ENVS[@]}; do
       --conf spark.kubernetes.driver.secretKeyRef.${KEY}=${VALUE} \
       --conf spark.kubernetes.executor.secretKeyRef.${KEY}=${VALUE}"
 done
-
-set -x
 
 # Submit job with fueling package.
 spark-submit \
