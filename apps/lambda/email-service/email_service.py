@@ -53,8 +53,8 @@ class EmailService(Resource):
         """Send email"""
         host = 'smtp.office365.com'
         port = 587
-        from_addr = 'apollo-data-pipeline@outlook.com'
-        password = 'ap0ll0!@#'
+        from_addr = os.environ.get('OUTLOOK_USER')
+        password = os.environ.get('OUTLOOK_PASSWD')
         EmailService.send_smtp_email(host, port, from_addr, password,
                                      subject, content, receivers, attachments)
 

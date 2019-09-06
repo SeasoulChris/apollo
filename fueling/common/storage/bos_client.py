@@ -31,8 +31,8 @@ class BosClient(BaseObjectStorageClient):
             BaseObjectStorageClient.__init__(self, BOS_MOUNT_PATH)
             self.region = os.environ.get('BOS_REGION')
             self.bucket = os.environ.get('BOS_BUCKET')
-            self.access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-            self.secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+            self.access_key = os.environ.get('BOS_ACCESS')
+            self.secret_key = os.environ.get('BOS_SECRET')
 
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
             glog.error('Failed to get BOS config.')

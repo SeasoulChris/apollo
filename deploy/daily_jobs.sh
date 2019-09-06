@@ -8,23 +8,19 @@ set -e
 # Preapre: Goto fuel root.
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
-# Job: Data jobs.
 # The bag-to-record job is code-freezed.
-./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 \
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 \
     --image "hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0" \
     --fueling "/mnt/bos/modules/data/jobs/deploy/fueling-20190828.zip" \
     "/apollo/modules/data/fuel/fueling/data/pipelines/bag_to_record.py"
 
-JOB="fueling/data/daily-data-jobs.py"
-./tools/submit-job-to-k8s.sh --workers 15 --memory 24g --disk 800 ${JOB}
+# Job: Daily jobs.
+JOB="fueling/daily-jobs.py"
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB}
 
 # Job: Control profiling.
 JOB="fueling/profiling/control-profiling-metrics.py"
-./tools/submit-job-to-k8s.sh --workers 15 --memory 24g ${JOB}
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g ${JOB}
 JOB="fueling/profiling/control-profiling-visualization.py"
 CONDA_ENV="fuel-py27"
-./tools/submit-job-to-k8s.sh --workers 15 --memory 24g -e ${CONDA_ENV} ${JOB}
-
-# Job: Video decompression job.
-JOB="fueling/perception/decode-video.py"
-./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB}
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g -e ${CONDA_ENV} ${JOB}

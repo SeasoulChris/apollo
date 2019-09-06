@@ -26,17 +26,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mongo-secret
-              key: mongo-user
+              key: user
         - name: MONGO_PASSWD
           valueFrom:
             secretKeyRef:
               name: mongo-secret
-              key: mongo-passwd
-        - name: APOLLO_EMAIL_PASSWD
-          valueFrom:
-            secretKeyRef:
-              name: apollo-k8s-secret
-              key: email-passwd
+              key: passwd
 
 ---
 

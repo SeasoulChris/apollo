@@ -188,6 +188,50 @@ if [ -z ${FUELING_PKG} ]; then
   FUELING_PKG="${BOS_MOUNT_PATH}/${REMOTE_FUELING_PKG}"
 fi
 
+ENV_CONF=""
+ENVS=(
+  "APOLLO_CONDA_ENV=${CONDA_ENV}"
+  "APOLLO_FUELING_PYPATH=${FUELING_PKG}"
+  "APOLLO_COMPUTE_TYPE=${COMPUTE_TYPE}"
+  "APOLLO_EXECUTORS=${EXECUTORS}"
+  # Partner BOS support.
+  "PARTNER_BOS_REGION=${PARTNER_BOS_REGION}"
+  "PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}"
+  "PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS}"
+  "PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET}"
+  # Azure Blob support.
+  "AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT}"
+  "AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY}"
+  "AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER}"
+)
+for i in ${ENVS[@]}; do
+  IFS='=' read KEY VALUE <<< "${i}"
+  if [ ! -z ${VALUE} ]; then
+    ENV_CONF="${ENV_CONF} \
+        --conf spark.executorEnv.${KEY}=${VALUE} \
+        --conf spark.kubernetes.driverEnv.${KEY}=${VALUE}"
+  fi
+done
+
+SECRET_ENVS=(
+  "BOS_ACCESS=bos-secret:ak"
+  "BOS_SECRET=bos-secret:sk"
+  "BOS_BUCKET=bos-secret:bucket"
+  "BOS_REGION=bos-secret:region"
+  "MONGO_USER=mongo-secret:user"
+  "MONGO_PASSWD=mongo-secret:passwd"
+  "OUTLOOK_USER=outlook-secret:user"
+  "OUTLOOK_PASSWD=outlook-secret:passwd"
+)
+for i in ${SECRET_ENVS[@]}; do
+  IFS='=' read KEY VALUE <<< "${i}"
+  ENV_CONF="${ENV_CONF} \
+      --conf spark.kubernetes.driver.secretKeyRef.${KEY}=${VALUE} \
+      --conf spark.kubernetes.executor.secretKeyRef.${KEY}=${VALUE}"
+done
+
+set -x
+
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \
@@ -200,50 +244,10 @@ spark-submit \
     --conf spark.executor.memory="${EXECUTOR_MEMORY}" \
     --conf spark.kubernetes.memoryOverheadFactor="${MEMORY_OVERHEAD_FACTOR}" \
     --conf spark.kubernetes.node.selector.computetype="${COMPUTE_TYPE}" \
-\
     --conf spark.kubernetes.authenticate.driver.serviceAccountName="spark" \
     --conf spark.kubernetes.container.image="${IMAGE}" \
     --conf spark.kubernetes.container.image.pullPolicy="Always" \
     --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
     --conf spark.kubernetes.executor.ephemeralStorageGB="${EXECUTOR_DISK_GB}" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
-\
-    --conf spark.executorEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.executorEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
-    --conf spark.executorEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_CONDA_ENV="${CONDA_ENV}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_EXECUTORS="${EXECUTORS}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_FUELING_PYPATH="${FUELING_PKG}" \
-    --conf spark.kubernetes.driverEnv.APOLLO_COMPUTE_TYPE="${COMPUTE_TYPE}" \
-\
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
-    --conf spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-    --conf spark.kubernetes.driverEnv.BOS_REGION="${BOS_REGION}" \
-    --conf spark.kubernetes.driverEnv.BOS_BUCKET="${BOS_BUCKET}" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID="bos-secret:ak" \
-    --conf spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY="bos-secret:sk" \
-    --conf spark.executorEnv.BOS_REGION="${BOS_REGION}" \
-    --conf spark.executorEnv.BOS_BUCKET="${BOS_BUCKET}" \
-\
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
-    --conf spark.kubernetes.driver.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
-    --conf spark.kubernetes.executor.secretKeyRef.MONGO_USER="mongo-secret:mongo-user" \
-    --conf spark.kubernetes.executor.secretKeyRef.MONGO_PASSWD="mongo-secret:mongo-passwd" \
-\
-    --conf spark.kubernetes.driverEnv.AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT} \
-    --conf spark.kubernetes.driverEnv.AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY} \
-    --conf spark.kubernetes.driverEnv.AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER} \
-    --conf spark.executorEnv.AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT} \
-    --conf spark.executorEnv.AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY} \
-    --conf spark.executorEnv.AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER} \
-\
-    --conf spark.kubernetes.driverEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION} \
-    --conf spark.kubernetes.driverEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET} \
-    --conf spark.kubernetes.driverEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
-    --conf spark.kubernetes.driverEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
-    --conf spark.executorEnv.PARTNER_BOS_REGION=${PARTNER_BOS_REGION} \
-    --conf spark.executorEnv.PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET} \
-    --conf spark.executorEnv.PARTNER_BOS_ACCESS=${PARTNER_BOS_ACCESS} \
-    --conf spark.executorEnv.PARTNER_BOS_SECRET=${PARTNER_BOS_SECRET} \
-\
-    "${JOB_FILE}" --running_mode=PROD $@
+    ${ENV_CONF} "${JOB_FILE}" --running_mode=PROD $@
