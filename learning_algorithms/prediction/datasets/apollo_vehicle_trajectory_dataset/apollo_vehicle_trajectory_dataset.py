@@ -19,6 +19,8 @@ single_lane_feature_size = 600
 past_lane_feature_size = 200
 future_lane_feature_size = 400
 
+MAX_NUM_NEARBY_OBS = 16
+
 
 def LoadDataForLearning(filepath):
     list_of_data_for_learning = \
@@ -362,6 +364,16 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         self.total_num_data_pt = len(self.start_idx)
         print ('Total number of data points = {}'.format(self.total_num_data_pt))
 
+    def select_nearby_obs(self, target_obs_pos, nearby_obs_pos):
+        curr_target_pos = target_obs_pos[-1, :]
+        curr_nearby_pos = nearby_obs_pos[:, -1, :]
+        disp = curr_nearby_pos - curr_target_pos
+        dist = np.sqrt(disp[:, 0] * disp[:, 0] + disp[:, 1] * disp[:, 1])
+        ordered_idx = list(np.argsort(dist))
+        if len(ordered_idx) > MAX_NUM_NEARBY_OBS:
+            ordered_idx = ordered_idx[0 : MAX_NUM_NEARBY_OBS]
+        return ordered_idx
+
     def __len__(self):
         return self.total_num_data_pt
 
@@ -390,7 +402,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             # Target obstacle's historical information
             target_obs_pos = all_obs_positions[predicting_idx, :, :]
             target_obs_pos_rel = target_obs_pos - target_obs_pos[-1, :]
-            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])[0]
+            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
             target_obs_hist_size = obs_hist_sizes[predicting_idx]
 
             # Nearby obstacles' historical information
@@ -402,14 +414,27 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             nearby_obs_hist_sizes = obs_hist_sizes[nearby_obs_mask, :]
             nearby_obs_pos_rel = all_obs_pos_rel[nearby_obs_mask, :]
 
+            selected_nearby_idx = self.select_nearby_obs(target_obs_pos, nearby_obs_pos)
+            nearby_obs_pos_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, obs_hist_size, 2])
+            nearby_obs_hist_sizes_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, 1])
+            nearby_obs_pos_rel_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, 20, 2])
+            num_nearby_obs = len(selected_nearby_idx)
+            nearby_obs_pos_with_padding[0:num_nearby_obs, :] = \
+                nearby_obs_pos[selected_nearby_idx, :]
+            nearby_obs_hist_sizes_with_padding[0:num_nearby_obs, :] = \
+                nearby_obs_hist_sizes[selected_nearby_idx, :]
+            nearby_obs_pos_rel_with_padding[0:num_nearby_obs, :] = \
+                nearby_obs_pos_rel[selected_nearby_idx, :]
+
             return ((img,
-                     torch.from_numpy(target_obs_pos_rel).float(),
-                     torch.from_numpy(target_obs_hist_size).float(),
-                     torch.from_numpy(all_obs_pos_rel).float(),
                      torch.from_numpy(target_obs_pos).float(),
-                     torch.from_numpy(nearby_obs_pos).float(),
-                     torch.from_numpy(nearby_obs_hist_sizes).float(),
-                     torch.from_numpy(nearby_obs_pos_rel).float()),
+                     torch.from_numpy(target_obs_hist_size).float(),
+                     torch.from_numpy(target_obs_pos_rel).float(),
+                     torch.from_numpy(nearby_obs_pos_with_padding).float(),
+                     torch.from_numpy(nearby_obs_hist_sizes_with_padding).float(),
+                     torch.from_numpy(nearby_obs_pos_rel_with_padding).float(),
+                     torch.from_numpy(all_obs_pos_rel[predicting_idx]).float(),
+                     torch.from_numpy(num_nearby_obs * np.ones((1)))),
                     torch.from_numpy(target_obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]

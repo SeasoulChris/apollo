@@ -13,6 +13,8 @@ if __name__ == "__main__":
     # Set-up the GPU to use
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
+    IMG_MODE = False
+
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
     parser.add_argument('train_file', type=str, help='training data')
@@ -22,22 +24,26 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file)
-    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file)
+    train_dataset = ApolloVehicleTrajectoryDataset(args.train_file, IMG_MODE)
+    valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file, IMG_MODE)
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True,
-                              num_workers=8, drop_last=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=64, shuffle=True,
-                              num_workers=8, drop_last=True, collate_fn=collate_fn)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
+                                               num_workers=8, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=64, shuffle=True,
+                                               num_workers=8, drop_last=True)
 
     # Model and training setup
     model = SelfLSTM()
+    # model = SemanticMapSelfLSTMModel(30, 20)
+    # model = SemanticMapSocialAttentionModel(30, 20)
+
     loss = ProbablisticTrajectoryLoss()
+    # loss = SemanticMapLoss()
 
     # print(model)
     learning_rate = 3e-4
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=3, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:
