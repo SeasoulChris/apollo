@@ -65,18 +65,19 @@ def test_gp(args, dataset, GaussianProcess):
 
         input_data = input_data.numpy()
 
-        '''
         # Input feature visualization
         for i in range(len(input_data)):
-            plt.figure(figsize=(4, 3))
-            plt.title("Dataset Visualization")
-            plt.plot(input_data[i, :, 0], 'o', color='black')
-            plt.plot(input_data[i, :, 1], 'o', color='grey')
-            plt.plot(input_data[i, :, 2], 'o', color='green')
-            plt.plot(input_data[i, :, 3], 'o', color='red')
-            plt.plot(input_data[i, :, 4], 'o', color='blue')
-            plt.show()
-        '''
+            if i % 100 == 0:
+                plt.figure(figsize=(4, 3))
+                plt.title("Dataset Visualization")
+                plt.plot(input_data[i, :, 0], 'o', color='black')
+                plt.plot(input_data[i, :, 1], 'o', color='grey')
+                plt.plot(input_data[i, :, 2], 'o', color='green')
+                plt.plot(input_data[i, :, 3], 'o', color='red')
+                plt.plot(input_data[i, :, 4], 'o', color='blue')
+                plt.plot(input_data[i, :, 5], 'o', color='purple')
+                plt.show()
+
 
         glog.debug("gt_data: {}".format(gt_data))
         glog.debug("predicted_data: {}".format(predicted_data))

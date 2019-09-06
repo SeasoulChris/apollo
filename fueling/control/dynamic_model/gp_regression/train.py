@@ -32,14 +32,23 @@ class DeepEncodingNet(nn.Module):
         super(DeepEncodingNet, self).__init__()
         # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1,
         # padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
-        self.conv1 = nn.Conv1d(u_dim, 100, u_dim, stride=5)
-        self.conv2 = nn.Conv1d(100, 50, u_dim, stride=5)
-        self.fc = nn.Linear(200, kernel_dim)
+        self.conv1 = nn.Conv1d(u_dim, 100, u_dim, stride=3) # 32
+        self.conv2 = nn.Conv1d(100, 100, u_dim, stride=3) # 9
+        self.conv3 = nn.Conv1d(100, 50, u_dim, stride=3) # 2
+        self.fc = nn.Linear(100, kernel_dim)
 
     def forward(self, data):
         """Define forward computation and activation functions"""
-        data = Func.relu(self.conv2(Func.relu(self.conv1(torch.transpose(data, -1, -2)))))
-        data = self.fc(data.view(data.shape[0], -1))
+        glog.debug("Original data shape: {}".format(data.shape))
+        conv1_input = torch.transpose(data, -1, -2)
+        glog.debug("Conv1 input data shape: {}".format(conv1_input.shape))
+        conv2_input = Func.relu(self.conv1(conv1_input))
+        glog.debug("Conv2 input data shape: {}".format(conv2_input.shape))
+        conv3_input = Func.relu(self.conv2(conv2_input))
+        glog.debug("Conv3 input data shape: {}".format(conv3_input.shape))
+        fc_input = Func.relu(self.conv3(conv3_input))
+        glog.debug("Fully-connected layer input data shape: {}".format(fc_input.shape))
+        data = self.fc(fc_input.view(fc_input.shape[0], -1))
         return data
 
 

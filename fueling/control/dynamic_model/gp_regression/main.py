@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--lr_decay', type=float, default=0.999)
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
