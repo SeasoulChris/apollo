@@ -25,6 +25,7 @@ DIM_INPUT = feature_config["input_dim"]
 MLP_DIM_INPUT = feature_config["mlp_input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
+PI = 3.14159
 
 
 def generate_segment(h5_file):
@@ -77,7 +78,7 @@ def generate_gp_data(args, segment):
         input_segment[k, input_index["u_1"]] = segment[k, segment_index["throttle"]]
         input_segment[k, input_index["u_2"]] = segment[k, segment_index["brake"]]
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
-        input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]]
+        input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]] / PI
 
         # TODO(Jiaxuan): Solve the keras error and get the MLP model's (x,y) prediction
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0 : MLP_DIM_INPUT].reshape(
@@ -106,10 +107,9 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     # Prediction on acceleration and angular speed by MLP
     output_fnn = np.zeros([1, 2])
     # Normalization for MLP model's input/output
-    normalized_mlp_input = np.zeros([1, MLP_DIM_INPUT])
-    normalized_mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
+    mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
     # glog.info("Model Input {}".format(mlp_input))
-    output_fnn[0, :] = model.predict(normalized_mlp_input)
+    output_fnn[0, :] = model.predict(mlp_input)
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
     # glog.info("Model Output {}".format(output_fnn))
     # Update the vehicle speed based on predicted acceleration

@@ -12,7 +12,7 @@ from fueling.control.dynamic_model.gp_regression.train import train_gp
 
 def launch(args):
     # tasks
-    args.train_gp = True
+    args.train_gp = False
     args.test_gp = True
 
     dataset = GPDataSet(args)
