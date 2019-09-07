@@ -1,0 +1,40 @@
+name: fuel-py27-wuwu
+dependencies:
+  # Core
+  - python = 2.7
+  - pyspark = 2.4.0
+
+  # Language tools
+  - pip
+  - pylint
+
+  # Google infra
+  - absl-py
+  - protobuf
+  - tensorflow
+  - tensorflow-gpu
+
+  # Data science
+  - boto3
+  - cudatoolkit = 9.2
+  - h5py
+  - keras
+  - matplotlib
+  - numpy
+  - pymongo
+  - scikit-learn
+
+  # Other
+  - opencv
+  - pyproj
+  - requests
+
+  # Other
+
+  - pip:
+    - azure.storage.blob
+    - colored-glog
+    - pyspark-utils
+    - alabaster
+    - opencv
+    - openblas
