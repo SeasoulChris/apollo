@@ -55,6 +55,7 @@ dependencies:
   - rope
   - ruamel_yaml
   - scandir
+  - openblas
 
   # System
   - openpyxl
@@ -127,5 +128,3 @@ dependencies:
     - colored-glog
     - pyspark-utils
     - alabaster
-    - opencv
-    - openblas
