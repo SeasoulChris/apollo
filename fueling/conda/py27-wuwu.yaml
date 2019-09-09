@@ -23,13 +23,104 @@ dependencies:
   - numpy
   - pymongo
   - scikit-learn
+  - pandas
+  - pandocfilters
+  - patsy
+  - pickleshare
+  - pyodbc
+  - scikit-image
 
   # Other
   - opencv
   - pyproj
   - requests
+  - pathlib2
+  - pbr
+  - pcre
+  - pexpect
+  - openssl
+  - pixman
+  - ply
+  - prompt_toolkit
+  - psutil
+  - ptyprocess
+  - py
+  - pyaudio
+  - pycosat
+  - pytables
+  - python-dateutil
+  - pytz
+  - pywavelets
+  - requests
+  - rope
+  - ruamel_yaml
+  - scandir
 
-  # Other
+  # System
+  - openpyxl
+  - pycparser
+  - pycrypto
+  - pycurl
+  - pyflakes
+  - pygments
+  - pylint
+  - pyopenssl
+  - pyparsing
+  - pyqt
+  - pytest
+  - pyyaml
+  - pyzmq
+  - qt
+  - qtawesome
+  - qtconsole
+  - qtpy
+  - readline
+  - seaborn
+  - setuptools
+  - simplegeneric
+  - singledispatch
+  - sip
+  - six
+  - snowballstemmer
+  - sortedcollections
+  - sortedcontainers
+  - sphinx
+  - spyder
+  - sqlalchemy
+  - sqlite
+  - ssl_match_hostname
+  - statsmodels
+  - subprocess32
+  - sympy
+  - tblib
+  - terminado
+  - testpath
+  - tk
+  - toolz
+  - tornado
+  - tornado
+  - traitlets
+  - unicodecsv
+  - unixodbc
+  - wcwidth
+  - werkzeug
+  - wheel
+  - widgetsnbextension
+  - wrapt
+  - xlrd
+  - xlsxwriter
+  - xlwt
+  - xz
+  - yaml
+  - zict
+  - zlib
+
+
+  # Jupyter notebook
+  - jupyter
+  - jupyter_client
+  - jupyter_console
+  - jupyter_core
 
   - pip:
     - azure.storage.blob
