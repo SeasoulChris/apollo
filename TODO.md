@@ -15,10 +15,6 @@
 1. 感知：Guang
 1. 数据：Longtao，Xiangquan
 
-### 支持Azure Blob存储
-1. PM：Oliver
-1. 数据：Longtao，Xiangquan
-
 ### 通用Profiling管线
 1. 需提供便捷的对各模块、各类指标的统计信息，包括平均值、最大值、最小值、std_dev， 10分位、90分位， 99分位，对异常信息进行邮件报警，在Dashboard上作图展示。
 1. 可参考pandas的 DataFrame.describe()
@@ -33,12 +29,6 @@
 ### 数据流水线性能的量化度量
 1. 可自研白盒度量标准和工具
 1. 可调研Kubernetes、Spark其他的黑盒度量工具
-
-### Driving Path噪音消除
-1. 我们会在ETL流水线里对车辆定位信息进行采样：https://github.com/ApolloAuto/apollo-fuel/blob/master/fueling/data/record_parser.py#L160
-1. 然后在Dashboard上绘制，例如：http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/task/mnt/bos/small-records/2019/2019-08-06/2019-08-06-20-04-00
-1. 但是因为定位的抖动，尤其是冷启动阶段，会导致我们目前naive的采样逻辑得到了少量噪点，在Dashboard上产生错误：http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/task/mnt/bos/small-records/2019/2019-08-06/2019-08-06-12-24-46 同时我们对里程的统计也是错误的，需要修正。
-1. 因此我们需要改进采样方法，丢弃明显错误的定位点
 
 ## 持续调研和学习
 
