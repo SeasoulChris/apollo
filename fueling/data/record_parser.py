@@ -21,9 +21,9 @@ from modules.planning.proto.planning_pb2 import ADCTrajectory
 
 from fueling.common.coord_utils import CoordUtils
 from fueling.planning.metrics.latency import LatencyMetrics
+from fueling.planning.stability.speed_jerk_stability import SpeedJerkStability
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.record_utils as record_utils
-
 
 # Configs
 POS_SAMPLE_MIN_DURATION_SEC = 2
@@ -59,6 +59,14 @@ class RecordParser(object):
         for bucket, cnt in parser._planning_latency_analyzer.get_hist().items():
             record.stat.planning_stat.latency.latency_hist[bucket] = cnt
 
+        for speed, jerk_cnt in parser._stability_analyzer.get_speed_jerk_cnt().items():
+            speed_jerk = record.stat.planning_stat.stability.speed_jerk.add()
+            speed_jerk.speed = speed
+            for jerk, cnt in jerk_cnt.items():
+                jerk_cnt = speed_jerk.jerk_cnt.add()
+                jerk_cnt.jerk = jerk
+                jerk_cnt.cnt = cnt
+
         return record
 
     def __init__(self, record_file):
@@ -75,6 +83,7 @@ class RecordParser(object):
         self._last_position_sampled_time = None
         # Planning stat
         self._planning_latency_analyzer = LatencyMetrics()
+        self._stability_analyzer = SpeedJerkStability()
 
     def ParseMeta(self):
         """
@@ -160,8 +169,8 @@ class RecordParser(object):
 
         # Sample driving path.
         if (self._last_position_sampled is None or
-            (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-             pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
+                (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
+                 pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
                 lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)
@@ -177,6 +186,7 @@ class RecordParser(object):
         localization = LocalizationEstimate()
         localization.ParseFromString(msg)
         self._process_position(localization.header.timestamp_sec, localization.pose.position)
+        self._stability_analyzer.add(localization)
 
     def ProcessGnssOdometry(self, msg):
         """Process GPS, stat mileages and save driving path."""

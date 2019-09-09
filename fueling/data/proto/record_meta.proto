@@ -22,7 +22,21 @@ message PlanningStat {
     optional uint64 min = 3;
     optional uint64 avg = 4;
   }
+
+  message Stability {
+    message SpeedJerk {
+      message JerkCnt {
+        optional int32 jerk = 1;
+        optional int32 cnt = 2;
+      }
+      optional int32 speed = 1;
+      repeated JerkCnt jerk_cnt = 2;
+    }
+    repeated SpeedJerk speed_jerk = 1;
+  }
+
   optional Latency latency = 1;
+  optional Stability stability = 2;
 }
 
 message ModuleStat {
@@ -71,11 +85,11 @@ message RecordMeta {
     // General metrics stat, for example:
     // {
     //   "planning" : fields {
-    //     "latency": {values: [0.11, 0.12, 0.1, ...]},
+    //   "latency": {values: [0.11, 0.12, 0.1, ...]},
     //   },
     //   "control" : fields {
-    //     "lateral_error": {values: [0.11, 0.12, 0.1, ...]},
-    //     "speed_error": {values: [0.11, 0.12, 0.1, ...]},
+    //   "lateral_error": {values: [0.11, 0.12, 0.1, ...]},
+    //   "speed_error": {values: [0.11, 0.12, 0.1, ...]},
     //   },
     // }
     // Please try to make the field keys more structured and readable, such as "A.B.C".
