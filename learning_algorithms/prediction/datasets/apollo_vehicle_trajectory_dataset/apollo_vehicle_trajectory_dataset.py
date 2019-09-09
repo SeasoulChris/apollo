@@ -368,11 +368,9 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         curr_target_pos = target_obs_pos[-1, :]
         curr_nearby_pos = nearby_obs_pos[:, -1, :]
         disp = curr_nearby_pos - curr_target_pos
-        dist = np.sqrt(disp[:, 0] * disp[:, 0] + disp[:, 1] * disp[:, 1])
+        dist = np.sqrt(np.sum(disp ** 2, 1))
         ordered_idx = list(np.argsort(dist))
-        if len(ordered_idx) > MAX_NUM_NEARBY_OBS:
-            ordered_idx = ordered_idx[0 : MAX_NUM_NEARBY_OBS]
-        return ordered_idx
+        return ordered_idx[0:MAX_NUM_NEARBY_OBS]
 
     def __len__(self):
         return self.total_num_data_pt
