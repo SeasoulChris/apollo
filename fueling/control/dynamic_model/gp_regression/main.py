@@ -12,7 +12,7 @@ from fueling.control.dynamic_model.gp_regression.train import train_gp
 
 def launch(args):
     # tasks
-    args.train_gp = False
+    args.train_gp = True
     args.test_gp = True
 
     dataset = GPDataSet(args)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters
-    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--lr_decay', type=float, default=0.999)
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
