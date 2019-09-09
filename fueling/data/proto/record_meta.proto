@@ -85,11 +85,11 @@ message RecordMeta {
     // General metrics stat, for example:
     // {
     //   "planning" : fields {
-    //   "latency": {values: [0.11, 0.12, 0.1, ...]},
+    //     "latency": {values: [0.11, 0.12, 0.1, ...]},
     //   },
     //   "control" : fields {
-    //   "lateral_error": {values: [0.11, 0.12, 0.1, ...]},
-    //   "speed_error": {values: [0.11, 0.12, 0.1, ...]},
+    //     "lateral_error": {values: [0.11, 0.12, 0.1, ...]},
+    //     "speed_error": {values: [0.11, 0.12, 0.1, ...]},
     //   },
     // }
     // Please try to make the field keys more structured and readable, such as "A.B.C".

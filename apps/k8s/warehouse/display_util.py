@@ -2,6 +2,7 @@
 # -*- coding: UTF-8-*-
 """Utils for displaying."""
 import matplotlib
+
 matplotlib.use('Agg')
 
 import datetime
@@ -99,13 +100,41 @@ def plot_record(record):
     # 1. Add necessary fields in fueling/data/proto/record_meta.proto.
     # 2. Extend fueling/data/record_parser.py to extract data and populate the fields.
     # 3. Read the fields here and plot properly.
-    fig, ax = plt.subplots()
+    fig, axs = plt.subplots(2, 1)
     planning_latency = record.stat.planning_stat.latency.latency_hist
     latency_keys = ["latency_0_10_ms", "latency_20_40_ms", "latency_40_60_ms", "latency_60_80_ms",
                     "latency_80_100_ms", "latency_100_120_ms", "latency_120_150_ms",
                     "latency_150_200_ms", "latency_200_up_ms"]
     latency_values = [planning_latency.get(key, 0) for key in latency_keys]
-    ax.bar(latency_keys, latency_values)
+    axs[0].bar(latency_keys, latency_values)
+
+    stability = record.stat.planning_stat.stability
+    speed_x = []
+    jerk_y = []
+    for speed_jerk in stability.speed_jerk:
+        speed = speed_jerk.speed
+        for jerk_cnt in speed_jerk.jerk_cnt:
+            jerk = jerk_cnt.jerk
+            speed_x.append(speed)
+            jerk_y.append(jerk)
+    axs[1].set_xlabel("speed")
+    axs[1].set_ylabel("jerk")
+    axs[1].plot(speed_x, jerk_y, 'rx')
+
+    base_speed_jerk = {0: [0, 1, 2, 3, 4], 1: [2, 3, 1, 0, 4, 5], 2: [2, 1, 0, 3, 4, -1], 3: [1, 0, 2, 3, 4, 5, -1, -2],
+                       4: [0, -1, 1, 3, 4, 2, -2, 5], 5: [0, 1, 2, 3, -1, 4], 6: [1, 2, 0, 3, -1, 4, 5],
+                       7: [2, 1, 0, -1, 3, 4, -2, 5], 8: [0, -1, 1, 2, 3, 4], 9: [0, 1, 2, -1], 10: [0, 1, -1, 2],
+                       11: [0, -2, -1, 1, 2], 12: [0, -1, 1, -2, 2, 3], 13: [-1, -2, 0, 1, 2],
+                       14: [0, 1, -1, -2, -3, 2, 3], 15: [0, 1, 2, -1, -2], 16: [0, 1, -1, 2, -2], 17: [0, 1, 2],
+                       18: [0, 1, 2, -1], 19: [0, 1]}
+
+    speed_x = []
+    jerk_y = []
+    for speed, jerk_list in base_speed_jerk.items():
+        for jerk in jerk_list:
+            speed_x.append(speed)
+            jerk_y.append(jerk)
+    axs[1].plot(speed_x, jerk_y, 'g.')
 
     # Use mpld3 to transform to HTML.
     # Known issues:

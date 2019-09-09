@@ -63,9 +63,7 @@ class RecordParser(object):
             speed_jerk = record.stat.planning_stat.stability.speed_jerk.add()
             speed_jerk.speed = speed
             for jerk, cnt in jerk_cnt.items():
-                jerk_cnt = speed_jerk.jerk_cnt.add()
-                jerk_cnt.jerk = jerk
-                jerk_cnt.cnt = cnt
+                speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
         return record
 

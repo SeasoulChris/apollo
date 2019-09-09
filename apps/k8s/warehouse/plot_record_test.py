@@ -9,7 +9,7 @@ from fueling.data.record_parser import RecordParser
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 1:
+    if len(sys.argv) != 2:
         print ('Usage: plot_record_test.py <a.record>')
         sys.exit(1)
     record_meta = RecordParser.Parse(sys.argv[-1])
