@@ -33,7 +33,7 @@ def generate_segment(h5_file):
     load a single h5 file to a numpy array
     """
     segment = None
-    glog.info('Loading {}'.format(h5_file))
+    glog.info('Loading New File {}'.format(h5_file))
     with h5py.File(h5_file, 'r') as fin:
         for ds in fin.values():
             if segment is None:
@@ -134,10 +134,13 @@ def get_train_data(args):
 
     for h5_file in datasets:
         file_name = h5_file.split(args.unlabeled_dataset_path)[1].split(path_suffix)[0]
-        glog.info("File name: {}".format(file_name))
+        file_name = os.path.join(args.labeled_dataset_path, file_name + '.h5')
+        if os.path.exists(file_name):
+            glog.info("File Already Generated: {}".format(file_name))
+            continue
+        # generated data segment for unhandled file
         segment = generate_segment(h5_file)
         input_segment, output_segment = generate_gp_data(args, segment)
-        file_name = os.path.join(args.labeled_dataset_path, file_name + '.h5')
         # save the generated label dataset
         with h5py.File(file_name, 'w') as h5_file:
             h5_file.create_dataset('input_segment', data=input_segment)
