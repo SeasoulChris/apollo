@@ -49,8 +49,10 @@ class SemanticMapDataset(Dataset):
             key = os.path.basename(img_name).replace(".png", "")
             pos_dict = np.load(os.path.join(os.path.dirname(img_name), 'obs_pos.npy')).item()
             past_pos = pos_dict[key]
-            label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(
-                "image-feature", "features-san-mateo-new").replace("image-valid", "features-san-mateo-new"), 'future_status.npy')).item()
+            label_dict = np.load(os.path.join(os.path.dirname(img_name)
+                                              .replace("image-feature", "features-san-mateo-new")
+                                              .replace("image-valid", "features-san-mateo-new"),
+                                              'future_status.npy')).item()
             future_pos = label_dict[key]
             origin = future_pos[0]
             past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
@@ -180,7 +182,8 @@ class SemanticMapSelfLSTMModel(nn.Module):
                 (curr_obs_pos_rel[ts_obs_mask, :]).clone()).view(curr_N, 1, -1)
 
             _, (ht_new, ct_new) = self.lstm(
-                disp_embedding, (ht[ts_obs_mask, :].view(1, curr_N, -1), ct[ts_obs_mask, :].view(1, curr_N, -1)))
+                disp_embedding, (ht[ts_obs_mask, :].view(1, curr_N, -1),
+                ct[ts_obs_mask, :].view(1, curr_N, -1)))
             ht[ts_obs_mask, :] = ht_new.view(curr_N, -1)
             ct[ts_obs_mask, :] = ct_new.view(curr_N, -1)
 
@@ -340,13 +343,16 @@ class SemanticMapSocialAttentionModel(nn.Module):
             att_score_max, _ = torch.max(att_scores.view(N, -1), 1)
             att_scores = att_scores.view(N, -1) - att_score_max.repeat(nearby_padding_size, 1).t()
 
-            att_scores_numerator = (torch.exp(att_scores).view(-1) * (curr_nearby_ts_mask.float())).view(N, -1)
+            att_scores_numerator = (torch.exp(att_scores).view(-1) * \
+                                    (curr_nearby_ts_mask.float())).view(N, -1)
 
             att_scores_denominator = \
                 torch.sum(att_scores_numerator, 1).repeat(nearby_padding_size, 1).t() + 1e-6
-            att_scores_final = (att_scores_numerator / att_scores_denominator).view(N, nearby_padding_size, 1) \
+            att_scores_final = (att_scores_numerator / \
+                                att_scores_denominator).view(N, nearby_padding_size, 1) \
                          .repeat(1, 1, self.edge_hidden_size)
 
-            Ht[:, :] = torch.sum((nearby_ht_list.view(N, nearby_padding_size, -1).clone() * att_scores_final), 1)
+            Ht[:, :] = torch.sum(
+                (nearby_ht_list.view(N, nearby_padding_size, -1).clone() * att_scores_final), 1)
 
         return pred_traj
