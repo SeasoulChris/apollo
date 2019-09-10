@@ -184,7 +184,7 @@ class RecordParser(object):
         localization = LocalizationEstimate()
         localization.ParseFromString(msg)
         # skip message from sim control that channel localization/pose contains error
-        if localization.header.module_name == "SimControl" or  localization.pose.position.z == 0:
+        if localization.header.module_name == "SimControl" or localization.pose.position.z == 0:
             return
         self._process_position(localization.header.timestamp_sec, localization.pose.position)
         self._stability_analyzer.add(localization)
