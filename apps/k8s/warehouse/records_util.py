@@ -53,6 +53,7 @@ def CombinePlanningMetrics(records):
     weighted_avg = []
     total_weight = 0.00001
 
+    # metrics
     for record in records:
         planning_stat.latency.max = max(planning_stat.latency.max,
                                         record.stat.planning_stat.latency.max)
@@ -74,5 +75,27 @@ def CombinePlanningMetrics(records):
 
     for key, val in latency_hist.items():
         planning_stat.latency.latency_hist[key] = val
+
+    # stability
+    speed_jerk_cnt = {}
+    for record in records:
+        for speed_jerk in record.stat.planning_stat.stability.speed_jerk:
+            speed = speed_jerk.speed
+            for jerk_cnt in speed_jerk.jerk_cnt:
+                jerk = jerk_cnt.jerk
+                cnt = jerk_cnt.cnt
+                if speed in speed_jerk_cnt:
+                    if jerk in speed_jerk_cnt[speed]:
+                        speed_jerk_cnt[speed][jerk] += cnt
+                    else:
+                        speed_jerk_cnt[speed][jerk] = cnt
+                else:
+                    speed_jerk_cnt[speed] = {jerk: cnt}
+
+    for speed, jerk_cnt in speed_jerk_cnt.items():
+        speed_jerk = planning_stat.stability.speed_jerk.add()
+        speed_jerk.speed = speed
+        for jerk, cnt in jerk_cnt.items():
+            speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
     return planning_stat
