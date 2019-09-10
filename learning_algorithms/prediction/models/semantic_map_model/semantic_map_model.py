@@ -205,12 +205,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.edge_hidden_size = edge_hidden_size
 
         # Target hidden state
-        target_h0 = torch.zeros(1, node_hidden_size)
-        target_c0 = torch.zeros(1, node_hidden_size)
-        nn.init.xavier_normal_(target_h0, gain=nn.init.calculate_gain('relu'))
-        nn.init.xavier_normal_(target_c0, gain=nn.init.calculate_gain('relu'))
-        self.target_h0 = nn.Parameter(target_h0, requires_grad=True)
-        self.target_c0 = nn.Parameter(target_c0, requires_grad=True)
+        self.target_h0, self.target_c0 = generate_lstm_states(node_hidden_size)
 
         # Target RNN flow
         self.target_rel_disp_embedding = nn.Linear(2, embed_size)
@@ -219,12 +214,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.target_attention_embedding = nn.Linear(2, attention_dim)
 
         # Nearby hidden state
-        nearby_h0 = torch.zeros(1, edge_hidden_size)
-        nearby_c0 = torch.zeros(1, edge_hidden_size)
-        nn.init.xavier_normal_(nearby_h0, gain=nn.init.calculate_gain('relu'))
-        nn.init.xavier_normal_(nearby_c0, gain=nn.init.calculate_gain('relu'))
-        self.nearby_h0 = nn.Parameter(nearby_h0, requires_grad=True)
-        self.nearby_c0 = nn.Parameter(nearby_c0, requires_grad=True)
+        self.nearby_h0, self.nearby_c0 = generate_lstm_states(edge_hidden_size)
 
         # Nearby RNN flow
         self.embed_size = embed_size
@@ -246,7 +236,6 @@ class SemanticMapSocialAttentionModel(nn.Module):
         nearby_padding_size = nearby_obs_pos.size(1)
         M = N * nearby_padding_size
         pred_mask = cuda(torch.ones(N))
-        pred_out = cuda(torch.zeros(N, self.pred_len, 2))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
 
         img_embedding = self.cnn(img)
@@ -282,10 +271,10 @@ class SemanticMapSocialAttentionModel(nn.Module):
                 target_ts_obs_mask = (target_obs_hist_size > -1).view(-1)
                 nearby_ts_obs_mask = cuda(torch.ones(N, nearby_padding_size, 1))
                 pred_input = torch.cat((target_ht, img_embedding, Ht), 1)
-                pred_out[:, t-observation_len, :] = self.pred_layer(pred_input).float().clone()
-                curr_target_obs_pos_rel = pred_out[:, t-observation_len, :2]
-                curr_target_obs_pos = curr_target_obs_pos_rel + curr_target_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = curr_target_obs_pos.clone()
+                pred_out = self.pred_layer(pred_input).float().clone()
+                curr_target_obs_pos = curr_target_obs_pos + pred_out
+                curr_target_obs_pos_rel = curr_target_obs_pos_rel + pred_out
+                pred_traj[:, t-observation_len, :] = curr_target_obs_pos_rel.clone()
 
             # Target obstacles forward
             num_target_ts_obs = torch.sum(target_ts_obs_mask).long().item()
