@@ -17,7 +17,9 @@ JOB="/apollo/modules/data/fuel/fueling/data/pipelines/bag_to_record.py"
 
 # Job: Daily jobs.
 JOB="fueling/daily-jobs.py"
-./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB}
+./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB} \
+    --generate_small_records_of_last_n_days=30 \
+    --index_records_of_last_n_days=30
 
 # Job: Control profiling.
 JOB="fueling/profiling/control-profiling-metrics.py"

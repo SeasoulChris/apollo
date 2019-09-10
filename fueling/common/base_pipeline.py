@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Fueling base pipeline."""
 
+from datetime import datetime
 import os
 import sys
 
@@ -11,7 +12,6 @@ import colored_glog as glog
 from fueling.common.mongo_utils import Mongo
 import fueling.common.storage.blob_client as blob_client
 import fueling.common.storage.bos_client as bos_client
-import fueling.common.time_utils as time_utils
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
@@ -89,7 +89,7 @@ class BasePipeline(object):
                        'instead of calling native "python".')
             sys.exit(1)
         if not self.FLAGS.get('job_id'):
-            self.FLAGS['job_id'] = time_utils.format_current_time()
+            self.FLAGS['job_id'] = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
         glog.info('Running {} job in {} mode, owner={}, id={}'.format(
             self.name, mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))

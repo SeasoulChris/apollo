@@ -4,6 +4,7 @@
 import collections
 import os
 
+from absl import flags
 import colored_glog as glog
 import pyspark_utils.helper as spark_helper
 
@@ -13,6 +14,10 @@ from fueling.data.record_parser import RecordParser
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.time_utils as time_utils
+
+
+flags.DEFINE_integer('index_records_of_last_n_days', 0, 'Index records of last n days.')
 
 
 class IndexRecords(BasePipeline):
@@ -37,6 +42,15 @@ class IndexRecords(BasePipeline):
         records_rdd = self.context().union([
             self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
+
+        # Filter by date.
+        n_days = self.FLAGS.get('index_records_of_last_n_days')
+        if n_days:
+            start_date = time_utils.n_days_ago(n_days, '%Y-%m-%d')
+            glog.info('Process last {} days of records starting from {}'.format(n_days, start_date))
+            # RDD(record_path), which is like /mnt/bos/small-records/2019/2019-09-09/...
+            records_rdd = records_rdd.filter(lambda record: record.split('/', 6)[5] >= start_date)
+
         self.process(records_rdd, email_utils.DATA_TEAM)
 
     def process(self, records_rdd, summary_receivers=None):
