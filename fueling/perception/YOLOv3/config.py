@@ -48,12 +48,12 @@ gpu = "0"
 learning_rate = 0.0001
 decay_steps = 35000
 decay_rate = 0.5
-max_iter = 40000
+max_iter = 10
 start_iter = 0
 num_threads = 8
 batch_size = 1
 save_interval = 10000
-print_interval = 200
+print_interval = 1
 summary_interval = 500
 
 negative_ignore_thresh = 0.4

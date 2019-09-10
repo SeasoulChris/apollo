@@ -9,7 +9,7 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.train import training
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
-import fueling.common.bos_client as bos_client
+import fueling.common.storage.bos_client as bos_client
 
 
 MAX_ITER = cfg.max_iter
