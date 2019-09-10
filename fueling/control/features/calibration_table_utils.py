@@ -35,7 +35,7 @@ glog.info('Load calibration table conf: %s' % conf_filename)
 steer_condition = CALIBRATION_TABLE_CONF.steer_condition
 curvature_condition = CALIBRATION_TABLE_CONF.curvature_condition
 
-train_percetage = CALIBRATION_TABLE_CONF.train_percentage
+train_percentage = CALIBRATION_TABLE_CONF.train_percentage
 
 THROTTLE_MAX = CALIBRATION_TABLE_CONF.throttle_max
 BRAKE_MAX = -1 * CALIBRATION_TABLE_CONF.brake_max
@@ -76,6 +76,10 @@ def decide_cmd(chassis_throttle_val, chassis_brake_val, VEHICLE_PARAM_CONF):
     segment_throttle_list = gen_throttle_list(VEHICLE_PARAM_CONF)
     segment_brake_list = gen_brake_list(VEHICLE_PARAM_CONF)
     feature_cmd = 0.0
+    if (VEHICLE_PARAM_CONF.vehicle_id.other_unique_id is "lexus"
+            and chassis_throttle_val > 0.1 and chassis_brake_val > 0.1):
+        glog.info("feature_cmd = 200")
+        feature_cmd = 200.0
     if chassis_throttle_val > abs(segment_throttle_list[0]):
         feature_cmd = chassis_throttle_val
     elif chassis_brake_val > abs(segment_brake_list[-1]):
@@ -178,6 +182,7 @@ def feature_cut(elem, VEHICLE_PARAM_CONF):
             elem[id_elem][0] = elem[i][0]
             elem[id_elem][1] = elem[i][1]
             elem[id_elem][2] = elem[i][2]
+            glog.info("elem_acc: %f" % elem[i][2])
             elem[id_elem][3] = elem[i][3]  # add steering angle as reference
             id_elem += 1
 
@@ -270,14 +275,14 @@ def write_h5_train_test(elem, origin_prefix, target_prefix):
     brake_test = np.zeros(features.shape)
     for feature in features:
         if feature[2] > 0.0:
-            if random.random() < train_percetage:
+            if random.random() < train_percentage:
                 throttle_train[throttle_train_feature_num] = feature
                 throttle_train_feature_num += 1
             else:
                 throttle_test[throttle_test_feature_num] = feature
                 throttle_test_feature_num += 1
         elif feature[2] < 0.0:
-            if random.random() < train_percetage:
+            if random.random() < train_percentage:
                 brake_train[brake_train_feature_num] = feature
                 brake_train_feature_num += 1
             else:
