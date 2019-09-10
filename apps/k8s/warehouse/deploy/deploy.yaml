@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: warehouse
-        image: hub.baidubce.com/apollo/warehouse:20190909_1637
+        image: hub.baidubce.com/apollo/warehouse:20190910_1400
         ports:
         - containerPort: 8000
         env:
@@ -32,6 +32,16 @@ spec:
             secretKeyRef:
               name: mongo-secret
               key: passwd
+        - name: BOS_ASK_ACCESS
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: ak
+        - name: BOS_ASK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: sk
 
 ---
 

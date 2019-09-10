@@ -2,6 +2,8 @@
 # -*- coding: UTF-8-*-
 """Records utils."""
 
+from collections import defaultdict
+
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import PlanningStat
 
@@ -77,20 +79,12 @@ def CombinePlanningMetrics(records):
         planning_stat.latency.latency_hist[key] = val
 
     # stability
-    speed_jerk_cnt = {}
+    speed_jerk_cnt = defaultdict(lambda: defaultdict(int))
     for record in records:
         for speed_jerk in record.stat.planning_stat.stability.speed_jerk:
             speed = speed_jerk.speed
             for jerk_cnt in speed_jerk.jerk_cnt:
-                jerk = jerk_cnt.jerk
-                cnt = jerk_cnt.cnt
-                if speed in speed_jerk_cnt:
-                    if jerk in speed_jerk_cnt[speed]:
-                        speed_jerk_cnt[speed][jerk] += cnt
-                    else:
-                        speed_jerk_cnt[speed][jerk] = cnt
-                else:
-                    speed_jerk_cnt[speed] = {jerk: cnt}
+                speed_jerk_cnt[speed][jerk_cnt.jerk] += jerk_cnt.cnt
 
     for speed, jerk_cnt in speed_jerk_cnt.items():
         speed_jerk = planning_stat.stability.speed_jerk.add()

@@ -112,6 +112,13 @@ def record_hdl(record_path):
     return flask.render_template('record.tpl', record=record)
 
 
+@app.route('/bos-ask', methods=['POST'])
+def bos_ask():
+    if flask.request.form.get('pin') != 'woyouyitouxiaomaolv':
+        return ''
+    return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
+
+
 class FlaskApp(gunicorn.app.base.BaseApplication):
     """A wrapper to run flask app."""
     def __init__(self, flask_app):
