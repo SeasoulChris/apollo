@@ -1,0 +1,12 @@
+vehicle_type: "Mkz7"
+controller_type: "Lon_Lat_Controller"
+vehicle_wheelbase: 3.06
+driving_mode: COMPLETE_AUTO_DRIVE
+gear_position: GEAR_DRIVE
+gear_position: GEAR_REVERSE
+
+control_period: 0.01                    # unit: sec
+control_frame_num: 100                  # unit: frame
+control_command_pct: 100                # unit: 1
+total_time_factor: 1000                 # unit: micro-sec/sec
+min_sample_size: 5                      # unit: 1

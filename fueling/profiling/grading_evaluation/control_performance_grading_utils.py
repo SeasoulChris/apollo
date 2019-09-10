@@ -8,8 +8,8 @@ import os
 from collections import namedtuple
 
 import colored_glog as glog
-import fueling.common.h5_utils as h5_utils
 
+import fueling.common.h5_utils as h5_utils
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
 import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
@@ -105,8 +105,10 @@ def compute_h5_and_gradings(target_groups):
                                     'beyond_feature_name',
                                     'beyond_threshold',
                                     'count_feature_name'])
-    grading_results.__new__.__defaults__ = (None,) * len(grading_results._fields)
-    grading_arguments.__new__.__defaults__ = (None,) * len(grading_arguments._fields)
+    grading_results.__new__.__defaults__ = (
+        None,) * len(grading_results._fields)
+    grading_arguments.__new__.__defaults__ = (
+        None,) * len(grading_arguments._fields)
     grading_group_result = grading_results(
         station_err_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['speed_reference'],
@@ -119,7 +121,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         station_err_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['acceleration_reference'],
-            std_filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='station_error',
             std_denorm_name=['speed_reference'],
@@ -137,7 +140,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         speed_err_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['acceleration_reference'],
-            std_filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='speed_error',
             std_denorm_name=['speed_reference'],
@@ -157,7 +161,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         lateral_err_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
-            std_filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='lateral_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
@@ -178,7 +183,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         lateral_err_rate_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
-            std_filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='lateral_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
@@ -198,7 +204,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         heading_err_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
-            std_filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
@@ -218,7 +225,8 @@ def compute_h5_and_gradings(target_groups):
         )),
         heading_err_rate_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
-            std_filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            std_filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             std_filter_mode=[0],
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
@@ -334,21 +342,24 @@ def compute_h5_and_gradings(target_groups):
         throttle_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='throttle_cmd',
             usage_filter_name=['acceleration_reference'],
-            usage_filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            usage_filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             usage_filter_mode=[0],
             usage_weight=profiling_conf.control_command_pct
         )),
         brake_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='brake_cmd',
             usage_filter_name=['acceleration_reference'],
-            usage_filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            usage_filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             usage_filter_mode=[0],
             usage_weight=profiling_conf.control_command_pct
         )),
         steering_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='steering_cmd',
             usage_filter_name=['curvature_reference'],
-            usage_filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            usage_filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             usage_filter_mode=[0],
             usage_weight=profiling_conf.control_command_pct
         )),
@@ -430,7 +441,8 @@ def compute_peak(grading_mtx, arg):
         glog.warn('no enough elements {} for peak computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return ([0.0, 0.0], 0)
-    idx_max = np.argmax(np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]]))
+    idx_max = np.argmax(
+        np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]]))
     return ([np.fabs(grading_mtx[idx_max, FEATURE_IDX[arg.peak_feature_name]]) /
              arg.peak_threshold, grading_mtx[idx_max, FEATURE_IDX[arg.peak_time_name]]],
             elem_num)
@@ -448,7 +460,8 @@ def compute_ending(grading_mtx, arg):
         glog.warn('no enough elements {} for ending computing requirement {}'
                   .format(elem_num, 1))
         return ([[0.0], [0.0], [0.0]], 0)
-    grading_mtx = grading_mtx[np.argsort(grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
+    grading_mtx = grading_mtx[np.argsort(
+        grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
     static_error = [np.fabs(grading_mtx[0, FEATURE_IDX[arg.ending_feature_name]]) /
                     arg.ending_threshold]
     static_start_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]]
@@ -460,8 +473,10 @@ def compute_ending(grading_mtx, arg):
         else:
             static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.ending_feature_name]]) /
                                 arg.ending_threshold)
-            static_start_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
-            static_stop_time.append(grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
+            static_start_time.append(
+                grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
+            static_stop_time.append(
+                grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
     return ([static_error, static_start_time, static_stop_time], elem_num)
 
 
@@ -567,7 +582,7 @@ def combine_gradings(grading_x, grading_y):
                     append_value = val_y
                 else:
                     grading_item_value = val_y
-                    append_alue = val_x
+                    append_value = val_x
                 # If the first static_start_time in append_value is close to the last
                 # static_stop_time in grading_item_value
                 if append_value[1][0] - grading_item_value[2][-1] <= 1.0:
@@ -589,7 +604,8 @@ def combine_gradings(grading_x, grading_y):
               grading_x._fields[idx].find('count') >= 0 or
               grading_x._fields[idx].find('mean') >= 0):
             if num_x + num_y != 0:
-                grading_item_value = (val_x * num_x + val_y * num_y) / (num_x + num_y)
+                grading_item_value = (
+                    val_x * num_x + val_y * num_y) / (num_x + num_y)
             else:
                 grading_item_value = 0.0
         grading_item_num = num_x + num_y
@@ -606,9 +622,11 @@ def output_gradings(target_grading):
                                        '{}_{}_control_performance_grading.txt'
                                        .format(profiling_conf.vehicle_type,
                                                profiling_conf.controller_type))
-    glog.info('writing grading output {} to {}'.format(grading, grading_output_path))
+    glog.info('writing grading output {} to {}'.format(
+        grading, grading_output_path))
     if not grading:
-        glog.warn('No grading results written to {}'.format(grading_output_path))
+        glog.warn('No grading results written to {}'.format(
+            grading_output_path))
     else:
         with open(grading_output_path, 'w') as grading_file:
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
@@ -637,7 +655,8 @@ def output_gradings(target_grading):
                 else:
                     grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
-            grading_file.write('\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
+            grading_file.write(
+                '\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
 
 
@@ -657,7 +676,8 @@ def highlight_gradings(task, grading_file):
     std_samples = []
     peak_samples = []
     if not grading_file:
-        glog.warn('No grading files found under the targeted path for task: {}'.format(task))
+        glog.warn(
+            'No grading files found under the targeted path for task: {}'.format(task))
         return ([], [])
     for file in grading_file:
         glog.info('Loading {}'.format(file))

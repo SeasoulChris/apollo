@@ -67,6 +67,17 @@ POSE_IDX = {
     "pose_heading": 4,
 }
 
+VEHICLE_DYNAMICS_IDX = {
+    "acceleration": 0,
+    "steering_target": 1,
+    "current_acceleration": 2,
+    "streeing_position": 3,
+    "timestamp_sec": 4,
+    "sequence_num": 5,
+    "chassis_timestamp_sec": 6,
+    "chassis_sequence_num": 7,
+}
+
 FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference", "heading_reference", "heading_rate_reference",
                  "curvature_reference", "path_remain", "station_error", "speed_error", "lateral_error", "lateral_error_rate",
                  "heading_error", "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station",
