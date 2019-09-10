@@ -68,8 +68,7 @@ def parse_error(path):
 def check_vehicle_id(conf):
     # print(conf.HasField('vehicle_id.other_unique_id'))
     vehicle_id = conf.vehicle_param.vehicle_id
-    if vehicle_id.HasField('vin') or vehicle_id.HasField('plate') \
-            or vehicle_id.HasField('other_unique_id'):
+    if vehicle_id.vin or vehicle_id.plate or vehicle_id.other_unique_id:
         return True
     glog.error("Error: No vehicle ID")
     return False

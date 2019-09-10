@@ -17,10 +17,9 @@ class ImuSpeed:
         timestamp_sec = location_est.measurement_time
         self.timestamp_list.append(timestamp_sec)
 
-        speed = location_est.pose.linear_velocity.x \
-                * math.cos(location_est.pose.heading) + \
-                location_est.pose.linear_velocity.y * \
-                math.sin(location_est.pose.heading)
+        velocity = location_est.pose.linear_velocity
+        heading = location_est.pose.heading
+        speed = velocity.x * math.cos(heading) + velocity.y * math.sin(heading)
         self.speed_list.append(speed)
 
     def get_speed_list(self):
@@ -30,13 +29,7 @@ class ImuSpeed:
         return self.timestamp_list
 
     def get_lastest_speed(self):
-        if len(self.speed_list) > 0:
-            return self.speed_list[-1]
-        else:
-            return None
+        return self.speed_list[-1] if self.speed_list else None
 
     def get_lastest_timestamp(self):
-        if len(self.timestamp_list) > 0:
-            return self.timestamp_list[-1]
-        else:
-            return None
+        return self.timestamp_list[-1] if self.timestamp_list else None

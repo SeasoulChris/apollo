@@ -119,9 +119,9 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
     msgs_iterator = populate_utils.DataStreamIterator(msgs_stream)
     pose_iterator = populate_utils.DataStreamIterator(pose_stream)
 
-    builder_manager = populate_utils. \
-        BuilderManager(WANTED_CHANNELS.values(),
-                       populate_utils.FramePopulator(root_dir, target_dir, slice_size))
+    builder_manager = populate_utils.BuilderManager(
+        WANTED_CHANNELS.values(),
+        populate_utils.FramePopulator(root_dir, target_dir, slice_size))
     msg = get_next_message(None, msg_map, msgs_iterator)
     message_struct = populate_utils.MessageStruct(msg, None, None)
     pose = pose_iterator.next(lambda x: x.topic == '/apollo/localization/pose')
