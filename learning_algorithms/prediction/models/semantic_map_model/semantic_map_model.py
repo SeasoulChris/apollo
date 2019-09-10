@@ -145,9 +145,9 @@ class SemanticMapSelfLSTMModel(nn.Module):
 
     def forward(self, X):
         img = X[0]
-        obs_pos = X[3]
         obs_hist_size = X[2]
-        obs_pos_rel = X[7]
+        obs_pos = X[3]
+        obs_pos_rel = X[4]
         N = obs_pos.size(0)
         observation_len = obs_pos.size(1)
         ht, ct = self.h0.repeat(N, 1), self.h0.repeat(N, 1)
@@ -204,11 +204,12 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         self.edge_hidden_size = edge_hidden_size
 
+        self.step_disp_embedding = nn.Linear(2, embed_size)
+
         # Target hidden state
         self.target_h0, self.target_c0 = generate_lstm_states(node_hidden_size)
 
         # Target RNN flow
-        self.target_rel_disp_embedding = nn.Linear(2, embed_size)
         self.target_lstm = nn.LSTM(embed_size, node_hidden_size,
                                    num_layers=1, batch_first=True)
         self.target_attention_embedding = nn.Linear(2, attention_dim)
@@ -218,7 +219,6 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
         # Nearby RNN flow
         self.embed_size = embed_size
-        self.nearby_rel_disp_embedding = nn.Linear(2, embed_size)
         self.nearby_lstm = nn.LSTM(embed_size, edge_hidden_size, num_layers=1, batch_first=True)
         self.nearby_attention_embedding = nn.Linear(2, attention_dim)
 
@@ -228,12 +228,13 @@ class SemanticMapSocialAttentionModel(nn.Module):
         self.pred_layer = nn.Linear(node_hidden_size + self.cnn_out_size + edge_hidden_size, 2)
 
     def forward(self, X):
-        img, target_obs_pos, target_obs_hist_size, target_obs_pos_rel, \
-             nearby_obs_pos, nearby_obs_hist_sizes, nearby_obs_pos_rel, _, num_nearby_obs = X
+        img, target_obs_pos_abs, target_obs_hist_size, target_obs_pos_rel, target_obs_pos_step, \
+             nearby_obs_pos_abs, nearby_obs_hist_sizes, nearby_obs_pos_rel, nearby_obs_pos_step, \
+             num_nearby_obs = X
 
         N = img.size(0)
-        observation_len = target_obs_pos.size(1)
-        nearby_padding_size = nearby_obs_pos.size(1)
+        observation_len = target_obs_pos_abs.size(1)
+        nearby_padding_size = nearby_obs_pos_abs.size(1)
         M = N * nearby_padding_size
         pred_mask = cuda(torch.ones(N))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
@@ -257,23 +258,27 @@ class SemanticMapSocialAttentionModel(nn.Module):
         for t in range(1, observation_len+self.pred_len):
             if t < observation_len:
                 target_ts_obs_mask = (target_obs_hist_size > observation_len - t).view(-1) # (N,)
-                curr_target_obs_pos = target_obs_pos[:, t, :].float()  # (N, 2)
+                curr_target_obs_pos_abs = target_obs_pos_abs[:, t, :].float()  # (N, 2)
                 curr_target_obs_pos_rel = target_obs_pos_rel[:, t, :].float()  # (N, 2)
+                curr_target_obs_pos_step = target_obs_pos_step[:, t, :].float() # (N, 2)
                 # (N, nearby_padding_size, 1)
                 nearby_ts_obs_mask = (nearby_obs_hist_sizes > observation_len-t)
                 # (N, nearby_padding_size)
                 nearby_ts_obs_mask = nearby_ts_obs_mask[:, :, 0]
                 # (N, nearby_padding_size, 2)
-                curr_nearby_obs_pos = nearby_obs_pos[:, :, t, :].float()
+                curr_nearby_obs_pos_abs = nearby_obs_pos_abs[:, :, t, :].float()
                 # (N, nearby_padding_size, 2)
                 curr_nearby_obs_pos_rel = nearby_obs_pos_rel[:, :, t, :].float()
+                # (N, nearby_padding_size, 2)
+                curr_nearby_obs_pos_step = nearby_obs_pos_step[:, :, t, :].float()
             else:
                 target_ts_obs_mask = (target_obs_hist_size > -1).view(-1)
                 nearby_ts_obs_mask = cuda(torch.ones(N, nearby_padding_size, 1))
                 pred_input = torch.cat((target_ht, img_embedding, Ht), 1)
                 pred_out = self.pred_layer(pred_input).float().clone()
-                curr_target_obs_pos = curr_target_obs_pos + pred_out
+                curr_target_obs_pos_abs = curr_target_obs_pos_abs + pred_out
                 curr_target_obs_pos_rel = curr_target_obs_pos_rel + pred_out
+                curr_target_obs_pos_step = pred_out
                 pred_traj[:, t-observation_len, :] = curr_target_obs_pos_rel.clone()
 
             # Target obstacles forward
@@ -281,8 +286,9 @@ class SemanticMapSocialAttentionModel(nn.Module):
             # TODO(kechxu) figure out the following if condition
             if num_target_ts_obs == 0:
                 continue
-            target_disp_embedding = self.target_rel_disp_embedding(
-                curr_target_obs_pos_rel[target_ts_obs_mask==1, :].view(num_target_ts_obs, 1, -1).clone())
+            target_disp_embedding = self.step_disp_embedding(
+                curr_target_obs_pos_step[target_ts_obs_mask==1, :]
+                .view(num_target_ts_obs, 1, -1).clone())
 
             _, (ht_new_t, ct_new_t) = self.target_lstm(target_disp_embedding,
                 (target_ht[target_ts_obs_mask==1, :].view(1, num_target_ts_obs, -1),
@@ -297,8 +303,8 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
             curr_nearby_ts_mask = nearby_ts_obs_mask.view(-1).long()
 
-            nearby_disp_embedding = self.nearby_rel_disp_embedding(
-                (curr_nearby_obs_pos_rel.view(-1, 2).clone())[curr_nearby_ts_mask==1, :] \
+            nearby_disp_embedding = self.step_disp_embedding(
+                (curr_nearby_obs_pos_step.view(-1, 2).clone())[curr_nearby_ts_mask==1, :] \
                 .clone()).view(curr_N, 1, -1)
 
             _, (ht_new_n, ct_new_n) = self.nearby_lstm(nearby_disp_embedding,
@@ -309,11 +315,11 @@ class SemanticMapSocialAttentionModel(nn.Module):
             nearby_ct_list[curr_nearby_ts_mask==1, :] = ct_new_n.view(curr_N, -1)
 
             # (M, 2)
-            curr_nearby_pos = curr_nearby_obs_pos.view(-1, 2)
+            curr_nearby_pos_abs = curr_nearby_obs_pos_abs.view(-1, 2)
             # (M, 2)
-            curr_target_pos = curr_target_obs_pos.repeat(1, nearby_padding_size).view(-1, 2)
+            curr_target_pos_abs = curr_target_obs_pos_abs.repeat(1, nearby_padding_size).view(-1, 2)
             # (M, 2)
-            curr_tn_rel_pos = curr_nearby_pos - curr_target_pos
+            curr_tn_rel_pos = curr_nearby_pos_abs - curr_target_pos_abs
 
             # (M, embed_size)
             att_nearby_embedding = self.nearby_attention_embedding(

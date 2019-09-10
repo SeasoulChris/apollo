@@ -396,40 +396,46 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             if self.img_transform:
                 img = self.img_transform(img)
             all_obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
+            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
 
             # Target obstacle's historical information
-            target_obs_pos = all_obs_positions[predicting_idx, :, :]
-            target_obs_pos_rel = target_obs_pos - target_obs_pos[-1, :]
-            all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
+            target_obs_pos_abs = all_obs_positions[predicting_idx, :, :]
+            target_obs_pos_rel = target_obs_pos_abs - target_obs_pos_abs[-1, :]
+            target_obs_pos_step = all_obs_pos_rel[predicting_idx]
             target_obs_hist_size = obs_hist_sizes[predicting_idx]
 
             # Nearby obstacles' historical information
             num_obs = all_obs_positions.shape[0]
             nearby_obs_mask = [(i != predicting_idx) for i in range(num_obs)]
-            nearby_obs_pos = all_obs_positions[nearby_obs_mask, :]
+            nearby_obs_pos_abs = all_obs_positions[nearby_obs_mask, :]
             nearby_obs_hist_sizes = obs_hist_sizes[nearby_obs_mask, :]
-            nearby_obs_pos_rel = nearby_obs_pos - nearby_obs_pos[:, -1:, :]
+            nearby_obs_pos_rel = nearby_obs_pos_abs - nearby_obs_pos_abs[:, -1:, :]
+            nearby_obs_pos_step = all_obs_pos_rel[nearby_obs_mask, :]
 
-            selected_nearby_idx = self.select_nearby_obs(target_obs_pos, nearby_obs_pos)
-            nearby_obs_pos_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, obs_hist_size, 2])
+            selected_nearby_idx = self.select_nearby_obs(target_obs_pos_abs, nearby_obs_pos_abs)
+            nearby_obs_pos_abs_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, obs_hist_size, 2])
             nearby_obs_hist_sizes_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, 1])
             nearby_obs_pos_rel_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, 20, 2])
+            nearby_obs_pos_step_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, 20, 2])
             num_nearby_obs = len(selected_nearby_idx)
-            nearby_obs_pos_with_padding[0:num_nearby_obs, :] = \
-                nearby_obs_pos[selected_nearby_idx, :]
+            nearby_obs_pos_abs_with_padding[0:num_nearby_obs, :] = \
+                nearby_obs_pos_abs[selected_nearby_idx, :]
             nearby_obs_hist_sizes_with_padding[0:num_nearby_obs, :] = \
                 nearby_obs_hist_sizes[selected_nearby_idx, :]
             nearby_obs_pos_rel_with_padding[0:num_nearby_obs, :] = \
                 nearby_obs_pos_rel[selected_nearby_idx, :]
+            nearby_obs_pos_step_with_padding[0:num_nearby_obs, :] = \
+                nearby_obs_pos_step[selected_nearby_idx, :]
 
             return ((img,
-                     torch.from_numpy(target_obs_pos).float(),
+                     torch.from_numpy(target_obs_pos_abs).float(),
                      torch.from_numpy(target_obs_hist_size).float(),
                      torch.from_numpy(target_obs_pos_rel).float(),
-                     torch.from_numpy(nearby_obs_pos_with_padding).float(),
+                     torch.from_numpy(target_obs_pos_step).float(),
+                     torch.from_numpy(nearby_obs_pos_abs_with_padding).float(),
                      torch.from_numpy(nearby_obs_hist_sizes_with_padding).float(),
                      torch.from_numpy(nearby_obs_pos_rel_with_padding).float(),
-                     torch.from_numpy(all_obs_pos_rel[predicting_idx]).float(),
+                     torch.from_numpy(nearby_obs_pos_step_with_padding).float(),
                      torch.from_numpy(num_nearby_obs * np.ones((1)))),
                     torch.from_numpy(target_obs_future_traj).float())
         else:
