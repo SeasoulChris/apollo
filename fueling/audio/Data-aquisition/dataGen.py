@@ -1,11 +1,14 @@
 from __future__ import unicode_literals
 import youtube_dl
+import moviepy
+import moviepy.video.io.ffmpeg_tools
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import csv
 import ast
 import os
 import os.path
 #Class definitions
+
 
 em_class = { '/m/03j1ly':'Emergency vehicle',
 		'/m/04qvtq':'Police car(siren)',
@@ -67,7 +70,7 @@ nonem_files_path = '/Users/sheel/nonEmergency/'
 
 # mention the name of the .csv file
 with open('balanced_train_segments.csv') as csvfile:
-	readCSV = csv.reader(csvfile,delimiter=str(u',').encode('utf-8'))
+	readCSV = csv.reader(csvfile, delimiter=",")
 	count=0
 	em_c=0
 	non_em_c=0
@@ -108,7 +111,7 @@ with open('balanced_train_segments.csv') as csvfile:
 			if flg1==1 and flg2==1:
 				continue;
 			elif flg1==1:
-				print v_id,v_start,v_end,'em'
+				print("{}, {}, {}, em".format(v_id, v_start, v_end))
 				ydl_opts = {
     					'format': 'bestaudio/best',
 					'ignoreerrors':'True',
@@ -129,12 +132,12 @@ with open('balanced_train_segments.csv') as csvfile:
 				if(os.path.exists(input_file)):
 					em_c = em_c +1
 					output_file = em_files_path+str(em_c)+'.wav'
-					print output_file
+					print(output_file)
 					ffmpeg_extract_subclip(input_file,v_start,v_end,targetname=output_file)
 					os.remove(input_file)
 					
 			elif flg2==1:
-				print v_id,v_start,v_end,'Non-em'
+				print("{}, {}, {}, Non-em".format(v_id, v_start, v_end))
 				ydl_opts = {
     					'format': 'bestaudio/best',
 					'ignoreerrors':'True',
@@ -154,6 +157,6 @@ with open('balanced_train_segments.csv') as csvfile:
 				if(os.path.exists(input_file)):
 					non_em_c = non_em_c+1
 					output_file = nonem_files_path+str(non_em_c)+'.wav'
-					print output_file
+					print(output_file)
 					ffmpeg_extract_subclip(input_file,v_start,v_end,targetname=output_file) 
 					os.remove(input_file)
