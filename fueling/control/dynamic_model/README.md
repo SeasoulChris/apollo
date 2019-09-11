@@ -13,5 +13,5 @@
    ./fueling/control/dynamic_model/feature_extraction/feature_extraction.sh
    ```
 3. Results are:
-   * sample sets: `INTER_FOLDER/job_owner/job_id`, where `INTER_FOLDER` is defined in `./fueling/control/dynamic_model/feature_extraction/sample-set.py`
-   * uniform distributed sets: `OUTPUT_FOLDER/job_owner/job_id/TODAY`, where`OUTPUT_FOLDER` is defined in `./fueling/control/dynamic_model/feature_extraction/uniform-set.py` and `TODAY` is the date when the script is run.
+   * sample sets: `INTER_FOLDER/job_owner/job_id`, where `INTER_FOLDER` is defined in `./fueling/control/dynamic_model/feature_extraction/sample_set.py`
+   * uniform distributed sets: `OUTPUT_FOLDER/job_owner/job_id/TODAY`, where`OUTPUT_FOLDER` is defined in `./fueling/control/dynamic_model/feature_extraction/uniform_set.py` and `TODAY` is the date when the script is run.

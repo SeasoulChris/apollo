@@ -3,9 +3,7 @@
 A simple demo PySpark job with GPU training.
 
 Run with:
-    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 2 --memory 20g \
-        --gpu --env fuel-py36 \
-        fueling/demo/gpu-sample.py
+    ./tools/submit-job-to-k8s.sh --gpu --env fuel-py36 fueling/demo/gpu_sample.py
 """
 
 # Standard packages

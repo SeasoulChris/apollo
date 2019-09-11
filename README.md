@@ -75,9 +75,7 @@ practices are:
    upstream environments which have their own well-known working directories,
    such as `/apollo`, `/mnt/bos`, `/opt/spark/work-dir`, etc. To avoid relative
    path mistakes, we enforce providing absolute file paths whenever possible.
-1. File and folder name convention: **lower_case_with_underscores** if it's
-   importable, otherwise **lower-case-with-dash**. So all main pipeline jobs
-   should be **dash** style.
+1. Python script and package name convention: **lower_case_with_underscores**.
 1. Filter early, filter often.
 1. Cascade simple transformations, instead of making a huge complicate one.
 1. All transformations should be repeatable and consistant. The process and even

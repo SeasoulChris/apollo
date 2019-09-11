@@ -16,14 +16,14 @@ JOB="/apollo/modules/data/fuel/fueling/data/pipelines/bag_to_record.py"
     ${JOB}
 
 # Job: Daily jobs.
-JOB="fueling/daily-jobs.py"
+JOB="fueling/daily_jobs.py"
 ./tools/submit-job-to-k8s.sh --workers 10 --memory 24g --disk 800 ${JOB} \
     --generate_small_records_of_last_n_days=30 \
     --index_records_of_last_n_days=30
 
 # Job: Control profiling.
-JOB="fueling/profiling/control-profiling-metrics.py"
+JOB="fueling/profiling/control_profiling_metrics.py"
 ./tools/submit-job-to-k8s.sh --workers 10 --memory 24g ${JOB}
-JOB="fueling/profiling/control-profiling-visualization.py"
+JOB="fueling/profiling/control_profiling_visualization.py"
 CONDA_ENV="fuel-py27"
 ./tools/submit-job-to-k8s.sh --workers 10 --memory 24g -e ${CONDA_ENV} ${JOB}

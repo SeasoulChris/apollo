@@ -6,8 +6,7 @@ Prerequisite:
     python rosbag_helper.py demo_3.5.record
 
 Run with:
-    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 1 --memory 8g --disk 10 \
-        fueling/demo/count-msg-by-channel.py
+    ./tools/submit-job-to-k8s.sh fueling/demo/count_msg_by_channel.py
 """
 #!/usr/bin/env python
 

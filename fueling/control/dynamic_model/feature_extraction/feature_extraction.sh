@@ -7,7 +7,7 @@ set -e
 JOB_ID=$(date +%Y-%m-%d-%H)
 
 # Feature extraction.
-JOB="fueling/control/dynamic_model/feature_extraction/sample-set.py"
+JOB="fueling/control/dynamic_model/feature_extraction/sample_set.py"
 ENV="fuel-py27-cyber"
 INPUT_DATA_PATH="modules/control/data/records"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 60g ${JOB} \
@@ -15,7 +15,7 @@ INPUT_DATA_PATH="modules/control/data/records"
 
 
 # Feature extraction.
-JOB="fueling/control/dynamic_model/feature_extraction/uniform-set.py"
+JOB="fueling/control/dynamic_model/feature_extraction/uniform_set.py"
 ENV="fuel-py27-cyber"
 INPUT_DATA_PATH="modules/control/data/records"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 60g ${JOB} \
