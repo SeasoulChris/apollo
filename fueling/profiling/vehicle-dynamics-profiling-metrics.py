@@ -15,9 +15,9 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
+import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils \
+       as feature_utils
 import fueling.profiling.grading_evaluation.vehicle_dynamics_grading_utils as grading_utils
-import fueling.profiling.contron_profiling_metric_utils as control_profiling
 
 
 class VehicleDynamicsProfilingMetrics(BasePipeline):
@@ -29,12 +29,11 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
     def run_test(self):
         """Run test."""
 
-        original_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
+        original_prefix = '/apollo/modules/data/fuel/testdata/profiling/vehicle_dynamics'
+        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/vehicle_dynamics/generated'
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
             os.path.join(original_prefix, 'Road_Test'),
-            os.path.join(original_prefix, 'Sim_Test'),
         ]).cache()
 
         self.run(todo_tasks, original_prefix, target_prefix)
@@ -47,8 +46,8 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
         original_prefix = 'small-records/2019'
         target_prefix = 'modules/profiling/vehicle_dynamics_profiling_hf5'
         # RDD(tasks), the task dirs
-        todo_tasks = spark_helper.cache_and_log('todo_tasks',
-                                                dir_utils.get_todo_tasks(original_prefix, target_prefix))
+        dir_todo_tasks = dir_utils.get_todo_tasks(original_prefix, target_prefix)
+        todo_tasks = spark_helper.cache_and_log('todo_tasks', dir_todo_tasks)
         self.run(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         glog.info('Control Profiling: All Done, PROD')
@@ -74,13 +73,23 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, (message)s)
          .groupByKey()
          # RDD(target_dir, group_id, group of (message)s), divide messages into groups
-         .flatMap(control_profiling.partition_data)
+         .flatMap(partition_data)
          # PairRDD(target_dir, grading_result), for each group get the gradings and write h5 files
          .map(grading_utils.computing_and_grading)
          # PairRDD(target_dir, combined_grading_result), combine gradings for each target/task
          .reduceByKey(grading_utils.combine_gradings)
          # PairRDD(target_dir, combined_grading_result), output grading results for each target
          .foreach(grading_utils.output_gradings))
+
+
+def partition_data(target_msgs):
+    """Divide the messages to groups each of which has exact number of messages"""
+    target, msgs = target_msgs
+    glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    msgs = sorted(msgs, key=lambda msg: msg.timestamp)
+    msgs_groups = [msgs[idx: idx + feature_utils.MSG_PER_SEGMENT]
+                   for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]
+    return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
 
 
 if __name__ == '__main__':
