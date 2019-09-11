@@ -32,6 +32,18 @@ dependencies:
   - pytz
   - requests
 
+  # Audio
+  - librosa
+  - seaborn
+  - pydub
+  - pywavelets
+
+  # Jupyter notebook
+  - jupyter
+  - jupyter_client
+  - jupyter_console
+  - jupyter_core
+
   - pip:
     - azure.storage.blob
     - colored-glog
@@ -40,3 +52,4 @@ dependencies:
     - scaleapi
     - youtube-dl
     - moviepy
+    - eyed3
