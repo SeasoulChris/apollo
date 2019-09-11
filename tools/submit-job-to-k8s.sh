@@ -230,9 +230,12 @@ for i in ${SECRET_ENVS[@]}; do
       --conf spark.kubernetes.executor.secretKeyRef.${KEY}=${VALUE}"
 done
 
+JOB_NAME=${SUBMITTER}-$(basename "${JOB_FILE}" | cut -d "." -f 1 | sed "s/_/-/g")
+
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \
+    --name ${JOB_NAME} \
     --deploy-mode cluster \
     --conf spark.default.parallelism="${EXECUTORS}" \
     --conf spark.driver.memory="${DRIVER_MEMORY}" \
