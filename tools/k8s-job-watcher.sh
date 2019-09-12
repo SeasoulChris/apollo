@@ -23,6 +23,7 @@ while true; do
   fi
 
   DRIVER_SVC=$(kubectl get services | grep "${JOB_NAME}" | tail -n 1 | awk '{print $1}')
+  echo ""
   echo -e "Kubernetes Dashboard:${BLUE} http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:443/proxy/#!/pod?namespace=default ${NO_COLOR}"
   echo -e "    Auth with${BLUE} ${TOKEN} ${NO_COLOR}"
   #echo ""
