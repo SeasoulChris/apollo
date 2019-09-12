@@ -33,9 +33,7 @@ dependencies:
   - requests
 
   # Audio
-  - librosa
   - seaborn
-  - pydub
   - pywavelets
 
   # Jupyter notebook
@@ -47,9 +45,12 @@ dependencies:
   - pip:
     - azure.storage.blob
     - colored-glog
-    - pyspark-utils
     - Pillow
+    - pyspark-utils
     - scaleapi
-    - youtube-dl
-    - moviepy
+    # Audio
     - eyed3
+    - librosa
+    - moviepy
+    - pydub
+    - youtube-dl
