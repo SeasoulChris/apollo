@@ -14,7 +14,7 @@ dependencies:
 
   # Data science
   - boto3
-  - cudatoolkit = 9.2
+  - cudatoolkit = 10.0
   - h5py
   - keras
   - matplotlib
