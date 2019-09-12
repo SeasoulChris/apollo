@@ -33,12 +33,11 @@ if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
       -v "${HOME}/.kube":/root/.kube \
       -v "$(pwd)":/fuel \
       -e IN_CLIENT_DOCKER=true \
-      -e SUBMITTER=${USER} \
+      -e SUBMITTER=$(whoami) \
       -w="/fuel" \
       apolloauto/fuel-client:20190821_1718 \
-      bash tools/submit-job-to-k8s.sh $@ | tee /tmp/spark-submit.log
-  grep 'Exit code: ' /tmp/spark-submit.log > /tmp/spark-submit.ret
-  exit $(awk '{print $3}' /tmp/spark-submit.ret)
+      bash tools/submit-job-to-k8s.sh $@
+  exit $?
 fi
 
 # Now we are inside the client docker, and working dir is the fuel root.
@@ -232,6 +231,8 @@ done
 
 JOB_NAME=${SUBMITTER}-$(basename "${JOB_FILE}" | cut -d "." -f 1 | sed "s/_/-/g")
 
+./tools/k8s-job-watcher.sh "${JOB_NAME}" &
+
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \
@@ -251,4 +252,7 @@ spark-submit \
     --conf spark.kubernetes.container.image.pullSecrets="baidubce" \
     --conf spark.kubernetes.executor.ephemeralStorageGB="${EXECUTOR_DISK_GB}" \
     --conf spark.kubernetes.executor.request.cores="${EXECUTOR_CORES}" \
-    ${ENV_CONF} "${JOB_FILE}" --running_mode=PROD $@
+    ${ENV_CONF} "${JOB_FILE}" --running_mode=PROD $@ | tee /tmp/spark-submit.log
+
+EXIT_CODE=$(grep 'Exit code: ' /tmp/spark-submit.log | awk '{print $3}')
+exit ${EXIT_CODE}
