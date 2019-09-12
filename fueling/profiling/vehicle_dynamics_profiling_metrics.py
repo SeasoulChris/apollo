@@ -35,10 +35,9 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
         todo_tasks = self.to_rdd([
             os.path.join(original_prefix, 'Road_Test'),
         ]).cache()
-
         self.run(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
-        glog.info('tasks {}'.format(todo_tasks))
+        glog.info('tasks {}'.format(todo_tasks.collect()))
         glog.info('Vehicle Dynamics Profiling: All Done, TEST')
 
     def run_prod(self):
@@ -74,8 +73,10 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
          .groupByKey()
          # RDD(target_dir, group_id, group of (message)s), divide messages into groups
          .flatMap(partition_data)
-         # PairRDD(target_dir, grading_result), for each group get the gradings and write h5 files
-         .map(grading_utils.computing_and_grading)
+         # PairRDD(target_dir, matrix_result), for each group get the matrix and write h5 files
+         .map(grading_utils.generating_matrix_and_h5)
+         # PairRDD(target_dir, grading_result), for each group compute the gradings
+         .map(grading_utils.computing_gradings)
          # PairRDD(target_dir, combined_grading_result), combine gradings for each target/task
          .reduceByKey(grading_utils.combine_gradings)
          # PairRDD(target_dir, combined_grading_result), output grading results for each target

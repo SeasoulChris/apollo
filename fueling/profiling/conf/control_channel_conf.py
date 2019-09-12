@@ -67,7 +67,7 @@ POSE_IDX = {
     "pose_heading": 4,
 }
 
-VEHICLE_DYNAMICS_IDX = {
+DYNAMICS_FEATURE_IDX = {
     "acceleration": 0,
     "steering_target": 1,
     "current_acceleration": 2,

@@ -10,12 +10,11 @@ from collections import namedtuple
 import colored_glog as glog
 
 import fueling.common.h5_utils as h5_utils
-from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
-from fueling.profiling.conf.control_channel_conf import VEHICLE_DYNAMICS_IDX
+from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX
 import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils as feature_utils
 
 
-def computing_and_grading(target_groups):
+def generating_matrix_and_h5(target_groups):
     """Do computing against one group"""
     target, group_id, msgs = target_groups
     glog.info('computing {} messages for target {}'.format(len(msgs), target))
@@ -32,7 +31,11 @@ def computing_and_grading(target_groups):
     glog.info('writing {} messages to h5 file {} for target {}'
               .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
+    return (grading_mtx, target)
 
+def computing_gradings(mtx_groups):
+    """Do computing against one group"""
+    grading_mtx, target = mtx_groups
     grading_results = namedtuple('grading_results',
                                  ['throttle_dead_time',
                                   'throttle_rise_time',
@@ -40,14 +43,12 @@ def computing_and_grading(target_groups):
                                   'throttle_overshoot',
                                   'throttle_bandwidth',
                                   'throttle_resonant_peak',
-
                                   'brake_dead_time',
                                   'brake_rise_time',
                                   'brake_setting_time',
                                   'brake_overshoot',
                                   'brake_bandwidth',
                                   'brake_resonant_peak',
-
                                   'steering_dead_time',
                                   'steering_rise_time',
                                   'steering_setting_time',
@@ -118,19 +119,16 @@ def computing_and_grading(target_groups):
             desired_feature_name='acceleration_throttle',
             metured_feature_name='current_acceleration_throttle'
         ))
-
     brake_bandwidth, brake_resonant_peak = compute_dynamics_freq(
         grading_mtx, grading_arguments(
             desired_feature_name='acceleration_brake',
             metured_feature_name='current_acceleration_brake'
         ))
-
     steering_bandwidth, steering_resonant_peak = compute_dynamics_freq(
         grading_mtx, grading_arguments(
             desired_feature_name='streeting_target',
             metured_feature_name='streering_position'
         ))
-
     grading_group_result = grading_results(
         throttle_dead_time=compute_deadtime(),
         throttle_rise_time=throttle_rise_time,
@@ -151,7 +149,6 @@ def computing_and_grading(target_groups):
         steering_bandwidth=steering_bandwidth,
         steering_resonant_peak=steering_resonant_peak,
     )
-
     return (target, grading_group_result)
 
 
@@ -165,9 +162,9 @@ def compute_dynamics_time(grading_mtx, arg):
     """Compute the dynamics time domain field"""
 
     # measured value
-    y = grading_mtx[:, VEHICLE_DYNAMICS_IDX[arg.std_norm_name]]
+    y = grading_mtx[:, DYNAMICS_FEATURE_IDX[arg.std_norm_name]]
     # desired value
-    u = grading_mtx[:, VEHICLE_DYNAMICS_IDX[arg.std_denorm_name]]
+    u = grading_mtx[:, DYNAMICS_FEATURE_IDX[arg.std_denorm_name]]
     # TODO(fengzongbao): Need to complete
     t_dead = 0.0
     a1, a2, b1, b2 = dynamics_estimator(y, u, t_dead)
@@ -183,9 +180,9 @@ def compute_dynamics_freq(grading_mtx, arg):
     """Compute the dynamics frequency domain field"""
 
     # measured value
-    y = grading_mtx[:, VEHICLE_DYNAMICS_IDX[arg.std_norm_name]]
+    y = grading_mtx[:, DYNAMICS_FEATURE_IDX[arg.std_norm_name]]
     # desired value
-    u = grading_mtx[:, VEHICLE_DYNAMICS_IDX[arg.std_denorm_name]]
+    u = grading_mtx[:, DYNAMICS_FEATURE_IDX[arg.std_denorm_name]]
 
     # TODO(fengzongbao): Need to complete
     t_dead = 0.0
@@ -247,7 +244,7 @@ def combine_gradings(grading_x, grading_y):
     return grading_x
 
 
-def output_gradings():
+def output_gradings(target_grading):
     """Write the grading results to files in coresponding target dirs"""
     # TODO(fengzongbao): Need to complete
     pass

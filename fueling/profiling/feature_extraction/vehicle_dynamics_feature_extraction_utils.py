@@ -11,8 +11,67 @@ from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import Cont
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 
-from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX, POSE_IDX
+from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, MODE_IDX
 
+# Message number in each segment
+MSG_PER_SEGMENT = 30000
+# Maximum allowed time gap betwee two messages
+MAX_PHASE_DELTA = 0.01
+# Minimum epsilon value used in compare with zero
+MIN_EPSILON = 0.000001
+
+
+def verify_vehicle_controller(task):
+    """Verify if the task has any record file whose controller/vehicle types match config"""
+    record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
+                        if (record_utils.is_record_file(record_file) or
+                            record_utils.is_bag_file(record_file))), None)
+    if not record_file:
+        glog.warn('no valid record file found in task: {}'.format(task))
+        return False
+    # Read two topics together to avoid looping all messages in the record file twice
+    glog.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
+    read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
+                                                 record_utils.HMI_STATUS_CHANNEL])
+    messages = read_record_func(record_file)
+    glog.info('{} messages for record file {}'.format(
+        len(messages), record_file))
+    vehicle_message = get_message_by_topic(
+        messages, record_utils.HMI_STATUS_CHANNEL)
+    if not vehicle_message:
+        glog.error('no vehicle messages found in task {} record {}'.format(task, record_file))
+        return False
+    control_message = get_message_by_topic(messages, record_utils.CONTROL_CHANNEL)
+    if not control_message:
+        glog.error('no control messages found in task {} record {}'.format(task, record_file))
+        return False
+    return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
+                               record_utils.message_to_proto(control_message))
+
+
+def data_matches_config(vehicle_type, controller_type):
+    """Compare the data retrieved in record file and configured value and see if matches"""
+    conf_vehicle_type = get_profiling_config().vehicle_type
+    conf_controller_type = get_profiling_config().controller_type
+    if conf_vehicle_type != vehicle_type:
+        glog.warn('mismatch between record vehicle {} and configed {}'
+                  .format(vehicle_type, conf_vehicle_type))
+        return False
+    if controller_type.debug.simple_lat_debug and controller_type.debug.simple_lon_debug:
+        if conf_controller_type != 'Lon_Lat_Controller':
+            glog.warn('mismatch between record controller Lon_Lat_Controller and configed {}'
+                      .format(conf_controller_type))
+            return False
+    elif controller_type.debug.simple_mpc_debug:
+        if conf_controller_type != 'Mpc_Controller':
+            glog.warn('mismatch between record controller Mpc_Controller and configed {}'
+                      .format(conf_controller_type))
+            return False
+    else:
+        glog.warn('no controller type found in records')
+        return False
+    return True
+    
 
 def extract_data_two_channels(msgs, driving_mode, gear_position):
     """Extract control/chassis data array and filter the control data with selected chassis features"""
@@ -39,20 +98,20 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
     chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
     # Second, filter the control data with existing chassis and localization sequence_num
-    control_idx_by_chassis = np.in1d(control_mtx[:, FEATURE_IDX['chassis_sequence_num']],
+    control_idx_by_chassis = np.in1d(control_mtx[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']],
                                      chassis_mtx_filtered[:, MODE_IDX['sequence_num']])
     control_mtx_rtn = control_mtx[control_idx_by_chassis, :]
     # Third, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
     inv_seq_chassis = (
-        np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_sequence_num']]) < 0)
+        np.diff(control_mtx_rtn[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]) < 0)
     control_idx_inv_seq = np.where(np.insert(inv_seq_chassis, 0, 0))
     control_mtx_rtn = np.delete(control_mtx_rtn, control_idx_inv_seq, axis=0)
     # Fourth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
     chassis_idx = 0
     for control_idx in range(control_mtx_rtn.shape[0]):
-        while (control_mtx_rtn[control_idx, FEATURE_IDX['chassis_sequence_num']] !=
+        while (control_mtx_rtn[control_idx, DYNAMICS_FEATURE_IDX['chassis_sequence_num']] !=
                chassis_mtx_filtered[chassis_idx, MODE_IDX['sequence_num']]):
             chassis_idx += 1
         chassis_idx_rtn.append(chassis_idx)
