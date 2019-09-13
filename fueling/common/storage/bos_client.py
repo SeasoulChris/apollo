@@ -70,15 +70,10 @@ class BosClient(BaseObjectStorageClient):
             for obj in page.get('Contents', []):
                 yield obj
 
-    def list_dirs(self, prefix, to_abs_path=True):
-        """Get a RDD of dirs with given prefix."""
-        dirs = [obj['Key'][:-1] for obj in self.list_objects(prefix) if obj['Key'].endswith('/')]
-        return map(self.abs_path, dirs) if to_abs_path else dirs
-
     def file_exists(self, remote_path):
         """Check if specified file is existing"""
         try:
-            response = self.client().get_object(Bucket=self.bucket, Key=remote_path)
+            self.client().get_object(Bucket=self.bucket, Key=remote_path)
         except botocore.exceptions.ClientError as ex:
             if ex.response['Error']['Code'] == 'NoSuchKey':
                 return False
