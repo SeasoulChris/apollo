@@ -11,7 +11,7 @@ from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import Cont
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 
-from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, MODE_IDX
+from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, DYNAMICS_MODE_IDX
 
 # Message number in each segment
 MSG_PER_SEGMENT = 30000
@@ -71,7 +71,7 @@ def data_matches_config(vehicle_type, controller_type):
         glog.warn('no controller type found in records')
         return False
     return True
-    
+
 
 def extract_data_two_channels(msgs, driving_mode, gear_position):
     """Extract control/chassis data array and filter the control data with selected chassis features"""
@@ -89,17 +89,17 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
         return np.take(control_mtx, [], axis=0)
     # First, filter the chassis data with desired driving modes and gear locations
     driving_condition = (
-        chassis_mtx[:, MODE_IDX['driving_mode']] == driving_mode)
+        chassis_mtx[:, DYNAMICS_MODE_IDX['driving_mode']] == driving_mode)
     gear_condition = (
-        chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[0])
+        chassis_mtx[:, DYNAMICS_MODE_IDX['gear_location']] == gear_position[0])
     for gear_idx in range(1, len(gear_position)):
         gear_condition |= (
-            chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[gear_idx])
+            chassis_mtx[:, DYNAMICS_MODE_IDX['gear_location']] == gear_position[gear_idx])
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
     chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
     # Second, filter the control data with existing chassis and localization sequence_num
     control_idx_by_chassis = np.in1d(control_mtx[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']],
-                                     chassis_mtx_filtered[:, MODE_IDX['sequence_num']])
+                                     chassis_mtx_filtered[:, DYNAMICS_MODE_IDX['sequence_num']])
     control_mtx_rtn = control_mtx[control_idx_by_chassis, :]
     # Third, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
@@ -112,7 +112,7 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     chassis_idx = 0
     for control_idx in range(control_mtx_rtn.shape[0]):
         while (control_mtx_rtn[control_idx, DYNAMICS_FEATURE_IDX['chassis_sequence_num']] !=
-               chassis_mtx_filtered[chassis_idx, MODE_IDX['sequence_num']]):
+               chassis_mtx_filtered[chassis_idx, DYNAMICS_MODE_IDX['sequence_num']]):
             chassis_idx += 1
         chassis_idx_rtn.append(chassis_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
@@ -122,10 +122,10 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     # TODO(fengzongbao) Filter acceleration_reference by positive and negative to throttle and brake
     if (control_mtx_rtn.shape[0] > 0):
         # First, merge the chassis data into control data matrix
-        if (chassis_mtx_rtn.shape[1] > MODE_IDX['brake_chassis']):
+        if (chassis_mtx_rtn.shape[1] > DYNAMICS_MODE_IDX['brake_chassis']):
             grading_mtx = np.hstack((control_mtx_rtn,
-                                     chassis_mtx_rtn[:, [MODE_IDX['throttle_chassis'],
-                                                         MODE_IDX['brake_chassis']]]))
+                                     chassis_mtx_rtn[:, [DYNAMICS_MODE_IDX['throttle_chassis'],
+                                                         DYNAMICS_MODE_IDX['brake_chassis']]]))
         else:
             grading_mtx = np.hstack((control_mtx_rtn,
                                      np.zeros((control_mtx_rtn.shape[0], 2))))
@@ -163,33 +163,37 @@ def extract_control_data_from_msg(msg):
         control_lat = msg_proto.debug.simple_lat_debug
         data_array = np.array([
             # Features: "Command" category
-            msg_proto.acceleration,                         # 0
-            msg_proto.steering_target,                      # 1
+            msg_proto.throttle,                             # 1
+            msg_proto.brake,                                # 2
+            msg_proto.acceleration,                         # 3
+            msg_proto.steering_target,                      # 4
             # Features: "Reference" category
-            control_lon.current_acceleration,               # 2
-            control_lat.steering_position,                  # 3
+            control_lon.current_acceleration,               # 5
+            control_lat.steering_position,                  # 6
             # Features: "Header" category
-            control_header.timestamp_sec,                   # 4
-            control_header.sequence_num,                    # 5
+            control_header.timestamp_sec,                   # 7
+            control_header.sequence_num,                    # 8
             # Features: "Input Info" category
-            input_debug.canbus_header.timestamp_sec,        # 6
-            input_debug.canbus_header.sequence_num,         # 7
+            input_debug.canbus_header.timestamp_sec,        # 9
+            input_debug.canbus_header.sequence_num,         # 10
         ])
     else:
         control_mpc = msg_proto.debug.simple_mpc_debug
         data_array = np.array([
             # Features: "Command" category
-            msg_proto.acceleration,                         # 0
-            msg_proto.steering_target,                      # 1
+            msg_proto.throttle,                             # 1
+            msg_proto.brake,                                # 2
+            msg_proto.acceleration,                         # 3
+            msg_proto.steering_target,                      # 4
             # Features: "State" category
-            control_mpc.acceleration_feedback,              # 2
-            control_mpc.steering_position,                  # 3
+            control_mpc.acceleration_feedback,              # 5
+            control_mpc.steering_position,                  # 6
             # Features: "Header" category
-            control_header.timestamp_sec,                   # 4
-            control_header.sequence_num,                    # 5
+            control_header.timestamp_sec,                   # 7
+            control_header.sequence_num,                    # 8
             # Features: "Input Info" category
-            input_debug.canbus_header.timestamp_sec,        # 6
-            input_debug.canbus_header.sequence_num          # 7
+            input_debug.canbus_header.timestamp_sec,        # 9
+            input_debug.canbus_header.sequence_num          # 10
         ])
 
     return data_array
@@ -199,7 +203,8 @@ def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
     chassis_header = msg_proto.header
-    if get_profiling_config().vehicle_type.find('Mkz') >= 0:
+    if (get_profiling_config().vehicle_type.find('Mkz') or
+        get_profiling_config().vehicle_type.find('Lexus')):
         data_array = np.array([
             # Features: "Status" category
             msg_proto.driving_mode,                          # 0

@@ -31,6 +31,8 @@ def generating_matrix_and_h5(target_groups):
     glog.info('writing {} messages to h5 file {} for target {}'
               .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
+    glog.info('grading_mtx information: {}'
+              .format(grading_mtx[0]))
     return (grading_mtx, target)
 
 def computing_gradings(mtx_groups):
@@ -90,7 +92,7 @@ def computing_gradings(mtx_groups):
                                     'beyond_threshold',
                                     'count_feature_name',
                                     'desired_feature_name',
-                                    'metured_feature_name'])
+                                    'measured_feature_name'])
 
     grading_results.__new__.__defaults__ = (
         None,) * len(grading_results._fields)
@@ -100,34 +102,34 @@ def computing_gradings(mtx_groups):
     # Compute time domain fields
     throttle_rise_time, throttle_overshoot, throttle_setting_time = compute_dynamics_time(
         grading_mtx, grading_arguments(
-            desired_feature_name='acceleration_throttle',
-            metured_feature_name='current_acceleration_throttle'
+            desired_feature_name='acceleration_cmd',
+            measured_feature_name='acceleration'
         ))
     brake_rise_time, brake_overshoot, brake_setting_time = compute_dynamics_time(
         grading_mtx, grading_arguments(
-            desired_feature_name='acceleration_brake',
-            metured_feature_name='current_acceleration_brake'
+            desired_feature_name='deceleration_cmd',
+            measured_feature_name='deceleration'
         ))
     steering_rise_time, steering_overshoot, steering_setting_time = compute_dynamics_time(
         grading_mtx, grading_arguments(
-            desired_feature_name='streeting_target',
-            metured_feature_name='streering_position'
+            desired_feature_name='streeting_cmd',
+            measured_feature_name='streering'
         ))
-    # Compute frequency domain fields
+    # Compute frequency domain field
     throttle_bandwidth, throttle_resonant_peak = compute_dynamics_freq(
         grading_mtx, grading_arguments(
-            desired_feature_name='acceleration_throttle',
-            metured_feature_name='current_acceleration_throttle'
+            desired_feature_name='acceleration_cmd',
+            measured_feature_name='acceleration'
         ))
     brake_bandwidth, brake_resonant_peak = compute_dynamics_freq(
         grading_mtx, grading_arguments(
-            desired_feature_name='acceleration_brake',
-            metured_feature_name='current_acceleration_brake'
+            desired_feature_name='deceleration_cmd',
+            measured_feature_name='deceleration'
         ))
     steering_bandwidth, steering_resonant_peak = compute_dynamics_freq(
         grading_mtx, grading_arguments(
-            desired_feature_name='streeting_target',
-            metured_feature_name='streering_position'
+            desired_feature_name='streeting_cmd',
+            measured_feature_name='streering'
         ))
     grading_group_result = grading_results(
         throttle_dead_time=compute_deadtime(),

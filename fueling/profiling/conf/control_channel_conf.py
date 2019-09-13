@@ -2,6 +2,8 @@
 
 """Configs to store the necessary dict or list"""
 
+"""Control Profiling Index and Names: """
+
 MODE_IDX = {
     # Modes extracted from all vehicle types
     "driving_mode": 0,
@@ -67,17 +69,6 @@ POSE_IDX = {
     "pose_heading": 4,
 }
 
-DYNAMICS_FEATURE_IDX = {
-    "acceleration": 0,
-    "steering_target": 1,
-    "current_acceleration": 2,
-    "streeing_position": 3,
-    "timestamp_sec": 4,
-    "sequence_num": 5,
-    "chassis_timestamp_sec": 6,
-    "chassis_sequence_num": 7,
-}
-
 FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference", "heading_reference", "heading_rate_reference",
                  "curvature_reference", "path_remain", "station_error", "speed_error", "lateral_error", "lateral_error_rate",
                  "heading_error", "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station",
@@ -85,3 +76,37 @@ FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference
                  "heading_acceleration", "heading_jerk", "total_time", "total_time_exceeded", "timestamp_sec", "sequence_num",
                  "localization_timestamp_sec", "localization_sequence_num", "chassis_timestamp_sec", "chassis_sequence_num",
                  "trajectory_timestamp_sec", "trajectory_sequence_num", "throttle_chassis", "brake_chassis", "pose_heading_offset"]
+
+
+"""Vehicle Dynamics Profiling Index and Names: """
+
+
+DYNAMICS_MODE_IDX = {
+    # Modes extracted from all vehicle types
+    "driving_mode": 0,
+    "gear_location": 1,
+    "timestamp_sec": 2,
+    "sequence_num": 3,
+    # Additional Modes extracted from Lincoln vehicle type
+    "throttle_chassis": 4,
+    "brake_chassis": 5,
+}
+
+DYNAMICS_FEATURE_IDX = {
+    "throttle_cmd": 0,
+    "brake_cmd": 1,
+    "acceleration_cmd": 2,
+    "steering_cmd": 3,
+    "acceleration": 4,
+    "steering": 5,
+    "timestamp_sec": 6,
+    "sequence_num": 7,
+    "chassis_timestamp_sec": 8,
+    "chassis_sequence_num": 9,
+    "throttle": 10,
+    "brake": 11,
+}
+
+DYNAMICS_FEATURE_NAMES = ["throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "acceleration", "streeing",
+                          "timestamp_sec", "sequence_num", "chassis_timestamp_sec", "chassis_sequence_num",
+                          "throttle", "brake"]
