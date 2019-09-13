@@ -482,13 +482,10 @@ class training:
                    .format(xy_, wh_, positive_conf_,
                            negative_conf_, cls_, alpha_, hwl_))
 
+        # TODO(KaWai): add output_path and uncomment below codes
         # store the model every SAVE_INTERVAL epochs
-        if self.cur_step % SAVE_INTERVAL == 0:
-            self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)
-            print("Model saved in file: %s" % MODEL_OUTPUT_PATH)
+        # if self.cur_step % SAVE_INTERVAL == 0:
+            # self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)
+            # print("Model saved in file: %s" % MODEL_OUTPUT_PATH)
 
         self.cur_step += 1
-
-    @staticmethod
-    def step_test(data):
-        print("OK==========================")

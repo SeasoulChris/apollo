@@ -3,6 +3,7 @@
 import os
 import sys
 
+import glob
 import numpy as np
 
 from fueling.perception.YOLOv3.utils.yolo_utils import process_label_file
@@ -33,22 +34,20 @@ def get_all_paths(label_path):
     camera calibration directory path as well.
     Output: (label_path, image_dir, calib_dir)
     """
-    id, label_path = label_path
+    label_path = label_path
     label_dir, file_name = os.path.split(label_path)
     file_name, _ = os.path.splitext(file_name)
     data_dir, _ = os.path.split(label_dir)
 
     image_dir = os.path.join(os.path.join(data_dir, "images"))
     calib_dir = os.path.join(os.path.join(data_dir, "calib"))
-    return (id, (label_path, image_dir, calib_dir))
-
+    return (label_path, image_dir, calib_dir)
 
 def process_data(paths):
     """
     Read data from paths and preprocss to get input and
     ground truth outputs.
     """
-    id, paths = paths
     label_path, image_dir, calib_dir = paths
     image_data, y_true, cls_box_map, objs, calib = \
         process_label_file(label_path,
@@ -69,8 +68,7 @@ def process_data(paths):
                            random_jitter_=RANDOM_JITTER,
                            jitter_chance=JITTER_CHANCE,
                            jitter_percentage=JITTER_PERCENTAGE)
-    return (id, (image_data, y_true, cls_box_map, objs, calib))
-
+    return (image_data, y_true, cls_box_map, objs, calib)
 
 def filter_classes(element):
     """
@@ -79,7 +77,6 @@ def filter_classes(element):
     Input element: should be the output of function
       'process_data'.
     """
-    id, element = element
     image_data, y_true, cls_box_map, objs, calib = element
     if CLS_TO_CONSIDER is not None:
         # Zero out elements in y_true
@@ -100,4 +97,4 @@ def filter_classes(element):
                 keys.append(key)
         for key in keys:
             cls_box_map.pop(key)
-    return (id, (image_data, y_true, [cls_box_map], [objs], [calib]))
+    return (image_data, y_true, [cls_box_map], [objs], [calib])
