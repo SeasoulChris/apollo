@@ -17,7 +17,7 @@ MAX_ITER = cfg.max_iter
 
 class Yolov3Training(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, 'yolov3')
+        BasePipeline.__init__(self, "yolov3")
 
     def run_test(self):
         def _get_all_label_txt_paths(dataset_path):
@@ -25,34 +25,42 @@ class Yolov3Training(BasePipeline):
             txt_list = glob.glob(os.path.join(label_dir, "*.txt"))
             return txt_list
 
-        data_dir = '/apollo/modules/data/fuel/testdata/perception'
+        data_dir = "/apollo/modules/data/fuel/testdata/perception"
         training_datasets = glob.glob(os.path.join(data_dir, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (
+            # RDD(directory_path), directory containing a dataset
             training_datasets_rdd
+            # RDD(file_path), paths of all label txt files
             .map(_get_all_label_txt_paths)
             .cache())
-        output_dir = os.path.join(data_dir, 'yolov3_output')
+        output_dir = os.path.join(data_dir, "yolov3_output")
         self.run(training_datasets_rdd, output_dir)
 
     def run_prod(self):
         def _get_all_label_txt_paths_bos(dataset_path):
             label_dir = os.path.join(dataset_path, "label")
             txt_list = self.bos().list_files(label_dir, ".txt", to_abs_path=False)
-            txt_list = [os.path.join('/mnt/bos/', path) for path in txt_list]
+            txt_list = [os.path.join("/mnt/bos/", path) for path in txt_list]
             return txt_list
 
-        data_dir = 'modules/perception/camera_object/'
+        data_dir = "modules/perception/camera_object/"
         training_datasets = self.bos().list_dirs(data_dir, to_abs_path=False)
-        training_datasets = [path for path in training_datasets if len(path.split("/"))==4]
+        print("=================")
+        print(training_datasets)
+        training_datasets = [path for path in training_datasets if len(path.split("/")) == 4]
+        print("=================")
+        print(training_datasets)
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (
+            # RDD(directory_path), directory containing a dataset
             training_datasets_rdd
+            # RDD(file_path), paths of all label txt files
             .map(_get_all_label_txt_paths_bos)
             .cache())
-        output_dir = os.path.join(data_dir, 'yolov3_output')
+        output_dir = os.path.join(data_dir, "yolov3_output")
         self.run(data, output_dir)
 
     def run(self, data, output_dir):
@@ -73,5 +81,5 @@ class Yolov3Training(BasePipeline):
 
         data.foreach(_executor)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Yolov3Training().main()
