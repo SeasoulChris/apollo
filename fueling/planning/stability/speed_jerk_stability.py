@@ -19,6 +19,9 @@ class SpeedJerkStability:
     def get_speed_jerk_cnt(self):
         speed_list = self.speed_processor.get_speed_list()
         jerk_list = self.jerk_processor.get_jerk_list()
+        # Return early when either list is empty.
+        if not speed_list or not jerk_list:
+            return {}
 
         grid_speed_list = self.grid(speed_list)
         grid_jerk_list = self.grid(jerk_list)
