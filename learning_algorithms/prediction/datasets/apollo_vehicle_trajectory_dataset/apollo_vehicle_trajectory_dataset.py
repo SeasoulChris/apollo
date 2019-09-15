@@ -6,10 +6,10 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
-import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
-from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.helper_utils import *
+import fueling.common.file_utils as file_utils
+import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 obs_hist_size = 20
@@ -87,7 +87,7 @@ class DataPreprocessor(object):
         '''
         # Go through all the data_for_learning file, for each data-point, find
         # the corresponding label file, merge them.
-        all_file_paths = GetListOfFiles(feature_dir)
+        all_file_paths = file_utils.list_files(feature_dir)
         total_num_data_points = 0
         total_usable_data_points = 0
 
@@ -253,7 +253,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             "sunnyvale_with_two_offices.png"), "san_mateo": cv.imread("san_mateo.png")}
 
         scene_id = -1
-        all_file_paths = GetListOfFiles(data_dir)
+        all_file_paths = file_utils.list_files(data_dir)
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue

@@ -5,8 +5,8 @@ import argparse
 import torch
 
 from learning_algorithms.prediction.models.lane_scanning_model.lane_scanning_model import *
-from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.train_utils import *
+import fueling.common.file_utils as file_utils
 
 
 cuda_is_available = torch.cuda.is_available()
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     logging.basicConfig(filename=args.save_path + 'testlog.log',
                         level=logging.INFO)
 
-    files_train = GetListOfFiles(args.train_file)
-    files_valid = GetListOfFiles(args.valid_file)
+    files_train = file_utils.list_files(args.train_file)
+    files_valid = file_utils.list_files(args.valid_file)
 
     train_dataset = LaneScanningDataset(args.train_file)
     valid_dataset = LaneScanningDataset(args.valid_file)

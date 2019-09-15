@@ -4,8 +4,8 @@ import argparse
 import torch
 
 from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
-from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.train_utils import *
+import fueling.common.file_utils as file_utils
 
 
 if __name__ == "__main__":

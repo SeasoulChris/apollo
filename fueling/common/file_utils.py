@@ -31,3 +31,8 @@ def touch(file_path):
         glog.error('Failed to touch file ' + file_path)
         raise
     return file_path
+
+
+def list_files(dir_path):
+    """List all sub-files in given dir_path."""
+    return [os.path.join(root, f) for root, _, files in os.walk(dir_path) for f in files]

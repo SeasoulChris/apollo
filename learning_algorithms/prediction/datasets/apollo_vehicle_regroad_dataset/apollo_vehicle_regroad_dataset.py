@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
-from learning_algorithms.utilities.IO_utils import *
+import fueling.common.file_utils as file_utils
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
@@ -51,7 +51,7 @@ def CalculateDistanceAndAngle(curve, point):
 def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
     # Go through all the data_for_learning file, for each data-point, find
     # the corresponding label file, merge them.
-    all_file_paths = GetListOfFiles(feature_dir)
+    all_file_paths = file_utils.list_files(feature_dir)
     total_num_dirty_data_points = 0
     total_usable_data_points = 0
     total_cutin_data_points = 0
@@ -268,7 +268,7 @@ class ApolloVehicleRegularRoadDataset(Dataset):
         self.is_cutin = []
         total_num_cutin_data_pt = 0
 
-        all_file_paths = GetListOfFiles(data_dir)
+        all_file_paths = file_utils.list_files(data_dir)
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue

@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
-from learning_algorithms.utilities.IO_utils import *
+import fueling.common.file_utils as file_utils
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
@@ -19,7 +19,7 @@ def LoadDataForLearning(filepath):
 class ApolloPedestrianDataset(Dataset):
     def __init__(self, data_dir, obs_len=21, pred_len=40, threshold_dist_to_adc=15.0,
                  threshold_discontinuity=0.25, verbose=False):
-        all_file_paths = GetListOfFiles(data_dir)
+        all_file_paths = file_utils.list_files(data_dir)
         seq_len = obs_len + pred_len
         self.obs_len = obs_len
         self.pred_len = pred_len

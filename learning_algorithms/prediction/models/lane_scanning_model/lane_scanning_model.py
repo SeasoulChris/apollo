@@ -6,9 +6,9 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from learning_algorithms.utilities.helper_utils import *
-from learning_algorithms.utilities.IO_utils import *
 from learning_algorithms.utilities.loss_utils import *
 from learning_algorithms.utilities.network_utils import *
+import fueling.common.file_utils as file_utils
 
 
 #########################################################
@@ -16,7 +16,7 @@ from learning_algorithms.utilities.network_utils import *
 #########################################################
 class LaneScanningDataset(Dataset):
     def __init__(self, dir, verbose=True):
-        self.all_files = GetListOfFiles(dir)
+        self.all_files = file_utils.list_files(dir)
         self.obs_features = []
         self.lane_features = []
         self.traj_labels = []
