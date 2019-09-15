@@ -41,7 +41,7 @@ class DumpFeatureProto(BasePipeline):
             .distinct())
         completed_records_dir = (
             # RDD(label_dir). start with target_prefix
-            self.to_rdd(self.bos().list_dirs(target_prefix))
+            self.to_rdd(self.bos().list_end_dirs(target_prefix))
             # RDD(record_dir), has been completed
             .map(lambda label_dir: label_dir.replace(os.path.join(
                 target_prefix, label_dir[(label_dir.find(target_prefix) +

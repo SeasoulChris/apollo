@@ -78,9 +78,9 @@ class DynamicModelEvaluation(BasePipeline):
 
         bos = self.bos()
         # PairRDD('mlp', folder_path)
-        mlp_model_rdd = self.to_rdd(bos.list_dirs(mlp_model_prefix)).keyBy(lambda _: 'mlp')
+        mlp_model_rdd = self.to_rdd(bos.list_end_dirs(mlp_model_prefix)).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
-        lstm_model_rdd = self.to_rdd(bos.list_dirs(lstm_model_prefix)).keyBy(lambda _: 'lstm')
+        lstm_model_rdd = self.to_rdd(bos.list_end_dirs(lstm_model_prefix)).keyBy(lambda _: 'lstm')
 
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset

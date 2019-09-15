@@ -30,9 +30,9 @@ class BaseObjectStorageClient(object):
             files = map(self.abs_path, files)
         return files
 
-    def list_dirs(self, prefix, to_abs_path=True):
+    def list_end_dirs(self, prefix, to_abs_path=True):
         """
-        Get a list of dirs with given prefix.
+        Get a list of dirs with given prefix, which contain at least one file.
         Return absolute paths if to_abs_path is True else keys.
         """
         files = self.list_keys(prefix)
