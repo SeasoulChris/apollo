@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
 
+from collections import defaultdict
+
 from fueling.planning.stability.imu_speed import ImuSpeed
 from fueling.planning.stability.imu_speed_jerk import ImuSpeedJerk
 
@@ -8,7 +10,7 @@ from fueling.planning.stability.imu_speed_jerk import ImuSpeedJerk
 class SpeedJerkStability:
 
     def __init__(self):
-        self.speed_jerk_cnt = {}
+        self.speed_jerk_cnt = defaultdict(lambda: defaultdict(int))
         self.jerk_processor = ImuSpeedJerk()
         self.speed_processor = ImuSpeed()
 
@@ -25,26 +27,13 @@ class SpeedJerkStability:
 
         grid_speed_list = self.grid(speed_list)
         grid_jerk_list = self.grid(jerk_list)
-
-        grid_speed_list = grid_speed_list[-1 * len(grid_jerk_list):]
-
+        grid_speed_list = grid_speed_list[-len(grid_jerk_list):]
         for i in range(len(grid_speed_list)):
             speed = grid_speed_list[i]
             jerk = grid_jerk_list[i]
-
-            if speed in self.speed_jerk_cnt:
-                if jerk in self.speed_jerk_cnt[speed]:
-                    self.speed_jerk_cnt[speed][jerk] += 1
-                else:
-                    self.speed_jerk_cnt[speed][jerk] = 1
-            else:
-                self.speed_jerk_cnt[speed] = {jerk: 1}
-
+            self.speed_jerk_cnt[speed][jerk] += 1
         return self.speed_jerk_cnt
 
     @staticmethod
     def grid(data_list):
-        data_grid = []
-        for data in data_list:
-            data_grid.append(int(round(data)))
-        return data_grid
+        return [int(round(data)) for data in data_list]
