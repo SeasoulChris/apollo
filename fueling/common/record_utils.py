@@ -19,6 +19,9 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
+import fueling.common.time_utils as time_utils
+
+
 CHASSIS_CHANNEL = '/apollo/canbus/chassis'
 CONTROL_CHANNEL = '/apollo/control'
 DRIVE_EVENT_CHANNEL = '/apollo/drive_event'
@@ -188,3 +191,26 @@ def guess_map_name_from_driving_path(driving_path):
     guessed_map = map_vote.most_common(1)[0][0]
     glog.info('Guessed map from driving_path as {}'.format(guessed_map))
     return guessed_map
+
+
+def filter_last_n_days_records(n):
+    """Return a filter function which checks the first YYYY-mm-dd part in path."""
+    DATE_FMT = '%Y-%m-%d'
+    cut_date = time_utils.n_days_ago(n, DATE_FMT)
+    glog.info('Process last {} days records starting from {}'.format(n, cut_date))
+    date_len = len(cut_date)
+
+    def filter(record_path):
+        """
+        record_path must contain a part following pattern 'YYYY-mm-dd', such as:
+           public-test/YYYY/YYYY-mm-dd/...
+           small-records/YYYY/YYYY-mm-dd/...
+           /mnt/bos/public-test/YYYY/YYYY-mm-dd/...
+           /mnt/bos/small-records/YYYY/YYYY-mm-dd/...
+        """
+        for part in record_path.split('/'):
+            if len(part) == date_len and time_utils.try_parse(part, DATE_FMT):
+                return part >= cut_date
+        glog.error('Invalid path pattern: ' + record_path)
+        return False
+    return filter

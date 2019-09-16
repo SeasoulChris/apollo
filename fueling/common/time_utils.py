@@ -16,3 +16,12 @@ def n_days_ago(n, fmt=None):
     """Get datetime of n days ago, return string if format is provided."""
     dt = datetime.now() - timedelta(days=n)
     return dt.strftime(fmt) if fmt else dt
+
+
+def try_parse(date_str, fmt):
+    """Parse date_str as given format."""
+    try:
+        return datetime.strptime(date_str, fmt)
+    except ValueError:
+        pass
+    return None

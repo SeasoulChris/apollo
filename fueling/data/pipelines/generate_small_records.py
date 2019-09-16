@@ -15,7 +15,6 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
-import fueling.common.time_utils as time_utils
 
 
 flags.DEFINE_integer('generate_small_records_of_last_n_days', 0,
@@ -105,10 +104,8 @@ class GenerateSmallRecords(BasePipeline):
         # Filter by date.
         n_days = self.FLAGS.get('generate_small_records_of_last_n_days')
         if n_days:
-            start_date = time_utils.n_days_ago(n_days, '%Y-%m-%d')
-            glog.info('Process last {} days of records starting from {}'.format(n_days, start_date))
             # RDD(todo_record), which is like /mnt/bos/small-records/2019/2019-09-09/...
-            todo_records = todo_records.filter(lambda record: record.split('/', 6)[5] >= start_date)
+            todo_records = todo_records.filter(record_utils.filter_last_n_days_records(n_days))
 
         if SKIP_EXISTING_DST_RECORDS:
             todo_records = todo_records.subtract(
