@@ -97,4 +97,4 @@ def filter_classes(element):
                 keys.append(key)
         for key in keys:
             cls_box_map.pop(key)
-    return (image_data, y_true, [cls_box_map], [objs], [calib])
+    return (image_data, y_true, cls_box_map, objs, calib)
