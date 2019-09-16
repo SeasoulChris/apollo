@@ -399,10 +399,15 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             all_obs_pos_rel = np.concatenate(self.obs_pos_rel[s_idx:e_idx])
 
             # Target obstacle's historical information
-            target_obs_pos_abs = all_obs_positions[predicting_idx, :, :]
-            target_obs_pos_rel = target_obs_pos_abs - target_obs_pos_abs[-1, :]
-            target_obs_pos_step = all_obs_pos_rel[predicting_idx]
             target_obs_hist_size = obs_hist_sizes[predicting_idx]
+            target_obs_pos_abs = all_obs_positions[predicting_idx, :, :]
+            target_obs_pos_rel = np.zeros_like(target_obs_pos_abs)
+            target_obs_pos_step = np.zeros_like(target_obs_pos_abs)
+            hist_size  = int(target_obs_hist_size[0])
+            for i in range(20-hist_size, 20):
+                target_obs_pos_rel[i, :] = world_coord_to_relative_coord(target_obs_pos_abs[i, :], world_coord)
+                if i > 0:
+                    target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i-1, :]
 
             # Nearby obstacles' historical information
             num_obs = all_obs_positions.shape[0]
