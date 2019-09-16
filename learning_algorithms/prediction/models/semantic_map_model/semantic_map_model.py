@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
 
-from learning_algorithms.utilities.helper_utils import *
+from fueling.common.coord_utils import CoordUtils
 from learning_algorithms.utilities.train_utils import *
 from learning_algorithms.utilities.network_utils import *
 
@@ -55,8 +55,8 @@ class SemanticMapDataset(Dataset):
                                               'future_status.npy')).item()
             future_pos = label_dict[key]
             origin = future_pos[0]
-            past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
-            future_pos = [world_coord_to_relative_coord(pos, origin) for pos in future_pos]
+            past_pos = [CoordUtils.world_to_relative(pos, origin) for pos in past_pos]
+            future_pos = [CoordUtils.world_to_relative(pos, origin) for pos in future_pos]
 
             sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
             sample_label = torch.FloatTensor(future_pos[0:10]).view(-1)

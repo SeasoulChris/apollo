@@ -3,16 +3,15 @@
 import glob
 import os
 
+from torch.utils.data import Dataset
+from torchvision import models
+from torchvision import transforms
 import cv2 as cv
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset
 
-from torchvision import models
-from torchvision import transforms
-
-from learning_algorithms.utilities.helper_utils import *
+from fueling.common.coord_utils import CoordUtils
 
 
 '''
@@ -54,8 +53,8 @@ class JunctionMapDataset(Dataset):
             # origin = future_pos[0]
             junction_label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(
                 "image-feature", "labels-san-mateo"), 'junction_label.npy')).item()
-            # past_pos = [world_coord_to_relative_coord(pos, origin) for pos in past_pos]
-            # future_pos = [world_coord_to_relative_coord(pos, origin) for pos in future_pos]
+            # past_pos = [CoordUtils.world_to_relative(pos, origin) for pos in past_pos]
+            # future_pos = [CoordUtils.world_to_relative(pos, origin) for pos in future_pos]
             # sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
             junction_label = junction_label_dict[key]
             if len(junction_label) != 24:

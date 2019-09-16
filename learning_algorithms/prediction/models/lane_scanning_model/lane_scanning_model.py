@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
-from learning_algorithms.utilities.helper_utils import *
+from fueling.common.coord_utils import CoordUtils
 from learning_algorithms.utilities.loss_utils import *
 from learning_algorithms.utilities.network_utils import *
 import fueling.common.file_utils as file_utils
@@ -52,7 +52,7 @@ class LaneScanningDataset(Dataset):
                 traj_label = np.zeros((1, 20))
                 for j, point in enumerate(data_point[-30:-20]):
                     traj_label[0, j], traj_label[0, j+10] = \
-                        world_coord_to_relative_coord(point, data_point[-30])
+                        CoordUtils.world_to_relative(point, data_point[-30])
                 self.traj_labels.append(traj_label)
             if verbose:
                 print ('Loaded {} out of {} files'.format(i+1, len(self.all_files)))

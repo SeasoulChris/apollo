@@ -10,7 +10,6 @@ from scipy.signal import filtfilt
 
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
     import *
-from learning_algorithms.utilities.helper_utils import *
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 

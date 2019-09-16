@@ -5,9 +5,9 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from fueling.common.coord_utils import CoordUtils
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
-from learning_algorithms.utilities.helper_utils import *
 import fueling.common.file_utils as file_utils
 import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
@@ -344,7 +344,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, self.pred_len, 2))
                     for i in range(self.pred_len):
-                        new_coord = world_coord_to_relative_coord(
+                        new_coord = CoordUtils.world_to_relative(
                             curr_future_traj[i, :], ref_world_coord)
                         new_curr_future_traj[0, i, 0] = new_coord[0]
                         new_curr_future_traj[0, i, 1] = new_coord[1]
@@ -405,7 +405,7 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             target_obs_pos_step = np.zeros_like(target_obs_pos_abs)
             hist_size  = int(target_obs_hist_size[0])
             for i in range(20-hist_size, 20):
-                target_obs_pos_rel[i, :] = world_coord_to_relative_coord(target_obs_pos_abs[i, :], world_coord)
+                target_obs_pos_rel[i, :] = CoordUtils.world_to_relative(target_obs_pos_abs[i, :], world_coord)
                 if i > 0:
                     target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i-1, :]
 
