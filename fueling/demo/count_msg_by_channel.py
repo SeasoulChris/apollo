@@ -21,9 +21,6 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 
 
-flags.DEFINE_integer('sleep_time', 0, 'Time to sleep.')
-
-
 class CountMsgByChannel(BasePipeline):
     """Demo pipeline."""
 
@@ -43,6 +40,7 @@ class CountMsgByChannel(BasePipeline):
             .reduceByKey(lambda a, b: a + b)
             # [(topic, N)]
             .collect())
+        logging.info('Pipeline finished!')
 
     def run_prod(self):
         """For this demo, prod and test are the same."""

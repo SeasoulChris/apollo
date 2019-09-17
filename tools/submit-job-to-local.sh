@@ -56,4 +56,4 @@ source /usr/local/miniconda/bin/activate ${CONDA_ENV}
 source /apollo/scripts/apollo_base.sh
 export LOG_VERBOSITY=${LOG_VERBOSITY}
 
-spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@
+spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@ | grep -v ' INFO  '
