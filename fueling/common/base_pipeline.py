@@ -81,8 +81,7 @@ class BasePipeline(object):
     def __main__(self, argv):
         """Run the pipeline."""
         self.FLAGS = flags.FLAGS.flag_values_dict()
-        if self.FLAGS.get('debug'):
-            logging.set_verbosity(logging.DEBUG)
+        logging.set_verbosity(logging.DEBUG if self.FLAGS.get('debug') else logging.INFO)
 
         mode = self.FLAGS.get('running_mode')
         if mode is None:
