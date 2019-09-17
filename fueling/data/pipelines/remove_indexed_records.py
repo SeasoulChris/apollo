@@ -8,7 +8,7 @@ Usage:
 """
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
@@ -28,7 +28,7 @@ class RemoveIndexedRecords(BasePipeline):
         """Run prod."""
         prefix = self.FLAGS.get('prefix_of_indexed_records_to_remove')
         if not prefix:
-            glog.error('Please specify --prefix_of_indexed_records_to_remove.')
+            logging.error('Please specify --prefix_of_indexed_records_to_remove.')
             return
         col = Mongo().record_collection()
         op_filter = {'path': {'$regex': '^' + prefix}}

@@ -2,7 +2,6 @@
 
 import os
 
-import colored_glog as glog
 import glob
 import numpy as np
 

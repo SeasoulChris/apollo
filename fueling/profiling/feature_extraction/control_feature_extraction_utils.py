@@ -4,7 +4,7 @@
 
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 
 from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
@@ -26,23 +26,23 @@ def verify_vehicle_controller(task):
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
     if not record_file:
-        glog.warn('no valid record file found in task: {}'.format(task))
+        logging.warning('no valid record file found in task: {}'.format(task))
         return False
     # Read two topics together to avoid looping all messages in the record file twice
-    glog.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
+    logging.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)
-    glog.info('{} messages for record file {}'.format(
+    logging.info('{} messages for record file {}'.format(
         len(messages), record_file))
     vehicle_message = get_message_by_topic(
         messages, record_utils.HMI_STATUS_CHANNEL)
     if not vehicle_message:
-        glog.error('no vehicle messages found in task {} record {}'.format(task, record_file))
+        logging.error('no vehicle messages found in task {} record {}'.format(task, record_file))
         return False
     control_message = get_message_by_topic(messages, record_utils.CONTROL_CHANNEL)
     if not control_message:
-        glog.error('no control messages found in task {} record {}'.format(task, record_file))
+        logging.error('no control messages found in task {} record {}'.format(task, record_file))
         return False
     return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
                                record_utils.message_to_proto(control_message))
@@ -53,21 +53,21 @@ def data_matches_config(vehicle_type, controller_type):
     conf_vehicle_type = get_config_control_profiling().vehicle_type
     conf_controller_type = get_config_control_profiling().controller_type
     if conf_vehicle_type != vehicle_type:
-        glog.warn('mismatch between record vehicle {} and configed {}'
+        logging.warning('mismatch between record vehicle {} and configed {}'
                   .format(vehicle_type, conf_vehicle_type))
         return False
     if controller_type.debug.simple_lat_debug and controller_type.debug.simple_lon_debug:
         if conf_controller_type != 'Lon_Lat_Controller':
-            glog.warn('mismatch between record controller Lon_Lat_Controller and configed {}'
+            logging.warning('mismatch between record controller Lon_Lat_Controller and configed {}'
                       .format(conf_controller_type))
             return False
     elif controller_type.debug.simple_mpc_debug:
         if conf_controller_type != 'Mpc_Controller':
-            glog.warn('mismatch between record controller Mpc_Controller and configed {}'
+            logging.warning('mismatch between record controller Mpc_Controller and configed {}'
                       .format(conf_controller_type))
             return False
     else:
-        glog.warn('no controller type found in records')
+        logging.warning('no controller type found in records')
         return False
     return True
 
@@ -84,7 +84,7 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
                             for msg in control_msgs])
     localization_mtx = np.array([extract_localization_data_from_msg(msg)
                                  for msg in localization_msgs])
-    glog.info('The original msgs size are: chassis {}, control {}, and localization: {}'
+    logging.info('The original msgs size are: chassis {}, control {}, and localization: {}'
               .format(chassis_mtx.shape[0], control_mtx.shape[0], localization_mtx.shape[0]))
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
@@ -133,7 +133,7 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
     localization_mtx_rtn = np.take(
         localization_mtx, localization_idx_rtn, axis=0)
-    glog.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
+    logging.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
               .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0],
                       localization_mtx_rtn.shape[0]))
     # Finally, rebuild the grading mtx with the control data combined with

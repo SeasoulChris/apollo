@@ -3,7 +3,7 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
@@ -64,9 +64,9 @@ class MergeLabels(BasePipeline):
             .cache())
 
         if result.isEmpty():
-            glog.info("Nothing to be processed, everything is under control!")
+            logging.info("Nothing to be processed, everything is under control!")
             return
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_dir(src_dir):
@@ -76,10 +76,10 @@ class MergeLabels(BasePipeline):
             merge_dicts(src_dir, dict_name='junction_label')
             merge_dicts(src_dir, dict_name='cruise_label')
             merge_dicts(src_dir, dict_name='visited_lane_segment')
-            glog.info('Successfuly processed {}'.format(src_dir))
+            logging.info('Successfuly processed {}'.format(src_dir))
             return 1
         except:
-            glog.error('Failed to process {}'.format(src_dir))
+            logging.error('Failed to process {}'.format(src_dir))
         return 0
 
 

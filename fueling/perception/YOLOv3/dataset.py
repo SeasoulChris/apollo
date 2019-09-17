@@ -18,7 +18,7 @@ NUM_THREADS = cfg.num_threads
 
 class Dataset:
 
-    def __init__(self, label_file_paths, batch_size=BATCH_SIZE, num_threads=NUM_THREADS, 
+    def __init__(self, label_file_paths, batch_size=BATCH_SIZE, num_threads=NUM_THREADS,
                  random_color_shift=False, random_crop_bool=False, random_jitter_bool=False,
                  output_name=False, one_shot=False):
         """
@@ -76,21 +76,20 @@ class Dataset:
         Completed one whole iteration of the dataset?"
         """
         if not self.one_shot:
-            raise RuntimeError ("Method 'one_shot_completed' can be" 
-                                "called only when self.one_shot is True.")
+            raise RuntimeError(
+                "Method 'one_shot_completed' can be called only when self.one_shot is True.")
         return self.on_shot_complete
 
     def _parse_example(self):
         """
         Parse example from txt line.
         """
-        while True and (not self.one_shot_complete):
+        while not self.one_shot_complete:
             label_txt_path = self._txt_files_queue.get()
             all_paths = data_utils.get_all_paths(label_txt_path)
             processed = data_utils.process_data(all_paths)
             # Filter out classes that is not being considered
-            image_data, y_true, cls_box_map, objs, calib = \
-                data_utils.filter_classes(processed)
+            image_data, y_true, cls_box_map, objs, calib = data_utils.filter_classes(processed)
             scale1, scale2, scale3 = y_true
             #image_data = np.expand_dims(image_data, axis=0)
             final_data = (image_data, scale1, scale2, scale3, cls_box_map, objs, calib)
@@ -111,8 +110,9 @@ class Dataset:
         image_batch: np array with shape (batch_size, Input_height, Input_width, 3)
         label_batch: a list with len==batch_size
         """
-        #TODO[KWT] Add support for self.one_shot
-        image_batch = np.zeros(shape=(self.batch_size, cfg.Input_height, cfg.Input_width, 3), dtype=np.uint8)
+        # TODO[KWT] Add support for self.one_shot
+        image_batch = np.zeros(shape=(self.batch_size, cfg.Input_height, cfg.Input_width, 3),
+                               dtype=np.uint8)
         label_batch_scale1 = []
         label_batch_scale2 = []
         label_batch_scale3 = []
@@ -120,8 +120,7 @@ class Dataset:
         objs_list = []
         calib_list = []
         for i in range(self.batch_size):
-            image_data, scale1, scale2, scale3, cls_box_map, objs, calib = \
-                self._example_queue.get()
+            image_data, scale1, scale2, scale3, cls_box_map, objs, calib = self._example_queue.get()
             image_batch[i] = image_data
             label_batch_scale1.append(scale1)
             label_batch_scale2.append(scale2)
@@ -135,11 +134,10 @@ class Dataset:
         assert not np.any(np.isnan(label_batch_scale2))
         assert not np.any(np.isnan(label_batch_scale3))
 
-        return image_batch, \
-               np.concatenate(label_batch_scale1, axis=0), \
-               np.concatenate(label_batch_scale2, axis=0), \
-               np.concatenate(label_batch_scale3, axis=0), \
-               cls_box_map_list, \
-               objs_list, \
-               calib_list
-
+        return (image_batch,
+                np.concatenate(label_batch_scale1, axis=0),
+                np.concatenate(label_batch_scale2, axis=0),
+                np.concatenate(label_batch_scale3, axis=0),
+                cls_box_map_list,
+                objs_list,
+                calib_list)

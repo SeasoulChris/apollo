@@ -6,7 +6,7 @@ import shutil
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -110,7 +110,7 @@ def write_conf(conf_value, vehicle_param_conf, conf_path, conf):
     cur_conf.speed_max = min(speed_max, conf.speed_max)
     cur_conf.throttle_max = min(throttle_max, conf.throttle_max)
     cur_conf.brake_max = min(brake_max, conf.brake_max)
-    glog.info('Load calibration table conf: %s' % cur_conf)
+    logging.info('Load calibration table conf: %s' % cur_conf)
     file_utils.makedirs(conf_path)
     with open(os.path.join(conf_path, 'feature_key_conf.pb.txt'), 'w') as fin:
         fin.write(str(cur_conf))
@@ -140,7 +140,7 @@ class SampleSet(BasePipeline):
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
-        glog.info('origin_vehicle_dir %s' % origin_vehicle_dir.collect())
+        logging.info('origin_vehicle_dir %s' % origin_vehicle_dir.collect())
 
         """ get to do jobs """
         """ for run_test only, folder/vehicle/subfolder/*.record.* """
@@ -150,18 +150,18 @@ class SampleSet(BasePipeline):
             # PairRDD(vehicle_type, list_of_records)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
             .mapValues(os.path.dirname))
-        glog.info('todo_task_dirs %s' % todo_task_dirs.collect())
+        logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
 
         """ get conf files """
         vehicle_param_conf = origin_vehicle_dir
 
         conf_target_prefix = target_prefix
-        glog.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
-        glog.info(conf_target_prefix)
+        logging.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
+        logging.info(conf_target_prefix)
         target_param_conf = origin_vehicle_dir.map(lambda (vehicle, path):
                                                    (vehicle, path.replace(origin_prefix,
                                                                           conf_target_prefix, 1)))
-        glog.info('target_param_conf: %s' % target_param_conf.collect())
+        logging.info('target_param_conf: %s' % target_param_conf.collect())
 
         # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).cache())
@@ -174,10 +174,10 @@ class SampleSet(BasePipeline):
                               shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
                                               os.path.join(dst_path, VEHICLE_CONF))).count()
 
-        glog.info('todo_task_dirs: %s' % todo_task_dirs.collect())
-        glog.info('vehicle_param_conf: %s' % vehicle_param_conf.collect())
-        glog.info('origin_prefix: %s' % origin_prefix)
-        glog.info('target_prefix: %s' % target_prefix)
+        logging.info('todo_task_dirs: %s' % todo_task_dirs.collect())
+        logging.info('vehicle_param_conf: %s' % vehicle_param_conf.collect())
+        logging.info('origin_prefix: %s' % origin_prefix)
+        logging.info('target_prefix: %s' % target_prefix)
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
@@ -191,14 +191,14 @@ class SampleSet(BasePipeline):
         target_prefix = os.path.join(INTER_FOLDER, job_owner, job_id)
         our_bos = BosClient()
         target_dir = our_bos.abs_path(target_prefix)
-        glog.info('target_dir %s' % target_dir)
+        logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
         object_storage = self.partner_object_storage() or our_bos
         origin_dir = object_storage.abs_path(origin_prefix)
 
-        glog.info("origin_dir: %s" % origin_dir)
-        glog.info("target_prefix: %s" % target_prefix)
+        logging.info("origin_dir: %s" % origin_dir)
+        logging.info("target_prefix: %s" % target_prefix)
 
         # TODO(SHU): ADD SANITY check
 
@@ -209,7 +209,7 @@ class SampleSet(BasePipeline):
             self.to_rdd([origin_dir])
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle))
-        glog.info("vehicles: %s", vehicles.collect())
+        logging.info("vehicles: %s", vehicles.collect())
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
@@ -238,7 +238,7 @@ class SampleSet(BasePipeline):
                               shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
                                               os.path.join(dst_path, VEHICLE_CONF))).count()
 
-        glog.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
+        logging.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -291,7 +291,7 @@ class SampleSet(BasePipeline):
         """ processing RDD """
         # PairRDD(vehicle, vehicle_param)
         vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)
-        glog.info("vehicle_param_conf: %d", vehicle_param_conf.count())
+        logging.info("vehicle_param_conf: %d", vehicle_param_conf.count())
 
         records = (
             # PairRDD(vehicle, vehicle_folder)
@@ -305,11 +305,11 @@ class SampleSet(BasePipeline):
             # PairRDD((vehicle, dir), records_in_dir)
             .map(lambda (vehicle, (record_dir, records)): ((vehicle, record_dir), records))).cache()
 
-        glog.info('Records %s' % records.collect())
+        logging.info('Records %s' % records.collect())
 
         # PairRDD((vehicle, segment_dir, segment_id), msg)
         valid_msg_segments = valid_segment(records)
-        glog.info('Valid_msgs %d' % valid_msg_segments.count())
+        logging.info('Valid_msgs %d' % valid_msg_segments.count())
 
         parsed_msgs = (
             # PairRDD((vehicle, dir, segment_id), (chassis_msgs, pose_msgs))
@@ -317,7 +317,7 @@ class SampleSet(BasePipeline):
             # PairRDD((vehicle, dir, segment_id), one paired_chassis_msg_pose_msg)
             .flatMapValues(pair_cs_pose)).cache()
 
-        glog.info('parsed_msgs {}'.format(parsed_msgs.first()))
+        logging.info('parsed_msgs {}'.format(parsed_msgs.first()))
 
         data_segment_rdd = spark_helper.cache_and_log(
             'get_data_point',
@@ -349,7 +349,7 @@ class SampleSet(BasePipeline):
                 .map(feature_extraction_utils.multi_gen_feature_key_backwards), 1)
 
         # count data frames
-        glog.info('number of elems: %d' % data_segment_rdd
+        logging.info('number of elems: %d' % data_segment_rdd
                   # PairRDD((vehicle, dir, feature_key), (timestamp_sec, data_point) RDD)
                   .groupByKey()
                   # PairRDD((vehicle, dir, feature_key), list of (timestamp_sec, data_point))

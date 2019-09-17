@@ -9,7 +9,7 @@ import os
 import sys
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import google.protobuf.json_format as json_format
 import pymongo
 
@@ -29,7 +29,7 @@ class Mongo(object):
         if flags_dict is None:
             flags_dict = flags.FLAGS.flag_values_dict()
         if flags_dict.get('running_mode') == 'TEST':
-            glog.error('MongoDB is not reachable in TEST mode.')
+            logging.error('MongoDB is not reachable in TEST mode.')
             return None
 
         self.url = flags_dict['mongo_url']
@@ -39,7 +39,7 @@ class Mongo(object):
         self.user = os.environ.get('MONGO_USER')
         self.passwd = os.environ.get('MONGO_PASSWD')
         if not self.user or not self.passwd:
-            glog.fatal('No credential found for MongoDB authentication.')
+            logging.fatal('No credential found for MongoDB authentication.')
             sys.exit(1)
 
     def db_connection(self):
@@ -78,7 +78,7 @@ class Mongo(object):
 if __name__ == '__main__':
     def main(argv):
         mongo = Mongo(flags.FLAGS.flag_values_dict())
-        glog.info(Mongo.db().collection_names())
+        logging.info(Mongo.db().collection_names())
 
     from absl import app
     app.run(main)

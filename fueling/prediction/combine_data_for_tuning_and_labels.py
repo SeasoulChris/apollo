@@ -3,7 +3,7 @@ import glob
 import math
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 import pyspark_utils.op as spark_op
 
@@ -40,7 +40,7 @@ class DataForTuningLabelsCombine(BasePipeline):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = datatuning_file_rdd.map(self.process_dir).count()
-        glog.info('Processed {} tasks'.format(result))
+        logging.info('Processed {} tasks'.format(result))
 
     @staticmethod
     def process_dir(source_file):
@@ -58,7 +58,7 @@ def CombineDataForTuningAndLabels(feature_path, label_path):
         list_of_data_for_tuning.ParseFromString(file_in.read())
     dict_labels = np.load(label_path).item()
 
-    glog.error(len(dict_labels))
+    logging.error(len(dict_labels))
 
     output_np_array = []
     for data_for_tuning in list_of_data_for_tuning.data_for_tuning:
@@ -68,7 +68,7 @@ def CombineDataForTuningAndLabels(feature_path, label_path):
 
         # Sanity checks to see if this data-point is valid or not.
         if key not in dict_labels:
-            # glog.info('Cannot find a feature-to-label mapping.')
+            # logging.info('Cannot find a feature-to-label mapping.')
             continue
 
         labels = None
@@ -77,7 +77,7 @@ def CombineDataForTuningAndLabels(feature_path, label_path):
         start_timestamp = future_status[0][6]
         end_timestamp = future_status[-1][6]
         time_gap = end_timestamp - start_timestamp
-        glog.error("time gap = " + str(time_gap))
+        logging.error("time gap = " + str(time_gap))
         if time_gap < 2.1:
             continue
 
@@ -94,7 +94,7 @@ def CombineDataForTuningAndLabels(feature_path, label_path):
     output_np_array = np.array(output_np_array)
 
     np.save(feature_path + '.with_real_costs.npy', output_np_array)
-    glog.error('file saved ' + feature_path + '.with_real_costs.npy')
+    logging.error('file saved ' + feature_path + '.with_real_costs.npy')
     return output_np_array
 
 

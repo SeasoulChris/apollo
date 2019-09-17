@@ -4,7 +4,7 @@
 import collections
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -76,7 +76,7 @@ class ReorgSmallRecords(BasePipeline):
     def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
-        glog.info('Repartition to: {}'.format(partitions))
+        logging.info('Repartition to: {}'.format(partitions))
 
         input_records = spark_helper.cache_and_log('InputRecords',
                                                    src_records
@@ -139,33 +139,33 @@ class ReorgSmallRecords(BasePipeline):
     def process_file(input):
         """(target_file, (record, start_time, end_time)s) -> target_file"""
         target_file, records = input
-        glog.info('Processing {} records to {}'.format(len(records), target_file))
+        logging.info('Processing {} records to {}'.format(len(records), target_file))
 
         if SKIP_EXISTING_DEST_RECORD and os.path.exists(target_file):
-            glog.info('Skip generating exist record {}'.format(target_file))
+            logging.info('Skip generating exist record {}'.format(target_file))
             return target_file
 
         # Read messages and channel information.
         msgs = []
         topic_descs = {}
         for record, start_time, end_time in records:
-            glog.info('Read record {}'.format(record))
+            logging.info('Read record {}'.format(record))
             try:
                 reader = RecordReader(record)
                 msgs.extend([msg for msg in reader.read_messages()
                              if start_time <= msg.timestamp < end_time])
                 if not msgs:
-                    glog.error('Failed to read any message from {}'.format(record))
+                    logging.error('Failed to read any message from {}'.format(record))
                     return target_file
                 for msg in msgs:
                     if msg.topic not in topic_descs:
                         topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
             except Exception as err:
-                glog.error('Failed to read record {}: {}'.format(record, err))
+                logging.error('Failed to read record {}: {}'.format(record, err))
 
         # Check once again to avoid duplicate work after reading.
         if SKIP_EXISTING_DEST_RECORD and os.path.exists(target_file):
-            glog.info('Skip generating exist record {}'.format(target_file))
+            logging.info('Skip generating exist record {}'.format(target_file))
             return target_file
         # Write to record.
         file_utils.makedirs(os.path.dirname(target_file))
@@ -177,7 +177,7 @@ class ReorgSmallRecords(BasePipeline):
             for msg in msgs:
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
         except Exception as e:
-            glog.error('Failed to write to target file {}: {}'.format(target_file, e))
+            logging.error('Failed to write to target file {}: {}'.format(target_file, e))
             return None
         finally:
             writer.close()
@@ -187,7 +187,7 @@ class ReorgSmallRecords(BasePipeline):
     def send_summary(task_dirs, receivers):
         """Send summary."""
         if not task_dirs:
-            glog.info('No need to send summary for empty result')
+            logging.info('No need to send summary for empty result')
             return
         SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
         title = 'Reorg small records: {}'.format(len(task_dirs))
@@ -195,7 +195,7 @@ class ReorgSmallRecords(BasePipeline):
         try:
             email_utils.send_email_info(title, message, receivers)
         except Exception as error:
-            glog.error('Failed to send summary: {}'.format(error))
+            logging.error('Failed to send summary: {}'.format(error))
 
 
 if __name__ == '__main__':

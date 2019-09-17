@@ -57,8 +57,7 @@ class YOLOv3(object):
         self.is_training = is_training
         self.anchors = anchors
 
-    def _conv2d_fixed_padding(self, inputs, num_filters,
-                              kernel_size, strides=1, scope=None):
+    def _conv2d_fixed_padding(self, inputs, num_filters, kernel_size, strides=1, scope=None):
         """
         If strides>1, Perform padding to input first and then convolve,
         so that the output has resolution of input_resolution/stride.

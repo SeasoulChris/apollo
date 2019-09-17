@@ -6,7 +6,7 @@
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
@@ -31,7 +31,7 @@ class SampleSetFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+        logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/records'
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')

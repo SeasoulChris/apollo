@@ -6,7 +6,7 @@ from collections import namedtuple
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -15,8 +15,7 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils \
-       as feature_utils
+import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils as feature_utils
 import fueling.profiling.grading_evaluation.vehicle_dynamics_grading_utils as grading_utils
 
 
@@ -37,8 +36,8 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
         ]).cache()
         self.run(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
-        glog.info('tasks {}'.format(todo_tasks.collect()))
-        glog.info('Vehicle Dynamics Profiling: All Done, TEST')
+        logging.info('tasks {}'.format(todo_tasks.collect()))
+        logging.info('Vehicle Dynamics Profiling: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -49,7 +48,7 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
         todo_tasks = spark_helper.cache_and_log('todo_tasks', dir_todo_tasks)
         self.run(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
-        glog.info('Control Profiling: All Done, PROD')
+        logging.info('Control Profiling: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters, core procedure"""
@@ -86,7 +85,7 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
 def partition_data(target_msgs):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
-    glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
     msgs = sorted(msgs, key=lambda msg: msg.timestamp)
     msgs_groups = [msgs[idx: idx + feature_utils.MSG_PER_SEGMENT]
                    for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]

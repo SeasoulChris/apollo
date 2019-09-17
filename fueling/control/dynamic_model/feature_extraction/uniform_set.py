@@ -3,7 +3,7 @@ from datetime import date
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
@@ -76,7 +76,7 @@ class UniformSet(BasePipeline):
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle_type: os.path.join(origin_prefix, vehicle_type)))
-        glog.info(origin_vehicle_dir.collect())
+        logging.info(origin_vehicle_dir.collect())
 
         # hdf5 files
         feature_dir = spark_helper.cache_and_log(
@@ -101,7 +101,7 @@ class UniformSet(BasePipeline):
         # output folder
         target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, job_id, TODAY)
         target_dir = bos_client.abs_path(target_prefix)
-        glog.info('target dir: %s' % target_dir)
+        logging.info('target dir: %s' % target_dir)
 
         # use prefix to list files
         # RDD(origin_dir)

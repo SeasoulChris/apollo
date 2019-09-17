@@ -7,6 +7,7 @@ import glob
 import os
 import subprocess
 
+from absl import logging
 from keras.regularizers import l1, l2
 from keras.layers import Dense, Input
 from keras.layers import Activation
@@ -15,7 +16,6 @@ from keras.models import Sequential, Model
 from scipy.signal import savgol_filter
 from sklearn.model_selection import train_test_split
 from tensorflow.python.client import device_lib
-import colored_glog as glog
 import google.protobuf.text_format as text_format
 import h5py
 import numpy as np
@@ -30,7 +30,7 @@ import fueling.common.file_utils as file_utils
 USE_TENSORFLOW = True  # Slightly faster than Theano.
 USE_GPU = True  # CPU seems to be faster than GPU in this case.
 
-glog.info('Available devices: {}'.format(device_lib.list_local_devices()))
+logging.info('Available devices: {}'.format(device_lib.list_local_devices()))
 
 if USE_TENSORFLOW:
     if USE_GPU:
@@ -65,17 +65,17 @@ def check_output(command):
     out_lines = proc.stdout.readlines()
     proc.communicate()
     for line in out_lines:
-        glog.info(line.strip())
+        logging.info(line.strip())
 
 
 def setup_model():
     """Run tensorflow training task"""
     check_output('nvidia-smi')
     if tf.test.gpu_device_name():
-        glog.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
-        glog.info('GPU available? {}'.format(tf.test.is_gpu_available()))
+        logging.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+        logging.info('GPU available? {}'.format(tf.test.is_gpu_available()))
     else:
-        glog.warn('Please install GPU version of TF')
+        logging.warning('Please install GPU version of TF')
     """
     set up neural network based on keras.Sequential
     model: output = relu(w2^T * tanh(w1^T * input + b1) + b2)
@@ -85,7 +85,7 @@ def setup_model():
                     activation='relu', W_regularizer=l2(0.001)))
     if MLP_MODEL_LAYER == 3:
         model.add(Dense(6, init='he_normal', activation='relu', W_regularizer=l2(0.001)))
-        glog.info('Load Three-layer MLP Model')
+        logging.info('Load Three-layer MLP Model')
     model.add(Dense(DIM_OUTPUT, init='he_normal', W_regularizer=l2(0.001)))
     model.compile(loss='mse', optimizer='adam', metrics=['mse'])
     return model
@@ -135,15 +135,15 @@ def save_model(model, param_norm, filename):
 
 
 def mlp_keras(x_data, y_data, param_norm, out_dir):
-    glog.info("Start to train MLP model")
+    logging.info("Start to train MLP model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     x_data = (x_data - input_fea_mean) / input_fea_std
     y_data = (y_data - output_fea_mean) / output_fea_std
-    glog.info("x shape = {}, y shape = {}".format(x_data.shape, y_data.shape))
+    logging.info("x shape = {}, y shape = {}".format(x_data.shape, y_data.shape))
 
     x_train, x_test, y_train, y_test = train_test_split(x_data, y_data,
                                                         test_size=0.2, random_state=42)
-    glog.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
+    logging.info("x_train shape = {}, y_train shape = {}".format(x_train.shape, y_train.shape))
 
     model = setup_model()
     with tf.device('/gpu:0'):

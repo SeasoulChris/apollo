@@ -3,10 +3,10 @@
 import os
 import sys
 
+from absl import logging
 from keras.models import load_model
 from scipy import interpolate
 from scipy.signal import savgol_filter
-import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -131,7 +131,7 @@ def generate_imu_output_wo_PP7(segment):
 
 def load_calibration_table():
     table_length = len(CALIBRATION_TABLE.calibration)
-    glog.info("Calibration Table Length: {}".format(table_length))
+    logging.info("Calibration Table Length: {}".format(table_length))
     calibration_table = np.zeros([table_length, CALIBRATION_DIMENSION])
     for i, calibration in enumerate(CALIBRATION_TABLE.calibration):
         calibration_table[i, 0] = calibration.speed
@@ -282,7 +282,7 @@ def generate_evaluation_data(dataset_path, model_folder, model_name):
     segment = feature_extraction.generate_segment(dataset_path)
     segment = feature_extraction.feature_preprocessing(segment)
     if not segment.any():
-        glog.error('Errors occur during evaluation data generation')
+        logging.error('Errors occur during evaluation data generation')
         sys.exit()
     vehicle_state_gps, trajectory_gps = generate_gps_data(segment)
     output_echo_lincoln = echo_lincoln.echo_lincoln_wrapper(dataset_path)

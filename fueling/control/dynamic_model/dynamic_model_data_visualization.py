@@ -7,8 +7,8 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
+from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
-import colored_glog as glog
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,7 +55,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
         timestr = time.strftime('%Y%m%d-%H%M%S')
         file_name = ('dataset_distribution_%s.pdf' % timestr)
         result_file = os.path.join(output_dir, file_name)
-        glog.info('Result File: %s', result_file)
+        logging.info('Result File: %s', result_file)
 
         hdf5_file_list = self.to_rdd(self.bos().list_files(prefix, '.hdf5'))
         self.run(hdf5_file_list, result_file)

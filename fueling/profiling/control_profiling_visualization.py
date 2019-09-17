@@ -8,7 +8,7 @@ import os
 import tarfile
 import time
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -38,7 +38,7 @@ class ControlProfilingVisualization(BasePipeline):
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
-        glog.info('Control Profiling Visualization: All Done, TEST')
+        logging.info('Control Profiling Visualization: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -50,7 +50,7 @@ class ControlProfilingVisualization(BasePipeline):
                                                                          'COMPLETE', 'COMPLETE_PLOT'))
         self.run(todo_tasks, original_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
-        glog.info('Control Profiling Visualization: All Done, PROD')
+        logging.info('Control Profiling Visualization: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""

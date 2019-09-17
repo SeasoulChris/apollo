@@ -5,7 +5,7 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
@@ -30,7 +30,7 @@ class BackwardSampleSet(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+        logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/backward_records'
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'BackwardSampleSet')
@@ -105,7 +105,7 @@ class BackwardSampleSet(BasePipeline):
             # PairRDD((dir, feature_key), (timestamp_sec, data_point))
             .map(feature_extraction_utils.gen_feature_key_backwards), 0)
 
-        glog.info('number of elems: %d' % data_segment_rdd
+        logging.info('number of elems: %d' % data_segment_rdd
                   # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
                   .groupByKey()
                   # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
@@ -123,7 +123,7 @@ class BackwardSampleSet(BasePipeline):
             # # PairRDD((dir, feature_key), one segment)
             .flatMapValues(feature_extraction_utils.gen_segment), 0)
 
-        # glog.info('ALL segment: %s' % data_segment_rdd
+        # logging.info('ALL segment: %s' % data_segment_rdd
         #           .map(lambda (key, (time_stamp, segment))
         #                :('Mkz7', segment.shape[0])).reduceByKey(operator.add).collect())
 

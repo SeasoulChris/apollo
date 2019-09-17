@@ -5,7 +5,7 @@ import collections
 import fnmatch
 import os
 
-import colored_glog as glog
+from absl import logging
 
 from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader
@@ -71,7 +71,7 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
     """record_path -> [PyBagMessage, ...] or [] if error occurs."""
     def read_record_func(record_path):
         """Wrapper function."""
-        glog.info('Read record {}'.format(record_path))
+        logging.info('Read record {}'.format(record_path))
         try:
             reader = RecordReader(record_path)
             channel_set = {channel for channel in reader.get_channellist()
@@ -85,23 +85,23 @@ def read_record(channels=None, start_time_ns=0, end_time_ns=18446744073709551615
         except Exception as err:
             # Stop poping messages elegantly if exception happends, including
             # the normal StopIteration.
-            glog.error('Failed to read record {}: {}'.format(record_path, err))
+            logging.error('Failed to read record {}: {}'.format(record_path, err))
         return []
     return read_record_func
 
 
 def read_record_header(record_path):
     """record_path -> Header, or None if error occurs."""
-    glog.info('Read record header {}'.format(record_path))
+    logging.info('Read record header {}'.format(record_path))
     try:
         reader = RecordReader(record_path)
         header = Header()
         header.ParseFromString(reader.get_headerstring())
         if header.message_number > 0:
             return header
-        glog.error('No message in record {} or its header is broken'.format(record_path))
+        logging.error('No message in record {} or its header is broken'.format(record_path))
     except Exception as e:
-        glog.error('Failed to read record header {}: {}'.format(record_path, e))
+        logging.error('Failed to read record header {}: {}'.format(record_path, e))
     return None
 
 
@@ -109,13 +109,13 @@ def message_to_proto(py_bag_message):
     """Convert an Apollo py_bag_message to proto."""
     proto_type = CHANNEL_TO_TYPE.get(py_bag_message.topic)
     if proto_type is None:
-        glog.error('Parser for {} is not implemented!'.format(py_bag_message.topic))
+        logging.error('Parser for {} is not implemented!'.format(py_bag_message.topic))
         return None
     proto = proto_type()
     try:
         proto.ParseFromString(py_bag_message.message)
     except Exception as e:
-        glog.error('Failed to parse message from {}: {}'.format(py_bag_message.topic, e))
+        logging.error('Failed to parse message from {}: {}'.format(py_bag_message.topic, e))
         return None
     return proto
 
@@ -144,16 +144,16 @@ def get_map_name_from_records(records_dir):
     # get the map_dict mapping follow the hmi Titlecase. E.g.: "Hello World" -> "hello_world".
     map_dict = {map_name.replace('_', ' ').title(): map_name for map_name in map_list}
     reader = read_record([HMI_STATUS_CHANNEL])
-    glog.info('Try getting map name from {}'.format(records_dir))
+    logging.info('Try getting map name from {}'.format(records_dir))
     records = [os.path.join(records_dir, filename) for filename in os.listdir(records_dir)
                if is_record_file(filename)]
     for record in records:
         for msg in reader(record):
             hmi_status = message_to_proto(msg)
             map_name = map_dict[str(hmi_status.current_map)]
-            glog.info('Get map name "{}" from record {}'.format(map_name, record))
+            logging.info('Get map name "{}" from record {}'.format(map_name, record))
             return map_name
-    glog.error('Failed to get map_name')
+    logging.error('Failed to get map_name')
 
 
 def get_vehicle_id_from_records(records, default_id='Unknown'):
@@ -166,9 +166,9 @@ def get_vehicle_id_from_records(records, default_id='Unknown'):
                 continue
             vehicle_id = hmi_status.current_vehicle
             if vehicle_id:
-                glog.info('Got vehicle ID "{}" from record {}'.format(vehicle_id, record))
+                logging.info('Got vehicle ID "{}" from record {}'.format(vehicle_id, record))
                 return vehicle_id
-    glog.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
+    logging.error('Failed to get vehicle ID, fallback to: {}'.format(default_id))
     return default_id
 
 
@@ -189,7 +189,7 @@ def guess_map_name_from_driving_path(driving_path):
     # Add one guardian element.
     map_vote.update([None])
     guessed_map = map_vote.most_common(1)[0][0]
-    glog.info('Guessed map from driving_path as {}'.format(guessed_map))
+    logging.info('Guessed map from driving_path as {}'.format(guessed_map))
     return guessed_map
 
 
@@ -197,7 +197,7 @@ def filter_last_n_days_records(n):
     """Return a filter function which checks the first YYYY-mm-dd part in path."""
     DATE_FMT = '%Y-%m-%d'
     cut_date = time_utils.n_days_ago(n, DATE_FMT)
-    glog.info('Process last {} days records starting from {}'.format(n, cut_date))
+    logging.info('Process last {} days records starting from {}'.format(n, cut_date))
     date_len = len(cut_date)
 
     def filter(record_path):
@@ -211,6 +211,6 @@ def filter_last_n_days_records(n):
         for part in record_path.split('/'):
             if len(part) == date_len and time_utils.try_parse(part, DATE_FMT):
                 return part >= cut_date
-        glog.error('Invalid path pattern: ' + record_path)
+        logging.error('Invalid path pattern: ' + record_path)
         return False
     return filter

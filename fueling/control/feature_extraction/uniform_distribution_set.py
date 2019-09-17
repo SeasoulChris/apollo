@@ -4,7 +4,7 @@ from datetime import date
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
@@ -30,18 +30,18 @@ def pick_sample(list_of_segment, sample_size):
     sample_list = []
     for segment in list_of_segment:
         add_size = segment.shape[0]  # row, data points
-        glog.info('segment_shape %d' % segment.shape[0])
+        logging.info('segment_shape %d' % segment.shape[0])
         if counter + add_size <= sample_size:
-            glog.info('counter+add_size %d' % (counter + add_size))
+            logging.info('counter+add_size %d' % (counter + add_size))
             sample_list.append(segment)
             counter += add_size
         elif counter <= sample_size:
             to_add_size = max(sample_size - counter, model_config.feature_config['sequence_length'])
-            glog.info('to_add_size: %d' % to_add_size)
+            logging.info('to_add_size: %d' % to_add_size)
             sample_list.append(segment[0:to_add_size, :])
-            glog.info('more than sampe_size: %d' % (counter + to_add_size))
+            logging.info('more than sampe_size: %d' % (counter + to_add_size))
             return (sample_list, (counter + to_add_size))
-    glog.info('counter: %d' % counter)
+    logging.info('counter: %d' % counter)
     return (sample_list, counter)
 
 
@@ -65,7 +65,7 @@ class UniformDistributionSet(BasePipeline):
     def run_test(self):
         """Run test."""
         sample_size = 200
-        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+        logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
@@ -88,7 +88,7 @@ class UniformDistributionSet(BasePipeline):
                                      WANTED_VEHICLE)
         target_dir = os.path.join('modules/control/data/results/UniformDistributed',
                                   WANTED_VEHICLE, today)
-        glog.info('target dir: %s' % target_dir)
+        logging.info('target dir: %s' % target_dir)
 
         # RDD(.hdf5 file)
         todo_tasks = spark_helper.cache_and_log(

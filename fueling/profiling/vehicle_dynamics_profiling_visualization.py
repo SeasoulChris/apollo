@@ -8,7 +8,7 @@ import os
 import tarfile
 import time
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -36,7 +36,7 @@ class VehicleDynamicsProfilingVisualization(BasePipeline):
             os.path.join(origin_prefix, 'Road_Test'),
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
-        glog.info('Vehicle Dynamics Profiling Visualization: All Done, TEST')
+        logging.info('Vehicle Dynamics Profiling Visualization: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -47,7 +47,7 @@ class VehicleDynamicsProfilingVisualization(BasePipeline):
                                                 dir_utils.get_todo_tasks(original_prefix, target_prefix,
                                                                          'COMPLETE', 'COMPLETE_PLOT'))
         self.run(todo_tasks, original_prefix, target_prefix)
-        glog.info('Vehicle Dynamics Profiling Visualization: All Done, PROD')
+        logging.info('Vehicle Dynamics Profiling Visualization: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""

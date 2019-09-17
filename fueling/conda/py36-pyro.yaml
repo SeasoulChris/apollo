@@ -32,7 +32,6 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - colored-glog
     - pyro-ppl == 0.3.3
     - pyspark-utils
     - scaleapi

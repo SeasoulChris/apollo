@@ -5,9 +5,10 @@ from datetime import datetime
 import os
 import sys
 
-from absl import app, flags
+from absl import app
+from absl import flags
+from absl import logging
 from pyspark import SparkConf, SparkContext
-import colored_glog as glog
 
 from fueling.common.mongo_utils import Mongo
 import fueling.common.storage.blob_client as blob_client
@@ -81,17 +82,17 @@ class BasePipeline(object):
         """Run the pipeline."""
         self.FLAGS = flags.FLAGS.flag_values_dict()
         if self.FLAGS.get('debug'):
-            glog.setLevel(glog.DEBUG)
+            logging.set_verbosity(logging.DEBUG)
 
         mode = self.FLAGS.get('running_mode')
         if mode is None:
-            glog.fatal('No running mode is specified! Please run the pipeline with /tools/<runner> '
-                       'instead of calling native "python".')
+            logging.fatal('No running mode is specified! Please run the pipeline with '
+                          './tools/submit-job-to-xxx instead of calling native "python".')
             sys.exit(1)
         if not self.FLAGS.get('job_id'):
             self.FLAGS['job_id'] = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
-        glog.info('Running {} job in {} mode, owner={}, id={}'.format(
+        logging.info('Running {} job in {} mode, owner={}, id={}'.format(
             self.name, mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))
         if mode == 'TEST':
             self.run_test()

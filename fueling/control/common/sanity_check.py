@@ -4,7 +4,7 @@ import collections
 import os
 import math
 
-import glog
+from absl import logging
 import google.protobuf.text_format as text_format
 
 from cyber_py.record import RecordReader
@@ -21,14 +21,14 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 
 
 def list_records(path):
-    glog.info("in list_records:%s" % path)
+    logging.info("in list_records:%s" % path)
     records = []
     for (dirpath, _, filenames) in os.walk(path):
-        glog.info('filenames: %s' % filenames)
-        glog.info('dirpath %s' % dirpath)
+        logging.info('filenames: %s' % filenames)
+        logging.info('dirpath %s' % dirpath)
         for filename in filenames:
             end_file = os.path.join(dirpath, filename)
-            glog.info("end_files: %s" % end_file)
+            logging.info("end_files: %s" % end_file)
             if record_utils.is_record_file(end_file):
                 records.append(end_file)
     return records
@@ -36,18 +36,18 @@ def list_records(path):
 
 def missing_file(path):
     vehicles = multi_vehicle_utils.get_vehicle(path)
-    glog.info("vehicles %s" % vehicles)
+    logging.info("vehicles %s" % vehicles)
     for vehicle in vehicles:
         # config file
         conf = os.path.join(path, vehicle, ConfFile)
-        glog.info("vehicles conf %s" % conf)
+        logging.info("vehicles conf %s" % conf)
         if os.path.exists(conf) is False:
-            glog.error('Missing configuration file in %s' % vehicle)
+            logging.error('Missing configuration file in %s' % vehicle)
             return True
         # record file
-        glog.info("list of records:" % list_records(os.path.join(path, vehicle)))
+        logging.info("list of records:" % list_records(os.path.join(path, vehicle)))
         if len(list_records(os.path.join(path, vehicle))) == 0:
-            glog.error('No record files in %s' % vehicle)
+            logging.error('No record files in %s' % vehicle)
             return True
     return False
 
@@ -61,7 +61,7 @@ def parse_error(path):
             proto_utils.get_pb_from_text_file(conf, pb_value)
             return False
         except text_format.ParseError:
-            glog.error('Error: Cannot parse %s as binary or text proto' % conf)
+            logging.error('Error: Cannot parse %s as binary or text proto' % conf)
             return True
 
 
@@ -70,20 +70,20 @@ def check_vehicle_id(conf):
     vehicle_id = conf.vehicle_param.vehicle_id
     if vehicle_id.vin or vehicle_id.plate or vehicle_id.other_unique_id:
         return True
-    glog.error("Error: No vehicle ID")
+    logging.error("Error: No vehicle ID")
     return False
 
 
 def missing_field(path):
     vehicles = multi_vehicle_utils.get_vehicle(path)
-    glog.info("vehicles in missing field: %s" % vehicles)
+    logging.info("vehicles in missing field: %s" % vehicles)
     for vehicle in vehicles:
         conf_file = os.path.join(path, vehicle, ConfFile)
-        glog.info("conf_file: %s" % conf_file)
+        logging.info("conf_file: %s" % conf_file)
         # reset for each vehicle to avoid overwrited
         pb_value = vehicle_config_pb2.VehicleConfig()
         conf = proto_utils.get_pb_from_text_file(conf_file, pb_value)
-        glog.info("vehicles conf %s" % conf)
+        logging.info("vehicles conf %s" % conf)
         if not check_vehicle_id(conf):
             return True
         # required field
@@ -101,10 +101,10 @@ def missing_field(path):
 
 def missing_message_data(path, channels=CHANNELS):
     for record in list_records(path):
-        glog.info("reading records %s" % record)
+        logging.info("reading records %s" % record)
         reader = RecordReader(record)
         for channel in channels:
-            glog.info("has %d messages" % reader.get_messagenumber(channel))
+            logging.info("has %d messages" % reader.get_messagenumber(channel))
             if reader.get_messagenumber(channel) == 0:
                 return True
     return False
@@ -121,7 +121,7 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     elif missing_message_data(input_folder):
         err_msg = "Messages are missing in records of %s" % input_folder
     else:
-        glog.info("%s Passed sanity check." % input_folder)
+        logging.info("%s Passed sanity check." % input_folder)
         if email_receivers:
             title = 'Vehicle-calibration data sanity check passed for {}'.format(job_owner)
             content = 'job_id={} input_folder={}\n' \
@@ -136,7 +136,7 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
         content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))
         email_utils.send_email_error(title, content, email_receivers)
 
-    glog.error(err_msg)
+    logging.error(err_msg)
     return False
 
 # if __name__ == '__main__':

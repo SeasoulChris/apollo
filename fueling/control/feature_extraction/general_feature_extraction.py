@@ -2,7 +2,7 @@
 """Extraction features from records with folder path as part of the key"""
 import os
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 import pyspark_utils.helper as spark_helper
@@ -30,7 +30,7 @@ class GeneralFeatureExtraction(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        glog.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
+        logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData'
         target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'GeneralSet')
@@ -57,9 +57,9 @@ class GeneralFeatureExtraction(BasePipeline):
         """ processing RDD """
         def _gen_hdf5(elem):
             """ write data segment to hdf5 file """
-            # glog.info("Processing data in folder:" % str(elem[0][0]))
+            # logging.info("Processing data in folder:" % str(elem[0][0]))
             (folder_path, segment_id), (chassis, pose) = elem
-            glog.info("Processing data in folder: %s" % folder_path)
+            logging.info("Processing data in folder: %s" % folder_path)
             out_dir = folder_path.replace(origin_prefix, target_prefix, 1)
             file_utils.makedirs(out_dir)
             out_file_path = "{}/{}.hdf5".format(out_dir, segment_id)
@@ -69,7 +69,7 @@ class GeneralFeatureExtraction(BasePipeline):
                     name = "_segment_" + str(i).zfill(3)
                     out_file.create_dataset(name, data=mini_dataset, dtype="float32")
                     i += 1
-            glog.info("Created all mini_dataset to {}".format(out_file_path))
+            logging.info("Created all mini_dataset to {}".format(out_file_path))
             return elem
 
         # PairRDD((dir_segment, segment_id), (chassis_msg_list, pose_msg_list))
@@ -84,7 +84,7 @@ class GeneralFeatureExtraction(BasePipeline):
             # RDD((dir_segment, segment_id), (chassis_list, pose_list))
             # write all segment into a hdf5 file
             .map(_gen_hdf5))
-        glog.info('Generated %d h5 files!' % result.count())
+        logging.info('Generated %d h5 files!' % result.count())
         # mark completed folders
         # RDD (dir_segment)
         (feature_extraction_rdd_utils.mark_complete(valid_msgs, origin_prefix,
@@ -101,14 +101,14 @@ class GeneralFeatureExtraction(BasePipeline):
             reader = record_utils.read_record(
                 [record_utils.HMI_STATUS_CHANNEL])
             for record in records:
-                glog.info('Try getting vehicle name from {}'.format(record))
+                logging.info('Try getting vehicle name from {}'.format(record))
                 for msg in reader(record):
                     hmi_status = record_utils.message_to_proto(msg)
                     vehicle = hmi_status.current_vehicle
-                    glog.info('Get vehicle name "{}" from record {}'.format(
+                    logging.info('Get vehicle name "{}" from record {}'.format(
                         vehicle, record))
                     return vehicle
-            glog.info('Failed to get vehicle name')
+            logging.info('Failed to get vehicle name')
             return ''
         return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
 
@@ -121,7 +121,7 @@ class GeneralFeatureExtraction(BasePipeline):
         times_pose = np.array([x.header.timestamp_sec for x in pose])
         times_cs = np.array([x.header.timestamp_sec for x in chassis])
 
-        glog.info("start time index {} {}".format(times_cs[0], times_pose[0]))
+        logging.info("start time index {} {}".format(times_cs[0], times_pose[0]))
         index = [0, 0]
 
         def align():
@@ -151,7 +151,7 @@ class GeneralFeatureExtraction(BasePipeline):
                         index[1] += seg_len
                         align()
                         break
-        glog.info("build data done")
+        logging.info("build data done")
 
 
 if __name__ == '__main__':

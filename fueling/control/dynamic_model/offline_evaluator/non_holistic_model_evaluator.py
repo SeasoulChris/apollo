@@ -9,10 +9,10 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
+from absl import logging
 from google.protobuf import text_format
 from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
-import colored_glog as glog
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -113,7 +113,7 @@ def location(scenario_segments, platform_path):
         # location from origin IMU
         tmp_v_x = segment_origin[index - 1, segment_index["v_x"]]
         tmp_v_y = segment_origin[index - 1, segment_index["v_y"]]
-        glog.info("tmp_v_x: {}".format(tmp_v_x))
+        logging.info("tmp_v_x: {}".format(tmp_v_x))
         tmp_x[index] = tmp_x[index - 1] + tmp_v_x * DELTA_T +\
             1 / 2 * imu_scaling["pp7"] * segment_origin[index -
                                                         1, segment_index["a_x"]] * DELTA_T * DELTA_T
@@ -121,7 +121,7 @@ def location(scenario_segments, platform_path):
             1 / 2 * imu_scaling["pp7"] * segment_origin[index -
                                                         1, segment_index["a_y"]] * DELTA_T * DELTA_T
     pdf_file_path = os.path.join(platform_path, "location{}.pdf".format(scenario))
-    glog.info("tmp_x shape {}".format(tmp_x.shape))
+    logging.info("tmp_x shape {}".format(tmp_x.shape))
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
         plt.plot(segment_origin[:, segment_index["x"]], segment_origin[:, segment_index["y"]], "y--",
@@ -187,7 +187,7 @@ def speed(scenario_segments, platform_path):
 
     # plot
     pdf_file_path = os.path.join(platform_path, "speed{}.pdf".format(scenario))
-    glog.info("max: {}".format(max(abs(v_origin - v_d))))
+    logging.info("max: {}".format(max(abs(v_origin - v_d))))
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
         plt.plot(v_origin, "y--", alpha=ALPHA, label="Direct Speed", linewidth=1)
@@ -208,7 +208,7 @@ def acceleration(scenario_segments, platform_path):
     acc_origin = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
     acc_d = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
     acc_dd = np.zeros(segment_origin[:, segment_index["a_x"]].shape)
-    glog.info("max: {}".format(
+    logging.info("max: {}".format(
         max(abs(segment_origin[:, segment_index["a_x"]] - segment_d[:, segment_index["a_x"]]))))
     # origin
     for index in range(0, len(acc_origin)):
@@ -228,7 +228,7 @@ def acceleration(scenario_segments, platform_path):
                          np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
     # plot
     pdf_file_path = os.path.join(platform_path, "acc{}.pdf".format(scenario))
-    glog.info("max: {}".format(max(abs(acc_origin - acc_d))))
+    logging.info("max: {}".format(max(abs(acc_origin - acc_d))))
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
         plt.plot(acc_origin, "y--", alpha=ALPHA * 0.5, label="Direct Acceleration", linewidth=1)
@@ -535,7 +535,7 @@ def evaluate(model_info, dataset_info, platform_path):
     # Output the trajectory visualization plots to a pdf file
     pdf_file_path = os.path.join(model_info[1],
                                  'trajectory_visualization_under_%s.pdf' % dataset_info[0])
-    glog.info('pdf_file_path: {}'.format(pdf_file_path))
+    logging.info('pdf_file_path: {}'.format(pdf_file_path))
     visualize_evaluation_results(pdf_file_path, trajectory_gps, trajectory_gps2,
                                  trajectory_echo_lincoln, trajectory_imu, trajectory_fnn,
                                  trajectory_point_mass, vehicle_state_gps,

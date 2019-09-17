@@ -5,7 +5,7 @@ import tarfile
 import time
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import matplotlib
 matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
@@ -90,13 +90,13 @@ class MultiJobDataDistribution(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         bos_client = BosClient()
-        glog.info("job_id: %s" % job_id)
+        logging.info("job_id: %s" % job_id)
         # intermediate result folder
         origin_prefix = os.path.join(inter_result_folder, job_owner, job_id)
-        glog.info("origin_prefix: %s" % origin_prefix)
+        logging.info("origin_prefix: %s" % origin_prefix)
 
         target_prefix = os.path.join(output_folder, job_owner, job_id)
-        glog.info("origin_prefix: %s" % target_prefix)
+        logging.info("origin_prefix: %s" % target_prefix)
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -127,9 +127,9 @@ class MultiJobDataDistribution(BasePipeline):
         conf_files = glob.glob(os.path.join(target_dir, '*/calibration_table.pb.txt'))
         plots = glob.glob(os.path.join(target_dir, '*/*.pdf'))
         attachments = conf_files + plots
-        glog.info('conf_files: %s' % conf_files)
-        glog.info('plots: %s' % plots)
-        glog.info('attachments before tar: %s' % attachments)
+        logging.info('conf_files: %s' % conf_files)
+        logging.info('plots: %s' % plots)
+        logging.info('attachments before tar: %s' % attachments)
         # add all file to a tar.gz file
         if attachments:
             output_filename = os.path.join(target_dir, 'result.tar.gz')
@@ -138,17 +138,17 @@ class MultiJobDataDistribution(BasePipeline):
             for attachment in attachments:
                 vehicle = os.path.basename(os.path.dirname(attachment))
                 file_name = os.path.basename(attachment)
-                glog.info('add_to_tar_attachment: %s' % attachment)
-                glog.info('add_to_tar_vehicle: %s' % vehicle)
-                glog.info('add_to_tar_file_name: %s' % file_name)
+                logging.info('add_to_tar_attachment: %s' % attachment)
+                logging.info('add_to_tar_vehicle: %s' % vehicle)
+                logging.info('add_to_tar_file_name: %s' % file_name)
                 tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
             tar.close()
             tar = tarfile.open(output_filename, 'r:gz')
             tar.extractall(target_dir)
             tar.close()
-            glog.info('output_filename: %s' % output_filename)
+            logging.info('output_filename: %s' % output_filename)
             attachments = [output_filename]
-            glog.info('attachments: %s' % attachments)
+            logging.info('attachments: %s' % attachments)
         email_utils.send_email_info(title, content, receivers, attachments)
 
     def run(self, hdf5_file, target_dir):

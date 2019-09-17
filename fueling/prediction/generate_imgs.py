@@ -3,7 +3,7 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 import cv2 as cv
 import pyspark_utils.op as spark_op
 
@@ -58,7 +58,7 @@ class GenerateImgs(BasePipeline):
             # RDD(0/1), 1 for success
             .map(spark_op.do_tuple(self.process_frame_env))
             .cache())
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_frame_env(target_dir, frame_env):
@@ -67,7 +67,7 @@ class GenerateImgs(BasePipeline):
         region = target_dir_parts[target_dir_parts.index('img_features') + 1]
         try:
             obstacle_mapping = ObstacleMapping(region, frame_env)
-            glog.debug("obstacles_history length is: " + str(len(frame_env.obstacles_history)))
+            logging.debug("obstacles_history length is: " + str(len(frame_env.obstacles_history)))
             for history in frame_env.obstacles_history:
                 if not history.is_trainable:
                     continue
@@ -75,25 +75,25 @@ class GenerateImgs(BasePipeline):
                 img = obstacle_mapping.crop_by_history(history)
                 filename = os.path.join(target_dir, key + ".png")
                 cv.imwrite(filename, img)
-                glog.info('Successfuly write img to: ' + filename)
+                logging.info('Successfuly write img to: ' + filename)
             return 1
         except BaseException:
-            glog.error('Failed to process this frame.')
+            logging.error('Failed to process this frame.')
         return 0
 
 
 def read_frame_env(file_path):
     """file_path -> FrameEnv, or None if error occurs."""
-    glog.info('Read FrameEnv from {} '.format(file_path))
+    logging.info('Read FrameEnv from {} '.format(file_path))
     try:
         list_frame = offline_features_pb2.ListFrameEnv()
         with open(file_path, 'r') as file_in:
             list_frame.ParseFromString(file_in.read())
         if len(list_frame.frame_env) > 0:
             return list_frame.frame_env
-        glog.error('No message in list_frame {} or its is broken'.format(file_path))
+        logging.error('No message in list_frame {} or its is broken'.format(file_path))
     except Exception as e:
-        glog.error('Failed to read list_frame {}: {}'.format(file_path, e))
+        logging.error('Failed to read list_frame {}: {}'.format(file_path, e))
     return []
 
 

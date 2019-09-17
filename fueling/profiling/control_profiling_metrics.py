@@ -7,7 +7,7 @@ import glob
 import os
 import tarfile
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -40,7 +40,7 @@ class ControlProfilingMetrics(BasePipeline):
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
-        glog.info('Control Profiling: All Done, TEST')
+        logging.info('Control Profiling: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -51,7 +51,7 @@ class ControlProfilingMetrics(BasePipeline):
                                                 dir_utils.get_todo_tasks(original_prefix, target_prefix))
         self.run(todo_tasks, original_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
-        glog.info('Control Profiling: All Done, PROD')
+        logging.info('Control Profiling: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
@@ -86,7 +86,7 @@ class ControlProfilingMetrics(BasePipeline):
 def partition_data(target_msgs):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
-    glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
     msgs = sorted(msgs, key=lambda msg: msg.timestamp)
     msgs_groups = [msgs[idx: idx + feature_utils.MSG_PER_SEGMENT]
                    for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]

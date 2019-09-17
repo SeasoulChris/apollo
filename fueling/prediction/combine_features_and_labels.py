@@ -2,7 +2,7 @@
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 import pyspark_utils.op as spark_op
 
@@ -36,7 +36,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = datalearn_file_rdd.map(self.process_dir).count()
-        glog.info('Processed {} tasks'.format(result))
+        logging.info('Processed {} tasks'.format(result))
 
     @staticmethod
     def process_dir(source_file):
@@ -65,7 +65,7 @@ def CombineFeaturesAndLabels(feature_path, label_path, dict_name='future_status'
 
         # Sanity checks to see if this data-point is valid or not.
         if key not in dict_labels:
-            glog.info('Cannot find a feature-to-label mapping.')
+            logging.info('Cannot find a feature-to-label mapping.')
             continue
 
         labels = None

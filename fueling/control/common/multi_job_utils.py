@@ -6,7 +6,7 @@ import os
 import random
 
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 
@@ -46,7 +46,7 @@ def get_conf_value(msgs):
         acc_y = pose.linear_acceleration.y
         acc = acc_x * math.cos(heading_angle) + acc_y * math.sin(heading_angle)
         if int(chassis.gear_location) != 1 or chassis.speed_mps < 0:  # keep only gear_drive data
-            # glog.info("chassis.gear_location %s" % chassis.gear_location)
+            # logging.info("chassis.gear_location %s" % chassis.gear_location)
             continue
         throttle_max = max(chassis.throttle_percentage, throttle_max)
         brake_max = max(chassis.brake_percentage, brake_max)
@@ -85,7 +85,7 @@ def write_conf(conf_value, vehicle_param_conf, train_conf_path, train_conf=CALIB
     cur_conf.acc_min = min(acc_min, vehicle_param_conf.max_deceleration)
     cur_conf.acc_max = max(acc_max, vehicle_param_conf.max_deceleration)
 
-    glog.info('Load calibration table conf: %s' % cur_conf)
+    logging.info('Load calibration table conf: %s' % cur_conf)
     file_utils.makedirs(train_conf_path)
     with open(os.path.join(train_conf_path, 'calibration_table_conf.pb.txt'), 'w') as fin:
         fin.write(str(cur_conf))

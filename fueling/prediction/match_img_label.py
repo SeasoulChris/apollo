@@ -3,7 +3,7 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
@@ -32,7 +32,7 @@ class MatchImgLabel(BasePipeline):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = png_img_rdd.map(self.process_file).cache()
-        glog.info('Keeping {}/{} imgs'.format(result.reduce(operator.add), result.count()))
+        logging.info('Keeping {}/{} imgs'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_file(src_file):
@@ -44,11 +44,11 @@ class MatchImgLabel(BasePipeline):
                 'junction_label.npy')).item()
             sample_label = junction_label_dict[key]
             if len(sample_label) == 24:
-                glog.info("Keeping image: " + src_file)
+                logging.info("Keeping image: " + src_file)
                 return 1
         except BaseException:
             pass
-        glog.info("Removing image: " + src_file)
+        logging.info("Removing image: " + src_file)
         os.remove(src_file)
         return 0
 

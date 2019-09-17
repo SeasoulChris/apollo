@@ -25,6 +25,5 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - colored-glog
     - pyquaternion
     - pyspark-utils

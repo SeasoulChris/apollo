@@ -5,7 +5,7 @@
 import os
 import time
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 import pyro
 import pyro.contrib.gp as gp
@@ -39,22 +39,22 @@ class DeepEncodingNet(nn.Module):
 
     def forward(self, data):
         """Define forward computation and activation functions"""
-        glog.debug("Original data shape: {}".format(data.shape))
+        logging.debug("Original data shape: {}".format(data.shape))
         conv1_input = torch.transpose(data, -1, -2)
-        glog.debug("Conv1 input data shape: {}".format(conv1_input.shape))
+        logging.debug("Conv1 input data shape: {}".format(conv1_input.shape))
         conv2_input = Func.relu(self.conv1(conv1_input))
-        glog.debug("Conv2 input data shape: {}".format(conv2_input.shape))
+        logging.debug("Conv2 input data shape: {}".format(conv2_input.shape))
         conv3_input = Func.relu(self.conv2(conv2_input))
-        glog.debug("Conv3 input data shape: {}".format(conv3_input.shape))
+        logging.debug("Conv3 input data shape: {}".format(conv3_input.shape))
         fc_input = Func.relu(self.conv3(conv3_input))
-        glog.debug("Fully-connected layer input data shape: {}".format(fc_input.shape))
+        logging.debug("Fully-connected layer input data shape: {}".format(fc_input.shape))
         data = self.fc(fc_input.view(fc_input.shape[0], -1))
         return data
 
 
 def preprocessing(args, dataset, gp):
     # TODO(Jiaxuan): Implement data preprocessing module
-    glog.info("End of preprocessing")
+    logging.info("End of preprocessing")
 
 
 def save_gp(args, gp_model, kernel_net):
@@ -73,10 +73,10 @@ def save_gp(args, gp_model, kernel_net):
 def train_gp(args, dataset, gp_class):
     """Train the dataset with Gaussian Process assumption"""
     feature, label = dataset.get_train_data()
-    glog.info("************Input Dim: {}".format(feature.shape))
-    glog.info("************Input Example: {}".format(feature[0]))
-    glog.info("************Output Dim: {}".format(label.shape))
-    glog.info("************Output Example: {}".format(label[0]))
+    logging.info("************Input Dim: {}".format(feature.shape))
+    logging.info("************Input Example: {}".format(feature[0]))
+    logging.info("************Output Dim: {}".format(label.shape))
+    logging.info("************Output Example: {}".format(label[0]))
 
     # Encode the original features to lower-dimentional feature with kernal size
     deep_encoding_net = DeepEncodingNet(args, feature.shape[2], args.kernel_dim)
@@ -106,11 +106,11 @@ def train_gp(args, dataset, gp_class):
     # ELBO: Evidence Lower Boundary
     svi = infer.SVI(gp_instante.model, gp_instante.guide, optimizer, infer.Trace_ELBO())
 
-    glog.info("Start of training")
+    logging.info("Start of training")
     gp_instante.set_data(feature, label)
     for epoch in range(1, args.epochs + 1):
         loss = svi.step()
-        glog.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss))
+        logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss))
         if epoch == 10:
             gp_instante.gp_f.jitter = 1e-4
 

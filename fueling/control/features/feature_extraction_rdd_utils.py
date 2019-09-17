@@ -2,7 +2,6 @@ from collections import Counter
 import operator
 import os
 
-import colored_glog as glog
 import pyspark_utils.op as spark_op
 
 

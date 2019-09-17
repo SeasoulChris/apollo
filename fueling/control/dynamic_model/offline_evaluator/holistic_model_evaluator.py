@@ -9,10 +9,10 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
+from absl import logging
 from google.protobuf import text_format
 from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
-import colored_glog as glog
 import matplotlib.pyplot as plt
 import numpy as np
 

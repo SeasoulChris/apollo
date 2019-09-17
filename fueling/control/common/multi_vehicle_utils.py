@@ -2,7 +2,7 @@
 import os
 import time
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2

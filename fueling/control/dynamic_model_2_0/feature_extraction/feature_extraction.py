@@ -3,7 +3,7 @@
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
@@ -40,8 +40,8 @@ def count_msgs(dir_msgRDD):
             count_chassis += 1
         elif message.topic == record_utils.LOCALIZATION_CHANNEL:
             count_localization += 1
-    glog.info('{} chassis messages for record folder {}'.format(count_chassis, folder))
-    glog.info('{} localization messages for record folder {}'.format(count_localization, folder))
+    logging.info('{} chassis messages for record folder {}'.format(count_chassis, folder))
+    logging.info('{} localization messages for record folder {}'.format(count_localization, folder))
     if count_chassis < SEGMENT_LEN / 2 or count_localization < SEGMENT_LEN / 2:
         return (folder, [])
     return dir_msgRDD
@@ -50,7 +50,7 @@ def count_msgs(dir_msgRDD):
 def partition_data(target_msgs, segment_len=SEGMENT_LEN, segment_int=SEGMENT_INTERVAL):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
-    glog.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
     msgs = sorted(msgs, key=lambda msgs: msgs.timestamp)
     msgs_groups = [msgs[idx: idx + segment_len]
                    for idx in range(0, len(msgs), segment_int)]
@@ -70,7 +70,7 @@ def get_datapoints(elem):
 def count_pair_msgs(elem):
     """ count paired msgs """
     (segment_dir, group_id), data_list = elem
-    glog.info('{} data points for record folder {} segment {}'.format(
+    logging.info('{} data points for record folder {} segment {}'.format(
         len(data_list), segment_dir, group_id))
 
 

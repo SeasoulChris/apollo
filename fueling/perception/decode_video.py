@@ -8,7 +8,7 @@ import operator
 import os
 import time
 
-import colored_glog as glog
+from absl import logging
 import cv2
 import pyspark_utils.helper as spark_helper
 
@@ -70,15 +70,15 @@ class DecodeVideoPipeline(BasePipeline):
         decoded_records_dir = 'modules/data/video-decoded-records'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
-        glog.info('ToDo tasks: {}'.format(todo_tasks))
+        logging.info('ToDo tasks: {}'.format(todo_tasks))
 
         self.run(todo_tasks, root_dir, video_dir, decoded_records_dir)
 
-        glog.info('Task done, marking COMPLETE')
+        logging.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
         mark_complete_and_send_summary(todo_tasks, decoded_records_dir, root_dir)
 
-        glog.info('Video Decoding: All Done, TEST.')
+        logging.info('Video Decoding: All Done, TEST.')
 
     def run_prod(self):
         """Run prod."""
@@ -87,15 +87,15 @@ class DecodeVideoPipeline(BasePipeline):
         decoded_records_dir = 'modules/data/public-test-video-decoded'
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
-        glog.info('ToDo tasks: {}'.format(todo_tasks))
+        logging.info('ToDo tasks: {}'.format(todo_tasks))
 
         self.run(todo_tasks, root_dir, video_dir, decoded_records_dir)
 
-        glog.info('Task done, marking COMPLETE')
+        logging.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
         mark_complete_and_send_summary(todo_tasks, decoded_records_dir, root_dir)
 
-        glog.info('Video Decoding: All Done, PROD.')
+        logging.info('Video Decoding: All Done, PROD.')
 
     def run(self, todo_tasks, root_dir, target_dir, decoded_records_dir):
         """Run the pipeline with given arguments."""
@@ -131,7 +131,7 @@ class DecodeVideoPipeline(BasePipeline):
         target_groups.foreach(decode_videos)
 
         # Replace video frames with the decoded images back to original records
-        glog.info('Decoding done, now replacing original records')
+        logging.info('Decoding done, now replacing original records')
         target_records = target_records.repartition(int(os.environ.get('APOLLO_EXECUTORS', 10)))
         # PairRDD(target_dir, record)
         (target_records
@@ -146,10 +146,10 @@ def group_video_frames(message_meta):
     target_topic, meta_values = message_meta
     target, _ = target_topic
     if os.path.exists(os.path.join(target, 'COMPLETE')):
-        glog.info('target already processed: {}, do nothing'.format(target_topic))
+        logging.info('target already processed: {}, do nothing'.format(target_topic))
         return [(target_topic, [])]
     meta_list = sorted(list(meta_values), key=operator.itemgetter(0))
-    glog.info('Grouping target topic: {}, with {} messages'.format(target_topic, len(meta_list)))
+    logging.info('Grouping target topic: {}, with {} messages'.format(target_topic, len(meta_list)))
     groups = list()
     frames_group = list()
     # Initial type of video frames that defined in apollo video drive proto
@@ -161,18 +161,18 @@ def group_video_frames(message_meta):
             frame_type = ast.literal_eval(fields).get('frame_type', None)
         except ValueError as error:
             # Skip the problematic frame if for any reason it was not parsed correctly
-            glog.error('invalid meta data: {}'.format(meta_list[idx]))
+            logging.error('invalid meta data: {}'.format(meta_list[idx]))
             continue
         if not frame_type:
             # If the frame was parsed fine but no type was specified, means something wrong
             raise ValueError('Invalid frame type for {}'.format(target_topic))
         if frame_type == initial_frame_type or idx == len(meta_list) - 1:
             if frames_group and frames_group[0][1] == initial_frame_type:
-                glog.info('generating new group, size:{}'.format(len(frames_group)))
+                logging.info('generating new group, size:{}'.format(len(frames_group)))
                 groups.append(frames_group)
             frames_group = list()
         frames_group.append((timestamp, frame_type, src_path))
-    glog.info('total groups count:{}'.format(len(groups)))
+    logging.info('total groups count:{}'.format(len(groups)))
     return [(target_topic, group) for group in groups]
 
 
@@ -183,9 +183,9 @@ def decode_videos(message_meta):
     """
     target_topic, meta_values = message_meta
     meta_list = sorted(list(meta_values), key=operator.itemgetter(0))
-    glog.info('decoding task {} with {} frames'.format(target_topic, len(meta_list)))
+    logging.info('decoding task {} with {} frames'.format(target_topic, len(meta_list)))
     if not meta_list:
-        glog.error('no video frames for target dir and topic {}'.format(target_topic))
+        logging.error('no video frames for target dir and topic {}'.format(target_topic))
         return
     target_dir, topic = target_topic
     image_dir = os.path.join(target_dir, 'images')
@@ -197,10 +197,10 @@ def decode_videos(message_meta):
     # Check COMPLETE in a finer granular group level
     complete_marker = os.path.join(image_output_path, 'COMPLETE')
     if os.path.exists(complete_marker):
-        glog.info('images are already converted, {}'.format(image_output_path))
+        logging.info('images are already converted, {}'.format(image_output_path))
         return
     h265_video_file_path = os.path.join(target_dir, '{}.h265'.format(cur_group_name))
-    glog.info('current video file path: {}'.format(h265_video_file_path))
+    logging.info('current video file path: {}'.format(h265_video_file_path))
     with open(h265_video_file_path, 'wb') as h265_video_file:
         for _, _, video_frame_bin_path in meta_list:
             with open(video_frame_bin_path, 'rb') as video_frame_bin:
@@ -215,7 +215,7 @@ def decode_videos(message_meta):
     generated_images = sorted(glob.glob('{}/*.jpg'.format(image_output_path)))
     if len(generated_images) != len(meta_list):
         # Logging instead of raising to give some tolerance for decoding huge number of frames
-        glog.error('Mismatch between original frames:{} and generated images:{} for video {}'
+        logging.error('Mismatch between original frames:{} and generated images:{} for video {}'
                    .format(len(meta_list), len(generated_images), h265_video_file_path))
     # Rename the generated images to match the original frame name, and move to overall image dir
     for idx in range(0, len(generated_images)):
@@ -223,25 +223,25 @@ def decode_videos(message_meta):
                   os.path.join(image_dir,
                                streaming_utils.get_message_id(meta_list[idx][0], topic)))
     file_utils.touch(complete_marker)
-    glog.info('done with group {}, image path: {}'.format(cur_group_name, image_output_path))
+    logging.info('done with group {}, image path: {}'.format(cur_group_name, image_output_path))
 
 
 def replace_images(target_record, root_dir, decoded_records_dir):
     """Scan messages in original record file, and replace video frames with decoded image frames"""
     video_dir, record = target_record
     if not os.path.exists(video_dir):
-        glog.error('no video or images generated for target: {}'.format(target_record))
+        logging.error('no video or images generated for target: {}'.format(target_record))
         return
     dst_record = streaming_utils.locate_target_record(root_dir, decoded_records_dir, record)
     if os.path.exists(os.path.join(os.path.dirname(dst_record), 'COMPLETE')):
-        glog.info('target already replaced {}, do nothing'.format(dst_record))
+        logging.info('target already replaced {}, do nothing'.format(dst_record))
         return
     if os.path.exists(dst_record):
         dst_header = record_utils.read_record_header(dst_record)
         if dst_header and dst_header.is_complete:
-            glog.info('destination record exists and is complete, do nothing'.format(dst_record))
+            logging.info('destination record exists and is complete, do nothing'.format(dst_record))
             return
-    glog.info("replacing frames for {} to {}".format(target_record, dst_record))
+    logging.info("replacing frames for {} to {}".format(target_record, dst_record))
     reader = RecordReader(record)
     file_utils.makedirs(os.path.dirname(dst_record))
     writer = RecordWriter(0, 0)
@@ -259,18 +259,18 @@ def replace_images(target_record, root_dir, decoded_records_dir):
                 message_topic = VIDEO_IMAGE_MAP[message.topic]
             if not message_content:
                 # For any reason it failed to convert, just ignore the message
-                glog.error('failed to convert message {}-{} in record {}'.format(
+                logging.error('failed to convert message {}-{} in record {}'.format(
                     message.topic, message.timestamp, record))
                 continue
         counter += 1
         if counter % 1000 == 0:
-            glog.info('writing {} th message to record {}'.format(counter, dst_record))
+            logging.info('writing {} th message to record {}'.format(counter, dst_record))
         writer.write_message(message_topic, message_content, message.timestamp)
         if message_topic not in topic_descs:
             topic_descs[message_topic] = reader.get_protodesc(message_topic)
             writer.write_channel(message_topic, message.data_type, topic_descs[message_topic])
     writer.close()
-    glog.info('done with replacement, target: {}, dst: {}'.format(target_record, dst_record))
+    logging.info('done with replacement, target: {}, dst: {}'.format(target_record, dst_record))
 
 
 def get_image_back(video_dir, message):
@@ -281,17 +281,17 @@ def get_image_back(video_dir, message):
         int(round(message_proto.header.timestamp_sec * (10 ** 9))), message.topic)
     image_path = os.path.join(video_dir, 'images', message_id)
     if not os.path.exists(image_path):
-        glog.error('message {} not found'.format(image_path))
+        logging.error('message {} not found'.format(image_path))
         return None
     img_bin = cv2.imread(image_path)
     # Check by using NoneType explicitly to avoid ambitiousness
     if img_bin is None:
-        glog.error('failed to read original message: {}'.format(image_path))
+        logging.error('failed to read original message: {}'.format(image_path))
         return None
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
     result, encode_img = cv2.imencode('.jpg', img_bin, encode_param)
     if not result:
-        glog.error('failed to encode message {}'.format(message_id))
+        logging.error('failed to encode message {}'.format(message_id))
         return None
     message_proto.format = '; jpeg compressed bgr8'
     message_proto.data = message_proto.data.replace(message_proto.data[:], bytearray(encode_img))
@@ -303,7 +303,7 @@ def mark_video_complete(todo_tasks, video_dir, root_dir):
     for task in todo_tasks:
         task_path = os.path.join(root_dir, video_dir, os.path.basename(task))
         if not os.path.exists(task_path):
-            glog.warn('no video decoded for task: {}'.format(task_path))
+            logging.warning('no video decoded for task: {}'.format(task_path))
             continue
         mark_complete(task_path)
 
@@ -318,13 +318,13 @@ def mark_complete_and_send_summary(todo_tasks, decoded_dir, root_dir):
     for task in todo_tasks:
         record = next((record for record in streaming_utils.list_records_for_task(task)), None)
         if not record:
-            glog.warn('no record found for task: {}'.format(task))
+            logging.warning('no record found for task: {}'.format(task))
             continue
         source_task = os.path.dirname(record)
         target_task = os.path.dirname(
             streaming_utils.locate_target_record(root_dir, decoded_dir, record))
         if not os.path.exists(target_task):
-            glog.warn('no decoded dir for task: {}'.format(target_task))
+            logging.warning('no decoded dir for task: {}'.format(target_task))
             # Still mark it completed even if it was not restored,
             # for avoiding being processed again next time
             file_utils.makedirs(target_task)

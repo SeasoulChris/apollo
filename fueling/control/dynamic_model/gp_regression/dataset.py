@@ -6,9 +6,9 @@ import os
 import pickle
 import sys
 
+from absl import logging
 from scipy.signal import savgol_filter
 from torch.utils.data.dataset import Dataset
-import colored_glog as glog
 import h5py
 import numpy as np
 import torch
@@ -43,7 +43,7 @@ class GPDataSet(Dataset):
         input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
         output_data = torch.zeros(DIM_OUTPUT, 0)
         for h5_file in datasets:
-            glog.debug(os.path.join(h5_file))
+            logging.debug(os.path.join(h5_file))
             with h5py.File(h5_file, 'r') as model_norms_file:
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))
@@ -68,7 +68,7 @@ class GPDataSet(Dataset):
         input_data = torch.zeros(0, INPUT_LENGTH, DIM_INPUT)
         gt_data = torch.zeros(0, DIM_OUTPUT)
         for h5_file in datasets:
-            glog.debug(os.path.join(h5_file))
+            logging.debug(os.path.join(h5_file))
             with h5py.File(h5_file, 'r') as model_norms_file:
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))

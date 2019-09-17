@@ -5,11 +5,12 @@
 import glob
 import os
 
-import colored_glog as glog
-import h5py
 import matplotlib
 matplotlib.use('Agg')
+
+from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -19,10 +20,10 @@ def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
     segments = []
     if not h5s:
-        glog.warn('No hdf5 files found under the targeted path.')
+        logging.warning('No hdf5 files found under the targeted path.')
         return segments
     for h5 in h5s:
-        glog.info('Loading {}'.format(h5))
+        logging.info('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as h5file:
             for value in h5file.values():
                 segments.append(np.array(value))
@@ -35,7 +36,7 @@ def generate_data(segments):
     """generate data array from the given data segments"""
     data = []
     if not segments:
-        glog.warn('No segments from hdf5 files found under the targetd path.')
+        logging.warning('No segments from hdf5 files found under the targetd path.')
         return data
     data.append(segments[0])
     for i in range(1, len(segments)):
@@ -49,7 +50,7 @@ def plot_h5_features_time(data_rdd):
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
-        glog.warn('No data from hdf5 files can be visualized under the targetd path {}'
+        logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
                   .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))

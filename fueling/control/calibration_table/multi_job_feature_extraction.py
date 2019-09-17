@@ -5,7 +5,7 @@ import shutil
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -127,12 +127,12 @@ class MultiJobFeatureExtraction(BasePipeline):
         vehicle_param_conf = origin_vehicle_dir
 
         conf_target_prefix = target_prefix
-        glog.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
-        glog.info(conf_target_prefix)
+        logging.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
+        logging.info(conf_target_prefix)
         target_param_conf = origin_vehicle_dir.map(lambda (vehicle, path):
                                                    (vehicle, path.replace(origin_prefix,
                                                                           conf_target_prefix, 1)))
-        glog.info('target_param_conf: %s' % target_param_conf.collect())
+        logging.info('target_param_conf: %s' % target_param_conf.collect())
         print("origin_vehicle_dir.join", origin_vehicle_dir.join(target_param_conf).collect())
 
         # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_param_conf)))
@@ -153,14 +153,14 @@ class MultiJobFeatureExtraction(BasePipeline):
         target_prefix = os.path.join(inter_result_folder, job_owner, job_id)
         our_bos = BosClient()
         target_dir = our_bos.abs_path(target_prefix)
-        glog.info('target_dir %s' % target_dir)
+        logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
         object_storage = self.partner_object_storage() or our_bos
         origin_dir = object_storage.abs_path(origin_prefix)
 
-        glog.info("origin_dir: %s" % origin_dir)
-        glog.info("target_prefix: %s" % target_prefix)
+        logging.info("origin_dir: %s" % origin_dir)
+        logging.info("target_prefix: %s" % target_prefix)
 
         # Add sanity check
         partner = partners.get(job_owner)
@@ -177,7 +177,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             self.to_rdd([origin_dir])
             # RDD(vehicle)
             .flatMap(multi_vehicle_utils.get_vehicle))
-        glog.info("vehicles: %s", vehicles.collect())
+        logging.info("vehicles: %s", vehicles.collect())
 
         """ get conf files """
         vehicle_param_conf = spark_helper.cache_and_log(
@@ -207,7 +207,7 @@ class MultiJobFeatureExtraction(BasePipeline):
                               shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
                                               os.path.join(dst_path, VEHICLE_CONF))).count()
 
-        glog.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
+        logging.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -280,7 +280,7 @@ class MultiJobFeatureExtraction(BasePipeline):
 
         # PairRDD(vehicle, vehicle_param)
         vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)
-        glog.info("vehicle_param_conf: %d", vehicle_param_conf.count())
+        logging.info("vehicle_param_conf: %d", vehicle_param_conf.count())
 
         records = (
             todo_task_dirs
@@ -293,11 +293,11 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir), records)
             .map(lambda (vehicle, (record_dir, records)): ((vehicle, record_dir), records))).cache()
 
-        glog.info('Records %d' % records.count())
+        logging.info('Records %d' % records.count())
 
         # PairRDD((vehicle, segment_dir, segment_id), msg)
         valid_msg_segments = valid_segment(records)
-        glog.info('Valid_msgs %d' % valid_msg_segments.count())
+        logging.info('Valid_msgs %d' % valid_msg_segments.count())
 
         parsed_msgs = (
             # PairRDD((vehicle, dir, segment_id), (chassis_msgs, pose_msgs))
@@ -305,7 +305,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD((vehicle, dir, segment_id), paired_chassis_msg_pose_msg)
             .mapValues(pair_cs_pose)).cache()
 
-        glog.info('parsed_msgs %d' % parsed_msgs.count())
+        logging.info('parsed_msgs %d' % parsed_msgs.count())
 
         # update conf file for each vehicle
         vehicle_msgs_rdd = (
@@ -316,7 +316,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             .mapValues(multi_job_utils.get_conf_value)
             # PairRDD(vehicle, (speed_min, speed_max, throttle_max, brake_max))
             .reduceByKey(multi_job_utils.compare_conf_value))
-        glog.info("vehicle_msgs_rdd: %s" % str(vehicle_msgs_rdd.collect()))
+        logging.info("vehicle_msgs_rdd: %s" % str(vehicle_msgs_rdd.collect()))
 
         # write conf value to calibratin table training conf files
         write_conf_rdd = (
@@ -327,8 +327,8 @@ class MultiJobFeatureExtraction(BasePipeline):
             .map(lambda (vehicle, (conf_value, conf)):
                  multi_job_utils.write_conf(conf_value, conf,
                                             os.path.join(target_prefix, vehicle))))
-        glog.info('target_prefix: %s' % target_prefix)
-        glog.info('vehicle_msgs_rdd: % d' % write_conf_rdd.count())
+        logging.info('target_prefix: %s' % target_prefix)
+        logging.info('vehicle_msgs_rdd: % d' % write_conf_rdd.count())
 
         # get train conf files
         #
@@ -341,7 +341,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, 0)
             .mapValues(multi_job_utils.get_train_conf)
         )
-        glog.info('train_conf_files %s' % train_conf.collect())
+        logging.info('train_conf_files %s' % train_conf.collect())
 
         conf = spark_helper.cache_and_log(
             'conf',
@@ -370,7 +370,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             msgs_with_conf.map(
                 lambda (vehicle, ((segment_dir, segment_id, msgs), (vehicle_conf, train_conf))):
                 ((vehicle, segment_dir, segment_id), (msgs, vehicle_conf, train_conf))))
-        glog.info('msgs_with_conf: %d' % msgs_with_conf.count())
+        logging.info('msgs_with_conf: %d' % msgs_with_conf.count())
 
         data_rdd = spark_helper.cache_and_log(
             'data_rdd',

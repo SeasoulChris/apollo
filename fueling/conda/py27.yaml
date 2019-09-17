@@ -31,5 +31,4 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - colored-glog
     - pyspark-utils

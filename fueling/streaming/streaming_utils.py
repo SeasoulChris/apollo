@@ -11,7 +11,7 @@ import shutil
 import stat
 import time
 
-import colored_glog as glog
+from absl import logging
 
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -232,7 +232,7 @@ def retry(func, params, retry_times):
             return ret
         except Exception as expn:
             error_msg = 'func failed with error {}. params: {}'.format(expn, params)
-            glog.error(error_msg)
+            logging.error(error_msg)
             retry_times -= 1
             if retry_times <= 0:
                 raise Exception(error_msg)

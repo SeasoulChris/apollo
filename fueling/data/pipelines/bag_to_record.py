@@ -7,7 +7,7 @@ import fnmatch
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -62,7 +62,7 @@ class BagToRecord(BasePipeline):
                   dir_bag[1])))
 
         if self.FLAGS.get('skip_existing_record'):
-            glog.info('Skip existing record.')
+            logging.info('Skip existing record.')
             # PairRDD(dst_record, src_bag)
             record_to_bag = spark_op.substract_keys(
                 record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record')))
@@ -108,9 +108,9 @@ class BagToRecord(BasePipeline):
         ret = os.system(cmd)
         msg = 'SHELL[{}]: {}'.format(ret, cmd)
         if ret != 0:
-            glog.error(msg)
+            logging.error(msg)
             return None
-        glog.info(msg)
+        logging.info(msg)
         return record
 
 

@@ -5,11 +5,11 @@ from random import shuffle
 from time import time
 import os
 
+from absl import logging
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
 from keras.regularizers import l1, l2
-import colored_glog as glog
 import h5py
 import numpy as np
 import tensorflow as tf
@@ -66,7 +66,7 @@ def setup_model(model_name):
 
 
 def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_name='lstm_two_layer'):
-    glog.info("Start to train LSTM model")
+    logging.info("Start to train LSTM model")
     (input_fea_mean, input_fea_std), (output_fea_mean, output_fea_std) = param_norm
     for i in range(DIM_LSTM_LENGTH):
         lstm_input_data[:, :, i] = (lstm_input_data[:, :, i] - input_fea_mean) / input_fea_std

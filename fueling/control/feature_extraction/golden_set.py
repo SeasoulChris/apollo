@@ -5,7 +5,7 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 import pyspark_utils.helper as spark_helper
@@ -83,7 +83,7 @@ class GoldenSet(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        glog.info('VEHICLE: %s' % VEHICLE)
+        logging.info('VEHICLE: %s' % VEHICLE)
 
         origin_dir = '/apollo/data/GoldenSet'
         target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
@@ -99,7 +99,7 @@ class GoldenSet(BasePipeline):
             # PairRDD(dir, record_file)
             .keyBy(os.path.dirname))
 
-        glog.info('todo_recors: %s' % todo_records.collect())
+        logging.info('todo_recors: %s' % todo_records.collect())
         self.run(todo_records, origin_dir, target_dir)
 
     def run_prod(self):
@@ -144,7 +144,7 @@ class GoldenSet(BasePipeline):
             .keys()
             .cache())
 
-        glog.info('valid_msgs number: %d' % valid_msgs.count())
+        logging.info('valid_msgs number: %d' % valid_msgs.count())
 
         # PairRDD(dir, valid_msgs)
         valid_msgs = spark_op.filter_keys(dir_to_msgs, valid_msgs)
@@ -152,31 +152,31 @@ class GoldenSet(BasePipeline):
         data_segment_rdd = (
             # PairRDD(dir_segment, (chassis_msg_list, pose_msg_list))
             feature_extraction_rdd_utils.chassis_localization_parsed_msg_rdd(valid_msgs))
-        glog.info('parsed_msg number: %d' % data_segment_rdd.count())
+        logging.info('parsed_msg number: %d' % data_segment_rdd.count())
 
         data_segment_rdd = (
             data_segment_rdd
             # PairRDD(dir_segment, paired_chassis_msg_pose_msg)
             .flatMapValues(feature_extraction_utils.pair_cs_pose))
-        glog.info('pair_cs_pose number: %d' % data_segment_rdd.count())
+        logging.info('pair_cs_pose number: %d' % data_segment_rdd.count())
 
         data_segment_rdd = (
             data_segment_rdd
             # PairRDD(dir, data_point)
             .mapValues(get_data_point))
-        glog.info('get_data_point: %d' % data_segment_rdd.count())
+        logging.info('get_data_point: %d' % data_segment_rdd.count())
 
         data_segment_rdd = (
             data_segment_rdd
             .groupByKey()
             # PairRDD(dir, list of (timestamp_sec, data_point))
             .mapValues(list))
-        glog.info('data_segment: %d' % data_segment_rdd.count())
+        logging.info('data_segment: %d' % data_segment_rdd.count())
 
         data_segment_rdd = (
             # PairRDD(dir, (timestamp_sec, data_point))
             data_segment_rdd.mapValues(gen_segment))
-        glog.info('data_segment number: %d' % data_segment_rdd.count())
+        logging.info('data_segment number: %d' % data_segment_rdd.count())
 
         spark_helper.cache_and_log(
             'hdf5',

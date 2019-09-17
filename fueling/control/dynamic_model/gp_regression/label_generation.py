@@ -7,8 +7,8 @@ import os
 import pickle
 import sys
 
+from absl import logging
 from keras.models import load_model
-import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -33,7 +33,7 @@ def generate_segment(h5_file):
     load a single h5 file to a numpy array
     """
     segment = None
-    glog.info('Loading New File {}'.format(h5_file))
+    logging.info('Loading New File {}'.format(h5_file))
     with h5py.File(h5_file, 'r') as fin:
         for ds in fin.values():
             if segment is None:
@@ -89,13 +89,13 @@ def generate_gp_data(args, segment):
         # Calculate the model prediction on current position
         predicted_x += predicted_v * np.cos(predicted_heading) * feature_config["delta_t"]
         predicted_y += predicted_v * np.sin(predicted_heading) * feature_config["delta_t"]
-    # glog.info("The predicted x:{}, y:{}".format(predicted_x, predicted_y))
+    # logging.info("The predicted x:{}, y:{}".format(predicted_x, predicted_y))
     # The residual error on x and y prediction
     output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["x"]] - predicted_x
     output_segment[output_index["d_y"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["y"]] - predicted_y
-    glog.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
+    logging.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
     return (input_segment, output_segment)
 
 
@@ -108,10 +108,10 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     output_fnn = np.zeros([1, 2])
     # Normalization for MLP model's input/output
     mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
-    # glog.info("Model Input {}".format(mlp_input))
+    # logging.info("Model Input {}".format(mlp_input))
     output_fnn[0, :] = model.predict(mlp_input)
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
-    # glog.info("Model Output {}".format(output_fnn))
+    # logging.info("Model Output {}".format(output_fnn))
     # Update the vehicle speed based on predicted acceleration
     velocity_fnn = output_fnn[0, 0] * feature_config["delta_t"] + mlp_input[0, 0]
     # If (negative speed under forward gear || positive speed under backward gear ||
@@ -136,7 +136,7 @@ def get_train_data(args):
         file_name = h5_file.split(args.unlabeled_dataset_path)[1].split(path_suffix)[0]
         file_name = os.path.join(args.labeled_dataset_path, file_name + '.h5')
         if os.path.exists(file_name):
-            glog.info("File Already Generated: {}".format(file_name))
+            logging.info("File Already Generated: {}".format(file_name))
             continue
         # generated data segment for unhandled file
         segment = generate_segment(h5_file)

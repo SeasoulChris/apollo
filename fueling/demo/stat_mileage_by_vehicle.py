@@ -5,7 +5,7 @@ import glob
 import os
 
 # Third-party packages
-import colored_glog as glog
+from absl import logging
 
 # Apollo packages
 from modules.canbus.proto import chassis_pb2
@@ -42,7 +42,7 @@ class StatMileageByVehicle(BasePipeline):
                      glob.glob(os.path.join(dir, '*bag*'))))
         result = self.run(test_dirs)
 
-        glog.info('Calculated auto mileage in test mode is:{}'.format(result))
+        logging.info('Calculated auto mileage in test mode is:{}'.format(result))
 
     def run_prod(self):
         """Run prod."""
@@ -57,7 +57,7 @@ class StatMileageByVehicle(BasePipeline):
 
         prod_mileage = self.run(todo_dirs)
 
-        glog.info('Calculated auto mileage in production mode is :{}'.format(
+        logging.info('Calculated auto mileage in production mode is :{}'.format(
             prod_mileage))
 
     def run(self, dirs):
@@ -73,7 +73,7 @@ class StatMileageByVehicle(BasePipeline):
         )
 
         if not result:
-            glog.info("Nothing to be processed, everything is under control!")
+            logging.info("Nothing to be processed, everything is under control!")
             return None
 
         return result

@@ -3,6 +3,7 @@
 
 import os
 
+from absl import logging
 from azure.storage.blob import BlockBlobService
 
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
@@ -24,7 +25,7 @@ class BlobClient(BaseObjectStorageClient):
         self.account_key = os.environ.get('AZURE_STORAGE_ACCESS_KEY')
         self.container_name = os.environ.get('AZURE_BLOB_CONTAINER')
         if not self.account_name or not self.account_key or not self.container_name:
-            glog.error('Failed to get Azure config.')
+            logging.error('Failed to get Azure config.')
             return None
 
     # Override

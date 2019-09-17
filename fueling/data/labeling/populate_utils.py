@@ -5,9 +5,9 @@ import gc
 import math
 import os
 
+from absl import logging
 from google.protobuf.json_format import MessageToJson
 from pyquaternion import Quaternion as PyQuaternion
-import colored_glog as glog
 import cv2
 import numpy as np
 import pypcd
@@ -566,7 +566,7 @@ class FramePopulator(object):
                                      lidar_pose.position.y, lidar_pose.position.z)
         file_name = os.path.join(frame_dir, 'frame-{}.json'.format(lidar_msg.message.timestamp))
         if os.path.exists(file_name):
-            glog.info('frame file {} already existed, do nothing'.format(file_name))
+            logging.info('frame file {} already existed, do nothing'.format(file_name))
             return
 
         for message_struct in message_structs:
@@ -583,12 +583,12 @@ class FramePopulator(object):
                                                  pose,
                                                  self._stationary_pole)
         frame.timestamp = float(lidar_msg.message.timestamp)/(10**9)
-        glog.info('converting proto object to json: {}'.format(file_name))
+        logging.info('converting proto object to json: {}'.format(file_name))
         json_obj = MessageToJson(frame, False, True)
-        glog.info('preparing to dump json to file: {}'.format(file_name))
+        logging.info('preparing to dump json to file: {}'.format(file_name))
         with open(file_name, 'w') as outfile:
             outfile.write(json_obj)
-        glog.info('dumped json: {}'.format(file_name))
+        logging.info('dumped json: {}'.format(file_name))
 
     def pass_filter_rules(self, lidar_msg, lidar_pose, message_structs, max_diff):
         """Check if the current frame should be filtered out by various of rules"""
@@ -602,7 +602,7 @@ class FramePopulator(object):
         if self._pre_frame_time:
             interval = (float(lidar_msg.message.timestamp) - self._pre_frame_time) / (10**9)
             if (interval < min_interval):
-                glog.warn('filtered out by interval rule, interval: {}'.format(interval))
+                logging.warning('filtered out by interval rule, interval: {}'.format(interval))
                 return False
         self._pre_frame_time = float(lidar_msg.message.timestamp)
         # Car Not Moving rule
@@ -610,14 +610,14 @@ class FramePopulator(object):
             distance = math.sqrt((float(lidar_pose.position.x) - self._pre_pose_x) ** 2 +
                                  (float(lidar_pose.position.y) - self._pre_pose_y) ** 2)
             if distance < min_distance:
-                glog.warn('filtered out by car not moving rule, distance: {}'.format(distance))
+                logging.warning('filtered out by car not moving rule, distance: {}'.format(distance))
                 return False
         self._pre_pose_x = float(lidar_pose.position.x)
         self._pre_pose_y = float(lidar_pose.position.y)
         # Max Frames Number rule
         self._frame_num += 1
         if self._frame_num > max_frame_num:
-            glog.warn('filtered out by frame number rule, number: {}'.format(self._frame_num))
+            logging.warning('filtered out by frame number rule, number: {}'.format(self._frame_num))
             return False
         return True
 
@@ -628,7 +628,7 @@ class FramePopulator(object):
         diff = abs(float(lidar_msg.message.timestamp) - float(front6mm_msg.message.timestamp))
         actual_diff = diff / (10 ** 6)
         if actual_diff > max_diff:
-            glog.warn('diff {} is bigger than {}'.format(actual_diff, max_diff))
+            logging.warning('diff {} is bigger than {}'.format(actual_diff, max_diff))
             return False
         return True
 
@@ -658,16 +658,16 @@ class FramePopulator(object):
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
-            glog.warn('keep this frame anyways, and let agent do the filtering per requirement')
+            logging.warning('keep this frame anyways, and let agent do the filtering per requirement')
             # return
 
         pcd_file_name = os.path.join(pcd_dir, 'velodyne128-{}.pcd'.format(frame_counter))
         if os.path.exists(pcd_file_name):
-            glog.info('frame file {} already existed, do nothing'.format(pcd_file_name))
+            logging.info('frame file {} already existed, do nothing'.format(pcd_file_name))
             return
 
         # PCD
-        glog.info('generating pcd: {}'.format(pcd_file_name))
+        logging.info('generating pcd: {}'.format(pcd_file_name))
         pcd_object = streaming_utils.load_message_obj(lidar_msg.message.objpath)
         point_cloud = PointCloud()
         point_cloud.ParseFromString(pcd_object)
@@ -695,7 +695,7 @@ class FramePopulator(object):
 
         # IMAGES
         image_file_name = os.path.join(pcd_dir, 'photo.txt')
-        glog.info('generating images: {}'.format(image_file_name))
+        logging.info('generating images: {}'.format(image_file_name))
         params = [frame_counter, lidar_time_str]
         for message_struct in message_structs:
             channel, timestamp, _, objpath = message_struct.message
@@ -717,7 +717,7 @@ class FramePopulator(object):
 
         # POSE
         pose_file_name = os.path.join(pcd_dir, 'pose.txt')
-        glog.info('printing gps pose info to: {}'.format(pose_file_name))
+        logging.info('printing gps pose info to: {}'.format(pose_file_name))
         lidar_pose = get_interp_pose(lidar_msg.message.timestamp,
                                      lidar_msg.pose_left,
                                      lidar_msg.pose_right)
@@ -871,7 +871,7 @@ class BuilderManager(object):
             status, msg = builder.build(message_struct)
             if msg is None:
                 if status == 1:
-                    glog.info('constructing the {}th frame'.format(self._counter))
+                    logging.info('constructing the {}th frame'.format(self._counter))
                     builder.complete(self._frame_populator, self._counter, agent, diff)
                     self._counter += 1
                     self._builder_list.remove(builder)

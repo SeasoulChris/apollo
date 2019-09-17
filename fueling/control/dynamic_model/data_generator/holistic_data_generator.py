@@ -2,18 +2,18 @@
 
 import os
 
-import colored_glog as glog
-import h5py
-import numpy as np
+from absl import logging
 from keras.models import load_model
 from scipy import interpolate
+import h5py
+import numpy as np
 
-import fueling.common.proto_utils as proto_utils
-import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
+import fueling.common.proto_utils as proto_utils
+import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 
 from modules.common.configs.proto import vehicle_config_pb2
 import modules.control.proto.control_conf_pb2 as ControlConf
@@ -141,7 +141,7 @@ def generate_imu_output(segment):
 
 def load_calibration_table():
     table_length = len(CALIBRATION_TABLE.calibration)
-    glog.info("Calibration Table Length: {}".format(table_length))
+    logging.info("Calibration Table Length: {}".format(table_length))
     calibration_table = np.zeros([table_length, CALIBRATION_DIMENSION])
     for i, calibration in enumerate(CALIBRATION_TABLE.calibration):
         calibration_table[i, 0] = calibration.speed

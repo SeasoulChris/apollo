@@ -3,7 +3,7 @@ import operator
 import os
 import shutil
 
-import colored_glog as glog
+from absl import logging
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.db_backed_utils as db_backed_utils
@@ -50,9 +50,9 @@ class CopyFiles(BasePipeline):
         result = files_rdd.map(lambda filename: shutil.copyfile(
                                filename, filename.replace(origin_prefix, target_prefix)))
 
-        glog.info('Finishing copy ' + str(result.count()) + ' files: '
+        logging.info('Finishing copy ' + str(result.count()) + ' files: '
                   + origin_prefix + ' -> ' + target_prefix)
-        glog.info('Everything is under control!')
+        logging.info('Everything is under control!')
 
 
 if __name__ == '__main__':

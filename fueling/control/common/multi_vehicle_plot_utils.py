@@ -5,9 +5,9 @@ import time
 
 import matplotlib
 matplotlib.use('Agg')
+from absl import logging
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_pdf import PdfPages
-import colored_glog as glog
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -27,10 +27,10 @@ cali_input_index = {
 
 
 def plot_dynamic_model_feature_hist(fearure, result_file):
-    glog.info('Total Number of Feature Frames %s' % fearure.shape[0])
+    logging.info('Total Number of Feature Frames %s' % fearure.shape[0])
     with PdfPages(result_file) as pdf:
         for feature_name in input_index:
-            glog.info('feature_name %s' % feature_name)
+            logging.info('feature_name %s' % feature_name)
             # skip if the feature is not in the segment_index list
             if feature_name not in segment_index:
                 continue

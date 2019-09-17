@@ -4,7 +4,7 @@
 import glob
 import os
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import matplotlib
 matplotlib.use('Agg')
@@ -20,10 +20,10 @@ def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
     segments = []
     if not h5s:
-        glog.warn('No hdf5 files found under the targeted path.')
+        logging.warning('No hdf5 files found under the targeted path.')
         return segments
     for h5 in h5s:
-        glog.info('Loading {}'.format(h5))
+        logging.info('Loading {}'.format(h5))
         with h5py.File(h5, 'r+') as h5file:
             for value in h5file.values():
                 segments.append(np.array(value))
@@ -36,7 +36,7 @@ def generate_data(segments):
     """generate data array from the given data segments"""
     data = []
     if not segments:
-        glog.warn('No segments from hdf5 files found under the targetd path.')
+        logging.warning('No segments from hdf5 files found under the targetd path.')
         return data
     data.append(segments[0])
     for i in range(1, len(segments)):
@@ -65,7 +65,7 @@ def plot_h5_features_hist(data_rdd):
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
-        glog.warn('No data from hdf5 files can be visualized under the targetd path {}'
+        logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
                   .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
@@ -80,7 +80,7 @@ def plot_h5_features_hist(data_rdd):
         for i in range(len(FEATURE_NAMES)):
             if (i < data.shape[1] and
                     (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
-                glog.info('Processing the plots at Column: {}, Feature: {}'
+                logging.info('Processing the plots at Column: {}, Feature: {}'
                           .format(i, FEATURE_NAMES[i]))
                 if i == FEATURE_IDX["pose_heading_offset"]:
                     data_plot_idx = np.where((data[:, FEATURE_IDX["speed"]] >
@@ -96,7 +96,7 @@ def plot_h5_features_hist(data_rdd):
                     scope = data_plot[seq[length - 1]] - data_plot[seq[0]]
                     scope_90 = data_plot[seq[int(length * 0.95 - 1)]] - \
                         data_plot[seq[int(length * 0.05)]]
-                    glog.info('The data scope is: {} the intermedia-90% data scope is: {}'
+                    logging.info('The data scope is: {} the intermedia-90% data scope is: {}'
                               .format(scope, scope_90))
                     bounds = clean_data(data_plot, seq)
                     if bounds[0] == 0 and bounds[1] == 1:

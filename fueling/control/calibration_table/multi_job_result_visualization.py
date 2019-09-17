@@ -5,8 +5,8 @@ import os
 import time
 
 from absl import flags
+from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
-import colored_glog as glog
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np

@@ -5,7 +5,7 @@ import collections
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
@@ -74,7 +74,7 @@ class IndexRecords(BasePipeline):
         for record in records:
             if record in indexed_records:
                 new_indexed.append(record)
-                glog.info('Skip record indexed in current batch: {}'.format(record))
+                logging.info('Skip record indexed in current batch: {}'.format(record))
                 continue
             record_meta = RecordParser.Parse(record)
             if record_meta is None:
@@ -82,7 +82,7 @@ class IndexRecords(BasePipeline):
             doc = Mongo.pb_to_doc(record_meta)
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             new_indexed.append(record)
-            glog.info('Indexed record {}'.format(record))
+            logging.info('Indexed record {}'.format(record))
         return new_indexed
 
     @staticmethod
@@ -104,14 +104,14 @@ class IndexRecords(BasePipeline):
                 .cache())
         msg_count = msgs.count()
         if msg_count == 0:
-            glog.error('No record was imported')
+            logging.error('No record was imported')
             return
 
         title = 'Index records: {}'.format(msg_count)
         try:
             email_utils.send_email_info(title, msgs.collect(), receivers)
         except Exception as error:
-            glog.error('Failed to send summary: {}'.format(error))
+            logging.error('Failed to send summary: {}'.format(error))
 
 
 if __name__ == '__main__':

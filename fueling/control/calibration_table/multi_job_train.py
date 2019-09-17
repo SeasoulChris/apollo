@@ -5,7 +5,7 @@ import operator
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 import pyspark_utils.helper as spark_helper
@@ -171,7 +171,7 @@ class MultiJobTrain(BasePipeline):
     def run(self, feature_dir, origin_vehicle_conf_dir, target_dir):
 
         # conf files
-        glog.info('origin_vehicle_dir %s' % origin_vehicle_conf_dir.collect())
+        logging.info('origin_vehicle_dir %s' % origin_vehicle_conf_dir.collect())
         # # # get confs
         # PairRDD(vehicle, vehicle_conf)
         vehicle_conf = origin_vehicle_conf_dir.mapValues(multi_vehicle_utils.get_vehicle_param)

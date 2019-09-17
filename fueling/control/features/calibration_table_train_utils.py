@@ -3,7 +3,7 @@ import glob
 import random
 import os
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 
@@ -18,7 +18,7 @@ import fueling.control.features.calibration_table_utils as calibration_table_uti
 def generate_segments(h5s):
     segments = []
     for h5 in h5s:
-        glog.info('Loading %s' % str(h5))
+        logging.info('Loading %s' % str(h5))
         with h5py.File(h5, 'r+') as fin:
             names = list(fin.keys())
             if len(names) < 1:
@@ -59,8 +59,8 @@ def train_model(data_sets, layer, train_alpha):
     model = NeuralNetworkTF(layer)
     params, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
                                                 alpha=train_alpha, print_loss=True)
-    glog.info(" model train cost: %f" % train_cost)
-    glog.info(" model test cost: %f " % test_cost)
+    logging.info(" model train cost: %f" % train_cost)
+    logging.info(" model test cost: %f " % test_cost)
     return model
 
 
@@ -113,7 +113,7 @@ def combine_file(files):
     file_name = os.path.join(os.path.dirname(brake_file), 'calibration_table.pb.txt')
     with open(file_name, 'wb') as outfile:
         for f in files:
-            glog.info('infile: %s' % f)
+            logging.info('infile: %s' % f)
             with open(f, "rb") as infile:
                 for line in infile:
                     outfile.write(line)

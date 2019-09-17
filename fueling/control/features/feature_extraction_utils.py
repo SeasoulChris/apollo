@@ -5,7 +5,7 @@ common functions for feature extractin
 import os
 import glob
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import math
 import numpy as np
@@ -55,20 +55,20 @@ def get_vehicle_of_dirs(dir_to_records_rdd):
     Extract HMIStatus.current_vehicle from each dir.
     Convert RDD(dir, record) to RDD(dir, vehicle).
     """
-    glog.info('records: {}'.format(dir_to_records_rdd))
+    logging.info('records: {}'.format(dir_to_records_rdd))
 
     def _get_vehicle_from_records(records):
         reader = record_utils.read_record([record_utils.HMI_STATUS_CHANNEL])
-        glog.info('records: {}'.format(records))
+        logging.info('records: {}'.format(records))
 
         for record in records:
-            glog.info('Try getting vehicle name from {}'.format(record))
+            logging.info('Try getting vehicle name from {}'.format(record))
             for msg in reader(record):
                 hmi_status = record_utils.message_to_proto(msg)
                 vehicle = hmi_status.current_vehicle
-                glog.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
+                logging.info('Get vehicle name "{}" from record {}'.format(vehicle, record))
                 return vehicle
-        glog.info('Failed to get vehicle name')
+        logging.info('Failed to get vehicle name')
         return ''
     return dir_to_records_rdd.groupByKey().mapValues(_get_vehicle_from_records)
 
@@ -302,7 +302,7 @@ def gen_feature_key_backwards(elem):
     steering = elem[1][17] * 100
     gear = elem[1][22]
     gear_key = int(gear)
-    # glog.info('gear: %d' % gear)
+    # logging.info('gear: %d' % gear)
 
     if gear_key != 2:  # check if it fardward driving
         elem_key = int(10000)
@@ -331,13 +331,13 @@ def gen_segment(elem):
             data_set = np.vstack([data_set, elem[i][1]])
             counter += 1
         else:
-            # glog.info('time differences: %f' % (elem[i][0] - pre_time))
+            # logging.info('time differences: %f' % (elem[i][0] - pre_time))
             if counter > model_config.feature_config['sequence_length']:
                 segments.append((segment_id(pre_time), data_set))
             data_set = np.array([elem[i][1]])
             counter = 0
         pre_time = elem[i][0]
-        # glog.info('previous time: %f' % pre_time)
+        # logging.info('previous time: %f' % pre_time)
     if counter > model_config.feature_config['sequence_length']:
         segments.append((segment_id(pre_time), data_set))
     return segments

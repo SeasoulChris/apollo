@@ -4,7 +4,7 @@
 import errno
 import os
 
-import colored_glog as glog
+from absl import logging
 
 
 def makedirs(dir_path):
@@ -15,7 +15,7 @@ def makedirs(dir_path):
         os.makedirs(dir_path)
     except OSError as error:
         if error.errno != errno.EEXIST:
-            glog.error('Failed to makedir ' + dir_path)
+            logging.error('Failed to makedir ' + dir_path)
             raise
     return dir_path
 
@@ -25,10 +25,10 @@ def touch(file_path):
     makedirs(os.path.dirname(file_path))
     try:
         if not os.path.exists(file_path):
-            glog.info('Touch file: {}'.format(file_path))
+            logging.info('Touch file: {}'.format(file_path))
             os.mknod(file_path)
     except:
-        glog.error('Failed to touch file ' + file_path)
+        logging.error('Failed to touch file ' + file_path)
         raise
     return file_path
 

@@ -2,7 +2,7 @@
 
 import os
 
-import colored_glog as glog
+from absl import logging
 import glob
 import h5py
 import numpy as np
@@ -79,7 +79,7 @@ class DynamicModelTraining(BasePipeline):
             # param_norm
             .values()
             .first())
-        glog.info('Param Norm = {}'.format(param_norm))
+        logging.info('Param Norm = {}'.format(param_norm))
 
         def _train(data_item):
             key, (input_data, output_data) = data_item

@@ -4,7 +4,6 @@ import glob
 import operator
 import os
 
-import colored_glog as glog
 import numpy as np
 import pyspark_utils.op as spark_op
 

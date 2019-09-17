@@ -2,7 +2,7 @@
 import glob
 import operator
 
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -51,9 +51,9 @@ class GenerateLabels(BasePipeline):
         result = bin_files_rdd.map(self.process_file).cache()
 
         if result.isEmpty():
-            glog.info("Nothing to be processed, everything is under control!")
+            logging.info("Nothing to be processed, everything is under control!")
             return
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_file(src_file):
@@ -62,10 +62,10 @@ class GenerateLabels(BasePipeline):
         try:
             label_gen.LoadFeaturePBAndSaveLabelFiles(src_file)
             label_gen.Label()
-            glog.info('Successfuly labeled {}'.format(src_file))
+            logging.info('Successfuly labeled {}'.format(src_file))
             return 1
         except BaseException:
-            glog.error('Failed to process {}'.format(src_file))
+            logging.error('Failed to process {}'.format(src_file))
         return 0
 
 

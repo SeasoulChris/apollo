@@ -11,8 +11,8 @@ import subprocess
 import time
 
 # Third-party packages
+from absl import logging
 from tensorflow.python.client import device_lib
-import colored_glog as glog
 import tensorflow as tf
 import torch
 
@@ -26,20 +26,20 @@ def check_output(command):
     out_lines = proc.stdout.readlines()
     proc.communicate()
     for line in out_lines:
-        glog.info(line.strip())
+        logging.info(line.strip())
 
 
 def run_tensorflow_gpu_function(executor_name):
     """Run tensorflow training task"""
-    glog.info('current executor: {}'.format(executor_name))
+    logging.info('current executor: {}'.format(executor_name))
     check_output('nvidia-smi')
 
     if tf.test.gpu_device_name():
-        glog.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
-        glog.info('GPU available? {}'.format(tf.test.is_gpu_available()))
-        glog.info('GPU devices: {}'.format(device_lib.list_local_devices()))
+        logging.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+        logging.info('GPU available? {}'.format(tf.test.is_gpu_available()))
+        logging.info('GPU devices: {}'.format(device_lib.list_local_devices()))
     else:
-        glog.warn('Please install GPU version of TF')
+        logging.warning('Please install GPU version of TF')
 
     time_start = time.time()
     mnist = tf.keras.datasets.mnist
@@ -59,18 +59,18 @@ def run_tensorflow_gpu_function(executor_name):
     model.fit(x_train, y_train, epochs=5)
     model.evaluate(x_test, y_test)
 
-    glog.info('Tensorflow GPU function is done, time spent: {}'.format(time.time() - time_start))
+    logging.info('Tensorflow GPU function is done, time spent: {}'.format(time.time() - time_start))
     time.sleep(60 * 3)
 
 
 def run_torch_gpu_function(executor_name):
     """Run Pytorch training task with GPU option"""
-    glog.info('current executor: {}'.format(executor_name))
+    logging.info('current executor: {}'.format(executor_name))
     check_output('nvidia-smi')
 
-    glog.info('cuda available? {}'.format(torch.cuda.is_available()))
-    glog.info('cuda version: {}'.format(torch.version.cuda))
-    glog.info('gpu device count: {}'.format(torch.cuda.device_count()))
+    logging.info('cuda available? {}'.format(torch.cuda.is_available()))
+    logging.info('cuda version: {}'.format(torch.version.cuda))
+    logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
     time_start = time.time()
 
@@ -99,7 +99,7 @@ def run_torch_gpu_function(executor_name):
 
         # Compute and print loss
         loss = (y_pred - y).pow(2).sum().item()
-        glog.info(t, loss)
+        logging.info(t, loss)
 
         # Backprop to compute gradients of w1 and w2 with respect to loss
         grad_y_pred = 2.0 * (y_pred - y)
@@ -112,7 +112,7 @@ def run_torch_gpu_function(executor_name):
         # Update weights using gradient descent
         w1 -= learning_rate * grad_w1
         w2 -= learning_rate * grad_w2
-    glog.info('Torch GPU function is done, time spent: {}'.format(time.time() - time_start))
+    logging.info('Torch GPU function is done, time spent: {}'.format(time.time() - time_start))
 
 
 class GPUSample(BasePipeline):
@@ -123,18 +123,18 @@ class GPUSample(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        glog.info('not designed for test')
+        logging.info('not designed for test')
         return
 
     def run_prod(self):
         """Run prod."""
-        glog.info('Running Production')
+        logging.info('Running Production')
         check_output('nvidia-smi')
         time_start = time.time()
 
         self.to_rdd(['executor-pytorch']).foreach(run_torch_gpu_function)
         self.to_rdd(['executor-tensorflow']).foreach(run_tensorflow_gpu_function)
-        glog.info('Done with running Production, time spent: {}'.format(time.time() - time_start))
+        logging.info('Done with running Production, time spent: {}'.format(time.time() - time_start))
 
 
 if __name__ == '__main__':

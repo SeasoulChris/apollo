@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import os
 
+from absl import logging
 import numpy as np
-import colored_glog as glog
 
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 
@@ -43,10 +43,10 @@ def echo_lincoln(input_file, output_file):
         'bash /apollo/modules/data/fuel/fueling/control/scripts/echo_lincoln_offline.sh '
         '"{}" "{}"'.format(input_file, output_file))
     if os.system(command) == 0:
-        glog.info('Generated results')
+        logging.info('Generated results')
         return 1
     else:
-        glog.error('Failed to generate results')
+        logging.error('Failed to generate results')
     return 0
 
 
@@ -57,9 +57,9 @@ def txt2numpy(txt_file):
 
 def echo_lincoln_wrapper(hdf5_file):
     input_file = hdf5_file + '.txt'
-    glog.info(input_file)
+    logging.info(input_file)
     output_file = hdf5_file + '_out.txt'
-    glog.info(output_file)
+    logging.info(output_file)
     hdf52txt([hdf5_file], input_file)
     echo_lincoln(input_file, output_file)
     with open(output_file, 'r') as fin:

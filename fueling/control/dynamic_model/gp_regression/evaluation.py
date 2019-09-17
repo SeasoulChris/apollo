@@ -5,7 +5,7 @@ import glob
 import os
 import pickle
 
-import colored_glog as glog
+from absl import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import progressbar
@@ -23,7 +23,7 @@ def test_gp(args, dataset, GaussianProcess):
     input_data, gt_data = dataset.get_test_data()
 
     for sub_dir in os.scandir(args.gp_model_path):
-        glog.info("************Loading GP model from {}".format(sub_dir))
+        logging.info("************Loading GP model from {}".format(sub_dir))
         fnet_dict = torch.load(os.path.join(sub_dir, "fnet.p"))
         lik_dict = torch.load(os.path.join(sub_dir, "likelihood.p"))
         kernel_dict = torch.load(os.path.join(sub_dir, "kernel.p"))
@@ -53,15 +53,15 @@ def test_gp(args, dataset, GaussianProcess):
         predicted_data = torch.zeros(0, gt_data.shape[1])
 
         for i in range(len(input_data)):
-            glog.debug("Input Dim {}".format((input_data[i].unsqueeze(0)).size()))
-            glog.debug("Label Dim {}".format(gt_data[i].size()))
+            logging.debug("Input Dim {}".format((input_data[i].unsqueeze(0)).size()))
+            logging.debug("Label Dim {}".format(gt_data[i].size()))
             predicted_mean, predicted_var = gp_model.gp_f(input_data[i].unsqueeze(0), full_cov=True)
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
                                                       predicted_mean[1]]).unsqueeze(0)), 0)
-            glog.info("predicted mean:{}".format(predicted_mean))
-            glog.info("predicted variance:{}".format(predicted_var))
-            glog.info("ground-truth residual error:{}".format(gt_data[i]))
+            logging.info("predicted mean:{}".format(predicted_mean))
+            logging.info("predicted variance:{}".format(predicted_var))
+            logging.info("ground-truth residual error:{}".format(gt_data[i]))
 
         input_data = input_data.numpy()
 
@@ -79,11 +79,11 @@ def test_gp(args, dataset, GaussianProcess):
                 plt.show()
 
 
-        glog.debug("gt_data: {}".format(gt_data))
-        glog.debug("predicted_data: {}".format(predicted_data))
+        logging.debug("gt_data: {}".format(gt_data))
+        logging.debug("predicted_data: {}".format(predicted_data))
         criterion = nn.MSELoss()
         loss = torch.sqrt(criterion(gt_data, predicted_data))
-        glog.info("RMSE:{}".format(loss))
+        logging.info("RMSE:{}".format(loss))
         gt_data = gt_data.numpy()
         predicted_data = predicted_data.numpy()
         plt.figure(figsize=(4, 3))

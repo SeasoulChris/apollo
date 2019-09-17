@@ -4,10 +4,10 @@
 import os
 import string
 
+from absl import logging
 import boto3
 import botocore.client
 import botocore.exceptions
-import colored_glog as glog
 
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
 
@@ -35,7 +35,7 @@ class BosClient(BaseObjectStorageClient):
             self.secret_key = os.environ.get('BOS_SECRET')
 
         if not self.access_key or not self.secret_key or not self.bucket or not self.region:
-            glog.error('Failed to get BOS config.')
+            logging.error('Failed to get BOS config.')
             return None
 
     # Override

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import colored_glog as glog
+from absl import logging
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
@@ -22,7 +22,7 @@ def generate_training_data(segment):
     """
     total_len = segment.shape[0] - DIM_DELAY_STEPS
     total_sequence_num = segment.shape[0] - DIM_DELAY_STEPS - DIM_SEQUENCE_LENGTH
-    glog.info('Total length: {}'.format(total_len))
+    logging.info('Total length: {}'.format(total_len))
 
     if IS_HOLISTIC:
         mlp_input_data, mlp_output_data = holistic_data_generator.generate_mlp_data(
@@ -40,10 +40,10 @@ def generate_training_data(segment):
             mlp_input_data[k:(k + DIM_SEQUENCE_LENGTH), :])
         lstm_output_data[k, :] = mlp_output_data[k + DIM_SEQUENCE_LENGTH, :]
 
-    glog.info('mlp_input_data shape: {}'.format(mlp_input_data.shape))
-    glog.info('mlp_output_data shape: {}'.format(mlp_output_data.shape))
-    glog.info('lstm_input_data shape: {}'.format(lstm_input_data.shape))
-    glog.info('lstm_output_data shape: {}'.format(lstm_output_data.shape))
+    logging.info('mlp_input_data shape: {}'.format(mlp_input_data.shape))
+    logging.info('mlp_output_data shape: {}'.format(mlp_output_data.shape))
+    logging.info('lstm_input_data shape: {}'.format(lstm_input_data.shape))
+    logging.info('lstm_output_data shape: {}'.format(lstm_output_data.shape))
 
     feature = [
         ("mlp_data", (mlp_input_data, mlp_output_data)),

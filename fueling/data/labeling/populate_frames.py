@@ -9,9 +9,9 @@ import textwrap
 import time
 
 from absl import flags
+from absl import logging
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
-import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
@@ -91,7 +91,7 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
     """Construct the frame by using given messages.
     Read the according message ONCE again, to avoid playing big messages in memory"""
     target_dir, msgs = frames
-    glog.info('Now executors start the hard working.  target_dir: {}'.format(target_dir))
+    logging.info('Now executors start the hard working.  target_dir: {}'.format(target_dir))
 
     # target_dir looks like:
     #'modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05/20181113152909#SS0
@@ -105,7 +105,7 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
     #)
 
     msg_map = Counter(msgs)
-    glog.info('Total messages: {}'.format(sum(msg_map.itervalues())))
+    logging.info('Total messages: {}'.format(sum(msg_map.itervalues())))
 
     src_records = list(streaming_utils.target_partition_to_records(
         root_dir, target_dir, slice_size))
@@ -144,7 +144,7 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
             msg = msg_new
             message_struct = populate_utils.MessageStruct(msg, None, None)
 
-    glog.info('Done with target: {}'.format(target_dir))
+    logging.info('Done with target: {}'.format(target_dir))
 
 
 def get_sql_query(sql_context, msgs_rdd):
@@ -181,7 +181,7 @@ def mark_complete(todo_tasks, target_dir, root_dir):
     for task in todo_tasks:
         task_path = os.path.join(root_dir, target_dir, os.path.basename(task))
         if not os.path.exists(task_path):
-            glog.warn('No data generated for task: {}, check if there are qualified frames'.format(
+            logging.warning('No data generated for task: {}, check if there are qualified frames'.format(
                 task_path))
             continue
         streaming_utils.write_to_file(
@@ -199,10 +199,10 @@ class PopulateFramesPipeline(BasePipeline):
         root_dir = '/apollo'
         target_dir = 'modules/data/labeling/generated'
         file_utils.makedirs(os.path.join(root_dir, target_dir))
-        glog.info('Running TEST, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
+        logging.info('Running TEST, target_dir: {}'.format(os.path.join(root_dir, target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
-        glog.info('ToDo tasks: {}'.format(todo_tasks))
+        logging.info('ToDo tasks: {}'.format(todo_tasks))
 
         # TODO: Just show case for email notification, to be updated as something more useful
         notification = namedtuple('Notification', ['todo_tasks', 'root_dir', 'target_dir'])
@@ -211,10 +211,10 @@ class PopulateFramesPipeline(BasePipeline):
 
         self.run(todo_tasks, root_dir, target_dir)
 
-        glog.info('Task done, marking COMPLETE')
+        logging.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
 
-        glog.info('Labeling: All Done, TEST.')
+        logging.info('Labeling: All Done, TEST.')
 
         # TODO: Just show case for email notification, to be updated as something more useful
         email_utils.send_email_info('Frame Population Job Completed', {'Success': 100, 'Fail': 200},
@@ -226,26 +226,26 @@ class PopulateFramesPipeline(BasePipeline):
         root_dir = bos_client.mnt_path
         target_dir = 'modules/data/labeling/generated'
         file_utils.makedirs(bos_client.abs_path(target_dir))
-        glog.info('Running PROD, target_dir: {}'.format(bos_client.abs_path(target_dir)))
+        logging.info('Running PROD, target_dir: {}'.format(bos_client.abs_path(target_dir)))
 
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
-        glog.info('ToDo tasks: {}'.format(todo_tasks))
+        logging.info('ToDo tasks: {}'.format(todo_tasks))
 
         self.run(todo_tasks, root_dir, target_dir)
 
-        glog.info('Task done, marking COMPLETE')
+        logging.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
 
-        glog.info('Labeling: All Done, PROD.')
+        logging.info('Labeling: All Done, PROD.')
 
     def run(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
         # Creating SQL query will fail and throw if input is empty, so check it here first
         if todo_tasks is None or not todo_tasks:
-            glog.warn('Labeling: no tasks to process, quit now')
+            logging.warning('Labeling: no tasks to process, quit now')
             return
 
-        glog.info('Load messages META data for query')
+        logging.info('Load messages META data for query')
         # -> RDD(task_dir), with absolute paths
         msgs_rdd = (self.to_rdd(todo_tasks).distinct()
                     # PairRDD(target_dir, task_dir), target_dir is destination, task_dir is source
@@ -266,7 +266,7 @@ class PopulateFramesPipeline(BasePipeline):
                     .cache())
 
         # Transform RDD to DataFrame, run SQL and tranform back when done
-        glog.info('SQL query to search closest sensor messages')
+        logging.info('SQL query to search closest sensor messages')
         sql_context = SQLContext(self.context())
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context.sql(sql_query)

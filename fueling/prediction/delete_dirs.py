@@ -3,7 +3,7 @@ import operator
 import os
 import shutil
 
-import colored_glog as glog
+from absl import logging
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.db_backed_utils as db_backed_utils
@@ -33,8 +33,8 @@ class DeleteDirs(BasePipeline):
             .foreach(os.remove))
 
         shutil.rmtree(os.path.join('/mnt/bos/', target_prefix))
-        glog.info('Delete dirs name: ' + target_prefix)
-        glog.info('Everything is under control!')
+        logging.info('Delete dirs name: ' + target_prefix)
+        logging.info('Everything is under control!')
 
 
 if __name__ == '__main__':

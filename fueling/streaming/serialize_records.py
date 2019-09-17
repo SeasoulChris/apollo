@@ -4,8 +4,8 @@
 
 import os
 
+from absl import logging
 from pyspark.streaming import StreamingContext
-import colored_glog as glog
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.storage.bos_client as bos_client
@@ -25,23 +25,23 @@ class DeserializeRecordsPipeline(BasePipeline):
         """Run test."""
         self._root_dir = '/apollo'
         self.run()
-        glog.info('Serialization: All Done. TEST')
+        logging.info('Serialization: All Done. TEST')
 
     def run_prod(self):
         """Run prod."""
         self._root_dir = bos_client.BOS_MOUNT_PATH
         self.run()
-        glog.info('Serialization: All Done. PROD')
+        logging.info('Serialization: All Done. PROD')
 
     def run(self):
         """Run streaming process"""
         stream_context = StreamingContext(self.context(), 30)
 
         record_path = streaming_utils.get_streaming_records(self._root_dir)
-        glog.info('Streaming monitors at {}'.format(record_path))
+        logging.info('Streaming monitors at {}'.format(record_path))
 
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
-        glog.info('partition number: {}'.format(partitions))
+        logging.info('partition number: {}'.format(partitions))
 
         records = stream_context.textFileStream(record_path).repartition(partitions)
         records.pprint()
@@ -53,8 +53,8 @@ class DeserializeRecordsPipeline(BasePipeline):
 
     def process_stream(self, stime, records_rdd):
         """Executor running"""
-        glog.info('stream processing time: {}'.format(stime))
-        glog.info('rdd partitions: {}'.format(records_rdd.getNumPartitions()))
+        logging.info('stream processing time: {}'.format(stime))
+        logging.info('rdd partitions: {}'.format(records_rdd.getNumPartitions()))
         records_rdd.map(lambda record: serialize_utils.parse_record(record, self._root_dir)).count()
 
 

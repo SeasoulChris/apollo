@@ -11,7 +11,7 @@ import math
 import os
 import sys
 
-import colored_glog as glog
+from absl import logging
 
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
@@ -92,11 +92,11 @@ class RecordParser(object):
         for chan in self._reader.get_channellist():
             self.record.channels[chan] = self._reader.get_messagenumber(chan)
         if len(self.record.channels) == 0:
-            glog.error('No message found in record')
+            logging.error('No message found in record')
             return False
         if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL) and
                 not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
-            glog.info('Get pose from GPS as the localization channel is missing.')
+            logging.info('Get pose from GPS as the localization channel is missing.')
             self._get_pose_from_gps = True
         return True
 
@@ -135,7 +135,7 @@ class RecordParser(object):
         # Save disengagement.
         if (self._current_driving_mode == Chassis.COMPLETE_AUTO_DRIVE and
                 chassis.driving_mode == Chassis.EMERGENCY_MODE):
-            glog.info('Disengagement found at {}'.format(timestamp))
+            logging.info('Disengagement found at {}'.format(timestamp))
             disengagement = self.record.disengagements.add(time=timestamp)
             pos = self._last_position
             if pos is not None:
@@ -144,7 +144,7 @@ class RecordParser(object):
                     disengagement.location.lat = lat
                     disengagement.location.lon = lon
                 except Exception as e:
-                    glog.error('Failed to parse pose to lat-lon: {}'.format(e))
+                    logging.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update DrivingMode.
         self._current_driving_mode = chassis.driving_mode
 
@@ -175,7 +175,7 @@ class RecordParser(object):
                 self._last_position_sampled = position
                 self._last_position_sampled_time = time_sec
             except Exception as e:
-                glog.error('Failed to parse pose to lat-lon: {}'.format(e))
+                logging.error('Failed to parse pose to lat-lon: {}'.format(e))
         # Update position.
         self._last_position = position
 

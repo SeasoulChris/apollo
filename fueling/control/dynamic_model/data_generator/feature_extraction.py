@@ -3,8 +3,8 @@
 import os
 import sys
 
+from absl import logging
 from scipy.signal import savgol_filter
-import colored_glog as glog
 import h5py
 import numpy as np
 
@@ -27,14 +27,14 @@ def generate_segment(h5_file):
     load a single h5 file to a numpy array
     """
     segment = None
-    glog.info('Loading {}'.format(h5_file))
+    logging.info('Loading {}'.format(h5_file))
     with h5py.File(h5_file, 'r') as fin:
         for ds in fin.values():
             if segment is None:
                 segment = np.array(ds)
             else:
                 segment = np.concatenate((segment, np.array(ds)), axis=0)
-    glog.info('The length of frames {}'.format(segment.shape[0]))
+    logging.info('The length of frames {}'.format(segment.shape[0]))
     return segment
 
 
@@ -44,7 +44,7 @@ def generate_segment_from_list(hdf5_file_list):
     """
     segment = None
     for filename in hdf5_file_list:
-        glog.info('Processing file %s' % filename)
+        logging.info('Processing file %s' % filename)
         with h5py.File(filename, 'r') as fin:
             for value in fin.values():
                 if segment is None:
@@ -85,7 +85,7 @@ def IMU_feature_processing(segment):
     """
     smooth noisy raw data from IMU by savgol_filter
     """
-    glog.info("smooth noisy raw data from IMU by savgol_filter")
+    logging.info("smooth noisy raw data from IMU by savgol_filter")
     # discard the segments that are too short
     if segment.shape[0] < WINDOW_SIZE or segment.shape[0] < DIM_DELAY_STEPS + DIM_SEQUENCE_LENGTH:
         return None
@@ -106,7 +106,7 @@ def IMU_feature_processing(segment):
     segment_dd[:, segment_index["v_x"]] = savgol_filter(tmp_dd_v_x, WINDOW_SIZE, POLYNOMINAL_ORDER)
     segment_dd[:, segment_index["v_y"]] = savgol_filter(tmp_dd_v_y, WINDOW_SIZE, POLYNOMINAL_ORDER)
 
-    glog.info("max speed difference: {}".format(
+    logging.info("max speed difference: {}".format(
         max(segment_dd[:, segment_index["v_x"]] - segment[:, segment_index["v_x"]])))
     # get acc from d(dx/dt)/dt for segment_dd
     # a = dv/dt
@@ -229,9 +229,9 @@ def get_param_norm(input_feature, output_feature):
     """
     normalize the samples and save normalized parameters
     """
-    glog.info("Input Feature Dimension {}".format(input_feature.shape))
-    glog.info("Output Feature Dimension {}".format(output_feature.shape))
-    glog.info("Start to calculate parameter norms")
+    logging.info("Input Feature Dimension {}".format(input_feature.shape))
+    logging.info("Output Feature Dimension {}".format(output_feature.shape))
+    logging.info("Start to calculate parameter norms")
     input_fea_mean = np.mean(input_feature, axis=0)
     input_fea_std = np.std(input_feature, axis=0) + STD_EPSILON
     output_fea_mean = np.mean(output_feature, axis=0)

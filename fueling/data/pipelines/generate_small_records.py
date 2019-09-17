@@ -5,7 +5,7 @@ import collections
 import os
 
 from absl import flags
-import colored_glog as glog
+from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -115,7 +115,7 @@ class GenerateSmallRecords(BasePipeline):
                 .map(lambda path: path.replace(dst_prefix, src_prefix, 1)))
 
             partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
-            glog.info('Repartition to: {}'.format(partitions))
+            logging.info('Repartition to: {}'.format(partitions))
             todo_records = todo_records.repartition(partitions).cache()
 
             # Mark dst_dirs which have finished.
@@ -161,9 +161,9 @@ class GenerateSmallRecords(BasePipeline):
     @staticmethod
     def process_file(src_record, dst_record):
         """Process src_record to dst_record."""
-        glog.info('Processing {} to {}'.format(src_record, dst_record))
+        logging.info('Processing {} to {}'.format(src_record, dst_record))
         if SKIP_EXISTING_DST_RECORDS and os.path.exists(dst_record):
-            glog.warn('Skip generating exist record {}'.format(dst_record))
+            logging.warning('Skip generating exist record {}'.format(dst_record))
             return dst_record
 
         # Read messages and channel information.
@@ -173,19 +173,19 @@ class GenerateSmallRecords(BasePipeline):
             reader = RecordReader(src_record)
             msgs = [msg for msg in reader.read_messages() if msg.topic in CHANNELS]
             if len(msgs) == 0:
-                glog.error('Failed to read any message from {}'.format(src_record))
+                logging.error('Failed to read any message from {}'.format(src_record))
                 return dst_record
 
             for msg in msgs:
                 if msg.topic not in topic_descs:
                     topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
         except Exception as err:
-            glog.error('Failed to read record {}: {}'.format(src_record, err))
+            logging.error('Failed to read record {}: {}'.format(src_record, err))
             return None
 
         # Check once again to avoid duplicate work after reading.
         if SKIP_EXISTING_DST_RECORDS and os.path.exists(dst_record):
-            glog.warn('Skip generating exist record {}'.format(dst_record))
+            logging.warning('Skip generating exist record {}'.format(dst_record))
             return dst_record
         # Write to record.
         file_utils.makedirs(os.path.dirname(dst_record))
@@ -197,7 +197,7 @@ class GenerateSmallRecords(BasePipeline):
             for msg in msgs:
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
         except Exception as e:
-            glog.error('Failed to write to target file {}: {}'.format(dst_record, e))
+            logging.error('Failed to write to target file {}: {}'.format(dst_record, e))
             return None
         finally:
             writer.close()
@@ -207,7 +207,7 @@ class GenerateSmallRecords(BasePipeline):
     def send_summary(task_dirs, receivers):
         """Send summary."""
         if not task_dirs:
-            glog.info('No need to send summary for empty result')
+            logging.info('No need to send summary for empty result')
             return
         SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
         title = 'Generated small records: {}'.format(len(task_dirs))
@@ -215,7 +215,7 @@ class GenerateSmallRecords(BasePipeline):
         try:
             email_utils.send_email_info(title, message, receivers)
         except Exception as error:
-            glog.error('Failed to send summary: {}'.format(error))
+            logging.error('Failed to send summary: {}'.format(error))
 
 
 if __name__ == '__main__':

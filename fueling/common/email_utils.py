@@ -12,7 +12,7 @@ import os
 import smtplib
 import sys
 
-import colored_glog as glog
+from absl import logging
 
 
 DATA_TEAM = [
@@ -122,7 +122,7 @@ class EmailService(object):
                 with open(attachment, 'rb') as fin:
                     attachments_dict[os.path.basename(attachment)] = fin.read()
             except Exception as err:
-                glog.error('Failed to add attachment {}: {}'.format(attachment, err))
+                logging.error('Failed to add attachment {}: {}'.format(attachment, err))
         cls.send_outlook_email(subject, content, receivers, attachments_dict)
 
     @classmethod

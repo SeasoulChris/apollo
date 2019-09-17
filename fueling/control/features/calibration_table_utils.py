@@ -5,7 +5,7 @@ import math
 import os
 import random
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 
@@ -29,7 +29,7 @@ conf_filename = 'calibration_table_conf.pb.txt'
 calibration_conf_file = os.path.join(conf_file_dir, conf_filename)
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
-glog.info('Load calibration table conf: %s' % conf_filename)
+logging.info('Load calibration table conf: %s' % conf_filename)
 
 # calibration table parameters
 steer_condition = CALIBRATION_TABLE_CONF.steer_condition
@@ -78,7 +78,7 @@ def decide_cmd(chassis_throttle_val, chassis_brake_val, VEHICLE_PARAM_CONF):
     feature_cmd = 0.0
     if (VEHICLE_PARAM_CONF.vehicle_id.other_unique_id is "lexus"
             and chassis_throttle_val > 0.1 and chassis_brake_val > 0.1):
-        glog.info("feature_cmd = 200")
+        logging.info("feature_cmd = 200")
         feature_cmd = 200.0
     if chassis_throttle_val > abs(segment_throttle_list[0]):
         feature_cmd = chassis_throttle_val
@@ -182,7 +182,7 @@ def feature_cut(elem, VEHICLE_PARAM_CONF):
             elem[id_elem][0] = elem[i][0]
             elem[id_elem][1] = elem[i][1]
             elem[id_elem][2] = elem[i][2]
-            glog.info("elem_acc: %f" % elem[i][2])
+            logging.info("elem_acc: %f" % elem[i][2])
             elem[id_elem][3] = elem[i][3]  # add steering angle as reference
             id_elem += 1
 
@@ -290,33 +290,33 @@ def write_h5_train_test(elem, origin_prefix, target_prefix):
                 brake_test_feature_num += 1
 
     # throttle train file
-    glog.info('throttle file size: %d' % throttle_train.shape[0])
+    logging.info('throttle file size: %d' % throttle_train.shape[0])
 
     # throttle train file
     throttle_train_target_prefix = os.path.join(target_prefix, 'throttle', 'train')
     throttle_train_file_dir = file_dir.replace(origin_prefix, throttle_train_target_prefix, 1)
-    glog.info('Writing throttle_train hdf5 file to %s' % throttle_train_file_dir)
+    logging.info('Writing throttle_train hdf5 file to %s' % throttle_train_file_dir)
     throttle_train_data = throttle_train[0:throttle_train_feature_num, :]
     h5_utils.write_h5_single_segment(throttle_train_data, throttle_train_file_dir, key)
 
     # throttle test file
     throttle_test_target_prefix = os.path.join(target_prefix, 'throttle', 'test')
     throttle_test_file_dir = file_dir.replace(origin_prefix, throttle_test_target_prefix, 1)
-    glog.info('Writing throttle_test hdf5 file to %s' % throttle_test_file_dir)
+    logging.info('Writing throttle_test hdf5 file to %s' % throttle_test_file_dir)
     throttle_test_data = throttle_test[0:throttle_test_feature_num, :]
     h5_utils.write_h5_single_segment(throttle_test_data, throttle_test_file_dir, key)
 
     # brake train file
     brake_train_target_prefix = os.path.join(target_prefix, 'brake', 'train')
     brake_train_file_dir = file_dir.replace(origin_prefix, brake_train_target_prefix, 1)
-    glog.info('Writing brake_train hdf5 file to %s' % brake_train_file_dir)
+    logging.info('Writing brake_train hdf5 file to %s' % brake_train_file_dir)
     brake_train_data = brake_train[0:brake_train_feature_num, :]
     h5_utils.write_h5_single_segment(brake_train_data, brake_train_file_dir, key)
 
     # brake test file
     brake_test_target_prefix = os.path.join(target_prefix, 'brake', 'test')
     brake_test_file_dir = file_dir.replace(origin_prefix, brake_test_target_prefix, 1)
-    glog.info('Writing brake_test hdf5 file to %s' % brake_test_file_dir)
+    logging.info('Writing brake_test hdf5 file to %s' % brake_test_file_dir)
     brake_test_data = brake_test[0:brake_test_feature_num, :]
     h5_utils.write_h5_single_segment(brake_test_data, brake_test_file_dir, key)
 

@@ -1,37 +1,36 @@
 #!/usr/bin/env python
-
 """ Control performance grading related utils. """
+
+from collections import namedtuple
 import math
 import numpy as np
 import os
 
-from collections import namedtuple
+from absl import logging
 
-import colored_glog as glog
-
-import fueling.common.h5_utils as h5_utils
 from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX
+import fueling.common.h5_utils as h5_utils
 import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils as feature_utils
 
 
 def generating_matrix_and_h5(target_groups):
     """Do computing against one group"""
     target, group_id, msgs = target_groups
-    glog.info('computing {} messages for target {}'.format(len(msgs), target))
+    logging.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_profiling_config()
     grading_mtx = feature_utils.extract_data_two_channels(msgs, profiling_conf.driving_mode,
                                                           profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
-        glog.warn('no valid element in {} items in group {} for task {}'
+        logging.warning('no valid element in {} items in group {} for task {}'
                   .format(len(msgs), group_id, target))
         return (target, None)
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
-    glog.info('writing {} messages to h5 file {} for target {}'
+    logging.info('writing {} messages to h5 file {} for target {}'
               .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
-    glog.info('grading_mtx information: {}'
+    logging.info('grading_mtx information: {}'
               .format(grading_mtx[0]))
     return (grading_mtx, target)
 

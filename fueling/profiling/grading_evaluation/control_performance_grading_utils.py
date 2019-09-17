@@ -1,34 +1,33 @@
 #!/usr/bin/env python
-
 """ Control performance grading related utils. """
+
+from collections import namedtuple
 import math
 import numpy as np
 import os
 
-from collections import namedtuple
+from absl import logging
 
-import colored_glog as glog
-
-import fueling.common.h5_utils as h5_utils
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
+import fueling.common.h5_utils as h5_utils
 import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
 
 def compute_h5_and_gradings(target_groups):
     """Do computing against one group"""
     target, group_id, msgs = target_groups
-    glog.info('computing {} messages for target {}'.format(len(msgs), target))
+    logging.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
                                                                profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
-        glog.warn('no valid element in {} items in group {} for task {}'
+        logging.warning('no valid element in {} items in group {} for task {}'
                   .format(len(msgs), group_id, target))
         return (target, None)
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
-    glog.info('writing {} messages to h5 file {} for target {}'
+    logging.info('writing {} messages to h5 file {} for target {}'
               .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
     grading_results = namedtuple('grading_results',
@@ -416,7 +415,7 @@ def compute_std(grading_mtx, arg):
                                        arg.std_filter_value[idx], arg.std_filter_mode[idx])
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
-        glog.warn('no enough elements {} for std computing requirement {}'
+        logging.warning('no enough elements {} for std computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     column_norm = grading_mtx[:, FEATURE_IDX[arg.std_norm_name]]
@@ -438,7 +437,7 @@ def compute_peak(grading_mtx, arg):
                                        arg.peak_filter_value[idx], arg.peak_filter_mode[idx])
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
-        glog.warn('no enough elements {} for peak computing requirement {}'
+        logging.warning('no enough elements {} for peak computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return ([0.0, 0.0], 0)
     idx_max = np.argmax(
@@ -457,7 +456,7 @@ def compute_ending(grading_mtx, arg):
                                        arg.ending_filter_value[idx], arg.ending_filter_mode[idx])
     elem_num, item_num = grading_mtx.shape
     if elem_num < 1:
-        glog.warn('no enough elements {} for ending computing requirement {}'
+        logging.warning('no enough elements {} for ending computing requirement {}'
                   .format(elem_num, 1))
         return ([[0.0], [0.0], [0.0]], 0)
     grading_mtx = grading_mtx[np.argsort(
@@ -489,7 +488,7 @@ def compute_usage(grading_mtx, arg):
                                        arg.usage_filter_value[idx], arg.usage_filter_mode[idx])
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
-        glog.warn('no enough elements {} for usage computing requirement {}'
+        logging.warning('no enough elements {} for usage computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     return (get_std_value([val / arg.usage_weight
@@ -521,11 +520,11 @@ def compute_mean(grading_mtx, arg):
                                        arg.mean_filter_value[idx], arg.mean_filter_mode[idx])
     elem_num, item_num = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
-        glog.warn('no enough elements {} for mean computing requirement {}'
+        logging.warning('no enough elements {} for mean computing requirement {}'
                   .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     if item_num <= FEATURE_IDX[arg.mean_feature_name]:
-        glog.warn('no desired feature item {} for mean computing requirement {}'
+        logging.warning('no desired feature item {} for mean computing requirement {}'
                   .format(item_num, FEATURE_IDX[arg.mean_feature_name]))
         return (0.0, 0)
     return (np.mean(grading_mtx[:, FEATURE_IDX[arg.mean_feature_name]], axis=0) / arg.mean_weight,
@@ -622,10 +621,10 @@ def output_gradings(target_grading):
                                        '{}_{}_control_performance_grading.txt'
                                        .format(profiling_conf.vehicle_type,
                                                profiling_conf.controller_type))
-    glog.info('writing grading output {} to {}'.format(
+    logging.info('writing grading output {} to {}'.format(
         grading, grading_output_path))
     if not grading:
-        glog.warn('No grading results written to {}'.format(
+        logging.warning('No grading results written to {}'.format(
             grading_output_path))
     else:
         with open(grading_output_path, 'w') as grading_file:
@@ -634,7 +633,7 @@ def output_gradings(target_grading):
                                        'Event Timestamp'))
             for name, value in grading._asdict().iteritems():
                 if not value:
-                    glog.warn('grading value for {} is None'.format(name))
+                    logging.warning('grading value for {} is None'.format(name))
                     continue
                 # For the ending_XXX values and XXX_peak values, the data are stored in
                 # multiple-dimentional list in the first element of value tuples
@@ -676,11 +675,11 @@ def highlight_gradings(task, grading_file):
     std_samples = []
     peak_samples = []
     if not grading_file:
-        glog.warn(
+        logging.warning(
             'No grading files found under the targeted path for task: {}'.format(task))
         return ([], [])
     for file in grading_file:
-        glog.info('Loading {}'.format(file))
+        logging.info('Loading {}'.format(file))
         with open(file, 'r') as informations:
             for information in informations:
                 gradings = information.split()

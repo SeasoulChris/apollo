@@ -5,7 +5,7 @@
 import os
 import time
 
-import colored_glog as glog
+from absl import logging
 import yaml
 
 from cyber_py import record
@@ -53,16 +53,16 @@ def parse_record(record_file, root_dir):
                                           streaming_utils.STREAMING_CONF, 'serialize_conf.yaml')
     settings = list(yaml.load_all(file(yaml_file_path, 'r')))
     record_file = record_file.strip()
-    glog.info('Executor: processsing record file : {}'.format(record_file))
+    logging.info('Executor: processsing record file : {}'.format(record_file))
     if not record_utils.is_record_file(record_file):
         return
     record_dir = streaming_utils.record_to_stream_path(record_file,
                                                        root_dir,
                                                        streaming_utils.STREAMING_DATA)
-    glog.info('Executor: record directory : {}'.format(record_dir))
+    logging.info('Executor: record directory : {}'.format(record_dir))
     file_utils.makedirs(record_dir)
     if os.path.exists(os.path.join(record_dir, 'COMPLETE')):
-        glog.info('target has been generated, do nothing')
+        logging.info('target has been generated, do nothing')
         return
     topic_files = [os.path.join(record_dir,
                                 streaming_utils.topic_to_file_name(x.get('topic'))) for x in settings]
@@ -80,7 +80,7 @@ def parse_record(record_file, root_dir):
                 header_time, meta = build_meta_with_fields(fields, message)
                 topic_file_handles[renamed_topic].write('{}\n'.format(meta))
                 streaming_utils.write_message_obj(record_dir, renamed_topic, message, header_time)
-        glog.info('completed serializing record file {}.'.format(record_file))
+        logging.info('completed serializing record file {}.'.format(record_file))
         streaming_utils.write_to_file(os.path.join(record_dir, 'COMPLETE'),
                                       'w',
                                       '{:.6f}'.format(time.time()))

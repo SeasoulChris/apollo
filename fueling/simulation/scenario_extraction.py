@@ -5,7 +5,7 @@ based on disengage info
 """
 import os
 
-import colored_glog as glog
+from absl import logging
 
 from cyber_py.record import RecordReader
 
@@ -18,12 +18,12 @@ def list_end_files(target_dir):
     List all end files recursively under the specified dir.
     This is for testing used by run_test() which simulates the production behavior
     """
-    glog.info('target_dir: {}'.format(target_dir))
+    logging.info('target_dir: {}'.format(target_dir))
     end_files = list()
     for (dirpath, _, filenames) in os.walk(target_dir):
         end_files.extend([os.path.join(dirpath, file_name) for file_name in filenames])
 
-    glog.info('end_files: {}'.format(end_files))
+    logging.info('end_files: {}'.format(end_files))
     return end_files
 
 
@@ -45,11 +45,11 @@ def get_todo_tasks(original_prefix, target_prefix, list_func):
 def execute_task(task):
     """Execute task by task"""
     dest_dir, source_dir = task
-    glog.info('Executing task with src_dir: {}, dst_dir: {}'.format(source_dir, dest_dir))
+    logging.info('Executing task with src_dir: {}, dst_dir: {}'.format(source_dir, dest_dir))
 
     record_file = next((x for x in os.listdir(source_dir) if record_utils.is_record_file(x)), None)
     if record_file is None:
-        glog.warn('No records file found in {}'.format(source_dir))
+        logging.warning('No records file found in {}'.format(source_dir))
         return
     map_dir = '/mnt/bos/modules/map/data/san_mateo'
     message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages()
@@ -59,21 +59,21 @@ def execute_task(task):
             map_dir = '/mnt/bos/modules/map/data/sunnyvale'
 
     # Invoke logsim_generator binary
-    glog.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
+    logging.info("Start to extract logsim scenarios for {} and map {}".format(source_dir, map_dir))
     simulation_path = '/apollo/modules/simulation'
     return_code = os.system(
         'cd {} && ./bin/logsim_generator_executable --alsologtostderr '
         '--input_dir={} --output_dir={} --scenario_map_dir={}'.format(
             simulation_path, source_dir, dest_dir, map_dir))
     if return_code != 0:
-        glog.error('Failed to execute logsim_generator for task {}'.format(source_dir))
+        logging.error('Failed to execute logsim_generator for task {}'.format(source_dir))
         # Print log here only, since rerunning will probably fail again.
         # Need people intervention instead
         # return
 
     # Mark complete
     complete_file = os.path.join(dest_dir, 'COMPLETE')
-    glog.info('Touching complete file {}'.format(complete_file))
+    logging.info('Touching complete file {}'.format(complete_file))
     if not os.path.exists(complete_file):
         os.mknod(complete_file)
 
@@ -95,10 +95,10 @@ class ScenarioExtractionPipeline(BasePipeline):
         todo_tasks = get_todo_tasks(
             original_prefix, target_prefix,
             lambda path: self.to_rdd(list_end_files(os.path.join(root_dir, path))))
-        glog.info('todo tasks: {}'.format(todo_tasks.collect()))
+        logging.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, original_prefix, target_prefix)
-        glog.info('Simulation: All Done, TEST')
+        logging.info('Simulation: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -108,10 +108,10 @@ class ScenarioExtractionPipeline(BasePipeline):
         # RDD(tasks)
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,
                                     lambda path: self.to_rdd(self.bos().list_files(path)))
-        glog.info('todo tasks: {}'.format(todo_tasks.collect()))
+        logging.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, original_prefix, target_prefix)
-        glog.info('Simulation: All Done, PROD')
+        logging.info('Simulation: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""

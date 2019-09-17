@@ -2,7 +2,7 @@
 import operator
 import os
 
-import colored_glog as glog
+from absl import logging
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.db_backed_utils as db_backed_utils
@@ -74,9 +74,9 @@ class DumpFeatureProto(BasePipeline):
             .cache())
 
         if result.isEmpty():
-            glog.info("Nothing to be processed, everything is under control!")
+            logging.info("Nothing to be processed, everything is under control!")
             return
-        glog.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
@@ -86,10 +86,10 @@ class DumpFeatureProto(BasePipeline):
             'modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
             '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
         if os.system(command) == 0:
-            glog.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
+            logging.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
             return 1
         else:
-            glog.error('Failed to process {} to {}'.format(record_dir, target_dir))
+            logging.error('Failed to process {} to {}'.format(record_dir, target_dir))
         return 0
 
     def get_dirs_map(self, record_dirs):

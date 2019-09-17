@@ -4,7 +4,7 @@ import glob
 import os
 import re
 
-import colored_glog as glog
+from absl import logging
 import h5py
 import numpy as np
 import pyspark_utils.helper as spark_helper
@@ -19,9 +19,9 @@ IS_BACKWARD = feature_config["is_backward"]
 
 def extract_scenario_name(dataset_path):
     """ extract scenario name """
-    glog.info("data_path:{}".format(dataset_path))
+    logging.info("data_path:{}".format(dataset_path))
     result = re.findall(r"golden_test_backward/(.+?)/1.hdf5", dataset_path)
-    glog.info("hdf5 files:{}".format(result))
+    logging.info("hdf5 files:{}".format(result))
     return result
 
 
@@ -37,15 +37,15 @@ class IMUEvaluation(BasePipeline):
             evaluation_set = "golden_test_backward"
 
         evaluation_dataset = os.path.join(platform_path, evaluation_set, "*/*.hdf5")
-        glog.info("evaluation_dataset: {}".format(evaluation_dataset))
-        glog.info("files in evaluation_dataset: {}".format(glob.glob(evaluation_dataset)))
+        logging.info("evaluation_dataset: {}".format(evaluation_dataset))
+        logging.info("files in evaluation_dataset: {}".format(glob.glob(evaluation_dataset)))
 
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
             self.to_rdd(glob.glob(evaluation_dataset))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
-        glog.info(evaluation_dataset_rdd.collect())
+        logging.info(evaluation_dataset_rdd.collect())
 
         self.run(evaluation_dataset_rdd, platform_path)
 
