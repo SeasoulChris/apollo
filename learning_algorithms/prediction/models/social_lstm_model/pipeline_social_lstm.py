@@ -43,7 +43,7 @@ if __name__ == "__main__":
         optimizer, factor=0.3, patience=2, min_lr=1e-9, verbose=True, mode='min')
 
     # CUDA setup:
-    if (torch.cuda.is_available()):
+    if torch.cuda.is_available():
         print ("Using CUDA to speed up training.")
         model.cuda()
     else:

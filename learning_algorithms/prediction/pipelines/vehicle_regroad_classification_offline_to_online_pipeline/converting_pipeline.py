@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import copy
+
 import torch
 
 from learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset import *
@@ -21,7 +22,8 @@ class OnlinePredictionLayer(nn.Module):
 if __name__ == "__main__":
     offline_model = CruiseMLP()
     offline_model.load_state_dict(torch.load(
-        '/home/jiacheng/work/apollo-prophet/learning_algorithms/pipelines/vehicle_regroad_classification_pipeline/model_epoch11_valloss0.628565.pt'))
+        '/home/jiacheng/work/apollo-prophet/learning_algorithms/pipelines/'
+        'vehicle_regroad_classification_pipeline/model_epoch11_valloss0.628565.pt'))
 
     online_obs_enc = offline_model.vehicle_encoding
     online_obs_enc.eval()

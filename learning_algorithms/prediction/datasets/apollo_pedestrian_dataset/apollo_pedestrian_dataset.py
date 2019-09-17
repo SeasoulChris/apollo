@@ -87,9 +87,8 @@ class ApolloPedestrianDataset(Dataset):
             # b:
             clean_ped_timestamp = np.asarray(clean_ped_timestamp)
             seg_id = 0
-            ped_discontinuity_idx = \
-                np.argwhere(clean_ped_timestamp[1:] -
-                            clean_ped_timestamp[:-1] > threshold_discontinuity)
+            ped_discontinuity_idx = np.argwhere(
+                clean_ped_timestamp[1:] - clean_ped_timestamp[:-1] > threshold_discontinuity)
             ped_discontinuity_idx = [
                 0] + (ped_discontinuity_idx.reshape(-1) + 1).tolist() + [len(clean_ped_val)]
             for i in range(len(ped_discontinuity_idx)-1):

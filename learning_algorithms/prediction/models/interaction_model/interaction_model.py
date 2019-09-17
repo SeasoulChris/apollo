@@ -36,4 +36,3 @@ class InteractionLoss():
         # loss = y_pred.type(torch.float).mean().item()
         # print("Loss is {:.3f} %".format(loss))
         print("----------- one epoch done -----------")
-        return

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+
 import torch
 
 from learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset import *
@@ -30,7 +31,7 @@ def train_using_given_model_and_params(model_params, train_file, valid_file):
         optimizer, factor=0.3, patience=3, min_lr=1e-11, verbose=True, mode='min')
 
     # Set-up CUDA
-    if (torch.cuda.is_available()):
+    if torch.cuda.is_available():
         print ("Using CUDA to speed up training.")
         model.cuda()
     else:

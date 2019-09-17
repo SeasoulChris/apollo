@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import numpy as np
 import os
 import math
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
