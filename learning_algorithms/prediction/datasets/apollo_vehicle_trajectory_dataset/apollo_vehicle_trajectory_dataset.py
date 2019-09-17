@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cv2 as cv
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
