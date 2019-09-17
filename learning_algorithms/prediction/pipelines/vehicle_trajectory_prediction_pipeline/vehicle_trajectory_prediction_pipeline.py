@@ -4,7 +4,7 @@ import argparse
 
 import torch
 
-from learning_algorithms.utilities.train_utils import *
+from fueling.common.learning.train_utils import *
 from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset import *
 from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *

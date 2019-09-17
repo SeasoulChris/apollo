@@ -2,8 +2,8 @@
 
 import torch
 
+from fueling.common.learning.train_utils import *
 from learning_algorithms.prediction.models.junction_map_model.junction_map_model import *
-from learning_algorithms.utilities.train_utils import *
 
 
 # Set-up data-loader

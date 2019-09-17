@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
+
 import torch
 
+from fueling.common.learning.train_utils import *
 from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
-from learning_algorithms.utilities.train_utils import *
 import fueling.common.file_utils as file_utils
 
 

@@ -4,10 +4,10 @@ import copy
 
 import torch
 
+from fueling.common.learning.network_utils import *
+from fueling.common.learning.train_utils import *
 from learning_algorithms.prediction.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset import *
 from learning_algorithms.prediction.models.lane_attention_model.lane_attention_model import *
-from learning_algorithms.utilities.network_utils import *
-from learning_algorithms.utilities.train_utils import *
 
 
 class OnlinePredictionLayer(nn.Module):

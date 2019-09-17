@@ -6,8 +6,8 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch.utils.data import Dataset
 
 from fueling.common.coord_utils import CoordUtils
-from learning_algorithms.utilities.loss_utils import *
-from learning_algorithms.utilities.network_utils import *
+from fueling.common.learning.loss_utils import *
+from fueling.common.learning.network_utils import *
 import fueling.common.file_utils as file_utils
 
 

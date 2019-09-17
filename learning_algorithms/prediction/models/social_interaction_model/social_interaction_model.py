@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 
-from learning_algorithms.utilities.train_utils import *
+from fueling.common.learning.train_utils import *
 
 
 class SocialInteraction(nn.Module):
