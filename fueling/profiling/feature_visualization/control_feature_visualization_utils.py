@@ -4,7 +4,6 @@
 import glob
 import os
 
-from absl import logging
 import h5py
 import matplotlib
 matplotlib.use('Agg')
@@ -13,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+import fueling.common.logging as logging
 import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
 

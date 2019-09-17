@@ -9,7 +9,6 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from absl import logging
 from google.protobuf import text_format
 from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.metrics import mean_squared_error
@@ -23,6 +22,7 @@ from fueling.control.dynamic_model.conf.model_config import segment_index, input
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
 
 from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
+import fueling.common.logging as logging
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.

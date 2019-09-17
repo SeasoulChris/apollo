@@ -6,11 +6,10 @@ This is a module to run perception benchmark on lidar data
 import datetime
 import os
 
-from absl import logging
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.bos_client as bos_client
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 def write_list_path(src_folder_path, dst_file_path):

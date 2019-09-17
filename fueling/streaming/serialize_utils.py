@@ -5,12 +5,12 @@
 import os
 import time
 
-from absl import logging
 import yaml
 
 from cyber_py import record
 
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.streaming.streaming_utils as streaming_utils
 

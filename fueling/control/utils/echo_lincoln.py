@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import os
 
-from absl import logging
 import numpy as np
 
+import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 
 # first line is initial velocity

@@ -6,7 +6,6 @@ import os
 import random
 
 
-from absl import logging
 import h5py
 import numpy as np
 
@@ -15,6 +14,7 @@ from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 

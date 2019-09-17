@@ -3,10 +3,11 @@ import glob
 import operator
 import os
 
-from absl import logging
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
+
 
 SKIP_EXISTING_DST_FILE = False
 

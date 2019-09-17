@@ -4,7 +4,7 @@
 import errno
 import os
 
-from absl import logging
+import fueling.common.logging as logging
 
 
 def makedirs(dir_path):

@@ -53,6 +53,7 @@ EXECUTOR_CORES=1
 EXECUTOR_MEMORY=12g
 EXECUTOR_DISK_GB=20
 COMPUTE_TYPE="CPU"
+LOG_VERBOSITY="INFO"
 # Configurable but rarely change.
 MEMORY_OVERHEAD_FACTOR=0
 BOS_REGION="bj"
@@ -105,6 +106,10 @@ while [ $# -gt 0 ]; do
     --disk|-d)                    # Disk size in GB per worker: "-d 50"
       shift
       EXECUTOR_DISK_GB=$1
+      ;;
+    --verbosity|-v)               # Log verbosity: "-v INFO", or DEBUG, WARNING, ERROR, FATAL.
+      shift
+      LOG_VERBOSITY=$1
       ;;
     --fueling)                    # Pre packaged fueling folder to avoid uploading.
       shift
@@ -193,6 +198,7 @@ ENVS=(
   "APOLLO_FUELING_PYPATH=${FUELING_PKG}"
   "APOLLO_COMPUTE_TYPE=${COMPUTE_TYPE}"
   "APOLLO_EXECUTORS=${EXECUTORS}"
+  "LOG_VERBOSITY=${LOG_VERBOSITY}"
   # Partner BOS support.
   "PARTNER_BOS_REGION=${PARTNER_BOS_REGION}"
   "PARTNER_BOS_BUCKET=${PARTNER_BOS_BUCKET}"

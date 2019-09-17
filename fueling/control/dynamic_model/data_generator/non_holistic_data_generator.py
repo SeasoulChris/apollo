@@ -3,7 +3,6 @@
 import os
 import sys
 
-from absl import logging
 from keras.models import load_model
 from scipy import interpolate
 from scipy.signal import savgol_filter
@@ -15,6 +14,7 @@ from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scal
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.utils.echo_lincoln as echo_lincoln

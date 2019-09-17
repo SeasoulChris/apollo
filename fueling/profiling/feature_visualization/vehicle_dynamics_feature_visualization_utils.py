@@ -8,13 +8,14 @@ import os
 import matplotlib
 matplotlib.use('Agg')
 
-from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, DYNAMICS_FEATURE_NAMES
+import fueling.common.logging as logging
+
 
 def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""

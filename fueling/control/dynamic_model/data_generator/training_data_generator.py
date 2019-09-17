@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from absl import logging
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
+import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.holistic_data_generator as holistic_data_generator
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as non_holistic_data_generator
 

@@ -7,17 +7,15 @@ import sys
 
 from absl import app
 from absl import flags
-from absl import logging
 from pyspark import SparkConf, SparkContext
 
 from fueling.common.mongo_utils import Mongo
+import fueling.common.logging as logging
 import fueling.common.storage.blob_client as blob_client
 import fueling.common.storage.bos_client as bos_client
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
-flags.DEFINE_boolean('debug', False, 'Enable debug logging.')
-
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 
@@ -81,8 +79,6 @@ class BasePipeline(object):
     def __main__(self, argv):
         """Run the pipeline."""
         self.FLAGS = flags.FLAGS.flag_values_dict()
-        logging.set_verbosity(logging.DEBUG if self.FLAGS.get('debug') else logging.INFO)
-
         mode = self.FLAGS.get('running_mode')
         if mode is None:
             logging.fatal('No running mode is specified! Please run the pipeline with '

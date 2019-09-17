@@ -7,7 +7,6 @@ import glob
 import os
 import subprocess
 
-from absl import logging
 from keras.regularizers import l1, l2
 from keras.layers import Dense, Input
 from keras.layers import Activation
@@ -24,6 +23,7 @@ import tensorflow as tf
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 # System setup

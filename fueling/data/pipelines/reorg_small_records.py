@@ -4,7 +4,6 @@
 import collections
 import os
 
-from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -13,6 +12,7 @@ from cyber_py.record import RecordReader, RecordWriter
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 

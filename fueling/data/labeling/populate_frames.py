@@ -9,7 +9,6 @@ import textwrap
 import time
 
 from absl import flags
-from absl import logging
 from pyspark.sql import Row
 from pyspark.sql import SQLContext
 
@@ -17,6 +16,7 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.data.labeling.populate_utils as populate_utils
 import fueling.streaming.streaming_utils as streaming_utils

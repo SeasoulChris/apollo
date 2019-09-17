@@ -4,12 +4,12 @@
 import os
 import string
 
-from absl import logging
 import boto3
 import botocore.client
 import botocore.exceptions
 
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
+import fueling.common.logging as logging
 
 
 # Constants

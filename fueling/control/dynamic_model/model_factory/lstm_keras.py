@@ -5,7 +5,6 @@ from random import shuffle
 from time import time
 import os
 
-from absl import logging
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
@@ -16,6 +15,7 @@ import tensorflow as tf
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, lstm_model_config
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 # System setup

@@ -5,8 +5,6 @@ import collections
 import fnmatch
 import os
 
-from absl import logging
-
 from cyber.proto.record_pb2 import Header
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
@@ -19,6 +17,7 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
+import fueling.common.logging as logging
 import fueling.common.time_utils as time_utils
 
 

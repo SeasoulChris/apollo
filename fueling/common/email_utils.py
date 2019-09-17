@@ -12,7 +12,7 @@ import os
 import smtplib
 import sys
 
-from absl import logging
+import fueling.common.logging as logging
 
 
 DATA_TEAM = [

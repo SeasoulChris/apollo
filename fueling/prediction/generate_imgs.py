@@ -3,7 +3,6 @@ import glob
 import operator
 import os
 
-from absl import logging
 import cv2 as cv
 import pyspark_utils.op as spark_op
 
@@ -12,6 +11,7 @@ from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 class GenerateImgs(BasePipeline):

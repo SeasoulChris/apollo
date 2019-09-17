@@ -7,12 +7,12 @@ import fnmatch
 import os
 
 from absl import flags
-from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 flags.DEFINE_boolean('skip_existing_record', True, 'Skip existing record.')

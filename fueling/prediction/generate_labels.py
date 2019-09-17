@@ -2,11 +2,12 @@
 import glob
 import operator
 
-from absl import logging
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator
+import fueling.common.logging as logging
+
 
 SKIP_EXISTING_DST_FILE = False
 

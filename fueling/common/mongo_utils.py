@@ -9,9 +9,10 @@ import os
 import sys
 
 from absl import flags
-from absl import logging
 import google.protobuf.json_format as json_format
 import pymongo
+
+import fueling.common.logging as logging
 
 
 flags.DEFINE_string(

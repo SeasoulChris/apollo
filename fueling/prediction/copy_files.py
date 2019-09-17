@@ -3,11 +3,10 @@ import operator
 import os
 import shutil
 
-from absl import logging
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 

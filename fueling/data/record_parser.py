@@ -11,8 +11,6 @@ import math
 import os
 import sys
 
-from absl import logging
-
 from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.gps_pb2 import Gps
@@ -23,6 +21,7 @@ from fueling.common.coord_utils import CoordUtils
 from fueling.planning.metrics.latency import LatencyMetrics
 from fueling.planning.stability.speed_jerk_stability import SpeedJerkStability
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 # Configs

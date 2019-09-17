@@ -4,12 +4,12 @@ import glob
 import os
 import re
 
-from absl import logging
 import h5py
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config
+import fueling.common.logging as logging
 if feature_config["is_holistic"]:
     import fueling.control.dynamic_model.offline_evaluator.holistic_model_evaluator as evaluator
 else:

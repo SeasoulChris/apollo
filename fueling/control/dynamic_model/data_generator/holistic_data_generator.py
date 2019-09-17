@@ -2,7 +2,6 @@
 
 import os
 
-from absl import logging
 from keras.models import load_model
 from scipy import interpolate
 import h5py
@@ -12,6 +11,7 @@ from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
 from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 

@@ -13,14 +13,13 @@ Run with:
 # Standard packages
 import pprint
 
-# Third-party packages
-from absl import flags
-
 # Apollo packages
 from cyber_py.record import RecordReader
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
+
 
 flags.DEFINE_integer('sleep_time', 0, 'Time to sleep.')
 

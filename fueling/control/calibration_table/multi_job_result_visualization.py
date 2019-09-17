@@ -5,7 +5,6 @@ import os
 import time
 
 from absl import flags
-from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import matplotlib.pyplot as plt
@@ -19,6 +18,7 @@ from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.email_utils as email_utils
+import fueling.common.logging as logging
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils

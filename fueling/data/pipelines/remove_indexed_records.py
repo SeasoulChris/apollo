@@ -8,10 +8,10 @@ Usage:
 """
 
 from absl import flags
-from absl import logging
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
+import fueling.common.logging as logging
 
 
 flags.DEFINE_string('prefix_of_indexed_records_to_remove', None,

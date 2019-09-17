@@ -3,7 +3,6 @@
 import os
 import sys
 
-from absl import logging
 from scipy.signal import savgol_filter
 import h5py
 import numpy as np
@@ -11,6 +10,7 @@ import numpy as np
 from fueling.control.dynamic_model.conf.model_config import acc_method
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from fueling.control.dynamic_model.conf.model_config import segment_index
+import fueling.common.logging as logging
 
 
 # Constants

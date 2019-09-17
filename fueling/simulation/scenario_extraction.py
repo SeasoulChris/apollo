@@ -5,11 +5,10 @@ based on disengage info
 """
 import os
 
-from absl import logging
-
 from cyber_py.record import RecordReader
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 

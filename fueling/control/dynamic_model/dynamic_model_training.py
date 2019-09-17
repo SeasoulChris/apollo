@@ -2,7 +2,6 @@
 
 import os
 
-from absl import logging
 import glob
 import h5py
 import numpy as np
@@ -10,6 +9,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config
+import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator

@@ -6,7 +6,6 @@ import os
 import pickle
 import sys
 
-from absl import logging
 from scipy.signal import savgol_filter
 from torch.utils.data.dataset import Dataset
 import h5py
@@ -15,6 +14,7 @@ import torch
 
 from fueling.control.dynamic_model.gp_regression.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model.gp_regression.model_conf import input_index, output_index
+import fueling.common.logging as logging
 
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;

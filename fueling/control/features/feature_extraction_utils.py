@@ -5,7 +5,6 @@ common functions for feature extractin
 import os
 import glob
 
-from absl import logging
 import h5py
 import math
 import numpy as np
@@ -17,6 +16,7 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
 import fueling.common.h5_utils as h5_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils

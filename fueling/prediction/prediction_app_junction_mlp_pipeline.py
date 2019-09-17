@@ -2,11 +2,10 @@
 
 """Running training job for junction-mlp-pipeline"""
 
-from absl import logging
-
 import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pipeline as junction_mlp
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
 
 
 class JunctionMlpPipeline(BasePipeline):

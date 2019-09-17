@@ -3,13 +3,14 @@ import glob
 import math
 import os
 
-from absl import logging
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
+
 
 COLLISION_COST_EXP_COEFFICIENT = 1.0
 

@@ -5,7 +5,6 @@ import tarfile
 import time
 
 from absl import flags
-from absl import logging
 import matplotlib
 matplotlib.use('Agg')
 import pyspark_utils.helper as spark_helper
@@ -21,6 +20,7 @@ from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.email_utils as email_utils
+import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 

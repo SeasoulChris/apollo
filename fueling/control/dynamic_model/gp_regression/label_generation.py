@@ -7,7 +7,6 @@ import os
 import pickle
 import sys
 
-from absl import logging
 from keras.models import load_model
 import h5py
 import numpy as np
@@ -15,6 +14,7 @@ import numpy as np
 from fueling.control.dynamic_model.gp_regression.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model.gp_regression.model_conf import input_index, output_index
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;

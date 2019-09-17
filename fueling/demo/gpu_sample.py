@@ -11,13 +11,13 @@ import subprocess
 import time
 
 # Third-party packages
-from absl import logging
 from tensorflow.python.client import device_lib
 import tensorflow as tf
 import torch
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
 
 
 def check_output(command):

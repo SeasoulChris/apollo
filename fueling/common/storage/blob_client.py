@@ -3,10 +3,10 @@
 
 import os
 
-from absl import logging
 from azure.storage.blob import BlockBlobService
 
 from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
+import fueling.common.logging as logging
 
 
 # Constants

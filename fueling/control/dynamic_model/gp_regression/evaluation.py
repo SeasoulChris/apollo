@@ -5,7 +5,6 @@ import glob
 import os
 import pickle
 
-from absl import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import progressbar
@@ -16,6 +15,7 @@ import torch.nn as nn
 
 from fueling.control.dynamic_model.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model.gp_regression.train import train_gp, DeepEncodingNet
+import fueling.common.logging as logging
 
 
 def test_gp(args, dataset, GaussianProcess):

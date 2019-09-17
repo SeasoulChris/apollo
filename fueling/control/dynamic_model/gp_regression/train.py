@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-
 """Training models"""
 
 import os
 import time
 
-from absl import logging
 import numpy as np
 import pyro
 import pyro.contrib.gp as gp
@@ -17,6 +15,7 @@ import torch.nn.functional as Func
 
 from fueling.control.dynamic_model.gp_regression.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model.gp_regression.model_conf import input_index, output_index
+import fueling.common.logging as logging
 
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;

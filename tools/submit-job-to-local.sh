@@ -17,16 +17,21 @@ fi
 JOB_FILE=""
 CONDA_ENV="fuel-py27-cyber"
 EXECUTOR_CORES=2
+LOG_VERBOSITY="INFO"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --env|-e)  # Conda environment: "-e fuel-py36"
+    --env|-e)        # Conda environment: "-e fuel-py36"
       shift
       CONDA_ENV=$1
       ;;
-    --cpu|-c)  # CPU count per worker: "-c 2"
+    --cpu|-c)        # CPU count per worker: "-c 2"
       shift
       EXECUTOR_CORES=$1
+      ;;
+    --verbosity|-v)  # Log verbosity: "-v INFO", or DEBUG, WARNING, ERROR, FATAL.
+      shift
+      LOG_VERBOSITY=$1
       ;;
     *)
       if [ -f "$1" ]; then
@@ -49,5 +54,6 @@ fi
 
 source /usr/local/miniconda/bin/activate ${CONDA_ENV}
 source /apollo/scripts/apollo_base.sh
+export LOG_VERBOSITY=${LOG_VERBOSITY}
 
 spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@

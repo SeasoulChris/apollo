@@ -4,11 +4,11 @@ from datetime import date
 import glob
 import os
 
-from absl import logging
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.h5_utils as h5_utils
+import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.control.dynamic_model.conf.model_config as model_config
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils

@@ -4,9 +4,6 @@ import collections
 import glob
 import os
 
-# Third-party packages
-from absl import logging
-
 # Apollo packages
 from modules.canbus.proto import chassis_pb2
 from modules.canbus.proto.chassis_pb2 import Chassis
@@ -14,6 +11,7 @@ from modules.localization.proto import localization_pb2
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.data.record_parser as record_parser
 

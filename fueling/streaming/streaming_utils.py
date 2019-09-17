@@ -11,10 +11,10 @@ import shutil
 import stat
 import time
 
-from absl import logging
-
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+
 
 STREAMING_PATH = 'modules/streaming'
 STREAMING_RECORDS = 'records'

@@ -7,7 +7,6 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
-from absl import logging
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import matplotlib.pyplot as plt
@@ -17,6 +16,7 @@ import pyspark_utils.helper as spark_helper
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 from fueling.control.dynamic_model.conf.model_config import feature_config
+import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.control.dynamic_model.data_generator.feature_extraction as data_generator
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils

@@ -4,13 +4,13 @@ import collections
 import os
 import math
 
-from absl import logging
 import google.protobuf.text_format as text_format
 
 from cyber_py.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 import fueling.common.email_utils as email_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils

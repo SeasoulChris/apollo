@@ -5,7 +5,6 @@ import shutil
 import os
 
 from absl import flags
-from absl import logging
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -19,6 +18,7 @@ from fueling.control.common.sanity_check import sanity_check  # include sanity c
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils

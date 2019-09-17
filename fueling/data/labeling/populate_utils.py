@@ -5,7 +5,6 @@ import gc
 import math
 import os
 
-from absl import logging
 from google.protobuf.json_format import MessageToJson
 from pyquaternion import Quaternion as PyQuaternion
 import cv2
@@ -23,6 +22,7 @@ from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 

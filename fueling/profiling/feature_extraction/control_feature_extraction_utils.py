@@ -4,13 +4,14 @@
 
 import os
 
-from absl import logging
 import numpy as np
 
+from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX, POSE_IDX
 from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
 import fueling.common.proto_utils as proto_utils
+import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX, POSE_IDX
+
 
 # Message number in each segment
 MSG_PER_SEGMENT = 3000
