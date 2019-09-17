@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """Training utils."""
 
-import logging
 import math
+import os
 
 import numpy as np
 import torch
+
+import fueling.common.logging as logging
 
 
 #########################################################
@@ -118,8 +120,7 @@ def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimiz
 #########################################################
 
 
-def train_dataloader(train_loader, model, loss, optimizer, epoch,
-                     print_period=None):
+def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None):
     model.train()
 
     loss_history = []
@@ -137,7 +138,7 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch,
 
         if print_period is None:
             continue
-        if (i > 0) and (i % print_period == 0):
+        if i > 0 and i % print_period == 0:
             logging.info('   Step: {}, training loss: {}'.format(
                 i, np.mean(loss_history[-print_period:])))
             print ('   Step: {}, training loss: {}'.format(
@@ -200,26 +201,21 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
         else:
             num_epoch_valid_loss_not_decreasing += 1
             # Early stop if enabled and met the criterion
-            if early_stop is not None and \
-               early_stop == num_epoch_valid_loss_not_decreasing:
+            if early_stop == num_epoch_valid_loss_not_decreasing:
                 print ('Reached early-stopping criterion. Stop training.')
                 logging.info('Reached early-stopping criterion. Stop training.')
                 logging.info('Best validation loss = {}'.format(best_valid_loss))
                 break
 
         # Save model according to the specified mode.
+        epoch_model_name = 'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss)
         if save_mode == 0:
             if is_better_model:
-                torch.save(model.state_dict(),
-                           save_name + '/model.pt'.format(epoch, valid_loss))
+                torch.save(model.state_dict(), os.path.join(save_name, 'model.pt'))
         elif save_mode == 1:
             if is_better_model:
-                torch.save(model.state_dict(),
-                           save_name + '/model_epoch{}_valloss{:.6f}.pt'
-                           .format(epoch, valid_loss))
+                torch.save(model.state_dict(), os.path.join(save_name, epoch_model_name))
         elif save_mode == 2:
-            torch.save(model.state_dict(),
-                       save_name + '/model_epoch{}_valloss{:.6f}.pt'
-                       .format(epoch, valid_loss))
+            torch.save(model.state_dict(), os.path.join(save_name, epoch_model_name))
 
     return model
