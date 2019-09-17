@@ -45,6 +45,55 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
+def plot_control_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status):
+    """ control actions x,y - time """
+    plt.plot(data_plot_x0, data_plot_y0, data_plot_x1, data_plot_y1, linewidth=0.5)
+    plt.xlabel('timestamp_sec (relative to t0)')
+    plt.ylabel(feature + ' commands and measured outputs')
+    plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " and " +
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")")
+    xmin, xmax, ymin, ymax = plt.axis()
+    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+             'Maximum = {0:.3f}, Minimum = {1:.3f}'
+             .format(np.amax(data_plot_y1), np.amin(data_plot_y1)),
+             color='red', fontsize=8)
+    plt.tight_layout()
+
+def plot_action_vs_cmd(data_plot_x, data_plot_y, feature, status):
+    """ control actions x - y """
+    plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
+    plt.axis('equal')
+    # plt.xlim(0, 40)
+    # plt.ylim(0, 40)
+    # plt.gca().set_aspect('equal', adjustable='box')
+    plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
+    plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
+    plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " vs " +
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")")
+    xmin, xmax, ymin, ymax = plt.axis()
+    plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+             'Maximum = {0:.3f}, Minimum = {1:.3f}'
+             .format(np.amax(data_plot_y), np.amin(data_plot_y)),
+             color='red', fontsize=8)
+    plt.tight_layout()
+
+def plot_xcorr(data_plot_x, data_plot_y, feature):
+    """ cross-correlation x - y """
+    lags = plt.xcorr(data_plot_x, data_plot_y, usevlines=True, maxlags=50, normed=True, lw=0.5)
+    plt.grid(True)
+    plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " delay frames")
+    plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " cross-correlation")
+    plt.title("Cross-correlation " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+              + " vs " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
+    lag_frame = lags[0][np.argmax(lags[1])]
+    glog.info("The estimated delay frame number is {}".format(lag_frame))
+    plt.plot(lag_frame, 1.0, "r", marker=8)
+    xmin, xmax, ymin, ymax = plt.axis()
+    plt.text(lag_frame + 3, ymin * 0.05 + ymax * 0.95,
+             'Delay Frame = {}'.format(lag_frame),
+             color='red', fontsize=8)
+    plt.tight_layout()
+    return lag_frame
 
 def plot_h5_features_time(data_rdd):
     """plot the time-domain data of all the variables in the data array"""
@@ -65,42 +114,32 @@ def plot_h5_features_time(data_rdd):
         data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
         plot_features = ["throttle", "brake", "steering"]
         for feature in plot_features:
+            if feature is "throttle":
+                slope_y0 = 1.0
+                bias_y0 = -8.0
+            elif feature is "brake":
+                slope_y0 = 1.0
+                bias_y0 = 0.0
+            elif feature is "steering":
+                slope_y0 = 1.0
+                bias_y0 = 0.0
             data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+            data_plot_y0 = np.maximum(0, data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] * slope_y0 + bias_y0)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
-            # control actions x,y-time
+            # Raw data plots and analysis
+            status = "raw data"
             plt.figure(figsize=(4, 4))
-            plt.plot(data_plot_x0, data_plot_y0, data_plot_x1, data_plot_y1)
-            plt.xlabel('timestamp_sec (relative to t0)')
-            plt.ylabel(feature + ' commands and measured outputs')
-            plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " and " +
-                      DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
-            xmin, xmax, ymin, ymax = plt.axis()
-            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                     .format(np.amax(data_plot_y1), np.amin(data_plot_y1)),
-                     color='red', fontsize=8)
-            plt.tight_layout()
+            plot_control_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
             pdf.savefig()
             plt.close()
-            # control actions x-y
-            data_plot_x = data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-            data_plot_y = data[:, DYNAMICS_FEATURE_IDX[feature]]
             plt.figure(figsize=(4, 4))
-            plt.plot(data_plot_x, data_plot_y, '.')
-            plt.axis('equal')
-            plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
-            plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
-            plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " vs " +
-                      DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
-            xmin, xmax, ymin, ymax = plt.axis()
-            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                     .format(np.amax(data_plot_y1), np.amin(data_plot_y1)),
-                     color='red', fontsize=8)
-            plt.tight_layout()
+            plot_action_vs_cmd(data_plot_y0, data_plot_y1, feature, status)
+            pdf.savefig()
+            plt.close()
+            plt.figure(figsize=(4, 4))
+            lags = plot_xcorr(data_plot_y0, data_plot_y1, feature)
             pdf.savefig()
             plt.close()
