@@ -40,8 +40,6 @@ from sklearn.metrics import confusion_matrix
 from sklearn.externals import joblib
 
 from numpy.random import seed
-seed(1)
-set_random_seed(2)
 
 sns.set_style("whitegrid")
 
@@ -76,7 +74,7 @@ def preprocess(y):
     return amplitude_envelope
 
 
-def prepare_data(X_em, X_nonem):
+def prepare_data(X_em, X_nonem, scale=True):
     X_em = np.array(X_em)
     X_nonem = np.array(X_nonem)
 
@@ -84,7 +82,8 @@ def prepare_data(X_em, X_nonem):
     Y = np.hstack((np.ones(len(X_em)), np.zeros(len(X_nonem))))
 
     scaler = StandardScaler()
-    scaler.fit_transform(X)
+    if scale:
+        scaler.fit_transform(X)
 
     X, Y = shuffle(X, Y, random_state=7)
 
@@ -331,7 +330,7 @@ if __name__ == "__main__":
             y, sr, 0.10*sr, .05*sr)
         X_test_nonem.extend(features)
 
-    X_test, Y_test, scaler2 = prepare_data(X_test_em, X_test_nonem)
+    X_test, Y_test, _ = prepare_data(X_test_em, X_test_nonem, False)
 
     K.set_image_dim_ordering('th')
 
@@ -341,6 +340,8 @@ if __name__ == "__main__":
     # Supress Tensorflow error logs
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+    seed(1)
+    set_random_seed(2)
     model = Sequential()
     model.add(Dense(105, input_dim=105, activation='relu'))
     model.add(Dense(16, activation='relu'))
@@ -397,7 +398,7 @@ if __name__ == "__main__":
     op_list = []
     for test_file in tqdm(test_em_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler2)
+        classes = predict_op(y, scaler1)
         if classes == 1:
             correct_em += 1
         em_tot += 1
@@ -411,19 +412,19 @@ if __name__ == "__main__":
     op_list = []
     for test_file in tqdm(test_nonem_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler2)
+        classes = predict_op(y, scaler1)
         if classes == 0:
             correct_nonem += 1
         nonem_tot += 1
 
-    print("Correct Non-EM count = {}".format(correct_em))
-    print("Total Non-EM count = {}".format(em_tot))
+    print("Correct Non-EM count = {}".format(correct_nonem))
+    print("Total Non-EM count = {}".format(nonem_tot))
 
     test_file = os.path.join(test_path_em, '101.wav')
     y, sr = librosa.load(test_file, sr=8000)
     ipd.Audio(test_file)
 
-    classes = predict_prob(y, scaler2)
+    classes = predict_prob(y, scaler1)
 
     plt.figure()
     plt.plot(classes, c='r', linewidth=3.0, alpha=0.5)
