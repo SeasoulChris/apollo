@@ -292,11 +292,11 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     curr_obs_feature = np.flip(curr_obs_feature, 0)
                     curr_obs_pos = np.zeros((1, obs_hist_size, 2))
                     # (1 x max_obs_hist_size x 2)
+                    curr_obs_pos[0, -curr_obs_hist_size:, :] = \
+                        curr_obs_feature[-curr_obs_hist_size:, 1:3]
                     self.obs_pos.append(curr_obs_pos)
                     curr_obs_pos_rel = np.zeros((1, obs_hist_size, 2))
                     if curr_obs_hist_size > 1:
-                        curr_obs_pos[0, -curr_obs_hist_size:,
-                                     :] = curr_obs_feature[-curr_obs_hist_size:, 1:3]
                         curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
                             curr_obs_pos[0, -curr_obs_hist_size+1:, :] - \
                             curr_obs_pos[0, -curr_obs_hist_size:-1, :]
