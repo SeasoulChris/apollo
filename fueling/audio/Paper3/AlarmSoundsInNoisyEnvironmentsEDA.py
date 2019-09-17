@@ -3,14 +3,32 @@
 
 # In[1]:
 
-
+from keras import backend as K
+import tensorflow as tf
+from keras import optimizers
+from keras.models import load_model
+from keras.callbacks import EarlyStopping
+from keras.layers import Dense
+from keras.models import Sequential
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from pyAudioAnalysis import audioFeatureExtraction
+from pyAudioAnalysis import audioBasicIO
+import seaborn as sns
+import matplotlib.ticker as ticker
+import matplotlib.style as ms
+import matplotlib.pyplot as plt
+from scipy.signal import butter, lfilter, hilbert
+from tensorflow import set_random_seed
+import argparse
 import os
 import glob
 import time
 
 import numpy as np
 import pandas as pd
-#IPython.display for audio output
+# IPython.display for audio output
 import IPython.display as ipd
 # Librosa for audio
 import librosa
@@ -21,31 +39,32 @@ from sklearn.externals import joblib
 
 from numpy.random import seed
 seed(1)
-from tensorflow import set_random_seed
 set_random_seed(2)
 
 # For designing the band-pass filter
-from scipy.signal import butter, lfilter, hilbert
 
-import matplotlib.pyplot as plt
-import matplotlib.style as ms
-import matplotlib.ticker as ticker
-import seaborn as sns
 sns.set_style("whitegrid")
 # get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 # In[2]:
-
-
 # HEADS UP: modify the path according to your local machine
-train_path_em = '/home/xukecheng/Desktop/cleaned_data/train_balanced/Emergency/'
-train_path_nonem = '/home/xukecheng/Desktop/cleaned_data/train_balanced/nonEmergency/'
+root_dir = '/home/xukecheng/Desktop'
 
-test_path_em = '/home/xukecheng/Desktop/cleaned_data/eval_balanced/Emergency/'
-test_path_nonem = '/home/xukecheng/Desktop/cleaned_data/eval_balanced/nonEmergency/'
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--root_dir", help="parent dir to cleaned_data / on your local machine",
+    type=str, default=root_dir)
+args = parser.parse_args()
+root_dir = args.root_dir
 
-
+train_path_em = os.path.join(
+    root_dir, 'cleaned_data/train_balanced/Emergency/')
+train_path_nonem = os.path.join(
+    root_dir, 'cleaned_data/train_balanced/nonEmergency/')
+test_path_em = os.path.join(root_dir, 'cleaned_data/eval_balanced/Emergency/')
+test_path_nonem = os.path.join(
+    root_dir, 'cleaned_data/eval_balanced/nonEmergency/')
 # In[3]:
 
 
@@ -72,7 +91,7 @@ ipd.Audio(fn)
 # In[5]:
 
 
-librosa.display.waveplot(y=y, sr=sr);
+librosa.display.waveplot(y=y, sr=sr)
 
 
 # In[6]:
@@ -99,36 +118,36 @@ librosa.display.waveplot(y=y_filt, sr=sr)
 # In[9]:
 
 
-def melspectrogram(y,sr):
+def melspectrogram(y, sr):
     # Let's make and display a mel-scaled power (energy-squared) spectrogram
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
 
     # Convert to log scale (dB). We'll use the peak power (max) as reference.
     log_S = librosa.power_to_db(S, ref=np.max)
-    
+
     return log_S
 
 
 # In[10]:
 
 
-log_S = melspectrogram(y,sr)
+log_S = melspectrogram(y, sr)
 # Make a new figure
-plt.figure(figsize=(12,4))
+plt.figure(figsize=(12, 4))
 # Display the spectrogram on a mel scale
 # sample rate and hop length parameters are used to render the time axis
-librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel');
+librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
 
 
 # In[11]:
 
 
-log_S = melspectrogram(y_filt,sr)
+log_S = melspectrogram(y_filt, sr)
 # Make a new figure
-plt.figure(figsize=(12,4))
+plt.figure(figsize=(12, 4))
 # Display the spectrogram on a mel scale
 # sample rate and hop length parameters are used to render the time axis
-librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel');
+librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
 
 
 # In[12]:
@@ -148,21 +167,17 @@ amplitude_envelope = np.abs(analytic_signal)
 
 
 t = np.arange(len(y[:8000])) / sr
-fig = plt.figure(figsize=(16,5))
+fig = plt.figure(figsize=(16, 5))
 ax0 = fig.add_subplot(111)
 # ax0.plot(y[:8000], label='signal')
 ax0.plot(analytic_signal[:8000], label='signal')
 ax0.plot(amplitude_envelope[:8000], label='envelope')
-ax0.legend();
+ax0.legend()
 
 
 # ## Feature Extraction
 
 # In[15]:
-
-
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import audioFeatureExtraction
 
 
 # In[16]:
@@ -190,7 +205,8 @@ X_em = []
 for fn in tqdm(em_files):
     y, sr = librosa.load(fn, sr=8000)
     y = preprocess(y)
-    features = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr)
+    features = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     X_em.extend(features)
 
 
@@ -220,7 +236,8 @@ X_nonem = []
 for fn in tqdm(nonem_files):
     y, sr = librosa.load(fn, sr=8000)
     y = preprocess(y)
-    features = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr);
+    features = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     X_nonem.extend(features)
     count += 1
     if count == 120:
@@ -236,24 +253,20 @@ len(X_nonem)
 # In[25]:
 
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
-
 def prepare_data(X_em, X_nonem):
     X_em = np.array(X_em)
     X_nonem = np.array(X_nonem)
-    
+
     X = np.vstack((X_em, X_nonem))
     Y = np.hstack((np.ones(len(X_em)), np.zeros(len(X_nonem))))
-    
+
     scaler = StandardScaler()
     scaler.fit_transform(X)
-    
+
     X, Y = shuffle(X, Y, random_state=7)
-    
+
 #     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
-    
+
     return X, Y, scaler
 
 
@@ -266,7 +279,7 @@ X_train, Y_train, scaler1 = prepare_data(X_em, X_nonem)
 # In[27]:
 
 
-f= open("scaler_values.txt","w+")
+f = open("scaler_values.txt", "w+")
 mean_v = []
 std_v = []
 for i in range(len(scaler1.mean_)):
@@ -291,7 +304,8 @@ X_test_em = []
 for fn in tqdm(test_em_files):
     y, sr = librosa.load(fn, sr=8000)
     y = preprocess(y)
-    features = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr);
+    features = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     X_test_em.extend(features)
 
 
@@ -302,7 +316,8 @@ X_test_nonem = []
 for fn in tqdm(test_nonem_files):
     y, sr = librosa.load(fn, sr=8000)
     y = preprocess(y)
-    features = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr);
+    features = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     X_test_nonem.extend(features)
 
 
@@ -315,20 +330,13 @@ X_test, Y_test, scaler2 = prepare_data(X_test_em, X_test_nonem)
 # In[105]:
 
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.callbacks import EarlyStopping
-from keras.models import load_model
-from keras import optimizers
-import tensorflow as tf
-from keras import backend as K
 K.set_image_dim_ordering('th')
 
 # fix random seed for reproducibility
 np.random.seed(7)
 
 # Supress Tensorflow error logs
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 # In[106]:
@@ -346,16 +354,19 @@ model.summary()
 # In[107]:
 
 
-optm = optimizers.Adam(lr=0.005, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+optm = optimizers.Adam(lr=0.005, beta_1=0.9, beta_2=0.999,
+                       epsilon=None, decay=0.0, amsgrad=False)
 model.compile(loss='binary_crossentropy', optimizer=optm, metrics=['accuracy'])
-earlystop = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=20, verbose=0, mode='auto')
+earlystop = EarlyStopping(
+    monitor='val_loss', min_delta=0.01, patience=20, verbose=0, mode='auto')
 callbacks_list = [earlystop]
 
 
 # In[108]:
 
 
-history = model.fit(X_train, Y_train, epochs=200, validation_data=(X_test, Y_test), batch_size=256, callbacks=callbacks_list)
+history = model.fit(X_train, Y_train, epochs=200, validation_data=(
+    X_test, Y_test), batch_size=256, callbacks=callbacks_list)
 model.save("model_3h.h5")
 print("Saved model to disk!")
 
@@ -364,23 +375,29 @@ print("Saved model to disk!")
 
 
 def plot_model_history(model_history):
-    fig, axs = plt.subplots(1,2,figsize=(15,5))
+    fig, axs = plt.subplots(1, 2, figsize=(15, 5))
     # summarize history for accuracy
-    axs[0].plot(range(1,len(model_history.history['acc'])+1),model_history.history['acc'])
-    axs[0].plot(range(1,len(model_history.history['val_acc'])+1),model_history.history['val_acc'])
+    axs[0].plot(range(1, len(model_history.history['acc'])+1),
+                model_history.history['acc'])
+    axs[0].plot(range(1, len(model_history.history['val_acc'])+1),
+                model_history.history['val_acc'])
     axs[0].set_title('Model Accuracy')
     axs[0].set_title('Model Accuracy')
     axs[0].set_ylabel('Accuracy')
     axs[0].set_xlabel('Epoch')
-    axs[0].set_xticks(np.arange(1,len(model_history.history['acc'])+1),len(model_history.history['acc'])/10)
+    axs[0].set_xticks(np.arange(
+        1, len(model_history.history['acc'])+1), len(model_history.history['acc'])/10)
     axs[0].legend(['train', 'val'], loc='best')
     # summarize history for loss
-    axs[1].plot(range(1,len(model_history.history['loss'])+1),model_history.history['loss'])
-    axs[1].plot(range(1,len(model_history.history['val_loss'])+1),model_history.history['val_loss'])
+    axs[1].plot(range(1, len(model_history.history['loss'])+1),
+                model_history.history['loss'])
+    axs[1].plot(range(1, len(model_history.history['val_loss'])+1),
+                model_history.history['val_loss'])
     axs[1].set_title('Model Loss')
     axs[1].set_ylabel('Loss')
     axs[1].set_xlabel('Epoch')
-    axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
+    axs[1].set_xticks(np.arange(
+        1, len(model_history.history['loss'])+1), len(model_history.history['loss'])/10)
     axs[1].legend(['train', 'val'], loc='best')
     plt.savefig('model_history.png')
 
@@ -402,10 +419,10 @@ model = load_model('model_3h.h5')
 
 Y_pred = model.predict_classes(X_test)
 cm = confusion_matrix(Y_pred, Y_test)
-df_cm = pd.DataFrame(cm, index = ['Non-EM', 'EM'],
-                  columns = ['Non-EM', 'EM'])
-plt.figure(figsize = (8,6))
-sns.heatmap(df_cm, annot=True, cmap='YlGnBu');
+df_cm = pd.DataFrame(cm, index=['Non-EM', 'EM'],
+                     columns=['Non-EM', 'EM'])
+plt.figure(figsize=(8, 6))
+sns.heatmap(df_cm, annot=True, cmap='YlGnBu')
 
 
 # In[117]:
@@ -416,8 +433,8 @@ pred_test = pred_test[:, 0]
 pred_test
 
 Y_test_np = np.array(Y_test)
-Y_test_em = Y_test_np[Y_test_np==1]
-Y_test_nonem = Y_test_np[Y_test_np==0]
+Y_test_em = Y_test_np[Y_test_np == 1]
+Y_test_nonem = Y_test_np[Y_test_np == 0]
 
 is_correct = pred_test == Y_test_np
 print(np.sum(is_correct) / is_correct.shape[0])
@@ -434,39 +451,42 @@ print(np.sum(nonem_correct) / nonem_correct.shape[0])
 
 def predict_op(y, scaler):
     y = preprocess(y)
-    features_list = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr)
+    features_list = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     scaler.transform(features_list)
     count = 0
     N = 10
     th = 0.5
-    
+
     prob_list = []
     class_list = []
     for i in range(N):
-        p = model.predict(features_list[i].reshape(1,74), batch_size=None, verbose=0)
+        p = model.predict(features_list[i].reshape(
+            1, 74), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
-    #print(prob)
+    # print(prob)
     if prob > th:
-        #print("Em")
+        # print("Em")
         class_list.append(1)
     else:
-        #print("Non-em")
+        # print("Non-em")
         class_list.append(0)
-    
-    for i in range(N,len(features_list)):
+
+    for i in range(N, len(features_list)):
         prob_list.pop(0)
-        p = model.predict(features_list[i].reshape(1,74), batch_size=None, verbose=0)
+        p = model.predict(features_list[i].reshape(
+            1, 74), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
         prob = np.mean(prob_list)
-        #print(prob)
+        # print(prob)
         if prob > th:
-            #print("Em")
+            # print("Em")
             class_list.append(1)
         else:
-            #print("Non-em")
+            # print("Non-em")
             class_list.append(0)
     if np.mean(class_list) > 0.5:
         return 1
@@ -537,7 +557,7 @@ y, sr = librosa.load(test_file, sr=8000)
 ipd.Audio(test_file)
 
 
-# FP: 104 (bicycle bell)  
+# FP: 104 (bicycle bell)
 # FN: 12 (clear siren), 15 (vehicle noise)
 
 # In[ ]:
@@ -545,41 +565,44 @@ ipd.Audio(test_file)
 
 def predict_prob(y, scaler):
     y = preprocess(y)
-    mfccs_list = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.10*sr, .05*sr)
+    mfccs_list = audioFeatureExtraction.stFeatureExtraction(
+        y, sr, 0.10*sr, .05*sr)
     scaler.transform(mfccs_list)
     count = 0
     N = 20
     th = 0.5
-    
+
     model = load_model('model_3h.h5')
-    
+
     prob_list = []
     class_list = []
     for i in range(N):
-        p = model.predict(mfccs_list[i].reshape(1,74), batch_size=None, verbose=0)
+        p = model.predict(mfccs_list[i].reshape(
+            1, 74), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
-    #print(prob)
+    # print(prob)
     if prob > th:
-        #print("Em")
+        # print("Em")
         class_list.append(1)
     else:
-        #print("Non-em")
+        # print("Non-em")
         class_list.append(0)
-    
-    for i in range(N,len(mfccs_list)):
+
+    for i in range(N, len(mfccs_list)):
         prob_list.pop(0)
-        p = model.predict(mfccs_list[i].reshape(1,74), batch_size=None, verbose=0)
+        p = model.predict(mfccs_list[i].reshape(
+            1, 74), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
         prob = np.mean(prob_list)
-        #print(prob)
+        # print(prob)
         if prob > th:
-            #print("Em")
+            # print("Em")
             class_list.append(1)
         else:
-            #print("Non-em")
+            # print("Non-em")
             class_list.append(0)
     return class_list
 
@@ -594,9 +617,9 @@ classes = predict_prob(y, scaler2)
 
 
 plt.figure()
-plt.plot(classes, c='r', linewidth = 3.0, alpha=0.5)
-plt.yticks([0,1])
-plt.ylim([-0.1,1.1])
+plt.plot(classes, c='r', linewidth=3.0, alpha=0.5)
+plt.yticks([0, 1])
+plt.ylim([-0.1, 1.1])
 plt.xlabel("Samples")
 plt.ylabel("Em signal presence")
 plt.grid('on')
@@ -606,16 +629,12 @@ plt.show()
 # In[ ]:
 
 
-log_S = melspectrogram(y,sr)
+log_S = melspectrogram(y, sr)
 # Make a new figure
-plt.figure(figsize=(12,4))
+plt.figure(figsize=(12, 4))
 # Display the spectrogram on a mel scale
 # sample rate and hop length parameters are used to render the time axis
-librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel');
+librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
 
 
 # In[ ]:
-
-
-
-
