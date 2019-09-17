@@ -3,6 +3,8 @@
 
 # In[1]:
 
+import warnings
+import sys
 from keras import backend as K
 import tensorflow as tf
 from keras import optimizers
@@ -43,8 +45,6 @@ set_random_seed(2)
 
 sns.set_style("whitegrid")
 
-import sys
-import warnings
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
@@ -134,7 +134,7 @@ def predict_op(y, scaler):
     class_list = []
     for i in range(N):
         p = model.predict(features_list[i].reshape(
-            1, 74), batch_size=None, verbose=0)
+            1, 105), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
@@ -149,7 +149,7 @@ def predict_op(y, scaler):
     for i in range(N, len(features_list)):
         prob_list.pop(0)
         p = model.predict(features_list[i].reshape(
-            1, 74), batch_size=None, verbose=0)
+            1, 105), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
         prob = np.mean(prob_list)
@@ -181,7 +181,7 @@ def predict_prob(y, scaler):
     class_list = []
     for i in range(N):
         p = model.predict(mfccs_list[i].reshape(
-            1, 74), batch_size=None, verbose=0)
+            1, 105), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
     prob = np.mean(prob_list)
@@ -196,7 +196,7 @@ def predict_prob(y, scaler):
     for i in range(N, len(mfccs_list)):
         prob_list.pop(0)
         p = model.predict(mfccs_list[i].reshape(
-            1, 74), batch_size=None, verbose=0)
+            1, 105), batch_size=None, verbose=0)
         p = p.flatten()
         prob_list.append(p)
         prob = np.mean(prob_list)
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--root_dir", help="parent dir to cleaned_data / on your local machine",
+        "--root_dir", help="parent dir to cleaned_data/ on your local machine",
         type=str)
     args = parser.parse_args()
     root_dir = args.root_dir
@@ -223,7 +223,8 @@ if __name__ == "__main__":
         root_dir, 'cleaned_data/train_balanced/Emergency/')
     train_path_nonem = os.path.join(
         root_dir, 'cleaned_data/train_balanced/nonEmergency/')
-    test_path_em = os.path.join(root_dir, 'cleaned_data/eval_balanced/Emergency/')
+    test_path_em = os.path.join(
+        root_dir, 'cleaned_data/eval_balanced/Emergency/')
     test_path_nonem = os.path.join(
         root_dir, 'cleaned_data/eval_balanced/nonEmergency/')
 
@@ -341,7 +342,7 @@ if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     model = Sequential()
-    model.add(Dense(74, input_dim=74, activation='relu'))
+    model.add(Dense(105, input_dim=105, activation='relu'))
     model.add(Dense(16, activation='relu'))
     # model.add(Dense(128, activation='relu'))
     # model.add(Dense(256, activation='relu'))
@@ -350,7 +351,8 @@ if __name__ == "__main__":
 
     optm = optimizers.Adam(lr=0.005, beta_1=0.9, beta_2=0.999,
                            epsilon=None, decay=0.0, amsgrad=False)
-    model.compile(loss='binary_crossentropy', optimizer=optm, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy',
+                  optimizer=optm, metrics=['accuracy'])
     earlystop = EarlyStopping(
         monitor='val_loss', min_delta=0.01, patience=20, verbose=0, mode='auto')
     callbacks_list = [earlystop]
@@ -387,7 +389,8 @@ if __name__ == "__main__":
     print("EM ACC = {}".format(np.sum(em_correct) / em_correct.shape[0]))
 
     nonem_correct = is_correct[Y_test_np == 0]
-    print("Non-EM ACC = {}".format(np.sum(nonem_correct) / nonem_correct.shape[0]))
+    print("Non-EM ACC = {}".format(np.sum(nonem_correct) /
+                                   nonem_correct.shape[0]))
 
     em_tot = 0
     correct_em = 0

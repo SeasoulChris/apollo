@@ -613,10 +613,19 @@ def stDWT(X, fs):
 
 def stWPT(X, fs):
     """
-    Wavelet Packet Transform (4 decomposition levels)
+    Wavelet Packet Transform (4 decomposition levels). Fs independent
     """
-    coeffs = pywt.WaveletPacket(X, 'db1', maxlevel=4)
-    return coeffs
+    maxlevel_wpt = 4
+    tree_wpt = pywt.WaveletPacket(X, 'db1', maxlevel=maxlevel_wpt)
+
+    features = []
+    for i in range(0, maxlevel_wpt + 1, 1):
+        for node in tree_wpt.get_level(i, 'natural'):
+            average = sum(tree_wpt[node.path].data) / \
+                len(tree_wpt[node.path].data)
+            features.append(average)
+
+    return features
 
 
 """ Windowing and feature extraction """
@@ -693,8 +702,11 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         # Wavelet-based features
         st_dwt_features = stDWT(x, Fs)
         curFV = np.append(curFV, st_dwt_features)
-        stFeatures.append(curFV)
+        st_wpt_features = stWPT(X, Fs)
+        curFV = np.append(curFV, st_wpt_features)
 
+        stFeatures.append(curFV)
+        
         # delta features
         '''
         if countFrames>1:
@@ -706,6 +718,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         stFeatures.append(curFVFinal)        
         # '''
         # end of delta
+
         Xprev = X.copy()
 
     # stFeatures = np.concatenate(stFeatures, 1)
