@@ -5,6 +5,7 @@ dependencies:
   - pyspark = 2.4.0
 
   # Language tools
+  - cython
   - pip
   - pylint
 
