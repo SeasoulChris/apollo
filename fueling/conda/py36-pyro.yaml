@@ -16,7 +16,7 @@ dependencies:
   - boto3
   - cudatoolkit = 9.2
   - h5py
-  - keras
+  - keras-gpu
   - matplotlib
   - numpy
   - pymongo

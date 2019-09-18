@@ -16,14 +16,13 @@ dependencies:
   - boto3
   - cudatoolkit = 10.0
   - h5py
-  - keras
+  - keras-gpu
   - matplotlib
   - numpy
   - pymongo
   - pytorch = 1.1.0
   - scikit-learn
   - torchvision
-  - tensorflow
   - tensorflow-gpu
 
   # Other
