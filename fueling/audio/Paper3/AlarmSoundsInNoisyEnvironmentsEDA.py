@@ -120,7 +120,7 @@ def plot_model_history(model_history):
     plt.savefig('model_history.png')
 
 
-def predict_op(y, scaler):
+def predict_op(y, scaler, model):
     y = preprocess(y)
     features_list = audioFeatureExtraction.stFeatureExtraction(
         y, sr, 0.10*sr, .05*sr)
@@ -384,21 +384,20 @@ if __name__ == "__main__":
 
     print("------ data level results -----")
     is_correct = pred_test == Y_test_np
-    print("Overall ACC = {}".format(np.sum(is_correct) / is_correct.shape[0]))
+    print("Overall ACC = {}".format(np.mean(is_correct)))
 
     em_correct = is_correct[Y_test_np == 1]
-    print("EM ACC = {}".format(np.sum(em_correct) / em_correct.shape[0]))
+    print("EM ACC = {}".format(np.mean(em_correct)))
 
     nonem_correct = is_correct[Y_test_np == 0]
-    print("Non-EM ACC = {}".format(np.sum(nonem_correct) /
-                                   nonem_correct.shape[0]))
+    print("Non-EM ACC = {}".format(np.mean(nonem_correct)))
 
     em_tot = 0
     correct_em = 0
     op_list = []
     for test_file in tqdm(test_em_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler1)
+        classes = predict_op(y, scaler1, model)
         if classes == 1:
             correct_em += 1
         em_tot += 1
@@ -412,7 +411,7 @@ if __name__ == "__main__":
     op_list = []
     for test_file in tqdm(test_nonem_files):
         y, sr = librosa.load(test_file, sr=8000)
-        classes = predict_op(y, scaler1)
+        classes = predict_op(y, scaler1, model)
         if classes == 0:
             correct_nonem += 1
         nonem_tot += 1
