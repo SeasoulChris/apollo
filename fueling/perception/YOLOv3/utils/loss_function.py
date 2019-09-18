@@ -5,7 +5,7 @@ import math
 import keras.backend as K
 import tensorflow as tf
 
-from fueling.perception.YOLOv3.detect_function import yolo_head
+from fueling.perception.YOLOv3.network.detect_function import yolo_head
 import fueling.perception.YOLOv3.config as cfg
 
 

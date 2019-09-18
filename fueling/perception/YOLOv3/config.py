@@ -45,13 +45,13 @@ train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this va
                         "BatchNorm/beta",
                         "BatchNorm/gamma"]
 gpu = "0"
-learning_rate = 0.0001
+learning_rate = 0.001
 decay_steps = 35000
 decay_rate = 0.5
-max_iter = 10
+max_iter = 100
 start_iter = 0
 num_threads = 8
-batch_size = 1
+batch_size = 8
 save_interval = 10000
 print_interval = 1
 summary_interval = 500

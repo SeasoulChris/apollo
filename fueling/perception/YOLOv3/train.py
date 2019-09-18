@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 
 from fueling.perception.YOLOv3 import config as cfg
-from fueling.perception.YOLOv3.network_function import YOLOv3
+from fueling.perception.YOLOv3.network.network_function import YOLOv3
 from fueling.perception.YOLOv3.utils.loss_function import compute_loss
 from fueling.perception.YOLOv3.utils.loss_function import convert_raw_output_to_box
 from fueling.perception.YOLOv3.utils.object_utils import Object
