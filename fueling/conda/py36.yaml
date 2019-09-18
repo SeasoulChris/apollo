@@ -44,6 +44,7 @@ dependencies:
   - pip:
     - azure.storage.blob
     - Pillow
+    - pycocotools
     - pyspark-utils
     - scaleapi
     # Audio
@@ -52,5 +53,3 @@ dependencies:
     - moviepy
     - pydub
     - youtube-dl
-    # Libs from VCS.
-    - git+https://github.com/cocodataset/cocoapi.git#egg=cocoapi&subdirectory=PythonAPI
