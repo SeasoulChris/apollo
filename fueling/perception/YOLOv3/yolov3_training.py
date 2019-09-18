@@ -9,8 +9,9 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.dataset import Dataset
 from fueling.perception.YOLOv3.train import training
-import fueling.perception.YOLOv3.utils.data_utils as data_utils
+import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
+import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
 MAX_ITER = cfg.max_iter
@@ -66,7 +67,6 @@ class Yolov3Training(BasePipeline):
             for i in range(MAX_ITER):
                 data = data_pool.batch
                 engine.step(data)
-
         data.foreach(_executor)
 
 if __name__ == "__main__":
