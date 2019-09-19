@@ -19,6 +19,18 @@
 1. 需提供便捷的对各模块、各类指标的统计信息，包括平均值、最大值、最小值、std_dev， 10分位、90分位， 99分位，对异常信息进行邮件报警，在Dashboard上作图展示。
 1. 可参考pandas的 DataFrame.describe()
 
+## 2019 Q4
+
+### 基于Redis的 Pipeline Metrics Service and Dashboard
+对分布式数据处理而言，一个比较重要的基础工具就是 Metrics Service & Dashboard，既可以用作实时进度跟踪，
+也可以用作性能、压力、吞吐量等的白盒测量，再往下可以搭建服务监测和报警体系。在Google内部对应的工具就是Monarch。
+
+本项目第一版就是一个最简易的 Monarch，包含三部分：
+1. 在K8S集群上搭建，或直接使用云端托管的一个 Redis 服务。
+1. 在Apollo-Fuel内提供简便的方法，可以向 Redis 写入数据，支持 Increase(value=1), Set(value)等操作。
+   Key为路径样式，如 /prediction/a/b/c 。
+1. 在K8S上搭建Dashboard服务，可以按前缀展示Redis中的 Metrics 列表并自动刷新。
+
 ## 候选项目
 
 ### 开放服务的Web前端
