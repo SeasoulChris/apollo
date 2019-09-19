@@ -2,8 +2,13 @@
 
 import numpy as np
 import os
+
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset
+from torchvision import models
+from torchvision import transforms
 
 from fueling.audio.Paper3.pyAudioAnalysis import audioBasicIO
 from fueling.audio.Paper3.pyAudioAnalysis import audioFeatureExtraction
@@ -43,6 +48,39 @@ class AudioDataset(Dataset):
         if self.mode == 'cnn1d':
             return ((torch.from_numpy(self.features[idx])),
                     torch.from_numpy(self.labels[idx]*np.ones(1, 1)))
+
+
+class AudioLoss():
+    def loss_fn(self, y_pred, y_true):
+        # TODO(kechxu): implement
+        pass
+
+    def loss_info(self, y_pred, y_true):
+        # TODO(kechxu): implement
+        return
+
+
+
+class AudioCNN1dModel(nn.Module):
+    def __init__(self):
+        super(AudioCNN1dModel, self).__init__()
+        # TODO(jinyun): implement
+        pass
+
+    def forward(self, X):
+        # TODO(jinyun): implement
+        pass
+
+
+class AudioCNN2dModel(nn.Module):
+    def __init__(self):
+        super(AudioCNN1dModel, self).__init__()
+        # TODO(kechxu): implement
+        pass
+
+    def forward(self, X):
+        # TODO(kechxu): implement
+        pass
 
 
 if __name__ == "__main__":
