@@ -156,17 +156,17 @@ def accumulate_obj(xy_wh_conf_value,
             raise RuntimeError("Both gt and dt are None. Either gt or dt must be provides.")
         if dt is not None:
             line = dt.type + " 0 0 0 " + \
-                   (' ').join([str(round(x, 2)) for x in dt.box2d]) + ' ' + \
-                   (' ').join([str(dt.h), str(dt.w), str(dt.l)]) + ' ' + \
-                   (' ').join([str(x) for x in list(dt.t)]) + ' ' + \
+                   (" ").join([str(round(x, 2)) for x in dt.box2d]) + " " + \
+                   (" ").join([str(dt.h), str(dt.w), str(dt.l)]) + " " + \
+                   (" ").join([str(x) for x in list(dt.t)]) + " " + \
                    str(dt.ry) + \
-                   ' ' + str(round(dt.score, 2))
+                   " " + str(round(dt.score, 2))
         elif gt is not None:
             line = gt.type + " " + str(gt.truncation) + " " + \
                    str(gt.occlusion) + " " + str(gt.alpha) + " " + \
-                   (' ').join([str(round(x, 2)) for x in gt.box2d]) + ' ' + \
-                   (' ').join([str(gt.h), str(gt.w), str(gt.l)]) + ' ' + \
-                   (' ').join([str(x) for x in list(gt.t)]) + ' ' + \
+                   (" ").join([str(round(x, 2)) for x in gt.box2d]) + " " + \
+                   (" ").join([str(gt.h), str(gt.w), str(gt.l)]) + " " + \
+                   (" ").join([str(x) for x in list(gt.t)]) + " " + \
                    str(gt.ry)
         return line
 
@@ -304,8 +304,8 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
               (0:4)-> xywh normalized w.r.t input width and height, objectness,
                       cos(alpha), sin(alpha), 3d_h, 3d_w, 3d_l, + probability_of_classes
     """
-    image_jpg_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0] + ".jpg")
-    image_png_path = os.path.join(image_dir, os.path.basename(file_path).split('.')[0] + ".png")
+    image_jpg_path = os.path.join(image_dir, os.path.basename(file_path).split(".")[0] + ".jpg")
+    image_png_path = os.path.join(image_dir, os.path.basename(file_path).split(".")[0] + ".png")
     if not os.path.exists(file_path):
         raise RuntimeError("Label file path : {} does not exist.".format(file_path))
     if os.path.exists(image_jpg_path):
@@ -319,7 +319,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     origin_image_size = image.size
     image_temp.close()
 
-    calib_path = os.path.join(calib_dir, os.path.basename(file_path).split('.')[0] + ".txt")
+    calib_path = os.path.join(calib_dir, os.path.basename(file_path).split(".")[0] + ".txt")
     if not os.path.exists(calib_path):
         raise RuntimeError("Calibration file path : {} does not exist.".format(calib_path))
     calib = read_camera_params(calib_path)
@@ -349,7 +349,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     with open(file_path) as handle:
         objs = [Label_Object(line, cls_name_id_map)
                 for line in handle.readlines()
-                if line.split(' ')[0] in cls_name_id_map.keys()]
+                if line.split(" ")[0] in cls_name_id_map.keys()]
         # TODO[Kawai]: remove following to include truncation
         objs = [obj for obj in objs if (obj.truncation <= 0.0001 and obj.occlusion < 5)]
     # correct the BBs to the image resize
@@ -423,7 +423,7 @@ def letterbox_image(image, size):
     w, h = size
     resized_image = image.resize((w, h), Image.BICUBIC)
 
-    boxed_image = Image.new('RGB', size, (128, 128, 128))
+    boxed_image = Image.new("RGB", size, (128, 128, 128))
     boxed_image.paste(resized_image)
 
     return boxed_image, image_shape
@@ -447,7 +447,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                        (5+num_cls*4+num_angle_bins:5+num_cls*4+num_angle_bins*3):
                          cos(alpha), sin(alpha)
     """
-    assert (true_boxes[..., 4] < num_classes).all(), 'class id must be less than num_classes'
+    assert (true_boxes[..., 4] < num_classes).all(), "class id must be less than num_classes"
     anchor_mask = cfg.anchor_mask  # different anchors are assigned to different scales (3, 3)
     # (bs, max_box, 9)  0:4 -> (x_min, y_min, x_max, y_max)
     true_boxes = np.array(true_boxes, dtype=np.float32)

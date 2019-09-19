@@ -69,39 +69,39 @@ class training:
         self.last_save_step = -1
         self.num_gpu = num_gpu
         self.epoch = 0
-        self.global_step = tf.Variable(start_step, name='global_step', trainable=False)
+        self.global_step = tf.Variable(start_step, name="global_step", trainable=False)
 
     def _init_essential_placeholders(self):
         """
         Essential placeholders.
         """
         placeholders = {}
-        placeholders['input_image'] = tf.placeholder(tf.float32,
+        placeholders["input_image"] = tf.placeholder(tf.float32,
                                                      shape=[BATCH_SIZE, INPUT_HEIGHT,
                                                             INPUT_WIDTH, CHANNELS],
-                                                     name='Input')
-        placeholders['visual_image'] = tf.placeholder(tf.float32,
+                                                     name="Input")
+        placeholders["visual_image"] = tf.placeholder(tf.float32,
                                                       shape=[1, INPUT_HEIGHT * VISUAL_SCALE,
                                                              INPUT_WIDTH * VISUAL_SCALE, CHANNELS],
                                                       name="visual_image")
-        placeholders['is_train_placeholder'] = tf.placeholder(tf.bool, shape=[])
+        placeholders["is_train_placeholder"] = tf.placeholder(tf.bool, shape=[])
         with tf.name_scope("Target"):
 
-            placeholders['label_scale1'] = \
+            placeholders["label_scale1"] = \
                 tf.placeholder(tf.float32,
                                shape=[BATCH_SIZE, INPUT_HEIGHT / 32, INPUT_WIDTH / 32,
                                       NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name='target_S1')
-            placeholders['label_scale2'] = \
+                               name="target_S1")
+            placeholders["label_scale2"] = \
                 tf.placeholder(tf.float32,
                                shape=[BATCH_SIZE, INPUT_HEIGHT / 16, INPUT_WIDTH / 16,
                                       NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name='target_S2')
-            placeholders['label_scale3'] = \
+                               name="target_S2")
+            placeholders["label_scale3"] = \
                 tf.placeholder(tf.float32,
                                shape=[BATCH_SIZE, INPUT_HEIGHT / 8, INPUT_WIDTH / 8,
                                       NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name='target_S3')
+                               name="target_S3")
         return placeholders
 
     def _config_graph(self, input_tensor, is_training=True, reuse=False):
@@ -208,7 +208,7 @@ class training:
         """
         return tf.summary.FileWriter(os.path.join(MODEL_OUTPUT_PATH, suffix))
 
-    def _add_to_summary(self, tensor, name, _type='scalar'):
+    def _add_to_summary(self, tensor, name, _type="scalar"):
         """
         Write tensor to summary.
         """
@@ -288,16 +288,16 @@ class training:
                     e_placeholders = self._init_essential_placeholders()
                     if i == self.num_gpu - 1:
                         output_scale1, output_scale2, output_scale3, feature1, feature2, feature3 \
-                            = tf.cond(e_placeholders['is_train_placeholder'],
-                                      true_fn=lambda: self._config_graph(e_placeholders['input_image'],
+                            = tf.cond(e_placeholders["is_train_placeholder"],
+                                      true_fn=lambda: self._config_graph(e_placeholders["input_image"],
                                                                          is_training=True,
                                                                          reuse=reuse),
-                                      false_fn=lambda: self._config_graph(e_placeholders['input_image'],
+                                      false_fn=lambda: self._config_graph(e_placeholders["input_image"],
                                                                           is_training=False,
                                                                           reuse=True))
                     else:
                         output_scale1, output_scale2, output_scale3, feature1, feature2, feature3 \
-                            = self._config_graph(e_placeholders['input_image'],
+                            = self._config_graph(e_placeholders["input_image"],
                                                  is_training=True, reuse=reuse)
                     reuse = True
 
@@ -314,7 +314,7 @@ class training:
                             temp = [v for v in tf.global_variables() if (n in v.name)]
                             variables_to_train = variables_to_train.union(set(temp))
                         variables_to_train = list(variables_to_train)
-                        print ("=======Number of variables to train : {}========"
+                        logging.info("=======Number of variables to train : {}========"
                                .format(len(variables_to_train)))
 
                     grads, optimizer = self._init_optimizer(loss + regularization_loss,
@@ -357,9 +357,9 @@ class training:
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
             self.sess.run(tf.local_variables_initializer(),
-                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
+                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: False})
             self.sess.run(tf.global_variables_initializer(),
-                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: False})
+                          feed_dict={self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: False})
 
             if RESTORE_TRAINING:
                 self._restore_from_checkpoint(self.sess)
@@ -371,7 +371,7 @@ class training:
         """
         Perform 1 update on the model with input training data.
         """
-        feed_dict = {self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: True}
+        feed_dict = {self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
             cls_box_map_lists, objs_list, calib_list, _ = data
         feed_dict.update({
@@ -383,7 +383,7 @@ class training:
             self.sess.run(self.ops, feed_dict=feed_dict)
 
         if self.cur_step % SUMMARY_INTERVAL == 0:
-            feed_dict[self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']] = False
+            feed_dict[self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]] = False
             xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
             image_np = self._image_summary(image_batch, xy_wh_conf_value,
                                            calib_list, cls_box_map_lists)[0]
@@ -406,6 +406,6 @@ class training:
 
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0:
-           self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)
-           logging.info("Model saved in file: %s" % MODEL_OUTPUT_PATH)
+           self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH), global_step=self.cur_step)
+           logging.info("Model saved in file: {}".format(MODEL_OUTPUT_PATH))
         self.cur_step += 1

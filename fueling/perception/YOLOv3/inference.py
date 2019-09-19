@@ -17,12 +17,12 @@ from fueling.perception.YOLOv3.network.network_function import YOLOv3
 from fueling.perception.YOLOv3.utils.loss_function import compute_loss
 from fueling.perception.YOLOv3.utils.loss_function import convert_raw_output_to_box
 from fueling.perception.YOLOv3.utils.object_utils import Object
-from fueling.perception.YOLOv3.utils.projected_utils import read_camera_params
 from fueling.perception.YOLOv3.utils.projected_utils import kitti_obj_cam_interaction
+from fueling.perception.YOLOv3.utils.projected_utils import read_camera_params
 from fueling.perception.YOLOv3.utils.yolo_utils import accumulate_obj
-from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
-from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
+from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
+from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
 
 
 GPU = cfg.gpu
@@ -50,7 +50,7 @@ slim = tf.contrib.slim
 
 class Inference:
 
-    def __init__(self, start_step=0, num_gpu=1):
+    def __init__(self):
         pass
 
     def _init_essential_placeholders(self):
@@ -58,10 +58,10 @@ class Inference:
         Essential placeholders.
         """
         placeholders = {}
-        placeholders['input_image'] = tf.placeholder(tf.float32,
+        placeholders["input_image"] = tf.placeholder(tf.float32,
                                                      shape=[BATCH_SIZE, INPUT_HEIGHT,
                                                             INPUT_WIDTH, CHANNELS],
-                                                     name='Input')
+                                                     name="Input")
         return placeholders
 
     def _config_graph(self, input_tensor, is_training=True, reuse=False):
@@ -81,7 +81,7 @@ class Inference:
         """
         restore_saver = tf.train.Saver()
         restore_saver.restore(sess, RESTORE_PATH)
-        print ("Restored weights from {}.".format(RESTORE_PATH))
+        logging.info("Restored weights from {}.".format(RESTORE_PATH))
 
     def setup_network(self):
         """
@@ -89,7 +89,7 @@ class Inference:
         """
         self.essential_placeholders = self._init_essential_placeholders()
         output_scale1, output_scale2, output_scale3, feature1, feature2, feature3 \
-            = self._config_graph(self.essential_placeholders['input_image'], is_training=False)
+            = self._config_graph(self.essential_placeholders["input_image"], is_training=False)
 
         self.xy_wh_conf = \
             convert_raw_output_to_box([output_scale1, output_scale2, output_scale3],
@@ -115,9 +115,9 @@ class Inference:
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):
                 with open(os.path.join(output_dir,
-                             image_name_list[batch_id]+".txt"), 'w') as handle:
+                             "{}.txt".format(image_name_list[batch_id])), "w") as handle:
                     for line_id, line in enumerate(image_dets):
-                        if (line_id != len(image_dets)-1):
-                            line = line + '\n'
+                        if (line_id != len(image_dets) - 1):
+                            line = "{}\n".format(line)
                         handle.write(line)
         _write_output()
