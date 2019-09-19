@@ -12,6 +12,9 @@ from fueling.common import file_utils
 
 class AudioDataset(Dataset):
     def __init__(self, data_dir, mode='cnn1d', win_size=10, step=5):
+    	self.mode = mode
+    	self.win_size = win_size
+    	self.step = step
         self.features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.labels = []  # 1: emergency, 0: non-emergency
         files = file_utils.list_files(data_dir)
@@ -36,8 +39,10 @@ class AudioDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        # TODO(kechxu): return the data at idx
-        pass
+    	# TODO(all): maybe the type of label need to be modified
+        if self.mode == 'cnn1d':
+            return ((torch.from_numpy(self.features[idx])),
+                    torch.from_numpy(self.labels[idx]*np.ones(1, 1)))
 
 
 if __name__ == "__main__":
