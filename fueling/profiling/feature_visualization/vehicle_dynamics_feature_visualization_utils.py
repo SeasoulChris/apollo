@@ -45,7 +45,7 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
-def plot_control_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status):
+def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status):
     """ control actions x,y - time """
     plt.plot(data_plot_x0, data_plot_y0, data_plot_x1, data_plot_y1, linewidth=0.5)
     plt.xlabel('timestamp_sec (relative to t0)')
@@ -59,7 +59,7 @@ def plot_control_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1,
              color='red', fontsize=8)
     plt.tight_layout()
 
-def plot_action_vs_cmd(data_plot_x, data_plot_y, feature, status):
+def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
@@ -74,25 +74,37 @@ def plot_action_vs_cmd(data_plot_x, data_plot_y, feature, status):
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
              'Maximum = {0:.3f}, Minimum = {1:.3f}'
              .format(np.amax(data_plot_y), np.amin(data_plot_y)),
-             color='red', fontsize=8)
+             color='red', fontsize=6)
     plt.tight_layout()
+    var_polyfit = [1.0, 0.0]
+    if polyfit:
+        var_polyfit = np.polyfit(data_plot_x, data_plot_y, 1)
+        line_polyfit = np.poly1d(var_polyfit)
+        fit_plot_x = np.array([np.amin(data_plot_x), np.amax(data_plot_x)])
+        fit_plot_y = line_polyfit(fit_plot_x)
+        plt.plot(fit_plot_x, fit_plot_y, '--r')
+        plt.text(xmin * 0.6 + xmax * 0.4, ymin * 0.8 + ymax * 0.2,
+                 'Polyfit: slope = {0:.3f}; bias = {1:.3f}'.format(var_polyfit[0], var_polyfit[1]),
+                 color='red', fontsize=6)
+    return var_polyfit
 
 def plot_xcorr(data_plot_x, data_plot_y, feature):
     """ cross-correlation x - y """
-    lags = plt.xcorr(data_plot_x, data_plot_y, usevlines=True, maxlags=50, normed=True, lw=0.5)
+    lags = plt.xcorr(data_plot_x, data_plot_y, usevlines=True, maxlags=50,
+                     normed=True, lw=0.5, linestyle='solid', color='blue')
     plt.grid(True)
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " delay frames")
     plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " cross-correlation")
     plt.title("Cross-correlation " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
               + " vs " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
     lag_frame = lags[0][np.argmax(lags[1])]
-    glog.info("The estimated delay frame number is {}".format(lag_frame))
-    plt.plot(lag_frame, 1.0, "r", marker=8)
+    plt.plot(lag_frame, 1.0, "o", markersize=2, markerfacecolor='r', markeredgecolor='b')
     xmin, xmax, ymin, ymax = plt.axis()
     plt.text(lag_frame + 3, ymin * 0.05 + ymax * 0.95,
              'Delay Frame = {}'.format(lag_frame),
-             color='red', fontsize=8)
+             color='red', fontsize=6)
     plt.tight_layout()
+    print('"The estimated delay frame number is: ', lag_frame)
     return lag_frame
 
 def plot_h5_features_time(data_rdd):
@@ -123,23 +135,62 @@ def plot_h5_features_time(data_rdd):
             elif feature is "steering":
                 slope_y0 = 1.0
                 bias_y0 = 0.0
+            # Raw data plots and analysis
+            status = "raw data"
             data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] * slope_y0 + bias_y0)
+            data_plot_y0 = np.maximum(0, data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                         * slope_y0 + bias_y0)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
-            # Raw data plots and analysis
-            status = "raw data"
             plt.figure(figsize=(4, 4))
-            plot_control_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            plot_action_vs_cmd(data_plot_y0, data_plot_y1, feature, status)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, False)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            lags = plot_xcorr(data_plot_y0, data_plot_y1, feature)
+            delay_frame = plot_xcorr(data_plot_y0, data_plot_y1, feature)
+            pdf.savefig()
+            plt.close()
+            # Shifted data by estimating delay frame number
+            status = "aligned data"
+            data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
+                            data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
+                            data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_y0 = np.maximum(0, data[0:-1 + delay_frame,
+                                              DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                              * slope_y0 + bias_y0)
+            data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            plt.figure(figsize=(4, 4))
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            pdf.savefig()
+            plt.close()
+            plt.figure(figsize=(4, 4))
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, True)
+            pdf.savefig()
+            plt.close()
+            # Scaled data by fitting the data curve
+            status = "scaled data"
+            slope_y0 *= var_polyfit[0]
+            bias_y0 = bias_y0 * var_polyfit[0] + var_polyfit[1]
+            data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
+                            data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
+                            data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_y0 = np.maximum(0, data[0:-1 + delay_frame,
+                                              DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                              * slope_y0 + bias_y0)
+            data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            plt.figure(figsize=(4, 4))
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            pdf.savefig()
+            plt.close()
+            plt.figure(figsize=(4, 4))
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, True)
             pdf.savefig()
             plt.close()
