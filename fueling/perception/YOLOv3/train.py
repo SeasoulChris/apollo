@@ -22,6 +22,7 @@ from fueling.perception.YOLOv3.utils.projected_utils import kitti_obj_cam_intera
 from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
 from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
+import fueling.common.logging as logging
 
 
 GPU = cfg.gpu
@@ -451,7 +452,7 @@ class training:
         """
         feed_dict = {self.gpu_placeholders[self.num_gpu - 1]['is_train_placeholder']: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
-            cls_box_map_lists, objs_list, calib_list = data
+            cls_box_map_lists, objs_list, calib_list, _ = data
         feed_dict.update({
             self.gpu_placeholders[self.num_gpu - 1]["input_image"]: (image_batch / 255.),
             self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
@@ -474,18 +475,16 @@ class training:
             self.summary_writer_train.add_summary(summary_image, global_step=self.cur_step)
 
         if self.cur_step % PRINT_INTERVAL == 0:
-            print ("step = {}, Loss = {}".format(self.cur_step, loss_train))
-            print ("xy_loss = {}, wh_loss = {}, \
-                    positive_conf_loss = {}, \
-                    negative_conf_loss = {}, \
-                    cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
-                   .format(xy_, wh_, positive_conf_,
-                           negative_conf_, cls_, alpha_, hwl_))
+            logging.info("step = {}, Loss = {}".format(self.cur_step, loss_train))
+            logging.info ("xy_loss = {}, wh_loss = {}, \
+                          positive_conf_loss = {}, \
+                          negative_conf_loss = {}, \
+                          cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
+                          .format(xy_, wh_, positive_conf_,
+                                  negative_conf_, cls_, alpha_, hwl_))
 
-        # TODO(KaWai): add output_path and uncomment below codes
         # store the model every SAVE_INTERVAL epochs
-        # if self.cur_step % SAVE_INTERVAL == 0:
-            # self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)
-            # print("Model saved in file: %s" % MODEL_OUTPUT_PATH)
-
+        if self.cur_step % SAVE_INTERVAL == 0:
+           self.saver.save(self.sess, MODEL_OUTPUT_PATH + '/models', global_step=self.cur_step)
+           logging.info("Model saved in file: %s" % MODEL_OUTPUT_PATH)
         self.cur_step += 1
