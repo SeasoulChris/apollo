@@ -45,35 +45,39 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
-def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status):
+def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
+                     title_addon, text_addon):
     """ control actions x,y - time """
-    plt.plot(data_plot_x0, data_plot_y0, data_plot_x1, data_plot_y1, linewidth=0.5)
+    plt.plot(data_plot_x0, data_plot_y0, label="command", linewidth=0.5)
+    plt.plot(data_plot_x1, data_plot_y1, label="action", linewidth=0.5)
     plt.xlabel('timestamp_sec (relative to t0)')
     plt.ylabel(feature + ' commands and measured outputs')
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " and " +
-              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")")
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")")
+    plt.legend(fontsize=6)
     xmin, xmax, ymin, ymax = plt.axis()
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-             'Maximum = {0:.3f}, Minimum = {1:.3f}'
-             .format(np.amax(data_plot_y1), np.amin(data_plot_y1)),
+             'Max Devidation = {0:.3f}, \nStandard Deviation = {1:.3f}'
+             .format(np.amax(np.abs(data_plot_y1 - data_plot_y0)),
+                     np.std(data_plot_y1 - data_plot_y0)),
              color='red', fontsize=8)
+    plt.text(xmin * 0.5 + xmax * 0.5, ymin * 0.5 + ymax * 0.5, text_addon,
+             color='red', fontsize=6)
     plt.tight_layout()
 
 def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
-    # plt.xlim(0, 40)
-    # plt.ylim(0, 40)
-    # plt.gca().set_aspect('equal', adjustable='box')
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
     plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " vs " +
               DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")")
     xmin, xmax, ymin, ymax = plt.axis()
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-             'Maximum = {0:.3f}, Minimum = {1:.3f}'
-             .format(np.amax(data_plot_y), np.amin(data_plot_y)),
+             'Max Devidation = {0:.3f}, \nStandard Deviation = {1:.3f}'
+             .format(np.amax(np.abs(data_plot_y - data_plot_x)),
+                     np.std(data_plot_y - data_plot_x)),
              color='red', fontsize=6)
     plt.tight_layout()
     var_polyfit = [1.0, 0.0]
@@ -83,8 +87,9 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
         fit_plot_x = np.array([np.amin(data_plot_x), np.amax(data_plot_x)])
         fit_plot_y = line_polyfit(fit_plot_x)
         plt.plot(fit_plot_x, fit_plot_y, '--r')
-        plt.text(xmin * 0.6 + xmax * 0.4, ymin * 0.8 + ymax * 0.2,
-                 'Polyfit: slope = {0:.3f}; bias = {1:.3f}'.format(var_polyfit[0], var_polyfit[1]),
+        plt.text(xmin * 0.4 + xmax * 0.6, ymin * 0.8 + ymax * 0.2,
+                 'Polyfit: slope = {0:.3f}, \nPolyfit: bias = {1:.3f}'
+                 .format(var_polyfit[0], var_polyfit[1]),
                  color='red', fontsize=6)
     return var_polyfit
 
@@ -129,14 +134,17 @@ def plot_h5_features_time(data_rdd):
             if feature is "throttle":
                 slope_y0 = 1.0
                 bias_y0 = -8.0
+                delay_frame = 0
             elif feature is "brake":
                 slope_y0 = 1.0
                 bias_y0 = 0.0
+                delay_frame = 0
             elif feature is "steering":
                 slope_y0 = 1.0
                 bias_y0 = 0.0
+                delay_frame = 0
             # Raw data plots and analysis
-            status = "raw data"
+            title_addon = "raw data"
             data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
@@ -144,12 +152,15 @@ def plot_h5_features_time(data_rdd):
             data_plot_y0 = np.maximum(0, data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
                                          * slope_y0 + bias_y0)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
+            text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
+                             title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, False)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, False)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
@@ -157,7 +168,7 @@ def plot_h5_features_time(data_rdd):
             pdf.savefig()
             plt.close()
             # Shifted data by estimating delay frame number
-            status = "aligned data"
+            title_addon = "aligned data"
             data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
@@ -166,16 +177,19 @@ def plot_h5_features_time(data_rdd):
                                               DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
                                               * slope_y0 + bias_y0)
             data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
+                             title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, True)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, True)
             pdf.savefig()
             plt.close()
             # Scaled data by fitting the data curve
-            status = "scaled data"
+            title_addon = "scaled data"
             slope_y0 *= var_polyfit[0]
             bias_y0 = bias_y0 * var_polyfit[0] + var_polyfit[1]
             data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
@@ -186,11 +200,14 @@ def plot_h5_features_time(data_rdd):
                                               DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
                                               * slope_y0 + bias_y0)
             data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature, status)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
+                             title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, status, True)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, True)
             pdf.savefig()
             plt.close()
