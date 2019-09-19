@@ -13,7 +13,7 @@ class LogInit(object):
     def init(cls):
         if cls.INITED:
             return
-        verbosity = os.environ.get('LOG_VERBOSITY')
+        verbosity = os.environ.get('LOG_VERBOSITY', 'INFO')
         if verbosity == 'INFO':
             set_verbosity(INFO)
         elif verbosity == 'DEBUG':
