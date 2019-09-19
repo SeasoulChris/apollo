@@ -92,7 +92,8 @@ class Dataset:
             image_data, y_true, cls_box_map, objs, calib = data_utils.filter_classes(processed)
             scale1, scale2, scale3 = y_true
             #image_data = np.expand_dims(image_data, axis=0)
-            final_data = (image_data, scale1, scale2, scale3, cls_box_map, objs, calib)
+            image_name = os.path.basename(label_txt_path).split(".")[0]
+            final_data = (image_data, scale1, scale2, scale3, cls_box_map, objs, calib, image_name)
             self._example_queue.put(final_data)
 
     @property
@@ -119,8 +120,10 @@ class Dataset:
         cls_box_map_list = []
         objs_list = []
         calib_list = []
+        image_name_list = []
         for i in range(self.batch_size):
-            image_data, scale1, scale2, scale3, cls_box_map, objs, calib = self._example_queue.get()
+            image_data, scale1, scale2, scale3, cls_box_map, objs, calib, image_name = \
+                self._example_queue.get()
             image_batch[i] = image_data
             label_batch_scale1.append(scale1)
             label_batch_scale2.append(scale2)
@@ -128,6 +131,7 @@ class Dataset:
             cls_box_map_list.append(cls_box_map)
             objs_list.append(objs)
             calib_list.append(calib)
+            image_name_list.append(image_name)
 
         assert not np.any(np.isnan(image_batch))
         assert not np.any(np.isnan(label_batch_scale1))
@@ -140,4 +144,5 @@ class Dataset:
                 np.concatenate(label_batch_scale3, axis=0),
                 cls_box_map_list,
                 objs_list,
-                calib_list)
+                calib_list,
+                image_name_list)
