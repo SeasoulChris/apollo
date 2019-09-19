@@ -37,8 +37,7 @@ class MultiJobResultVisualization(BasePipeline):
         job_id = self.FLAGS.get('job_id')
 
         # conf file in the input data folder
-        conf_prefix = os.path.join(
-            inter_result_folder, job_owner, job_id)
+        conf_prefix = os.path.join(inter_result_folder, job_owner, job_id)
 
         # results in output folder
         origin_prefix = os.path.join(output_folder, job_owner, job_id)

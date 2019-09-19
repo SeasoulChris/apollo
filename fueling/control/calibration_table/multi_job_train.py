@@ -129,7 +129,7 @@ class MultiJobTrain(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-                .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle)))
+            .mapValues(lambda vehicle: os.path.join(origin_dir, vehicle)))
 
         # use prefix to list files
         # RDD(origin_dir)

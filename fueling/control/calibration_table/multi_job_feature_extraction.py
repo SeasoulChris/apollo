@@ -139,8 +139,9 @@ class MultiJobFeatureExtraction(BasePipeline):
         src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).cache())
 
         src_dst_rdd.mapValues(lambda (src_path, dst_path): file_utils.makedirs(dst_path)).count()
-        src_dst_rdd.mapValues(lambda (src_path, dst_path): shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                                                           os.path.join(dst_path, VEHICLE_CONF))).count()
+        src_dst_rdd.mapValues(lambda (src_path, dst_path):
+                              shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
+                                              os.path.join(dst_path, VEHICLE_CONF))).count()
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 

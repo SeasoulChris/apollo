@@ -9,7 +9,7 @@ JOB_ID=$(date +%Y-%m-%d-%H)
 # Feature extraction.
 JOB="fueling/control/calibration_table/multi_job_feature_extraction.py"
 ENV="fuel-py27-cyber"
-INPUT_DATA_PATH="modules/control/data/task001"
+INPUT_DATA_PATH="modules/control/apollo_calibration_table"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 60g ${JOB} \
 --input_data_path="${INPUT_DATA_PATH}" --job_id="${JOB_ID}"
 

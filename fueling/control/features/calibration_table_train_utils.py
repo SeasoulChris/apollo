@@ -57,8 +57,8 @@ def train_model(data_sets, layer, train_alpha):
     (X_train, Y_train), (X_test, Y_test) = data_sets
 
     model = NeuralNetworkTF(layer)
-    params, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
-                                                alpha=train_alpha, print_loss=True)
+    _, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
+                                           alpha=train_alpha, print_loss=True)
     logging.info(" model train cost: %f" % train_cost)
     logging.info(" model test cost: %f " % test_cost)
     return model
@@ -109,7 +109,7 @@ def train_write_model(elem, target_prefix):
 
 
 def combine_file(files):
-    brake_file, throttle_file = files
+    brake_file, _ = files
     file_name = os.path.join(os.path.dirname(brake_file), 'calibration_table.pb.txt')
     with open(file_name, 'wb') as outfile:
         for f in files:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# TODO: Fix order per README.md.
+from collections import defaultdict
 import glob
 import math
 import os
@@ -8,8 +8,9 @@ import random
 import h5py
 import numpy as np
 
-from fueling.control.features.filters import Filters
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
+
+from fueling.control.features.filters import Filters
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
@@ -51,8 +52,7 @@ wanted_driving_mode = "COMPLETE_MANUAL"
 
 def gen_brake_list(VEHICLE_PARAM_CONF):
     BRAKE_DEADZONE = -1 * VEHICLE_PARAM_CONF.brake_deadzone
-    return np.linspace(
-        BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.brake_segment).tolist()
+    return np.linspace(BRAKE_MAX, BRAKE_DEADZONE, num=CALIBRATION_TABLE_CONF.brake_segment).tolist()
 
 
 def gen_throttle_list(VEHICLE_PARAM_CONF):
@@ -141,14 +141,12 @@ def satisfy_brake_condition(elem, index, VEHICLE_PARAM_CONF):
     """
     acc_min_condition = VEHICLE_PARAM_CONF.max_deceleration
     segment_brake_list = gen_brake_list(VEHICLE_PARAM_CONF)
-    condition = abs(elem[index][3]) < steer_condition and \
-        elem[index][0] > speed_min_condition and \
-        elem[index][0] < speed_max_condition and \
-        elem[index][2] > segment_brake_list[0] and \
-        elem[index][2] < segment_brake_list[-1] and \
-        elem[index][1] < 0.0 and \
-        elem[index][1] > acc_min_condition and \
-        int(elem[index][4]) == 0
+    condition = (
+        abs(elem[index][3]) < steer_condition and
+        speed_min_condition < elem[index][0] < speed_max_condition and
+        segment_brake_list[0] < elem[index][2] < segment_brake_list[-1] and
+        acc_min_condition < elem[index][1] < 0.0 and
+        int(elem[index][4]) == 0)
     return condition
 
 
@@ -158,14 +156,12 @@ def satisfy_throttle_condition(elem, index, VEHICLE_PARAM_CONF):
     """
     acc_max_condition = VEHICLE_PARAM_CONF.max_acceleration
     segment_throttle_list = gen_throttle_list(VEHICLE_PARAM_CONF)
-    condition = abs(elem[index][3]) < steer_condition and \
-        elem[index][0] > speed_min_condition and \
-        elem[index][0] < speed_max_condition and \
-        elem[index][2] > segment_throttle_list[0] and \
-        elem[index][2] < segment_throttle_list[-1] and \
-        elem[index][1] > 0.0 and \
-        elem[index][1] < acc_max_condition and \
-        int(elem[index][4]) == 0
+    condition = (
+        abs(elem[index][3]) < steer_condition and
+        speed_min_condition < elem[index][0] < speed_max_condition and
+        segment_throttle_list[0] < elem[index][2] < segment_throttle_list[-1] and
+        0.0 < elem[index][1] < acc_max_condition and
+        int(elem[index][4]) == 0)
     return condition
 
 
@@ -177,8 +173,8 @@ def feature_cut(elem, VEHICLE_PARAM_CONF):
     num_row = elem.shape[0]
     # find satisfied data
     for i in range(num_row):
-        if satisfy_throttle_condition(elem, i, VEHICLE_PARAM_CONF) \
-                or satisfy_brake_condition(elem, i, VEHICLE_PARAM_CONF):
+        if (satisfy_throttle_condition(elem, i, VEHICLE_PARAM_CONF)
+                or satisfy_brake_condition(elem, i, VEHICLE_PARAM_CONF)):
             elem[id_elem][0] = elem[i][0]
             elem[id_elem][1] = elem[i][1]
             elem[id_elem][2] = elem[i][2]
@@ -194,13 +190,7 @@ def feature_distribute(elem, VEHICLE_PARAM_CONF):
     distribute feature into each grid
     """
     segment_cmd_list = gen_cmd_list(VEHICLE_PARAM_CONF)
-    # TODO: Use collections.defaultdict(dict)
-    grid_dict = {}
-    for segment_cmd in segment_cmd_list:
-        grid_dict[segment_cmd] = {}
-        for segment_speed in segment_speed_list:
-            grid_dict[segment_cmd][segment_speed] = []
-
+    grid_dict = defaultdict(lambda: defaultdict(list))
     # stratified storing data
     feature_num = elem.shape[0]  # number of rows
     for feature_index in range(feature_num):
@@ -209,12 +199,11 @@ def feature_distribute(elem, VEHICLE_PARAM_CONF):
         for cmd_index in range(len(segment_cmd_list) - 1):
             curr_segment_cmd = segment_cmd_list[cmd_index]
             next_segment_cmd = segment_cmd_list[cmd_index + 1]
-            if (cmd > curr_segment_cmd and cmd < next_segment_cmd):
+            if curr_segment_cmd < cmd < next_segment_cmd:
                 for speed_index in range(len(segment_speed_list) - 1):
                     curr_segment_speed = segment_speed_list[speed_index]
                     next_segment_speed = segment_speed_list[speed_index + 1]
-                    if (speed > curr_segment_speed and speed < next_segment_speed):
-                        # TODO: Allow 100 chars.
+                    if curr_segment_speed < speed < next_segment_speed:
                         grid_dict[curr_segment_cmd][curr_segment_speed].append(feature_index)
                         break
                 break

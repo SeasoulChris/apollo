@@ -1,16 +1,17 @@
 #!/usr/bin/env python
+from collections import defaultdict
 import copy
 import glob
 import math
 import os
 import random
 
-
 import h5py
 import numpy as np
 
-from fueling.control.features.filters import Filters
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
+
+from fueling.control.features.filters import Filters
 from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
@@ -157,9 +158,11 @@ def satisfy_brake_condition(elem, index, vehicle_param_conf, train_conf):
     # vehicle param conf is not vehicle actual acc limit
     # acc_min_condition = vehicle_param_conf.max_deceleration
     steer_condition = train_conf.steer_condition
-    condition = abs(elem[index][3]) < steer_condition and \
-        brake_min_condition < elem[index][2] < brake_max_condition and \
-        elem[index][1] < 0.0 and int(elem[index][4]) == 0
+    condition = (
+        abs(elem[index][3]) < steer_condition and
+        brake_min_condition < elem[index][2] < brake_max_condition and
+        elem[index][1] < 0.0 and
+        int(elem[index][4]) == 0)
     return condition
 
 
@@ -172,9 +175,11 @@ def satisfy_throttle_condition(elem, index, vehicle_param_conf, train_conf):
     # vehicle param conf is not vehicle actual acc limit
     # acc_max_condition = vehicle_param_conf.max_acceleration
     steer_condition = train_conf.steer_condition
-    condition = abs(elem[index][3]) < steer_condition and \
-        throttle_min_condition < elem[index][2] < throttle_max_condition and \
-        0.0 < elem[index][1] and int(elem[index][4]) == 0
+    condition = (
+        abs(elem[index][3]) < steer_condition and
+        throttle_min_condition < elem[index][2] < throttle_max_condition and
+        0.0 < elem[index][1] and
+        int(elem[index][4]) == 0)
     return condition
 
 
@@ -186,8 +191,8 @@ def feature_cut(elem, vehicle_param_conf, train_conf):
     num_row = elem.shape[0]
     # find satisfied data
     for i in range(num_row):
-        if satisfy_throttle_condition(elem, i, vehicle_param_conf, train_conf) \
-                or satisfy_brake_condition(elem, i, vehicle_param_conf, train_conf):
+        if (satisfy_throttle_condition(elem, i, vehicle_param_conf, train_conf)
+                or satisfy_brake_condition(elem, i, vehicle_param_conf, train_conf)):
             elem[id_elem][0] = elem[i][0]
             elem[id_elem][1] = elem[i][1]
             elem[id_elem][2] = elem[i][2]
@@ -204,12 +209,7 @@ def feature_distribute(elem, vehicle_param_conf, train_conf):
     segment_cmd_list = gen_cmd_list(vehicle_param_conf, train_conf)
     segment_speed_list = np.linspace(
         train_conf.speed_min, train_conf.speed_max, num=train_conf.speed_segment).tolist()
-    # TODO: Use collections.defaultdict(dict)
-    grid_dict = {}
-    for segment_cmd in segment_cmd_list:
-        grid_dict[segment_cmd] = {}
-        for segment_speed in segment_speed_list:
-            grid_dict[segment_cmd][segment_speed] = []
+    grid_dict = defaultdict(lambda: defaultdict(list))
 
     # stratified storing data
     feature_num = elem.shape[0]  # number of rows
@@ -219,12 +219,11 @@ def feature_distribute(elem, vehicle_param_conf, train_conf):
         for cmd_index in range(len(segment_cmd_list) - 1):
             curr_segment_cmd = segment_cmd_list[cmd_index]
             next_segment_cmd = segment_cmd_list[cmd_index + 1]
-            if (cmd > curr_segment_cmd and cmd < next_segment_cmd):
+            if curr_segment_cmd < cmd < next_segment_cmd:
                 for speed_index in range(len(segment_speed_list) - 1):
                     curr_segment_speed = segment_speed_list[speed_index]
                     next_segment_speed = segment_speed_list[speed_index + 1]
-                    if (speed > curr_segment_speed and speed < next_segment_speed):
-                        # TODO: Allow 100 chars.
+                    if curr_segment_speed < speed < next_segment_speed:
                         grid_dict[curr_segment_cmd][curr_segment_speed].append(feature_index)
                         break
                 break
@@ -274,7 +273,6 @@ def feature_store(elem, vehicle_param_conf, train_conf):
 
 
 def gen_data(elems, vehicle_param_conf, train_conf):
-
     ret = feature_generate(elems, vehicle_param_conf)
     ret = calibration_table_utils.feature_filter(ret)
     ret = feature_cut(ret, vehicle_param_conf, train_conf)
@@ -285,6 +283,5 @@ def gen_data(elems, vehicle_param_conf, train_conf):
 def get_train_conf(folder_dir):
     train_conf_filename = 'calibration_table_conf.pb.txt'
     train_conf_file = os.path.join(folder_dir, train_conf_filename)
-    train_conf = proto_utils.get_pb_from_text_file(
-        train_conf_file, CalibrationTable())
+    train_conf = proto_utils.get_pb_from_text_file(train_conf_file, CalibrationTable())
     return train_conf
