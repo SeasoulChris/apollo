@@ -17,6 +17,15 @@ from fueling.perception.YOLOv3.utils.projected_utils import draw_3d_box
 import fueling.perception.YOLOv3.config as cfg
 
 
+ORIGINAL_WIDTH = cfg.original_width
+ORIGINAL_HEIGHT = cfg.original_height
+INPUT_WIDTH = cfg.Input_width
+INPUT_HEIGHT = cfg.Input_height
+NMS_CONFIDENCE_THRESHOLD = cfg.nms_confidence_threshold
+NMS_IOU_THRESHOLD = cfg.nms_iou_threshold
+CLASS_MAP = cfg.class_map
+
+
 def letter_box_pos_to_original_pos(letter_pos, current_size, ori_image_size):
     """
     Parameters should have same shape and dimension space. (Width, Height) or (Height, Width)
@@ -72,16 +81,23 @@ def _iou(box1, box2):
     return iou
 
 
-def non_max_suppression(predictions_with_boxes, confidence_threshold=0.9, iou_threshold=0.4):
+def non_max_suppression(predictions_with_boxes, 
+                        input_resolution,
+                        confidence_threshold=0.9, iou_threshold=0.4):
     """
     Applies Non-max suppression to prediction boxes.
 
     :param predictions_with_boxes: 3D numpy array,
               [bs, ...+...+..., 10:(xmin, ymin, xmax, ymax, cos, sin, h, w, l)]
+    :param input_resolution: resolution of the input to the network. [w, h]
     :param confidence_threshold: the threshold for deciding if prediction is valid
     :param iou_threshold: the threshold for deciding if two boxes overlap
     :return: dict: class -> [(box, score)]
     """
+    predictions_with_boxes[..., 0] *= input_resolution[0]
+    predictions_with_boxes[..., 1] *= input_resolution[1]
+    predictions_with_boxes[..., 2] *= input_resolution[0]
+    predictions_with_boxes[..., 3] *= input_resolution[1]
     conf_mask = np.expand_dims(
         (predictions_with_boxes[:, :, 4] > confidence_threshold), -1)  # (bs, ...+...+..., 1)
     # The line below "non_zero_idxs = np.nonzero(image_pred)" assums predictions are all non-zero,
@@ -129,6 +145,70 @@ def non_max_suppression(predictions_with_boxes, confidence_threshold=0.9, iou_th
 
     return results
 
+def accumulate_obj(xy_wh_conf_value,
+                   gt_obj_batch=None, calib_batch=None):
+    """
+    Accumulate ground_truth/detection objects into KITTI style txt lines
+    or raw string KITTI format.
+    """
+    def obj2string(gt=None, dt=None):
+        if gt is None and dt is None:
+            raise RuntimeError("Both gt and dt are None. Either gt or dt must be provides.")
+        if dt is not None:
+            line = dt.type + " 0 0 0 " + \
+                   (' ').join([str(round(x, 2)) for x in dt.box2d]) + ' ' + \
+                   (' ').join([str(dt.h), str(dt.w), str(dt.l)]) + ' ' + \
+                   (' ').join([str(x) for x in list(dt.t)]) + ' ' + \
+                   str(dt.ry) + \
+                   ' ' + str(round(dt.score, 2))
+        elif gt is not None:
+            line = gt.type + " " + str(gt.truncation) + " " + \
+                   str(gt.occlusion) + " " + str(gt.alpha) + " " + \
+                   (' ').join([str(round(x, 2)) for x in gt.box2d]) + ' ' + \
+                   (' ').join([str(gt.h), str(gt.w), str(gt.l)]) + ' ' + \
+                   (' ').join([str(x) for x in list(gt.t)]) + ' ' + \
+                   str(gt.ry)
+        return line
+
+    boxes = non_max_suppression(xy_wh_conf_value,
+                                [INPUT_WIDTH, INPUT_HEIGHT],
+                                confidence_threshold=NMS_CONFIDENCE_THRESHOLD,
+                                iou_threshold=NMS_IOU_THRESHOLD)
+
+    cls_names = {v: k for k, v in CLASS_MAP.items()}
+    detection_string_list_batch = []
+    for i in range(len(calib_batch)):
+        detection_string_list_image = []
+        interactor = kitti_obj_cam_interaction(calib_batch[i])
+        for cls_id, bboxs in boxes[i].items():
+            for box, score, cshwl in bboxs:
+                box = convert_to_original_size(box,
+                                               np.array((INPUT_WIDTH, INPUT_HEIGHT)),
+                                               np.array((ORIGINAL_WIDTH, ORIGINAL_HEIGHT)),
+                                               False)
+
+                obj = Object([cls_names[cls_id], None, None, None,
+                              box[0], box[1], box[2], box[3],
+                              cshwl[2], cshwl[3], cshwl[4],
+                              None, None, None, None])
+                obj.score = score
+                local_angle = math.degrees(np.arctan2(cshwl[1], cshwl[0]))
+                beta = interactor.local_angle_to_car_yaw(local_angle, obj)
+                obj.ry = math.radians(beta)
+                translation = interactor.compute_translation(obj)
+                if translation is not None:
+                    obj.t = translation
+                line = obj2string(gt=None, dt=obj)
+                detection_string_list_image.append(line)
+
+        detection_string_list_batch.append(detection_string_list_image)
+    if gt_obj_batch is not None:
+        gt_string_list_batch = []
+        for objs_image in gt_obj_batch:
+            lines = [obj2string(gt=obj, dt=None) for obj in objs_image]
+            gt_string_list_batch.append(lines)  # list of list of obj strings
+        return detection_string_list_batch, gt_string_list_batch
+    return detection_string_list_batch
 
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib, is_letter_box_image, cls_box_map=None):
