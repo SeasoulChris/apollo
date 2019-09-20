@@ -59,11 +59,12 @@ class AudioDataset(Dataset):
 
 class AudioLoss():
     def loss_fn(self, y_pred, y_true):
-        # TODO(kechxu): implement
-        pass
+        loss_func = nn.CrossEntropyLoss()
+        return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-        # TODO(kechxu): implement
+        acc = np.mean(y_pred==y_true)
+        print("Accuracy: {}".format(acc))
         return
 
 
