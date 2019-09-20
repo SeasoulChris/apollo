@@ -101,13 +101,13 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     control_idx_by_chassis = np.in1d(control_mtx[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']],
                                      chassis_mtx_filtered[:, DYNAMICS_MODE_IDX['sequence_num']])
     control_mtx_rtn = control_mtx[control_idx_by_chassis, :]
-    # Third, delete the control data with inverted-sequence chassis and localization sequence_num
-    # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
-    inv_seq_chassis = (
-        np.diff(control_mtx_rtn[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]) < 0)
-    control_idx_inv_seq = np.where(np.insert(inv_seq_chassis, 0, 0))
-    control_mtx_rtn = np.delete(control_mtx_rtn, control_idx_inv_seq, axis=0)
-    # Fourth, filter the chassis and localization data with filtered control data
+    # Third, swap the control data with inverted-sequence chassis sequence_num
+    # (in very rare cases, the chassis sequence number in record is like ... 100, 102, 101, 103 ...)
+    for inv in np.where(np.diff(control_mtx_rtn[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]) < 0):
+        control_mtx_rtn[[inv, inv + 1], :] = control_mtx_rtn[[inv + 1, inv], :]
+    for inv in np.where(np.diff(chassis_mtx_filtered[:, DYNAMICS_MODE_IDX['sequence_num']]) < 0):
+        chassis_mtx_filtered[[inv, inv + 1], :] = chassis_mtx_filtered[[inv + 1, inv], :]
+    # Fourth, filter the chassis data with filtered control data
     chassis_idx_rtn = []
     chassis_idx = 0
     for control_idx in range(control_mtx_rtn.shape[0]):
@@ -118,10 +118,10 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
     logging.info('The filtered msgs size are: chassis {}, control {}'
               .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0]))
-    # Finally, rebuild the grading mtx with the control data combined with chassis and localizaiton data
+    # Finally, rebuild the grading mtx with the control data combined with chassis data
     # TODO(fengzongbao) Filter acceleration_reference by positive and negative to throttle and brake
     if (control_mtx_rtn.shape[0] > 0):
-        # First, merge the chassis data into control data matrix
+        # Merge the chassis data into control data matrix
         if (chassis_mtx_rtn.shape[1] > DYNAMICS_MODE_IDX['brake_chassis']):
             grading_mtx = np.hstack((control_mtx_rtn,
                                      chassis_mtx_rtn[:, [DYNAMICS_MODE_IDX['throttle_chassis'],
