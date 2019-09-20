@@ -68,7 +68,6 @@ class AudioDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        # TODO(all): maybe the type of label need to be modified
         if self.mode == 'cnn1d':
             label = np.float32(self.labels[idx])
             return ((torch.from_numpy(self.features[idx])), label)
@@ -87,9 +86,12 @@ class AudioLoss():
         return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-        # TODO(kechxu) fix
-        # acc = np.mean(y_pred==y_true)
-        # print("Accuracy: {}".format(acc))
+        tag_pred = (y_pred > 0.5)
+        tag_true = (y_true > 0.5)
+        tag_pred = tag_pred.view(-1)
+        tag_true = tag_true.view(-1)
+        acc = (tag_pred==tag_true).type(torch.float).mean().item()
+        print("Accuracy: {}".format(acc))
         return
 
 
