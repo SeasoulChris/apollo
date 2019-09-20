@@ -82,7 +82,7 @@ class EmailService(object):
         else:
             rows = [list(named_tuple) for named_tuple in content]
             header = ['{}{}{}'.format(header_col_prefix, named_tuple, header_col_suffix)
-                    for named_tuple in content[0]._fields]
+                      for named_tuple in content[0]._fields]
             header = '{}{}{}'.format(header_row_prefix, '\n'.join(header), header_row_suffix)
 
         row_prefix = '<tr>\n'

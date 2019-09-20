@@ -21,17 +21,18 @@ def generating_matrix_and_h5(target_groups):
                                                           profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         logging.warning('no valid element in {} items in group {} for task {}'
-                  .format(len(msgs), group_id, target))
+                        .format(len(msgs), group_id, target))
         return (target, None)
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
     logging.info('writing {} messages to h5 file {} for target {}'
-              .format(grading_mtx.shape[0], h5_output_file, target))
+                 .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
     logging.info('grading_mtx information: {}'
-              .format(grading_mtx[0]))
+                 .format(grading_mtx[0]))
     return (grading_mtx, target)
+
 
 def computing_gradings(mtx_groups):
     """Do computing against one group"""

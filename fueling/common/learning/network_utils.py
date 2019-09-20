@@ -15,10 +15,9 @@ def generate_mlp(dim_list, last_layer_nonlinear=True, dropout=0.0):
         layers.append(nn.Linear(dim_in, dim_out))
         layers.append(nn.ReLU())
         layers.append(nn.Dropout(dropout))
-    if last_layer_nonlinear:
-        return nn.Sequential(*layers)
-    else:
-        return nn.Sequential(*layers[:-2])
+    if not last_layer_nonlinear:
+        layers = layers[:-2]
+    return nn.Sequential(*layers)
 
 
 def generate_lstm_states(hidden_size, bilateral=False):

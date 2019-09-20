@@ -123,7 +123,6 @@ class MultiJobDataDistribution(BasePipeline):
             receivers.append(partner.email)
         title = 'Your vehicle calibration job is done!'
         content = {'Job Owner': job_owner, 'Job ID': job_id}
-        origin_dir = bos_client.abs_path(origin_prefix)
         conf_files = glob.glob(os.path.join(target_dir, '*/calibration_table.pb.txt'))
         plots = glob.glob(os.path.join(target_dir, '*/*.pdf'))
         attachments = conf_files + plots
@@ -155,10 +154,10 @@ class MultiJobDataDistribution(BasePipeline):
         # PairRDD(vehicle, features)
         features = spark_helper.cache_and_log('features', hdf5_file.mapValues(read_hdf5))
         # PairRDD(vehicle, result_file)
-        plots = spark_helper.cache_and_log(
-            'plots', features.map(lambda vehicle_feature:
-                                  multi_vehicle_plot_utils.plot_feature_hist(vehicle_feature,
-                                                                             target_dir)))
+        spark_helper.cache_and_log(
+            'plots',
+            features.map(lambda vehicle_feature:
+                         multi_vehicle_plot_utils.plot_feature_hist(vehicle_feature, target_dir)))
 
     def list_end_files_prod(self, path):
         return self.bos().list_files(path, '.hdf5')

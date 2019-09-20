@@ -43,6 +43,7 @@ def get_all_paths(label_path):
     calib_dir = os.path.join(os.path.join(data_dir, "calib"))
     return (label_path, image_dir, calib_dir)
 
+
 def process_data(paths):
     """
     Read data from paths and preprocss to get input and
@@ -69,6 +70,7 @@ def process_data(paths):
                            jitter_chance=JITTER_CHANCE,
                            jitter_percentage=JITTER_PERCENTAGE)
     return (image_data, y_true, cls_box_map, objs, calib, original_image)
+
 
 def filter_classes(element):
     """

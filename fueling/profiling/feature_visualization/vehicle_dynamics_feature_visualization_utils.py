@@ -45,6 +45,7 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
+
 def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
                      title_addon, text_addon):
     """ control actions x,y - time """
@@ -64,6 +65,7 @@ def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, fea
     plt.text(xmin * 0.5 + xmax * 0.5, ymin * 0.5 + ymax * 0.5, text_addon,
              color='red', fontsize=6)
     plt.tight_layout()
+
 
 def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
     """ control actions x - y """
@@ -93,6 +95,7 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
                  color='red', fontsize=6)
     return var_polyfit
 
+
 def plot_xcorr(data_plot_x, data_plot_y, feature):
     """ cross-correlation x - y """
     lags = plt.xcorr(data_plot_x, data_plot_y, usevlines=True, maxlags=50,
@@ -112,13 +115,14 @@ def plot_xcorr(data_plot_x, data_plot_y, feature):
     print('"The estimated delay frame number is: ', lag_frame)
     return lag_frame
 
+
 def plot_h5_features_time(data_rdd):
     """plot the time-domain data of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                  .format(dir_data))
+                        .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:

@@ -106,10 +106,10 @@ class BackwardSampleSet(BasePipeline):
             .map(feature_extraction_utils.gen_feature_key_backwards), 0)
 
         logging.info('number of elems: %d' % data_segment_rdd
-                  # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
-                  .groupByKey()
-                  # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
-                  .mapValues(list).count())
+                     # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
+                     .groupByKey()
+                     # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
+                     .mapValues(list).count())
 
         data_segment_rdd = spark_helper.cache_and_log(
             'gen_segment',

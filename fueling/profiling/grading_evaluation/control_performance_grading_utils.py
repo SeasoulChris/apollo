@@ -21,13 +21,13 @@ def compute_h5_and_gradings(target_groups):
                                                                profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         logging.warning('no valid element in {} items in group {} for task {}'
-                  .format(len(msgs), group_id, target))
+                        .format(len(msgs), group_id, target))
         return (target, None)
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
     logging.info('writing {} messages to h5 file {} for target {}'
-              .format(grading_mtx.shape[0], h5_output_file, target))
+                 .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
     grading_results = namedtuple('grading_results',
                                  ['station_err_std',
@@ -415,7 +415,7 @@ def compute_std(grading_mtx, arg):
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         logging.warning('no enough elements {} for std computing requirement {}'
-                  .format(elem_num, profiling_conf.min_sample_size))
+                        .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     column_norm = grading_mtx[:, FEATURE_IDX[arg.std_norm_name]]
     column_denorm = grading_mtx[:, np.array([FEATURE_IDX[denorm_name]
@@ -437,7 +437,7 @@ def compute_peak(grading_mtx, arg):
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         logging.warning('no enough elements {} for peak computing requirement {}'
-                  .format(elem_num, profiling_conf.min_sample_size))
+                        .format(elem_num, profiling_conf.min_sample_size))
         return ([0.0, 0.0], 0)
     idx_max = np.argmax(
         np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]]))
@@ -456,7 +456,7 @@ def compute_ending(grading_mtx, arg):
     elem_num, item_num = grading_mtx.shape
     if elem_num < 1:
         logging.warning('no enough elements {} for ending computing requirement {}'
-                  .format(elem_num, 1))
+                        .format(elem_num, 1))
         return ([[0.0], [0.0], [0.0]], 0)
     grading_mtx = grading_mtx[np.argsort(
         grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
@@ -488,7 +488,7 @@ def compute_usage(grading_mtx, arg):
     elem_num, _ = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         logging.warning('no enough elements {} for usage computing requirement {}'
-                  .format(elem_num, profiling_conf.min_sample_size))
+                        .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     return (get_std_value([val / arg.usage_weight
                            for val in grading_mtx[:, FEATURE_IDX[arg.usage_feature_name]]]),
@@ -520,11 +520,11 @@ def compute_mean(grading_mtx, arg):
     elem_num, item_num = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         logging.warning('no enough elements {} for mean computing requirement {}'
-                  .format(elem_num, profiling_conf.min_sample_size))
+                        .format(elem_num, profiling_conf.min_sample_size))
         return (0.0, 0)
     if item_num <= FEATURE_IDX[arg.mean_feature_name]:
         logging.warning('no desired feature item {} for mean computing requirement {}'
-                  .format(item_num, FEATURE_IDX[arg.mean_feature_name]))
+                        .format(item_num, FEATURE_IDX[arg.mean_feature_name]))
         return (0.0, 0)
     return (np.mean(grading_mtx[:, FEATURE_IDX[arg.mean_feature_name]], axis=0) / arg.mean_weight,
             elem_num)

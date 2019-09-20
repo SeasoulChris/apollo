@@ -50,7 +50,7 @@ class CopyFiles(BasePipeline):
                                filename, filename.replace(origin_prefix, target_prefix)))
 
         logging.info('Finishing copy ' + str(result.count()) + ' files: '
-                  + origin_prefix + ' -> ' + target_prefix)
+                     + origin_prefix + ' -> ' + target_prefix)
         logging.info('Everything is under control!')
 
 

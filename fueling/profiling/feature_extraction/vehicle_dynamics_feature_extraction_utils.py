@@ -55,17 +55,17 @@ def data_matches_config(vehicle_type, controller_type):
     conf_controller_type = get_profiling_config().controller_type
     if conf_vehicle_type != vehicle_type:
         logging.warning('mismatch between record vehicle {} and configed {}'
-                  .format(vehicle_type, conf_vehicle_type))
+                        .format(vehicle_type, conf_vehicle_type))
         return False
     if controller_type.debug.simple_lat_debug and controller_type.debug.simple_lon_debug:
         if conf_controller_type != 'Lon_Lat_Controller':
             logging.warning('mismatch between record controller Lon_Lat_Controller and configed {}'
-                      .format(conf_controller_type))
+                            .format(conf_controller_type))
             return False
     elif controller_type.debug.simple_mpc_debug:
         if conf_controller_type != 'Mpc_Controller':
             logging.warning('mismatch between record controller Mpc_Controller and configed {}'
-                      .format(conf_controller_type))
+                            .format(conf_controller_type))
             return False
     else:
         logging.warning('no controller type found in records')
@@ -84,7 +84,7 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
                             for msg in control_msgs])
 
     logging.info('The original msgs size are: chassis {}, control {}'
-              .format(chassis_mtx.shape[0], control_mtx.shape[0]))
+                 .format(chassis_mtx.shape[0], control_mtx.shape[0]))
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
     # First, filter the chassis data with desired driving modes and gear locations

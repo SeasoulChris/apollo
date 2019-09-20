@@ -81,7 +81,7 @@ def generate_gp_data(args, segment):
         input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]] / PI
 
         # TODO(Jiaxuan): Solve the keras error and get the MLP model's (x,y) prediction
-        predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0 : MLP_DIM_INPUT].reshape(
+        predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
                                                        1, MLP_DIM_INPUT), model, norms)
         # Calculate the model prediction on current speed and heading
         predicted_v += predicted_a * feature_config["delta_t"]

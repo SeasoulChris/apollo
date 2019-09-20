@@ -31,9 +31,9 @@ class DeepEncodingNet(nn.Module):
         super(DeepEncodingNet, self).__init__()
         # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1,
         # padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
-        self.conv1 = nn.Conv1d(u_dim, 200, u_dim, stride=3) # 32
-        self.conv2 = nn.Conv1d(200, 100, u_dim, stride=3) # 9
-        self.conv3 = nn.Conv1d(100, 100, u_dim, stride=3) # 2
+        self.conv1 = nn.Conv1d(u_dim, 200, u_dim, stride=3)  # 32
+        self.conv2 = nn.Conv1d(200, 100, u_dim, stride=3)  # 9
+        self.conv3 = nn.Conv1d(100, 100, u_dim, stride=3)  # 2
         self.fc = nn.Linear(200, kernel_dim)
 
     def forward(self, data):

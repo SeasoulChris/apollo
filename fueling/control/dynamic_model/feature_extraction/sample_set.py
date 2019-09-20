@@ -350,10 +350,10 @@ class SampleSet(BasePipeline):
 
         # count data frames
         logging.info('number of elems: %d' % data_segment_rdd
-                  # PairRDD((vehicle, dir, feature_key), (timestamp_sec, data_point) RDD)
-                  .groupByKey()
-                  # PairRDD((vehicle, dir, feature_key), list of (timestamp_sec, data_point))
-                  .mapValues(list).count())
+                     # PairRDD((vehicle, dir, feature_key), (timestamp_sec, data_point) RDD)
+                     .groupByKey()
+                     # PairRDD((vehicle, dir, feature_key), list of (timestamp_sec, data_point))
+                     .mapValues(list).count())
 
         data_segment_rdd = spark_helper.cache_and_log(
             'gen_segment',

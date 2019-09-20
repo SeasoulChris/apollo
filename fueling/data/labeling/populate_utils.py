@@ -610,7 +610,8 @@ class FramePopulator(object):
             distance = math.sqrt((float(lidar_pose.position.x) - self._pre_pose_x) ** 2 +
                                  (float(lidar_pose.position.y) - self._pre_pose_y) ** 2)
             if distance < min_distance:
-                logging.warning('filtered out by car not moving rule, distance: {}'.format(distance))
+                logging.warning(
+                    'filtered out by car not moving rule, distance: {}'.format(distance))
                 return False
         self._pre_pose_x = float(lidar_pose.position.x)
         self._pre_pose_y = float(lidar_pose.position.y)
@@ -658,7 +659,8 @@ class FramePopulator(object):
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
         if not self.diff_between_lidar_and_camera(lidar_msg, message_structs, max_diff):
-            logging.warning('keep this frame anyways, and let agent do the filtering per requirement')
+            logging.warning(
+                'keep this frame anyways, and let agent do the filtering per requirement')
             # return
 
         pcd_file_name = os.path.join(pcd_dir, 'velodyne128-{}.pcd'.format(frame_counter))

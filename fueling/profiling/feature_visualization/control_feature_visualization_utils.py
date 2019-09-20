@@ -66,7 +66,7 @@ def plot_h5_features_hist(data_rdd):
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                  .format(dir_data))
+                        .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
@@ -81,7 +81,7 @@ def plot_h5_features_hist(data_rdd):
             if (i < data.shape[1] and
                     (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
                 logging.info('Processing the plots at Column: {}, Feature: {}'
-                          .format(i, FEATURE_NAMES[i]))
+                             .format(i, FEATURE_NAMES[i]))
                 if i == FEATURE_IDX["pose_heading_offset"]:
                     data_plot_idx = np.where((data[:, FEATURE_IDX["speed"]] >
                                               profiling_conf.control_metrics.speed_stop) &
@@ -97,7 +97,7 @@ def plot_h5_features_hist(data_rdd):
                     scope_90 = data_plot[seq[int(length * 0.95 - 1)]] - \
                         data_plot[seq[int(length * 0.05)]]
                     logging.info('The data scope is: {} the intermedia-90% data scope is: {}'
-                              .format(scope, scope_90))
+                                 .format(scope, scope_90))
                     bounds = clean_data(data_plot, seq)
                     if bounds[0] == 0 and bounds[1] == 1:
                         plt.figure(figsize=(4, 3))

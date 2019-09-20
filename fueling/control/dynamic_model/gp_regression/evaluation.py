@@ -78,7 +78,6 @@ def test_gp(args, dataset, GaussianProcess):
                 plt.plot(input_data[i, :, 5], 'o', color='purple')
                 plt.show()
 
-
         logging.debug("gt_data: {}".format(gt_data))
         logging.debug("predicted_data: {}".format(predicted_data))
         criterion = nn.MSELoss()
