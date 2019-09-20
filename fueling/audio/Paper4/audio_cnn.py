@@ -17,9 +17,9 @@ from fueling.common import file_utils
 
 class AudioDataset(Dataset):
     def __init__(self, data_dir, mode='cnn1d', win_size=16, step=8):
-    	self.mode = mode
-    	self.win_size = win_size
-    	self.step = step
+        self.mode = mode
+        self.win_size = win_size
+        self.step = step
         self.features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.labels = []  # 1: emergency, 0: non-emergency
         files = file_utils.list_files(data_dir)
@@ -67,16 +67,31 @@ class AudioLoss():
         return
 
 
-
 class AudioCNN1dModel(nn.Module):
     def __init__(self):
         super(AudioCNN1dModel, self).__init__()
-        # TODO(jinyun): implement
-        pass
+        self.conv1 = nn.Conv1d(128, 64, 3, padding=1)
+        self.pool1 = nn.MaxPool1d(2)
+
+        self.conv2 = nn.Conv1d(64, 32, 3, padding=1)
+        self.pool2 = nn.MaxPool1d(2)
+
+        self.conv3 = nn.Conv1d(32, 16, 3, padding=1)
+
+        self.fc1 = nn.Linear(16 * 4, 1)
 
     def forward(self, X):
-        # TODO(jinyun): implement
-        pass
+        # Conv layers
+        X = self.pool1(F.relu(self.conv1(X)))
+        X = self.pool2(F.relu(self.conv2(X)))
+        X = F.relu(self.conv3(X))
+        # Flatten
+        X = X.view(-1, 16 * 4)
+        # FC layers
+        X = F.relu(self.fc1(X))
+        X = F.sigmoid(self.fc2(X))
+
+        return X
 
 
 class AudioCNN2dModel(nn.Module):
@@ -100,7 +115,7 @@ class AudioCNN2dModel(nn.Module):
         # FC layers
         X = F.relu(self.fc1(X))
         X = self.dropout(X)
-        X = F.sigmoid(self.fc2(x))
+        X = F.sigmoid(self.fc2(X))
 
         return X
 
