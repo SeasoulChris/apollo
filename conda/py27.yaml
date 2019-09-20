@@ -21,6 +21,7 @@ dependencies:
   - matplotlib
   - numpy
   - pymongo
+  - pytorch
   - scikit-learn
 
   # Other

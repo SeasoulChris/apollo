@@ -143,14 +143,9 @@ class lane_scanning_model(torch.nn.Module):
             bidirectional=True,
             batch_first=True)
 
-        self.multi_lane_fc = generate_mlp(
-            dim_lane_fc, dropout=0.0)
-
-        self.obs_feature_fc = generate_mlp(
-            dim_obs_fc, dropout=0.0)
-
-        self.traj_fc = generate_mlp(dim_traj_fc,
-                                    last_layer_nonlinear=False, dropout=0.0)
+        self.multi_lane_fc = generate_mlp(dim_lane_fc, dropout=0.0)
+        self.obs_feature_fc = generate_mlp(dim_obs_fc, dropout=0.0)
+        self.traj_fc = generate_mlp(dim_traj_fc, last_layer_nonlinear=False, dropout=0.0)
 
     def forward(self, X):
         obs_fea, lane_fea, num_laneseq = X
