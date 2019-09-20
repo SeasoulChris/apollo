@@ -4,8 +4,8 @@ import numpy as np
 
 
 #=============== NETWORK SETTINGS ================
-Input_width = 608  # must be multiple of 32
-Input_height = 352  # must be multiple of 32
+Input_width = 1440  # must be multiple of 32
+Input_height = 800  # must be multiple of 32
 original_width = 1920
 original_height = 1080
 visual_scale = 2  # scale to up/down sample image for training visualization
@@ -21,23 +21,25 @@ num_output_layers = 5 + 4 * num_classes + 3 * num_angle_bins
 truncation_rate = 10    # objs with truncation rate higher than this will be filtered out
 occlusion = 5           # objs with occlusion code higher than this will be filtered out
 
-anchors = np.array([[120, 80], [180, 150], [310, 240],  # [116,90], [156, 198], [373, 326],
-                    [40, 85], [75, 45], [65, 110],  # [30, 61], [62, 45], [59, 119],
-                    [18, 35], [29, 17], [8, 8]])  # [10, 13], [16, 30], [33, 23]])
+anchors = np.array([[284, 181], [426, 340], [734, 545],  # [116,90], [156, 198], [373, 326],
+                    [94, 193], [177, 102], [153, 250],  # [30, 61], [62, 45], [59, 119],
+                    [42, 79], [68, 38], [18, 18]])  # [10, 13], [16, 30], [33, 23]])
 anchor_mask = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 num_anchor_boxes_per_scale = len(anchor_mask[0])
 
 #========= NMS SETTINGS ============
-nms_confidence_threshold = 0.90
+nms_confidence_threshold = 0.9
 nms_iou_threshold = 0.3
 
 #===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True  # Set to False for training and True for inference
+inference_only_2d = False
 
 restore_training = False
-start_from_coco = True
-restore_path = "./"
-model_output_path = "./"
+start_from_coco = False
+restore_path = "fueling/perception/YOLOv3/models/models-119999"
+model_output_path = "fueling/perception/YOLOv3/models/"
+inference_output_path = "./fueling/perception/YOLOv3/infer_output/models-119999"
 
 train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this variable to None
                         "yolo-v3/Conv_14",
@@ -46,13 +48,13 @@ train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this va
                         "BatchNorm/gamma"]
 gpu = "0"
 learning_rate = 0.001
-decay_steps = 35000
+decay_steps = 100
 decay_rate = 0.5
 max_iter = 100
 start_iter = 0
 num_threads = 8
 batch_size = 8
-save_interval = 10000
+save_interval = 99
 print_interval = 1
 summary_interval = 500
 

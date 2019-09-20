@@ -177,31 +177,47 @@ def accumulate_obj(xy_wh_conf_value,
 
     cls_names = {v: k for k, v in CLASS_MAP.items()}
     detection_string_list_batch = []
-    for i in range(len(calib_batch)):
+    for i in range(len(boxes)):
         detection_string_list_image = []
-        interactor = kitti_obj_cam_interaction(calib_batch[i])
-        for cls_id, bboxs in boxes[i].items():
-            for box, score, cshwl in bboxs:
-                box = convert_to_original_size(box,
-                                               np.array((INPUT_WIDTH, INPUT_HEIGHT)),
-                                               np.array((ORIGINAL_WIDTH, ORIGINAL_HEIGHT)),
-                                               False)
+        if calib_batch is not None:
+            interactor = kitti_obj_cam_interaction(calib_batch[i])
+            for cls_id, bboxs in boxes[i].items():
+                for box, score, cshwl in bboxs:
+                    box = convert_to_original_size(box,
+                                                   np.array((INPUT_WIDTH, INPUT_HEIGHT)),
+                                                   np.array((ORIGINAL_WIDTH, ORIGINAL_HEIGHT)),
+                                                   False)
 
-                obj = Object([cls_names[cls_id], None, None, None,
-                              box[0], box[1], box[2], box[3],
-                              cshwl[2], cshwl[3], cshwl[4],
-                              None, None, None, None])
-                obj.score = score
-                local_angle = math.degrees(np.arctan2(cshwl[1], cshwl[0]))
-                beta = interactor.local_angle_to_car_yaw(local_angle, obj)
-                obj.ry = math.radians(beta)
-                translation = interactor.compute_translation(obj)
-                if translation is not None:
-                    obj.t = translation
-                line = obj2string(gt=None, dt=obj)
-                detection_string_list_image.append(line)
+                    obj = Object([cls_names[cls_id], None, None, None,
+                                  box[0], box[1], box[2], box[3],
+                                  cshwl[2], cshwl[3], cshwl[4],
+                                  None, None, None, None])
+                    obj.score = score
+                    local_angle = math.degrees(np.arctan2(cshwl[1], cshwl[0]))
+                    beta = interactor.local_angle_to_car_yaw(local_angle, obj)
+                    obj.ry = math.radians(beta)
+                    translation = interactor.compute_translation(obj)
+                    if translation is not None:
+                        obj.t = translation
+                    line = obj2string(gt=None, dt=obj)
+                    detection_string_list_image.append(line)
+        else:
+            for cls_id, bboxs in boxes[i].items():
+                for box, score, cshwl in bboxs:
+                    box = convert_to_original_size(box,
+                                                   np.array((INPUT_WIDTH, INPUT_HEIGHT)),
+                                                   np.array((ORIGINAL_WIDTH, ORIGINAL_HEIGHT)),
+                                                   False)
 
+                    obj = Object([cls_names[cls_id], 0, 0, 0,
+                                  box[0], box[1], box[2], box[3],
+                                  cshwl[2], cshwl[3], cshwl[4],
+                                  0, 0, 0, 0])
+                    obj.score = score
+                    line = obj2string(gt=None, dt=obj)
+                    detection_string_list_image.append(line)
         detection_string_list_batch.append(detection_string_list_image)
+
     if gt_obj_batch is not None:
         gt_string_list_batch = []
         for objs_image in gt_obj_batch:
@@ -211,7 +227,7 @@ def accumulate_obj(xy_wh_conf_value,
     return detection_string_list_batch, boxes
 
 def draw_boxes(boxes, img, cls_names, detection_size,
-               orig_size, calib, is_letter_box_image, cls_box_map=None):
+               orig_size, calib=None, is_letter_box_image=False, cls_box_map=None):
     """
     boxes: dictionary cls_id -> list of objests. objects: (2d bbox, confidence, cshwl);
              2d bbox:xmin,ymin,xmax,ymax; cshwl: cos(local_angle), sin(local_angle), h, w, l.
@@ -224,19 +240,20 @@ def draw_boxes(boxes, img, cls_names, detection_size,
     cls_box_map: dict cls_id->list of 2d bbox of ground truth objects.
     """
     draw = ImageDraw.Draw(img)
-    interactor = kitti_obj_cam_interaction(calib)
+    if calib is not None:
+        interactor = kitti_obj_cam_interaction(calib)
 
     original_width, original_height = orig_size
     objs = []
     for cls, bboxs in boxes.items():
-        color = (0, 0, 255)
+        color = (255, 0, 0)
         # TODO[KaWai]: uncomment below for writing classes of bbox on images
         # font = ImageFont.truetype("arial.ttf", 8)
         for box_o, score, cshwl in bboxs:
             box = convert_to_original_size(box_o, np.array(detection_size),
                                            np.array(img.size),
                                            is_letter_box_image)
-            if len(bboxs) < 20:
+            if calib is not None:
                 obj = Object([cls_names[cls], None, None, None,
                               box_o[0] * original_width / detection_size[0],
                               box_o[1] * original_height / detection_size[1],
@@ -262,12 +279,12 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                     # TODO[KaWai]: uncomment below to offset the T, e.g. in KITTI dataset
                     #obj.t = tuple(np.array(translation) - interactor.offset.reshape((3,)) )
                 objs.append(obj)
-
+            
             draw.rectangle(box, outline=color)
             # TODO[KaWai]: uncomment below to write class name and score for each bbox.
             # draw.text(box[:2], '{} {:.2f}%'.format(
             #    cls_names[cls], score * 100), fill=color, font=font)
-
+    
     if cls_box_map:
         color = (255, 255, 0)
         for cls, bboxs in cls_box_map.items():
@@ -276,11 +293,11 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                                                np.array(img.size),
                                                is_letter_box_image)
                 draw.rectangle(box, outline=color)
-
+    
     return objs
 
 
-def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
+def process_label_file(label_path, image_path, calib_path, input_shape, anchors,
                        cls_name_id_map, num_classes, num_angle_bins,
                        bin_overlap_frac, num_output_layers,
                        random_color_shift=False, color_shift_percentage=0.5,
@@ -293,8 +310,8 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
                (class_name, x*3, x_min, y_min, x_max, y_max, x*8, class_id, x*8)
                [0:truncated, 1:occluded, 2:alpha, 3:x0, 4:y0, 5:x1, 6:y1,
                 7:h, 8:w, 9:l, 10:X, 11:Y, 12:Z, 13:rotation_y]
-    image_dir: path to directory that contains all the images. The label txt file name
-               should be the same with image names inside image_dir.
+    image_path: path to the images. The label txt file name
+               should be the same with image names in image_path.
     input_shape: network input shape -> (input_height, input_width)
     anchors: array of shape (9 anchors, 2->w,h)
 
@@ -304,22 +321,13 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
               (0:4)-> xywh normalized w.r.t input width and height, objectness,
                       cos(alpha), sin(alpha), 3d_h, 3d_w, 3d_l, + probability_of_classes
     """
-    image_jpg_path = os.path.join(image_dir, os.path.basename(file_path).split(".")[0] + ".jpg")
-    image_png_path = os.path.join(image_dir, os.path.basename(file_path).split(".")[0] + ".png")
-    if not os.path.exists(file_path):
-        raise RuntimeError("Label file path : {} does not exist.".format(file_path))
-    if os.path.exists(image_jpg_path):
-        image_path = image_jpg_path
-    elif os.path.exists(image_png_path):
-        image_path = image_png_path
-    else:
-        raise RuntimeError("Image file path : {}/png does not exist.".format(image_jpg_path))
+    if not os.path.exists(label_path):
+        raise RuntimeError("Label file path : {} does not exist.".format(label_path))
     image_temp = Image.open(image_path)
     original_image = image_temp.copy()
     origin_image_size = original_image.size
     image_temp.close()
 
-    calib_path = os.path.join(calib_dir, os.path.basename(file_path).split(".")[0] + ".txt")
     if not os.path.exists(calib_path):
         raise RuntimeError("Calibration file path : {} does not exist.".format(calib_path))
     calib = read_camera_params(calib_path)
@@ -346,7 +354,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     boxes = np.zeros((max_boxes, 9), dtype=np.float)
     input_shape = np.array(input_shape)[::-1]  # hw -> wh
     image_size = np.array(image.size)
-    with open(file_path) as handle:
+    with open(label_path) as handle:
         objs = [Label_Object(line, cls_name_id_map)
                 for line in handle.readlines()
                 if line.split(" ")[0] in cls_name_id_map.keys()]

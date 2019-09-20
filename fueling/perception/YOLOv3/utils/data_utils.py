@@ -28,20 +28,26 @@ JITTER_PERCENTAGE = cfg.jitter_percentage
 CLS_TO_CONSIDER = cfg.classes_to_consider
 
 
-def get_all_paths(label_path):
+def get_all_image_paths(dataset_path):
+    image_dir = os.path.join(dataset_path, "images")
+    image_path_list = glob.glob(os.path.join(image_dir, "*.jpg"))
+    image_path_list += glob.glob(os.path.join(image_dir, "*.png"))
+    return image_path_list
+
+def get_all_paths(image_path):
     """
     From label path to get both image directory path and
     camera calibration directory path as well.
     Output: (label_path, image_dir, calib_dir)
     """
-    label_path = label_path
-    label_dir, file_name = os.path.split(label_path)
+    image_path = image_path
+    image_dir, file_name = os.path.split(image_path)
     file_name, _ = os.path.splitext(file_name)
-    data_dir, _ = os.path.split(label_dir)
+    data_dir, _ = os.path.split(image_dir)
 
-    image_dir = os.path.join(os.path.join(data_dir, "images"))
-    calib_dir = os.path.join(os.path.join(data_dir, "calib"))
-    return (label_path, image_dir, calib_dir)
+    label_path = os.path.join(os.path.join(data_dir, "label"), "{}.txt".format(file_name))
+    calib_path = os.path.join(os.path.join(data_dir, "calib"), "{}.txt".format(file_name))
+    return (label_path, image_path, calib_path)
 
 
 def process_data(paths):
@@ -49,11 +55,11 @@ def process_data(paths):
     Read data from paths and preprocss to get input and
     ground truth outputs.
     """
-    label_path, image_dir, calib_dir = paths
+    label_path, image_path, calib_path = paths
     image_data, y_true, cls_box_map, objs, calib, original_image = \
         process_label_file(label_path,
-                           image_dir,
-                           calib_dir,
+                           image_path,
+                           calib_path,
                            input_shape=INPUT_SHAPE,
                            anchors=ANCHORS,
                            cls_name_id_map=CLS_NAME_ID_MAP,

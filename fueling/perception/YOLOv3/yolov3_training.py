@@ -21,11 +21,6 @@ class Yolov3Training(BasePipeline):
         BasePipeline.__init__(self, "yolov3")
 
     def run_test(self):
-        def _get_all_label_txt_paths(dataset_path):
-            label_dir = os.path.join(dataset_path, "label")
-            txt_list = glob.glob(os.path.join(label_dir, "*.txt"))
-            return txt_list
-
         data_dir = "/apollo/modules/data/fuel/testdata/perception"
         training_datasets = glob.glob(os.path.join(data_dir, "*"))
         # RDD(file_path) for training dataset.
@@ -34,16 +29,11 @@ class Yolov3Training(BasePipeline):
             # RDD(directory_path), directory containing a dataset
             training_datasets_rdd
             # RDD(file_path), paths of all label txt files
-            .map(_get_all_label_txt_paths)
+            .map(data_utils.get_all_image_paths)
             .cache())
         self.run(data)
 
     def run_prod(self):
-        def _get_all_label_txt_paths_bos(dataset_path):
-            label_dir = os.path.join(dataset_path, "label")
-            txt_list = glob.glob(os.path.join(label_dir, "*.txt"))
-            return txt_list
-
         data_dir = "modules/perception/camera_object/"
         training_datasets = glob.glob(os.path.join("/mnt/bos", data_dir, "*"))
         # RDD(file_path) for training dataset.
@@ -52,15 +42,15 @@ class Yolov3Training(BasePipeline):
             # RDD(directory_path), directory containing a dataset
             training_datasets_rdd
             # RDD(file_path), paths of all label txt files
-            .map(_get_all_label_txt_paths_bos)
+            .map(data_utils.get_all_image_paths)
             .cache())
         self.run(data)
 
     def run(self, data):
-        def _executor(label_txt_paths):
+        def _executor(image_paths):
             engine = training()
             engine.setup_training()
-            data_pool = Dataset(label_txt_paths)
+            data_pool = Dataset(image_paths)
             for i in range(MAX_ITER):
                 data = data_pool.batch
                 engine.step(data)

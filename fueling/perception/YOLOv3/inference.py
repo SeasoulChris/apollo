@@ -106,14 +106,19 @@ class Inference:
         """
         Perform 1 update on the model with input training data.
         """
-        image_batch, _, _, _, cls_box_map_lists, objs_list, \
-            calib_list, image_name_list, original_image_list = data
+        has_label = len(data) == 9
+        if has_label:
+            image_batch, _, _, _, cls_box_map_lists, objs_list, \
+                calib_list, image_name_list, original_image_list = data
+        else:
+            image_batch, image_name_list, original_image_list = data
+
         feed_dict = {
             self.essential_placeholders["input_image"]: (image_batch / 255.)}
 
         xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
         detection_string_list_batch, boxes = accumulate_obj(xy_wh_conf_value,
-                                                            calib_batch=calib_list)
+                                                            calib_batch=calib_list if has_label else None)
 
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):
@@ -130,8 +135,9 @@ class Inference:
                            cls_names,
                            (INPUT_WIDTH, INPUT_HEIGHT),
                            (ORIGINAL_WIDTH, ORIGINAL_HEIGHT),
-                           calib_list[i], False,
-                           cls_box_map=cls_box_map_lists[i])
+                           calib=calib_list[i] if has_label else None,
+                           is_letter_box_image=False,
+                           cls_box_map=cls_box_map_lists[i] if has_label else None)
                 original_image_list[i].save(os.path.join(output_dir,
                     "{}.jpg".format(image_name_list[i])))
         _write_output()

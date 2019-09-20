@@ -6,21 +6,23 @@ from PIL import Image, ImageDraw
 from queue import Queue
 from random import shuffle
 from threading import Thread
+import cv2
 import numpy as np
 
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.utils import data_utils
+from fueling.perception.YOLOv3.utils.yolo_utils import letterbox_image
 
 
 BATCH_SIZE = cfg.batch_size
 NUM_THREADS = cfg.num_threads
+INPUT_WIDTH = cfg.Input_width
+INPUT_HEIGHT = cfg.Input_height
 
 
-class Dataset:
+class DatasetOnlyImage:
 
-    def __init__(self, image_file_paths, batch_size=BATCH_SIZE, num_threads=NUM_THREADS,
-                 random_color_shift=False, random_crop_bool=False, random_jitter_bool=False,
-                 output_name=False, one_shot=False):
+    def __init__(self, image_file_paths, batch_size=BATCH_SIZE, num_threads=NUM_THREADS):
         """
         Initialize a Dataset object. This Dataset class uses multi-threading to process input data.
         params:
@@ -33,12 +35,6 @@ class Dataset:
         """
         self.image_file_paths = image_file_paths
         self.batch_size = batch_size
-        self.output_name = output_name
-        self.random_color_shift = random_color_shift
-        self.random_crop = random_crop_bool
-        self.random_jitter = random_jitter_bool
-        self.one_shot = one_shot
-        self.one_shot_complete = False
 
         self._txt_files_queue = Queue(maxsize=10000)
         self._example_queue = Queue(maxsize=100)
@@ -63,40 +59,23 @@ class Dataset:
         """
         while True:
             if self._idx == self._num_files:
-                if self.one_shot:
-                    self.one_shot_complete = True
-                    break
                 self._idx = 0
                 shuffle(self._txt_files)
             self._txt_files_queue.put(self._txt_files[self._idx])
             self._idx += 1
 
-    def one_shot_completed(self):
-        """
-        Completed one whole iteration of the dataset?"
-        """
-        if not self.one_shot:
-            raise RuntimeError(
-                "Method 'one_shot_completed' can be called only when self.one_shot is True.")
-        return self.on_shot_complete
-
     def _parse_example(self):
         """
         Parse example from txt line.
         """
-        while not self.one_shot_complete:
-            image_path = self._txt_files_queue.get()
-            all_paths = data_utils.get_all_paths(image_path)
-            processed = data_utils.process_data(all_paths)
-            # Filter out classes that is not being considered
-            image_data, y_true, cls_box_map, objs, calib, original_image = \
-                data_utils.filter_classes(processed)
-            scale1, scale2, scale3 = y_true
-            #image_data = np.expand_dims(image_data, axis=0)
-            image_name = os.path.basename(image_path).split(".")[0]
-            final_data = (image_data, scale1, scale2, scale3, cls_box_map, \
-                          objs, calib, image_name, original_image)
-            self._example_queue.put(final_data)
+        while True:
+            image_file_path = self._txt_files_queue.get()
+            image = cv2.imread(image_file_path)[:,:,::-1]
+            original_image = Image.fromarray(image)
+            resized_image = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
+            image_data = np.array(resized_image, dtype=np.uint8)
+            image_name = os.path.basename(image_file_path).split(".")[0]
+            self._example_queue.put((image_data, image_name, original_image))
 
     @property
     def dataset_size(self):
@@ -116,38 +95,16 @@ class Dataset:
         # TODO[KWT] Add support for self.one_shot
         image_batch = np.zeros(shape=(self.batch_size, cfg.Input_height, cfg.Input_width, 3),
                                dtype=np.uint8)
-        label_batch_scale1 = []
-        label_batch_scale2 = []
-        label_batch_scale3 = []
-        cls_box_map_list = []
-        objs_list = []
-        calib_list = []
         image_name_list = []
         original_image_list = []
         for i in range(self.batch_size):
-            image_data, scale1, scale2, scale3, cls_box_map, objs, \
-            calib, image_name, original_image = self._example_queue.get()
+            image_data, image_name, original_image = self._example_queue.get()
             image_batch[i] = image_data
-            label_batch_scale1.append(scale1)
-            label_batch_scale2.append(scale2)
-            label_batch_scale3.append(scale3)
-            cls_box_map_list.append(cls_box_map)
-            objs_list.append(objs)
-            calib_list.append(calib)
             image_name_list.append(image_name)
             original_image_list.append(original_image)
 
         assert not np.any(np.isnan(image_batch))
-        assert not np.any(np.isnan(label_batch_scale1))
-        assert not np.any(np.isnan(label_batch_scale2))
-        assert not np.any(np.isnan(label_batch_scale3))
 
         return (image_batch,
-                np.concatenate(label_batch_scale1, axis=0),
-                np.concatenate(label_batch_scale2, axis=0),
-                np.concatenate(label_batch_scale3, axis=0),
-                cls_box_map_list,
-                objs_list,
-                calib_list,
                 image_name_list,
                 original_image_list)
