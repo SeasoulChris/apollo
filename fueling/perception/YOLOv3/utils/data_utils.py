@@ -49,7 +49,7 @@ def process_data(paths):
     ground truth outputs.
     """
     label_path, image_dir, calib_dir = paths
-    image_data, y_true, cls_box_map, objs, calib = \
+    image_data, y_true, cls_box_map, objs, calib, original_image = \
         process_label_file(label_path,
                            image_dir,
                            calib_dir,
@@ -68,7 +68,7 @@ def process_data(paths):
                            random_jitter_=RANDOM_JITTER,
                            jitter_chance=JITTER_CHANCE,
                            jitter_percentage=JITTER_PERCENTAGE)
-    return (image_data, y_true, cls_box_map, objs, calib)
+    return (image_data, y_true, cls_box_map, objs, calib, original_image)
 
 def filter_classes(element):
     """
@@ -77,7 +77,7 @@ def filter_classes(element):
     Input element: should be the output of function
       'process_data'.
     """
-    image_data, y_true, cls_box_map, objs, calib = element
+    image_data, y_true, cls_box_map, objs, calib, original_image = element
     if CLS_TO_CONSIDER is not None:
         # Zero out elements in y_true
         for i, scale_label in enumerate(y_true):
@@ -97,4 +97,4 @@ def filter_classes(element):
                 keys.append(key)
         for key in keys:
             cls_box_map.pop(key)
-    return (image_data, y_true, cls_box_map, objs, calib)
+    return (image_data, y_true, cls_box_map, objs, calib, original_image)

@@ -23,6 +23,7 @@ from fueling.perception.YOLOv3.utils.yolo_utils import accumulate_obj
 from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
 from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
+import fueling.common.logging as logging
 
 
 GPU = cfg.gpu
@@ -105,13 +106,15 @@ class Inference:
         """
         Perform 1 update on the model with input training data.
         """
-        image_batch, _, _, _, cls_box_map_lists, objs_list, calib_list, image_name_list = data
+        image_batch, _, _, _, cls_box_map_lists, objs_list, \
+            calib_list, image_name_list, original_image_list = data
         feed_dict = {
             self.essential_placeholders["input_image"]: (image_batch / 255.)}
 
         xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
-        detection_string_list_batch = accumulate_obj(xy_wh_conf_value,
-                                                     calib_batch=calib_list)
+        detection_string_list_batch, boxes = accumulate_obj(xy_wh_conf_value,
+                                                            calib_batch=calib_list)
+
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):
                 with open(os.path.join(output_dir,
@@ -120,4 +123,16 @@ class Inference:
                         if (line_id != len(image_dets) - 1):
                             line = "{}\n".format(line)
                         handle.write(line)
+        def _write_image():
+            cls_names = {v:k for k, v in CLASS_MAP.items()}
+            for i in range(len(boxes)):
+                draw_boxes(boxes[i], original_image_list[i],
+                           cls_names,
+                           (INPUT_WIDTH, INPUT_HEIGHT),
+                           (ORIGINAL_WIDTH, ORIGINAL_HEIGHT),
+                           calib_list[i], False,
+                           cls_box_map=cls_box_map_lists[i])
+                original_image_list[i].save(os.path.join(output_dir,
+                    "{}.jpg".format(image_name_list[i])))
         _write_output()
+        _write_image()

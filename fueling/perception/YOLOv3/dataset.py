@@ -89,11 +89,13 @@ class Dataset:
             all_paths = data_utils.get_all_paths(label_txt_path)
             processed = data_utils.process_data(all_paths)
             # Filter out classes that is not being considered
-            image_data, y_true, cls_box_map, objs, calib = data_utils.filter_classes(processed)
+            image_data, y_true, cls_box_map, objs, calib, original_image = \
+                data_utils.filter_classes(processed)
             scale1, scale2, scale3 = y_true
             #image_data = np.expand_dims(image_data, axis=0)
             image_name = os.path.basename(label_txt_path).split(".")[0]
-            final_data = (image_data, scale1, scale2, scale3, cls_box_map, objs, calib, image_name)
+            final_data = (image_data, scale1, scale2, scale3, cls_box_map, \
+                          objs, calib, image_name, original_image)
             self._example_queue.put(final_data)
 
     @property
@@ -121,9 +123,10 @@ class Dataset:
         objs_list = []
         calib_list = []
         image_name_list = []
+        original_image_list = []
         for i in range(self.batch_size):
-            image_data, scale1, scale2, scale3, cls_box_map, objs, calib, image_name = \
-                self._example_queue.get()
+            image_data, scale1, scale2, scale3, cls_box_map, objs, \
+            calib, image_name, original_image = self._example_queue.get()
             image_batch[i] = image_data
             label_batch_scale1.append(scale1)
             label_batch_scale2.append(scale2)
@@ -132,6 +135,7 @@ class Dataset:
             objs_list.append(objs)
             calib_list.append(calib)
             image_name_list.append(image_name)
+            original_image_list.append(original_image)
 
         assert not np.any(np.isnan(image_batch))
         assert not np.any(np.isnan(label_batch_scale1))
@@ -145,4 +149,5 @@ class Dataset:
                 cls_box_map_list,
                 objs_list,
                 calib_list,
-                image_name_list)
+                image_name_list,
+                original_image_list)

@@ -208,7 +208,7 @@ def accumulate_obj(xy_wh_conf_value,
             lines = [obj2string(gt=obj, dt=None) for obj in objs_image]
             gt_string_list_batch.append(lines)  # list of list of obj strings
         return detection_string_list_batch, gt_string_list_batch
-    return detection_string_list_batch
+    return detection_string_list_batch, boxes
 
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib, is_letter_box_image, cls_box_map=None):
@@ -315,8 +315,8 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     else:
         raise RuntimeError("Image file path : {}/png does not exist.".format(image_jpg_path))
     image_temp = Image.open(image_path)
-    image = image_temp.copy()
-    origin_image_size = image.size
+    original_image = image_temp.copy()
+    origin_image_size = original_image.size
     image_temp.close()
 
     calib_path = os.path.join(calib_dir, os.path.basename(file_path).split(".")[0] + ".txt")
@@ -325,7 +325,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     calib = read_camera_params(calib_path)
     interactor = kitti_obj_cam_interaction(calib)
 
-    image_np = np.asarray(image, dtype=np.uint8)
+    image_np = np.asarray(original_image, dtype=np.uint8)
     start_x, start_y, crop_width, crop_height = None, None, None, None
     flip_switch = random_flip and random.uniform(0.0, 1.0) < flip_chance
     if random_color_shift:
@@ -408,7 +408,7 @@ def process_label_file(file_path, image_dir, calib_dir, input_shape, anchors,
     y_true = preprocess_true_boxes(np.array(box_data), input_shape, anchors,
                                    num_classes, num_angle_bins,
                                    bin_overlap_frac, num_output_layers)
-    return image_data, y_true, cls_box_map, objs, calib
+    return image_data, y_true, cls_box_map, objs, calib, original_image
 
 
 def letterbox_image(image, size):

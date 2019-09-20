@@ -373,7 +373,7 @@ class training:
         """
         feed_dict = {self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
-            cls_box_map_lists, objs_list, calib_list, _ = data
+            cls_box_map_lists, objs_list, calib_list, _, _ = data
         feed_dict.update({
             self.gpu_placeholders[self.num_gpu - 1]["input_image"]: (image_batch / 255.),
             self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
