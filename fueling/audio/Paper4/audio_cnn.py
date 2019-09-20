@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-import numpy as np
 import os
-from scipy.signal import butter, lfilter, hilbert
-from tqdm import tqdm
 
-import librosa
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,50 +16,15 @@ from fueling.common.learning.train_utils import *
 from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset import *
 from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
-
-
-def preprocess(y):
-    y_filt = butter_bandpass_filter(y)
-    analytic_signal = hilbert(y_filt)
-    amplitude_envelope = np.abs(analytic_signal)
-    return amplitude_envelope
-
-
-def butter_bandpass_filter(data, lowcut=500, highcut=1500, fs=8000, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-
-    b, a = butter(order, [low, high], btype='band')
-    y = lfilter(b, a, data)
-    return y
+from fueling.audio.Paper4.audio_features_extraction import AudioFeatureExtraction
 
 
 class AudioDataset(Dataset):
-    def __init__(self, data_dir, mode='cnn1d', win_size=16, step=8):
+    def __init__(self, mode='cnn1d', features, labels):
         self.mode = mode
-        self.win_size = win_size
-        self.step = step
-        self.features = []  # a list of spectrograms, each: [n_mels, win_size]
-        self.labels = []  # 1: emergency, 0: non-emergency
-        files = file_utils.list_files(data_dir)
-        for file in tqdm(files):
-            if file.find('.wav') == -1:
-                continue
-            signal, sr = librosa.load(file, sr=8000)
-            signal = preprocess(signal)
-            S = librosa.feature.melspectrogram(signal, sr=sr, n_mels=128)
-            log_S = librosa.power_to_db(S, ref=np.max) # [128, len]
-            label = 1
-            if file.find("nonEmergency") != -1:
-                label = 0
-            start = 0
-            while start + win_size <= log_S.shape[1]:
-                end = start + win_size
-                log_S_segment = log_S[:, start:end]
-                self.features.append(log_S_segment)
-                self.labels.append(label)
-                start += step
+        # a list of spectrograms, each: [n_mels, win_size]
+        self.features = features
+        self.labels = labels  # 1: emergency, 0: non-emergency
 
     def __len__(self):
         return len(self.labels)
@@ -90,7 +52,7 @@ class AudioLoss():
         tag_true = (y_true > 0.5)
         tag_pred = tag_pred.view(-1)
         tag_true = tag_true.view(-1)
-        acc = (tag_pred==tag_true).type(torch.float).mean().item()
+        acc = (tag_pred == tag_true).type(torch.float).mean().item()
         print("Accuracy: {}".format(acc))
         return
 
@@ -158,8 +120,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_dataset = AudioDataset(args.train_file, MODEL)
-    valid_dataset = AudioDataset(args.valid_file, MODEL)
+    train_features, train_labels = AudioFeatureExtraction.load_features_labels(
+        args.train_file)
+    train_dataset = AudioDataset(MODEL, train_features, train_labels)
+
+    valid_features, valid_labels = AudioFeatureExtraction.load_features_labels(
+        args.valid_file)
+    valid_dataset = AudioDataset(MODEL, valid_features, valid_labels)
 
     print('--------- Loading Training Data -----------')
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
@@ -186,10 +153,10 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if (torch.cuda.is_available()):
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
