@@ -132,16 +132,16 @@ def plot_h5_features_time(data_rdd):
         plot_features = ["throttle", "brake", "steering"]
         for feature in plot_features:
             if feature is "throttle":
-                slope_y0 = 1.0
-                bias_y0 = -8.0
+                slope_y = 1.0
+                bias_y = 8.0
                 delay_frame = 0
             elif feature is "brake":
-                slope_y0 = 1.0
-                bias_y0 = 0.0
+                slope_y = 1.0
+                bias_y = 0.0
                 delay_frame = 0
             elif feature is "steering":
-                slope_y0 = 1.0
-                bias_y0 = 0.0
+                slope_y = -1.0
+                bias_y = 0.0
                 delay_frame = 0
             # Raw data plots and analysis
             title_addon = "raw data"
@@ -149,11 +149,11 @@ def plot_h5_features_time(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                         * slope_y0 + bias_y0)
+            data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                          - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
-                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
             plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
                              title_addon, text_addon)
@@ -173,12 +173,11 @@ def plot_h5_features_time(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, data[0:-1 + delay_frame,
-                                              DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                              * slope_y0 + bias_y0)
+            data_plot_y0 = np.maximum(0, (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                          - bias_y) / slope_y)
             data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
-                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
             plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
                              title_addon, text_addon)
@@ -190,18 +189,17 @@ def plot_h5_features_time(data_rdd):
             plt.close()
             # Scaled data by fitting the data curve
             title_addon = "scaled data"
-            slope_y0 *= var_polyfit[0]
-            bias_y0 = bias_y0 * var_polyfit[0] + var_polyfit[1]
             data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, data[0:-1 + delay_frame,
-                                              DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                              * slope_y0 + bias_y0)
+            data_plot_y0 = np.maximum(0, (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                          - bias_y) / slope_y * var_polyfit[0] + var_polyfit[1])
             data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            bias_y += slope_y * var_polyfit[1]
+            slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
-                          \ncmd-act shift frame = {2:.3f}".format(slope_y0, bias_y0, delay_frame)
+                          \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
             plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
                              title_addon, text_addon)
