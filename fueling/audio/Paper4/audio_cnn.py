@@ -16,7 +16,7 @@ from fueling.common import file_utils
 
 
 class AudioDataset(Dataset):
-    def __init__(self, data_dir, mode='cnn1d', win_size=10, step=5):
+    def __init__(self, data_dir, mode='cnn1d', win_size=16, step=8):
     	self.mode = mode
     	self.win_size = win_size
     	self.step = step
@@ -44,10 +44,17 @@ class AudioDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-    	# TODO(all): maybe the type of label need to be modified
+        # TODO(all): maybe the type of label need to be modified
         if self.mode == 'cnn1d':
             return ((torch.from_numpy(self.features[idx])),
                     torch.from_numpy(self.labels[idx]*np.ones(1, 1)))
+        if self.mode == 'cnn2d':
+            img = torch.from_numpy(self.features[idx])
+            h = img.size(0)
+            w = img.size(1)
+            img = img.view(h, w, 1).clone()
+            label = torch.from_numpy(self.labels[idx]*np.ones(1, 1))
+            return ((img), label)
 
 
 class AudioLoss():
@@ -74,13 +81,28 @@ class AudioCNN1dModel(nn.Module):
 
 class AudioCNN2dModel(nn.Module):
     def __init__(self):
-        super(AudioCNN1dModel, self).__init__()
-        # TODO(kechxu): implement
-        pass
+        super(AudioCNN2dModel, self).__init__()
+        self.conv1 = nn.Conv2d(1, 8, 3, padding=1)
+        self.conv2 = nn.Conv2d(8, 16, 3, padding=1)
+        self.conv3 = nn.Conv2d(16, 32, 3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(16*2*32, 100)
+        self.fc2 = nn.Linear(100, 1)
+        self.dropout = nn.Dropout(0.25)
 
     def forward(self, X):
-        # TODO(kechxu): implement
-        pass
+        # Conv layers
+        X = self.pool(F.relu(self.conv1(X)))
+        X = self.pool(F.relu(self.conv2(X)))
+        X = self.pool(F.relu(self.conv3(X)))
+        # Flatten
+        X = X.view(-1, 16*2*32)
+        # FC layers
+        X = F.relu(self.fc1(X))
+        X = self.dropout(X)
+        X = F.sigmoid(self.fc2(x))
+
+        return X
 
 
 if __name__ == "__main__":
