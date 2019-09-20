@@ -36,8 +36,7 @@ class Yolov3Training(BasePipeline):
             # RDD(file_path), paths of all label txt files
             .map(_get_all_label_txt_paths)
             .cache())
-        output_dir = os.path.join(data_dir, "yolov3_output")
-        self.run(data, output_dir)
+        self.run(data)
 
     def run_prod(self):
         def _get_all_label_txt_paths_bos(dataset_path):
@@ -55,10 +54,9 @@ class Yolov3Training(BasePipeline):
             # RDD(file_path), paths of all label txt files
             .map(_get_all_label_txt_paths_bos)
             .cache())
-        output_dir = os.path.join(data_dir, "yolov3_output")
-        self.run(data, output_dir)
+        self.run(data)
 
-    def run(self, data, output_dir):
+    def run(self, data):
         def _executor(label_txt_paths):
             engine = training()
             engine.setup_training()
