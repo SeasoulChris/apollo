@@ -10,6 +10,7 @@ import modules.control.proto.calibration_table_pb2 as calibration_table_pb2
 
 from fueling.control.features.filters import Filters
 from fueling.control.features.neural_network_tf import NeuralNetworkTF
+from fueling.control.features.neural_network_torch import NeuralNetworkTorch
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.features.calibration_table_utils as calibration_table_utils
@@ -59,6 +60,8 @@ def train_model(data_sets, layer, train_alpha):
     model = NeuralNetworkTF(layer)
     _, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test,
                                            alpha=train_alpha, print_loss=True)
+    # model = NeuralNetworkTorch(layer)
+    # _, train_cost, test_cost = model.train(X_train, Y_train, X_test, Y_test, alpha=train_alpha)
     logging.info(" model train cost: %f" % train_cost)
     logging.info(" model test cost: %f " % test_cost)
     return model

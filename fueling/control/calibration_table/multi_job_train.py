@@ -15,12 +15,10 @@ from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-import fueling.common.record_utils as record_utils
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
@@ -49,7 +47,7 @@ class MultiJobTrain(BasePipeline):
             # PairRDD(vehicle, all files in throttle/brake train/test folder)
             .flatMapValues(lambda path: self.bos().list_files(path, '.hdf5'))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
-            .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
+            .map(lambda vehicle_h5: ((vehicle_h5[0], throttle_or_brake), vehicle_h5[1]))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
             .groupByKey()
             # PairRDD((vehicle, 'throttle or brake'), list of hdf5 files)
@@ -71,7 +69,7 @@ class MultiJobTrain(BasePipeline):
                 # PairRDD(vehicle, all files in throttle train feature folder)
                 .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5')))
                 # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
-                .map(lambda (vehicle, hdf5_file): ((vehicle, throttle_or_brake), hdf5_file))
+                .map(lambda vehicle_h5: ((vehicle_h5[0], throttle_or_brake), vehicle_h5[1]))
                 # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)
                 .groupByKey()
                 # PairRDD((vehicle, 'throttle or brake'), list of hdf5 files)
@@ -203,11 +201,12 @@ class MultiJobTrain(BasePipeline):
         throttle_train_param = spark_helper.cache_and_log(
             'throttle_train_param',
             # PairRDD(vehicle, train_param)
-            conf.mapValues(lambda (vehicle_conf, train_conf):
-                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
-                                                                      'throttle'))
+            conf.mapValues(lambda vehicle_and_train_conf:
+                           multi_vehicle_utils.gen_param_w_train_conf(
+                               vehicle_and_train_conf[0], vehicle_and_train_conf[1], 'throttle'))
             # PairRDD((vehicle, 'throttle'), train_param)
-            .map(lambda (vehicle, train_param): ((vehicle, 'throttle'), train_param)))
+            .map(lambda vehicle_and_train_param:
+                 ((vehicle_and_train_param[0], 'throttle'), vehicle_and_train_param[1])))
 
         throttle_model = spark_helper.cache_and_log(
             'throttle_model',
@@ -237,11 +236,12 @@ class MultiJobTrain(BasePipeline):
         brake_train_param = spark_helper.cache_and_log(
             'brake_train_param',
             # PairRDD(vehicle, train_param)
-            conf.mapValues(lambda (vehicle_conf, train_conf):
-                           multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
-                                                                      'brake'))
+            conf.mapValues(lambda vehicle_and_train_conf:
+                           multi_vehicle_utils.gen_param_w_train_conf(
+                               vehicle_and_train_conf[0], vehicle_and_train_conf[1], 'brake'))
             # PairRDD((vehicle, 'brake'), train_param)
-            .map(lambda (vehicle, train_param): ((vehicle, 'brake'), train_param)))
+            .map(lambda vehicle_and_train_param:
+                 ((vehicle_and_train_param[0], 'brake'), vehicle_and_train_param[1])))
 
         brake_model = spark_helper.cache_and_log(
             'brake_model',

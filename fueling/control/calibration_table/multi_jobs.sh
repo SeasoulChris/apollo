@@ -16,7 +16,7 @@ INPUT_DATA_PATH="modules/control/apollo_calibration_table"
 
 # Training.
 JOB="fueling/control/calibration_table/multi_job_train.py"
-ENV="fuel-py27"
+ENV="fuel-py36"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 5 --memory 60g ${JOB} \
 --job_id="${JOB_ID}"
 

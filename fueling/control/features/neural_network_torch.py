@@ -14,6 +14,11 @@ class NeuralNetworkTorch(object):
         self.net.apply(self.init_weights)
 
     def train(self, X_train, Y_train, X_test, Y_test, alpha=0.01, w_lambda=0.01, num_epoch=10000):
+        X_train = torch.from_numpy(X_train).float()
+        Y_train = torch.from_numpy(Y_train).float()
+        X_test = torch.from_numpy(X_test).float()
+        Y_test = torch.from_numpy(Y_test).float()
+
         criterion = torch.nn.MSELoss()
         optimizer = torch.optim.Adam(self.net.parameters(), lr=alpha, weight_decay=w_lambda)
 
@@ -26,9 +31,9 @@ class NeuralNetworkTorch(object):
             loss = criterion(outputs, Y_train)
             loss.backward()
             optimizer.step()
-            train_cost = loss.data[0]
+            train_cost = loss.item()
             if epoch % 100 == 0:
-                logging.info("loss after epoch %d: %f" % (epoch, train_cost))
+                logging.info("loss after epoch {}: {}".format(epoch, train_cost))
 
         # Evaluation mode.
         test_cost = 0
@@ -36,12 +41,12 @@ class NeuralNetworkTorch(object):
         with torch.no_grad():
             outputs = self.net(X_test)
             loss = criterion(outputs, Y_test)
-            test_cost = loss.data[0]
+            test_cost = loss.item()
 
         return self.net.parameters(), train_cost, test_cost
 
     def predict(self, X_data):
-        return self.net(X_data)
+        return self.net(torch.from_numpy(X_data).float()).detach().numpy()
 
     @staticmethod
     def init_weights(m):

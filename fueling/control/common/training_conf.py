@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-from sets import Set
+try:
+    # TODO(xiaoxq): Retire.
+    from sets import Set  # Python 2
+except ImportError:
+    Set = set  # Python 3
+
 
 vehicle_list = Set(['ch9'])
 
