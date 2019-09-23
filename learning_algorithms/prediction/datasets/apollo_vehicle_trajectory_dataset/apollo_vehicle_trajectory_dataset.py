@@ -415,8 +415,13 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             nearby_obs_mask = [(i != predicting_idx) for i in range(num_obs)]
             nearby_obs_pos_abs = all_obs_positions[nearby_obs_mask, :]
             nearby_obs_hist_sizes = obs_hist_sizes[nearby_obs_mask, :]
-            nearby_obs_pos_rel = nearby_obs_pos_abs - nearby_obs_pos_abs[:, -1:, :]
-            nearby_obs_pos_step = all_obs_pos_rel[nearby_obs_mask, :]
+            nearby_obs_pos_rel = np.zeros_like(nearby_obs_pos_abs)
+            nearby_obs_pos_step = np.zeros_like(nearby_obs_pos_abs)
+            for obs_id in range(nearby_obs_hist_sizes.shape[0]):
+                for i in range(20-int(nearby_obs_hist_sizes[obs_id,0]), 20):
+                    nearby_obs_pos_rel[obs_id, i, :] = CoordUtils.world_to_relative(nearby_obs_pos_abs[obs_id, i, :], world_coord)
+                    if i > 0:
+                        nearby_obs_pos_step[obs_id, i, :] = nearby_obs_pos_rel[obs_id, i, :] - nearby_obs_pos_rel[obs_id, i-1, :]
 
             selected_nearby_idx = self.select_nearby_obs(target_obs_pos_abs, nearby_obs_pos_abs)
             nearby_obs_pos_abs_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, obs_hist_size, 2])
