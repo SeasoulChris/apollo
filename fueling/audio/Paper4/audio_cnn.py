@@ -52,9 +52,8 @@ class AudioLoss():
         tag_true = (y_true > 0.5)
         tag_pred = tag_pred.view(-1)
         tag_true = tag_true.view(-1)
-        acc = (tag_pred == tag_true).type(torch.float).mean().item()
-        print("Accuracy: {}".format(acc))
-        return
+        accuracy = (tag_pred == tag_true).type(torch.float).mean().item()
+        return accuracy
 
 
 class AudioCNN1dModel(nn.Module):
@@ -130,10 +129,10 @@ if __name__ == "__main__":
 
     print('--------- Loading Training Data -----------')
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
-                                               num_workers=2, drop_last=True)
+                                               num_workers=8, drop_last=True)
     print('--------- Loading Validation Data -----------')
     valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=32, shuffle=True,
-                                               num_workers=2, drop_last=True)
+                                               num_workers=8, drop_last=True)
 
     # Model and training setup
     model = None
@@ -160,4 +159,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name='./', print_period=10)
+                           scheduler, epochs=50, save_name='./', print_period=100)
