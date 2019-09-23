@@ -4,32 +4,17 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )/../../.."
 
 set -e
+
+SUBMITTER="./tools/submit-job-to-k8s.sh --workers 5 --cpu 5 --memory 60g"
 JOB_ID=$(date +%Y-%m-%d-%H)
+INPUT_DATA_PATH="modules/control/apollo_calibration_table"
 
 # Feature extraction.
 JOB="fueling/control/calibration_table/multi_job_feature_extraction.py"
 ENV="fuel-py27-cyber"
-INPUT_DATA_PATH="modules/control/apollo_calibration_table"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 60g ${JOB} \
---input_data_path="${INPUT_DATA_PATH}" --job_id="${JOB_ID}"
+${SUBMITTER} --env ${ENV} ${JOB} --job_id="${JOB_ID}" --input_data_path="${INPUT_DATA_PATH}"
 
-
-# Training.
-JOB="fueling/control/calibration_table/multi_job_train.py"
+# Training, result visualization and distribution.
+JOB="fueling/control/calibration_table/multi_job_train_vis_dist.py"
 ENV="fuel-py36"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 5 --memory 60g ${JOB} \
---job_id="${JOB_ID}"
-
-
-# Result visualization
-JOB="fueling/control/calibration_table/multi_job_result_visualization.py"
-ENV="fuel-py36"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 20g ${JOB} \
---job_id="${JOB_ID}"
-
-
-# Data distribution visualization
-JOB="fueling/control/calibration_table/multi_job_data_distribution.py"
-ENV="fuel-py36"
-./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 20g ${JOB} \
---job_id="${JOB_ID}"
+${SUBMITTER} --env ${ENV} ${JOB} --job_id="${JOB_ID}"
