@@ -114,9 +114,12 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
         np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_sequence_num']]) < 0)
     inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
                             < 0.0)
-    control_idx_inv_seq = np.where(np.insert(inv_seq_chassis, 0, 0) |
-                                   np.insert(inv_seq_localization, 0, 0))[0]
-    control_mtx_rtn = np.delete(control_mtx_rtn, control_idx_inv_seq, axis=0)
+    for inv in np.where(inv_seq_chassis | inv_seq_localization):
+        control_mtx_rtn[[inv, inv + 1], :] = control_mtx_rtn[[inv + 1, inv], :]
+    for inv in np.where(np.diff(chassis_mtx_filtered[:, MODE_IDX['sequence_num']]) < 0):
+        chassis_mtx_filtered[[inv, inv + 1], :] = chassis_mtx_filtered[[inv + 1, inv], :]
+    for inv in np.where(np.diff(localization_mtx[:, POSE_IDX['timestamp_sec']]) < 0):
+        localization_mtx[[inv, inv + 1], :] = localization_mtx[[inv + 1, inv], :]
     # Fourth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
     localization_idx_rtn = []
