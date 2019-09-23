@@ -103,9 +103,9 @@ class MultiJobResultVisualization(BasePipeline):
             # PairRDD(vehicle, (vehicle_conf,train_conf)))
             .join(train_conf)
             # PairRDD(vehicle, throttle_param)
-            .mapValues(lambda (vehicle_conf, train_conf):
-                       multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
-                                                                  'throttle'))
+            .mapValues(lambda vehicle_train_conf:
+                       multi_vehicle_utils.gen_param_w_train_conf(
+                           vehicle_train_conf[0], vehicle_train_conf[1], 'throttle'))
             # PairRDD(vehicle, (data, throttle_param))
             .join(throttle_features)
             # RDD(plot_file)
@@ -127,9 +127,9 @@ class MultiJobResultVisualization(BasePipeline):
             # PairRDD(vehicle, (vehicle_conf,train_conf)))
             .join(train_conf)
             # PairRDD(vehicle, brake_param)
-            .mapValues(lambda (vehicle_conf, train_conf):
-                       multi_vehicle_utils.gen_param_w_train_conf(vehicle_conf, train_conf,
-                                                                  'brake'))
+            .mapValues(lambda vehicle_train_conf:
+                       multi_vehicle_utils.gen_param_w_train_conf(
+                           vehicle_train_conf[0], vehicle_train_conf[1], 'brake'))
             # PairRDD(vehicle, (data, brake_param))
             .join(brake_features)
             # RDD(plot_file)

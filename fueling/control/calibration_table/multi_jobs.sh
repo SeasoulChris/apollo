@@ -23,13 +23,13 @@ ENV="fuel-py36"
 
 # Result visualization
 JOB="fueling/control/calibration_table/multi_job_result_visualization.py"
-ENV="fuel-py27"
+ENV="fuel-py36"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 20g ${JOB} \
 --job_id="${JOB_ID}"
 
 
 # Data distribution visualization
 JOB="fueling/control/calibration_table/multi_job_data_distribution.py"
-ENV="fuel-py27"
+ENV="fuel-py36"
 ./tools/submit-job-to-k8s.sh --env ${ENV} --workers 5 --cpu 2 --memory 20g ${JOB} \
 --job_id="${JOB_ID}"
