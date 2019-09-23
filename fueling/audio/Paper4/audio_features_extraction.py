@@ -71,8 +71,10 @@ class AudioFeatureExtraction(object):
                     self.neg_features.append(log_S_segment)
                     self.neg_labels.append(label)
                 start += self.step
+        self.features = self.pos_features + self.neg_features
+        self.labels = self.pos_labels + self.neg_labels
 
-    def balance_features(self, shuffle=True):
+    def balance_features(self, enable_shuffle=True):
         min_features_size = min(len(self.pos_features), len(self.neg_features))
         self.pos_features = self.pos_features[:min_features_size]
         self.pos_labels = self.pos_labels[:min_features_size]
@@ -85,7 +87,7 @@ class AudioFeatureExtraction(object):
         if len(self.features) != len(self.labels):
             raise ValueError('features size not matching labels size')
 
-        if shuffle:
+        if enable_shuffle:
             shuffle(self.features, self.labels, random_state=0)
 
     def save_features(self, features_dir):
