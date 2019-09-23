@@ -7,6 +7,7 @@ import numpy as np
 import librosa
 from tqdm import tqdm
 from scipy.signal import butter, lfilter, hilbert
+from sklearn.utils import shuffle
 
 from fueling.audio.Paper3.pyAudioAnalysis import audioBasicIO
 from fueling.audio.Paper3.pyAudioAnalysis import audioFeatureExtraction
@@ -36,6 +37,11 @@ class AudioFeatureExtraction(object):
         self.data_dir = data_dir
         self.win_size = win_size
         self.step = step
+        self.pos_features = []  # a list of spectrograms, each: [n_mels, win_size]
+        self.pos_labels = []  # 1: emergency, 0: non-emergency
+        self.neg_features = []  # a list of spectrograms, each: [n_mels, win_size]
+        self.neg_labels = []  # 1: emergency, 0: non-emergency
+
         self.features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.labels = []  # 1: emergency, 0: non-emergency
 
@@ -44,20 +50,43 @@ class AudioFeatureExtraction(object):
         for file in tqdm(files):
             if file.find('.wav') == -1:
                 continue
+
             signal, sr = librosa.load(file, sr=8000)
             signal = preprocess(signal)
             S = librosa.feature.melspectrogram(signal, sr=sr, n_mels=128)
             log_S = librosa.power_to_db(S, ref=np.max)  # [128, len]
+
             label = 1
             if file.find("nonEmergency") != -1:
                 label = 0
+
             start = 0
             while start + self.win_size <= log_S.shape[1]:
                 end = start + self.win_size
                 log_S_segment = log_S[:, start:end]
-                self.features.append(log_S_segment)
-                self.labels.append(label)
+                if label == 1:
+                    self.pos_features.append(log_S_segment)
+                    self.pos_labels.append(label)
+                else:
+                    self.neg_features.append(log_S_segment)
+                    self.neg_labels.append(label)
                 start += self.step
+
+    def balance_features(self, shuffle=True):
+        min_features_size = min(len(self.pos_features), len(self.neg_features))
+        self.pos_features = self.pos_features[:min_features_size]
+        self.pos_labels = self.pos_labels[:min_features_size]
+        self.neg_features = self.neg_features[:min_features_size]
+        self.neg_labels = self.neg_labels[:min_features_size]
+
+        self.features = self.pos_features + self.neg_features
+        self.labels = self.pos_labels + self.neg_labels
+
+        if len(self.features) != len(self.labels):
+            raise ValueError('features size not matching labels size')
+
+        if shuffle:
+            shuffle(self.features, self.labels, random_state=0)
 
     def save_features(self, features_dir):
         features = np.array(self.features)
@@ -83,6 +112,8 @@ if __name__ == "__main__":
     train_set_extractor = AudioFeatureExtraction(args.train_file)
 
     train_set_extractor.extract_features()
+
+    train_set_extractor.balance_features(True)
 
     train_set_extractor.save_features(args.train_file)
 
