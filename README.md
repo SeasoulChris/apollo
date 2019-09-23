@@ -22,12 +22,14 @@
 
    # Sometimes we encounter PYTHONPATH issue, you may need to run something like
    # this to hard-reset:
-   export PYTHONPATH=$(python -m site --user-site):/apollo/modules/data/fuel:${PYTHONPATH}
+   SITE_PACKAGE=$(python -c "import site; print(site.getsitepackages()[0])")
+   ENV_PACKAGE=$(dirname ${SITE_PACKAGE})
+   export PYTHONPATH="/apollo/modules/data/fuel:/apollo/py_proto:${ENV_PACKAGE}:${SITE_PACKAGE}:${PYTHONPATH}"
    ```
 
    Available envs are:
    * `fuel-py27-cyber` conda/py27-cyber.yaml
-   * `fuel-py27`       conda/py27.yaml
+   * `fuel-py27`       conda/py27.yaml **[In Deprecation]**
    * `fuel-py36`       conda/py36.yaml
 
    Use the Cyber compatible env if you need to read, write Cyber records, or
