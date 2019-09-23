@@ -31,7 +31,7 @@ def butter_bandpass_filter(data, lowcut=500, highcut=1500, fs=8000, order=5):
     return y
 
 
-class AudioFeatureExtraction():
+class AudioFeatureExtraction(object):
     def __init__(self, data_dir, win_size=16, step=8):
         self.data_dir = data_dir
         self.win_size = win_size

@@ -20,7 +20,7 @@ from fueling.audio.Paper4.audio_features_extraction import AudioFeatureExtractio
 
 
 class AudioDataset(Dataset):
-    def __init__(self, mode='cnn1d', features, labels):
+    def __init__(self, mode, features, labels):
         self.mode = mode
         # a list of spectrograms, each: [n_mels, win_size]
         self.features = features
@@ -52,7 +52,7 @@ class AudioLoss():
         tag_true = (y_true > 0.5)
         tag_pred = tag_pred.view(-1)
         tag_true = tag_true.view(-1)
-        accuracy = (tag_pred == tag_true).type(torch.float).mean().item()
+        accuracy = (tag_pred == tag_true).type(torch.float).mean()
         return accuracy
 
 
@@ -119,11 +119,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set-up data-loader
-    train_features, train_labels = AudioFeatureExtraction.load_features_labels(
+    train_set_extractor = AudioFeatureExtraction(args.train_file)
+    train_features, train_labels = train_set_extractor.load_features_labels(
         args.train_file)
     train_dataset = AudioDataset(MODEL, train_features, train_labels)
 
-    valid_features, valid_labels = AudioFeatureExtraction.load_features_labels(
+    validation_set_extractor = AudioFeatureExtraction(args.valid_file)
+    valid_features, valid_labels = validation_set_extractor.load_features_labels(
         args.valid_file)
     valid_dataset = AudioDataset(MODEL, valid_features, valid_labels)
 
