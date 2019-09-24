@@ -100,8 +100,10 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
     chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
     # Second, filter the control data with existing chassis and localization sequence_num
-    control_idx_by_chassis = np.in1d(control_mtx[:, FEATURE_IDX['chassis_sequence_num']],
-                                     chassis_mtx_filtered[:, MODE_IDX['sequence_num']])
+    control_idx_by_chassis = np.in1d(['%.3f' % x for x in
+                                      control_mtx[:, FEATURE_IDX['chassis_timestamp_sec']]],
+                                     ['%.3f' % x for x in
+                                      chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']]])
     control_idx_by_localization = np.in1d(['%.3f' % x for x in
                                            control_mtx[:, FEATURE_IDX['localization_timestamp_sec']]],
                                           ['%.3f' % x for x in
@@ -110,29 +112,32 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
                                   control_idx_by_localization, :]
     # Third, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
-    inv_seq_chassis = (
-        np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_sequence_num']]) < 0)
+    inv_seq_chassis = (np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_timestamp_sec']]) < 0.0)
     inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
                             < 0.0)
     for inv in np.where(inv_seq_chassis | inv_seq_localization):
-        control_mtx_rtn[[inv, inv + 1], :] = control_mtx_rtn[[inv + 1, inv], :]
-    for inv in np.where(np.diff(chassis_mtx_filtered[:, MODE_IDX['sequence_num']]) < 0):
-        chassis_mtx_filtered[[inv, inv + 1], :] = chassis_mtx_filtered[[inv + 1, inv], :]
-    for inv in np.where(np.diff(localization_mtx[:, POSE_IDX['timestamp_sec']]) < 0):
-        localization_mtx[[inv, inv + 1], :] = localization_mtx[[inv + 1, inv], :]
+        control_mtx_rtn = np.delete(control_mtx_rtn, [inv, inv + 1], axis=0)
+    for inv in np.where(np.diff(chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']]) < 0.0):
+        chassis_mtx_filtered = np.delete(chassis_mtx_filtered, [inv, inv + 1], axis=0)
+    for inv in np.where(np.diff(localization_mtx[:, POSE_IDX['timestamp_sec']]) < 0.0):
+        localization_mtx = np.delete(localization_mtx, [inv, inv + 1], axis=0)
     # Fourth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
     localization_idx_rtn = []
     chassis_idx = 0
     localization_idx = 0
     for control_idx in range(control_mtx_rtn.shape[0]):
-        while (control_mtx_rtn[control_idx, FEATURE_IDX['chassis_sequence_num']] !=
-               chassis_mtx_filtered[chassis_idx, MODE_IDX['sequence_num']]):
+        chassis_timestamp = round(control_mtx_rtn[control_idx,
+                                                  FEATURE_IDX['chassis_timestamp_sec']], 3)
+        localization_timestamp = round(control_mtx_rtn[control_idx,
+                                                       FEATURE_IDX['localization_timestamp_sec']], 3)
+        while (round(chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']], 3) !=
+               chassis_timestamp):
             chassis_idx += 1
-        while (['%.3f' % control_mtx_rtn[control_idx, FEATURE_IDX['localization_timestamp_sec']]] !=
-               ['%.3f' % localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]]):
-            localization_idx += 1
         chassis_idx_rtn.append(chassis_idx)
+        while (round(localization_mtx[localization_idx, POSE_IDX['timestamp_sec']], 3) !=
+               localization_timestamp):
+            localization_idx += 1
         localization_idx_rtn.append(localization_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
     localization_mtx_rtn = np.take(
