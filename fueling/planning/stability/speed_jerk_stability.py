@@ -9,10 +9,10 @@ from fueling.planning.stability.imu_speed_jerk import ImuSpeedJerk
 
 class SpeedJerkStability:
 
-    def __init__(self):
+    def __init__(self, is_lateral=False):
         self.speed_jerk_cnt = defaultdict(lambda: defaultdict(int))
-        self.jerk_processor = ImuSpeedJerk()
-        self.speed_processor = ImuSpeed()
+        self.jerk_processor = ImuSpeedJerk(is_lateral)
+        self.speed_processor = ImuSpeed(is_lateral)
 
     def add(self, location_est):
         self.speed_processor.add(location_est)

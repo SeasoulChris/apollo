@@ -33,6 +33,7 @@ message PlanningStat {
       repeated JerkCnt jerk_cnt = 2;
     }
     repeated SpeedJerk speed_jerk = 1;
+    repeated SpeedJerk lat_speed_jerk = 2;
   }
 
   optional Latency latency = 1;

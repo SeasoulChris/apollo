@@ -6,10 +6,10 @@ from imu_speed import ImuSpeed
 
 class ImuSpeedAcc:
 
-    def __init__(self):
+    def __init__(self, is_lateral=False):
         self.timestamp_list = []
         self.acc_list = []
-        self.imu_speed = ImuSpeed()
+        self.imu_speed = ImuSpeed(is_lateral)
 
     def add(self, location_est):
         self.imu_speed.add(location_est)

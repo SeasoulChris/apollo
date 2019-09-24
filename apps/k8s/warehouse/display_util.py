@@ -100,7 +100,8 @@ def plot_record(record):
     # 1. Add necessary fields in fueling/data/proto/record_meta.proto.
     # 2. Extend fueling/data/record_parser.py to extract data and populate the fields.
     # 3. Read the fields here and plot properly.
-    fig, axs = plt.subplots(2, 1)
+    fig, axs = plt.subplots(3, 1)
+    fig.set_size_inches(10, 15)
     planning_latency = record.stat.planning_stat.latency.latency_hist
     latency_keys = ["latency_0_10_ms", "latency_20_40_ms", "latency_40_60_ms", "latency_60_80_ms",
                     "latency_80_100_ms", "latency_100_120_ms", "latency_120_150_ms",
@@ -135,6 +136,39 @@ def plot_record(record):
             speed_x.append(speed)
             jerk_y.append(jerk)
     axs[1].plot(speed_x, jerk_y, 'g.')
+
+    # lat speed jerk
+    speed_x = []
+    jerk_y = []
+    for speed_jerk in stability.speed_jerk:
+        speed = speed_jerk.speed
+        for jerk_cnt in speed_jerk.jerk_cnt:
+            jerk = jerk_cnt.jerk
+            speed_x.append(speed)
+            jerk_y.append(jerk)
+    axs[2].set_xlabel("speed")
+    axs[2].set_ylabel("jerk")
+    axs[2].plot(speed_x, jerk_y, 'rx')
+
+    base_speed_jerk = {0: [0, 1, 2, 3, -1, -2, -3, -5, -4, 4, 5], 1: [3, 4, 2, 1, -1, -2, -3, 0, -4, -5, -6],
+                       2: [1, 0, -1, -2, -5, -6, -4, -3, 2, 3], 3: [0, -1, 1, -2, -3, -4, -5, 2, 3, 4, 5, -6, -7],
+                       4: [0, -1, 1, 2, 3, -2, -3, 4, -4], 5: [0, -1, 1, 2, 3, 4, -2, -3],
+                       6: [0, 1, -1, -2, 2, -3, -4, 3], 7: [0, 1, 2, 3, 4, -1, -2, -3], 8: [0, -1, 1, 2, 3, 4, -2],
+                       9: [0, -1, 1], 10: [0, -1, 1, 2, -2], 11: [0, -1, -2, 1], 12: [0, -1, -2], 13: [-1, -2, 0],
+                       -11: [0, 1, 3, 2], -18: [0, 1], -17: [0, 1, -1, 2], -16: [0, 1, -1, 2], -15: [0, 1, 2, 3],
+                       -14: [0, -1, 1, 2, 3, 4], -13: [0, 1, 2, 3, -1], -12: [0, 1, -1, 3, 2],
+                       -1: [-1, 0, 1, 3, 4, 2, -2, -3, -4, 5, 6], -10: [0, 1, -1, 2, 3], -9: [0, 1, -1, 2],
+                       -8: [0, 1, 2, 5, 4, 3], -7: [0, 1, 4, 3, 5, 2], -6: [0, 1, 2, 4, 5, 3, -1],
+                       -5: [1, 0, 3, 2, -1, 4, 5], -4: [3, 2, 4, 1, 0, -1], -3: [1, 0, 2, 3, -1, 4, 5, 6],
+                       -2: [0, 1, 2, 3, 4, 5, -1, -3, -2, 6]}
+
+    speed_x = []
+    jerk_y = []
+    for speed, jerk_list in base_speed_jerk.items():
+        for jerk in jerk_list:
+            speed_x.append(speed)
+            jerk_y.append(jerk)
+    axs[2].plot(speed_x, jerk_y, 'g.')
 
     # Use mpld3 to transform to HTML.
     # Known issues:

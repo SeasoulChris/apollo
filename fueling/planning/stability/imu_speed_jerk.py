@@ -6,10 +6,10 @@ from imu_speed_acc import ImuSpeedAcc
 
 class ImuSpeedJerk:
 
-    def __init__(self):
+    def __init__(self, is_lateral=False):
         self.timestamp_list = []
         self.jerk_list = []
-        self.imu_speed_acc = ImuSpeedAcc()
+        self.imu_speed_acc = ImuSpeedAcc(is_lateral)
 
     def add(self, location_est):
         self.imu_speed_acc.add(location_est)

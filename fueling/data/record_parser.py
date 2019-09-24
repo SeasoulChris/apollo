@@ -58,8 +58,14 @@ class RecordParser(object):
         for bucket, cnt in parser._planning_latency_analyzer.get_hist().items():
             record.stat.planning_stat.latency.latency_hist[bucket] = cnt
 
-        for speed, jerk_cnt in parser._stability_analyzer.get_speed_jerk_cnt().items():
+        for speed, jerk_cnt in parser._lon_stability_analyzer.get_speed_jerk_cnt().items():
             speed_jerk = record.stat.planning_stat.stability.speed_jerk.add()
+            speed_jerk.speed = speed
+            for jerk, cnt in jerk_cnt.items():
+                speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
+
+        for speed, jerk_cnt in parser._lat_stability_analyzer.get_speed_jerk_cnt().items():
+            speed_jerk = record.stat.planning_stat.stability.lat_speed_jerk.add()
             speed_jerk.speed = speed
             for jerk, cnt in jerk_cnt.items():
                 speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
@@ -80,7 +86,8 @@ class RecordParser(object):
         self._last_position_sampled_time = None
         # Planning stat
         self._planning_latency_analyzer = LatencyMetrics()
-        self._stability_analyzer = SpeedJerkStability()
+        self._lon_stability_analyzer = SpeedJerkStability(is_lateral=False)
+        self._lat_stability_analyzer = SpeedJerkStability(is_lateral=True)
 
     def ParseMeta(self):
         """
@@ -186,7 +193,8 @@ class RecordParser(object):
         if localization.header.module_name == "SimControl" or localization.pose.position.z == 0:
             return
         self._process_position(localization.header.timestamp_sec, localization.pose.position)
-        self._stability_analyzer.add(localization)
+        self._lon_stability_analyzer.add(localization)
+        self._lat_stability_analyzer.add(localization)
 
     def ProcessGnssOdometry(self, msg):
         """Process GPS, stat mileages and save driving path."""
