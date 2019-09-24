@@ -22,7 +22,7 @@ INFERENCE_ONLY_2D = cfg.inference_only_2d
 
 class Yolov3Inference(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, "yolov3")
+        BasePipeline.__init__(self, "yolov3_inference")
 
     def run_test(self):
         data_dir = "/apollo/modules/data/fuel/testdata/perception"

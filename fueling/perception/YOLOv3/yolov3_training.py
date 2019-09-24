@@ -18,7 +18,7 @@ MAX_ITER = cfg.max_iter
 
 class Yolov3Training(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, "yolov3")
+        BasePipeline.__init__(self, "yolov3_training")
 
     def run_test(self):
         data_dir = "/apollo/modules/data/fuel/testdata/perception"
