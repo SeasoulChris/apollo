@@ -53,4 +53,5 @@ dependencies:
     - librosa
     - moviepy
     - pydub
+    - redis
     - youtube-dl

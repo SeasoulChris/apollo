@@ -227,6 +227,7 @@ SECRET_ENVS=(
   "MONGO_PASSWD=mongo-secret:passwd"
   "OUTLOOK_USER=outlook-secret:user"
   "OUTLOOK_PASSWD=outlook-secret:passwd"
+  "REDIS_PASSWD=redis-secret:passwd"
 )
 for i in ${SECRET_ENVS[@]}; do
   IFS='=' read KEY VALUE <<< "${i}"
