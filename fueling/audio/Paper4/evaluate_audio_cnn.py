@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import os
 
+from absl import flags
 import numpy as np
 import torch
 import torch.nn as nn
@@ -9,6 +11,14 @@ from torchvision import models
 from torchvision import transforms
 
 from audio_cnn import AudioCNN1dModel, AudioCNN2dModel
+
+flags.DEFINE_string(
+    'model_file',
+    '/home/xukecheng/work/apollo-fuel/model_epoch7_valloss0.793750.pt',
+    'model file for evaluation.')
+flags.DEFINE_string(
+    'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+    'dir containing validation data.')
 
 
 def evaluate(model, X, y_true):
@@ -24,42 +34,50 @@ def evaluate(model, X, y_true):
 
 if __name__ == '__main__':
 
-    MODEL = 'cnn2d'
+    def main(argv):
 
-    model = None
-    if MODEL == 'cnn1d':
-        model = AudioCNN1dModel()
-    elif MODEL == 'cnn2d':
-        model = AudioCNN2dModel()
+        flags_dict = flags.FLAGS.flag_values_dict()
 
-    # TODO(jinyun): modify the following file paths to argparse
-    model_state_dict = torch.load('/home/xukecheng/work/apollo-fuel/model_epoch7_valloss0.793750.pt')
-    model.load_state_dict(model_state_dict)
-    print(model)
-    X = np.load('/home/xukecheng/Desktop/cleaned_data/eval_balanced/features.npy')
-    y = np.load('/home/xukecheng/Desktop/cleaned_data/eval_balanced/labels.npy')
+        MODEL = 'cnn2d'
 
-    X_em = X[y==1]
-    y_em = y[y==1]
-    X_nonem = X[y==0]
-    y_nonem = y[y==0]
+        model = None
+        if MODEL == 'cnn1d':
+            model = AudioCNN1dModel()
+        elif MODEL == 'cnn2d':
+            model = AudioCNN2dModel()
 
-    X = torch.from_numpy(X)
-    y = torch.from_numpy(y)
-    X_em = torch.from_numpy(X_em)
-    y_em = torch.from_numpy(y_em)
-    X_nonem = torch.from_numpy(X_nonem)
-    y_nonem = torch.from_numpy(y_nonem)
+        model_state_dict = torch.load(
+            flags_dict['model_file'])
+        model.load_state_dict(model_state_dict)
+        print(model)
+        X = np.load(
+            os.path.join(flags_dict['valid_dir'], 'features.npy'))
+        y = np.load(os.path.join(flags_dict['valid_dir'], 'labels.npy'))
 
-    if MODEL == 'cnn2d':
-        X = X.view(-1, 1, 128, 16)
-        X_em = X_em.view(-1, 1, 128, 16)
-        X_nonem = X_nonem.view(-1, 1, 128, 16)
+        X_em = X[y == 1]
+        y_em = y[y == 1]
+        X_nonem = X[y == 0]
+        y_nonem = y[y == 0]
 
-    print('----------- Data level Results -----------')
-    print('Overall accuracy = {}'.format(evaluate(model, X, y)))
-    print('EM accuracy = {}'.format(evaluate(model, X_em, y_em)))
-    print('Non-EM accuracy = {}'.format(evaluate(model, X_nonem, y_nonem)))
+        X = torch.from_numpy(X)
+        y = torch.from_numpy(y)
+        X_em = torch.from_numpy(X_em)
+        y_em = torch.from_numpy(y_em)
+        X_nonem = torch.from_numpy(X_nonem)
+        y_nonem = torch.from_numpy(y_nonem)
 
-    print('----------- File level Results -----------')
-    # TODO(kechxu): implement
+        if MODEL == 'cnn2d':
+            X = X.view(-1, 1, 128, 16)
+            X_em = X_em.view(-1, 1, 128, 16)
+            X_nonem = X_nonem.view(-1, 1, 128, 16)
+
+        print('----------- Data level Results -----------')
+        print('Overall accuracy = {}'.format(evaluate(model, X, y)))
+        print('EM accuracy = {}'.format(evaluate(model, X_em, y_em)))
+        print('Non-EM accuracy = {}'.format(evaluate(model, X_nonem, y_nonem)))
+
+        print('----------- File level Results -----------')
+        # TODO(kechxu): implement
+
+    from absl import app
+    app.run(main)
