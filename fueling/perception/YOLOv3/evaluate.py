@@ -86,19 +86,20 @@ def compile_annotations(image_label_result_uid_list):
         ann_list = []
         for obj in objs:
             x0, y0, x1, y1 = obj[0][3:7]
+            #TODO[KWT]: uncomment below to clip out-of-image-bound bboxes
             #x0 = round(max(0, min(width, x0)), 3)
             #x1 = round(max(0, min(width, x1)), 3)
             #y0 = round(max(0, min(height, y0)), 3)
             #y1 = round(max(0, min(height, y1)), 3)
             cat_id = obj[1]
 
-            obj_dic = {'area': round((x1-x0+1) * (y1-y0+1), 2),
-                       'bbox': [x0, y0, round(x1-x0+1, 2), round(y1-y0+1, 2)],
-                       'category_id': cat_id,
-                       'id': obj_id,
-                       'image_id': uid,
-                       'iscrowd': 0,
-                       'segmentation': None}
+            obj_dic = {"area": round((x1 - x0 + 1) * (y1 - y0 + 1), 2),
+                       "bbox": [x0, y0, round(x1 - x0 + 1, 2), round(y1 - y0 + 1, 2)],
+                       "category_id": cat_id,
+                       "id": obj_id,
+                       "image_id": uid,
+                       "iscrowd": 0,
+                       "segmentation": None}
             obj_id += 1
             ann_list.append(obj_dic)
         image_objs_label_result_uid_list.append(
@@ -152,9 +153,9 @@ def compile_categories(gt_dt):
     gt, dt = gt_dt
     cat_list = []
     for k, v in CLASS_NAME_ID_MAP.items():
-        cat_list.append({'id': v,
-                         'name': k,
-                         'supercategory': k})
+        cat_list.append({"id": v,
+                         "name": k,
+                         "supercategory": k})
     gt["categories"] = cat_list
     return (gt, dt)
 
