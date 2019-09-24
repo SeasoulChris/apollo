@@ -170,31 +170,53 @@ class Yolov3Evaluate(BasePipeline):
         # RDD(file_path) for training dataset.
         dataset_result_rdd = self.to_rdd(dataset_result_list)
         data = (
-            # RDD((dataset, result_dir)), (label dataset, inference result dir)
+            # RDD((label_dataset, result_dir)), each dataset to be evaluatued
             dataset_result_rdd
-            # RDD([(label_txt_path, result_txt_path, uid), ...]), 
-            # match every label file to corresponding result file 
+            # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
+            # in a dataset and the result directory
             .map(match_label_to_result)
+            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
+            # image information as a dictionay
             .map(compile_images)
+            # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
+            # add the annotation list for that image example
             .map(compile_annotations)
+            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a 
+            # ground truth dictionary and a inference result matrix
             .map(read_results)
+            # RDD((gt_dict, complete_result_matrix)), add the category list to the
+            # gt_dict
             .map(compile_categories)
             )
         self.run(data)
 
     def run_prod(self):
-        data_dir = "modules/perception/camera_object/"
-        training_datasets = glob.glob(os.path.join("/mnt/bos", data_dir, "*"))
+        label_dir = "modules/perception/camera_obj/YOLOv3/train"
+        result_dir = "modules/perception/camera_obj/YOLOv3/test_output"
+        dataset_dir_list = glob.glob(os.path.join(label_dir, "*"))
+        dataset_result_list = [(dataset, result_dir) for dataset in dataset_dir_list]
         # RDD(file_path) for training dataset.
-        training_datasets_rdd = self.to_rdd(training_datasets)
+        dataset_result_rdd = self.to_rdd(dataset_result_list)
         data = (
-            # RDD(directory_path), directory containing a dataset
-            training_datasets_rdd
-            # RDD(file_path), paths of all label txt files
-            .map(data_utils.get_all_image_paths)
-            .cache())
-        output_dir = os.path.join(INFERENCE_OUTPUT_PATH)
-        self.run(data, output_dir)
+            # RDD((label_dataset, result_dir)), each dataset to be evaluatued
+            dataset_result_rdd
+            # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
+            # in a dataset and the result directory
+            .map(match_label_to_result)
+            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the 
+            # image information as a dictionay
+            .map(compile_images)
+            # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
+            # add the annotation list for that image example
+            .map(compile_annotations)
+            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a 
+            # ground truth dictionary and a inference result matrix
+            .map(read_results)
+            # RDD((gt_dict, complete_result_matrix)), add the category list to the 
+            # gt_dict
+            .map(compile_categories)
+            )
+        self.run(data)
 
     def run(self, data_rdd):
         def _executor(gt_dt):
