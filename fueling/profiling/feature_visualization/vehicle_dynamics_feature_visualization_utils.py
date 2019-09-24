@@ -16,6 +16,8 @@ import numpy as np
 from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, DYNAMICS_FEATURE_NAMES
 import fueling.common.logging as logging
 
+# Minimum epsilon value used in compare with zero
+MIN_EPSILON = 0.000001
 
 def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
@@ -45,14 +47,13 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
-
 def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
                      title_addon, text_addon):
     """ control actions x,y - time """
     plt.plot(data_plot_x0, data_plot_y0, label="command", linewidth=0.5)
     plt.plot(data_plot_x1, data_plot_y1, label="action", linewidth=0.5)
-    plt.xlabel('timestamp_sec (relative to t0)')
-    plt.ylabel(feature + ' commands and measured outputs')
+    plt.xlabel('timestamp_sec (relative to t0) /sec')
+    plt.ylabel(feature + ' commands and measured outputs /%')
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " and " +
               DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")")
     plt.legend(fontsize=6)
@@ -66,8 +67,7 @@ def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, fea
              color='red', fontsize=6)
     plt.tight_layout()
 
-
-def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
+def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone_x, feature, status, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
@@ -84,7 +84,9 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
     plt.tight_layout()
     var_polyfit = [1.0, 0.0]
     if polyfit:
-        var_polyfit = np.polyfit(data_plot_x, data_plot_y, 1)
+        data_fit_x = np.take(data_plot_x, data_alivezone_x, axis=0)
+        data_fit_y = np.take(data_plot_y, data_alivezone_x, axis=0)
+        var_polyfit = np.polyfit(data_fit_x, data_fit_y, 1)
         line_polyfit = np.poly1d(var_polyfit)
         fit_plot_x = np.array([np.amin(data_plot_x), np.amax(data_plot_x)])
         fit_plot_y = line_polyfit(fit_plot_x)
@@ -95,10 +97,11 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, feature, status, polyfit):
                  color='red', fontsize=6)
     return var_polyfit
 
-
-def plot_xcorr(data_plot_x, data_plot_y, feature):
+def plot_xcorr(data_plot_x, data_plot_y, data_alivezone_x, feature):
     """ cross-correlation x - y """
-    lags = plt.xcorr(data_plot_x, data_plot_y, usevlines=True, maxlags=50,
+    data_xcorr_x = np.take(data_plot_x, data_alivezone_x, axis=0)
+    data_xcorr_y = np.take(data_plot_y, data_alivezone_x, axis=0)
+    lags = plt.xcorr(data_xcorr_x, data_xcorr_y, usevlines=True, maxlags=50,
                      normed=True, lw=0.5, linestyle='solid', color='blue')
     plt.grid(True)
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " delay frames")
@@ -115,14 +118,13 @@ def plot_xcorr(data_plot_x, data_plot_y, feature):
     print('"The estimated delay frame number is: ', lag_frame)
     return lag_frame
 
-
 def plot_h5_features_time(data_rdd):
     """plot the time-domain data of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                        .format(dir_data))
+                  .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
@@ -137,14 +139,14 @@ def plot_h5_features_time(data_rdd):
         for feature in plot_features:
             if feature is "throttle":
                 slope_y = 1.0
-                bias_y = 8.0
+                bias_y = 0.0
                 delay_frame = 0
             elif feature is "brake":
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
             elif feature is "steering":
-                slope_y = -1.0
+                slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
             # Raw data plots and analysis
@@ -153,9 +155,13 @@ def plot_h5_features_time(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                          - bias_y) / slope_y)
+            if feature is "steering":
+                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
+            else:
+                data_plot_y0 = np.maximum(0.0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                                - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
+            data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
@@ -164,11 +170,12 @@ def plot_h5_features_time(data_rdd):
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, False)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, data_alivezone_y0,
+                                          feature, title_addon, False)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            delay_frame = plot_xcorr(data_plot_y0, data_plot_y1, feature)
+            delay_frame = plot_xcorr(data_plot_y0, data_plot_y1, data_alivezone_y0, feature)
             pdf.savefig()
             plt.close()
             # Shifted data by estimating delay frame number
@@ -177,9 +184,15 @@ def plot_h5_features_time(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                          - bias_y) / slope_y)
+            if feature is "steering":
+                data_plot_y0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                - bias_y) / slope_y
+            else:
+                data_plot_y0 = np.maximum(0.0, (data[0:-1 + delay_frame,
+                                                     DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                                - bias_y) / slope_y)
             data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
@@ -188,18 +201,17 @@ def plot_h5_features_time(data_rdd):
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, True)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, data_alivezone_y0, feature,
+                                          title_addon, True)
             pdf.savefig()
             plt.close()
             # Scaled data by fitting the data curve
             title_addon = "scaled data"
-            data_plot_x0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
-                            data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
-                            data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = np.maximum(0, (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                          - bias_y) / slope_y * var_polyfit[0] + var_polyfit[1])
-            data_plot_y1 = data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX[feature]]
+            if feature is "steering":
+                data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
+            else:
+                data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
+                                                                * var_polyfit[0] + var_polyfit[1])
             bias_y += slope_y * var_polyfit[1]
             slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
@@ -210,6 +222,7 @@ def plot_h5_features_time(data_rdd):
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
-            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, feature, title_addon, True)
+            var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, data_alivezone_y0,
+                                          feature, title_addon, True)
             pdf.savefig()
             plt.close()
