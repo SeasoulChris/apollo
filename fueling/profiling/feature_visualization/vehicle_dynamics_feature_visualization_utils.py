@@ -47,46 +47,51 @@ def generate_data(segments):
     print('Data_Set length is: ', len(data))
     return data
 
-def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
-                     title_addon, text_addon):
+
+def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone,
+                     feature, title_addon, text_addon):
     """ control actions x,y - time """
     plt.plot(data_plot_x0, data_plot_y0, label="command", linewidth=0.5)
     plt.plot(data_plot_x1, data_plot_y1, label="action", linewidth=0.5)
     plt.xlabel('timestamp_sec (relative to t0) /sec')
     plt.ylabel(feature + ' commands and measured outputs /%')
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " and " +
-              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")")
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")",
+              fontsize=10)
     plt.legend(fontsize=6)
     xmin, xmax, ymin, ymax = plt.axis()
+    data_est_y0 = np.take(data_plot_y0, data_alivezone, axis=0)
+    data_est_y1 = np.take(data_plot_y1, data_alivezone, axis=0)
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
              'Max Devidation = {0:.3f}, \nStandard Deviation = {1:.3f}'
-             .format(np.amax(np.abs(data_plot_y1 - data_plot_y0)),
-                     np.std(data_plot_y1 - data_plot_y0)),
+             .format(np.amax(np.abs(data_est_y1 - data_est_y0)),
+                     np.std(data_est_y1 - data_est_y0)),
              color='red', fontsize=8)
     plt.text(xmin * 0.5 + xmax * 0.5, ymin * 0.5 + ymax * 0.5, text_addon,
              color='red', fontsize=6)
     plt.tight_layout()
 
-def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone_x, feature, status, polyfit):
+def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, status, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
     plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " vs " +
-              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")")
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")",
+              fontsize=10)
     xmin, xmax, ymin, ymax = plt.axis()
+    data_est_y = np.take(data_plot_x, data_alivezone, axis=0)
+    data_est_x = np.take(data_plot_y, data_alivezone, axis=0)
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
              'Max Devidation = {0:.3f}, \nStandard Deviation = {1:.3f}'
-             .format(np.amax(np.abs(data_plot_y - data_plot_x)),
-                     np.std(data_plot_y - data_plot_x)),
+             .format(np.amax(np.abs(data_est_y - data_est_x)),
+                     np.std(data_est_y - data_est_x)),
              color='red', fontsize=6)
     plt.tight_layout()
     var_polyfit = [1.0, 0.0]
     if polyfit:
-        data_fit_x = np.take(data_plot_x, data_alivezone_x, axis=0)
-        data_fit_y = np.take(data_plot_y, data_alivezone_x, axis=0)
-        var_polyfit = np.polyfit(data_fit_x, data_fit_y, 1)
+        var_polyfit = np.polyfit(data_est_x, data_est_y, 1)
         line_polyfit = np.poly1d(var_polyfit)
         fit_plot_x = np.array([np.amin(data_plot_x), np.amax(data_plot_x)])
         fit_plot_y = line_polyfit(fit_plot_x)
@@ -97,17 +102,17 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone_x, feature, status,
                  color='red', fontsize=6)
     return var_polyfit
 
-def plot_xcorr(data_plot_x, data_plot_y, data_alivezone_x, feature):
+def plot_xcorr(data_plot_x, data_plot_y, data_alivezone, feature):
     """ cross-correlation x - y """
-    data_xcorr_x = np.take(data_plot_x, data_alivezone_x, axis=0)
-    data_xcorr_y = np.take(data_plot_y, data_alivezone_x, axis=0)
+    data_xcorr_x = np.take(data_plot_x, data_alivezone, axis=0)
+    data_xcorr_y = np.take(data_plot_y, data_alivezone, axis=0)
     lags = plt.xcorr(data_xcorr_x, data_xcorr_y, usevlines=True, maxlags=50,
                      normed=True, lw=0.5, linestyle='solid', color='blue')
     plt.grid(True)
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " delay frames")
     plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " cross-correlation")
     plt.title("Cross-correlation " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-              + " vs " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
+              + " vs " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]], fontsize=10)
     lag_frame = lags[0][np.argmax(lags[1])]
     plt.plot(lag_frame, 1.0, "o", markersize=2, markerfacecolor='r', markeredgecolor='b')
     xmin, xmax, ymin, ymax = plt.axis()
@@ -135,7 +140,7 @@ def plot_h5_features_time(data_rdd):
         pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
     with PdfPages(pdffile) as pdf:
         data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
-        plot_features = ["throttle", "brake", "steering"]
+        plot_features = ["throttle", "brake", "steering", "acceleration"]
         for feature in plot_features:
             if feature is "throttle":
                 slope_y = 1.0
@@ -149,24 +154,28 @@ def plot_h5_features_time(data_rdd):
                 slope_y = 1.0
                 bias_y = 0.0
                 delay_frame = 0
+            elif feature is "acceleration":
+                slope_y = 1.0
+                bias_y = 0.0
+                delay_frame = 0
             # Raw data plots and analysis
             title_addon = "raw data"
             data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            if feature is "steering":
+            if feature is "steering" or feature is "acceleration":
                 data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
             else:
-                data_plot_y0 = np.maximum(0.0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                                - bias_y) / slope_y)
+                data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
+                                                 - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
-                             title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
+                             feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
@@ -184,7 +193,7 @@ def plot_h5_features_time(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[0 - delay_frame:-1, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0 - delay_frame, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            if feature is "steering":
+            if feature is "steering" or feature is "acceleration":
                 data_plot_y0 = (data[0:-1 + delay_frame, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
                                 - bias_y) / slope_y
             else:
@@ -196,8 +205,8 @@ def plot_h5_features_time(data_rdd):
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
-                             title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
+                             feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
@@ -207,18 +216,18 @@ def plot_h5_features_time(data_rdd):
             plt.close()
             # Scaled data by fitting the data curve
             title_addon = "scaled data"
-            if feature is "steering":
+            if feature is "steering" or feature is "acceleration":
                 data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
             else:
                 data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
-                                                                * var_polyfit[0] + var_polyfit[1])
+                                                                  * var_polyfit[0] + var_polyfit[1])
             bias_y += slope_y * var_polyfit[1]
             slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, feature,
-                             title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
+                             feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
