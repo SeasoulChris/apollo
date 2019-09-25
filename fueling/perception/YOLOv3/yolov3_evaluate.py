@@ -15,6 +15,7 @@ import fueling.common.storage.bos_client as bos_client
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
+BATCH_SIZE = cfg.batch_size
 MAX_ITER = cfg.max_iter
 INFERENCE_OUTPUT_PATH = cfg.inference_output_path
 INFERENCE_ONLY_2D = cfg.inference_only_2d
@@ -60,7 +61,7 @@ class Yolov3Inference(BasePipeline):
                 data_pool = DatasetOnlyImage(image_paths)
             else:
                 data_pool = Dataset(image_paths)
-            for _ in range(data_pool.dataset_size):
+            for _ in range((data_pool.dataset_size + 1) // BATCH_SIZE):
                 data = data_pool.batch
                 engine.run(data, output_dir)
         if not os.path.exists(output_dir):
