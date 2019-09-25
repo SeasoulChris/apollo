@@ -28,7 +28,7 @@ class Dataset:
                       labels for 1 image. "class_name, x_min,y_min,x_max,y_max,x,x,x,x,x,x,x,x,
                       class_id, x,x,x,x,x,x,x,x"
         batch_size: number of examples per batch
-        num_threads: number of thread to process data. 
+        num_threads: number of thread to process data.
         output_name: bool, if output also the image/label file names
         """
         self.image_file_paths = image_file_paths

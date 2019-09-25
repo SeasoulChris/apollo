@@ -167,7 +167,7 @@ def get_sql_query(sql_context, msgs_rdd):
         INNER JOIN
         (
             SELECT target, time, topic, btopic, MIN(ABS(time-btime)) as mindiff
-            FROM %(table_name)s 
+            FROM %(table_name)s
             GROUP BY target, time, topic, btopic
         ) B on A.target=B.target AND A.time=B.time AND A.topic=B.topic
         WHERE ABS(A.time-A.btime)=B.mindiff
@@ -262,7 +262,8 @@ class PopulateFramesPipeline(BasePipeline):
                     .flatMapValues(lambda record: streaming_utils
                                    .load_meta_data(root_dir, record, WANTED_CHANNELS.values()))
                     # RDD(target_partition, timestamp, topic)
-                    .map(lambda (target, meta): (target, meta.timestamp, meta.topic))
+                    .map(lambda target_meta:
+                         (target_meta[0], target_meta[1].timestamp, target_meta[1].topic))
                     .cache())
 
         # Transform RDD to DataFrame, run SQL and tranform back when done

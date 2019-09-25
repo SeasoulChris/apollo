@@ -119,13 +119,13 @@ def quaternion_to_roation(qtn):
     """Convert quaternion vector to 3x3 rotation matrix."""
     rotation_mat = np.zeros(shape=(3, 3), dtype=float)
     rotation_mat[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
-    rotation_mat[0][1] = 2 * (qtn.qx*qtn.qy - qtn.qw*qtn.qz)
-    rotation_mat[0][2] = 2 * (qtn.qx*qtn.qz + qtn.qw*qtn.qy)
-    rotation_mat[1][0] = 2 * (qtn.qx*qtn.qy + qtn.qw*qtn.qz)
+    rotation_mat[0][1] = 2 * (qtn.qx * qtn.qy - qtn.qw * qtn.qz)
+    rotation_mat[0][2] = 2 * (qtn.qx * qtn.qz + qtn.qw * qtn.qy)
+    rotation_mat[1][0] = 2 * (qtn.qx * qtn.qy + qtn.qw * qtn.qz)
     rotation_mat[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
-    rotation_mat[1][2] = 2 * (qtn.qy*qtn.qz - qtn.qw*qtn.qx)
-    rotation_mat[2][0] = 2 * (qtn.qx*qtn.qz - qtn.qw*qtn.qy)
-    rotation_mat[2][1] = 2 * (qtn.qy*qtn.qz + qtn.qw*qtn.qx)
+    rotation_mat[1][2] = 2 * (qtn.qy * qtn.qz - qtn.qw * qtn.qx)
+    rotation_mat[2][0] = 2 * (qtn.qx * qtn.qz - qtn.qw * qtn.qy)
+    rotation_mat[2][1] = 2 * (qtn.qy * qtn.qz + qtn.qw * qtn.qx)
     rotation_mat[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
     return rotation_mat
 
@@ -133,12 +133,12 @@ def quaternion_to_roation(qtn):
 def rotation_to_quaternion(rot):
     """Convert 3x3 rottation matrix to quaternion vector."""
     qtn = Quaternion()
-    qtn.qx = np.absolute(np.sqrt(1+rot[0][0]-rot[1][1]-rot[2][2])) * \
-        np.sign(rot[2][1]-rot[1][2]) * 0.5
-    qtn.qy = np.absolute(np.sqrt(1-rot[0][0]+rot[1][1]-rot[2][2])) * \
-        np.sign(rot[0][2]-rot[2][0]) * 0.5
-    qtn.qz = np.absolute(np.sqrt(1-rot[0][0]-rot[1][1]+rot[2][2])) * \
-        np.sign(rot[1][0]-rot[0][1]) * 0.5
+    qtn.qx = np.absolute(np.sqrt(1 + rot[0][0] - rot[1][1] - rot[2][2])) * \
+        np.sign(rot[2][1] - rot[1][2]) * 0.5
+    qtn.qy = np.absolute(np.sqrt(1 - rot[0][0] + rot[1][1] - rot[2][2])) * \
+        np.sign(rot[0][2] - rot[2][0]) * 0.5
+    qtn.qz = np.absolute(np.sqrt(1 - rot[0][0] - rot[1][1] + rot[2][2])) * \
+        np.sign(rot[1][0] - rot[0][1]) * 0.5
     qtn.qw = np.sqrt(1 - qtn.qx * qtn.qx - qtn.qy * qtn.qy - qtn.qz * qtn.qz)
     return qtn
 
@@ -147,13 +147,13 @@ def generate_transform(qtn, dev):
     """Generate a matrix with rotation and deviation/translation."""
     tranform = np.zeros(shape=(4, 4), dtype=float)
     tranform[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
-    tranform[0][1] = 2 * (qtn.qx*qtn.qy - qtn.qw*qtn.qz)
-    tranform[0][2] = 2 * (qtn.qx*qtn.qz + qtn.qw*qtn.qy)
-    tranform[1][0] = 2 * (qtn.qx*qtn.qy + qtn.qw*qtn.qz)
+    tranform[0][1] = 2 * (qtn.qx * qtn.qy - qtn.qw * qtn.qz)
+    tranform[0][2] = 2 * (qtn.qx * qtn.qz + qtn.qw * qtn.qy)
+    tranform[1][0] = 2 * (qtn.qx * qtn.qy + qtn.qw * qtn.qz)
     tranform[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
-    tranform[1][2] = 2 * (qtn.qy*qtn.qz - qtn.qw*qtn.qx)
-    tranform[2][0] = 2 * (qtn.qx*qtn.qz - qtn.qw*qtn.qy)
-    tranform[2][1] = 2 * (qtn.qy*qtn.qz + qtn.qw*qtn.qx)
+    tranform[1][2] = 2 * (qtn.qy * qtn.qz - qtn.qw * qtn.qx)
+    tranform[2][0] = 2 * (qtn.qx * qtn.qz - qtn.qw * qtn.qy)
+    tranform[2][1] = 2 * (qtn.qy * qtn.qz + qtn.qw * qtn.qx)
     tranform[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
     tranform[0][3] = dev.x
     tranform[1][3] = dev.y
@@ -191,10 +191,10 @@ def transform_coordinate(point, transform):
 def multiply_quaternion(qtn1, qtn2):
     """Multiple two quaternions. qtn1 is the rotation applied AFTER qtn2."""
     qtn = Quaternion()
-    qtn.qw = qtn1.qw*qtn2.qw - qtn1.qx*qtn2.qx - qtn1.qy*qtn2.qy - qtn1.qz*qtn2.qz
-    qtn.qx = qtn1.qw*qtn2.qx + qtn1.qx*qtn2.qw + qtn1.qy*qtn2.qz - qtn1.qz*qtn2.qy
-    qtn.qy = qtn1.qw*qtn2.qy - qtn1.qx*qtn2.qy + qtn1.qy*qtn2.qw + qtn1.qz*qtn2.qx
-    qtn.qz = qtn1.qw*qtn2.qz + qtn1.qx*qtn2.qy - qtn1.qy*qtn2.qx + qtn1.qz*qtn2.qw
+    qtn.qw = qtn1.qw * qtn2.qw - qtn1.qx * qtn2.qx - qtn1.qy * qtn2.qy - qtn1.qz * qtn2.qz
+    qtn.qx = qtn1.qw * qtn2.qx + qtn1.qx * qtn2.qw + qtn1.qy * qtn2.qz - qtn1.qz * qtn2.qy
+    qtn.qy = qtn1.qw * qtn2.qy - qtn1.qx * qtn2.qy + qtn1.qy * qtn2.qw + qtn1.qz * qtn2.qx
+    qtn.qz = qtn1.qw * qtn2.qz + qtn1.qx * qtn2.qy - qtn1.qy * qtn2.qx + qtn1.qz * qtn2.qw
     return qtn
 
 
@@ -220,14 +220,14 @@ def convert_to_world_coordinate(point, transform, stationary_pole):
 
 def euler_to_quaternion(roll, pitch, yaw):
     """Euler to Quaternion"""
-    qtnx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - \
-        np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-    qtny = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + \
-        np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-    qtnz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - \
-        np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-    qtnw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + \
-        np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qtnx = np.sin(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) - \
+        np.cos(roll / 2) * np.sin(pitch / 2) * np.sin(yaw / 2)
+    qtny = np.cos(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2) + \
+        np.sin(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2)
+    qtnz = np.cos(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2) - \
+        np.sin(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2)
+    qtnw = np.cos(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) + \
+        np.sin(roll / 2) * np.sin(pitch / 2) * np.sin(yaw / 2)
     return [qtnx, qtny, qtnz, qtnw]
 
 
@@ -430,7 +430,7 @@ class ImageSensor(Sensor):
     def process(self, message, timestamp, frame, pose, stationary_pole):
         """Processing image message."""
         camera_image = frame_pb2.CameraImage()
-        camera_image.timestamp = float(timestamp)/(10**9)
+        camera_image.timestamp = float(timestamp) / (10**9)
         image_name = streaming_utils.get_message_id(timestamp, self._channel)
         dump_img_name(os.path.join(self._task_dir, 'images'), image_name)
         camera_image.image_url = '{}/{}.jpg'.format(SENSOR_PARAMS['image_url'], image_name)
@@ -582,7 +582,7 @@ class FramePopulator(object):
                                                  frame,
                                                  pose,
                                                  self._stationary_pole)
-        frame.timestamp = float(lidar_msg.message.timestamp)/(10**9)
+        frame.timestamp = float(lidar_msg.message.timestamp) / (10**9)
         logging.info('converting proto object to json: {}'.format(file_name))
         json_obj = MessageToJson(frame, False, True)
         logging.info('preparing to dump json to file: {}'.format(file_name))
@@ -654,7 +654,7 @@ class FramePopulator(object):
         file_utils.makedirs(img_dir)
         lidar_msg = next(x for x in message_structs
                          if x.message.topic == SENSOR_PARAMS['lidar_channel'])
-        lidar_time = float(lidar_msg.message.timestamp)/(10**9)
+        lidar_time = float(lidar_msg.message.timestamp) / (10**9)
         lidar_time_str = '{:.9f}'.format(lidar_time)
 
         # Filter out the frames that lidar-128 has time diff bigger than designed value
@@ -780,17 +780,17 @@ class DataStream(object):
         self._buffer.extend(self._load_func(self._data_source[self._data_source_index]))
         self._data_source_index += 1
         # Update each iterator's index if applicable
-        item_number_released = len(self._buffer)/3
+        item_number_released = len(self._buffer) / 3
         for iterator in self._iterators:
-            if not iterator.okay_to_update_index(item_number_released+1):
+            if not iterator.okay_to_update_index(item_number_released + 1):
                 return 0
         if self._data_source_index <= 1:
             return 0
         del self._buffer[:item_number_released]
         gc.collect()
         for iterator in self._iterators:
-            iterator.update_index(item_number_released+1)
-        return item_number_released+1
+            iterator.update_index(item_number_released + 1)
+        return item_number_released + 1
 
 
 class DataStreamIterator(object):

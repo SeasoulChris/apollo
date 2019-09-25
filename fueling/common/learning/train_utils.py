@@ -42,8 +42,8 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
     pred_y = []
     for i in range(num_of_batch):
         optimizer.zero_grad()
-        X = train_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        y = train_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
+        X = train_X[i * batch_size: min(num_of_data, (i + 1) * batch_size), ]
+        y = train_y[i * batch_size: min(num_of_data, (i + 1) * batch_size), ]
         if batch_preprocess is not None:
             X, y = batch_preprocess(X, y)
         pred = model(X)
@@ -75,8 +75,8 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
     num_of_batch = math.ceil(num_of_data / batch_size)
     pred_y = []
     for i in range(num_of_batch):
-        X = valid_X[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
-        y = valid_y[i*batch_size: min(num_of_data, (i+1)*batch_size), ]
+        X = valid_X[i * batch_size: min(num_of_data, (i + 1) * batch_size), ]
+        y = valid_y[i * batch_size: min(num_of_data, (i + 1) * batch_size), ]
         if batch_preprocess is not None:
             X, y = batch_preprocess(X, y)
         pred = model(X)
@@ -97,7 +97,7 @@ def train_valid_vanilla(train_X, train_y, valid_X, valid_y, model, loss, optimiz
                         scheduler, epochs, save_name, batch_preprocess=None,
                         train_batch=1024, print_period=100, valid_batch=1024):
     best_valid_loss = float('+inf')
-    for epoch in range(1, epochs+1):
+    for epoch in range(1, epochs + 1):
         train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
                       batch_preprocess, train_batch, print_period)
         valid_loss = valid_vanilla(valid_X, valid_y, model, loss,
@@ -181,7 +181,7 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
     '''
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
-    for epoch in range(1, epochs+1):
+    for epoch in range(1, epochs + 1):
         train_dataloader(train_loader, model, loss, optimizer, epoch, print_period)
         with torch.no_grad():
             valid_loss = valid_dataloader(valid_loader, model, loss)

@@ -172,7 +172,7 @@ def compute_dynamics_time(grading_mtx, arg):
     natural_freq, damping_ratio = dynamics_transformation(a1, a2, b1, b2)
 
     rise_time = 1.8 / natural_freq
-    overshoot = np.exp(-np.pi * damping_ratio/(1-damping_ratio**2))
+    overshoot = np.exp(-np.pi * damping_ratio / (1 - damping_ratio**2))
     settling_time = 4.6 / (natural_freq * damping_ratio)
     return (rise_time, overshoot, settling_time)
 

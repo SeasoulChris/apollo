@@ -26,15 +26,15 @@ def traj_bivariate_gaussian_loss(y_pred, y_true):
     gt_x, gt_y = y_true[:, :, 0], y_true[:, :, 1]
     eps = 1e-20
 
-    z = ((gt_x-mux)/(eps+sigma_x))**2 + ((gt_y-muy)/(eps+sigma_y))**2 - \
-        2*corr*(gt_x-mux)*(gt_y-muy)/(sigma_x*sigma_y+eps)
-    P = 1/(2*math.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
-        torch.exp(-z/(2*(1-corr**2)))
+    z = ((gt_x - mux) / (eps + sigma_x))**2 + ((gt_y - muy) / (eps + sigma_y))**2 - \
+        2 * corr * (gt_x - mux) * (gt_y - muy) / (sigma_x * sigma_y + eps)
+    P = 1 / (2 * math.pi * sigma_x * sigma_y * torch.sqrt(1 - corr**2) + eps) * \
+        torch.exp(-z / (2 * (1 - corr**2)))
 
     loss = torch.clamp(P, min=eps)
     loss = -loss.log()
 
-    return torch.sum(loss)/N
+    return torch.sum(loss) / N
 
 
 '''

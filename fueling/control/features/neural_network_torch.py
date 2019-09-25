@@ -51,6 +51,6 @@ class NeuralNetworkTorch(object):
 
     @staticmethod
     def init_weights(m):
-        if type(m) == torch.nn.Linear:
+        if isinstance(m, torch.nn.Linear):
             torch.nn.init.xavier_uniform_(m.weight)
             m.bias.data.fill_(0)

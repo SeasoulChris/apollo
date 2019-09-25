@@ -29,7 +29,7 @@ train_alpha = CALIBRATION_TABLE_CONF.train_alpha
 
 
 def get_vehicle(path):
-    return [sub_folder for sub_folder in os.listdir(path) if os.path.isdir(os.path.join(path, sub_folder))]
+    return [subdir for subdir in os.listdir(path) if os.path.isdir(os.path.join(path, subdir))]
 
 
 def get_vehicle_param(folder_dir):

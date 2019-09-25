@@ -103,7 +103,8 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     control_mtx_rtn = control_mtx[control_idx_by_chassis, :]
     # Third, swap the control data with inverted-sequence chassis sequence_num
     # (in very rare cases, the chassis sequence number in record is like ... 100, 102, 101, 103 ...)
-    for inv in np.where(np.diff(control_mtx_rtn[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]) < 0):
+    for inv in np.where(
+            np.diff(control_mtx_rtn[:, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]) < 0):
         control_mtx_rtn[[inv, inv + 1], :] = control_mtx_rtn[[inv + 1, inv], :]
     for inv in np.where(np.diff(chassis_mtx_filtered[:, DYNAMICS_MODE_IDX['sequence_num']]) < 0):
         chassis_mtx_filtered[[inv, inv + 1], :] = chassis_mtx_filtered[[inv + 1, inv], :]

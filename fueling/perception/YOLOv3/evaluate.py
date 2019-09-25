@@ -22,9 +22,9 @@ EVALUATE_RESULT_DIR_CLOUD = cfg.evaluate_result_dir_cloud
 
 def match_label_to_result(dataset_result_dir):
     """
-    From labeled dataset and inference result directory, 
+    From labeled dataset and inference result directory,
     match each labeled txt file to its corresponding inference
-    result txt file with the same name. Also append a 
+    result txt file with the same name. Also append a
     unique id number to each match file pairs.
     """
     dataset_dir, result_dir = dataset_result_dir
