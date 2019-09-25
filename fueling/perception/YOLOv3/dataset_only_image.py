@@ -12,6 +12,7 @@ import numpy as np
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.utils import data_utils
 from fueling.perception.YOLOv3.utils.yolo_utils import letterbox_image
+import fueling.common.logging as logging
 
 
 BATCH_SIZE = cfg.batch_size
@@ -70,7 +71,11 @@ class DatasetOnlyImage:
         """
         while True:
             image_file_path = self._txt_files_queue.get()
-            image = cv2.imread(image_file_path)[:, :, ::-1]
+            image = cv2.imread(image_file_path)
+            if image == None:
+                logging.warn("Failed to read image {}. Skip.".format(image_file_path))
+                continue
+            image = image[:, :, ::-1]
             original_image = Image.fromarray(image)
             resized_image = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT))
             image_data = np.array(resized_image, dtype=np.uint8)
