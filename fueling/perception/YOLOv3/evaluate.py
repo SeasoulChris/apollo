@@ -14,6 +14,10 @@ import fueling.common.logging as logging
 
 
 CLASS_NAME_ID_MAP = cfg.class_map
+EVALUATE_DATA_DIR_LOCAL = cfg.evaluate_data_dir_local
+EVALUATE_RESULT_DIR_LOCAL = cfg.evaluate_result_dir_local
+EVALUATE_DATA_DIR_CLOUD = cfg.evaluate_data_dir_cloud
+EVALUATE_RESULT_DIR_CLOUD = cfg.evaluate_result_dir_cloud
 
 
 def match_label_to_result(dataset_result_dir):
@@ -169,10 +173,8 @@ class Yolov3Evaluate(BasePipeline):
         BasePipeline.__init__(self, "yolov3_evaluate")
 
     def run_test(self):
-        label_dir = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
-        result_dir = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output"
-        dataset_dir_list = glob.glob(os.path.join(label_dir, "*"))
-        dataset_result_list = [(dataset, result_dir) for dataset in dataset_dir_list]
+        dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_LOCAL, "*"))
+        dataset_result_list = [(dataset, EVALUATE_RESULT_DIR_LOCAL) for dataset in dataset_dir_list]
         # RDD(file_path) for training dataset.
         dataset_result_rdd = self.to_rdd(dataset_result_list)
         data = (
@@ -197,10 +199,9 @@ class Yolov3Evaluate(BasePipeline):
         self.run(data)
 
     def run_prod(self):
-        label_dir = "modules/perception/camera_obj/YOLOv3/train"
-        result_dir = "modules/perception/camera_obj/YOLOv3/test_output"
-        dataset_dir_list = glob.glob(os.path.join(label_dir, "*"))
-        dataset_result_list = [(dataset, result_dir) for dataset in dataset_dir_list]
+        dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_CLOUD, "*"))
+        dataset_result_list = \
+                [(dataset, EVALUATE_RESULT_DATA_CLOUD) for dataset in dataset_dir_list]
         # RDD(file_path) for training dataset.
         dataset_result_rdd = self.to_rdd(dataset_result_list)
         data = (

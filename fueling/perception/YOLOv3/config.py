@@ -41,6 +41,15 @@ restore_path = "testdata/perception/YOLOv3/models/models-119999"
 model_output_path = "fueling/perception/YOLOv3/models/"
 inference_output_path = "./testdata/perception/YOLOv3/infer_output/models-119999/google_images/emergency-vehicle"
 
+train_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
+inference_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
+evaluate_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
+evaluate_result_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output"
+train_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
+inference_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
+evaluate_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
+evaluate_result_dir_cloud = "modules/perception/camera_obj/YOLOv3/test_output"
+
 train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this variable to None
                         "yolo-v3/Conv_14",
                         "yolo-v3/Conv_22",

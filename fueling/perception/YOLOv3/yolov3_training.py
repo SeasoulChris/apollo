@@ -14,6 +14,8 @@ import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
 MAX_ITER = cfg.max_iter
+TRAIN_DATA_DIR_LOCAL = cfg.train_data_dir_local
+TRAIN_DATA_DIR_CLOUD = cfg.train_data_dir_cloud
 
 
 class Yolov3Training(BasePipeline):
@@ -21,8 +23,7 @@ class Yolov3Training(BasePipeline):
         BasePipeline.__init__(self, "yolov3_training")
 
     def run_test(self):
-        data_dir = "/apollo/modules/data/fuel/testdata/perception"
-        training_datasets = glob.glob(os.path.join(data_dir, "*"))
+        training_datasets = glob.glob(os.path.join(TRAIN_DATA_DIR_LOCAL, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (
@@ -34,8 +35,7 @@ class Yolov3Training(BasePipeline):
         self.run(data)
 
     def run_prod(self):
-        data_dir = "modules/perception/camera_obj/YOLOv3/train"
-        training_datasets = glob.glob(os.path.join("/mnt/bos", data_dir, "*"))
+        training_datasets = glob.glob(os.path.join("/mnt/bos", TRAIN_DATA_DIR_CLOUD, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (

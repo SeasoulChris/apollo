@@ -19,6 +19,8 @@ BATCH_SIZE = cfg.batch_size
 MAX_ITER = cfg.max_iter
 INFERENCE_OUTPUT_PATH = cfg.inference_output_path
 INFERENCE_ONLY_2D = cfg.inference_only_2d
+INFERENCE_DATA_DIR_LOCAL = cfg.inference_data_dir_local
+INFERENCE_DATA_DIR_CLOUD = cfg.inference_data_dir_cloud
 
 
 class Yolov3Inference(BasePipeline):
@@ -26,8 +28,7 @@ class Yolov3Inference(BasePipeline):
         BasePipeline.__init__(self, "yolov3_inference")
 
     def run_test(self):
-        data_dir = "/apollo/modules/data/fuel/testdata/perception"
-        training_datasets = glob.glob(os.path.join(data_dir, "*"))
+        training_datasets = glob.glob(os.path.join(INFERENCE_DATA_DIR_LOCAL, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (
@@ -41,7 +42,7 @@ class Yolov3Inference(BasePipeline):
 
     def run_prod(self):
         data_dir = "modules/perception/camera_obj/YOLOv3/train"
-        training_datasets = glob.glob(os.path.join("/mnt/bos", data_dir, "*"))
+        training_datasets = glob.glob(os.path.join("/mnt/bos", INFERENCE_DATA_DIR_CLOUD, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (
