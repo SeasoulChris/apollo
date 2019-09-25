@@ -37,7 +37,6 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
 
     loss_history = []
     logging.info('Epoch: {}:'.format(epoch))
-    print('Epoch: {}:'.format(epoch))
     num_of_data = train_X.shape[0]
     num_of_batch = math.ceil(num_of_data / batch_size)
     pred_y = []
@@ -64,7 +63,6 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
 
     train_loss = np.mean(loss_history)
     logging.info('Training loss: {}'.format(train_loss))
-    print('Training Loss: {}'.format(train_loss))
     loss.loss_info(pred_y, train_y)
 
 
@@ -90,7 +88,6 @@ def valid_vanilla(valid_X, valid_y, model, loss, batch_preprocess=None,
 
     valid_loss = np.mean(loss_history)
     logging.info('Validation loss: {}.'.format(valid_loss))
-    print ('Validation loss: {}.'.format(valid_loss))
     loss.loss_info(pred_y, valid_y)
 
     return valid_loss
@@ -146,7 +143,6 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
 
     train_loss = np.mean(loss_history)
     logging.info('Training loss: {}'.format(train_loss))
-    print('Training Loss: {}'.format(train_loss))
 
 
 def valid_dataloader(valid_loader, model, loss, analyzer=None):
@@ -170,8 +166,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
 
     valid_loss = np.mean(loss_history)
     logging.info('Validation loss: {}.'.format(valid_loss))
-    print ('Validation loss: {}.'.format(valid_loss))
-    print ('Validation accuracy = {}'.format(np.mean(loss_info_history)))
+    logging.info('Validation accuracy = {}'.format(np.mean(loss_info_history)))
 
     return valid_loss
 
