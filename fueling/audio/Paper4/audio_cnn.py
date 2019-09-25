@@ -121,12 +121,12 @@ if __name__ == "__main__":
     # Set-up data-loader
     train_set_extractor = AudioFeatureExtraction(args.train_file)
     train_features, train_labels = train_set_extractor.load_features_labels(
-        args.train_file)
+        'cnn', args.train_file)
     train_dataset = AudioDataset(MODEL, train_features, train_labels)
 
     validation_set_extractor = AudioFeatureExtraction(args.valid_file)
-    valid_features, valid_labels = validation_set_extractor.load_features_labels(
-        args.valid_file)
+    valid_features, valid_labels = validation_set_extractor.load_features_labels('cnn',
+                                                                                 args.valid_file)
     valid_dataset = AudioDataset(MODEL, valid_features, valid_labels)
 
     print('--------- Loading Training Data -----------')

@@ -17,7 +17,6 @@ from sklearn.svm import SVC
 from sklearn.utils import shuffle
 
 from pyAudioAnalysis import audioFeatureExtraction
-from pyAudioAnalysis import audioBasicIO
 
 import seaborn as sns
 import matplotlib.ticker as ticker
@@ -173,7 +172,6 @@ def predict_prob(y, scaler, model, N=20):
             class_list.append(0)
 
     return class_list
-
 
 
 if __name__ == "__main__":

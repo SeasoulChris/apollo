@@ -9,7 +9,6 @@ from tqdm import tqdm
 from scipy.signal import butter, lfilter, hilbert
 from sklearn.utils import shuffle
 
-from fueling.audio.Paper3.pyAudioAnalysis import audioBasicIO
 from fueling.audio.Paper3.pyAudioAnalysis import audioFeatureExtraction
 from fueling.common import file_utils
 from fueling.common.learning.train_utils import *
@@ -45,7 +44,7 @@ class AudioFeatureExtraction(object):
         self.features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.labels = []  # 1: emergency, 0: non-emergency
 
-    def extract_features(self):
+    def extract_cnn_features(self):
         files = file_utils.list_files(self.data_dir)
         for file in tqdm(files):
             if file.find('.wav') == -1:
@@ -74,6 +73,31 @@ class AudioFeatureExtraction(object):
         self.features = self.pos_features + self.neg_features
         self.labels = self.pos_labels + self.neg_labels
 
+    def extract_mlp_features(self):
+        files = file_utils.list_files(self.data_dir)
+        for file in tqdm(files):
+            if file.find('.wav') == -1:
+                continue
+
+            signal, sr = librosa.load(file, sr=8000)
+            signal = preprocess(signal)
+            total_features = audioFeatureExtraction.stFeatureExtraction(
+                signal, sr, 0.10*sr, .05*sr)
+
+            label = 1
+            if file.find("nonEmergency") != -1:
+                label = 0
+
+            if label == 1:
+                self.pos_features.extend(total_features)
+                self.pos_labels.extend([label] * len(total_features))
+            else:
+                self.neg_features.extend(total_features)
+                self.neg_labels.extend([label] * len(total_features))
+
+        self.features = self.pos_features + self.neg_features
+        self.labels = self.pos_labels + self.neg_labels
+
     def balance_features(self, enable_shuffle=True):
         min_features_size = min(len(self.pos_features), len(self.neg_features))
         self.pos_features = self.pos_features[:min_features_size]
@@ -90,15 +114,17 @@ class AudioFeatureExtraction(object):
         if enable_shuffle:
             shuffle(self.features, self.labels, random_state=0)
 
-    def save_features(self, features_dir):
+    def save_features(self, model_type, features_dir):
         features = np.array(self.features)
         labels = np.array(self.labels)
-        np.save(os.path.join(features_dir, 'features.npy'), features)
-        np.save(os.path.join(features_dir, 'labels.npy'), labels)
+        np.save(os.path.join(features_dir, model_type + '_features.npy'), features)
+        np.save(os.path.join(features_dir, model_type + '_labels.npy'), labels)
 
-    def load_features_labels(self, features_dir):
-        features = np.load(os.path.join(features_dir, 'features.npy'))
-        labels = np.load(os.path.join(features_dir, 'labels.npy'))
+    def load_features_labels(self, model_type, features_dir):
+        features = np.load(os.path.join(
+            features_dir, model_type + '_features.npy'))
+        labels = np.load(os.path.join(
+            features_dir, model_type + '_labels.npy'))
 
         return features, labels
 
@@ -106,6 +132,8 @@ class AudioFeatureExtraction(object):
 if __name__ == "__main__":
     # data parser:
     parser = argparse.ArgumentParser(description='features_extraction')
+    parser.add_argument('model_type', type=str, default='cnn',
+                        help='features for cnn or mlp')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
     args = parser.parse_args()
@@ -113,15 +141,29 @@ if __name__ == "__main__":
     # train set features extraction and save
     train_set_extractor = AudioFeatureExtraction(args.train_file)
 
-    train_set_extractor.extract_features()
+    if args.model_type == 'cnn':
+        train_set_extractor.extract_cnn_features()
+    elif args.model_type == 'mlp':
+        train_set_extractor.extract_mlp_features()
+    else:
+        raise ValueError(
+            'model_type not properly defined, only support cnn or mlp')
 
     train_set_extractor.balance_features(True)
 
-    train_set_extractor.save_features(args.train_file)
+    train_set_extractor.save_features(args.model_type, args.train_file)
 
     # validation set features extraction and save
     validation_set_extractor = AudioFeatureExtraction(args.valid_file)
 
-    validation_set_extractor.extract_features()
+    validation_set_extractor.extract_cnn_features()
 
-    validation_set_extractor.save_features(args.valid_file)
+    if args.model_type == 'cnn':
+        validation_set_extractor.extract_cnn_features()
+    elif args.model_type == 'mlp':
+        validation_set_extractor.extract_mlp_features()
+    else:
+        raise ValueError(
+            'model_type not properly defined, only support cnn or mlp')
+
+    validation_set_extractor.save_features(args.model_type, args.valid_file)
