@@ -36,6 +36,7 @@ def match_label_to_result(dataset_result_dir):
         match_list.append((label_path, result_path, uid))
     return match_list
 
+
 def compile_images(label_result_uid_list):
     """
     Compile the images of annotations into the cocoAPI format.
@@ -65,8 +66,9 @@ def compile_images(label_result_uid_list):
         image_info["width"] = width
         image_info["id"] = uid
         image_label_result_uid_list.append(
-                (image_info, label_txt_path, result_txt_path, uid))
+            (image_info, label_txt_path, result_txt_path, uid))
     return image_label_result_uid_list
+
 
 def compile_annotations(image_label_result_uid_list):
     """
@@ -86,7 +88,7 @@ def compile_annotations(image_label_result_uid_list):
         ann_list = []
         for obj in objs:
             x0, y0, x1, y1 = obj[0][3:7]
-            #TODO[KWT]: uncomment below to clip out-of-image-bound bboxes
+            # TODO[KWT]: uncomment below to clip out-of-image-bound bboxes
             #x0 = round(max(0, min(width, x0)), 3)
             #x1 = round(max(0, min(width, x1)), 3)
             #y0 = round(max(0, min(height, y0)), 3)
@@ -103,8 +105,9 @@ def compile_annotations(image_label_result_uid_list):
             obj_id += 1
             ann_list.append(obj_dic)
         image_objs_label_result_uid_list.append(
-                (image_info, ann_list, label_txt_path, result_txt_path, uid))
+            (image_info, ann_list, label_txt_path, result_txt_path, uid))
     return image_objs_label_result_uid_list
+
 
 def read_results(image_objs_label_result_uid_list):
     """
@@ -146,6 +149,7 @@ def read_results(image_objs_label_result_uid_list):
 
     return (gt_dict, complete_result_matrix)
 
+
 def compile_categories(gt_dt):
     """
     Compile categories into the cocoAPI format.
@@ -158,6 +162,7 @@ def compile_categories(gt_dt):
                          "supercategory": k})
     gt["categories"] = cat_list
     return (gt, dt)
+
 
 class Yolov3Evaluate(BasePipeline):
     def __init__(self):
@@ -182,13 +187,13 @@ class Yolov3Evaluate(BasePipeline):
             # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
             # add the annotation list for that image example
             .map(compile_annotations)
-            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a 
+            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
             # ground truth dictionary and a inference result matrix
             .map(read_results)
             # RDD((gt_dict, complete_result_matrix)), add the category list to the
             # gt_dict
             .map(compile_categories)
-            )
+        )
         self.run(data)
 
     def run_prod(self):
@@ -204,19 +209,19 @@ class Yolov3Evaluate(BasePipeline):
             # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
             # in a dataset and the result directory
             .map(match_label_to_result)
-            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the 
+            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
             # image information as a dictionay
             .map(compile_images)
             # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
             # add the annotation list for that image example
             .map(compile_annotations)
-            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a 
+            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
             # ground truth dictionary and a inference result matrix
             .map(read_results)
-            # RDD((gt_dict, complete_result_matrix)), add the category list to the 
+            # RDD((gt_dict, complete_result_matrix)), add the category list to the
             # gt_dict
             .map(compile_categories)
-            )
+        )
         self.run(data)
 
     def run(self, data_rdd):
@@ -232,6 +237,6 @@ class Yolov3Evaluate(BasePipeline):
             evaluator.summarize()
         data_rdd.foreach(_executor)
 
+
 if __name__ == "__main__":
     Yolov3Evaluate().main()
-

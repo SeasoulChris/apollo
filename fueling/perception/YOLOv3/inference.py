@@ -123,13 +123,14 @@ class Inference:
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):
                 with open(os.path.join(output_dir,
-                             "{}.txt".format(image_name_list[batch_id])), "w") as handle:
+                                       "{}.txt".format(image_name_list[batch_id])), "w") as handle:
                     for line_id, line in enumerate(image_dets):
                         if (line_id != len(image_dets) - 1):
                             line = "{}\n".format(line)
                         handle.write(line)
+
         def _write_image():
-            cls_names = {v:k for k, v in CLASS_MAP.items()}
+            cls_names = {v: k for k, v in CLASS_MAP.items()}
             for i in range(len(boxes)):
                 draw_boxes(boxes[i], original_image_list[i],
                            cls_names,
@@ -139,6 +140,6 @@ class Inference:
                            is_letter_box_image=False,
                            cls_box_map=cls_box_map_lists[i] if has_label else None)
                 original_image_list[i].save(os.path.join(output_dir,
-                    "{}.jpg".format(image_name_list[i])))
+                                                         "{}.jpg".format(image_name_list[i])))
         _write_output()
         _write_image()

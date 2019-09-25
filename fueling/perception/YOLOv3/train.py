@@ -315,7 +315,7 @@ class training:
                             variables_to_train = variables_to_train.union(set(temp))
                         variables_to_train = list(variables_to_train)
                         logging.info("=======Number of variables to train : {}========"
-                               .format(len(variables_to_train)))
+                                     .format(len(variables_to_train)))
 
                     grads, optimizer = self._init_optimizer(loss + regularization_loss,
                                                             start_learning_rate=LEARNING_RATE,
@@ -397,15 +397,16 @@ class training:
 
         if self.cur_step % PRINT_INTERVAL == 0:
             logging.info("step = {}, Loss = {}".format(self.cur_step, loss_train))
-            logging.info ("xy_loss = {}, wh_loss = {}, \
+            logging.info("xy_loss = {}, wh_loss = {}, \
                           positive_conf_loss = {}, \
                           negative_conf_loss = {}, \
                           cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
-                          .format(xy_, wh_, positive_conf_,
-                                  negative_conf_, cls_, alpha_, hwl_))
+                         .format(xy_, wh_, positive_conf_,
+                                 negative_conf_, cls_, alpha_, hwl_))
 
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0:
-           self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH), global_step=self.cur_step)
-           logging.info("Model saved in file: {}".format(MODEL_OUTPUT_PATH))
+            self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH),
+                            global_step=self.cur_step)
+            logging.info("Model saved in file: {}".format(MODEL_OUTPUT_PATH))
         self.cur_step += 1

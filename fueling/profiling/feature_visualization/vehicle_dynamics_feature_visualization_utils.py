@@ -19,6 +19,7 @@ import fueling.common.logging as logging
 # Minimum epsilon value used in compare with zero
 MIN_EPSILON = 0.000001
 
+
 def generate_segments(h5s):
     """generate data segments from all the selected hdf5 files"""
     segments = []
@@ -71,6 +72,7 @@ def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, dat
              color='red', fontsize=6)
     plt.tight_layout()
 
+
 def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, status, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
@@ -102,6 +104,7 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, status, p
                  color='red', fontsize=6)
     return var_polyfit
 
+
 def plot_xcorr(data_plot_x, data_plot_y, data_alivezone, feature):
     """ cross-correlation x - y """
     data_xcorr_x = np.take(data_plot_x, data_alivezone, axis=0)
@@ -123,13 +126,14 @@ def plot_xcorr(data_plot_x, data_plot_y, data_alivezone, feature):
     print('"The estimated delay frame number is: ', lag_frame)
     return lag_frame
 
+
 def plot_h5_features_time(data_rdd):
     """plot the time-domain data of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                  .format(dir_data))
+                        .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
@@ -165,10 +169,10 @@ def plot_h5_features_time(data_rdd):
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             if feature is "steering" or feature is "acceleration":
-                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
+                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] - bias_y) / slope_y
             else:
                 data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                                 - bias_y) / slope_y)
+                                              - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
@@ -220,7 +224,7 @@ def plot_h5_features_time(data_rdd):
                 data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
             else:
                 data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
-                                                                  * var_polyfit[0] + var_polyfit[1])
+                                                             * var_polyfit[0] + var_polyfit[1])
             bias_y += slope_y * var_polyfit[1]
             slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \

@@ -117,7 +117,7 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
         chassis_idx_rtn.append(chassis_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
     logging.info('The filtered msgs size are: chassis {}, control {}'
-              .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0]))
+                 .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0]))
     # Finally, rebuild the grading mtx with the control data combined with chassis data
     # TODO(fengzongbao) Filter acceleration_reference by positive and negative to throttle and brake
     if (control_mtx_rtn.shape[0] > 0):
@@ -204,7 +204,7 @@ def extract_chassis_data_from_msg(msg):
     msg_proto = record_utils.message_to_proto(msg)
     chassis_header = msg_proto.header
     if (get_profiling_config().vehicle_type.find('Mkz') or
-        get_profiling_config().vehicle_type.find('Lexus')):
+            get_profiling_config().vehicle_type.find('Lexus')):
         data_array = np.array([
             # Features: "Status" category
             msg_proto.driving_mode,                          # 0

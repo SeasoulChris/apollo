@@ -18,7 +18,7 @@ def test_read_label_and_result():
     a = list(map(compile_images, [matched_list]))
     b = list(map(compile_annotations, a))
     c = list(map(read_results, b))
-    d = list(map(compile_categories, c)) 
+    d = list(map(compile_categories, c))
     gt = d[0][0]
     dt = d[0][1]
     coco_obj = COCO()
@@ -29,6 +29,7 @@ def test_read_label_and_result():
     estimator.evaluate()
     estimator.accumulate()
     estimator.summarize()
+
 
 if __name__ == "__main__":
     test_read_label_and_result()

@@ -94,7 +94,7 @@ class Dataset:
             scale1, scale2, scale3 = y_true
             #image_data = np.expand_dims(image_data, axis=0)
             image_name = os.path.basename(image_path).split(".")[0]
-            final_data = (image_data, scale1, scale2, scale3, cls_box_map, \
+            final_data = (image_data, scale1, scale2, scale3, cls_box_map,
                           objs, calib, image_name, original_image)
             self._example_queue.put(final_data)
 
@@ -126,7 +126,7 @@ class Dataset:
         original_image_list = []
         for i in range(self.batch_size):
             image_data, scale1, scale2, scale3, cls_box_map, objs, \
-            calib, image_name, original_image = self._example_queue.get()
+                calib, image_name, original_image = self._example_queue.get()
             image_batch[i] = image_data
             label_batch_scale1.append(scale1)
             label_batch_scale2.append(scale2)

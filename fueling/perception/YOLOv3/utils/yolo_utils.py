@@ -81,7 +81,7 @@ def _iou(box1, box2):
     return iou
 
 
-def non_max_suppression(predictions_with_boxes, 
+def non_max_suppression(predictions_with_boxes,
                         input_resolution,
                         confidence_threshold=0.9, iou_threshold=0.4):
     """
@@ -145,6 +145,7 @@ def non_max_suppression(predictions_with_boxes,
 
     return results
 
+
 def accumulate_obj(xy_wh_conf_value,
                    gt_obj_batch=None, calib_batch=None):
     """
@@ -156,18 +157,18 @@ def accumulate_obj(xy_wh_conf_value,
             raise RuntimeError("Both gt and dt are None. Either gt or dt must be provides.")
         if dt is not None:
             line = dt.type + " 0 0 0 " + \
-                   (" ").join([str(round(x, 2)) for x in dt.box2d]) + " " + \
-                   (" ").join([str(dt.h), str(dt.w), str(dt.l)]) + " " + \
-                   (" ").join([str(x) for x in list(dt.t)]) + " " + \
-                   str(dt.ry) + \
-                   " " + str(round(dt.score, 2))
+                (" ").join([str(round(x, 2)) for x in dt.box2d]) + " " + \
+                (" ").join([str(dt.h), str(dt.w), str(dt.l)]) + " " + \
+                (" ").join([str(x) for x in list(dt.t)]) + " " + \
+                str(dt.ry) + \
+                " " + str(round(dt.score, 2))
         elif gt is not None:
             line = gt.type + " " + str(gt.truncation) + " " + \
-                   str(gt.occlusion) + " " + str(gt.alpha) + " " + \
-                   (" ").join([str(round(x, 2)) for x in gt.box2d]) + " " + \
-                   (" ").join([str(gt.h), str(gt.w), str(gt.l)]) + " " + \
-                   (" ").join([str(x) for x in list(gt.t)]) + " " + \
-                   str(gt.ry)
+                str(gt.occlusion) + " " + str(gt.alpha) + " " + \
+                (" ").join([str(round(x, 2)) for x in gt.box2d]) + " " + \
+                (" ").join([str(gt.h), str(gt.w), str(gt.l)]) + " " + \
+                (" ").join([str(x) for x in list(gt.t)]) + " " + \
+                str(gt.ry)
         return line
 
     boxes = non_max_suppression(xy_wh_conf_value,
@@ -226,6 +227,7 @@ def accumulate_obj(xy_wh_conf_value,
         return detection_string_list_batch, gt_string_list_batch
     return detection_string_list_batch, boxes
 
+
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib=None, is_letter_box_image=False, cls_box_map=None):
     """
@@ -279,12 +281,12 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                     # TODO[KaWai]: uncomment below to offset the T, e.g. in KITTI dataset
                     #obj.t = tuple(np.array(translation) - interactor.offset.reshape((3,)) )
                 objs.append(obj)
-            
+
             draw.rectangle(box, outline=color)
             # TODO[KaWai]: uncomment below to write class name and score for each bbox.
             # draw.text(box[:2], '{} {:.2f}%'.format(
             #    cls_names[cls], score * 100), fill=color, font=font)
-    
+
     if cls_box_map:
         color = (255, 255, 0)
         for cls, bboxs in cls_box_map.items():
@@ -293,7 +295,7 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                                                np.array(img.size),
                                                is_letter_box_image)
                 draw.rectangle(box, outline=color)
-    
+
     return objs
 
 

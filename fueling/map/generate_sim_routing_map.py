@@ -10,13 +10,14 @@ import fueling.common.file_utils as file_utils
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
+
 def execute_task(source_dir):
     """Execute task by task"""
     logging.info('executing task with src_dir: {}'.format(source_dir))
 
     sim_map_generator_bin = '/apollo/bazel-bin/modules/map/tools/sim_map_generator'
     sim_command = '{} --map_dir={} --output_dir={}'.format(
-                   sim_map_generator_bin, source_dir, source_dir)
+        sim_map_generator_bin, source_dir, source_dir)
     logging.info('sim_map_generator command is {}'.format(sim_command))
     return_code = os.system(sim_command)
     logging.info("return code for sim_map_gen is {}".format(return_code))
@@ -29,7 +30,7 @@ def execute_task(source_dir):
     routing_topo_creator_bin = '/apollo/bazel-bin/modules/routing/topo_creator/topo_creator'
 
     routing_command = '{} --flagfile=/apollo/modules/routing/conf/routing.conf -alsologtostderr --map_dir={}'.format(
-                routing_topo_creator_bin,source_dir)
+        routing_topo_creator_bin, source_dir)
     return_code = os.system(routing_command)
     logging.info("return code for gen routing map command is {}".format(return_code))
 
@@ -37,6 +38,7 @@ def execute_task(source_dir):
         logging.error('failed to generate routing map')
         return
     logging.info('Successed to generate routing map')
+
 
 class SimMapPipeline(BasePipeline):
     """generate sim routing map"""
@@ -55,7 +57,7 @@ class SimMapPipeline(BasePipeline):
         """Production."""
         src_prefix = 'test/simplehdmap/data'
 
-        bos_client = BosClient()        
+        bos_client = BosClient()
         original_path = bos_client.abs_path(src_prefix)
         logging.info('origin path is {}'.format(original_path))
         base_map_path = os.path.join(original_path, 'base_map.txt')
@@ -66,9 +68,9 @@ class SimMapPipeline(BasePipeline):
             logging.warning('sim_map_generator: {} not exists'.format(sim_map_generator_path))
         routing_creator_path = '/apollo/bazel-bin/modules/routing/topo_creator/topo_creator'
         if not os.path.exists(routing_creator_path):
-            logging.warning('topo_creator: {} not exists'.format(routing_creator_path))    
+            logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
-        self.run(original_path)        
+        self.run(original_path)
         logging.info('Simplehdmap: Done, PROD')
 
     def run(self, original_path):

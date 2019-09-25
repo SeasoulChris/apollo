@@ -67,5 +67,6 @@ class Yolov3Inference(BasePipeline):
             os.makedirs(output_dir)
         data_rdd.foreach(_executor)
 
+
 if __name__ == "__main__":
     Yolov3Inference().main()

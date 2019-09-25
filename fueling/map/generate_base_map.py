@@ -31,55 +31,57 @@ from fueling.common.storage.bos_client import BosClient
 
 LANE_WIDTH = 3.3
 
+
 class MapGenSingleLine(BasePipeline):
-    """map_gen_single_line pipeline."""    
+    """map_gen_single_line pipeline."""
+
     def __init__(self):
         BasePipeline.__init__(self, 'map_gen_single_line')
 
     def run_test(self):
-        """Run test."""        
+        """Run test."""
         src_prefix = '/apollo/data/bag'
         dst_prefix = '/apollo/data'
         # RDD(record_path)
-        todo_records = self.to_rdd([src_prefix])              
+        todo_records = self.to_rdd([src_prefix])
         self.run(todo_records, src_prefix, dst_prefix)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
-        logging.info('base_map.txt generated: Done, Test')       
+        logging.info('base_map.txt generated: Done, Test')
 
     def run_prod(self):
         src_prefix = 'test/simplehdmap/data/bag'
-        dst_prefix = 'test/simplehdmap/data'        
+        dst_prefix = 'test/simplehdmap/data'
         bos_client = BosClient()
         target_dir = bos_client.abs_path(dst_prefix)
         logging.info("target_prefix: {}".format(target_dir))
-        
+
         source_dir = bos_client.abs_path(src_prefix)
         logging.info("source_prefix: {}".format(source_dir))
 
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
-        #todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))               
+        #todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))
         self.run(todo_records, source_dir, target_dir)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
         logging.info('base_map.txt generated: Done, PROD')
-    
+
     def run(self, todo_records, src_prefix, dst_prefix):
         """Run the pipeline with given arguments."""
         # Spark cascade style programming.
         self.dst_prefix = dst_prefix
         record_points = spark_helper.cache_and_log('map_gen_single_line',
-            # RDD(source_dir)
-            todo_records
-            # RDD(points)
-            .map(self.process_topic)
-            # RDD(map)
-            .map(self.map_gen))        
+                                                   # RDD(source_dir)
+                                                   todo_records
+                                                   # RDD(points)
+                                                   .map(self.process_topic)
+                                                   # RDD(map)
+                                                   .map(self.map_gen))
 
     def process_topic(self, source_dir):
         points = []
@@ -92,7 +94,7 @@ class MapGenSingleLine(BasePipeline):
             msgs = [msg for msg in reader.read_messages()]
 
             logging.info('Success to read localization topic message {}'.format(len(msgs)))
-                    
+
             for msg in msgs:
                 if msg.topic == "/apollo/localization/pose":
                     localization = localization_pb2.LocalizationEstimate()
@@ -100,7 +102,7 @@ class MapGenSingleLine(BasePipeline):
                     x = float(localization.pose.position.x)
                     y = float(localization.pose.position.y)
                     points.append((x, y))
-        
+
         logging.info('Success to read localization pose points {}'.format(len(points)))
         if len(points) == 0:
             return None
@@ -109,7 +111,7 @@ class MapGenSingleLine(BasePipeline):
             points.reverse()
             bi_points.extend(points)
             return bi_points
-            #map_gen(points)
+            # map_gen(points)
 
     def map_gen(self, points):
         logging.info('Success to read localization pose points {}'.format(len(points)))
@@ -215,14 +217,14 @@ class MapGenSingleLine(BasePipeline):
             right_sample.width = LANE_WIDTH / 2.0
 
         fmap.write(str(base_map))
-        fmap.close()        
+        fmap.close()
 
         # Output base_map.bin
         base_map_bin = os.path.join(self.dst_prefix, 'base_map.bin')
         logging.info("base_map_bin_path: {}".format(base_map_bin))
         with open(base_map_bin, "wb") as f:
             f.write(base_map.SerializeToString())
-        #return str(base_map)
+        # return str(base_map)
 
     def convert(self, point, point2, distance):
         delta_y = point2.y - point.y
@@ -285,6 +287,7 @@ class MapGenSingleLine(BasePipeline):
         lane.left_boundary.length = 100.0
 
         return lane, central, left_boundary, right_boundary
+
 
 if __name__ == '__main__':
     MapGenSingleLine().main()

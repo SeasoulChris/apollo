@@ -45,9 +45,11 @@ def get_redis_instance():
     """
     return Redis(connection_pool=RedisConnectionPool.connection_pool())
 
+
 def redis_set(redis_key, redis_value):
     """Instant API to set a key value pair"""
     get_redis_instance().set(redis_key, redis_value)
+
 
 def redis_get(redis_key):
     """Instant API to get a value by using key"""

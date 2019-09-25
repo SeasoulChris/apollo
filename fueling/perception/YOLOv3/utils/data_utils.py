@@ -34,6 +34,7 @@ def get_all_image_paths(dataset_path):
     image_path_list += glob.glob(os.path.join(image_dir, "*.png"))
     return image_path_list
 
+
 def get_all_paths(image_path):
     """
     From label path to get both image directory path and
