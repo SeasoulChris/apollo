@@ -9,7 +9,9 @@ import matplotlib
 matplotlib.use('Agg')
 
 from matplotlib.backends.backend_pdf import PdfPages
+from scipy.fftpack import fft
 import h5py
+import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -73,14 +75,14 @@ def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, dat
     plt.tight_layout()
 
 
-def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, status, polyfit):
+def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, title_addon, polyfit):
     """ control actions x - y """
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
     plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]])
     plt.title(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]] + " vs " +
-              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + status + ")",
+              DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")",
               fontsize=10)
     xmin, xmax, ymin, ymax = plt.axis()
     data_est_y = np.take(data_plot_x, data_alivezone, axis=0)
@@ -127,21 +129,42 @@ def plot_xcorr(data_plot_x, data_plot_y, data_alivezone, feature):
     return lag_frame
 
 
+def plot_fft(data_plot_x, data_plot_y, data_alivezone, feature, title_addon):
+    """ fast fourier transformation """
+    # Number of sample points
+    L = data_plot_x.shape[0]
+    N = np.power(2, np.ceil(np.log2(abs(L)))).astype(int)
+    # Sample spacing
+    T = np.median(np.diff(data_plot_x, axis=0), axis=0)
+    # Fourier Transformation
+    data_fft_y = fft(mlab.detrend_mean(data_plot_y[data_alivezone], axis=0), n=N)
+    data_fft_x = np.linspace(0.0, 1.0 / (2.0 * T), N // 2)
+    plt.plot(data_fft_x, 2.0 / N * np.abs(data_fft_y[0: N // 2]))
+    plt.xlim([-1, 4])
+    plt.grid(True)
+    plt.xlabel('Frequency /Hz')
+    plt.ylabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " Power Spectrum")
+    plt.title("Frequency Spectrum of " + DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] +
+              " (" + title_addon + ")", fontsize=10)
+    plt.tight_layout()
+
+
 def plot_h5_features_time(data_rdd):
     """plot the time-domain data of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                        .format(dir_data))
+                  .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
         vehicle_controller = os.path.basename(grading_dir[0]).replace(
             'control_performance_grading.txt', '')
-        pdffile = os.path.join(dir_data, vehicle_controller + 'control_data_visualization.pdf')
+        pdffile = os.path.join(dir_data, vehicle_controller +
+                               'control_data_visualization_time_domain.pdf')
     else:
-        pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
+        pdffile = os.path.join(dir_data, 'control_data_visualization_time_domain.pdf')
     with PdfPages(pdffile) as pdf:
         data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
         plot_features = ["throttle", "brake", "steering", "acceleration"]
@@ -169,17 +192,17 @@ def plot_h5_features_time(data_rdd):
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             if feature is "steering" or feature is "acceleration":
-                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] - bias_y) / slope_y
+                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
             else:
                 data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                              - bias_y) / slope_y)
+                                                 - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
-                             feature, title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1,
+                             data_alivezone_y0, feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
@@ -209,8 +232,8 @@ def plot_h5_features_time(data_rdd):
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
-                             feature, title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1,
+                             data_alivezone_y0, feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
@@ -224,18 +247,65 @@ def plot_h5_features_time(data_rdd):
                 data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
             else:
                 data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
-                                                             * var_polyfit[0] + var_polyfit[1])
+                                                                  * var_polyfit[0] + var_polyfit[1])
             bias_y += slope_y * var_polyfit[1]
             slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
                           \ncmd-act shift frame = {2:.3f}".format(slope_y, bias_y, delay_frame)
             plt.figure(figsize=(4, 4))
-            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, data_alivezone_y0,
-                             feature, title_addon, text_addon)
+            plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1,
+                             data_alivezone_y0, feature, title_addon, text_addon)
             pdf.savefig()
             plt.close()
             plt.figure(figsize=(4, 4))
             var_polyfit = plot_act_vs_cmd(data_plot_y0, data_plot_y1, data_alivezone_y0,
                                           feature, title_addon, True)
+            pdf.savefig()
+            plt.close()
+
+
+def plot_h5_features_freq(data_rdd):
+    """plot the time-domain data of all the variables in the data array"""
+    # PairRDD(target_dir, data_array)
+    dir_data, data = data_rdd
+    if len(data) == 0:
+        logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
+                  .format(dir_data))
+        return
+    grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
+    if grading_dir:
+        vehicle_controller = os.path.basename(grading_dir[0]).replace(
+            'control_performance_grading.txt', '')
+        pdffile = os.path.join(dir_data, vehicle_controller +
+                                         'control_data_visualization_frequency_domain.pdf')
+    else:
+        pdffile = os.path.join(dir_data, 'control_data_visualization_frequency_domain.pdf')
+    with PdfPages(pdffile) as pdf:
+        data = data[np.argsort(data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]])]
+        plot_features = ["acceleration", "steering", ]
+        for feature in plot_features:
+            if feature is "throttle":
+                slope_y = 1.0
+                bias_y = 0.0
+                delay_frame = 0
+            elif feature is "acceleration":
+                slope_y = 1.0
+                bias_y = 0.0
+                delay_frame = 0
+            # Raw data plots and analysis
+            title_addon = "raw data"
+            data_plot_x0 = (data[:, DYNAMICS_FEATURE_IDX["timestamp_sec"]] -
+                            data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
+                            data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
+            data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
+            data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
+            data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
+            plt.figure(figsize=(4, 4))
+            plot_fft(data_plot_x0, data_plot_y0, data_alivezone_y0, feature + "_cmd", title_addon)
+            pdf.savefig()
+            plt.close()
+            plt.figure(figsize=(4, 4))
+            plot_fft(data_plot_x1, data_plot_y1, data_alivezone_y0, feature, title_addon)
             pdf.savefig()
             plt.close()
