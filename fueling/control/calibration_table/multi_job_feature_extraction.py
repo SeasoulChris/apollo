@@ -76,16 +76,16 @@ def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
    # PairRDD((vehicle, segment_dir, segment_id), msg)
     result_rdd = (
         valid_segment
-        # PairRDD(dir_segment, vehicle)
-        .map(lambda ((vehicle, segment_dir, segment_id), msgs): (segment_dir, vehicle))
-        # PariRDD(dir_segment) unique dir
+        # RDD((vehicle, segment_dir, segment_id))
+        .keys()
+        # RDD(segment_dir)
+        .map(lambda elements: elements[1])
+        # RDD(segment_dir), which is unique.
         .distinct()
-        # RDD(dir_segment with target_prefix)
-        .map(lambda (path, vehicle):
-             path.replace(os.path.join(origin_prefix, vehicle),
-                          os.path.join(target_prefix, vehicle, 'throttle', 'train'), 1))
-        # RDD(MARKER files)
-        .map(lambda path: os.path.join(path, MARKER)))
+        # RDD(segment_dir), with target_prefix.
+        .map(lambda path: path.replace(origin_prefix, target_prefix, 1))
+        # RDD(throttle_train_dir_marker)
+        .map(lambda path: os.path.join(path, 'throttle/train', MARKER)))
     # RDD(dir_MARKER)
     result_rdd.foreach(file_utils.touch)
     return result_rdd
@@ -129,19 +129,17 @@ class MultiJobFeatureExtraction(BasePipeline):
         conf_target_prefix = target_prefix
         logging.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
         logging.info(conf_target_prefix)
-        target_param_conf = origin_vehicle_dir.map(lambda (vehicle, path):
-                                                   (vehicle, path.replace(origin_prefix,
-                                                                          conf_target_prefix, 1)))
+        target_param_conf = origin_vehicle_dir.mapValues(
+            lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
         logging.info('target_param_conf: %s' % target_param_conf.collect())
         print("origin_vehicle_dir.join", origin_vehicle_dir.join(target_param_conf).collect())
 
-        # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_param_conf)))
-        src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).cache())
-
-        src_dst_rdd.mapValues(lambda (src_path, dst_path): file_utils.makedirs(dst_path)).count()
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                              os.path.join(dst_path, VEHICLE_CONF))).count()
+        # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
+        src_dst_rdd = origin_vehicle_dir.join(target_param_conf).values().cache()
+        # Create dst dirs and copy conf file to them.
+        src_dst_rdd.values().foreach(file_utils.makedirs)
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
+                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
 
         self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
@@ -195,18 +193,14 @@ class MultiJobFeatureExtraction(BasePipeline):
         # copy vehicle param configure file to target folder
         # target dir
         # PairRDD (vehicle, dst_path)
-        target_param_conf = vehicle_param_conf.map(
-            lambda (vehicle, path): (vehicle,
-                                     path.replace(os.path.join(origin_dir, vehicle),
-                                                  os.path.join(target_dir, vehicle), 1)))
-        # PairRDD (vehicle, (src_path, dst_path))
-        src_dst_rdd = (vehicle_param_conf.join(target_param_conf).cache())
+        target_param_conf = vehicle_param_conf.mapValues(
+            lambda path: path.replace(origin_dir, target_dir, 1))
+        # PairRDD (src_path, dst_path)
+        src_dst_rdd = vehicle_param_conf.join(target_param_conf).values().cache()
 
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              file_utils.makedirs(dst_path)).count()
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                              os.path.join(dst_path, VEHICLE_CONF))).count()
+        src_dst_rdd.values().foreach(file_utils.makedirs)
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
+                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
 
         logging.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
 
@@ -257,18 +251,16 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, abs_task_dir)
             todo_task_dirs
             # PairRDD(vehicle, task_dir_with_target_prefix)
-            .map(lambda (vehicle, path):
-                 (vehicle, path.replace(
-                     os.path.join(origin_prefix, vehicle),
-                     os.path.join(target_prefix, vehicle, 'throttle', 'train'), 1)))
+            .mapValues(lambda path: path.replace(origin_prefix, target_prefix, 1))
+            # PairRDD(vehicle, train_task_dir_with_target_prefix)
+            .mapValues(lambda path: os.path.join(path, 'throttle/train'))
             # PairRDD(vehicle, files)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*')))
             # PairRDD(vehicle, file_end_with_MARKER)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle, file_end_with_MARKER with origin prefix)
-            .map(lambda (vehicle, path):
-                 (vehicle, path.replace(os.path.join(target_prefix, vehicle, 'throttle', 'train'),
-                                        os.path.join(origin_prefix, vehicle), 1)))
+            .mapValues(lambda path: path.replace(target_prefix, origin_prefix, 1))
+            .mapValues(lambda path: path.replace('throttle/train/', '', 1))
             # PairRDD(vehicle, dir of file_end_with_MARKER with origin prefix)
             .mapValues(os.path.dirname))
 
@@ -283,18 +275,20 @@ class MultiJobFeatureExtraction(BasePipeline):
         vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)
         logging.info("vehicle_param_conf: %d", vehicle_param_conf.count())
 
-        records = (
-            todo_task_dirs
-            # PairRDD(vehicle, files)
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
-            # PairRDD(vehicle, records)
-            .filter(lambda (_, end_file): record_utils.is_record_file(end_file))
-            # PairRDD(vehicle, (dir, records))
-            .mapValues(lambda records: (os.path.dirname(records), records))
-            # PairRDD((vehicle, dir), records)
-            .map(lambda (vehicle, (record_dir, records)): ((vehicle, record_dir), records))).cache()
+        def _add_dir_to_key(vehicle_and_record):
+            vehicle, record = vehicle_and_record
+            record_dir = os.path.dirname(record)
+            return (vehicle, record_dir), record
 
-        logging.info('Records %d' % records.count())
+        records = spark_helper.cache_and_log(
+            'Records',
+            todo_task_dirs
+            # PairRDD(vehicle, file)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
+            # PairRDD(vehicle, record)
+            .filter(spark_op.filter_value(record_utils.is_record_file))
+            # PairRDD((vehicle, dir), record)
+            .map(_add_dir_to_key))
 
         # PairRDD((vehicle, segment_dir, segment_id), msg)
         valid_msg_segments = valid_segment(records)
@@ -312,12 +306,16 @@ class MultiJobFeatureExtraction(BasePipeline):
         vehicle_msgs_rdd = (
             parsed_msgs
             # PairRDD(vehicle, paired_chassis_msg_pose_msg)
-            .map(lambda ((vehicle, segment_dir, segment_id), msgs): (vehicle, msgs))
+            .map(spark_op.do_key(lambda key: key[0]))
             # PairRDD(vehicle, (speed_min, speed_max, throttle_max, brake_max))
             .mapValues(multi_job_utils.get_conf_value)
             # PairRDD(vehicle, (speed_min, speed_max, throttle_max, brake_max))
             .reduceByKey(multi_job_utils.compare_conf_value))
         logging.info("vehicle_msgs_rdd: %s" % str(vehicle_msgs_rdd.collect()))
+
+        def _write_conf(vehicle_confs):
+            vehicle, (conf_value, conf) = vehicle_confs
+            multi_job_utils.write_conf(conf_value, conf, os.path.join(target_prefix, vehicle))
 
         # write conf value to calibratin table training conf files
         write_conf_rdd = (
@@ -325,9 +323,8 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, ((speed_min, speed_max, throttle_max, brake_max), conf))
             .join(vehicle_param_conf)
             # RDD(0)
-            .map(lambda (vehicle, (conf_value, conf)):
-                 multi_job_utils.write_conf(conf_value, conf,
-                                            os.path.join(target_prefix, vehicle))))
+            .map(_write_conf))
+
         logging.info('target_prefix: %s' % target_prefix)
         logging.info('vehicle_msgs_rdd: % d' % write_conf_rdd.count())
 
@@ -336,12 +333,10 @@ class MultiJobFeatureExtraction(BasePipeline):
         train_conf = (
             vehicle_conf_folder
             # PairRDD(vehicle, target_vehicle_folder)
-            .map(lambda (vehicle, path):
-                 (vehicle, path.replace(os.path.join(origin_prefix, vehicle),
-                                        os.path.join(target_prefix, vehicle), 1)))
+            .mapValues(lambda path: path.replace(origin_prefix, target_prefix, 1))
             # PairRDD(vehicle, 0)
-            .mapValues(multi_job_utils.get_train_conf)
-        )
+            .mapValues(multi_job_utils.get_train_conf))
+
         logging.info('train_conf_files %s' % train_conf.collect())
 
         conf = spark_helper.cache_and_log(
@@ -349,11 +344,14 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD(vehicle, (vehicle_conf, train_conf))
             vehicle_param_conf.join(train_conf))
 
+        def _reorg_parsed_msgs(elements):
+            (vehicle, segment_dir, segment_id), msgs = elements
+            return vehicle, (segment_dir, segment_id, msgs)
+
         msgs_with_conf = spark_helper.cache_and_log(
             'msgs_with_conf',
             # PairRDD(vehicle, (segment_dir, segment_id, paired_chassis_msg_pose_msg))
-            parsed_msgs.map(lambda ((vehicle, segment_dir, segment_id), msgs):
-                            (vehicle, (segment_dir, segment_id, msgs)))
+            parsed_msgs.map(_reorg_parsed_msgs)
             # PairRDD(vehicle,
             #         ((dir_segment, segment_id, paired_chassis_msg_pose_msg),
             #          (vehicle_conf, train_conf)))
@@ -365,12 +363,13 @@ class MultiJobFeatureExtraction(BasePipeline):
         # train_conf
         print('train_conf ', elem[1][1][1])
 
+        def _reorg_msgs_with_conf(elements):
+            vehicle, ((segment_dir, segment_id, msgs), (vehicle_conf, train_conf)) = elements
+            return (vehicle, segment_dir, segment_id), (msgs, vehicle_conf, train_conf)
+
         # PairRDD((vehicle, dir_segment, segment_id),
         #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
-        msgs_with_conf = (
-            msgs_with_conf.map(
-                lambda (vehicle, ((segment_dir, segment_id, msgs), (vehicle_conf, train_conf))):
-                ((vehicle, segment_dir, segment_id), (msgs, vehicle_conf, train_conf))))
+        msgs_with_conf = msgs_with_conf.map(_reorg_msgs_with_conf)
         logging.info('msgs_with_conf: %d' % msgs_with_conf.count())
 
         data_rdd = spark_helper.cache_and_log(
@@ -379,12 +378,11 @@ class MultiJobFeatureExtraction(BasePipeline):
             #         (paired_chassis_msg_pose_msg, vehicle_param_conf))
             msgs_with_conf
             # PairRDD((vehicle, dir_segment, segment_id), (features, vehicle_param_conf))
-            .map(lambda ((vehicle, dir_segment, segment_id), (msgs, vehicle_conf, train_conf)):
-                 ((vehicle, dir_segment, segment_id),
-                  multi_job_utils.gen_data(msgs, vehicle_conf, train_conf))), 0)
+            .mapValues(lambda input3: multi_job_utils.gen_data(input3[0], input3[1], input3[2])),
+            0)
 
         # write data to hdf5 files
-        result_rdd = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'result_rdd',
             # PairRDD((vehicle, dir_segment, segment_id), feature_data_matrix)
             data_rdd
@@ -392,7 +390,7 @@ class MultiJobFeatureExtraction(BasePipeline):
             .map(lambda elem: write_h5(elem, origin_prefix, target_prefix)))
 
         # RDD (dir_segment)
-        complete_rdd = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'completed_dirs',
             mark_complete(valid_msg_segments, origin_prefix, target_prefix, MARKER))
 
