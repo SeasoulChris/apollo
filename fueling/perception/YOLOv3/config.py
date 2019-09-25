@@ -33,13 +33,13 @@ nms_iou_threshold = 0.3
 
 #===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True  # Set to False for training and True for inference
-inference_only_2d = False
+inference_only_2d = True
 
 restore_training = False
 start_from_coco = False
-restore_path = "fueling/perception/YOLOv3/models/models-119999"
+restore_path = "testdata/perception/YOLOv3/models/models-119999"
 model_output_path = "fueling/perception/YOLOv3/models/"
-inference_output_path = "./fueling/perception/YOLOv3/infer_output/models-119999"
+inference_output_path = "./testdata/perception/YOLOv3/infer_output/models-119999/google_images/emergency-vehicle"
 
 train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this variable to None
                         "yolo-v3/Conv_14",
@@ -52,7 +52,7 @@ decay_steps = 100
 decay_rate = 0.5
 max_iter = 100
 start_iter = 0
-num_threads = 8
+num_threads = 1
 batch_size = 8
 save_interval = 99
 print_interval = 1

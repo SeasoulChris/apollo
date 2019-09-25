@@ -65,7 +65,7 @@ class Inference:
                                                      name="Input")
         return placeholders
 
-    def _config_graph(self, input_tensor, is_training=True, reuse=False):
+    def _config_graph(self, input_tensor, is_training=True, reuse=tf.AUTO_REUSE):
         """
         Configure the inference computation graph.
         """
