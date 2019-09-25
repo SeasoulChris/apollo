@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
+import glob
 import os
 
 from PIL import Image
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
-import glob
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
