@@ -5,20 +5,27 @@
 
 set -e
 
-function DeletePod() {
-  DRIVER_POD_STATUS=$1
-  CUT_TIME=$2
+DRIVERS=$(kubectl get pods | grep '\-driver')
+COMPLETED_DRIVERS=$(echo "${DRIVERS}" | grep Completed | awk '{print $1}')
+ERROR_DRIVERS=$(echo "${DRIVERS}" | grep Error | awk '{print $1}')
 
+function DeletePod() {
+  CUT_TIME=$1
   CUT_TIMESTAMP=$(date -d "${CUT_TIME}" +%s%3N)
-  kubectl get pods | grep '\-driver' | grep "${DRIVER_POD_STATUS}" | awk '{print $1}' | \
-  while read -r DRIVER_POD; do
+  shift
+
+  while [ $# -gt 0 ]; do
+    DRIVER_POD=$1
     DRIVER_TIMESTAMP=$(echo "${DRIVER_POD}" | awk -F- '{print $(NF-1)}')
     if [ "${DRIVER_TIMESTAMP}" -lt "${CUT_TIMESTAMP}" ]; then
-      echo "Delete ${DRIVER_POD_STATUS} pod ${DRIVER_POD}"
+      DRIVER_TIMESTAMP_SEC=$(echo "${DRIVER_TIMESTAMP}/1000" | bc)
+      DRIVER_STARTING_TIME=$(date -d @${DRIVER_TIMESTAMP_SEC} "+%F %T")
+      echo "Deleting pod [${DRIVER_STARTING_TIME}] ${DRIVER_POD} ..."
       kubectl delete pods "${DRIVER_POD}"
     fi
+    shift
   done
 }
 
-DeletePod 'Completed' '12 hours ago'
-DeletePod 'Error'     '14 days ago'
+DeletePod '12 hours ago' ${COMPLETED_DRIVERS}
+DeletePod '24 hours ago' $(echo ${ERROR_DRIVERS} | grep -v prediction-app-performance-evaluation)
