@@ -16,8 +16,8 @@ import matplotlib.mlab
 import matplotlib.pyplot as plt
 from scipy import linalg as la
 # import audioTrainTest as aT
-from fueling.audio.Paper3.pyAudioAnalysis import audioBasicIO
-from fueling.audio.Paper3.pyAudioAnalysis import utilities
+from fueling.audio.pyAudioAnalysis import audioBasicIO
+from fueling.audio.pyAudioAnalysis import utilities
 from scipy.signal import lfilter, hamming
 #from scikits.talkbox import lpc
 import pywt

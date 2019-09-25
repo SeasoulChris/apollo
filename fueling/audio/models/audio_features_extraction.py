@@ -3,15 +3,29 @@
 import argparse
 import os
 
+from absl import flags
 import numpy as np
 import librosa
 from tqdm import tqdm
 from scipy.signal import butter, lfilter, hilbert
 from sklearn.utils import shuffle
 
-from fueling.audio.Paper3.pyAudioAnalysis import audioFeatureExtraction
+from fueling.audio.pyAudioAnalysis import audioFeatureExtraction
 from fueling.common import file_utils
 from fueling.common.learning.train_utils import *
+
+
+flags.DEFINE_string(
+    'feature_type', 'mlp',
+    'Feature type for training from [mlp, cnn].')
+
+flags.DEFINE_string(
+    'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
+    'The dirname with training data.')
+
+flags.DEFINE_string(
+    'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+    'The dirname with validation data.')
 
 
 def preprocess(y):
@@ -49,8 +63,11 @@ class AudioFeatureExtraction(object):
         for file in tqdm(files):
             if file.find('.wav') == -1:
                 continue
-
-            signal, sr = librosa.load(file, sr=8000)
+            try:
+                signal, sr = librosa.load(file, sr=8000)
+            except:
+                print("Failed to open file {}".format(file))
+                continue
             signal = preprocess(signal)
             S = librosa.feature.melspectrogram(signal, sr=sr, n_mels=128)
             log_S = librosa.power_to_db(S, ref=np.max)  # [128, len]
@@ -78,8 +95,11 @@ class AudioFeatureExtraction(object):
         for file in tqdm(files):
             if file.find('.wav') == -1:
                 continue
-
-            signal, sr = librosa.load(file, sr=8000)
+            try:
+                signal, sr = librosa.load(file, sr=8000)
+            except:
+                print("Failed to open file {}".format(file))
+                continue
             signal = preprocess(signal)
             total_features = audioFeatureExtraction.stFeatureExtraction(
                 signal, sr, 0.10*sr, .05*sr)
@@ -130,40 +150,42 @@ class AudioFeatureExtraction(object):
 
 
 if __name__ == "__main__":
-    # data parser:
-    parser = argparse.ArgumentParser(description='features_extraction')
-    parser.add_argument('model_type', type=str, default='cnn',
-                        help='features for cnn or mlp')
-    parser.add_argument('train_file', type=str, help='training data')
-    parser.add_argument('valid_file', type=str, help='validation data')
-    args = parser.parse_args()
 
-    # train set features extraction and save
-    train_set_extractor = AudioFeatureExtraction(args.train_file)
+    def main(argv):
 
-    if args.model_type == 'cnn':
-        train_set_extractor.extract_cnn_features()
-    elif args.model_type == 'mlp':
-        train_set_extractor.extract_mlp_features()
-    else:
-        raise ValueError(
-            'model_type not properly defined, only support cnn or mlp')
+        # data parser:
+        flags_dict = flags.FLAGS.flag_values_dict()
+        feature_type = flags_dict['feature_type']
+        train_dir = flags_dict['train_dir']
+        valid_dir = flags_dict['valid_dir']
 
-    train_set_extractor.balance_features(True)
+        # train set features extraction and save
+        train_set_extractor = AudioFeatureExtraction(train_dir)
 
-    train_set_extractor.save_features(args.model_type, args.train_file)
+        if feature_type == 'cnn':
+            train_set_extractor.extract_cnn_features()
+        elif feature_type == 'mlp':
+            train_set_extractor.extract_mlp_features()
+        else:
+            raise ValueError(
+                'model_type not properly defined, only support cnn or mlp')
 
-    # validation set features extraction and save
-    validation_set_extractor = AudioFeatureExtraction(args.valid_file)
+        train_set_extractor.balance_features(True)
 
-    validation_set_extractor.extract_cnn_features()
+        train_set_extractor.save_features(feature_type, train_dir)
 
-    if args.model_type == 'cnn':
-        validation_set_extractor.extract_cnn_features()
-    elif args.model_type == 'mlp':
-        validation_set_extractor.extract_mlp_features()
-    else:
-        raise ValueError(
-            'model_type not properly defined, only support cnn or mlp')
+        # validation set features extraction and save
+        validation_set_extractor = AudioFeatureExtraction(valid_dir)
 
-    validation_set_extractor.save_features(args.model_type, args.valid_file)
+        if feature_type == 'cnn':
+            validation_set_extractor.extract_cnn_features()
+        elif feature_type == 'mlp':
+            validation_set_extractor.extract_mlp_features()
+        else:
+            raise ValueError(
+                'model_type not properly defined, only support cnn or mlp')
+
+        validation_set_extractor.save_features(feature_type, valid_dir)
+
+    from absl import app
+    app.run(main)

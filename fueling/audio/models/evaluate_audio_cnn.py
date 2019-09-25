@@ -17,8 +17,8 @@ from tqdm import tqdm
 from scipy.signal import butter, lfilter, hilbert
 from sklearn.utils import shuffle
 
-from fueling.audio.Paper4.audio_cnn import AudioCNN1dModel, AudioCNN2dModel
-from fueling.audio.Paper4.audio_features_extraction import preprocess
+from fueling.audio.models.audio_models import AudioCNN1dModel, AudioCNN2dModel
+from fueling.audio.models.audio_features_extraction import preprocess
 from fueling.common import file_utils
 
 flags.DEFINE_string(
