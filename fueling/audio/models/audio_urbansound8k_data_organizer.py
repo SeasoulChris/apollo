@@ -10,9 +10,6 @@ from tqdm import tqdm
 
 from fueling.common import file_utils
 
-flags.DEFINE_string('data_dir', '/home/jinyun/Data/UrbanSound8K',
-                    'data dir of UrbanSound8k data set.')
-
 
 def siren_data_clustering(data_dir):
     '''Cluster into siren voice and nonsiren voice, and renaming'''
@@ -39,6 +36,9 @@ def siren_data_clustering(data_dir):
 
 
 if __name__ == "__main__":
+
+    flags.DEFINE_string('data_dir', '/home/jinyun/Data/UrbanSound8K',
+                        'data dir of UrbanSound8k data set.')
 
     def main(argv):
 

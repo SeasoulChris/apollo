@@ -3,7 +3,7 @@
 import argparse
 import os
 
-from absl import 
+from absl import flags
 import numpy as np
 import torch
 import torch.nn as nn
@@ -19,22 +19,6 @@ from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.a
 from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
-flags.DEFINE_string(
-    'model_type', 'mlp',
-    'Model type for training from [mlp, cnn1d, cnn2d].')
-
-flags.DEFINE_string(
-    'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
-    'The dirname with training data.')
-
-flags.DEFINE_string(
-    'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
-    'The dirname with validation data.')
-
-flags.DEFINE_string(
-    'model_dir', './',
-    'The dirname to save trained models.')
-
 
 class AudioDataset(Dataset):
     def __init__(self, mode, features, labels):
@@ -47,23 +31,24 @@ class AudioDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
+        if self.mode == 'mlp':
+            label = np.float32(self.labels[idx])
+            feature = torch.from_numpy(self.features[idx]).float()
+            return (feature, label)
         if self.mode == 'cnn1d':
             label = np.float32(self.labels[idx])
-            return ((torch.from_numpy(self.features[idx])), label)
+            return (torch.from_numpy(self.features[idx]), label)
         if self.mode == 'cnn2d':
             img = torch.from_numpy(self.features[idx])
             h = img.size(0)
             w = img.size(1)
             img = img.view(1, h, w).clone()
             label = np.float32(self.labels[idx])
-            return ((img), label)
+            return (img, label)
 
 
 class AudioLoss():
     def loss_fn(self, y_pred, y_true):
-        print(y_pred)
-        print(y_true)
-        # y_pred = y_pred.view(-1)
         loss_func = nn.BCELoss()
         return loss_func(y_pred, y_true)
 
@@ -147,20 +132,37 @@ class AudioCNN2dModel(nn.Module):
 
 if __name__ == "__main__":
 
+    flags.DEFINE_string(
+        'model_type', 'mlp',
+        'Model type for training from [mlp, cnn1d, cnn2d].')
+
+    flags.DEFINE_string(
+        'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
+        'The dirname with training data.')
+
+    flags.DEFINE_string(
+        'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+        'The dirname with validation data.')
+
+    flags.DEFINE_string(
+        'model_dir', './',
+        'The dirname to save trained models.')
+
     def main(argv):
 
         # Set-up the GPU to use
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
         # data parser:
-        model_type = flags.flags_dict['model_type']
+        flags_dict = flags.FLAGS.flag_values_dict()
+        model_type = flags_dict['model_type']
         feature_type = 'mlp'
         if model_type == 'cnn1d' or model_type == 'cnn2d':
             feature_type = 'cnn'
 
-        train_dir = flags.flags_dict['train_dir']
-        valid_dir = flags.flags_dict['valid_dir']
-        model_dir = flags.flags_dict['model_dir']
+        train_dir = flags_dict['train_dir']
+        valid_dir = flags_dict['valid_dir']
+        model_dir = flags_dict['model_dir']
 
         # Set-up data-loader
         train_set_extractor = AudioFeatureExtraction(train_dir)
@@ -171,7 +173,7 @@ if __name__ == "__main__":
 
         validation_set_extractor = AudioFeatureExtraction(valid_dir)
         valid_features, valid_labels = validation_set_extractor.load_features_labels(
-            feature_type, args.valid_file)
+            feature_type, valid_dir)
         valid_dataset = AudioDataset(model_type, valid_features, valid_labels)
 
         print('--------- Loading Training Data -----------')

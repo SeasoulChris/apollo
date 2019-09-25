@@ -21,15 +21,6 @@ from fueling.audio.models.audio_models import AudioCNN1dModel, AudioCNN2dModel
 from fueling.audio.models.audio_features_extraction import preprocess
 from fueling.common import file_utils
 
-flags.DEFINE_string(
-    'model_file',
-    '/home/xukecheng/work/apollo-fuel/model_cnn2d.pt',
-    'model file for evaluation.')
-flags.DEFINE_string(
-    'model_type', 'cnn2d', 'Model type, [cnn1d, cnn2d].')
-flags.DEFINE_string(
-    'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
-    'dir containing validation data.')
 
 sns.set_style("whitegrid")
 if not sys.warnoptions:
@@ -96,6 +87,18 @@ def file_correctly_predicted(model, file_path, model_type,
 
 
 if __name__ == '__main__':
+
+    flags.DEFINE_string(
+        'model_file',
+        '/home/xukecheng/work/apollo-fuel/model_cnn2d.pt',
+        'model file for evaluation.')
+
+    flags.DEFINE_string(
+        'model_type', 'cnn2d', 'Model type, [cnn1d, cnn2d].')
+
+    flags.DEFINE_string(
+        'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+        'dir containing validation data.')
 
     def main(argv):
 

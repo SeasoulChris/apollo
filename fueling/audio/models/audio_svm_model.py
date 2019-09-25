@@ -27,9 +27,6 @@ from tqdm import tqdm
 from fueling.audio.pyAudioAnalysis import audioFeatureExtraction
 
 
-flags.DEFINE_string('root_dir', '/home/Desktop/cleaned_data/',
-                    'The root dir containing data.')
-
 sns.set_style("whitegrid")
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -173,6 +170,9 @@ def predict_prob(y, scaler, model, N=20):
 
 
 if __name__ == "__main__":
+
+    flags.DEFINE_string('root_dir', '/home/Desktop/cleaned_data/',
+                        'The root dir containing data.')
 
     def main(argv):
     

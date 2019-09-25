@@ -15,19 +15,6 @@ from fueling.common import file_utils
 from fueling.common.learning.train_utils import *
 
 
-flags.DEFINE_string(
-    'feature_type', 'mlp',
-    'Feature type for training from [mlp, cnn].')
-
-flags.DEFINE_string(
-    'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
-    'The dirname with training data.')
-
-flags.DEFINE_string(
-    'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
-    'The dirname with validation data.')
-
-
 def preprocess(y):
     y_filt = butter_bandpass_filter(y)
     analytic_signal = hilbert(y_filt)
@@ -150,6 +137,18 @@ class AudioFeatureExtraction(object):
 
 
 if __name__ == "__main__":
+
+    flags.DEFINE_string(
+        'feature_type', 'mlp',
+        'Feature type for training from [mlp, cnn].')
+
+    flags.DEFINE_string(
+        'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
+        'The dirname with training data.')
+
+    flags.DEFINE_string(
+        'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+        'The dirname with validation data.')
 
     def main(argv):
 
