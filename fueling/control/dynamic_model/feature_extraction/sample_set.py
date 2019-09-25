@@ -158,21 +158,17 @@ class SampleSet(BasePipeline):
         conf_target_prefix = target_prefix
         logging.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
         logging.info(conf_target_prefix)
-        target_param_conf = origin_vehicle_dir.map(lambda (vehicle, path):
-                                                   (vehicle, path.replace(origin_prefix,
-                                                                          conf_target_prefix, 1)))
+        target_param_conf = origin_vehicle_dir.mapValues(
+            lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
         logging.info('target_param_conf: %s' % target_param_conf.collect())
 
-        # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_param_conf))
-        src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).cache())
-
-        # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_folder))
-        src_dst_rdd.mapValues(lambda (src_path, dst_path): file_utils.makedirs(dst_path)).count()
-
-        # PairRDD(vehicle, (source_vehicle_param_conf, dest_vehicle_folder_conf))
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                              os.path.join(dst_path, VEHICLE_CONF))).count()
+        # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf)
+        src_dst_rdd = (origin_vehicle_dir.join(target_param_conf).values().cache())
+        # Make dst dirs.
+        src_dst_rdd.values().foreach(file_utils.makedirs)
+        # Copy confs.
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
+                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
 
         logging.info('todo_task_dirs: %s' % todo_task_dirs.collect())
         logging.info('vehicle_param_conf: %s' % vehicle_param_conf.collect())
@@ -225,18 +221,14 @@ class SampleSet(BasePipeline):
         # copy vehicle param configure file to target folder
         # target dir
         # PairRDD (vehicle, dst_path)
-        target_param_conf = vehicle_param_conf.map(
-            lambda (vehicle, path): (vehicle,
-                                     path.replace(os.path.join(origin_dir, vehicle),
-                                                  os.path.join(target_dir, vehicle), 1)))
-        # PairRDD (vehicle, (src_path, dst_path))
-        src_dst_rdd = (vehicle_param_conf.join(target_param_conf).cache())
+        target_param_conf = vehicle_param_conf.mapValues(
+            lambda path: path.replace(origin_dir, target_dir, 1))
+        # PairRDD (src_path, dst_path)
+        src_dst_rdd = vehicle_param_conf.join(target_param_conf).values().cache()
 
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              file_utils.makedirs(dst_path)).count()
-        src_dst_rdd.mapValues(lambda (src_path, dst_path):
-                              shutil.copyfile(os.path.join(src_path, VEHICLE_CONF),
-                                              os.path.join(dst_path, VEHICLE_CONF))).count()
+        src_dst_rdd.values().foreach(file_utils.makedirs)
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
+                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
 
         logging.info('copy vehicle param conf from src to dst: %s' % src_dst_rdd.collect())
 
@@ -270,15 +262,13 @@ class SampleSet(BasePipeline):
             # PairRDD(vehicle, abs_task_dir)
             todo_task_dirs
             # PairRDD(vehicle, task_dir_with_target_prefix)
-            .map(lambda (vehicle, path):
-                 (vehicle, path.replace(origin_prefix, target_prefix, 1)))
+            .mapValues(lambda path: path.replace(origin_prefix, target_prefix, 1))
             # PairRDD(vehicle, files)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*')))
             # PairRDD(vehicle, file_end_with_MARKER)
             .filter(lambda key_path: key_path[1].endswith(MARKER))
             # PairRDD(vehicle, file_end_with_MARKER with origin prefix)
-            .map(lambda (vehicle, path):
-                 (vehicle, path.replace(origin_prefix, target_prefix, 1)))
+            .mapValues(lambda path: path.replace(origin_prefix, target_prefix, 1))
             # PairRDD(vehicle, dir of file_end_with_MARKER with origin prefix)
             .mapValues(os.path.dirname))
 
@@ -293,17 +283,21 @@ class SampleSet(BasePipeline):
         vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)
         logging.info("vehicle_param_conf: %d", vehicle_param_conf.count())
 
+        def _reorg_elements(elements):
+            vehicle, record = elements
+            record_dir = os.path.dirname(record)
+            return ((vehicle, record_dir), record)
+
         records = (
             # PairRDD(vehicle, vehicle_folder)
             todo_task_dirs
             # PairRDD(vehicle, files)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*record*')))
-            # PairRDD(vehicle, records)
-            .filter(lambda (_, end_file): record_utils.is_record_file(end_file))
-            # PairRDD(vehicle, (dir, records))
-            .mapValues(lambda records: (os.path.dirname(records), records))
-            # PairRDD((vehicle, dir), records_in_dir)
-            .map(lambda (vehicle, (record_dir, records)): ((vehicle, record_dir), records))).cache()
+            # PairRDD(vehicle, record)
+            .filter(lambda _end_file: record_utils.is_record_file(_end_file[1]))
+            # PairRDD((vehicle, record_dir), record)
+            .map(_reorg_elements)
+            .cache())
 
         logging.info('Records %s' % records.collect())
 
@@ -325,6 +319,10 @@ class SampleSet(BasePipeline):
             # PairRDD(vehicle, (dir, timestamp_sec, single data_point))
             .map(feature_extraction_utils.multi_get_data_point), 1)
 
+        def _reorg_elements(elements):
+            vehicle, ((data_dir, timestamp_sec, single_data_point), vehicle_param_conf) = elements
+            return (vehicle, data_dir, timestamp_sec), (single_data_point, vehicle_param_conf)
+
         # join data with conf files
         data_segment_rdd = spark_helper.cache_and_log(
             'get_data_point',
@@ -332,8 +330,7 @@ class SampleSet(BasePipeline):
             # PairRDD(vehicle, ((dir, timestamp_sec, single data_point), vehicle_param_conf))
             .join(vehicle_param_conf)
             # PairRDD((vehicle, dir, timestamp_sec), (single data_point, vehicle_param_conf))
-            .map(lambda (vehicle, ((dir, timestamp_sec, single_data_point), vehicle_param_conf)):
-                 ((vehicle, dir, timestamp_sec), (single_data_point, vehicle_param_conf))), 1)
+            .map(_reorg_elements))
 
         if GEAR == 1:
             data_segment_rdd = spark_helper.cache_and_log(
@@ -357,9 +354,10 @@ class SampleSet(BasePipeline):
 
         data_segment_rdd = spark_helper.cache_and_log(
             'gen_segment',
+            # PairRDD((vehicle, dir, feature_key), list of (timestamp_sec, data_point))
             data_segment_rdd
-            # remove the forward data
-            .filter(lambda ((_0, _1, feature_key), _): feature_key != 10000)
+            # feature_key != 10000
+            .filter(lambda elements: elements[0][2] != 10000)
             # PairRDD((vehicle, dir, feature_key), (timestamp_sec, data_point) RDD)
             .groupByKey()
             # PairRDD((vehicle, dir, feature_key), list of (timestamp_sec, data_point))

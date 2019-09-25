@@ -86,8 +86,7 @@ class MapGenSingleLine(BasePipeline):
     def process_topic(self, source_dir):
         points = []
         bi_points = []
-        fbags = glob.glob(os.path.join(source_dir, '*.record*'))
-        fbags.sort()
+        fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         logging.info('fbags: {}'.format(fbags))
         for fbag in fbags:
             reader = RecordReader(fbag)

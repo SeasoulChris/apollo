@@ -105,9 +105,13 @@ class DecodeVideoPipeline(BasePipeline):
             # RDD(task_dir), distinct paths
             .distinct()
             # PairRDD(target_dir, task)
-            .map(lambda task: (os.path.join(root_dir, target_dir, os.path.basename(task)), task))
+            .keyBy(lambda task: os.path.join(root_dir, target_dir, os.path.basename(task)))
             # PairRDD(target_dir, record)
             .flatMapValues(streaming_utils.list_records_for_task))
+
+        def _reorg_elements(elements):
+            target, (topic, time, fields, src_path) = elements
+            return (target, topic), (time, fields, src_path)
 
         # Retrieve video frames from original records
         target_groups = spark_helper.cache_and_log(
@@ -118,8 +122,7 @@ class DecodeVideoPipeline(BasePipeline):
             .flatMapValues(lambda record: streaming_utils.load_meta_data(
                 root_dir, record, VIDEO_CHANNELS))
             # PairRDD((target_dir, topic), (timestamp, fields, src_path))
-            .map(lambda (target, (topic, time, fields, src_path)):
-                 ((target, topic), (time, fields, src_path)))
+            .map(_reorg_elements)
             # PairRDD((target_dir, topic), (timestamp, fields, src_path)s)
             .groupByKey()
             # PairRDD((target_dir, topic), (timestamp, fields, src_path)s), cut into smaller groups

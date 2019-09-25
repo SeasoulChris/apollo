@@ -30,7 +30,7 @@ def wanted_vehicle_rdd(dir_to_records, WANTED_VEHICLE):
         # PairRDD(aboslute_dir, vehicle_type)
         feature_extraction_utils.get_vehicle_of_dirs(dir_to_records)
         # PairRDD(aboslute_dir, wanted_vehicle_type)
-        .filter(lambda (_, vehicle): vehicle == WANTED_VEHICLE)
+        .filter(lambda _vehicle: _vehicle[1] == WANTED_VEHICLE)
         # RDD(aboslute_dir) which include records of the wanted vehicle
         .keys())
 
@@ -56,9 +56,9 @@ def chassis_localization_segment_rdd(dir_to_msgs, MIN_MSG_PER_SEGMENT):
         # PairRDD((dir, timestamp_per_min), topic_counter)
         .reduceByKey(operator.add)
         # PairRDD((dir, timestamp_per_min), topic_counter)
-        .filter(lambda (_, counter):
-                counter.get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT
-                and counter.get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT)
+        .filter(lambda _counter:
+                _counter[1].get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT
+                and _counter[1].get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT)
         # RDD((dir, timestamp_per_min))
         .keys())
 

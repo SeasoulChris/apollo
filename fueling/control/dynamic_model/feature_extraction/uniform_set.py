@@ -21,13 +21,6 @@ OUTPUT_FOLDER = feature_extraction['uniform_output_folder']
 SAMPLE_SIZE = feature_extraction['sample_size']
 
 
-def get_key(file_name):
-    key, pre_segmentID = file_name.split('_')
-    # segmentID = os.path.splitext(pre_segmentID)[0]
-    # return key, segmentID
-    return key
-
-
 def pick_sample(list_of_segment, sample_size):
     counter = 0
     sample_list = []
@@ -124,17 +117,18 @@ class UniformSet(BasePipeline):
         self.run(hdf5_files, origin_vehicle_dir, target_dir)
 
     def run(self, feature_dir, origin_vehicle_conf_dir, target_dir):
+        def _generate_key(elements):
+            vehicle, hdf5 = elements
+            file_name = os.path.basename(hdf5)
+            key = file_name.split('_', 1)[1]
+            return (vehicle, key), hdf5
 
         categorized_segments = spark_helper.cache_and_log(
             'categorized_segments',
             # PairRDD(vehicle, .hdf5 files with absolute path)
             feature_dir
-            # PairRDD((vehicle, file_path), file_name)
-            .map(lambda (vehicle, file_dir): ((vehicle, file_dir), os.path.basename(file_dir)))
-            # PairRDD((vehicle, file_path), key)
-            .mapValues(get_key)
             # PairRDD((vehicle, key), file_path)
-            .map(lambda ((vehicle, file_path), key): ((vehicle, key), file_path))
+            .map(_generate_key)
             # PairRDD((vehicle, key), segments)
             .mapValues(h5_utils.read_h5)
             # PairRDD((vehicle, key), segments RDD)
@@ -142,7 +136,7 @@ class UniformSet(BasePipeline):
             # PairRDD((vehicle, key), list of segments)
             .mapValues(list))
 
-        sampled_segments = spark_helper.cache_and_log(
+        spark_helper.cache_and_log(
             'sampled_segments',
             # PairRDD((vehicle, key), list of segments)
             categorized_segments

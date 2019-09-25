@@ -69,15 +69,15 @@ def create_dataframe(sql_context, msgs_rdd, topics):
     """Create DataFrame for specified topics"""
     return sql_context.createDataFrame(
         msgs_rdd
-        .filter(lambda (_1, _2, topic): topic in operator.itemgetter(*topics)(WANTED_CHANNELS))
+        .filter(lambda __topic: __topic[2] in operator.itemgetter(*topics)(WANTED_CHANNELS))
         .map(lambda x: Row(target=x[0], time=x[1], topic=x[2])))
 
 
 def get_next_message(msg, msg_map, msgs_iterator):
     """Judiciously decide what the next message is"""
-    if msg is not None and \
-            msg_map['{}-{}'.format(msg.topic, msg.timestamp)] > 0 and \
-            msg.topic != WANTED_CHANNELS['lidar-128']:
+    if (msg is not None and
+            msg_map['{}-{}'.format(msg.topic, msg.timestamp)] > 0 and
+            msg.topic != WANTED_CHANNELS['lidar-128']):
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
         return msg
     msg = msgs_iterator.next(lambda x: x.topic in WANTED_CHANNELS.values() and

@@ -133,8 +133,9 @@ class FeatureExtraction(BasePipeline):
             .filter(spark_op.filter_value(lambda msgs: len(msgs) > 0))
             # RDD(target_dir, segment_id, group of (message)s), divide messages into groups
             .flatMap(partition_data)
-            # PairRDD((target_dir, segment_id), (message)s)
-            .map(lambda (target_dir, segment_id, msgs): ((target_dir, segment_id), msgs))
+            # PairRDD((target_dir, segment_id), messages)
+            .map(lambda args: ((args[0], args[1]), args[2]))
+            # PairRDD((target_dir, segment_id), proto_dict)
             .mapValues(record_utils.messages_to_proto_dict())
             # # PairRDD((dir_segment, segment_id), (chassis_list, pose_list))
             .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
@@ -149,7 +150,7 @@ class FeatureExtraction(BasePipeline):
             .mapValues(list), 0)
 
         # PairRDD((target_dir, group_id), len of list)
-        hdf5_dir_count = hdf5_dir.foreach(count_pair_msgs)
+        hdf5_dir.foreach(count_pair_msgs)
 
         (hdf5_dir
          # PairRDD((target_dir, group_id), list of data_point)

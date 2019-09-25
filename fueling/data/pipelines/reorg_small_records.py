@@ -78,38 +78,41 @@ class ReorgSmallRecords(BasePipeline):
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
         logging.info('Repartition to: {}'.format(partitions))
 
-        input_records = spark_helper.cache_and_log('InputRecords',
-                                                   src_records
-                                                   # RDD(src_record)
-                                                   .repartition(partitions)
-                                                   # PairRDD(src_record, record_header)
-                                                   .map(spark_op.value_by(record_utils.read_record_header))
-                                                   # PairRDD(src_record, record_header), where header is valid.
-                                                   .filter(lambda (_, header): header is not None)
-                                                   # PairRDD(dst_dir, (src_record, record_header))
-                                                   .keyBy(lambda (record, _): os.path.dirname(record).replace(src_prefix, dst_prefix, 1)))
+        input_records = spark_helper.cache_and_log(
+            'InputRecords',
+            src_records
+            # RDD(src_record)
+            .repartition(partitions)
+            # PairRDD(src_record, record_header)
+            .map(spark_op.value_by(record_utils.read_record_header))
+            # PairRDD(src_record, record_header), where header is valid.
+            .filter(lambda _header: _header[1] is not None)
+            # PairRDD(dst_dir, (src_record, record_header))
+            .keyBy(lambda record_: os.path.dirname(record_[0]).replace(src_prefix, dst_prefix, 1)))
 
-        output_records = spark_helper.cache_and_log('OutputRecords',
-                                                    # PairRDD(target_dir, (record, header))
-                                                    input_records
-                                                    # PairRDD(target_file, (record, start_time, end_time))
-                                                    .flatMap(self.shard_to_files)
-                                                    # PairRDD(target_file, (record, start_time, end_time)s)
-                                                    .groupByKey()
-                                                    # PairRDD(target_file, (record, start_time, end_time)s)
-                                                    .mapValues(sorted))
+        output_records = spark_helper.cache_and_log(
+            'OutputRecords',
+            # PairRDD(target_dir, (record, header))
+            input_records
+            # PairRDD(target_file, (record, start_time, end_time))
+            .flatMap(self.shard_to_files)
+            # PairRDD(target_file, (record, start_time, end_time)s)
+            .groupByKey()
+            # PairRDD(target_file, (record, start_time, end_time)s)
+            .mapValues(sorted))
 
-        finished_tasks = spark_helper.cache_and_log('FinishedTasks',
-                                                    # PairRDD(target_file, (record, start_time, end_time)s)
-                                                    output_records
-                                                    # RDD(target_file)
-                                                    .map(self.process_file)
-                                                    # RDD(target_file)
-                                                    .filter(bool)
-                                                    # RDD(target_dir)
-                                                    .map(os.path.dirname)
-                                                    # RDD(target_dir)
-                                                    .distinct())
+        finished_tasks = spark_helper.cache_and_log(
+            'FinishedTasks',
+            # PairRDD(target_file, (record, start_time, end_time)s)
+            output_records
+            # RDD(target_file)
+            .map(self.process_file)
+            # RDD(target_file)
+            .filter(bool)
+            # RDD(target_dir)
+            .map(os.path.dirname)
+            # RDD(target_dir)
+            .distinct())
 
         (finished_tasks
             # RDD(target_dir/COMPLETE)

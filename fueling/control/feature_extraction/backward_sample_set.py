@@ -115,8 +115,8 @@ class BackwardSampleSet(BasePipeline):
             'gen_segment',
             data_segment_rdd
             # remove the forward data
-            .filter(lambda ((_0, feature_key), _): feature_key != 10000)
-            # PairRDD((dir, feature_key), (timestamp_sec, data_point) RDD)
+            .filter(lambda _feature_key_: _feature_key_[0][1] != 10000)
+            # PairRDD((dir, feature_key), (timestamp_sec, data_point)s)
             .groupByKey()
             # PairRDD((dir, feature_key), list of (timestamp_sec, data_point))
             .mapValues(list)
