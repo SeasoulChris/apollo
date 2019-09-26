@@ -19,7 +19,7 @@ dependencies:
   - matplotlib
   - numpy
   - pymongo
-  - redis
+  - redis-py
 
   # Learning
   - cudatoolkit = 10.0

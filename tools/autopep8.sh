@@ -4,7 +4,7 @@
 # Usage:
 #   tools/autopep8.sh [path]
 
-CMD="autopep8 --in-place --max-line-length 100"
+CMD="autopep8 --in-place --max-line-length 100 -a"
 
 if [ -z $(which autopep8) ]; then
   # Install autopep8 for Ubuntu and MacOS.
