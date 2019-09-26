@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 
 import glob
 import numpy as np
@@ -16,6 +17,7 @@ import fueling.perception.YOLOv3.utils.data_utils as data_utils
 MAX_ITER = cfg.max_iter
 TRAIN_DATA_DIR_LOCAL = cfg.train_data_dir_local
 TRAIN_DATA_DIR_CLOUD = cfg.train_data_dir_cloud
+MODEL_OUTPUT_PATH = cfg.model_output_path
 
 
 class Yolov3Training(BasePipeline):
@@ -54,6 +56,7 @@ class Yolov3Training(BasePipeline):
             for i in range(MAX_ITER):
                 data = data_pool.batch
                 engine.step(data)
+        shutil.copyfile("./config.py", os.path.join(MODEL_OUTPUT_PATH, "config.py"))
         data.foreach(_executor)
 
 

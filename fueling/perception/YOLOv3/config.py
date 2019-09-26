@@ -38,10 +38,10 @@ inference_only_2d = True
 restore_training = False
 start_from_coco = False
 restore_path = "testdata/perception/YOLOv3/models/models-119999"
-model_output_path = "fueling/perception/YOLOv3/models/"
+model_output_path = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019/san_mateo_2018/models"
 inference_output_path = "./testdata/perception/YOLOv3/infer_output/models-119999/google_images/emergency-vehicle"
 
-train_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
+train_data_dir_local = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019"
 inference_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
 evaluate_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
 evaluate_result_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output"
@@ -55,16 +55,16 @@ train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this va
                         "yolo-v3/Conv_22",
                         "BatchNorm/beta",
                         "BatchNorm/gamma"]
-gpu = "0"
-learning_rate = 0.001
-decay_steps = 100
+gpu = "1"
+learning_rate = 0.00025
+decay_steps = 20000
 decay_rate = 0.5
-max_iter = 100
-start_iter = 0
-num_threads = 1
+max_iter = 2100 * 30
+start_iter = 1
+num_threads = 2
 batch_size = 8
-save_interval = 99
-print_interval = 1
+save_interval = 10000
+print_interval = 200
 summary_interval = 500
 
 negative_ignore_thresh = 0.4
@@ -76,7 +76,7 @@ lambda_cls = 2
 lambda_cs_conf = 5
 lambda_alpha = 10
 lambda_hwl = 1
-weight_decay = 0.0005
+weight_decay = 0.00005
 random_crop = False
 random_flip = False
 random_color_shift = False

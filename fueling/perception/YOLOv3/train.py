@@ -64,12 +64,12 @@ slim = tf.contrib.slim
 
 class training:
 
-    def __init__(self, start_step=0, num_gpu=1):
-        self.cur_step = start_step
+    def __init__(self, num_gpu=1):
+        self.cur_step = START_ITER
         self.last_save_step = -1
         self.num_gpu = num_gpu
         self.epoch = 0
-        self.global_step = tf.Variable(start_step, name="global_step", trainable=False)
+        self.global_step = tf.Variable(self.cur_step, name="global_step", trainable=False)
 
     def _init_essential_placeholders(self):
         """
@@ -337,7 +337,7 @@ class training:
             self.saver = self._init_model_saver()
 
             # ====================All summaries ====================
-            self.summary_writer_train = self._init_summary_writer("training")
+            self.summary_writer_train = self._init_summary_writer("summary")
 
             summary_tensor_map_train = {loss: "TRAIN_total_loss",
                                         xy_loss: "TRAIN_xy_loss",
@@ -405,7 +405,7 @@ class training:
                                  negative_conf_, cls_, alpha_, hwl_))
 
         # store the model every SAVE_INTERVAL epochs
-        if self.cur_step % SAVE_INTERVAL == 0:
+        if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
             self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH),
                             global_step=self.cur_step)
             logging.info("Model saved in file: {}".format(MODEL_OUTPUT_PATH))
