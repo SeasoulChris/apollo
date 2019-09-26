@@ -6,10 +6,14 @@ Redis utils.
 Requirements: redis-py
 """
 
+import time
+
 from absl import flags
 import redis
 
 import fueling.common.logging as logging
+
+REDIS_KEY_PREFIX_DECODE_VIDEO = 'decode_video'
 
 flags.DEFINE_string('redis_server_ip', '192.168.48.6', 'Internal Redis server IP address.')
 flags.DEFINE_integer('redis_port', 6379, 'Redis service port.')
@@ -41,18 +45,41 @@ class RedisConnectionPool(object):
 def get_redis_instance():
     """
     API to return a Redis instance.
-    The instance can be used in scenarios when multiple operations need to be done
+    The instance can be used in scenarios with multiple operations executing as a batch
     """
-    return Redis(connection_pool=RedisConnectionPool.connection_pool())
+    return redis.Redis(connection_pool=RedisConnectionPool.connection_pool())
 
 
 def redis_set(redis_key, redis_value):
     """Instant API to set a key value pair"""
-    get_redis_instance().set(redis_key, redis_value)
+    _retry(get_redis_instance().set, [redis_key, redis_value])
 
 
 def redis_get(redis_key):
     """Instant API to get a value by using key"""
-    return get_redis_instance().get(redis_key)
+    return _retry(get_redis_instance().get, [redis_key])
 
-# TODO(longtao): Add more utils and error handling logic later
+
+def redis_incr(redis_key, amount=1):
+    """Instant API to increment a value by its key"""
+    _retry(get_redis_instance().incr, [redis_key, amount])
+
+
+def _retry(func, params):
+    """A wrapper for exponential retry in case redis connection is not stable"""
+    cur_retries, max_retries = 0, 3
+    while cur_retries < max_retries:
+        try:
+            ret = func(*params)
+            return ret
+        except redis.exceptions.TimeoutError as ex:
+            logging.error('redis connection timeout. params: {}'.format(params))
+            if cur_retries >= max_retries:
+                # Silently swallow it instead of raising
+                return None
+            time.sleep(2 ** cur_retries)
+            cur_retries += 1
+        except Exception as ex:
+            # Silently swallow it instead of raising
+            logging.error('redis error. params: {}'.format(params))
+            return None

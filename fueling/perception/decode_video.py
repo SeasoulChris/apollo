@@ -19,6 +19,7 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+import fueling.common.redis_utils as redis_utils
 import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 
@@ -191,6 +192,11 @@ def decode_videos(message_meta):
         logging.error('no video frames for target dir and topic {}'.format(target_topic))
         return
     target_dir, topic = target_topic
+
+    task_key = '{}:{}'.format(
+        redis_utils.REDIS_KEY_PREFIX_DECODE_VIDEO, os.path.basename(target_dir))
+    redis_utils.redis_incr(task_key)
+
     image_dir = os.path.join(target_dir, 'images')
     file_utils.makedirs(target_dir)
     file_utils.makedirs(image_dir)
