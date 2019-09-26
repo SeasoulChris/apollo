@@ -77,6 +77,8 @@ def plot_ctl_vs_time(data_plot_x0, data_plot_x1, data_plot_y0, data_plot_y1, dat
 
 def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, title_addon, polyfit):
     """ control actions x - y """
+    data_est_x = np.take(data_plot_x, data_alivezone, axis=0)
+    data_est_y = np.take(data_plot_y, data_alivezone, axis=0)
     plt.plot(data_plot_x, data_plot_y, '.', markersize=2)
     plt.axis('equal')
     plt.xlabel(DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature + "_cmd"]])
@@ -85,8 +87,6 @@ def plot_act_vs_cmd(data_plot_x, data_plot_y, data_alivezone, feature, title_add
               DYNAMICS_FEATURE_NAMES[DYNAMICS_FEATURE_IDX[feature]] + " (" + title_addon + ")",
               fontsize=10)
     xmin, xmax, ymin, ymax = plt.axis()
-    data_est_y = np.take(data_plot_x, data_alivezone, axis=0)
-    data_est_x = np.take(data_plot_y, data_alivezone, axis=0)
     plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
              'Max Devidation = {0:.3f}, \nStandard Deviation = {1:.3f}'
              .format(np.amax(np.abs(data_est_y - data_est_x)),
@@ -125,7 +125,7 @@ def plot_xcorr(data_plot_x, data_plot_y, data_alivezone, feature):
              'Delay Frame = {}'.format(lag_frame),
              color='red', fontsize=6)
     plt.tight_layout()
-    print('"The estimated delay frame number is: ', lag_frame)
+    print('The estimated delay frame number is: ', lag_frame)
     return lag_frame
 
 
