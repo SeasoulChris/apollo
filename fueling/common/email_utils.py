@@ -33,6 +33,12 @@ PREDICTION_TEAM = [
     'xukecheng@baidu.com',
 ]
 
+SIMPlEHDMAP_TEAM = [
+    'hukuang@baidu.com',
+    'v_panxuechao@baidu.com',    
+    'v_wangxitong02@baidu.com',
+]
+
 
 def send_email_info(title, content, receivers, attachments=[]):
     """Send email with normal information"""
