@@ -70,6 +70,9 @@ AZURE_STORAGE_ACCOUNT=""
 AZURE_STORAGE_ACCESS_KEY=""
 AZURE_BLOB_CONTAINER=""
 
+# Make partner storage writable. Be cautious!
+PARTNER_STORAGE_WRITABLE="FALSE"
+
 # NON_JVM_MEMORY = EXECUTOR_MEMORY * MEMORY_OVERHEAD_FACTOR
 # Check https://spark.apache.org/docs/latest/running-on-kubernetes.html for more
 # information.
@@ -147,9 +150,12 @@ while [ $# -gt 0 ]; do
       shift
       AZURE_STORAGE_ACCESS_KEY=$1
       ;;
-    --azure_blob_container)       # Partner BOS access key.
+    --azure_blob_container)       # Azure blob container name.
       shift
       AZURE_BLOB_CONTAINER=$1
+      ;;
+    --partner_storage_writable)   # Make partner storage writable.
+      PARTNER_STORAGE_WRITABLE="TRUE"
       ;;
     *)
       JOB_FILE=$1
@@ -208,6 +214,8 @@ ENVS=(
   "AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT}"
   "AZURE_STORAGE_ACCESS_KEY=${AZURE_STORAGE_ACCESS_KEY}"
   "AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER}"
+  # Partner storage common config.
+  "PARTNER_STORAGE_WRITABLE=${PARTNER_STORAGE_WRITABLE}"
 )
 for i in ${ENVS[@]}; do
   IFS='=' read KEY VALUE <<< "${i}"
