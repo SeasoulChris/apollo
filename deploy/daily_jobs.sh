@@ -25,5 +25,5 @@ JOB="fueling/daily_jobs.py"
 JOB="fueling/profiling/control_profiling_metrics.py"
 ./tools/submit-job-to-k8s.sh --workers 10 --memory 24g ${JOB}
 JOB="fueling/profiling/control_profiling_visualization.py"
-CONDA_ENV="fuel-py27"
+CONDA_ENV="fuel-py36"
 ./tools/submit-job-to-k8s.sh --workers 10 --memory 24g -e ${CONDA_ENV} ${JOB}

@@ -12,8 +12,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
 import fueling.common.logging as logging
-import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
+import fueling.common.proto_utils as proto_utils
 
 
 def generate_segments(h5s):
@@ -75,7 +76,11 @@ def plot_h5_features_hist(data_rdd):
         pdffile = os.path.join(dir_data, vehicle_controller + 'control_data_visualization.pdf')
     else:
         pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
-    profiling_conf = feature_utils.get_config_control_profiling()
+
+    profiling_conf = proto_utils.get_pb_from_text_file(
+        '/apollo/modules/data/fuel/fueling/profiling/conf/control_profiling_conf.pb.txt',
+        ControlProfiling())
+
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
             if (i < data.shape[1] and
