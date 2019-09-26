@@ -6,6 +6,7 @@ Redis utils.
 Requirements: redis-py
 """
 
+import os
 import time
 
 from absl import flags
@@ -29,7 +30,7 @@ class RedisConnectionPool(object):
     connection_pool = None
 
     @staticmethod
-    def connection_pool(flags_dict=None):
+    def get_connection_pool(flags_dict=None):
         if not RedisConnectionPool.connection_pool:
             if not flags_dict:
                 flags_dict = flags.FLAGS.flag_values_dict()
@@ -47,7 +48,7 @@ def get_redis_instance():
     API to return a Redis instance.
     The instance can be used in scenarios with multiple operations executing as a batch
     """
-    return redis.Redis(connection_pool=RedisConnectionPool.connection_pool())
+    return redis.Redis(connection_pool=RedisConnectionPool.get_connection_pool())
 
 
 def redis_set(redis_key, redis_value):
@@ -81,5 +82,5 @@ def _retry(func, params):
             cur_retries += 1
         except Exception as ex:
             # Silently swallow it instead of raising
-            logging.error('redis error. params: {}'.format(params))
+            logging.error('redis error: {}. params: {}'.format(ex, params))
             return None
