@@ -72,7 +72,7 @@ class DatasetOnlyImage:
         while True:
             image_file_path = self._txt_files_queue.get()
             image = cv2.imread(image_file_path)
-            if image == None:
+            if image is None:
                 logging.warn("Failed to read image {}. Skip.".format(image_file_path))
                 continue
             image = image[:, :, ::-1]

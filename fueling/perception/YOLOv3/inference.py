@@ -122,7 +122,7 @@ class Inference:
 
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):
-                with open(os.path.join(output_dir,
+                with open(os.path.join(output_dir, "label",
                                        "{}.txt".format(image_name_list[batch_id])), "w") as handle:
                     for line_id, line in enumerate(image_dets):
                         if (line_id != len(image_dets) - 1):
@@ -139,7 +139,7 @@ class Inference:
                            calib=calib_list[i] if has_label else None,
                            is_letter_box_image=False,
                            cls_box_map=cls_box_map_lists[i] if has_label else None)
-                original_image_list[i].save(os.path.join(output_dir,
+                original_image_list[i].save(os.path.join(output_dir, "images",
                                                          "{}.jpg".format(image_name_list[i])))
         _write_output()
         _write_image()

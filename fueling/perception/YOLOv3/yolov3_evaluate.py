@@ -6,6 +6,7 @@ import glob
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.file_utils import makedirs
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.dataset import Dataset
 from fueling.perception.YOLOv3.dataset_only_image import DatasetOnlyImage
@@ -41,7 +42,6 @@ class Yolov3Inference(BasePipeline):
         self.run(data, output_dir)
 
     def run_prod(self):
-        data_dir = "modules/perception/camera_obj/YOLOv3/train"
         training_datasets = glob.glob(os.path.join("/mnt/bos", INFERENCE_DATA_DIR_CLOUD, "*"))
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
@@ -65,8 +65,12 @@ class Yolov3Inference(BasePipeline):
             for _ in range((data_pool.dataset_size + 1) // BATCH_SIZE):
                 data = data_pool.batch
                 engine.run(data, output_dir)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        label_output_path = os.path.join(output_dir, "label")
+        images_output_path = os.path.join(output_dir, "images")
+        if not os.path.exists(label_output_path):
+            makedirs(label_output_path)
+        if not os.path.exists(images_output_path):
+            makedirs(images_output_path)
         data_rdd.foreach(_executor)
 
 

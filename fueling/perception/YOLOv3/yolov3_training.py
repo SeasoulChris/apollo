@@ -6,6 +6,7 @@ import shutil
 import glob
 import numpy as np
 
+from fueling.common.file_utils import makedirs
 from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.dataset import Dataset
@@ -57,7 +58,7 @@ class Yolov3Training(BasePipeline):
                 data = data_pool.batch
                 engine.step(data)
         if not os.path.exists(MODEL_OUTPUT_PATH):
-            os.makedirs(MODEL_OUTPUT_PATH)
+            makedirs(MODEL_OUTPUT_PATH)
         shutil.copyfile("/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py",
                 os.path.join(MODEL_OUTPUT_PATH, "config.py"))
         data.foreach(_executor)
