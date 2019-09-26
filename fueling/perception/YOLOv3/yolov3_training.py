@@ -57,8 +57,7 @@ class Yolov3Training(BasePipeline):
             for i in range(MAX_ITER):
                 data = data_pool.batch
                 engine.step(data)
-        if not os.path.exists(MODEL_OUTPUT_PATH):
-            makedirs(MODEL_OUTPUT_PATH)
+        makedirs(MODEL_OUTPUT_PATH)
         shutil.copyfile("/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py",
                 os.path.join(MODEL_OUTPUT_PATH, "config.py"))
         data.foreach(_executor)
