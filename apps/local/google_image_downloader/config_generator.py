@@ -66,15 +66,13 @@ def main(argv):
     records = []
     for keyword in KEYWORDS:
         for location in LOCATION_KEYWORDS:
-            if location:
-                location = ' "%s"' % location
             for color_type in COLOR_TYPES:
                 for size_opt in SIZES:
                     for aspect_ratio in ASPECT_RATIOS:
                         for type_opt in TYPES:
                             for format_opt in FORMATS:
                                 records.append({
-                                    'keywords': keyword + location,
+                                    'keywords': '{} {}'.format(keyword, location),
                                     'color_type': color_type,
                                     'size': size_opt,
                                     'aspect_ratio': aspect_ratio,
