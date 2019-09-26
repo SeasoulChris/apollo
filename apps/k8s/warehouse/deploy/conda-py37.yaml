@@ -18,5 +18,4 @@ dependencies:
   - pytz
 
   - pip:
-    - colored-glog
     - flask-restful
