@@ -15,19 +15,23 @@ dependencies:
 
   # Data science
   - boto3
-  - cudatoolkit = 10.0
   - h5py
-  - keras-gpu
   - matplotlib
   - numpy
   - pymongo
+  - redis
+
+  # Learning
+  - cudatoolkit = 10.0
+  - keras-gpu
+  - opencv
+  - pillow
   - pytorch = 1.1.0
   - scikit-learn
   - torchvision
   - tensorflow-gpu
 
   # Other
-  - opencv
   - pyproj
   - pytz
   - requests
@@ -44,7 +48,6 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - Pillow
     - pycocotools
     - pyspark-utils
     - scaleapi
@@ -53,5 +56,4 @@ dependencies:
     - librosa
     - moviepy
     - pydub
-    - redis
     - youtube-dl
