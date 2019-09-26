@@ -49,6 +49,8 @@ class AudioDataset(Dataset):
 
 class AudioLoss():
     def loss_fn(self, y_pred, y_true):
+        y_pred = y_pred.view(-1)
+        y_true = y_true.view(-1)
         loss_func = nn.BCELoss()
         return loss_func(y_pred, y_true)
 
@@ -69,8 +71,10 @@ class AudioMLPModel(nn.Module):
         self.fc2 = nn.Linear(105, 16)
         self.fc3 = nn.Linear(16, 1)
         self.dropout = nn.Dropout(0.25)
+        self.batchnorm = nn.BatchNorm1d(self.input_dim)
 
     def forward(self, X):
+        X = self.batchnorm(X)
         X = F.relu(self.fc1(X))
         X = self.dropout(X)
         X = F.relu(self.fc2(X))
