@@ -141,11 +141,11 @@ if __name__ == "__main__":
         'Model type for training from [mlp, cnn1d, cnn2d].')
 
     flags.DEFINE_string(
-        'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
+        'train_dir', '/home/jinyun/cleaned_data/train_balanced/',
         'The dirname with training data.')
 
     flags.DEFINE_string(
-        'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+        'valid_dir', '/home/jinyun/cleaned_data/eval_balanced/',
         'The dirname with validation data.')
 
     flags.DEFINE_string(
@@ -169,14 +169,11 @@ if __name__ == "__main__":
         model_dir = flags_dict['model_dir']
 
         # Set-up data-loader
-        train_set_extractor = AudioFeatureExtraction(train_dir)
-
-        train_features, train_labels = train_set_extractor.load_features_labels(
+        train_features, train_labels = AudioFeatureExtraction.load_features_labels(
             feature_type, train_dir)
         train_dataset = AudioDataset(model_type, train_features, train_labels)
 
-        validation_set_extractor = AudioFeatureExtraction(valid_dir)
-        valid_features, valid_labels = validation_set_extractor.load_features_labels(
+        valid_features, valid_labels = AudioFeatureExtraction.load_features_labels(
             feature_type, valid_dir)
         valid_dataset = AudioDataset(model_type, valid_features, valid_labels)
 

@@ -127,7 +127,8 @@ class AudioFeatureExtraction(object):
         np.save(os.path.join(features_dir, model_type + '_features.npy'), features)
         np.save(os.path.join(features_dir, model_type + '_labels.npy'), labels)
 
-    def load_features_labels(self, model_type, features_dir):
+    @staticmethod
+    def load_features_labels(model_type, features_dir):
         features = np.load(os.path.join(
             features_dir, model_type + '_features.npy'))
         labels = np.load(os.path.join(
@@ -143,11 +144,11 @@ if __name__ == "__main__":
         'Feature type for training from [mlp, cnn].')
 
     flags.DEFINE_string(
-        'train_dir', '/home/xukecheng/Desktop/cleaned_data/train_balanced/',
+        'train_dir', '/home/jinyun/cleaned_data/train_balanced/',
         'The dirname with training data.')
 
     flags.DEFINE_string(
-        'valid_dir', '/home/xukecheng/Desktop/cleaned_data/eval_balanced/',
+        'valid_dir', '/home/jinyun/cleaned_data/eval_balanced/',
         'The dirname with validation data.')
 
     def main(argv):

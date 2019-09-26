@@ -34,7 +34,7 @@ from tqdm import tqdm
 from fueling.audio.pyAudioAnalysis import audioFeatureExtraction
 
 
-flags.DEFINE_string('root_dir', '/home/Desktop/cleaned_data/',
+flags.DEFINE_string('root_dir', '/home/jinyun/cleaned_data/',
                     'The root dir containing data.')
 
 sns.set_style('whitegrid')
@@ -115,7 +115,7 @@ def plot_model_history(model_history):
     plt.savefig('model_history.png')
 
 
-def predict_op(y, scaler, model):
+def predict_op(y, sr,  scaler, model):
     y = preprocess(y)
     features_list = audioFeatureExtraction.stFeatureExtraction(
         y, sr, 0.10*sr, .05*sr)
@@ -207,7 +207,7 @@ def predict_prob(y, scaler):
 if __name__ == '__main__':
 
     def main(argv):
-    
+
         flags_dict = flags.FLAGS.flag_values_dict()
         root_dir = flags_dict['root_dir']
 
@@ -370,7 +370,7 @@ if __name__ == '__main__':
             except:
                 print('Failed to open file {}'.format(fn))
                 continue
-            classes = predict_op(y, scaler1, model)
+            classes = predict_op(y, sr, scaler1, model)
             if classes == 1:
                 correct_em += 1
             em_tot += 1
@@ -388,7 +388,7 @@ if __name__ == '__main__':
             except:
                 print('Failed to open file {}'.format(fn))
                 continue
-            classes = predict_op(y, scaler1, model)
+            classes = predict_op(y, sr, scaler1, model)
             if classes == 0:
                 correct_nonem += 1
             nonem_tot += 1
