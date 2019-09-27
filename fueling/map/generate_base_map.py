@@ -31,8 +31,10 @@ from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
-LANE_WIDTH = 3.3
+flags.DEFINE_string('input_data_path', 'simplehdmap/data/bag',
+                    'simple hdmap records input data path.')
 
+LANE_WIDTH = 3.3
 
 class MapGenSingleLine(BasePipeline):
 
@@ -57,19 +59,20 @@ class MapGenSingleLine(BasePipeline):
     def run_prod(self):
         src_prefix = self.FLAGS.get('input_data_path')
         job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')
-        bos_client = BosClient()
+        job_id = self.FLAGS.get('job_id')        
         logging.info("job_id: %s" % job_id)
 
         #src_prefix = 'simplehdmap/data/bag'
-        dst_prefix = 'test/simplehdmap/data'
+        dst_prefix = 'simplehdmap/result'
+
+        bos_client = BosClient()
+        # Access partner's storage if provided.
+        object_storage = self.partner_object_storage() or bos_client
 
         origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
-        target_dir = bos_client.abs_path(origin_prefix)
-        logging.info("target_prefix: {}".format(target_dir))
-
-         # Access partner's storage if provided.
-        object_storage = self.partner_object_storage() or bos_client
+        target_dir = object_storage.abs_path(origin_prefix)
+        logging.info("target_prefix: {}".format(target_dir))        
+        
         source_dir = object_storage.abs_path(src_prefix)
 
         logging.info("source_prefix: {}".format(source_dir))
@@ -131,12 +134,13 @@ class MapGenSingleLine(BasePipeline):
         length = int(path.length)
 
         extra_roi_extension = 1.0
+        
+        base_map_txt = os.path.join(self.dst_prefix, 'base_map.txt')
+        logging.info("base_map_txt_path: {}".format(base_map_txt))
 
         if not os.path.exists(self.dst_prefix):
             logging.warning('bos path: {} not exists'.format(self.dst_prefix))
             file_utils.makedirs(self.dst_prefix)
-        base_map_txt = os.path.join(self.dst_prefix, 'base_map.txt')
-        logging.info("base_map_txt_path: {}".format(base_map_txt))
 
         fmap = open(base_map_txt, 'w')
         line_id = 0

@@ -5,6 +5,7 @@ This is a module to gen sim map
 
 import os
 import glob
+import tarfile
 
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
@@ -63,12 +64,13 @@ class SimMapPipeline(BasePipeline):
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
 
-        src_prefix = 'test/simplehdmap/data'
+        src_prefix = 'simplehdmap/result'
         origin_prefix = os.path.join(src_prefix, job_owner, job_id)
         logging.info("origin_prefix: %s" % origin_prefix)
 
         bos_client = BosClient()
-        source_path = bos_client.abs_path(origin_prefix)
+        object_storage = self.partner_object_storage() or bos_client
+        source_path = object_storage.abs_path(origin_prefix)
         logging.info('source_path path is {}'.format(source_path))
         base_map_path = os.path.join(source_path, 'base_map.txt')
 
@@ -84,40 +86,13 @@ class SimMapPipeline(BasePipeline):
 
         self.run(source_path)
 
-        receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.DATA_TEAM
+        receivers = email_utils.SIMPlEHDMAP_TEAM
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)
         title = 'Your simplehdmap generated is done!'
-        content = {'Job Owner': job_owner, 'Job ID': job_id}
-        bin_files = glob.glob(os.path.join(origin_prefix, '*/*.txt'))
-        txt_files = glob.glob(os.path.join(origin_prefix, '*/*.bin'))
-        attachments = bin_files + txt_files
-        logging.info('bin_files: %s' % bin_files)
-        logging.info('txt_files: %s' % txt_files)
-        logging.info('attachments before tar: %s' % attachments)
-        # add all file to a tar.gz file
-        if attachments:
-            output_filename = os.path.join(origin_prefix, 'result.tar.gz')
-            # with tarfile.open(output_filename, "w:gz") as tar:
-            tar = tarfile.open(output_filename, 'w:gz')
-            for attachment in attachments:
-                hdmap = os.path.basename(os.path.dirname(attachment))
-                file_name = os.path.basename(attachment)
-                logging.info('add_to_tar_attachment: %s' % attachment)
-                logging.info('add_to_tar_hdmap: %s' % hdmap)
-                logging.info('add_to_tar_file_name: %s' % file_name)
-                tar.add(attachment, arcname='%s_%s' % (hdmap, file_name))
-            tar.close()
-            tar = tarfile.open(output_filename, 'r:gz')
-            tar.extractall(origin_prefix)
-            tar.close()
-            logging.info('output_filename: %s' % output_filename)
-            attachments = [output_filename]
-            logging.info('attachments: %s' % attachments)
-        email_utils.send_email_info(title, content, receivers, attachments)
-
-        logging.info('Simplehdmap: Done, PROD')
+        content = {'Job Owner': job_owner, 'Job ID': job_id}        
+        email_utils.send_email_info(title, content, receivers)        
 
     def run(self, original_path):
         """Run the pipeline with given parameters"""
