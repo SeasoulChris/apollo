@@ -200,105 +200,119 @@ def get_config_control_profiling():
 def extract_control_data_from_msg(msg):
     """Extract wanted fields from control message"""
     msg_proto = record_utils.message_to_proto(msg)
-    control_latency = msg_proto.latency_stats
-    control_header = msg_proto.header
-    input_debug = msg_proto.debug.input_debug
+    control_latency = getattr(msg_proto, 'latency_stats', float('NaN'))
+    control_header = getattr(msg_proto, 'header', float('NaN'))
+    input_debug = getattr(getattr(msg_proto, 'debug', float('NaN')),
+                          'input_debug', float('NaN'))
     if get_config_control_profiling().controller_type == 'Lon_Lat_Controller':
-        control_lon = msg_proto.debug.simple_lon_debug
-        control_lat = msg_proto.debug.simple_lat_debug
+        control_lon = getattr(getattr(msg_proto, 'debug'), 'simple_lon_debug')
+        control_lat = getattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')
         data_array = np.array([
             # Features: "Reference" category
-            control_lon.station_reference,               # 0
-            control_lon.speed_reference,                 # 1
-            control_lon.acceleration_reference,          # 2
-            control_lat.ref_heading,                     # 3
-            control_lat.ref_heading_rate,                # 4
-            control_lat.curvature,                       # 5
+            getattr(control_lon, 'station_reference', float('NaN')),               # 0
+            getattr(control_lon, 'speed_reference', float('NaN')),                 # 1
+            getattr(control_lon, 'acceleration_reference', float('NaN')),          # 2
+            getattr(control_lat, 'ref_heading', float('NaN')),                     # 3
+            getattr(control_lat, 'ref_heading_rate', float('NaN')),                # 4
+            getattr(control_lat, 'curvature', float('NaN')),                       # 5
             # Features: "Error" category
-            control_lon.path_remain,                     # 6
-            control_lon.station_error,                   # 7
-            control_lon.speed_error,                     # 8
-            control_lat.lateral_error,                   # 9
-            control_lat.lateral_error_rate,              # 10
-            control_lat.heading_error,                   # 11
-            control_lat.heading_error_rate,              # 12
+            getattr(control_lon, 'path_remain', float('NaN')),                     # 6
+            getattr(control_lon, 'station_error', float('NaN')),                   # 7
+            getattr(control_lon, 'speed_error', float('NaN')),                     # 8
+            getattr(control_lat, 'lateral_error', float('NaN')),                   # 9
+            getattr(control_lat, 'lateral_error_rate', float('NaN')),              # 10
+            getattr(control_lat, 'heading_error', float('NaN')),                   # 11
+            getattr(control_lat, 'heading_error_rate', float('NaN')),              # 12
             # Features: "Command" category
-            msg_proto.throttle,                          # 13
-            msg_proto.brake,                             # 14
-            msg_proto.acceleration,                      # 15
-            msg_proto.steering_target,                   # 16
+            getattr(msg_proto, 'throttle', float('NaN')),                          # 13
+            getattr(msg_proto, 'brake', float('NaN')),                             # 14
+            getattr(msg_proto, 'acceleration', float('NaN')),                      # 15
+            getattr(msg_proto, 'steering_target', float('NaN')),                   # 16
             # Features: "State" category
-            control_lon.current_station,                 # 17
-            control_lon.current_speed,                   # 18
-            control_lon.current_acceleration,            # 19
-            control_lon.current_jerk,                    # 20
-            control_lat.lateral_acceleration,            # 21
-            control_lat.lateral_jerk,                    # 22
-            control_lat.heading,                         # 23
-            control_lat.heading_rate,                    # 24
-            control_lat.heading_acceleration,            # 25
-            control_lat.heading_jerk,                    # 26
+            getattr(control_lon, 'current_station', float('NaN')),                 # 17
+            getattr(control_lon, 'current_speed', float('NaN')),                   # 18
+            getattr(control_lon, 'current_acceleration', float('NaN')),            # 19
+            getattr(control_lon, 'current_jerk', float('NaN')),                    # 20
+            getattr(control_lat, 'lateral_acceleration', float('NaN')),            # 21
+            getattr(control_lat, 'lateral_jerk', float('NaN')),                    # 22
+            getattr(control_lat, 'heading', float('NaN')),                         # 23
+            getattr(control_lat, 'heading_rate', float('NaN')),                    # 24
+            getattr(control_lat, 'heading_acceleration', float('NaN')),            # 25
+            getattr(control_lat, 'heading_jerk', float('NaN')),                    # 26
             # Features: "Latency" category
-            control_latency.total_time_ms,               # 27
-            control_latency.total_time_exceeded,         # 28
+            getattr(control_latency, 'total_time_ms', float('NaN')),               # 27
+            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 28
             # Features: "Header" category
-            control_header.timestamp_sec,                # 29
-            control_header.sequence_num,                 # 30
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 29
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 30
             # Features: "Input Info" category
-            input_debug.localization_header.timestamp_sec,  # 31
-            input_debug.localization_header.sequence_num,   # 32
-            input_debug.canbus_header.timestamp_sec,        # 33
-            input_debug.canbus_header.sequence_num,         # 34
-            input_debug.trajectory_header.timestamp_sec,    # 35
-            input_debug.trajectory_header.sequence_num      # 36
+            getattr(getattr(input_debug, 'localization_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 31
+            getattr(getattr(input_debug, 'localization_header', float('NaN')),
+                    'sequence_num', float('NaN')),                                 # 32
+            getattr(getattr(input_debug, 'canbus_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 33
+            getattr(getattr(input_debug, 'canbus_header', float('NaN')),
+                    'sequence_num', float('NaN')),                                 # 34
+            getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 35
+            getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 36
         ])
     else:
-        control_mpc = msg_proto.debug.simple_mpc_debug
+        control_mpc = getattr(getattr(msg_proto, 'debug', float('NaN')),
+                              'simple_mpc_debug', float('NaN'))
         data_array = np.array([
             # Features: "Reference" category
-            control_mpc.station_reference,               # 0
-            control_mpc.speed_reference,                 # 1
-            control_mpc.acceleration_reference,          # 2
-            control_mpc.ref_heading,                     # 3
-            control_mpc.ref_heading_rate,                # 4
-            control_mpc.curvature,                       # 5
+            getattr(control_mpc, 'station_reference', float('NaN')),               # 0
+            getattr(control_mpc, 'speed_reference', float('NaN')),                 # 1
+            getattr(control_mpc, 'acceleration_reference', float('NaN')),          # 2
+            getattr(control_mpc, 'ref_heading', float('NaN')),                     # 3
+            getattr(control_mpc, 'ref_heading_rate', float('NaN')),                # 4
+            getattr(control_mpc, 'curvature', float('NaN')),                       # 5
             # Features: "Error" category
-            control_mpc.path_remain,                     # 6
-            control_mpc.station_error,                   # 7
-            control_mpc.speed_error,                     # 8
-            control_mpc.lateral_error,                   # 9
-            control_mpc.lateral_error_rate,              # 10
-            control_mpc.heading_error,                   # 11
-            control_mpc.heading_error_rate,              # 12
+            getattr(control_mpc, 'path_remain', float('NaN')),                     # 6
+            getattr(control_mpc, 'station_error', float('NaN')),                   # 7
+            getattr(control_mpc, 'speed_error', float('NaN')),                     # 8
+            getattr(control_mpc, 'lateral_error', float('NaN')),                   # 9
+            getattr(control_mpc, 'lateral_error_rate', float('NaN')),              # 10
+            getattr(control_mpc, 'heading_error', float('NaN')),                   # 11
+            getattr(control_mpc, 'heading_error_rate', float('NaN')),              # 12
             # Features: "Command" category
-            msg_proto.throttle,                          # 13
-            msg_proto.brake,                             # 14
-            msg_proto.acceleration,                      # 15
-            msg_proto.steering_target,                   # 16
+            getattr(msg_proto, 'throttle', float('NaN')),                          # 13
+            getattr(msg_proto, 'brake', float('NaN')),                             # 14
+            getattr(msg_proto, 'acceleration', float('NaN')),                      # 15
+            getattr(msg_proto, 'steering_target', float('NaN')),                   # 16
             # Features: "State" category
-            control_mpc.station_feedback,                # 17
-            control_mpc.speed_feedback,                  # 18
-            control_mpc.acceleration_feedback,           # 19
-            control_mpc.jerk_feedback,                   # 20
-            control_mpc.lateral_acceleration,            # 21
-            control_mpc.lateral_jerk,                    # 22
-            control_mpc.heading,                         # 23
-            control_mpc.heading_rate,                    # 24
-            control_mpc.heading_acceleration,            # 25
-            control_mpc.heading_jerk,                    # 26
+            getattr(control_mpc, 'station_feedback', float('NaN')),                # 17
+            getattr(control_mpc, 'speed_feedback', float('NaN')),                  # 18
+            getattr(control_mpc, 'acceleration_feedback', float('NaN')),           # 19
+            getattr(control_mpc, 'jerk_feedback', float('NaN')),                   # 20
+            getattr(control_mpc, 'lateral_acceleration', float('NaN')),            # 21
+            getattr(control_mpc, 'lateral_jerk', float('NaN')),                    # 22
+            getattr(control_mpc, 'heading', float('NaN')),                         # 23
+            getattr(control_mpc, 'heading_rate', float('NaN')),                    # 24
+            getattr(control_mpc, 'heading_acceleration', float('NaN')),            # 25
+            getattr(control_mpc, 'heading_jerk', float('NaN')),                    # 26
             # Features: "Latency" category
-            control_latency.total_time_ms,               # 27
-            control_latency.total_time_exceeded,         # 28
+            getattr(control_latency, 'total_time_ms', float('NaN')),               # 27
+            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 28
             # Features: "Header" category
-            control_header.timestamp_sec,                # 29
-            control_header.sequence_num,                 # 30
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 29
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 30
             # Features: "Input Info" category
-            input_debug.localization_header.timestamp_sec,  # 31
-            input_debug.localization_header.sequence_num,   # 32
-            input_debug.canbus_header.timestamp_sec,        # 33
-            input_debug.canbus_header.sequence_num,         # 34
-            input_debug.trajectory_header.timestamp_sec,    # 35
-            input_debug.trajectory_header.sequence_num      # 36
+            getattr(getattr(input_debug, 'localization_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 31
+            getattr(getattr(input_debug, 'localization_header', float('NaN')),
+                    'sequence_num', float('NaN')),                                 # 32
+            getattr(getattr(input_debug, 'canbus_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 33
+            getattr(getattr(input_debug, 'canbus_header', float('NaN')),
+                    'sequence_num', float('NaN')),                                 # 34
+            getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 35
+            getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 36
         ])
 
     return data_array
@@ -307,27 +321,27 @@ def extract_control_data_from_msg(msg):
 def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
-    chassis_header = msg_proto.header
+    chassis_header = getattr(msg_proto, 'header', float('NaN'))
     if get_config_control_profiling().vehicle_type.find('Mkz') >= 0:
         data_array = np.array([
             # Features: "Status" category
-            msg_proto.driving_mode,                          # 0
-            msg_proto.gear_location,                         # 1
+            getattr(msg_proto, 'driving_mode', float('NaN')),                          # 0
+            getattr(msg_proto, 'gear_location', float('NaN')),                         # 1
             # Features: "Header" category
-            chassis_header.timestamp_sec,                    # 2
-            chassis_header.sequence_num,                     # 3
+            getattr(chassis_header, 'timestamp_sec', float('NaN')),                    # 2
+            getattr(chassis_header, 'sequence_num', float('NaN')),                     # 3
             # Features: "Action" category
-            msg_proto.throttle_percentage,                   # 4
-            msg_proto.brake_percentage                       # 5
+            getattr(msg_proto, 'throttle_percentage', float('NaN')),                   # 4
+            getattr(msg_proto, 'brake_percentage', float('NaN'))                       # 5
         ])
     else:
         data_array = np.array([
             # Features: "Status" category
-            msg_proto.driving_mode,                          # 0
-            msg_proto.gear_location,                         # 1
+            getattr(msg_proto, 'driving_mode', float('NaN')),                          # 0
+            getattr(msg_proto, 'gear_location', float('NaN')),                         # 1
             # Features: "Header" category
-            chassis_header.timestamp_sec,                    # 2
-            chassis_header.sequence_num                      # 3
+            getattr(chassis_header, 'timestamp_sec', float('NaN')),                    # 2
+            getattr(chassis_header, 'sequence_num', float('NaN'))                      # 3
         ])
     return data_array
 
@@ -335,15 +349,17 @@ def extract_chassis_data_from_msg(msg):
 def extract_localization_data_from_msg(msg):
     """Extract wanted fields from localization message"""
     msg_proto = record_utils.message_to_proto(msg)
-    localization_header = msg_proto.header
-    localization_pose = msg_proto.pose
+    localization_header = getattr(msg_proto, 'header', float('NaN'))
+    localization_pose = getattr(msg_proto, 'pose', float('NaN'))
     data_array = np.array([
         # Features: "Header" category
-        localization_header.timestamp_sec,                   # 0
-        localization_header.sequence_num,                    # 1
+        getattr(localization_header, 'timestamp_sec', float('NaN')),                   # 0
+        getattr(localization_header, 'sequence_num', float('NaN')),                    # 1
         # Features: "Pose" category
-        localization_pose.position.x,                        # 2
-        localization_pose.position.y,                        # 3
-        localization_pose.heading                            # 4
+        getattr(getattr(localization_pose, 'position',
+                float('NaN')), 'x', float('NaN')),                                     # 2
+        getattr(getattr(localization_pose, 'position',
+                float('NaN')), 'y', float('NaN')),                                     # 3
+        getattr(localization_pose, 'heading', float('NaN'))                            # 4
     ])
     return data_array
