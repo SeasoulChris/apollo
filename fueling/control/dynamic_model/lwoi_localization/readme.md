@@ -12,7 +12,7 @@ Before running the code package, a series of preparation work need to be conduct
 
       ```bash
       $ conda env update --prune -f /apollo/modules/data/fuel/conda/py36-pyro.yaml
-      $ conda activate fuel-py36-pyro.yaml
+      $ conda activate fuel-py36-pyro
       ```
     Note: the `fuel-py36-pyro` is a little different from the regualr `fuel-py36` environment. The former one includes some special version setting which matches the current `pyro-ppl` version.     
 
