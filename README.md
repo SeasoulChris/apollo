@@ -16,6 +16,14 @@
 
 1. Install env and activate.
 
+   In order to install the conda-forge packages with conda, please set your conda environments (version >=4.6) with
+
+   ```bash
+   conda config --add channels conda-forge
+   conda config --set channel_priority strict
+   ```
+   Then to install and activate environments:
+
    ```bash
    conda env update --prune -f conda/py27-cyber.yaml
    source activate fuel-py27-cyber
@@ -128,7 +136,7 @@ If you are pretty familliar with the infra, please:
 
    # Start a cloud job.
    ./tools/submit-job-to-k8s.sh [options] /path/to/spark/job.py [job-gflags]
- 
+
    # Find your job and access its Spark UI.
    ./tools/access-service-on-k8s.sh 4040
    ```
