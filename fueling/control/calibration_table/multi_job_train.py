@@ -254,7 +254,13 @@ class MultiJobTrain(BasePipeline):
 
         model = spark_helper.cache_and_log(
             'model',
-            brake_model.join(throttle_model).mapValues(train_utils.combine_file))
+            brake_model
+            # PairRDD(vehicle, (brake_table, throttle_table))
+            .join(throttle_model)
+            # PairRDD(vehicle, unsorted_calibration_table)
+            .mapValues(train_utils.combine_file)
+            # PairRDD(vehicle, sorted_calibration_table)
+            .mapValues(train_utils.sort_single_config))
 
 
 if __name__ == '__main__':

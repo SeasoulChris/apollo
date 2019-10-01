@@ -13,6 +13,7 @@ from fueling.control.features.neural_network_tf import NeuralNetworkTF
 from fueling.control.features.neural_network_torch import NeuralNetworkTorch
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 
 
@@ -113,7 +114,7 @@ def train_write_model(elem, target_prefix):
 
 def combine_file(files):
     brake_file, _ = files
-    file_name = os.path.join(os.path.dirname(brake_file), 'calibration_table.pb.txt')
+    file_name = os.path.join(os.path.dirname(brake_file), 'calibration_table_pre.pb.txt')
     with open(file_name, 'wb') as outfile:
         for f in files:
             logging.info('infile: %s' % f)
@@ -121,3 +122,14 @@ def combine_file(files):
                 for line in infile:
                     outfile.write(line)
     return file_name
+
+
+def sort_single_config(single_file):
+    """ sort pb.txt file w.r.t speed """
+    calibration_table_pb = calibration_table_pb2.ControlCalibrationTable()
+    origin_config = proto_utils.get_pb_from_text_file(single_file, calibration_table_pb)
+    origin_config.calibration.sort(key=lambda elem: elem.speed)
+    # write
+    file_name = os.path.join(os.path.dirname(single_file), 'calibration_table.pb.txt')
+    with open(file_name, 'w') as wf:
+        wf.write(str(origin_config))
