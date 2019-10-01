@@ -120,13 +120,14 @@ class SemanticMapLoss():
 
 
 class SemanticMapSelfLSTMModel(nn.Module):
-    def __init__(self, pred_len, num_history_points,
+    def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128,
                  cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapSelfLSTMModel, self).__init__()
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = self.cnn.fc.in_features
         self.pred_len = pred_len
+        self.observation_len = observation_len
         fc_in_features = self.cnn.fc.in_features
         self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         for param in self.cnn.parameters():
@@ -151,7 +152,6 @@ class SemanticMapSelfLSTMModel(nn.Module):
         obs_pos = X[3]
         obs_pos_rel = X[4]
         N = obs_pos.size(0)
-        observation_len = obs_pos.size(1)
         ht, ct = self.h0.repeat(N, 1), self.h0.repeat(N, 1)
 
         img_embedding = self.cnn(img)
@@ -160,18 +160,18 @@ class SemanticMapSelfLSTMModel(nn.Module):
         pred_out = cuda(torch.zeros(N, self.pred_len, 2))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
 
-        for t in range(1, observation_len+self.pred_len):
-            if t < observation_len:
-                ts_obs_mask = (obs_hist_size > observation_len-t).long().view(-1)
+        for t in range(1, self.observation_len + self.pred_len):
+            if t < self.observation_len:
+                ts_obs_mask = (obs_hist_size > self.observation_len - t).long().view(-1)
                 curr_obs_pos_rel = obs_pos_rel[:, t, :].float()
                 curr_obs_pos = obs_pos[:, t, :].float()
             else:
                 ts_obs_mask = pred_mask
                 pred_input = torch.cat((ht.clone(), img_embedding), 1)
-                pred_out[:, t-observation_len, :] = self.pred_layer(pred_input).float().clone()
-                curr_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - self.observation_len, :] = self.pred_layer(pred_input).float().clone()
+                curr_obs_pos_rel = pred_out[:, t - self.observation_len, :2]
                 curr_obs_pos = curr_obs_pos + curr_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = curr_obs_pos.clone()
+                pred_traj[:, t - self.observation_len, :] = curr_obs_pos.clone()
 
             curr_N = torch.sum(ts_obs_mask).long().item()
             if curr_N == 0:
