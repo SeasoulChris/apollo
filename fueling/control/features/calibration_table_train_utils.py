@@ -131,5 +131,4 @@ def sort_single_config(single_file):
     origin_config.calibration.sort(key=lambda elem: elem.speed)
     # write
     file_name = os.path.join(os.path.dirname(single_file), 'calibration_table.pb.txt')
-    with open(file_name, 'w') as wf:
-        wf.write(str(origin_config))
+    proto_utils.write_pb_to_text_file(origin_config, file_name)

@@ -6,7 +6,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/../../.."
 set -e
 
 SUBMITTER="./tools/submit-job-to-k8s.sh --workers 5 --cpu 5 --memory 60g"
-JOB_ID=$(date +%Y-%m-%d-%H)
+JOB_ID=$(date +%Y-%m-%d-%H-%M)
 INPUT_DATA_PATH="modules/control/apollo_calibration_table"
 
 # Feature extraction.
