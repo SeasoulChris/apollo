@@ -120,13 +120,10 @@ def bos_ask():
     return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
 
 
-@app.route('/metrics', methods=['GET', 'POST'])
-@app.route('/metrics/<path:prefix>')
-def metrics_hdl(prefix=''):
+@app.route('/metrics', methods=['GET'])
+def metrics_hdl():
     """Handler of the redis metrics."""
-    prefix_post = flask.request.form.get('prefix')
-    prefix_input = prefix_post if prefix_post is not None else prefix
-    metrics = metrics_util.GetMetricsByPrefix(prefix_input)
+    metrics = metrics_util.GetMetricsByPrefix(flask.request.args.get('prefix'))
     return flask.render_template('metrics.tpl', metrics=metrics)
 
 

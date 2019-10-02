@@ -35,7 +35,7 @@ input[type=text]:focus {
 {% block body %}
 
 <div>
-  <form action="{{ url_for('metrics_hdl') }}" method="post">
+  <form action="{{ url_for('metrics_hdl') }}" method="get">
     <input type="text" name="prefix" placeholder="Prefix...">
   </form>
 
