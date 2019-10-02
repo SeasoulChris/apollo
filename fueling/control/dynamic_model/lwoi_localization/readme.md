@@ -14,7 +14,7 @@ Before running the code package, a series of preparation work need to be conduct
       $ conda env update --prune -f /apollo/modules/data/fuel/conda/py36-pyro.yaml
       $ conda activate fuel-py36-pyro
       ```
-    Note: the `fuel-py36-pyro` is a little different from the regualr `fuel-py36` environment. The former one includes some special version setting which matches the current `pyro-ppl` version.     
+    Note: the `fuel-py36-pyro` is a little different from the regular `fuel-py36` environment. The former one includes some special version setting which matches the current `pyro-ppl` version.
 
 ## Download Sensor and Groundtruth Data
 
@@ -30,7 +30,7 @@ So far the lwoi_localization package only supports the NCLT data downloading and
 
 2. Settle the decompressed data into the corresponding paths under /apollo-fuel/testdata/:
 
-   For example, the sensor_data and groundtruth data can be feed into the following folders:  
+   For example, the sensor_data and groundtruth data can be feed into the following folders:
 
    ```bash
    .../apollo-fuel/testdata/control/lwoi_localization/sensor_data/nclt/training/2012-01-08/(data)
@@ -99,14 +99,14 @@ The Main Codes are included in the lwoi_main.py.
  1. Set up the correct Conda environment:
 
        ```bash
-       $ conda env update --prune -f /apollo/modules/data/fuel/fueling/conda/py36-pyro.yaml
-       $ conda activate fuel-py36-pyro.yaml
+       $ conda env update --prune -f /apollo/modules/data/fuel/conda/py36-pyro.yaml
+       $ conda activate fuel-py36-pyro
        ```
 ## Download Sensor and Groundtruth Data
 
 (The same as out-of-docker situation)
 
-## Run the trainning and test codes
+## Run the training and test codes
 
 (The same as out-of-docker situation)
 
@@ -129,7 +129,7 @@ The Main Codes are included in the lwoi_main.py.
 
    `Illegal instruction (core dumped)`
 
-   when the pyro.infer module is called. Thus, in fuel-py36-pyro.yaml, `torch==1.1.0` (which is not equivalent to `pytorch=1.10`) is uploaded.  
+   when the pyro.infer module is called. Thus, in fuel-py36-pyro.yaml, `torch==1.1.0` (which is not equivalent to `pytorch=1.10`) is uploaded.
 
 3. Error Message:
    During running inside-docker, if a error message emerges similar to
@@ -140,7 +140,7 @@ The Main Codes are included in the lwoi_main.py.
 
     `Segmentation fault (core dumped)`
 
-   , then please run the following code to solve the problem:  
+   , then please run the following code to solve the problem:
 
          $ export LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
