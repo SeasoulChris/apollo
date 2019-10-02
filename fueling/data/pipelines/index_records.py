@@ -54,12 +54,11 @@ class IndexRecords(BasePipeline):
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
         docs = self.mongo().record_collection().find({}, {'path': 1})
-        redis_utils.redis_set(self.metrics_prefix + 'already_indexed_records', len(docs))
-        # RDD(record_path), which is indexed before.
-        indexed_records = self.to_rdd([doc['path'] for doc in docs])
+        indexed_records = [doc['path'] for doc in docs]
+        redis_utils.redis_set(self.metrics_prefix + 'already_indexed_records', len(indexed_records))
 
         # RDD(record_path), which is not indexed.
-        records_rdd = records_rdd.subtract(indexed_records).cache()
+        records_rdd = records_rdd.subtract(self.to_rdd(indexed_records)).cache()
         redis_utils.redis_set(self.metrics_prefix + 'records_to_be_indexed', records_rdd.count())
         redis_utils.redis_set(self.metrics_prefix + 'records_finished_indexing', 0)
 
