@@ -11,6 +11,7 @@ dependencies:
   - flask
   - gunicorn
   - pymongo
+  - redis-py
 
   # Other
   - matplotlib

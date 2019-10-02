@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: warehouse
-        image: hub.baidubce.com/apollo/warehouse:20190926_1500
+        image: hub.baidubce.com/apollo/warehouse:20191001_1122
         ports:
         - containerPort: 8000
         env:
@@ -42,6 +42,11 @@ spec:
             secretKeyRef:
               name: bos-ask-secret
               key: sk
+        - name: REDIS_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: passwd
 
 ---
 

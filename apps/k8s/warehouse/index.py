@@ -18,12 +18,13 @@ from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 from res_map_lookup import MapLookup
 import display_util
 import records_util
+import metrics_util
 
 
 flags.DEFINE_string('host', '0.0.0.0', 'Web host IP.')
-flags.DEFINE_integer('port', 8000, 'Web host port.')
+flags.DEFINE_integer('port', 8008, 'Web host port.')
 flags.DEFINE_integer('workers', 5, 'Web host workers.')
-flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
+flags.DEFINE_boolean('debug', True, 'Enable debug mode.')
 flags.DEFINE_integer('page_size', 20, 'Search results per page.')
 
 app = flask.Flask(__name__)
@@ -117,6 +118,16 @@ def bos_ask():
     if flask.request.form.get('pin') != 'woyouyitouxiaomaolv':
         return ''
     return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
+
+
+@app.route('/metrics', methods=['GET', 'POST'])
+@app.route('/metrics/<path:prefix>')
+def metrics_hdl(prefix=''):
+    """Handler of the redis metrics."""
+    prefix_post = flask.request.form.get('prefix')
+    prefix_input = prefix_post if prefix_post is not None else prefix
+    metrics = metrics_util.GetMetricsByPrefix(prefix_input)
+    return flask.render_template('metrics.tpl', metrics=metrics)
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
