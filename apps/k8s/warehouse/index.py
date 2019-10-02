@@ -22,9 +22,9 @@ import metrics_util
 
 
 flags.DEFINE_string('host', '0.0.0.0', 'Web host IP.')
-flags.DEFINE_integer('port', 8008, 'Web host port.')
+flags.DEFINE_integer('port', 8000, 'Web host port.')
 flags.DEFINE_integer('workers', 5, 'Web host workers.')
-flags.DEFINE_boolean('debug', True, 'Enable debug mode.')
+flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 flags.DEFINE_integer('page_size', 20, 'Search results per page.')
 
 app = flask.Flask(__name__)
