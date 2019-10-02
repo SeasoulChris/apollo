@@ -5,7 +5,6 @@ import collections
 import os
 
 from absl import flags
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
@@ -14,6 +13,7 @@ import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+import fueling.common.redis_utils as redis_utils
 
 
 flags.DEFINE_integer('index_records_of_last_n_days', 0, 'Index records of last n days.')
@@ -24,6 +24,7 @@ class IndexRecords(BasePipeline):
 
     def __init__(self):
         BasePipeline.__init__(self, 'index-records')
+        self.metrics_prefix = 'data/pipelines/index_records/'
 
     def run_test(self):
         """Run test."""
@@ -53,15 +54,17 @@ class IndexRecords(BasePipeline):
     def process(self, records_rdd, summary_receivers=None):
         """Run the pipeline with given arguments."""
         docs = self.mongo().record_collection().find({}, {'path': 1})
+        redis_utils.redis_set(self.metrics_prefix + 'already_indexed_records', len(docs))
         # RDD(record_path), which is indexed before.
-        indexed_records = spark_helper.cache_and_log(
-            'IndexedRecords', self.to_rdd([doc['path'] for doc in docs]))
+        indexed_records = self.to_rdd([doc['path'] for doc in docs])
+
         # RDD(record_path), which is not indexed.
-        records_rdd = spark_helper.cache_and_log(
-            'RecordsToIndex', records_rdd.subtract(indexed_records))
+        records_rdd = records_rdd.subtract(indexed_records).cache()
+        redis_utils.redis_set(self.metrics_prefix + 'records_to_be_indexed', records_rdd.count())
+        redis_utils.redis_set(self.metrics_prefix + 'records_finished_indexing', 0)
+
         # RDD(record_path), which is newly indexed.
-        new_indexed_records = spark_helper.cache_and_log(
-            'NewlyIndexedRecords', records_rdd.mapPartitions(self.index_records))
+        new_indexed_records = records_rdd.mapPartitions(self.index_records)
         if summary_receivers:
             self.send_summary(new_indexed_records, summary_receivers)
 
@@ -83,6 +86,7 @@ class IndexRecords(BasePipeline):
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             new_indexed.append(record)
             logging.info('Indexed record {}'.format(record))
+        redis_utils.redis_incr(self.metrics_prefix + 'records_finished_indexing', len(new_indexed))
         return new_indexed
 
     @staticmethod
