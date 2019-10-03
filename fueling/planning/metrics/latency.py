@@ -21,7 +21,8 @@ class LatencyMetrics:
 
     def process(self, planning_msg):
         latency_ms = planning_msg.latency_stats.total_time_ms
-        self.latency_list.append(latency_ms)
+        if latency_ms >= 0:
+            self.latency_list.append(latency_ms)
 
     def get_min(self):
         return int(min(self.latency_list)) if self.latency_list else 0
