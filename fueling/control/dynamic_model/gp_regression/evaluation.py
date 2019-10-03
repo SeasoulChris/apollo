@@ -55,13 +55,18 @@ def test_gp(args, dataset, GaussianProcess):
         for i in range(len(input_data)):
             logging.debug("Input Dim {}".format((input_data[i].unsqueeze(0)).size()))
             logging.debug("Label Dim {}".format(gt_data[i].size()))
-            predicted_mean, predicted_var = gp_model.gp_f(input_data[i].unsqueeze(0), full_cov=True)
+            predicted_mean, predicted_var = gp_model(input_data[i].unsqueeze(0))
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
                                                       predicted_mean[1]]).unsqueeze(0)), 0)
             logging.info("predicted mean:{}".format(predicted_mean))
             logging.info("predicted variance:{}".format(predicted_var))
             logging.info("ground-truth residual error:{}".format(gt_data[i]))
+        
+        #TODO(all): Debug 'Cannot insert a Tensor that requires grad as a constant.' Error
+        # gp_model.eval()
+        # traced_script_module = torch.jit.trace(gp_model, input_data[0].unsqueeze(0).detach())
+        # traced_script_module.save(os.path.join(args.eval_result_path, "gp_model.pt"))
 
         input_data = input_data.numpy()
 

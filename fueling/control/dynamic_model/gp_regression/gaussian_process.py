@@ -32,3 +32,7 @@ class GaussianProcess(Parameterized):
         """Set data for Gaussian process model"""
         # TODO(Jiaxuan): Implement proper feature setting
         self.gp_f.set_data(feature, label)
+
+    def forward(self, input_data):
+        """Call the VariantionalSparseGP with full_cov"""
+        return self.gp_f(input_data, full_cov=True)
