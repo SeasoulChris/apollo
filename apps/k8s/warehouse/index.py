@@ -14,6 +14,7 @@ import pymongo
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.redis_utils as redis_utils
 
 from res_map_lookup import MapLookup
 import display_util
@@ -32,10 +33,14 @@ app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 
 
+METRICS_PV_PREFIX = 'apps:warehouse:pv:'
+
+
 @app.route('/')
 @app.route('/tasks/<prefix>/<int:page_idx>')
 def tasks_hdl(prefix='small-records', page_idx=1):
     """Handler of the task list page."""
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'tasks')
     mongo_col = Mongo().record_collection()
     query = {'dir': {'$regex': '^/mnt/bos/' + prefix}}
     task_dirs = {doc['dir'] for doc in mongo_col.find(query, {'dir': 1})}
@@ -72,6 +77,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
 @app.route('/task/<path:task_path>')
 def task_hdl(task_path):
     """Handler of the task detail page."""
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'task')
     docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
     records = [Mongo.doc_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
@@ -81,6 +87,7 @@ def task_hdl(task_path):
 @app.route('/records/<int:page_idx>')
 def records_hdl(page_idx=1):
     """Handler of the record list page."""
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'records')
     G = flags.FLAGS
     kFields = {
         'path': 1,
@@ -108,6 +115,7 @@ def records_hdl(page_idx=1):
 @app.route('/record/<path:record_path>')
 def record_hdl(record_path):
     """Handler of the record detail page."""
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'record')
     doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
     record = Mongo.doc_to_pb(doc, RecordMeta())
     return flask.render_template('record.tpl', record=record)
@@ -115,6 +123,7 @@ def record_hdl(record_path):
 
 @app.route('/bos-ask', methods=['POST'])
 def bos_ask():
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'bos-ask')
     if flask.request.form.get('pin') != 'woyouyitouxiaomaolv':
         return ''
     return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
@@ -123,6 +132,7 @@ def bos_ask():
 @app.route('/metrics', methods=['GET'])
 def metrics_hdl():
     """Handler of the redis metrics."""
+    redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
     metrics = metrics_util.GetMetricsByPrefix(flask.request.args.get('prefix'))
     return flask.render_template('metrics.tpl', metrics=metrics)
 

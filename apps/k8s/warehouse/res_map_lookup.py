@@ -4,12 +4,14 @@ from flask_restful import Resource
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.redis_utils as redis_utils
 
 
 class MapLookup(Resource):
     """Map lookup service"""
 
     def get(self, lat, lon):
+        redis_utils.redis_incr('apps:warehouse:pv:map_lookup')
         try:
             lat = float(lat)
             lon = float(lon)

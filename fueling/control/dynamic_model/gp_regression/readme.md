@@ -1,21 +1,27 @@
-
 ## Gaussian Process Regression
+
 1. Setup Conda environment for label generation:
-```bash
-      $ conda env update --prune -f /apollo/modules/data/fuel/conda/py27.yaml
-      $ source activate fuel-py27
-```
-2. Run label generation script:
-```bash
-      $ python /apollo/modules/data/fuel/fueling/control/dynamic_model/gp_regression/label_generation.py
-```
 
-3. Deactivate Conda environment
-```bash
+   ```bash
+   conda env update --prune -f /apollo/modules/data/fuel/conda/py27.yaml
+   source activate fuel-py27
+   ```
+
+1. Run label generation script:
+
+   ```bash
+   python /apollo/modules/data/fuel/fueling/control/dynamic_model/gp_regression/label_generation.py
+   ```
+
+1. Deactivate Conda environment
+
+   ```bash
    conda deactivate
-```
+   ```
 
-4. Run training script:
-```bash
+1. Run training script:
+
+   ```bash
+   conda env update --prune -f /apollo/modules/data/fuel/conda/py36-pyro.yaml
    ./fueling/control/dynamic_model/gp_regression/gp_main.sh
-```
+   ```

@@ -116,7 +116,7 @@ class RecordParser(object):
             record_utils.LOCALIZATION_CHANNEL: self.ProcessLocalization,
             record_utils.PLANNING_CHANNEL: self.ProcessPlanning,
         }
-        for channel, msg, _type, timestamp in self._reader.read_messages():
+        for channel, msg, _type, _ in self._reader.read_messages():
             processor = PROCESSORS.get(channel)
             processor(msg) if processor else None
 
