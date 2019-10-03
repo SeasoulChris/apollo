@@ -95,12 +95,12 @@ practices are:
    failed unexpectedly, the pipeline have no idea about how to recover.
 1. Reading record header is much faster than reading record, if you can do
    significatnt filtering on records according to its header, do it.
-1. Use [gflags](https://abseil.io/docs/python/guides/flags), but don't abuse.
-   Always run your pipeline with our tools, and put job file and gflags at end:
-   `tools/submit-job-to-*.sh <tool-flags> <your-job.py> <job-gflags>`.
+1. Use `absl.flags` for script argument. refer to
+   [Flags And Logging guide](docs/flags-and-logging-guide.md) for more
+   information.
 
-   To access flag values, you need to call `self.FLAGS[KEY]` from an instance of
-   `BasePipeline`.
+   Always run pipeline with our tools, and follow the pattern:
+   `tools/submit-job-to-*.sh [tool-flags ...] <your-job.py> [job-gflags ...]`.
 1. For Apollo data access, we use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya)
    to mount Apollo's BOS storage at `/mnt/bos`, which can be used as a POSIX
    file system. But if you want to list many files under a folder, a better way
