@@ -4,6 +4,7 @@ protobuf
 
 # Web
 flask
+flask-restful
 gunicorn
 pyopenssl
-flask-restful
+redis

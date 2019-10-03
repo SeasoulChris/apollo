@@ -85,7 +85,7 @@ class IndexRecords(BasePipeline):
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             new_indexed.append(record)
             logging.info('Indexed record {}'.format(record))
-        redis_utils.redis_incr(self.metrics_prefix + 'records_finished_indexing', len(new_indexed))
+            redis_utils.redis_incr(self.metrics_prefix + 'records_finished_indexing')
         return new_indexed
 
     @staticmethod
