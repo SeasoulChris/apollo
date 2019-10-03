@@ -16,7 +16,7 @@ The collection of metrics means checking, inserting or updating keys to Redis da
 * redis_set(redis_key, redis_value): insert a key to Redis if it does not exist, otherwise update its value
 * redis_get(redis_key): get value by using key
 * redis_incr(redis_key, amount=1): increase the key's value by certain mount
-* get_redis_instance(): return a raw Redis client instance that can directly execute standard [Redis operations] (https://redis-py.readthedocs.io/en/latest/)
+* get_redis_instance(): return a raw Redis client instance that can directly execute standard [Redis operations](https://redis-py.readthedocs.io/en/latest/)
 
 All these APIs have encapsulated retrying and error handling mechanism, except for "get_redis_instance()".  By default the failure of APIs execution will *not* throw execptions but just log the error messages.  But for "get_redis_instance()" you have to handle errors or timeouts by your own if necessary. 
 
@@ -33,6 +33,6 @@ print(redis_utils.get('abc.123.xxx'))
 
 ### Metrics Dashboard
 
-You can view the metrics by going to [Dashboard] (http://usa-data.baidu.com), and clicking the "Metrics" navigate button.  Currently it shows all the keys in the system by default.
+You can view the metrics by going to [Dashboard](http://usa-data.baidu.com), and clicking the "Metrics" navigate button.  Currently it shows all the keys in the system by default.
 
 You can narrow down the scope by using the "Prefix..." form, which will then retrieve only the keys with specified prefix.
