@@ -28,6 +28,10 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
   exit 0
 fi
 
+if [ -z "${FUEL_CLIENT_IMAGE}" ]; then
+  FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718"
+fi
+
 if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
   docker run --rm --net host \
       -v "${HOME}/.kube":/root/.kube \
@@ -35,7 +39,7 @@ if [ "${IN_CLIENT_DOCKER}" != "true" ]; then
       -e IN_CLIENT_DOCKER=true \
       -e SUBMITTER=$(whoami) \
       -w="/fuel" \
-      apolloauto/fuel-client:20190821_1718 \
+      ${FUEL_CLIENT_IMAGE} \
       bash tools/submit-job-to-k8s.sh $@
   exit $?
 fi
