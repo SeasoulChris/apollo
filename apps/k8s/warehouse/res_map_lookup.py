@@ -11,7 +11,7 @@ class MapLookup(Resource):
     """Map lookup service"""
 
     def get(self, lat, lon):
-        redis_utils.redis_incr('apps:warehouse:pv:map_lookup')
+        redis_utils.redis_incr('apps.warehouse.pv.map_lookup')
         try:
             lat = float(lat)
             lon = float(lon)

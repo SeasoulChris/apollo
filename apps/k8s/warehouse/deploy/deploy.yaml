@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: warehouse
-        image: hub.baidubce.com/apollo/warehouse:20191002_1453
+        image: hub.baidubce.com/apollo/warehouse:20191003_1153
         ports:
         - containerPort: 8000
         env:

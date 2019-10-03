@@ -33,7 +33,7 @@ app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 
 
-METRICS_PV_PREFIX = 'apps:warehouse:pv:'
+METRICS_PV_PREFIX = 'apps.warehouse.pv.'
 
 
 @app.route('/')
