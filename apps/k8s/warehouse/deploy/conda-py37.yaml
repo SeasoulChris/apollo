@@ -19,4 +19,7 @@ dependencies:
   - pytz
 
   - pip:
+    - eventlet
     - flask-restful
+    - flask-socketio
+

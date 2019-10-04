@@ -9,6 +9,7 @@ from absl import app as absl_app
 from absl import flags
 import flask
 import flask_restful
+import flask_socketio
 import gunicorn.app.base
 import pymongo
 
@@ -133,8 +134,15 @@ def bos_ask():
 def metrics_hdl():
     """Handler of the redis metrics."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
-    metrics = metrics_util.GetMetricsByPrefix(flask.request.args.get('prefix'))
+    metrics = metrics_util.get_metrics_by_prefix(flask.request.args.get('prefix'))
     return flask.render_template('metrics.tpl', metrics=metrics)
+
+
+@socketio.on('client_request_metrics_event')
+def metrics_request_event(message):
+    server_response_channel = 'server_response_merics'
+    metrics = metrics_util.get_metrics_by_prefix(message['prefix']) 
+    flask_socketio.emit(server_response_channel, metrics)
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
@@ -164,9 +172,9 @@ api.add_resource(MapLookup, '/map-lookup/<string:lat>/<string:lon>')
 
 def main(argv):
     if flags.FLAGS.debug:
-        app.run(flags.FLAGS.host, flags.FLAGS.port, flags.FLAGS.debug)
+        socketio.run(app, flags.FLAGS.host, flags.FLAGS.port, debug=flags.FLAGS.debug)
     else:
-        FlaskApp(app).run()
+        socketio.run(app)
 
 if __name__ == '__main__':
     absl_app.run(main)
