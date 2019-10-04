@@ -32,6 +32,8 @@ dependencies:
   - tensorflow-gpu
 
   # Other
+  - future
+  - progressbar2
   - pyproj
   - pytz
   - requests
@@ -48,9 +50,12 @@ dependencies:
 
   - pip:
     - azure.storage.blob
+    - liegroups
     - pycocotools
+    - pyro-ppl
     - pyspark-utils
     - scaleapi
+
     # Audio
     - eyed3
     - librosa
