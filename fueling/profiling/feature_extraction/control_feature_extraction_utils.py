@@ -36,39 +36,46 @@ def verify_vehicle_controller(task):
     messages = read_record_func(record_file)
     logging.info('{} messages for record file {}'.format(
         len(messages), record_file))
-    vehicle_message = get_message_by_topic(
-        messages, record_utils.HMI_STATUS_CHANNEL)
-    if not vehicle_message:
-        logging.error('no vehicle messages found in task {} record {}'.format(task, record_file))
-        return False
+    vehicle_message = get_message_by_topic(messages, record_utils.HMI_STATUS_CHANNEL)
+    if vehicle_message and hasattr(record_utils.message_to_proto(vehicle_message), 'current_vehicle'):
+        vehicle_type = record_utils.message_to_proto(vehicle_message).current_vehicle
+    else:
+        logging.info('no vehicle messages found in task {} record {}; \
+                      use "Arbitrary" as the current vehicle type'.format(task, record_file))
+        vehicle_type = "Arbitrary"
     control_message = get_message_by_topic(messages, record_utils.CONTROL_CHANNEL)
-    if not control_message:
-        logging.error('no control messages found in task {} record {}'.format(task, record_file))
+    if control_message and hasattr(record_utils.message_to_proto(control_message), 'debug'):
+        if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug') and
+            hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
+            controller_type = "Lon_Lat_Controller"
+        elif hasattr(grecord_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
+            controller_type = "MPC_Controller"
+        else:
+            logging.info('no known controller type found in task {} record {}; \
+                          use "Arbitrary" as the current controller type'.format(task, record_file))
+            controller_type = "Arbitrary"
+    else:
+        logging.warning('no control messages found in task {} record {}; \
+                         stop control profiling procedure'.format(task, record_file))
         return False
-    return data_matches_config(record_utils.message_to_proto(vehicle_message).current_vehicle,
-                               record_utils.message_to_proto(control_message))
+    return data_matches_config(vehicle_type, controller_type)
 
 
-def data_matches_config(vehicle_type, controller_type):
+def data_matches_config(data_vehicle_type, data_controller_type):
     """Compare the data retrieved in record file and configured value and see if matches"""
     conf_vehicle_type = get_config_control_profiling().vehicle_type
     conf_controller_type = get_config_control_profiling().controller_type
-    if conf_vehicle_type != vehicle_type:
-        logging.warning('mismatch between record vehicle {} and configed {}'
-                        .format(vehicle_type, conf_vehicle_type))
+    if not conf_vehicle_type:
+        logging.info('No requred vehicle type; arbitrary one can be processed for profiling')
+    elif conf_vehicle_type != data_vehicle_type:
+        logging.warning('mismatch between record vehicle {} and configed vehicle {}'
+                        .format(data_vehicle_type, conf_vehicle_type))
         return False
-    if controller_type.debug.simple_lat_debug and controller_type.debug.simple_lon_debug:
-        if conf_controller_type != 'Lon_Lat_Controller':
-            logging.warning('mismatch between record controller Lon_Lat_Controller and configed {}'
-                            .format(conf_controller_type))
-            return False
-    elif controller_type.debug.simple_mpc_debug:
-        if conf_controller_type != 'Mpc_Controller':
-            logging.warning('mismatch between record controller Mpc_Controller and configed {}'
-                            .format(conf_controller_type))
-            return False
-    else:
-        logging.warning('no controller type found in records')
+    if not conf_controller_type:
+        logging.info('No requred controller type; arbitrary one ccan be processed for profiling')
+    elif conf_controller_type != data_controller_type:
+        logging.warning('mismatch between record controller {} and configed controller {}'
+                        .format(data_controller_type, conf_controller_type))
         return False
     return True
 
