@@ -29,8 +29,8 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling'
+        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, 'Road_Test'),
