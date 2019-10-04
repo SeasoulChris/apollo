@@ -148,44 +148,30 @@ class SemanticMapSelfLSTMModel(nn.Module):
 
     def forward(self, X):
         img = X[0]
-        obs_hist_size = X[2]
         obs_pos = X[3]
-        obs_pos_rel = X[4]
+        obs_pos_step = X[4]
         N = obs_pos.size(0)
         ht, ct = self.h0.repeat(N, 1), self.h0.repeat(N, 1)
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_mask = cuda(torch.ones(N))
-        pred_out = cuda(torch.zeros(N, self.pred_len, 2))
-        pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
+        pred_traj = torch.zeros(N, self.pred_len, 2)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
-                ts_obs_mask = (obs_hist_size > self.observation_len - t).long().view(-1)
-                curr_obs_pos_rel = obs_pos_rel[:, t, :].float()
+                curr_obs_pos_step = obs_pos_step[:, t, :].float()
                 curr_obs_pos = obs_pos[:, t, :].float()
             else:
-                ts_obs_mask = pred_mask
                 pred_input = torch.cat((ht.clone(), img_embedding), 1)
-                pred_out[:, t - self.observation_len, :] = self.pred_layer(pred_input).float().clone()
-                curr_obs_pos_rel = pred_out[:, t - self.observation_len, :2]
-                curr_obs_pos = curr_obs_pos + curr_obs_pos_rel
+                curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
+                curr_obs_pos = curr_obs_pos + curr_obs_pos_step
                 pred_traj[:, t - self.observation_len, :] = curr_obs_pos.clone()
 
-            curr_N = torch.sum(ts_obs_mask).long().item()
-            if curr_N == 0:
-                continue
+            disp_embedding = self.disp_embed(curr_obs_pos_step.clone()).view(N, 1, -1)
 
-            ts_obs_mask = (ts_obs_mask == 1)
-            disp_embedding = self.disp_embed(
-                (curr_obs_pos_rel[ts_obs_mask, :]).clone()).view(curr_N, 1, -1)
-
-            _, (ht_new, ct_new) = self.lstm(
-                disp_embedding, (ht[ts_obs_mask, :].view(1, curr_N, -1),
-                ct[ts_obs_mask, :].view(1, curr_N, -1)))
-            ht[ts_obs_mask, :] = ht_new.view(curr_N, -1)
-            ct[ts_obs_mask, :] = ct_new.view(curr_N, -1)
+            _, (ht_new, ct_new) = self.lstm(disp_embedding, (ht.view(1, N, -1), ct.view(1, N, -1)))
+            ht = ht_new.view(N, -1)
+            ct = ct_new.view(N, -1)
 
         return pred_traj
 
