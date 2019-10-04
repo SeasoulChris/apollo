@@ -79,12 +79,12 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
     localization_msgs = collect_message_by_topic(
         msgs, record_utils.LOCALIZATION_CHANNEL)
-    chassis_mtx = np.array([extract_chassis_data_from_msg(msg)
-                            for msg in chassis_msgs])
-    control_mtx = np.array([extract_control_data_from_msg(msg)
-                            for msg in control_msgs])
-    localization_mtx = np.array([extract_localization_data_from_msg(msg)
-                                 for msg in localization_msgs])
+    chassis_mtx = np.array([data for data in [extract_chassis_data_from_msg(msg)
+                                              for msg in chassis_msgs] if data is not None])
+    control_mtx = np.array([data for data in [extract_control_data_from_msg(msg)
+                                              for msg in control_msgs] if data is not None])
+    localization_mtx = np.array([data for data in [extract_localization_data_from_msg(msg)
+                                                   for msg in localization_msgs] if data is not None])
     logging.info('The original msgs size are: chassis {}, control {}, and localization: {}'
                  .format(chassis_mtx.shape[0], control_mtx.shape[0], localization_mtx.shape[0]))
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
@@ -204,9 +204,10 @@ def extract_control_data_from_msg(msg):
     control_header = getattr(msg_proto, 'header', float('NaN'))
     input_debug = getattr(getattr(msg_proto, 'debug', float('NaN')),
                           'input_debug', float('NaN'))
-    if get_config_control_profiling().controller_type == 'Lon_Lat_Controller':
-        control_lon = getattr(getattr(msg_proto, 'debug'), 'simple_lon_debug')
-        control_lat = getattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')
+    if (hasattr(getattr(msg_proto, 'debug'), 'simple_lon_debug') and
+        hasattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')):
+        control_lon = msg_proto.debug.simple_lon_debug
+        control_lat = msg_proto.debug.simple_lat_debug
         data_array = np.array([
             # Features: "Reference" category
             getattr(control_lon, 'station_reference', float('NaN')),               # 0
@@ -259,9 +260,8 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'sequence_num', float('NaN'))                                  # 36
         ])
-    else:
-        control_mpc = getattr(getattr(msg_proto, 'debug', float('NaN')),
-                              'simple_mpc_debug', float('NaN'))
+    elif hasattr(getattr(msg_proto, 'debug'), 'simple_mpc_debug'):
+        control_mpc = msg_proto.debug.simple_mpc_debug
         data_array = np.array([
             # Features: "Reference" category
             getattr(control_mpc, 'station_reference', float('NaN')),               # 0
@@ -314,7 +314,9 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'sequence_num', float('NaN'))                                  # 36
         ])
-
+    else:
+        # Return None for Non-recognized Controller Type
+        return None
     return data_array
 
 
@@ -322,27 +324,17 @@ def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
     chassis_header = getattr(msg_proto, 'header', float('NaN'))
-    if get_config_control_profiling().vehicle_type.find('Mkz') >= 0:
-        data_array = np.array([
-            # Features: "Status" category
-            getattr(msg_proto, 'driving_mode', float('NaN')),                          # 0
-            getattr(msg_proto, 'gear_location', float('NaN')),                         # 1
-            # Features: "Header" category
-            getattr(chassis_header, 'timestamp_sec', float('NaN')),                    # 2
-            getattr(chassis_header, 'sequence_num', float('NaN')),                     # 3
-            # Features: "Action" category
-            getattr(msg_proto, 'throttle_percentage', float('NaN')),                   # 4
-            getattr(msg_proto, 'brake_percentage', float('NaN'))                       # 5
-        ])
-    else:
-        data_array = np.array([
-            # Features: "Status" category
-            getattr(msg_proto, 'driving_mode', float('NaN')),                          # 0
-            getattr(msg_proto, 'gear_location', float('NaN')),                         # 1
-            # Features: "Header" category
-            getattr(chassis_header, 'timestamp_sec', float('NaN')),                    # 2
-            getattr(chassis_header, 'sequence_num', float('NaN'))                      # 3
-        ])
+    data_array = np.array([
+        # Features: "Status" category
+        getattr(msg_proto, 'driving_mode', float('NaN')),                          # 0
+        getattr(msg_proto, 'gear_location', float('NaN')),                         # 1
+        # Features: "Header" category
+        getattr(chassis_header, 'timestamp_sec', float('NaN')),                    # 2
+        getattr(chassis_header, 'sequence_num', float('NaN')),                     # 3
+        # Features: "Action" category
+        getattr(msg_proto, 'throttle_percentage', float('NaN')),                   # 4
+        getattr(msg_proto, 'brake_percentage', float('NaN'))                       # 5
+    ])
     return data_array
 
 
