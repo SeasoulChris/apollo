@@ -38,12 +38,12 @@ def test_gp(args, dataset, GaussianProcess):
         Xu = input_data[torch.arange(0, input_data.shape[0],
                                      step=int(max(input_data.shape[0] / args.num_inducing_point, 1))).long()]
         likelihood = gp.likelihoods.Gaussian(variance=torch.ones(2, 1))
-        likelihood.load_state_dict(lik_dict)
+        # likelihood.load_state_dict(lik_dict)
 
         kernelization = gp.kernels.Matern52(input_dim=args.kernel_dim,
                                             lengthscale=torch.ones(args.kernel_dim))
         kernel = gp.kernels.Warping(kernelization, iwarping_fn=_encoded_feature)
-        kernel.load_state_dict(kernel_dict)
+        # kernel.load_state_dict(kernel_dict)
         gp_f = gp.models.VariationalSparseGP(input_data, torch.ones(2, input_data.shape[0]),
                                              kernel, Xu, num_data=input_data.shape[0],
                                              likelihood=likelihood, mean_function=None,
@@ -53,9 +53,9 @@ def test_gp(args, dataset, GaussianProcess):
         predicted_data = torch.zeros(0, gt_data.shape[1])
 
         for i in range(len(input_data)):
-            logging.debug("Input Dim {}".format((input_data[i].unsqueeze(0)).size()))
+            logging.debug("Input Dim {}".format(input_data[i: i + 1].size()))
             logging.debug("Label Dim {}".format(gt_data[i].size()))
-            predicted_mean, predicted_var = gp_model(input_data[i].unsqueeze(0))
+            predicted_mean, predicted_var = gp_model(input_data[i : i + 1])
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
                                                       predicted_mean[1]]).unsqueeze(0)), 0)
@@ -64,9 +64,13 @@ def test_gp(args, dataset, GaussianProcess):
             logging.info("ground-truth residual error:{}".format(gt_data[i]))
         
         #TODO(all): Debug 'Cannot insert a Tensor that requires grad as a constant.' Error
-        # gp_model.eval()
-        # traced_script_module = torch.jit.trace(gp_model, input_data[0].unsqueeze(0).detach())
-        # traced_script_module.save(os.path.join(args.eval_result_path, "gp_model.pt"))
+        gp_model.eval()
+        # traced_script_module = torch.jit.trace(gp_model, input_data[0 : 1].detach())
+        traced_script_module = pyro.poutine.trace(gp_model).get_trace(input_data[0 : 1])
+        # AttributeError: 'Trace' object has no attribute 'save'
+        traced_script_module.save(os.path.join(args.eval_result_path, "gp_model.pt"))
+        # AttributeError: 'GaussianProcess' object has no attribute 'save'
+        # torch.jit.save(gp_model, "gp_model.pt")
 
         input_data = input_data.numpy()
 
