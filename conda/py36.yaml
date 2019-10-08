@@ -55,6 +55,7 @@ dependencies:
     - pyro-ppl
     - pyspark-utils
     - scaleapi
+    - websocket
 
     # Audio
     - eyed3
