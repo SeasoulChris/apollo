@@ -15,7 +15,6 @@ import math
 from absl import flags
 from shapely.geometry import LineString, Point
 import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 # Apollo packages
 from cyber_py.record import RecordReader
@@ -27,14 +26,13 @@ from modules.localization.proto import localization_pb2
 # Apollo-fuel packages
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
-from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
+LANE_WIDTH = 3.3
+
 flags.DEFINE_string('input_data_path', 'simplehdmap/data/bag',
                     'simple hdmap records input data path.')
-
-LANE_WIDTH = 3.3
 
 class MapGenSingleLine(BasePipeline):
 
@@ -70,8 +68,13 @@ class MapGenSingleLine(BasePipeline):
         object_storage = self.partner_object_storage() or bos_client
 
         origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
-        target_dir = object_storage.abs_path(origin_prefix)
-        logging.info("target_prefix: {}".format(target_dir))        
+        target_dir = object_storage.abs_path(origin_prefix)        
+
+        if not os.path.exists(target_dir):
+            logging.warning('bos path: {} not exists'.format(target_dir))
+            file_utils.makedirs(target_dir)
+        else:
+            logging.info("target_prefix: {}".format(target_dir))  
         
         source_dir = object_storage.abs_path(src_prefix)
 
@@ -137,10 +140,6 @@ class MapGenSingleLine(BasePipeline):
         
         base_map_txt = os.path.join(self.dst_prefix, 'base_map.txt')
         logging.info("base_map_txt_path: {}".format(base_map_txt))
-
-        if not os.path.exists(self.dst_prefix):
-            logging.warning('bos path: {} not exists'.format(self.dst_prefix))
-            file_utils.makedirs(self.dst_prefix)
 
         fmap = open(base_map_txt, 'w')
         line_id = 0

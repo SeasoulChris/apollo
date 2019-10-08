@@ -59,7 +59,7 @@ class JobProcessor(object):
             redis_utils.redis_incr(metrics_prefix + 'vehicle-calibration')
             job_exec = 'bash vehicle_calibration.sh {}'.format(self.job_config.input_data_path)
         elif self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
-            redis_utils.redis_incr(metrics_prefix + 'simple-hdmap')
+            redis_utils.redis_incr(metrics_prefix + 'generate-simple-hdmap')
             job_exec = 'bash generate_simple_hdmap.sh {}'.format(self.job_config.input_data_path)
         else:
             return HTTPStatus.BAD_REQUEST, 'Unsupported job type.'
