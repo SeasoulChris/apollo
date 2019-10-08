@@ -15,65 +15,84 @@ from fueling.common import file_utils
 from fueling.common.learning.train_utils import *
 
 
-def preprocess(y):
-    y_filt = butter_bandpass_filter(y)
-    analytic_signal = hilbert(y_filt)
-    amplitude_envelope = np.abs(analytic_signal)
-    return amplitude_envelope
-
-
-def butter_bandpass_filter(data, lowcut=500, highcut=1500, fs=8000, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-
-    b, a = butter(order, [low, high], btype='band')
-    y = lfilter(b, a, data)
-    return y
-
-
 class AudioFeatureExtraction(object):
-    def __init__(self, data_dir, win_size=16, step=8):
-        self.data_dir = data_dir
-        self.win_size = win_size
-        self.step = step
+    def clear(self):
         self.pos_features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.pos_labels = []  # 1: emergency, 0: non-emergency
         self.neg_features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.neg_labels = []  # 1: emergency, 0: non-emergency
-
         self.features = []  # a list of spectrograms, each: [n_mels, win_size]
         self.labels = []  # 1: emergency, 0: non-emergency
 
-    def extract_cnn_features(self):
+    def __init__(self, data_dir, sr=8000):
+        self.data_dir = data_dir
+        self.sample_rate = sr
+        self.clear()
+
+    def butter_bandpass_filter(self, data, lowcut=500, highcut=1500, order=5):
+        nyq = 0.5 * self.sample_rate
+        low = lowcut / nyq
+        high = highcut / nyq
+
+        b, a = butter(order, [low, high], btype='band')
+        y = lfilter(b, a, data)
+        return y
+
+    def preprocess(self, y):
+        y_filt = self.butter_bandpass_filter(y)
+        analytic_signal = hilbert(y_filt)
+        amplitude_envelope = np.abs(analytic_signal)
+        return amplitude_envelope
+
+    def extract_signal_segments(self, time_segment=1.0, time_step=0.1):
+        self.clear()
         files = file_utils.list_files(self.data_dir)
         for file in tqdm(files):
             if file.find('.wav') == -1:
                 continue
             try:
-                signal, sr = librosa.load(file, sr=8000)
+                signal, sr = librosa.load(file, sr=self.sample_rate)
             except:
                 print("Failed to open file {}".format(file))
                 continue
-            signal = preprocess(signal)
-            S = librosa.feature.melspectrogram(signal, sr=sr, n_mels=128)
-            log_S = librosa.power_to_db(S, ref=np.max)  # [128, len]
 
             label = 1
             if file.find("nonEmergency") != -1:
                 label = 0
 
-            start = 0
-            while start + self.win_size <= log_S.shape[1]:
-                end = start + self.win_size
-                log_S_segment = log_S[:, start:end]
+            signal = self.preprocess(signal)
+            signal_len = signal.shape[0]
+            segments = []
+            signal_step = int(self.sample_rate * time_step)
+            signal_pos = 0
+            signal_seg_len = int(self.sample_rate * time_segment)
+            while signal_pos + signal_seg_len <= signal_len:
+                segment = signal[signal_pos : (signal_pos + signal_seg_len)]
                 if label == 1:
-                    self.pos_features.append(log_S_segment)
+                    self.pos_features.append(segment)
                     self.pos_labels.append(label)
                 else:
-                    self.neg_features.append(log_S_segment)
+                    self.neg_features.append(segment)
                     self.neg_labels.append(label)
-                start += self.step
+                signal_pos += signal_step
+
+        self.features = self.pos_features + self.neg_features
+        self.labels = self.pos_labels + self.neg_labels
+
+    def extract_cnn_features(self):
+        self.clear()
+        signal_segments, labels = self.load_features_labels('signal', self.data_dir)
+        for i in tqdm(range(signal_segments.shape[0])):
+            signal = signal_segments[i]
+            label = labels[i]
+            S = librosa.feature.melspectrogram(signal, sr=self.sample_rate, n_mels=128)
+            log_S = librosa.power_to_db(S, ref=np.max)  # [n_mels, 16]
+            if label == 1:
+                self.pos_features.append(log_S)
+                self.pos_labels.append(label)
+            elif label == 0:
+                self.neg_features.append(log_S)
+                self.neg_labels.append(label)
         self.features = self.pos_features + self.neg_features
         self.labels = self.pos_labels + self.neg_labels
 
@@ -87,7 +106,7 @@ class AudioFeatureExtraction(object):
             except:
                 print("Failed to open file {}".format(file))
                 continue
-            signal = preprocess(signal)
+            signal = self.preprocess(signal)
             total_features = audioFeatureExtraction.stFeatureExtraction(
                 signal, sr, 0.10*sr, .05*sr)
 
@@ -98,7 +117,7 @@ class AudioFeatureExtraction(object):
             if label == 1:
                 self.pos_features.extend(total_features)
                 self.pos_labels.extend([label] * len(total_features))
-            else:
+            elif label == 0:
                 self.neg_features.extend(total_features)
                 self.neg_labels.extend([label] * len(total_features))
 
@@ -140,8 +159,8 @@ class AudioFeatureExtraction(object):
 if __name__ == "__main__":
 
     flags.DEFINE_string(
-        'feature_type', 'mlp',
-        'Feature type for training from [mlp, cnn].')
+        'feature_type', 'signal',
+        'Feature type for training from [signal, mlp, cnn].')
 
     flags.DEFINE_string(
         'train_dir', '/home/jinyun/cleaned_data/train_balanced/',
@@ -162,28 +181,32 @@ if __name__ == "__main__":
         # train set features extraction and save
         train_set_extractor = AudioFeatureExtraction(train_dir)
 
-        if feature_type == 'cnn':
+        if feature_type == 'signal':
+            train_set_extractor.extract_signal_segments()
+        elif feature_type == 'cnn':
             train_set_extractor.extract_cnn_features()
+            train_set_extractor.balance_features(True)
         elif feature_type == 'mlp':
             train_set_extractor.extract_mlp_features()
+            train_set_extractor.balance_features(True)
         else:
             raise ValueError(
-                'model_type not properly defined, only support cnn or mlp')
-
-        train_set_extractor.balance_features(True)
+                'model_type not properly defined, only support signal, cnn or mlp')
 
         train_set_extractor.save_features(feature_type, train_dir)
 
         # validation set features extraction and save
         validation_set_extractor = AudioFeatureExtraction(valid_dir)
 
-        if feature_type == 'cnn':
+        if feature_type == 'signal':
+            validation_set_extractor.extract_signal_segments()
+        elif feature_type == 'cnn':
             validation_set_extractor.extract_cnn_features()
         elif feature_type == 'mlp':
             validation_set_extractor.extract_mlp_features()
         else:
             raise ValueError(
-                'model_type not properly defined, only support cnn or mlp')
+                'model_type not properly defined, only support signal, cnn or mlp')
 
         validation_set_extractor.save_features(feature_type, valid_dir)
 
