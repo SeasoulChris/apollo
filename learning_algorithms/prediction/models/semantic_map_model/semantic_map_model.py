@@ -145,6 +145,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
         self.pred_layer = torch.nn.Sequential(
             nn.Linear(hidden_size + self.cnn_out_size, 2),
         )
+        self.pred_traj = torch.zeros(self.pred_len, 2)
 
     def forward(self, X):
         img = X[0]
@@ -155,7 +156,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_traj = torch.zeros(N, self.pred_len, 2)
+        pred_traj = self.pred_traj.repeat(N, 1, 1)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
