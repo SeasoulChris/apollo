@@ -4,37 +4,51 @@ import argparse
 import os
 import pickle
 
+import torch
+
 from fueling.control.dynamic_model.gp_regression.dataset import GPDataSet
+from fueling.control.dynamic_model.gp_regression.dreamview_server import load_gp, run_gp
 from fueling.control.dynamic_model.gp_regression.evaluation import test_gp
 from fueling.control.dynamic_model.gp_regression.gaussian_process import GaussianProcess
 from fueling.control.dynamic_model.gp_regression.train import train_gp
 
 
 def launch(args):
-    # tasks
-    args.train_gp = True
-    args.test_gp = True
+    # tasks to launch
+    args.train_gp = False
+    args.test_gp = False
+    args.run_gp = True
 
     dataset = GPDataSet(args)
     if args.train_gp:
         # train Gaussian process model
         train_gp(args, dataset, GaussianProcess)
     if args.test_gp:
-        # train Gaussian process model
+        # test Gaussian process model
         test_gp(args, dataset, GaussianProcess)
+    if args.run_gp:
+        # run Gaussian process model as server for dreamview clients
+        # create an input example of zero tensor
+        input_data = torch.zeros(1, 100, 6)
+        # load the trained GP model
+        gp_f = load_gp(args, dataset)
+        # keep being called by the web-socket and return predicted mean and var
+        (predicted_mean, predicted_var) = run_gp(gp_f, input_data)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
     parser.add_argument('--training_data_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/training")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/training")
     parser.add_argument('--testing_data_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/testing")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/testing")
     parser.add_argument('--gp_model_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
     parser.add_argument('--eval_result_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
+    parser.add_argument('--online_gp_model_path', type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model/20191004-130454")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
