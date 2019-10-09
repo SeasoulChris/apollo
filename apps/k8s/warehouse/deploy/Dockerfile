@@ -1,5 +1,7 @@
 FROM apolloauto/apollo:dev-18.04-x86_64-20190822_1616
 
+RUN apt-get update && apt-get install -y netbase
+
 COPY apps/k8s/warehouse/deploy/conda-py37.yaml /tmp/conda-py37.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
     /usr/local/miniconda/bin/conda clean -a -y

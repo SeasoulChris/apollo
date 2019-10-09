@@ -33,6 +33,7 @@ app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 
+socketio = flask_socketio.SocketIO(app)
 
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
 
@@ -134,13 +135,23 @@ def bos_ask():
 def metrics_hdl():
     """Handler of the redis metrics."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
-    metrics = metrics_util.get_metrics_by_prefix(flask.request.args.get('prefix'))
-    return flask.render_template('metrics.tpl', metrics=metrics)
+    prefix = flask.request.args.get('prefix')
+    if not prefix:
+        prefix = ''
+    metrics = metrics_util.get_metrics_by_prefix(prefix)
+    return flask.render_template('metrics.tpl', prefix=prefix, metrics=metrics)
+
+
+@app.route('/metrics_ajax')
+def metrics_ajax():
+    """Handler of ajax request from client"""
+    # TODO(Longtao): remove after the socketio connection issue is fixed
+    return metrics_util.get_metrics_by_prefix(flask.request.args.get('prefix'))
 
 
 @socketio.on('client_request_metrics_event')
 def metrics_request_event(message):
-    server_response_channel = 'server_response_merics'
+    server_response_channel = 'server_response_metrics'
     metrics = metrics_util.get_metrics_by_prefix(message['prefix']) 
     flask_socketio.emit(server_response_channel, metrics)
 
@@ -171,10 +182,7 @@ api.add_resource(MapLookup, '/map-lookup/<string:lat>/<string:lon>')
 
 
 def main(argv):
-    if flags.FLAGS.debug:
-        socketio.run(app, flags.FLAGS.host, flags.FLAGS.port, debug=flags.FLAGS.debug)
-    else:
-        socketio.run(app)
+    socketio.run(app, flags.FLAGS.host, flags.FLAGS.port, debug=flags.FLAGS.debug)
 
 if __name__ == '__main__':
     absl_app.run(main)

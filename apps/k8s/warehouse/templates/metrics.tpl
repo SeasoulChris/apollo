@@ -32,10 +32,11 @@ input[type=text]:focus {
 </style>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 <script type="text/javascript" charset="utf-8">
   function buildTable(metrics) {
     var keys = Object.keys(metrics);
-    var columns = 2;
     var table = document.getElementById('metricstable');
 
     var tbodys = table.getElementsByTagName('tbody');
@@ -59,16 +60,19 @@ input[type=text]:focus {
   }
 
   $(document).ready(function() {
-    var socket = io();
+    // TODO(Longtao): Fix the Hardcoded URL later, which BTW is not working for socketio anyways
+    var serverAddr = 'http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy';
+    var socket = io.connect(serverAddr);
     var connected = false;
     var timeInterval = 5000;
     var connectChannel = 'connect';
     var clientRequestChannel = 'client_request_metrics_event';
     var serverResponseChannel = 'server_response_metrics';
+    var metricsAjax = '/metrics_ajax';
 
-    var metrics = {{ metrics }};
+    var metrics = {{ metrics | tojson | safe }};
     var prefix = '{{ prefix }}';
-
+  
     buildTable(metrics);
 
     socket.on(connectChannel, function() {
@@ -79,6 +83,12 @@ input[type=text]:focus {
     setInterval(function() {
         if (connected) {
           socket.emit(clientRequestChannel, {'prefix': prefix});
+        }
+        else {
+          // TODO(Longtao): remove this when socketio connection issue is fixed
+          $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
+            buildTable(serverMetrics);
+          });
         }
       }, timeInterval);
 
