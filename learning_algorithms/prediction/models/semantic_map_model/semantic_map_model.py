@@ -151,7 +151,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
         obs_pos = X[3]
         obs_pos_step = X[4]
         N = obs_pos.size(0)
-        ht, ct = self.h0.repeat(N, 1), self.h0.repeat(N, 1)
+        ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
@@ -162,16 +162,14 @@ class SemanticMapSelfLSTMModel(nn.Module):
                 curr_obs_pos_step = obs_pos_step[:, t, :].float()
                 curr_obs_pos = obs_pos[:, t, :].float()
             else:
-                pred_input = torch.cat((ht.clone(), img_embedding), 1)
+                pred_input = torch.cat((ht.view(N, -1), img_embedding), 1)
                 curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
                 curr_obs_pos = curr_obs_pos + curr_obs_pos_step
                 pred_traj[:, t - self.observation_len, :] = curr_obs_pos.clone()
 
             disp_embedding = self.disp_embed(curr_obs_pos_step.clone()).view(N, 1, -1)
 
-            _, (ht_new, ct_new) = self.lstm(disp_embedding, (ht.view(1, N, -1), ct.view(1, N, -1)))
-            ht = ht_new.view(N, -1)
-            ct = ct_new.view(N, -1)
+            _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
         return pred_traj
 
