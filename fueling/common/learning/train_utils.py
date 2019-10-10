@@ -14,8 +14,10 @@ import fueling.common.logging as logging
 # Helper functions
 #########################################################
 def cuda(x):
-    if isinstance(x, (list, tuple)):
+    if isinstance(x, list):
         return [cuda(y) for y in x]
+    if isinstance(x, tuple):
+        return tuple([cuda(y) for y in x])
     return x.cuda() if torch.cuda.is_available() else x
 
 # TODO(jiacheng): implement this
