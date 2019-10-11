@@ -9,7 +9,6 @@ import time
 from absl import logging
 
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig, JobConfig
-import fueling.common.redis_utils as redis_utils
 
 
 class JobProcessor(object):
@@ -32,7 +31,6 @@ class JobProcessor(object):
 
     def process(self):
         metrics_prefix = 'apps.bae-proxy.job-processor.'
-        redis_utils.redis_incr(metrics_prefix + 'process')
 
         # User authentication.
         partner = self.job_config.partner_id
@@ -56,10 +54,8 @@ class JobProcessor(object):
 
         # Dispatch job.
         if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
-            redis_utils.redis_incr(metrics_prefix + 'vehicle-calibration')
             job_exec = 'bash vehicle_calibration.sh {}'.format(self.job_config.input_data_path)
         elif self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
-            redis_utils.redis_incr(metrics_prefix + 'generate-simple-hdmap')
             job_exec = 'bash generate_simple_hdmap.sh {}'.format(self.job_config.input_data_path)
         else:
             return HTTPStatus.BAD_REQUEST, 'Unsupported job type.'
