@@ -178,6 +178,15 @@ def plot_record(record):
     return mpld3.fig_to_html(fig)
 
 
+def plot_profiling(data):
+    """Plot profiling html by using list type of data"""
+    values = data['values']
+    width, height = 10, 5.5
+    fig, axs = plt.subplots(figsize=(width, height))
+    axs.bar(range(len(values)), values)
+    return mpld3.fig_to_html(fig)
+
+
 # To be registered into jinja2 templates.
 utils = {
     'draw_disengagements_on_gmap': draw_disengagements_on_gmap,
@@ -188,4 +197,5 @@ utils = {
     'drive_event_type_name': drive_event_type_name,
     'meter_to_miles': meter_to_miles,
     'plot_record': plot_record,
+    'plot_profiling': plot_profiling,
 }

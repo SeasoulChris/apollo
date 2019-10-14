@@ -16,6 +16,8 @@ The collection of metrics means checking, inserting or updating keys to Redis da
 * redis_set(redis_key, redis_value): insert a key to Redis if it does not exist, otherwise update its value
 * redis_get(redis_key): get value by using key
 * redis_incr(redis_key, amount=1): increase the key's value by certain mount
+* redis_extend(redis_key, values): create a key with list type of value if it does not exist, otherwise extend its value
+* redis_range(redis_key, left=0, right=-1): get list type of value by using key with given range, by default it returns the whole list
 * get_redis_instance(): return a raw Redis client instance that can directly execute standard [Redis operations](https://redis-py.readthedocs.io/en/latest/)
 
 All these APIs have encapsulated retrying and error handling mechanism, except for "get_redis_instance()".  By default the failure of APIs execution will *not* throw execptions but just log the error messages.  But for "get_redis_instance()" you have to handle errors or timeouts by your own if necessary. 

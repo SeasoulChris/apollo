@@ -29,13 +29,43 @@ input[type=text] {
 input[type=text]:focus {
   width: 100%;
 }
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 70%;
+    height: 100%;
+    max-width:1200px;
+    max-height:800px;
+  }
+}
 </style>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 <script type="text/javascript" charset="utf-8">
-  function buildTable(metrics) {
+  function attachFrame(key, serverAddr) {
+    var src = serverAddr + '/plot_img/' + key;
+    $('#theModal iframe').attr({'src': src});
+    $('#theModalLabel').text(key);
+  }
+
+
+  function buildProfilingViewColumn(td, serverAddr, key, value) {
+    if (!value.startsWith('[')) {
+      td.appendChild(document.createTextNode(''));
+      return
+    }
+    var link = document.createElement('a');
+    link.innerHTML = 'View';
+    link.href = '#';
+    link.setAttribute('data-toggle', 'modal');
+    link.setAttribute('data-target', '#theModal');
+    link.onclick = attachFrame(key, serverAddr);
+    td.appendChild(link);
+  }
+
+
+  function buildTable(metrics, serverAddr) {
     var keys = Object.keys(metrics);
     var table = document.getElementById('metricstable');
 
@@ -54,13 +84,17 @@ input[type=text]:focus {
       td_2.appendChild(document.createTextNode(metrics[keys[i]]));
       tr.appendChild(td_2);
       tbody.appendChild(tr);
+      var td_3 = document.createElement('td');
+      buildProfilingViewColumn(td_3, serverAddr, keys[i], metrics[keys[i]]);
+      tr.appendChild(td_3);
     }
 
     table.appendChild(tbody);
   }
 
+
   $(document).ready(function() {
-    // TODO(Longtao): Fix the Hardcoded URL later, which BTW is not working for socketio anyways
+    // TODO(Longtao): Fix the hardcoded URL later, which BTW is not working for socketio anyways
     var serverAddr = 'http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy';
     var socket = io.connect(serverAddr);
     var connected = false;
@@ -73,7 +107,7 @@ input[type=text]:focus {
     var metrics = {{ metrics | tojson | safe }};
     var prefix = '{{ prefix }}';
   
-    buildTable(metrics);
+    buildTable(metrics, serverAddr);
 
     socket.on(connectChannel, function() {
       connected = true;
@@ -81,19 +115,22 @@ input[type=text]:focus {
     });
 
     setInterval(function() {
+        if ($('#theModal').is(':visible')) {
+          return;
+        }
         if (connected) {
           socket.emit(clientRequestChannel, {'prefix': prefix});
         }
         else {
           // TODO(Longtao): remove this when socketio connection issue is fixed
           $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
-            buildTable(serverMetrics);
+            buildTable(serverMetrics, serverAddr);
           });
         }
       }, timeInterval);
 
     socket.on(serverResponseChannel, function(serverMetrics) {
-      buildTable(serverMetrics);
+      buildTable(serverMetrics, serverAddr);
     });
 
   });
@@ -109,9 +146,7 @@ input[type=text]:focus {
   <form action="{{ url_for('metrics_hdl') }}" method="get">
     <input type="text" id="prefix" name="prefix" placeholder=" {% if prefix %} {{ prefix }}... {% else %} Prefix... {% endif %} ">
   </form>
-
   <br>
-
   <div class="panel panel-default">
     <div class="panel-heading">Metrics</div>
     <div class="panel-body">
@@ -125,7 +160,27 @@ input[type=text]:focus {
       </table>
     </div>
   </div>
-
 </div>
+
+
+<div class="modal fade" id="theModal" tabindex="-1" role="dialog" aria-labelledby="theModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="theModalLabel">Modal Title</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <iframe class="resp-iframe" frameborder="0" style="height:600px; width:100%; margin:0 auto;"></iframe>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {% endblock %}

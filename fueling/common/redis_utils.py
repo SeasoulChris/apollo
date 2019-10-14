@@ -66,6 +66,16 @@ def redis_incr(redis_key, amount=1):
     _retry(get_redis_instance().incr, [redis_key, amount])
 
 
+def redis_extend(redis_key, redis_values):
+    """Instant API to extend a list if the given key exists, create the list otherwise"""
+    _retry(get_redis_instance().rpush, *redis_values)
+
+
+def redis_range(redis_key, left=0, right=-1):
+    """Instant API to get a list with left and right ranges by using key"""
+    return _retry(get_redis_instance().lrange, [redis_key, left, right])
+
+
 def _retry(func, params):
     """A wrapper for exponential retry in case redis connection is not stable"""
     cur_retries, max_retries = 0, 3

@@ -151,9 +151,18 @@ def metrics_ajax():
 
 @socketio.on('client_request_metrics_event')
 def metrics_request_event(message):
+    """Handler of socketio client request"""
     server_response_channel = 'server_response_metrics'
     metrics = metrics_util.get_metrics_by_prefix(message['prefix']) 
     flask_socketio.emit(server_response_channel, metrics)
+
+
+@app.route("/plot_img/<string:key>")
+def plot_img(key):
+    """Handler of profiling plot request"""
+    values = redis_utils.redis_range(key)
+    data = {'key': key, 'values': [float(x) for x in values]}
+    return flask.render_template('plot.tpl', data=data)
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
