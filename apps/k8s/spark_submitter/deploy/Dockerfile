@@ -18,6 +18,7 @@ RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add 
 # Python libs.
 RUN python3 -m pip install \
         absl-py \
+        boto3 \
         flask \
         Flask-RESTful \
         protobuf \

@@ -6,6 +6,7 @@ from http import HTTPStatus
 import base64
 import json
 import os
+import site
 
 from absl import app as absl_app
 from absl import logging
@@ -31,7 +32,7 @@ class SparkSubmitJob(flask_restful.Resource):
         except json_format.ParseError:
             http_code = HTTPStatus.BAD_REQUEST
             msg = 'SparkSubmitArg format error!'
-        return json.dumps({'message': msg}), http_code
+        return msg, http_code
 
     @staticmethod
     def spark_submit(arg):
@@ -39,6 +40,7 @@ class SparkSubmitJob(flask_restful.Resource):
         # Configs.
         K8S_MASTER = 'k8s://https://180.76.150.16:6443'
         STORAGE = '/mnt/bos'
+        EXTRACTED_PATH = '/apollo/modules/data/fuel'
         SECRET_ENVS = {
             'BOS_ACCESS': 'bos-secret:ak',
             'BOS_SECRET': 'bos-secret:sk',
@@ -133,24 +135,25 @@ class SparkSubmitJob(flask_restful.Resource):
 
         job_name = '{}-{}'.format(job_id,
                                   os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-'))
-        cmd = ('nohup spark-submit '
+        cmd = ('%(dist_packages)s/pyspark/bin/spark-submit '
                '--deploy-mode cluster '
                '--master %(k8s_master)s '
                '--name %(job_name)s '
                '%(confs)s '
                '"%(entrypoint)s" '
-               '%(flags)s > /dev/null 2>&1 &' % {
+               '%(flags)s' % {
+                   'dist_packages': site.getsitepackages()[0],
                    'k8s_master': K8S_MASTER,
                    'job_name': job_name,
                    'confs': confs,
-                   'entrypoint': arg.job.entrypoint,
+                   'entrypoint': os.path.join(EXTRACTED_PATH, arg.job.entrypoint),
                    'flags': '--running_mode=PROD ' + ' '.join(arg.job.flags),
                })
         logging.info('SHELL > {}'.format(cmd))
 
         # Execute command.
-        os.system(cmd)
-        return HTTPStatus.OK, 'Job submitted!'
+        os.system('nohup %s > /dev/null 2>&1 &' % cmd)
+        return HTTPStatus.OK, 'Job %s submitted!' % job_id
 
 
 app = flask.Flask(__name__)
