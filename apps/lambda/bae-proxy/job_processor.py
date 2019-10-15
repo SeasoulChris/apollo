@@ -17,6 +17,7 @@ class JobProcessor(object):
         'apollo-evangelist',
         'apollo-qa',
         'udelv2019',
+        'coolhigh',
     }
     # BOS charsets.
     BOS_BUCKET_CHARSET = set(string.ascii_lowercase + string.digits + '-')
