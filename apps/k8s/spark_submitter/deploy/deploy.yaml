@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-spark_submitter
+  labels:
+    app: spark_submitter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark_submitter
+  template:
+    metadata:
+      labels:
+        app: spark_submitter
+    spec:
+      imagePullSecrets:
+      - name: baidubce
+      containers:
+      - name: spark_submitter
+        image: hub.baidubce.com/apollo/spark_submitter:20191004_1221
+        ports:
+        - containerPort: 8000
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: spark_submitter-service
+spec:
+  selector:
+    app: spark_submitter
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000

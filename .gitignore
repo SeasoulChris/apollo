@@ -2,6 +2,7 @@ apollo/
 py_proto/
 kube.config
 *.zip
+*_pb2.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
