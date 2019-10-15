@@ -4,10 +4,20 @@ package apollo.data.fuel;
 
 // https://spark.apache.org/docs/latest/submitting-applications.html
 message SparkSubmitArg {
-  optional Env env = 1;
-  optional Job job = 2;
-  optional Worker worker = 3;
-  optional Partner partner = 4;
+  optional User user = 1;
+  optional Env env = 2;
+  optional Job job = 3;
+  optional Worker worker = 4;
+  optional Partner partner = 5;
+}
+
+message User {
+  // 1. We will check if the submitter has the permission to run as the role.
+  // 2. Then we will check if the role has the permission to run the job.
+  // 3. On dashboard, all the role owners could manage the job.
+  // 4. If the role is not given, the submitter just runs as himself.
+  optional string submitter = 1;
+  optional string running_role = 2;
 }
 
 message Env {

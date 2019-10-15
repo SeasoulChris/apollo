@@ -1,12 +1,16 @@
 #!/usr/bin/env python
-"""BAE proxy."""
+"""Spark submitter."""
 
+from datetime import datetime
 from http import HTTPStatus
+import base64
 import json
 import os
 
 from absl import app as absl_app
 from absl import logging
+import boto3
+import botocore
 import flask
 import flask_restful
 import google.protobuf.json_format as json_format
@@ -33,7 +37,7 @@ class SparkSubmitJob(flask_restful.Resource):
     def spark_submit(arg):
         """Submit job."""
         # Configs.
-        K8S_MASTER = 'https://180.76.150.16:6443'
+        K8S_MASTER = 'k8s://https://180.76.150.16:6443'
         STORAGE = '/mnt/bos'
         SECRET_ENVS = {
             'BOS_ACCESS': 'bos-secret:ak',
@@ -49,15 +53,28 @@ class SparkSubmitJob(flask_restful.Resource):
         ENVS = {
             'APOLLO_CONDA_ENV': arg.env.conda_env,
             'APOLLO_EXECUTORS': arg.worker.count,
-            'LOG_VERBOSITY': Env.LogVerbosity.Name(arg.log_verbosity),
+            'LOG_VERBOSITY': Env.LogVerbosity.Name(arg.env.log_verbosity),
         }
+
+        job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
+        submitter = arg.user.submitter
+        running_role = arg.user.running_role
+        # TODO: Verify submitter and running_role, and save to DB for job management.
 
         # Prepare fueling package.
         fueling_zip_path = arg.job.fueling_zip_path
         if arg.job.fueling_zip_base64:
-            # Decode, upload.
-            # fueling_zip_path = xxx
-            pass
+            fueling_zip_key = os.path.join('modules/data/jobs', job_id, 'fueling.zip')
+            boto3.client(
+                's3',
+                endpoint_url='http://s3.{}.bcebos.com'.format(os.environ.get('BOS_REGION')),
+                region_name=os.environ.get('BOS_REGION'),
+                config=botocore.client.Config(signature_version='s3v4')
+            ).put_object(
+                Bucket=os.environ.get('BOS_BUCKET'),
+                Body=base64.b64decode(arg.job.fueling_zip_base64),
+                Key=fueling_zip_key)
+            fueling_zip_path = os.path.join(STORAGE, fueling_zip_key)
         ENVS['APOLLO_FUELING_PYPATH'] = fueling_zip_path
 
         # Partner storage.
@@ -92,7 +109,7 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.executor.memory=%(worker_memory)sg '
             '--conf spark.kubernetes.executor.request.cores=%(worker_cpu)s '
             '--conf spark.kubernetes.executor.ephemeralStorageGB=%(worker_disk)s ' % {
-                'docker_image': arg.docker_image,
+                'docker_image': arg.env.docker_image,
                 'workers': arg.worker.count,
                 'worker_memory': arg.worker.memory,
                 'worker_cpu': arg.worker.cpu,
@@ -100,39 +117,39 @@ class SparkSubmitJob(flask_restful.Resource):
             })
 
         # Select nodes.
-        if arg.node_selector in {Env.NodeSelector.CPU, Env.NodeSelector.GPU}:
+        if arg.env.node_selector in {Env.NodeSelector.CPU, Env.NodeSelector.GPU}:
             confs += '--conf spark.kubernetes.node.selector.computetype={} '.format(
-                Env.NodeSelector.Name(arg.node_selector))
+                Env.NodeSelector.Name(arg.env.node_selector))
 
         # Envs.
-        for k, v in ENVS:
+        for key, value in ENVS.items():
             confs += ('--conf spark.kubernetes.driverEnv.%(key)s=%(value)s '
                       '--conf spark.executorEnv.%(key)s=%(value)s ' % {
-                          key: k, value: v})
-        for k, v in SECRET_ENVS:
+                          'key': key, 'value': value})
+        for key, value in SECRET_ENVS.items():
             confs += ('--conf spark.kubernetes.driver.secretKeyRef.%(key)s=%(value)s '
                       '--conf spark.kubernetes.executor.secretKeyRef.%(key)s=%(value)s ' % {
-                          key: k, value: v})
+                          'key': key, 'value': value})
 
-        # TODO: Construct job name.
-        job_name = 'TODO'  # job-id_job-owner_job-filename_timestamp
-        cmd = ('spark-submit '
+        job_name = '{}-{}'.format(job_id,
+                                  os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-'))
+        cmd = ('nohup spark-submit '
                '--deploy-mode cluster '
                '--master %(k8s_master)s '
                '--name %(job_name)s '
                '%(confs)s '
                '"%(entrypoint)s" '
-               '%(flags)s ' % {
+               '%(flags)s > /dev/null 2>&1 &' % {
                    'k8s_master': K8S_MASTER,
                    'job_name': job_name,
                    'confs': confs,
-                   'entrypoint': entrypoint,
-                   'flags': '--running_mode=PROD ' + ' '.join(arg.flags),
+                   'entrypoint': arg.job.entrypoint,
+                   'flags': '--running_mode=PROD ' + ' '.join(arg.job.flags),
                })
         logging.info('SHELL > {}'.format(cmd))
 
         # Execute command.
-        #os.system(cmd)
+        os.system(cmd)
         return HTTPStatus.OK, 'Job submitted!'
 
 
