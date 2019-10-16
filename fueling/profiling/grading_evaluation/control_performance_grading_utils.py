@@ -693,11 +693,21 @@ def highlight_gradings(task, grading_file):
                     for idx in range(len(gradings)):
                         if not gradings[idx] in (highlight_std_items + highlight_peak_items):
                             continue
-                        std_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
-                        std_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
+   
+                        # Store the mapping of task->score in Redis
                         cur_redis_prefix = '{}.{}'.format(control_redis_prefix, gradings[idx])
                         cur_redis_mapping = {task: gradings[idx + 1].strip('%')}
                         redis_utils.redis_extend_dict(cur_redis_prefix, cur_redis_mapping)
+
+                        cur_score = "=".join([gradings[idx], gradings[idx + 1]])
+                        cur_sample = "=".join([gradings[idx], gradings[idx + 2]])
+                        if gradings[idx] in highlight_std_items:
+                            std_scores.append(cur_score)
+                            std_samples.append(cur_sample)
+                        else:
+                            peak_scores.append(cur_score)
+                            peak_samples.append(cur_sample)
+
             highlight_scores = std_scores + ["____________________"] + peak_scores + ["<br />"]
             highlight_samples = std_samples + ["____________________"] + peak_samples + ["<br />"]
     return (highlight_scores, highlight_samples)
