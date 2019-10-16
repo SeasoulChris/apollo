@@ -104,8 +104,7 @@ def _retry(func, params):
     cur_retries, max_retries = 0, 3
     while cur_retries < max_retries:
         try:
-            ret = func(*params)
-            return ret
+            return func(*params)
         except redis.exceptions.TimeoutError as ex:
             logging.error('redis connection timeout. params: {}'.format(params))
             if cur_retries >= max_retries:

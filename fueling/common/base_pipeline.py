@@ -9,7 +9,6 @@ from absl import app
 from absl import flags
 from pyspark import SparkConf, SparkContext
 
-from fueling.common.mongo_utils import Mongo
 import fueling.common.logging as logging
 import fueling.common.storage.blob_client as blob_client
 import fueling.common.storage.bos_client as bos_client
@@ -51,10 +50,6 @@ class BasePipeline(object):
     def to_rdd(self, data):
         """Get an RDD of data."""
         return self.context().parallelize(data)
-
-    def mongo(self):
-        """Get a mongo client."""
-        return Mongo(self.FLAGS)
 
     # TODO(xiaoxq): Retire later.
     def bos(self):
