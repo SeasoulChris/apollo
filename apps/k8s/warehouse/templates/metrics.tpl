@@ -60,7 +60,11 @@ input[type=text]:focus {
     link.href = '#';
     link.setAttribute('data-toggle', 'modal');
     link.setAttribute('data-target', '#theModal');
-    link.onclick = attachFrame(key, serverAddr);
+    link.setAttribute('data-key', key);
+    link.setAttribute('data-serveraddr', serverAddr);
+    link.addEventListener('click', function(e) {
+        attachFrame(e.srcElement.getAttribute('data-key'), e.srcElement.getAttribute('data-serveraddr'));
+      }, false);
     td.appendChild(link);
   }
 

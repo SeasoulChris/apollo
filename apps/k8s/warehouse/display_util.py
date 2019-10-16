@@ -5,6 +5,7 @@ import matplotlib
 
 matplotlib.use('Agg')
 
+from collections import Counter
 import datetime
 import math
 import pytz
@@ -14,6 +15,8 @@ import matplotlib.pyplot as plt
 import mpld3
 
 from modules.common.proto.drive_event_pb2 import DriveEvent
+import fueling.common.redis_utils as redis_utils
+
 
 TIMEZONE = 'America/Los_Angeles'
 
@@ -178,13 +181,44 @@ def plot_record(record):
     return mpld3.fig_to_html(fig)
 
 
-def plot_profiling(data):
+def plot_profiling(redis_key):
     """Plot profiling html by using list type of data"""
-    values = data['values']
-    width, height = 10, 5.5
-    fig, axs = plt.subplots(figsize=(width, height))
-    axs.bar(range(len(values)), values)
-    return mpld3.fig_to_html(fig)
+    value_type = redis_utils.redis_type(redis_key)
+    width, height = 10, 5.5 * (2 if value_type == 'hash' else 1)
+    plt.style.use('ggplot')
+    fig = plt.figure()
+    fig.set_size_inches(width, height)
+
+    axs_bar = fig.add_subplot(2, 1, 1) if value_type == 'hash' else fig.add_subplot(1, 1, 1)
+    values_bar = (redis_utils.redis_range(redis_key) 
+    	if value_type == 'list' else redis_utils.redis_get_dict_values(redis_key))
+
+    counters = Counter([float(x) for x in values_bar])
+    bar_keys = counters.keys()
+    bar_values = [counters[x] for x in bar_keys]
+    axs_bar.set_title('Distribution')
+    axs_bar.set_xlabel('Values')
+    axs_bar.set_ylabel('Frequency')
+    axs_bar.bar(bar_keys, bar_values)
+
+    if value_type == 'hash':
+        axs_line = fig.add_subplot(2, 1, 2)
+        values_hash = redis_utils.redis_get_dict(redis_key)
+        x_values = sorted(values_hash.keys())
+        y_values = [float(values_hash[x]) for x in x_values] 
+        axs_line.set_title('History Comparison')
+        axs_line.set_xlabel('Dates')
+        axs_line.set_ylabel('Values')
+        axs_line.set_xticks(range(len(x_values)))
+        axs_line.set_xticklabels(x_values)
+        axs_line.plot(x_values, y_values, '-', label=redis_key)
+        axs_line.legend()
+        axs_line.grid(True)
+
+    plt.tight_layout()
+    html = mpld3.fig_to_html(fig)
+    plt.close('all')
+    return html
 
 
 # To be registered into jinja2 templates.

@@ -160,9 +160,7 @@ def metrics_request_event(message):
 @app.route("/plot_img/<string:key>")
 def plot_img(key):
     """Handler of profiling plot request"""
-    values = redis_utils.redis_range(key)
-    data = {'key': key, 'values': [float(x) for x in values]}
-    return flask.render_template('plot.tpl', data=data)
+    return flask.render_template('plot.tpl', key=key)
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):

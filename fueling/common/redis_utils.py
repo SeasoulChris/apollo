@@ -51,6 +51,11 @@ def get_redis_instance():
     return redis.Redis(connection_pool=RedisConnectionPool.get_connection_pool())
 
 
+def redis_type(redis_key):
+    """Get the value type from Redis by using given key"""
+    return _retry(get_redis_instance().type, [redis_key])
+
+
 def redis_set(redis_key, redis_value):
     """Instant API to set a key value pair"""
     _retry(get_redis_instance().set, [redis_key, redis_value])
@@ -74,6 +79,24 @@ def redis_extend(redis_key, redis_values):
 def redis_range(redis_key, left=0, right=-1):
     """Instant API to get a list with left and right ranges by using key"""
     return _retry(get_redis_instance().lrange, [redis_key, left, right])
+
+
+def redis_set_dict(redis_key, mapping):
+    """Store a dict in redis with specified key"""
+    if not isinstance(mapping, dict):
+        logging.error('redis_set_dict function requires a dict type of parameter as mapping')
+        return
+    _retry(get_redis_instance().hmset, [redis_key, mapping])
+
+
+def redis_get_dict(redis_key):
+    """Get a whole dict out by using the given key"""
+    return _retry(get_redis_instance().hgetall, [redis_key])
+
+
+def redis_get_dict_values(redis_key):
+    """Get values of dict by using given key"""
+    return _retry(get_redis_instance().hvals, [redis_key])
 
 
 def _retry(func, params):
