@@ -81,8 +81,8 @@ def redis_range(redis_key, left=0, right=-1):
     return _retry(get_redis_instance().lrange, [redis_key, left, right])
 
 
-def redis_set_dict(redis_key, mapping):
-    """Store a dict in redis with specified key"""
+def redis_extend_dict(redis_key, mapping):
+    """Extend a dict in redis if the given key exists, create the dict otherwise"""
     if not isinstance(mapping, dict):
         logging.error('redis_set_dict function requires a dict type of parameter as mapping')
         return

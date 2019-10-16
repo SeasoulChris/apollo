@@ -29,13 +29,18 @@ input[type=text] {
 input[type=text]:focus {
   width: 100%;
 }
-@media (min-width: 768px) {
-  .modal-xl {
-    width: 70%;
-    height: 100%;
-    max-width:1200px;
-    max-height:800px;
-  }
+@media (min-width: 1120px) {
+   .modal-xl {
+      width: 70%;
+   }
+}
+.modal-dialog,
+.modal-content {
+    height: 90%;
+}
+.modal-body {
+    max-height: calc(100% - 130px);
+    overflow-y: scroll;
 }
 </style>
 

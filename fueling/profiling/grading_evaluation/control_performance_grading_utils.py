@@ -9,6 +9,7 @@ import os
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
+import fueling.common.redis_utils as redis_utils
 import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
 
 
@@ -669,10 +670,16 @@ def highlight_gradings(task, grading_file):
                             'lateral_err_peak',
                             'heading_err_peak',
                             'total_time_peak']
+    
     std_scores = []
     peak_scores = []
     std_samples = []
     peak_samples = []
+
+    profiling_conf = feature_utils.get_config_control_profiling()
+    control_redis_prefix = 'control.profiling.{}.{}'.format(
+        profiling_conf.vehicle_type, profiling_conf.controller_type)
+
     if not grading_file:
         logging.warning(
             'No grading files found under the targeted path for task: {}'.format(task))
@@ -684,12 +691,13 @@ def highlight_gradings(task, grading_file):
                 gradings = information.split()
                 if (len(gradings) > 0):
                     for idx in range(len(gradings)):
-                        if gradings[idx] in highlight_std_items:
-                            std_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
-                            std_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
-                        if gradings[idx] in highlight_peak_items:
-                            peak_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
-                            peak_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
+                        if not gradings[idx] in (highlight_std_items + highlight_peak_items):
+                            continue
+                        std_scores.append("=".join([gradings[idx], gradings[idx + 1]]))
+                        std_samples.append("=".join([gradings[idx], gradings[idx + 2]]))
+                        cur_redis_prefix = '{}.{}'.format(control_redis_prefix, gradings[idx])
+                        cur_redis_mapping = {task: gradings[idx + 1].strip('%')}
+                        redis_utils.redis_extend_dict(cur_redis_prefix, cur_redis_mapping)
             highlight_scores = std_scores + ["____________________"] + peak_scores + ["<br />"]
             highlight_samples = std_samples + ["____________________"] + peak_samples + ["<br />"]
     return (highlight_scores, highlight_samples)

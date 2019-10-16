@@ -184,7 +184,7 @@ def plot_record(record):
 def plot_profiling(redis_key):
     """Plot profiling html by using list type of data"""
     value_type = redis_utils.redis_type(redis_key)
-    width, height = 10, 5.5 * (2 if value_type == 'hash' else 1)
+    width, height = 10, 5 * (2 if value_type == 'hash' else 1)
     plt.style.use('ggplot')
     fig = plt.figure()
     fig.set_size_inches(width, height)
@@ -193,7 +193,7 @@ def plot_profiling(redis_key):
     values_bar = (redis_utils.redis_range(redis_key) 
     	if value_type == 'list' else redis_utils.redis_get_dict_values(redis_key))
 
-    counters = Counter([float(x) for x in values_bar])
+    counters = Counter([round(float(x), 1) for x in values_bar])
     bar_keys = counters.keys()
     bar_values = [counters[x] for x in bar_keys]
     axs_bar.set_title('Distribution')
@@ -205,7 +205,7 @@ def plot_profiling(redis_key):
         axs_line = fig.add_subplot(2, 1, 2)
         values_hash = redis_utils.redis_get_dict(redis_key)
         x_values = sorted(values_hash.keys())
-        y_values = [float(values_hash[x]) for x in x_values] 
+        y_values = [round(float(values_hash[x]), 1) for x in x_values]
         axs_line.set_title('History Comparison')
         axs_line.set_xlabel('Dates')
         axs_line.set_ylabel('Values')
