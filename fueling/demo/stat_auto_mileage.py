@@ -43,7 +43,7 @@ class StatAutoMileage(BasePipeline):
 
     def run(self, records):
         mileage = records.map(self.calculate).sum()
-        logging.info('Calculated auto mileage in test mode is: {}'.format(mileage))
+        logging.info('Calculated auto mileage is: {}'.format(mileage))
 
     def calculate(self, record):
         """Calculate mileage"""
