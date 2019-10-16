@@ -52,7 +52,7 @@ dependencies:
     - azure.storage.blob
     - liegroups
     - pycocotools
-    - pyro-ppl
+    - pyro-ppl == 0.3.3  # 0.4.1+ requires pytorch 1.2.0+
     - pyspark-utils
     - scaleapi
     - websocket
