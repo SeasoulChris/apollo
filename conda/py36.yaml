@@ -22,11 +22,11 @@ dependencies:
   - redis-py
 
   # Learning
-  - cudatoolkit = 10.0
+  - cudatoolkit = 10.0  # Align with Apollo base image cuda version.
   - keras-gpu
   - opencv
   - pillow
-  - pytorch = 1.1.0
+  - pytorch = 1.1.0  # TODO(all): Explain why it's locked.
   - scikit-learn
   - torchvision
   - tensorflow-gpu

@@ -2,7 +2,7 @@ name: fuel-py27-cyber
 dependencies:
   # Core
   - python = 2.7
-  - pyspark = 2.4.0
+  - pyspark = 2.4.0  # Align with pre-built server image.
 
   # Language tools
   - pip

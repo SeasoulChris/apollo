@@ -2,7 +2,7 @@ name: fuel-py27
 dependencies:
   # Core
   - python = 2.7
-  - pyspark = 2.4.0
+  - pyspark = 2.4.0  # Align with pre-built server image.
 
   # Language tools
   - pip
@@ -15,7 +15,7 @@ dependencies:
 
   # Data science
   - boto3
-  - cudatoolkit = 10.0
+  - cudatoolkit = 10.0  # Align with Apollo base image cuda version.
   - h5py
   - keras-gpu
   - matplotlib
