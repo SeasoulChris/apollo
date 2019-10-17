@@ -15,7 +15,7 @@ dependencies:
   # Data science
   - boto3
   - h5py
-  - numpy = 1.8.2  # Known bug for different versions.
+  - numpy = 1.13  # Align with system version.
   - pymongo
   - redis-py
 
