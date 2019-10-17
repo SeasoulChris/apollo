@@ -31,8 +31,8 @@ from fueling.common.storage.bos_client import BosClient
 
 LANE_WIDTH = 3.3
 
-flags.DEFINE_string('input_data_path', 'simplehdmap/data/bag',
-                    'simple hdmap records input data path.')
+flags.DEFINE_string('input_data_path', 'simplehdmap',
+                    'simple hdmap input/output data path.')
 
 class MapGenSingleLine(BasePipeline):
 
@@ -55,13 +55,14 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run_prod(self):
-        src_prefix = self.FLAGS.get('input_data_path')
+        dir_prefix = self.FLAGS.get('input_data_path')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')        
         logging.info("job_id: %s" % job_id)
 
-        #src_prefix = 'simplehdmap/data/bag'
-        dst_prefix = 'simplehdmap/result'
+        #src_prefix = 'simplehdmap/data'
+        src_prefix = os.path.join(dir_prefix, 'data')
+        dst_prefix = os.path.join(dir_prefix, 'result')
 
         bos_client = BosClient()
         # Access partner's storage if provided.
