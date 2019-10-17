@@ -157,45 +157,45 @@ if __name__ == '__main__':
         print('EM accuracy = {}'.format(evaluate(model, X_em, y_em)))
         print('Non-EM accuracy = {}'.format(evaluate(model, X_nonem, y_nonem)))
 
-        print('----------- File level Results -----------')
-        test_path_em = os.path.join(flags_dict['valid_dir'], 'Emergency/')
-        test_em_files = file_utils.list_files(test_path_em)
-        print('Evaluating test em files ...')
-        em_total = 0
-        em_correct = 0
-        for test_file in tqdm(test_em_files):
-            if test_file.find('.wav') == -1:
-                continue
-            correct, results = file_correctly_predicted(
-                model, test_file, model_type)
-            if results.shape[0] == 0:
-                continue
-            em_total += 1
-            if correct:
-                em_correct += 1
-        print("Correct EM count = {}".format(em_correct))
-        print("Total EM count = {}".format(em_total))
-        print("File level EM accuracy = {}".format(em_correct / em_total))
+        # print('----------- File level Results -----------')
+        # test_path_em = os.path.join(flags_dict['valid_dir'], 'Emergency/')
+        # test_em_files = file_utils.list_files(test_path_em)
+        # print('Evaluating test em files ...')
+        # em_total = 0
+        # em_correct = 0
+        # for test_file in tqdm(test_em_files):
+        #     if test_file.find('.wav') == -1:
+        #         continue
+        #     correct, results = file_correctly_predicted(
+        #         model, test_file, model_type)
+        #     if results.shape[0] == 0:
+        #         continue
+        #     em_total += 1
+        #     if correct:
+        #         em_correct += 1
+        # print("Correct EM count = {}".format(em_correct))
+        # print("Total EM count = {}".format(em_total))
+        # print("File level EM accuracy = {}".format(em_correct / em_total))
 
-        test_path_nonem = os.path.join(
-            flags_dict['valid_dir'], 'nonEmergency/')
-        test_nonem_files = file_utils.list_files(test_path_nonem)
-        print('Evaluating test nonem files ...')
-        nonem_total = 0
-        nonem_correct = 0
-        for test_file in tqdm(test_nonem_files):
-            if test_file.find('.wav') == -1:
-                continue
-            correct, results = file_correctly_predicted(
-                model, test_file, model_type)
-            if results.shape[0] == 0:
-                continue
-            nonem_total += 1
-            if correct:
-                nonem_correct += 1
-        print("Correct Non-EM count = {}".format(nonem_correct))
-        print("Total Non-EM count = {}".format(nonem_total))
-        print("File level Non-EM accuracy = {}".format(nonem_correct / nonem_total))
+        # test_path_nonem = os.path.join(
+        #     flags_dict['valid_dir'], 'nonEmergency/')
+        # test_nonem_files = file_utils.list_files(test_path_nonem)
+        # print('Evaluating test nonem files ...')
+        # nonem_total = 0
+        # nonem_correct = 0
+        # for test_file in tqdm(test_nonem_files):
+        #     if test_file.find('.wav') == -1:
+        #         continue
+        #     correct, results = file_correctly_predicted(
+        #         model, test_file, model_type)
+        #     if results.shape[0] == 0:
+        #         continue
+        #     nonem_total += 1
+        #     if correct:
+        #         nonem_correct += 1
+        # print("Correct Non-EM count = {}".format(nonem_correct))
+        # print("Total Non-EM count = {}".format(nonem_total))
+        # print("File level Non-EM accuracy = {}".format(nonem_correct / nonem_total))
 
     from absl import app
     app.run(main)

@@ -60,7 +60,7 @@ class AudioFeatureExtraction(object):
             if file.find("nonEmergency") != -1:
                 label = 0
 
-            signal = self.preprocess(signal)
+            # signal = self.preprocess(signal)
             signal_len = signal.shape[0]
             segments = []
             signal_step = int(self.sample_rate * time_step)
@@ -85,13 +85,15 @@ class AudioFeatureExtraction(object):
         for i in tqdm(range(signal_segments.shape[0])):
             signal = signal_segments[i]
             label = labels[i]
-            S = librosa.feature.melspectrogram(signal, sr=self.sample_rate, n_mels=128)
-            log_S = librosa.power_to_db(S, ref=np.max)  # [n_mels, 16]
+            # S = librosa.feature.melspectrogram(signal, sr=self.sample_rate, n_mels=128)
+            # log_S = librosa.power_to_db(S, ref=np.max)
             if label == 1:
-                self.pos_features.append(log_S)
+                # self.neg_features.append(log_S)
+                self.pos_features.append(signal)
                 self.pos_labels.append(label)
             elif label == 0:
-                self.neg_features.append(log_S)
+                # self.neg_features.append(log_S)
+                self.neg_features.append(signal)
                 self.neg_labels.append(label)
         self.features = self.pos_features + self.neg_features
         self.labels = self.pos_labels + self.neg_labels
@@ -159,7 +161,7 @@ class AudioFeatureExtraction(object):
 if __name__ == "__main__":
 
     flags.DEFINE_string(
-        'feature_type', 'signal',
+        'feature_type', 'cnn',
         'Feature type for training from [signal, mlp, cnn].')
 
     flags.DEFINE_string(
@@ -170,6 +172,15 @@ if __name__ == "__main__":
         'valid_dir', '/home/jinyun/cleaned_data/eval_balanced/',
         'The dirname with validation data.')
 
+    flags.DEFINE_integer(
+        'sampling_rate', 16000, 'samplingrate on audio data')
+
+    flags.DEFINE_float(
+        'time_segment_length', 1.0, 'time_segment_length for featuring on audio data')
+
+    flags.DEFINE_float(
+        'time_step', 0.5, 'time stepping of features audio data')
+
     def main(argv):
 
         # data parser:
@@ -177,12 +188,15 @@ if __name__ == "__main__":
         feature_type = flags_dict['feature_type']
         train_dir = flags_dict['train_dir']
         valid_dir = flags_dict['valid_dir']
+        sampling_rate = flags_dict['sampling_rate']
+        time_segment=flags_dict['time_segment_length']
+        time_step=flags_dict['time_step']
 
         # train set features extraction and save
-        train_set_extractor = AudioFeatureExtraction(train_dir)
+        train_set_extractor = AudioFeatureExtraction(train_dir, sampling_rate)
 
         if feature_type == 'signal':
-            train_set_extractor.extract_signal_segments()
+            train_set_extractor.extract_signal_segments(time_segment, time_step)
         elif feature_type == 'cnn':
             train_set_extractor.extract_cnn_features()
             train_set_extractor.balance_features(True)
@@ -196,10 +210,10 @@ if __name__ == "__main__":
         train_set_extractor.save_features(feature_type, train_dir)
 
         # validation set features extraction and save
-        validation_set_extractor = AudioFeatureExtraction(valid_dir)
+        validation_set_extractor = AudioFeatureExtraction(valid_dir, sampling_rate)
 
         if feature_type == 'signal':
-            validation_set_extractor.extract_signal_segments()
+            validation_set_extractor.extract_signal_segments(time_segment, time_step)
         elif feature_type == 'cnn':
             validation_set_extractor.extract_cnn_features()
         elif feature_type == 'mlp':

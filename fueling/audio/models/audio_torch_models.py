@@ -85,6 +85,7 @@ class AudioMLPModel(nn.Module):
 class AudioCNN1dModel(nn.Module):
     def __init__(self):
         super(AudioCNN1dModel, self).__init__()
+
         self.conv1 = nn.Conv1d(128, 64, 3, padding=1)
         self.conv2 = nn.Conv1d(64, 32, 3, padding=1)
         self.conv3 = nn.Conv1d(32, 16, 3, padding=1)
@@ -93,18 +94,41 @@ class AudioCNN1dModel(nn.Module):
         self.fc2 = nn.Linear(32, 8)
         self.fc3 = nn.Linear(8, 1)
 
+        self.conv1 = nn.Conv1d(1, 16, 64, stride=2)
+        self.conv2 = nn.Conv1d(16, 32, 32, stride=2)
+        self.conv3 = nn.Conv1d(32, 64, 16, stride=2)
+        self.conv4 = nn.Conv1d(64, 128, 8, stride=2)
+        self.pool = nn.MaxPool1d(8, stride=8)
+        self.fc1 = nn.Linear(128 * 8, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 1)
+
     def forward(self, X):
-        # Conv layers
-        X = self.pool(F.relu(self.conv1(X)))
-        X = self.pool(F.relu(self.conv2(X)))
+        # # Conv layers
+        # X = self.pool(F.relu(self.conv1(X)))
+        # X = self.pool(F.relu(self.conv2(X)))
+        # X = F.relu(self.conv3(X))
+        # # Flatten
+        # X = X.view(-1, 16 * 4)
+        # # FC layers
+        # X = F.relu(self.fc1(X))
+        # X = F.relu(self.fc2(X))
+        # X = torch.sigmoid(self.fc3(X))
+
+        # Conv and pooling layers
+        X = F.relu(self.conv1(X))
+        X = self.pool(X)
+        X = F.relu(self.conv2(X))
+        X = self.pool(X)
         X = F.relu(self.conv3(X))
+        X = F.relu(self.conv4(X))
         # Flatten
-        X = X.view(-1, 16 * 4)
+        X = X.view(-1, 128 * 8)
         # FC layers
         X = F.relu(self.fc1(X))
         X = F.relu(self.fc2(X))
         X = torch.sigmoid(self.fc3(X))
-
+        
         return X
 
 
@@ -137,7 +161,7 @@ class AudioCNN2dModel(nn.Module):
 if __name__ == "__main__":
 
     flags.DEFINE_string(
-        'model_type', 'mlp',
+        'model_type', 'cnn1d',
         'Model type for training from [mlp, cnn1d, cnn2d].')
 
     flags.DEFINE_string(
