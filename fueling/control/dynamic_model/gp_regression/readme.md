@@ -3,8 +3,8 @@
 1. Setup Conda environment for label generation:
 
    ```bash
-   conda env update --prune -f /apollo/modules/data/fuel/conda/py27.yaml
-   source activate fuel-py27
+   conda env update --prune -f /apollo/modules/data/fuel/conda/py27-cyber.yaml
+   source activate fuel-py27-cyber
    ```
 
 1. Run label generation script:

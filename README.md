@@ -37,7 +37,6 @@
 
    Available envs are:
    * `fuel-py27-cyber` conda/py27-cyber.yaml
-   * `fuel-py27`       conda/py27.yaml **[In Deprecation]**
    * `fuel-py36`       conda/py36.yaml
 
    Use the Cyber compatible env if you need to read, write Cyber records, or
