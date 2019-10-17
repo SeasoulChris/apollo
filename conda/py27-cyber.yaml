@@ -23,6 +23,7 @@ dependencies:
   - opencv
   - pyproj
   - requests
+  - shapely
 
   - pip:
     - azure.storage.blob
