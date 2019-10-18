@@ -7,34 +7,37 @@ import torch
 import torch.nn as nn
 
 
-'''
-y_pred: N x sequence_length x 5 (mu_x, mu_y, sigma_x, sigma_y, correlation_xy)
-y_true: N x sequence_length x 2 (ground_truth_x, ground_truth_y)
-'''
+class TrajectoryBivariateGaussianLoss:
+    def loss_fn(self, y_pred, y_true, eps=1e-5):
+        if y_pred is None:
+            return cuda(torch.tensor(0))
+        # y_pred: N x pred_len x 5
+        # y_true: N x pred_len x 2
+        mux, muy, sigma_x, sigma_y, corr = y_pred[:, :, 0].float(), y_pred[:, :, 1].float(),\
+            y_pred[:, :, 2].float(), y_pred[:, :, 3].float(), y_pred[:, :, 4].float()
+        x, y = y_true[:, :, 0].float(), y_true[:, :, 1].float()
+        N = y_pred.size(0)
+        if N == 0:
+            return cuda(torch.tensor(0))
 
+        corr = torch.clamp(corr, min=-1+eps, max=1-eps)
+        z = (x-mux)**2/(sigma_x**2+eps) + (y-muy)**2/(sigma_y**2+eps) - \
+            2*corr*(x-mux)*(y-muy)/(torch.sqrt((sigma_x*sigma_y)**2)+eps)
+        z = torch.clamp(z, min=eps)
 
-def traj_bivariate_gaussian_loss(y_pred, y_true):
-    # Sanity checks.
-    if y_pred is None:
-        return 0
-    if y_pred.size(0) == 0:
-        return 0
+        P = 1/(2*np.pi*torch.sqrt((sigma_x*sigma_y)**2)*torch.sqrt(1-corr**2)+eps) \
+            * torch.exp(-z/(2*(1-corr**2)))
 
-    N = y_pred.size(0)
-    mux, muy, sigma_x, sigma_y, corr = y_pred[:, :, 0], y_pred[:, :, 1],\
-        y_pred[:, :, 2], y_pred[:, :, 3], y_pred[:, :, 4]
-    gt_x, gt_y = y_true[:, :, 0], y_true[:, :, 1]
-    eps = 1e-20
+        loss = torch.clamp(P, min=eps)
+        loss = -loss.log()
 
-    z = ((gt_x - mux) / (eps + sigma_x))**2 + ((gt_y - muy) / (eps + sigma_y))**2 - \
-        2 * corr * (gt_x - mux) * (gt_y - muy) / (sigma_x * sigma_y + eps)
-    P = 1 / (2 * math.pi * sigma_x * sigma_y * torch.sqrt(1 - corr**2) + eps) * \
-        torch.exp(-z / (2 * (1 - corr**2)))
+        return torch.sum(loss)/N
 
-    loss = torch.clamp(P, min=eps)
-    loss = -loss.log()
-
-    return torch.sum(loss) / N
+    def loss_info(self, y_pred, y_true):
+        diff = y_pred[:, :, :2] - y_true
+        diff = torch.sqrt(torch.sum(diff ** 2, 2))
+        out = torch.mean(diff)
+        return out
 
 
 '''
