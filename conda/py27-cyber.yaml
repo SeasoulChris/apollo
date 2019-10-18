@@ -11,19 +11,14 @@ dependencies:
   # Google infra
   - absl-py
   - protobuf
-  - tensorflow-gpu
 
   # Data science
   - boto3
-  - cudatoolkit = 10.0  # Align with Apollo base image cuda version.
   - h5py
-  - keras-gpu
   - matplotlib
   - numpy = 1.13  # Align with system version.
   - pymongo
-  - pytorch
   - redis-py
-  - scikit-learn
 
   # Other
   - opencv
