@@ -115,7 +115,8 @@ class LocalMapPipeline(BasePipeline):
         #msf_simple_map_creator.sh [records folder] [extrinsic_file] [zone_id] [map folder] [lidar_type]
         velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))
         local_command = '{} {} {} {} {} {}'.format(
-            local_map_creator_bin, source_dir, velodyne16_ext_list[0], self.zone_id, self.dst_prefix, self.lidar_type)
+            local_map_creator_bin, source_dir, velodyne16_ext_list[0],
+            self.zone_id, self.dst_prefix, self.lidar_type)
         logging.info('local_map_creator command is {}'.format(local_command))
         return_code = os.system(local_command)
         logging.info("return code for local_map_gen is {}".format(return_code))
