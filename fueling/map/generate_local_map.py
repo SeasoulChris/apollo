@@ -11,11 +11,16 @@ import pyspark_utils.helper as spark_helper
 
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
+import fueling.common.email_utils as email_utils
+from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
-flags.DEFINE_string('input_data_path', 'simplehdmap',
+flags.DEFINE_string('input_data_path', 'test/simplehdmap',
                     'simple hdmap input/output data path.')
+flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
+flags.DEFINE_string('lidar_type', 'velodyne16',
+                    'compensator pointcloud topic.')
 
 class LocalMapPipeline(BasePipeline):
 
@@ -30,6 +35,8 @@ class LocalMapPipeline(BasePipeline):
         dir_prefix = '/apollo/data/bag'
         src_prefix = os.path.join(dir_prefix, 'data')
         dst_prefix = os.path.join(dir_prefix, 'result')
+        zone_id = 50
+        lidar_type = 'velodyne16'
         if not os.path.exists(dst_prefix):
             logging.warning('src_prefix path: {} not exists'.format(dst_prefix))
             file_utils.makedirs(dst_prefix)
@@ -37,7 +44,7 @@ class LocalMapPipeline(BasePipeline):
             logging.info("target_prefix: {}".format(dst_prefix))
         # RDD(record_path)
         todo_records = self.to_rdd([src_prefix])
-        self.run(todo_records, src_prefix, dst_prefix)
+        self.run(todo_records, src_prefix, dst_prefix, zone_id, lidar_type)
         logging.info('local map gen: Done, TEST')
 
     def run_prod(self):
@@ -45,9 +52,10 @@ class LocalMapPipeline(BasePipeline):
         dir_prefix = self.FLAGS.get('input_data_path')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
+        zone_id = self.FLAGS.get('zone_id')
+        lidar_type = self.FLAGS.get('lidar_type')
         logging.info("job_id: %s" % job_id)
 
-        #src_prefix = 'simplehdmap/result'
         src_prefix = os.path.join(dir_prefix, 'data')
         dst_prefix = os.path.join(dir_prefix, 'result')        
 
@@ -62,21 +70,37 @@ class LocalMapPipeline(BasePipeline):
             logging.warning('bos path: {} not exists'.format(target_dir))
             file_utils.makedirs(target_dir)
         else:
-            logging.info("target_dir: {}".format(target_dir))        
+            logging.info("target_dir: {}".format(target_dir))
 
-        velodyne16_ext_path = os.path.join(source_dir, 'velodyne16_novatel_extrinsics_example.yaml')
-        if not os.path.exists(velodyne16_ext_path):
-            logging.warning('velodyne16_novatel_extrinsics_example.yaml: {} not exists'.format(velodyne16_ext_path))
+        receivers = email_utils.SIMPlEHDMAP_TEAM
+        partner = partners.get(job_owner)
+        if partner:
+            receivers.append(partner.email)
+        title = 'Your simplehdmap generated is done!'
+        content = {'Job Owner': job_owner, 'Job ID': job_id}       
+
+        velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))
+        logging.info('velodyne16_ext_list: {}'.format(velodyne16_ext_list))
+
+        if not velodyne16_ext_list:
+            logging.error('velodyne16_novatel_extrinsics_example.yaml not exists')
+            title = 'Your localmap is not generated!'
+            email_utils.send_email_info(title, content, receivers)
+            return
                
         # RDD(tasks), the tasks without source_dir as prefix
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
-        self.run(todo_records, source_dir, target_dir)       
+        self.run(todo_records, source_dir, target_dir, zone_id, lidar_type)
+                
+        email_utils.send_email_info(title, content, receivers)      
 
-    def run(self, todo_records, src_prefix, dst_prefix):
+    def run(self, todo_records, src_prefix, dst_prefix, zone_id, lidar_type):
         """Run the pipeline with given arguments."""
         # Spark cascade style programming.
         self.dst_prefix = dst_prefix
+        self.zone_id = zone_id
+        self.lidar_type = lidar_type
         record_points = spark_helper.cache_and_log('gen_local_map',
                                                    # RDD(source_dir)
                                                    todo_records
@@ -89,10 +113,9 @@ class LocalMapPipeline(BasePipeline):
 
         local_map_creator_bin = 'bash /apollo/scripts/msf_simple_map_creator.sh'
         #msf_simple_map_creator.sh [records folder] [extrinsic_file] [zone_id] [map folder] [lidar_type]
-        map_dir = self.dst_prefix
-        velodyne16_ext_path = os.path.join(source_dir, 'velodyne16_novatel_extrinsics_example.yaml')
-        local_command = '{} {} {} 50 {} 16'.format(
-            local_map_creator_bin, source_dir, velodyne16_ext_path, map_dir)
+        velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))
+        local_command = '{} {} {} {} {} {}'.format(
+            local_map_creator_bin, source_dir, velodyne16_ext_list[0], self.zone_id, self.dst_prefix, self.lidar_type)
         logging.info('local_map_creator command is {}'.format(local_command))
         return_code = os.system(local_command)
         logging.info("return code for local_map_gen is {}".format(return_code))

@@ -57,7 +57,10 @@ class JobProcessor(object):
         if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
             job_exec = 'bash vehicle_calibration.sh {}'.format(self.job_config.input_data_path)
         elif self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
-            job_exec = 'bash generate_simple_hdmap.sh {}'.format(self.job_config.input_data_path)
+            job_exec = 'bash generate_simple_hdmap.sh {} {} {}'.format(
+                        self.job_config.input_data_path,
+                        self.job_config.zone_id,
+                        self.job_config.lidar_type)
         else:
             return HTTPStatus.BAD_REQUEST, 'Unsupported job type.'
 

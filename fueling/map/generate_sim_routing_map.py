@@ -10,12 +10,10 @@ from absl import flags
 
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
-import fueling.common.email_utils as email_utils
-from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
-flags.DEFINE_string('input_data_path', 'simplehdmap',
+flags.DEFINE_string('input_data_path', 'test/simplehdmap',
                     'simple hdmap input/output data path.')
 
 def execute_task(source_dir):
@@ -89,15 +87,7 @@ class SimMapPipeline(BasePipeline):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
 
-        self.run(source_path)
-
-        receivers = email_utils.SIMPlEHDMAP_TEAM
-        partner = partners.get(job_owner)
-        if partner:
-            receivers.append(partner.email)
-        title = 'Your simplehdmap generated is done!'
-        content = {'Job Owner': job_owner, 'Job ID': job_id}        
-        email_utils.send_email_info(title, content, receivers)        
+        self.run(source_path)               
 
     def run(self, original_path):
         """Run the pipeline with given parameters"""

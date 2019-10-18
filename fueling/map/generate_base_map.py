@@ -31,7 +31,7 @@ from fueling.common.storage.bos_client import BosClient
 
 LANE_WIDTH = 3.3
 
-flags.DEFINE_string('input_data_path', 'simplehdmap',
+flags.DEFINE_string('input_data_path', 'test/simplehdmap',
                     'simple hdmap input/output data path.')
 
 class MapGenSingleLine(BasePipeline):
