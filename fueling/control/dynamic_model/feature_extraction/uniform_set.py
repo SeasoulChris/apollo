@@ -120,7 +120,7 @@ class UniformSet(BasePipeline):
         def _generate_key(elements):
             vehicle, hdf5 = elements
             file_name = os.path.basename(hdf5)
-            key = file_name.split('_', 1)[1]
+            key = file_name.split('_', 1)[0]
             return (vehicle, key), hdf5
 
         categorized_segments = spark_helper.cache_and_log(
