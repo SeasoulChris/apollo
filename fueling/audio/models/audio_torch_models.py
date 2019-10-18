@@ -15,9 +15,6 @@ from torchvision import transforms
 from fueling.common import file_utils
 from fueling.common.learning.train_utils import *
 from fueling.audio.models.audio_features_extraction import AudioFeatureExtraction
-from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset import *
-from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
 
 class AudioDataset(Dataset):
@@ -35,7 +32,7 @@ class AudioDataset(Dataset):
             label = np.float32(self.labels[idx])
             feature = torch.from_numpy(self.features[idx]).float()
             return (feature, label)
-        if self.mode == 'cnn1d':
+        if self.mode == 'cnn1d' or self.mode == 'cnn1dEE':
             label = np.float32(self.labels[idx])
             return (torch.from_numpy(self.features[idx]), label)
         if self.mode == 'cnn2d':
@@ -145,7 +142,6 @@ class AudioCNN1dEEModel(nn.Module):
         self.fc3 = nn.Linear(64, 1)
 
     def forward(self, X):
-
         # Conv and pooling layers
         X = F.relu(self.conv1(X))
         X = self.pool(X)
@@ -215,7 +211,7 @@ if __name__ == "__main__":
         flags_dict = flags.FLAGS.flag_values_dict()
         model_type = flags_dict['model_type']
         feature_type = 'mlp'
-        if model_type == 'cnn1d' or model_type == 'cnn2d':
+        if model_type == 'cnn1d' or model_type == 'cnn2d' or model_type == 'cnn1dEE':
             feature_type = 'cnn'
 
         train_dir = flags_dict['train_dir']
