@@ -696,7 +696,7 @@ def highlight_gradings(task, grading_file):
    
                         # Store the mapping of task->score in Redis
                         cur_redis_prefix = '{}.{}'.format(control_redis_prefix, gradings[idx])
-                        cur_redis_mapping = {task: gradings[idx + 1].strip('%')}
+                        cur_redis_mapping = {os.path.basename(task): gradings[idx + 1].strip('%')}
                         redis_utils.redis_extend_dict(cur_redis_prefix, cur_redis_mapping)
 
                         cur_score = "=".join([gradings[idx], gradings[idx + 1]])
