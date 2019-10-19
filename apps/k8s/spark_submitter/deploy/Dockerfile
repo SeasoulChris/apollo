@@ -6,8 +6,7 @@ RUN apt-get update -y && \
         curl \
         openjdk-8-jre \
         python3-pip \
-        software-properties-common \
-        zip
+        software-properties-common
 
 # Kubectl.
 RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \

@@ -37,6 +37,11 @@ spec:
             secretKeyRef:
               name: bos-secret
               key: region
+        - name: BOS_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: bos-secret
+              key: bucket
 
 ---
 

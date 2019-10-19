@@ -20,7 +20,7 @@ flags.DEFINE_string('running_role', None, 'Running as another role instead of th
 
 # Env.
 flags.DEFINE_string('docker_image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
-flags.DEFINE_string('conda_env', 'fuel-py36', 'Conda env name.')
+flags.DEFINE_string('conda_env', 'fuel-py27-cyber', 'Conda env name.')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
@@ -87,7 +87,7 @@ def get_job():
                             fueling_zip.write(f)
 
             fueling_zip = in_mem_zip.getvalue()
-            logging.info('fueling.zip has {} bytes'.format(len(fueling_zip)))
+            logging.info('fueling.zip has %.2fMB.' % (len(fueling_zip) / (2**20)))
             job['fueling_zip_base64'] = base64.b64encode(fueling_zip).decode('ascii')
     return job
 
@@ -138,7 +138,7 @@ def main(argv):
 
     KUBE_PROXY = 'http://usa-data.baidu.com:8001'
     SERVICE = 'http:spark-submitter-service:8000'
-    SUBMITTER = '{}/api/v1/namespaces/default/services/{}/proxy'.format(KUBE_PROXY, SERVICE)
+    SUBMITTER = '{}/api/v1/namespaces/default/services/{}/proxy/'.format(KUBE_PROXY, SERVICE)
     res = requests.post(SUBMITTER, json=json.dumps(arg))
 
     # Process result.
