@@ -43,7 +43,7 @@ message Env {
 
 message Job {
   optional string entrypoint = 1;
-  repeated string flags = 2;
+  optional string flags = 2;
 
   oneof fueling_pkg {
     // Content of fueling.zip.

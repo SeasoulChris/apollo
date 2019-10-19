@@ -25,9 +25,7 @@ class SparkSubmitJob(flask_restful.Resource):
     def post(self):
         """Accept user request, verify and process."""
         try:
-            request = flask.request.get_json()
-            parser = json_format.Parse if isinstance(request, str) else json_format.ParseDict
-            arg = parser(request, SparkSubmitArg())
+            arg = json_format.Parse(flask.request.get_json(), SparkSubmitArg())
             http_code, msg = SparkSubmitJob.spark_submit(arg)
         except json_format.ParseError:
             http_code = HTTPStatus.BAD_REQUEST
@@ -133,8 +131,8 @@ class SparkSubmitJob(flask_restful.Resource):
                       '--conf spark.kubernetes.executor.secretKeyRef.%(key)s=%(value)s ' % {
                           'key': key, 'value': value})
 
-        job_name = '{}-{}'.format(job_id,
-                                  os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-'))
+        job_name = 'job-{}-{}-{}'.format(
+            job_id, submitter, os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-'))
         cmd = ('%(dist_packages)s/pyspark/bin/spark-submit '
                '--deploy-mode cluster '
                '--master %(k8s_master)s '
@@ -147,7 +145,7 @@ class SparkSubmitJob(flask_restful.Resource):
                    'job_name': job_name,
                    'confs': confs,
                    'entrypoint': os.path.join(EXTRACTED_PATH, arg.job.entrypoint),
-                   'flags': '--running_mode=PROD ' + ' '.join(arg.job.flags),
+                   'flags': '--running_mode=PROD ' + arg.job.flags,
                })
         logging.info('SHELL > {}'.format(cmd))
 

@@ -3,7 +3,7 @@
 A simplest demo to calculate square sum of 1...n.
 
 Run with:
-    ./tools/submit-job-to-k8s.sh fueling/demo/simplest_demo.py
+    ./tools/submit-job-to-k8s.py --entrypoint=fueling/demo/simplest_demo.py
 """
 
 from fueling.common.base_pipeline import BasePipeline
