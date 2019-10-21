@@ -3,8 +3,6 @@
 # Jobs that run once everyday at 1:00 a.m.
 # Crontab example: 0 1 * * * /this/script.sh
 
-set -e
-
 # Preapre: Goto fuel root.
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
@@ -15,6 +13,8 @@ FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718" ./tools/submit-job-to-k
     --image "hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0" \
     --fueling "/mnt/bos/modules/data/jobs/deploy/fueling-latest.zip" \
     ${JOB}
+
+set -e
 
 # Job: Daily jobs.
 JOB="fueling/daily_jobs.py"
