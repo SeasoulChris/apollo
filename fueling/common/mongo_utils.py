@@ -20,7 +20,6 @@ flags.DEFINE_string(
     'mongodb://bJVmYB0.mongodb.bj.baidubce.com:27017,bJVmYB1.mongodb.bj.baidubce.com:27017',
     'MongoDB url.')
 flags.DEFINE_string('mongo_db_name', 'apollo', 'MongoDB DB name to access.')
-flags.DEFINE_string('mongo_record_collection_name', 'records', 'MongoDB record collection name.')
 
 
 class Mongo(object):
@@ -35,7 +34,6 @@ class Mongo(object):
 
         self.url = flags_dict['mongo_url']
         self.db_name = flags_dict['mongo_db_name']
-        self.record_collection_name = flags_dict['mongo_record_collection_name']
 
         self.user = os.environ.get('MONGO_USER')
         self.passwd = os.environ.get('MONGO_PASSWD')
@@ -59,7 +57,11 @@ class Mongo(object):
 
     def record_collection(self):
         """Get record collection."""
-        return self.collection(self.record_collection_name)
+        return self.collection('records')
+
+    def job_collection(self):
+        """Get job collection."""
+        return self.collection('jobs')
 
     @staticmethod
     def pb_to_doc(pb):

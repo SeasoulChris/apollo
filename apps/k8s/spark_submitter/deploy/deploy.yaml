@@ -42,6 +42,16 @@ spec:
             secretKeyRef:
               name: bos-secret
               key: bucket
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: user
+        - name: MONGO_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: passwd
 
 ---
 

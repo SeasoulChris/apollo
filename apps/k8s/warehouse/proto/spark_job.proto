@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package apollo.data.fuel;
+
+import "modules/data/fuel/apps/spark_submitter/spark_submit_arg.proto";
+
+message SparkJob {
+  optional string id = 1;
+  // Set job.fueling_zip_base64 as "YES" as it could be very large.
+  optional SparkSubmitArg arg = 2;
+}

@@ -21,14 +21,19 @@ RUN python3 -m pip install \
         flask \
         Flask-RESTful \
         protobuf \
+        pymongo \
         pyspark==2.4.0
 
 # Resource.
 # Get dest path with `python -c "import site; print(site.getsitepackages()[0])"`
-COPY deploy/spark-kubernetes_2.11-2.4.0.jar /usr/local/lib/python3.6/dist-packages/pyspark/jars/
-COPY deploy/kube.config /root/.kube/config
+COPY apps/k8s/spark_submitter/deploy/spark-kubernetes_2.11-2.4.0.jar \
+    /usr/local/lib/python3.6/dist-packages/pyspark/jars/
+COPY kube.config /root/.kube/config
 
 # Source.
-COPY index.py /home/spark_submitter/
-COPY spark_submit_arg_pb2.py /home/spark_submitter/
-ENTRYPOINT ["python3", "/home/spark_submitter/index.py"]
+COPY apps/k8s/spark_submitter/index.py /home/spark_submitter/
+COPY apps/k8s/spark_submitter/spark_submit_arg_pb2.py /home/spark_submitter/
+COPY fueling /home/spark_submitter/fueling
+
+WORKDIR /home/spark_submitter
+ENTRYPOINT ["python3", "index.py"]

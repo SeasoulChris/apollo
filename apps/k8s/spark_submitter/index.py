@@ -7,8 +7,10 @@ import base64
 import json
 import os
 import site
+import threading
 
-from absl import app as absl_app
+from absl import app
+from absl import flags
 from absl import logging
 import boto3
 import botocore
@@ -16,7 +18,12 @@ import flask
 import flask_restful
 import google.protobuf.json_format as json_format
 
+from fueling.common.mongo_utils import Mongo
+
 from spark_submit_arg_pb2 import SparkSubmitArg, Env
+
+
+flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 
 
 class SparkSubmitJob(flask_restful.Resource):
@@ -26,14 +33,17 @@ class SparkSubmitJob(flask_restful.Resource):
         """Accept user request, verify and process."""
         try:
             arg = json_format.Parse(flask.request.get_json(), SparkSubmitArg())
-            http_code, msg = SparkSubmitJob.spark_submit(arg)
+            job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
+            if flags.FLAGS.debug:
+                self.spark_submit(job_id, arg)
+            else:
+                threading.Thread(lambda: self.spark_submit(job_id, arg)).start()
+            return 'Job %s submitted!' % job_id, HTTPStatus.OK
         except json_format.ParseError:
-            http_code = HTTPStatus.BAD_REQUEST
-            msg = 'SparkSubmitArg format error!'
-        return msg, http_code
+            return 'SparkSubmitArg format error!', HTTPStatus.BAD_REQUEST
 
     @staticmethod
-    def spark_submit(arg):
+    def spark_submit(job_id, arg):
         """Submit job."""
         # Configs.
         K8S_MASTER = 'k8s://https://180.76.150.16:6443'
@@ -56,9 +66,8 @@ class SparkSubmitJob(flask_restful.Resource):
             'LOG_VERBOSITY': Env.LogVerbosity.Name(arg.env.log_verbosity),
         }
 
-        job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
         submitter = arg.user.submitter
-        running_role = arg.user.running_role
+        # running_role = arg.user.running_role
         # TODO: Verify submitter and running_role, and save to DB for job management.
 
         # Prepare fueling package.
@@ -75,7 +84,18 @@ class SparkSubmitJob(flask_restful.Resource):
                 Body=base64.b64decode(arg.job.fueling_zip_base64),
                 Key=fueling_zip_key)
             fueling_zip_path = os.path.join(STORAGE, fueling_zip_key)
+            # Only store hash to save space.
+            arg.job.fueling_zip_base64 = str(hash(arg.job.fueling_zip_base64))
         ENVS['APOLLO_FUELING_PYPATH'] = fueling_zip_path
+
+        # Update job database.
+        if not flags.FLAGS.debug:
+            # See apps/warehouse/proto/spark_job.proto
+            spark_job = {
+                'id': job_id,
+                'arg': Mongo.pb_to_doc(arg),
+            }
+            Mongo().job_collection().insert_one(spark_job)
 
         # Partner storage.
         if arg.partner.storage_writable:
@@ -147,21 +167,21 @@ class SparkSubmitJob(flask_restful.Resource):
                    'entrypoint': os.path.join(EXTRACTED_PATH, arg.job.entrypoint),
                    'flags': '--running_mode=PROD ' + arg.job.flags,
                })
-        logging.info('SHELL > {}'.format(cmd))
-
         # Execute command.
-        os.system('nohup %s > /dev/null 2>&1 &' % cmd)
-        return HTTPStatus.OK, 'Job %s submitted!' % job_id
+        logging.debug('SHELL > {}'.format(cmd))
+        os.system(cmd)
 
 
-app = flask.Flask(__name__)
-api = flask_restful.Api(app)
+flask_app = flask.Flask(__name__)
+api = flask_restful.Api(flask_app)
 api.add_resource(SparkSubmitJob, '/')
 
 
 def main(argv):
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    if flags.FLAGS.debug:
+        logging.set_verbosity(logging.DEBUG)
+    flask_app.run(host='0.0.0.0', port=8000, debug=flags.FLAGS.debug)
 
 
 if __name__ == '__main__':
-    absl_app.run(main)
+    app.run(main)
