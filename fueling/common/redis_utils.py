@@ -32,12 +32,15 @@ class RedisConnectionPool(object):
     @staticmethod
     def get_connection_pool(flags_dict=None):
         if not RedisConnectionPool.connection_pool:
+            redis_passwd = os.environ.get('REDIS_PASSWD')
+            if not redis_passwd:
+                return None
             if not flags_dict:
                 flags_dict = flags.FLAGS.flag_values_dict()
             RedisConnectionPool.connection_pool = redis.ConnectionPool(
                 host=flags_dict['redis_server_ip'],
                 port=flags_dict['redis_port'],
-                password=os.environ.get('REDIS_PASSWD'),
+                password=redis_passwd,
                 decode_responses=True,
                 socket_connect_timeout=flags_dict['redis_timeout'])
         return RedisConnectionPool.connection_pool
@@ -107,8 +110,7 @@ def _retry(func, params):
             return func(*params)
         except redis.exceptions.TimeoutError as ex:
             logging.error('redis connection timeout. params: {}'.format(params))
-            flags_dict = flags.FLAGS.flag_values_dict()
-            if cur_retries >= max_retries or flags_dict.get('running_mode') == 'TEST':
+            if cur_retries >= max_retries:
                 # Silently swallow it instead of raising
                 return None
             time.sleep(2 ** cur_retries)
