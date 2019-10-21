@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package apollo.data.fuel;
 
-import "modules/data/fuel/apps/spark_submitter/spark_submit_arg.proto";
+import "modules/data/fuel/apps/k8s/spark_submitter/spark_submit_arg.proto";
 
 message SparkJob {
   optional string id = 1;
