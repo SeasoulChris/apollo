@@ -51,55 +51,95 @@ def get_redis_instance():
     API to return a Redis instance.
     The instance can be used in scenarios with multiple operations executing as a batch
     """
-    return redis.Redis(connection_pool=RedisConnectionPool.get_connection_pool())
+    connection_pool = RedisConnectionPool.get_connection_pool()
+    if not connection_pool:
+        logging.error('redis connection pool not available.')
+        return None
+    return redis.Redis(connection_pool)
 
 
 def redis_type(redis_key):
     """Get the value type from Redis by using given key"""
-    return _retry(get_redis_instance().type, [redis_key])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.type, [redis_key])
 
 
 def redis_set(redis_key, redis_value):
     """Instant API to set a key value pair"""
-    _retry(get_redis_instance().set, [redis_key, redis_value])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return
+    _retry(redis_instance.set, [redis_key, redis_value])
 
 
 def redis_get(redis_key):
     """Instant API to get a value by using key"""
-    return _retry(get_redis_instance().get, [redis_key])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.get, [redis_key])
 
 
 def redis_incr(redis_key, amount=1):
     """Instant API to increment a value by its key"""
-    _retry(get_redis_instance().incr, [redis_key, amount])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return
+    _retry(redis_instance.incr, [redis_key, amount])
 
 
 def redis_extend(redis_key, redis_values):
     """Instant API to extend a list if the given key exists, create the list otherwise"""
-    _retry(get_redis_instance().rpush, *redis_values)
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return
+    _retry(redis_instance.rpush, *redis_values)
 
 
 def redis_range(redis_key, left=0, right=-1):
     """Instant API to get a list with left and right ranges by using key"""
-    return _retry(get_redis_instance().lrange, [redis_key, left, right])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.lrange, [redis_key, left, right])
 
 
 def redis_extend_dict(redis_key, mapping):
     """Extend a dict in redis if the given key exists, create the dict otherwise"""
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return
     if not isinstance(mapping, dict):
         logging.error('redis_set_dict function requires a dict type of parameter as mapping')
         return
-    _retry(get_redis_instance().hmset, [redis_key, mapping])
+    _retry(redis_instance.hmset, [redis_key, mapping])
 
 
 def redis_get_dict(redis_key):
     """Get a whole dict out by using the given key"""
-    return _retry(get_redis_instance().hgetall, [redis_key])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.hgetall, [redis_key])
 
 
 def redis_get_dict_values(redis_key):
     """Get values of dict by using given key"""
-    return _retry(get_redis_instance().hvals, [redis_key])
+    redis_instance = get_redis_instance()
+    if not redis_instanct:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.hvals, [redis_key])
 
 
 def _retry(func, params):
