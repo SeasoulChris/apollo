@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import mpld3
 
 from modules.common.proto.drive_event_pb2 import DriveEvent
+import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 
 
@@ -181,44 +182,80 @@ def plot_record(record):
     return mpld3.fig_to_html(fig)
 
 
-def plot_profiling(redis_key):
-    """Plot profiling html by using list type of data"""
-    value_type = redis_utils.redis_type(redis_key)
-    width, height = 10, 5 * (2 if value_type == 'hash' else 1)
+def plot_metrics(data):
+    """Plot images based on key and plot type"""
+    redis_key, plot_type = data['key'], data['type']
+    redis_type_2_plot_type = {
+        'list': ['bar', 'dot'],
+        'hash': ['line', 'pie'],
+    }
+   
+    redis_type = redis_utils.redis_type(redis_key)
+    if redis_type not in redis_type_2_plot_type:
+        logging.error('do not support display for given redis type: {}'.format(redis_type))
+        return
+  
+    if not plot_type:
+        plot_type = redis_type_2_plot_type[redis_type][0]
+    elif plot_type not in redis_type_2_plot_type[redis_type]:
+        logging.error('do not support display for given plot type: {}'.format(plot_type))
+        return
+   
+    width, height = 10, 5.5
     plt.style.use('ggplot')
-    fig = plt.figure()
+    fig, axs = plt.subplots(1, 1)
     fig.set_size_inches(width, height)
 
-    axs_bar = fig.add_subplot(2, 1, 1) if value_type == 'hash' else fig.add_subplot(1, 1, 1)
-    values_bar = (redis_utils.redis_range(redis_key) 
-    	if value_type == 'list' else redis_utils.redis_get_dict_values(redis_key))
+    values = (redis_utils.redis_range(redis_key)
+              if value_type == 'list' else redis_utils.redis_get_dict_values(redis_key))
 
-    counters = Counter([round(float(x), 1) for x in values_bar])
-    bar_keys = counters.keys()
-    bar_values = [counters[x] for x in bar_keys]
-    axs_bar.set_title('Distribution')
-    axs_bar.set_xlabel('Values')
-    axs_bar.set_ylabel('Frequency')
-    axs_bar.bar(bar_keys, bar_values)
-
-    if value_type == 'hash':
-        axs_line = fig.add_subplot(2, 1, 2)
-        values_hash = redis_utils.redis_get_dict(redis_key)
-        x_values = sorted(values_hash.keys())
-        y_values = [round(float(values_hash[x]), 1) for x in x_values]
-        axs_line.set_title('History Comparison')
-        axs_line.set_xlabel('Dates')
-        axs_line.set_ylabel('Values')
-        axs_line.set_xticks(range(len(x_values)))
-        axs_line.set_xticklabels(x_values)
-        axs_line.plot(x_values, y_values, '-', label=redis_key)
-        axs_line.legend()
-        axs_line.grid(True)
+    if plot_type == 'bar':
+       plot_bar(axs, values)
+    elif plot_type == 'dot':
+       plot_dot(axs, values)
+    elif plot_type == 'pie':
+       plot_pie(plt, axs, values)
+    elif plot_type == 'line':
+       plot_line(axs, redis_key, values)
 
     plt.tight_layout()
     html = mpld3.fig_to_html(fig)
     plt.close('all')
     return html
+
+
+def plot_bar(axs, values):
+    """Plot bar"""
+    counters = Counter([round(float(x), 0) for x in values])
+    bar_keys = counters.keys()
+    bar_values = [counters[x] for x in bar_keys]
+    axs.set_title('Distribution')
+    axs.set_xlabel('Values')
+    axs.set_ylabel('Frequency')
+    axs.bar(bar_keys, bar_values)
+
+
+def plot_line(axs, redis_key, values):
+    """Plot line"""
+    x_values = sorted(values.keys())
+    y_values = [round(float(values[x]), 1) for x in x_values]
+    axs.set_title('History Comparison')
+    axs.set_xlabel('Dates')
+    axs.set_ylabel('Values')
+    axs.set_xticks(range(len(x_values)))
+    axs.set_xticklabels(x_values)
+    axs.plot(x_values, y_values, '-', label=redis_key)
+    axs.legend()
+    axs.grid(True)
+
+
+def plot_pie(plt, axs, values):
+    """Plot pie"""
+    labels = values.keys()
+    sizes = [round(float(values[x]), 1) for x in x_values] 
+    explode = [0, 0, 0, 0]
+    axs.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
+    plt.axis('equal')
 
 
 # To be registered into jinja2 templates.
@@ -231,5 +268,5 @@ utils = {
     'drive_event_type_name': drive_event_type_name,
     'meter_to_miles': meter_to_miles,
     'plot_record': plot_record,
-    'plot_profiling': plot_profiling,
+    'plot_metrics': plot_metrics,
 }

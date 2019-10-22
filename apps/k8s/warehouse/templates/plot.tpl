@@ -6,7 +6,7 @@
 
 {% block body %}
 
-<div align="center">{{ key | plot_profiling }}</div>
+<div align="center">{{ data | plot_metrics }}</div>
 
 {% endblock %}
 

@@ -157,10 +157,12 @@ def metrics_request_event(message):
     flask_socketio.emit(server_response_channel, metrics)
 
 
-@app.route("/plot_img/<string:key>")
+@app.route('/plot_img', methods=['GET'])
 def plot_img(key):
     """Handler of profiling plot request"""
-    return flask.render_template('plot.tpl', key=key)
+    redis_key = flask.request.args.get('key')
+    plot_type = flask.request.args.get('type')
+    return flask.render_template('plot.tpl', data={'key': redis_key, 'type': plot_type})
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):

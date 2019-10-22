@@ -49,7 +49,8 @@ input[type=text]:focus {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 <script type="text/javascript" charset="utf-8">
   function attachFrame(key, serverAddr) {
-    var src = serverAddr + '/plot_img/' + key;
+    var src = serverAddr + '/plot_img';
+    src += '?key=' + key;
     $('#theModal iframe').attr({'src': src});
     $('#theModalLabel').text(key);
   }
