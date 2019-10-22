@@ -3,7 +3,7 @@
 A simple demo to parse records and stat auto mileage.
 
 Run with:
-    ./tools/submit-job-to-k8s.sh --env fuel-py27-cyber fueling/demo/stat_auto_mileage.py
+    ./tools/submit-job-to-k8s.py --entrypoint=fueling/demo/stat_auto_mileage.py
 """
 
 import glob

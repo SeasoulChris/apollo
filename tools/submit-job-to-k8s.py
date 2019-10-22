@@ -133,10 +133,15 @@ def main(argv):
     # Submit job.
 
     # For debug purpose, you may use the following config.
-    # KUBE_PROXY = 'http://localhost:8001'  # If you use local kube proxy.
+    # KUBE_PROXY_HOST = 'localhost'  # If you use local kube proxy.
     # SUBMITTER = 'http://localhost:8000/'  # If you use local submitter.
 
-    KUBE_PROXY = 'http://usa-data.baidu.com:8001'
+    KUBE_PROXY_HOST = 'usa-data.baidu.com'
+    if os.system("ping -c 1 %s > /dev/null 2>&1 " % KUBE_PROXY_HOST) != 0:
+        logging.fatal('Cannot reach k8s proxy %s. Are you running in intranet?')
+        sys.exit(1)
+
+    KUBE_PROXY = 'http://%s:8001' % KUBE_PROXY_HOST
     SERVICE = 'http:spark-submitter-service:8000'
     SUBMITTER = '{}/api/v1/namespaces/default/services/{}/proxy/'.format(KUBE_PROXY, SERVICE)
     res = requests.post(SUBMITTER, json=json.dumps(arg))

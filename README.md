@@ -124,17 +124,16 @@ practices are:
 ### Run pipeline in cluster
 
 If you are pretty familliar with the infra, please:
-1. Loop the data team in to have your job well reviewed and setup local k8s
-   client.
+1. Loop the data team in to have your job well reviewed.
 
 1. Then run:
 
    ```bash
    # Get to know the options.
-   ./tools/submit-job-to-k8s.sh -h
+   ./tools/submit-job-to-k8s.py --help
 
    # Start a cloud job.
-   ./tools/submit-job-to-k8s.sh [options] /path/to/spark/job.py [job-gflags]
+   ./tools/submit-job-to-k8s.py --entrypoint=/path/to/spark/job.py [other options]
 
    # Find your job and access its Spark UI.
    ./tools/access-service-on-k8s.sh 4040

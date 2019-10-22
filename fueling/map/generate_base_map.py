@@ -1,7 +1,7 @@
 """
 Run with:
-    ./tools/submit-job-to-k8s.sh --workers 1 --cpu 1 --memory 8g --disk 10 \
-        fueling/map/generate_base_map.py
+    ./tools/submit-job-to-k8s.py --worker_memory=8 --worker_disk=10 \
+        --entrypoint=fueling/map/generate_base_map.py
 """
 #!/usr/bin/env python
 
