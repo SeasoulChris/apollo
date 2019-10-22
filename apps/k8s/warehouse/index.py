@@ -158,7 +158,7 @@ def metrics_request_event(message):
 
 
 @app.route('/plot_img', methods=['GET'])
-def plot_img(key):
+def plot_img():
     """Handler of profiling plot request"""
     redis_key = flask.request.args.get('key')
     plot_type = flask.request.args.get('type')

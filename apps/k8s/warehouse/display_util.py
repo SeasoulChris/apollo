@@ -207,7 +207,7 @@ def plot_metrics(data):
     fig.set_size_inches(width, height)
 
     values = (redis_utils.redis_range(redis_key)
-              if value_type == 'list' else redis_utils.redis_get_dict_values(redis_key))
+              if redis_type == 'list' else redis_utils.redis_get_dict(redis_key))
 
     if plot_type == 'bar':
        plot_bar(axs, values)

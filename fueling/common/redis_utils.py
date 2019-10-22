@@ -55,7 +55,7 @@ def get_redis_instance():
     if not connection_pool:
         logging.error('redis connection pool not available.')
         return None
-    return redis.Redis(connection_pool)
+    return redis.Redis(connection_pool=connection_pool)
 
 
 def redis_type(redis_key):
