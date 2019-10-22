@@ -29,7 +29,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 if [ -z "${FUEL_CLIENT_IMAGE}" ]; then
-  FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718"
+  FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20191022_1411"
 fi
 
 if [ "${IN_CLIENT_DOCKER}" != "true" ]; then

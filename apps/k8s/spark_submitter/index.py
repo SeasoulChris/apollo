@@ -37,7 +37,7 @@ class SparkSubmitJob(flask_restful.Resource):
             if flags.FLAGS.debug:
                 self.spark_submit(job_id, arg)
             else:
-                threading.Thread(lambda: self.spark_submit(job_id, arg)).start()
+                threading.Thread(target=self.spark_submit, args=(job_id, arg)).start()
             return 'Job %s submitted!' % job_id, HTTPStatus.OK
         except json_format.ParseError:
             return 'SparkSubmitArg format error!', HTTPStatus.BAD_REQUEST

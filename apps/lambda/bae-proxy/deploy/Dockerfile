@@ -1,4 +1,4 @@
-FROM apolloauto/fuel-client:20190821_1718
+FROM apolloauto/fuel-client:20191022_1411
 
 ENV IN_CLIENT_DOCKER=true
 ENV SUBMITTER=bae-proxy

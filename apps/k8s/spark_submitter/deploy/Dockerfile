@@ -22,11 +22,11 @@ RUN python3 -m pip install \
         Flask-RESTful \
         protobuf \
         pymongo \
-        pyspark==2.4.0
+        pyspark==2.4.4
 
 # Resource.
 # Get dest path with `python -c "import site; print(site.getsitepackages()[0])"`
-COPY apps/k8s/spark_submitter/deploy/spark-kubernetes_2.11-2.4.0.jar \
+COPY apps/k8s/spark_submitter/deploy/spark-kubernetes_2.11-2.4.4.jar \
     /usr/local/lib/python3.6/dist-packages/pyspark/jars/
 COPY kube.config /root/.kube/config
 
