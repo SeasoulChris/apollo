@@ -24,5 +24,5 @@ ${SUBMITTER} --env ${ENV} ${JOB} --job_id="${JOB_ID}" --input_data_path="${INPUT
 # Job: map generate local_map
 JOB="fueling/map/generate_local_map.py"
 ENV="fuel-py27-cyber"
-${SUBMITTER} --env ${ENV} ${JOB} --job_id="${JOB_ID}" --input_data_path="${INPUT_DATA_PATH}"
-            --ZONE_ID=$ZONE_ID --LIDAR_TYPE="$LIDAR_TYPE"
+${SUBMITTER} --env ${ENV} ${JOB} --job_id="${JOB_ID}" --input_data_path="${INPUT_DATA_PATH}" \
+        --zone_id=$ZONE_ID --lidar_type="$LIDAR_TYPE"

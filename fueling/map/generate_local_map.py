@@ -35,8 +35,8 @@ class LocalMapPipeline(BasePipeline):
         dir_prefix = '/apollo/data/bag'
         src_prefix = os.path.join(dir_prefix, 'data')
         dst_prefix = os.path.join(dir_prefix, 'result')
-        zone_id = 50
-        lidar_type = 'velodyne16'
+        zone_id = self.FLAGS.get('zone_id')
+        lidar_type = self.FLAGS.get('lidar_type')
         if not os.path.exists(dst_prefix):
             logging.warning('src_prefix path: {} not exists'.format(dst_prefix))
             file_utils.makedirs(dst_prefix)
@@ -71,6 +71,9 @@ class LocalMapPipeline(BasePipeline):
             file_utils.makedirs(target_dir)
         else:
             logging.info("target_dir: {}".format(target_dir))
+        path = '/apollo/bazel-bin/modules/localization/msf/local_tool/data_extraction/compare_poses'
+        if not os.path.exists(path):
+            logging.warning('compare_poses: {} not exists'.format(path))
 
         receivers = email_utils.SIMPlEHDMAP_TEAM
         partner = partners.get(job_owner)

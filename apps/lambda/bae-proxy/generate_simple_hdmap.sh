@@ -32,4 +32,4 @@ ${SUBMITER} --env ${ENV} --workers 5 --cpu 5 --memory 60g ${JOB} ${PY_ARGS} \
 JOB="fueling/map/generate_local_map.py"
 ENV="fuel-py27-cyber"
 ${SUBMITER} --env ${ENV} --workers 5 --cpu 5 --memory 60g ${JOB} ${PY_ARGS} \
-    --input_data_path="${INPUT_DATA_PATH}" --ZONE_ID=$ZONE_ID --LIDAR_TYPE="$LIDAR_TYPE"
+    --input_data_path="${INPUT_DATA_PATH}" --zone_id=$ZONE_ID --lidar_type="$LIDAR_TYPE"
