@@ -2,7 +2,7 @@ name: fuel-py36
 dependencies:
   # Core
   - python = 3.6
-  - pyspark = 2.4.0
+  - pyspark = 2.4.4  # Align with pre-built server image.
 
   # Language tools
   - cython
