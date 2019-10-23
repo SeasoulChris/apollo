@@ -170,7 +170,7 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
     logging.info('Validation loss: {}.'.format(valid_loss))
     logging.info('Validation accuracy = {}'.format(np.mean(loss_info_history)))
 
-    return valid_loss
+    return np.mean(loss_info_history)
 
 
 def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,

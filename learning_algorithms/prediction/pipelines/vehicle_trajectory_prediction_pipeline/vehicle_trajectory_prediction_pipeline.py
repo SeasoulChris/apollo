@@ -5,6 +5,7 @@ import argparse
 import torch
 
 from fueling.common.learning.train_utils import *
+from fueling.common.learning.loss_utils import *
 from learning_algorithms.prediction.datasets.apollo_vehicle_trajectory_dataset.apollo_vehicle_trajectory_dataset import *
 from learning_algorithms.prediction.models.lane_attention_trajectory_model.lane_attention_trajectory_model import *
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
@@ -12,9 +13,9 @@ from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model
 
 if __name__ == "__main__":
     # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
-    IMG_MODE = False
+    IMG_MODE = True
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
@@ -28,18 +29,18 @@ if __name__ == "__main__":
     train_dataset = ApolloVehicleTrajectoryDataset(args.train_file, IMG_MODE)
     valid_dataset = ApolloVehicleTrajectoryDataset(args.valid_file, IMG_MODE)
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
-                                               num_workers=8, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=64, shuffle=True,
-                                               num_workers=8, drop_last=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
+                                               num_workers=16, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=32, shuffle=True,
+                                               num_workers=16, drop_last=True)
 
     # Model and training setup
-    model = SelfLSTM()
+    # model = SelfLSTM()
     # model = SemanticMapSelfLSTMModel(30, 20)
-    # model = SemanticMapSocialAttentionModel(30, 20)
-
-    loss = ProbablisticTrajectoryLoss()
     # loss = SemanticMapLoss()
+
+    model = SemanticMapSelfLSTMModelWithUncertainty(30, 20)
+    loss = TrajectoryBivariateGaussianLoss()
 
     # print(model)
     learning_rate = 3e-4
