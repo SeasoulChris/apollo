@@ -7,8 +7,9 @@ from os import listdir
 from os.path import isfile, join
 
 from fueling.planning.stability.libs import grade_table_utils
-from fueling.planning.stability.libs.imu_angular_velocity import ImuAngularVelocity
-from fueling.planning.stability.libs.imu_speed_jerk import ImuSpeedJerk
+from fueling.planning.stability.libs.planning_av import PlanningAv
+from fueling.planning.stability.libs.planning_jerk import PlanningJerk
+from fueling.planning.stability.libs.planning_lat_jerk import PlanningLatJerk
 from fueling.planning.stability.libs.record_reader import RecordItemReader
 
 
@@ -49,24 +50,24 @@ class Grader:
 
     def grade_record_file(self, folder, fn):
         reader = RecordItemReader(folder + "/" + fn)
-        lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
-        lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
-        av_processor = ImuAngularVelocity()
+        planning_lat_jerk_processor = PlanningLatJerk()
+        planning_lon_jerk_processor = PlanningJerk()
+        planning_av_processor = PlanningAv()
 
         score_list = []
-        topics = ["/apollo/localization/pose"]
+        topics = ["/apollo/planning"]
         for data in reader.read(topics):
-            if "pose" in data:
-                pose_data = data["pose"]
-                av_processor.add(pose_data)
-                lat_jerk_processor.add(pose_data)
-                lon_jerk_processor.add(pose_data)
+            if "planning" in data:
+                planning_pb = data["planning"]
+                planning_lat_jerk_processor.add(planning_pb)
+                planning_lon_jerk_processor.add(planning_pb)
+                planning_av_processor.add(planning_pb)
 
-                av = av_processor.get_latest_corrected_angular_velocity()
+                av = planning_av_processor.get_lastest_av()
                 if av is None:
                     continue
-                lat_jerk = lat_jerk_processor.get_lastest_jerk()
-                lon_jerk = lon_jerk_processor.get_lastest_jerk()
+                lat_jerk = planning_lat_jerk_processor.get_lastest_lat_jerk()
+                lon_jerk = planning_lon_jerk_processor.get_lastest_derived_jerk()
                 if lat_jerk is not None and lon_jerk is not None:
                     score = self.grade(lat_jerk, lon_jerk, av)
                     score_list.append(score)
