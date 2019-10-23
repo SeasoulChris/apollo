@@ -252,8 +252,8 @@ def plot_line(axs, redis_key, values):
 def plot_pie(plt, axs, values):
     """Plot pie"""
     labels = values.keys()
-    sizes = [round(float(values[x]), 1) for x in x_values] 
-    explode = [0, 0, 0, 0]
+    sizes = [round(float(values[x]), 1) for x in values] 
+    explode = [0] * len(sizes)
     axs.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
     plt.axis('equal')
 

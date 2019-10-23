@@ -106,12 +106,7 @@ input[type=text]:focus {
   $(document).ready(function() {
     // TODO(Longtao): Fix the hardcoded URL later, which BTW is not working for socketio anyways
     var serverAddr = 'http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy';
-    var socket = io.connect(serverAddr);
-    var connected = false;
     var timeInterval = 5000;
-    var connectChannel = 'connect';
-    var clientRequestChannel = 'client_request_metrics_event';
-    var serverResponseChannel = 'server_response_metrics';
     var metricsAjax = '/metrics_ajax';
 
     var metrics = {{ metrics | tojson | safe }};
@@ -119,29 +114,14 @@ input[type=text]:focus {
   
     buildTable(metrics, serverAddr);
 
-    socket.on(connectChannel, function() {
-      connected = true;
-      socket.emit(clientRequestChannel, {'prefix': prefix});
-    });
-
     setInterval(function() {
         if ($('#theModal').is(':visible')) {
           return;
         }
-        if (connected) {
-          socket.emit(clientRequestChannel, {'prefix': prefix});
-        }
-        else {
-          // TODO(Longtao): remove this when socketio connection issue is fixed
-          $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
-            buildTable(serverMetrics, serverAddr);
-          });
-        }
+        $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
+          buildTable(serverMetrics, serverAddr);
+        });
       }, timeInterval);
-
-    socket.on(serverResponseChannel, function(serverMetrics) {
-      buildTable(serverMetrics, serverAddr);
-    });
 
   });
 </script>
