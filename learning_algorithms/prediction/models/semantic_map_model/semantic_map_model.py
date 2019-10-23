@@ -125,11 +125,9 @@ class SemanticMapSelfLSTMModel(nn.Module):
                  cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapSelfLSTMModel, self).__init__()
         self.cnn = cnn_net(pretrained=pretrained)
-        self.cnn_out_size = self.cnn.fc.in_features
+        self.cnn_out_size = 1000
         self.pred_len = pred_len
         self.observation_len = observation_len
-        fc_in_features = self.cnn.fc.in_features
-        self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         for param in self.cnn.parameters():
             param.requires_grad = True
 
