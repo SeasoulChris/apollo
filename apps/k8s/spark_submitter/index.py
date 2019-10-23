@@ -116,6 +116,8 @@ class SparkSubmitJob(flask_restful.Resource):
 
         # Construct arguments.
         confs = (
+            # Overall
+            '--conf spark.kubernetes.memoryOverheadFactor=0 '
             # Docker
             '--conf spark.kubernetes.container.image.pullPolicy=Always '
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '

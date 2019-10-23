@@ -80,6 +80,7 @@ class IndexRecords(BasePipeline):
                 continue
             record_meta = RecordParser.Parse(record)
             if record_meta is None:
+                redis_utils.redis_incr(self.metrics_prefix + 'broken_records')
                 continue
             doc = Mongo.pb_to_doc(record_meta)
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
