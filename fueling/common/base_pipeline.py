@@ -88,6 +88,7 @@ class BasePipeline(object):
             self.run_test()
         else:
             self.run_prod()
+        self.context().stop()
 
     def main(self):
         app.run(self.__main__)
