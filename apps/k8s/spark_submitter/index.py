@@ -7,6 +7,7 @@ import base64
 import json
 import os
 import site
+import subprocess
 import threading
 
 from absl import app
@@ -28,6 +29,12 @@ flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 
 class SparkSubmitJob(flask_restful.Resource):
     """SparkSubmit job restful service"""
+    def get(self):
+        """Get job status."""
+        job_id = flask.request.args.get('job_id')
+        cmd = "kubectl get pods | grep %s | grep driver | awk '{print $3}'" % job_id
+        status = (subprocess.check_output(cmd, shell=True) or b'Preparing').decode('ASCII').strip()
+        return json.dumps({'status': status}), HTTPStatus.OK
 
     def post(self):
         """Accept user request, verify and process."""
@@ -38,9 +45,9 @@ class SparkSubmitJob(flask_restful.Resource):
                 self.spark_submit(job_id, arg)
             else:
                 threading.Thread(target=self.spark_submit, args=(job_id, arg)).start()
-            return 'Job %s submitted!' % job_id, HTTPStatus.OK
+            return json.dumps({'job_id': job_id}), HTTPStatus.OK
         except json_format.ParseError:
-            return 'SparkSubmitArg format error!', HTTPStatus.BAD_REQUEST
+            return json.dumps({'error': 'Bad SparkSubmitArg format!'}), HTTPStatus.BAD_REQUEST
 
     @staticmethod
     def spark_submit(job_id, arg):

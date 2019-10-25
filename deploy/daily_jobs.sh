@@ -19,13 +19,13 @@ set -e
 # Job: Daily jobs.
 JOB="fueling/daily_jobs.py"
 ./tools/submit-job-to-k8s.py --worker_count=10 --worker_memory=24 --worker_disk=800 \
-    --entrypoint=${JOB} \
+    --entrypoint=${JOB} --wait \
     --job_flags="--generate_small_records_of_last_n_days=30 --index_records_of_last_n_days=30"
 
 # Job: Control profiling.
 JOB="fueling/profiling/control_profiling_metrics.py"
-./tools/submit-job-to-k8s.py --worker_count=10 --worker_memory=24 --entrypoint=${JOB}
+./tools/submit-job-to-k8s.py --worker_count=10 --worker_memory=24 --entrypoint=${JOB} --wait
 JOB="fueling/profiling/control_profiling_visualization.py"
 CONDA_ENV="fuel-py36"
 ./tools/submit-job-to-k8s.py --worker_count=10 --worker_memory=24 --conda_env=${CONDA_ENV} \
-    --entrypoint=${JOB}
+    --entrypoint=${JOB} --wait

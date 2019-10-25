@@ -7,6 +7,7 @@ import io
 import json
 import os
 import sys
+import time
 import zipfile
 
 from absl import app
@@ -31,6 +32,7 @@ flags.DEFINE_string('fueling_zip_path', None, 'Fueling zip path.')
 flags.DEFINE_string('job_flags', None, 'Job flags.')
 flags.DEFINE_boolean('with_learning_algorithms', False,
                      'Whether to package the learning_algorithms folder.')
+flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 
 # Worker.
 flags.DEFINE_integer('worker_count', 1, 'Worker count.')
@@ -57,6 +59,7 @@ def get_user():
         'running_role': flags.FLAGS.running_role or getpass.getuser(),
     }
 
+
 def get_env():
     return {
         'conda_env': flags.FLAGS.conda_env,
@@ -64,6 +67,7 @@ def get_env():
         'node_selector': flags.FLAGS.node_selector,
         'log_verbosity': flags.FLAGS.log_verbosity,
     }
+
 
 def get_job():
     job = {
@@ -91,6 +95,7 @@ def get_job():
             job['fueling_zip_base64'] = base64.b64encode(fueling_zip).decode('ascii')
     return job
 
+
 def get_worker():
     return {
         'count': flags.FLAGS.worker_count,
@@ -98,6 +103,7 @@ def get_worker():
         'memory': flags.FLAGS.worker_memory,
         'disk': flags.FLAGS.worker_disk,
     }
+
 
 def get_partner():
     partner = {'partner_storage_writable': flags.FLAGS.partner_storage_writable}
@@ -114,6 +120,7 @@ def get_partner():
             'storage_access_key': flags.FLAGS.partner_azure_storage_access_key,
             'blob_container': flags.FLAGS.partner_azure_blob_container,
         }
+
 
 def main(argv):
     """Tool entrypoint."""
@@ -137,21 +144,42 @@ def main(argv):
     # SUBMITTER = 'http://localhost:8000/'  # If you use local submitter.
 
     KUBE_PROXY_HOST = 'usa-data.baidu.com'
-    if os.system("ping -c 1 %s > /dev/null 2>&1 " % KUBE_PROXY_HOST) != 0:
-        logging.fatal('Cannot reach k8s proxy %s. Are you running in intranet?')
-        sys.exit(1)
-
-    KUBE_PROXY = 'http://%s:8001' % KUBE_PROXY_HOST
+    KUBE_PROXY = 'http://{}:8001'.format(KUBE_PROXY_HOST)
     SERVICE = 'http:spark-submitter-service:8000'
     SUBMITTER = '{}/api/v1/namespaces/default/services/{}/proxy/'.format(KUBE_PROXY, SERVICE)
+
+    if os.system('ping -c 1 {} > /dev/null 2>&1'.format(KUBE_PROXY_HOST)) != 0:
+        logging.fatal('Cannot reach k8s proxy {}. Are you running in intranet?'.format(KUBE_PROXY_HOST))
+        sys.exit(1)
     res = requests.post(SUBMITTER, json=json.dumps(arg))
+    payload = json.loads(res.json() or '{}')
 
     # Process result.
-    if res.ok:
-        logging.info('Job submitted!')
-        # TODO: logging.info('View your task at {}')
-    else:
-        logging.error('Failed to submit job: HTTP {}, {}'.format(res.status_code, res.reason))
+    if not res.ok:
+        logging.error('Failed to submit job: HTTP {}, {}'.format(
+            res.status_code, payload.get('error')))
+        return
+
+    job_id = payload.get('job_id')
+    logging.info('Job {} submitted!'.format(job_id))
+    # TODO: logging.info('View your task at ...')
+
+    # Wait until job finishes.
+    if not flags.FLAGS.wait:
+        return
+    WAIT_INTERVAL_SECONDS = 3
+    END_STATUS = {'Completed', 'Error'}
+    job_status = None
+    while job_status not in END_STATUS:
+        time.sleep(WAIT_INTERVAL_SECONDS)
+        res = requests.get(SUBMITTER, params={'job_id': job_id})
+        if res.ok:
+            job_status = json.loads(res.json() or '{}').get('status')
+            logging.info('Job is {}...'.format(job_status))
+        else:
+            logging.error('Failed to get job status.')
+    if job_status == 'Error':
+        sys.exit(1)
 
 
 if __name__ == '__main__':
