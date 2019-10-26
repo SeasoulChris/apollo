@@ -3,7 +3,6 @@
 import sys
 import math
 import threading
-import gflags
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -13,6 +12,7 @@ from modules.localization.proto import localization_pb2
 from fueling.planning.stability.grading import stability_grader
 from fueling.planning.stability.libs.imu_angular_velocity import ImuAngularVelocity
 from fueling.planning.stability.libs.imu_speed_jerk import ImuSpeedJerk
+
 
 LAT_STABILITY_SCORE = []
 LAT_STABILITY_TIME = []
@@ -24,8 +24,7 @@ begin_t = None
 last_t = None
 lock = threading.Lock()
 
-FLAGS = gflags.FLAGS
-gflags.DEFINE_integer("data_length", 500, "Planning plot data length")
+PLOT_DATA_LENGTH = 500
 
 lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
 lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
@@ -83,10 +82,10 @@ def listener():
 
 
 def compensate(data_list):
-    comp_data = [0] * FLAGS.data_length
+    comp_data = [0] * PLOT_DATA_LENGTH
     comp_data.extend(data_list)
-    if len(comp_data) > FLAGS.data_length:
-        comp_data = comp_data[-FLAGS.data_length:]
+    if len(comp_data) > PLOT_DATA_LENGTH:
+        comp_data = comp_data[-PLOT_DATA_LENGTH:]
     return comp_data
 
 
@@ -107,7 +106,7 @@ if __name__ == '__main__':
     argv = FLAGS(sys.argv)
     listener()
     fig, ax = plt.subplots()
-    X = range(FLAGS.data_length)
+    X = range(PLOT_DATA_LENGTH)
     Xs = [i * -1 for i in X]
     Xs.sort()
     lat_stability_line, = ax.plot(

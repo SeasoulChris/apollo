@@ -19,8 +19,7 @@ set -e
 # Job: Daily jobs.
 JOB="fueling/daily_jobs.py"
 ./tools/submit-job-to-k8s.py --worker_count=10 --worker_memory=24 --worker_disk=800 \
-    --entrypoint=${JOB} --wait \
-    --job_flags="--generate_small_records_of_last_n_days=30 --index_records_of_last_n_days=30"
+    --entrypoint=${JOB} --wait
 
 # Job: Control profiling.
 JOB="fueling/profiling/control_profiling_metrics.py"

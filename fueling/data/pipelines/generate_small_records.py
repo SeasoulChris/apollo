@@ -17,8 +17,7 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 
-flags.DEFINE_integer('generate_small_records_of_last_n_days', 0,
-                     'Generate small records of last n days.')
+PROCESS_LAST_N_DAYS = 30
 
 
 # Config.
@@ -98,14 +97,15 @@ class GenerateSmallRecords(BasePipeline):
             # RDD(src_dir), which has COMPLETE marker.
             src_files.filter(is_marker).map(os.path.dirname)
         ).cache()
-        # RDD(todo_record)
-        todo_records = src_dir_and_records.values()
 
-        # Filter by date.
-        n_days = self.FLAGS.get('generate_small_records_of_last_n_days')
-        if n_days:
+        # RDD(todo_record)
+        todo_records = (
+            # PairRDD(src_dir, src_record)
+            src_dir_and_records
+            # RDD(todo_record)
+            .values()
             # RDD(todo_record), which is like /mnt/bos/small-records/2019/2019-09-09/...
-            todo_records = todo_records.filter(record_utils.filter_last_n_days_records(n_days))
+            .filter(record_utils.filter_last_n_days_records(PROCESS_LAST_N_DAYS)))
 
         if SKIP_EXISTING_DST_RECORDS:
             todo_records = todo_records.subtract(

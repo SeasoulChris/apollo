@@ -17,7 +17,7 @@ import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 
 
-flags.DEFINE_integer('index_records_of_last_n_days', 0, 'Index records of last n days.')
+PROCESS_LAST_N_DAYS = 30
 
 
 class IndexRecords(BasePipeline):
@@ -44,11 +44,9 @@ class IndexRecords(BasePipeline):
             self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
 
-        # Filter by date.
-        n_days = self.FLAGS.get('index_records_of_last_n_days')
-        if n_days:
-            # RDD(record_path), which is like /mnt/bos/small-records/2019/2019-09-09/...
-            records_rdd = records_rdd.filter(record_utils.filter_last_n_days_records(n_days))
+        # RDD(record_path), which is like /mnt/bos/small-records/2019/2019-09-09/...
+        records_rdd = records_rdd.filter(
+            record_utils.filter_last_n_days_records(PROCESS_LAST_N_DAYS))
 
         self.process(records_rdd, email_utils.DATA_TEAM)
 
