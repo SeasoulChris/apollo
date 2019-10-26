@@ -96,7 +96,7 @@ class DumpFeatureProto(BasePipeline):
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
         record_dirs = list(record_dirs)
-        collection = Mongo(self.FLAGS).record_collection()
+        collection = Mongo().record_collection()
         dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         dir_map_list = []
         for record_dir, map_name in dir_map_dict.items():
