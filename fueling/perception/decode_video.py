@@ -23,6 +23,9 @@ import fueling.common.redis_utils as redis_utils
 import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 
+
+REDIS_KEY_PREFIX_DECODE_VIDEO = 'decode_video'
+
 # The compressed channels that have videos we need to decode
 IMAGE_FRONT_6MM_CHANNEL = '/apollo/sensor/camera/front_6mm/image/compressed'
 IMAGE_FRONT_12MM_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
@@ -193,8 +196,7 @@ def decode_videos(message_meta):
         return
     target_dir, topic = target_topic
 
-    task_key = '{}:{}'.format(
-        redis_utils.REDIS_KEY_PREFIX_DECODE_VIDEO, os.path.basename(target_dir))
+    task_key = '{}:{}'.format(REDIS_KEY_PREFIX_DECODE_VIDEO, os.path.basename(target_dir))
     redis_utils.redis_incr(task_key)
 
     image_dir = os.path.join(target_dir, 'images')

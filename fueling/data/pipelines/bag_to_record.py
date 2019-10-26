@@ -15,9 +15,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 
-flags.DEFINE_boolean('skip_existing_record', True, 'Skip existing record.')
-
-# Constants.
 BINARY = '/apollo/bazel-bin/modules/data/tools/rosbag_to_record/rosbag_to_record'
 MARKER = 'COMPLETE'
 
@@ -61,11 +58,9 @@ class BagToRecord(BasePipeline):
                  (os.path.join(dir_bag[0], self.bag_name_to_record_name(dir_bag[1])),
                   dir_bag[1])))
 
-        if self.FLAGS.get('skip_existing_record'):
-            logging.info('Skip existing record.')
-            # PairRDD(dst_record, src_bag)
-            record_to_bag = spark_op.substract_keys(
-                record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record')))
+        # PairRDD(dst_record, src_bag)
+        record_to_bag = spark_op.substract_keys(
+            record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record')))
         self.run(record_to_bag.map(spark_op.swap_kv))
 
     def run(self, bag_to_record):

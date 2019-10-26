@@ -9,16 +9,14 @@ Requirements: redis-py
 import os
 import time
 
-from absl import flags
 import redis
 
 import fueling.common.logging as logging
 
-REDIS_KEY_PREFIX_DECODE_VIDEO = 'decode_video'
 
-flags.DEFINE_string('redis_server_ip', '192.168.48.6', 'Internal Redis server IP address.')
-flags.DEFINE_integer('redis_port', 6379, 'Redis service port.')
-flags.DEFINE_integer('redis_timeout', 5, 'Timeout exception will throw after configured seconds.')
+SERVER_HOST = '192.168.48.6'
+SERVER_PORT = 6379
+TIMEOUT = 5
 
 
 class RedisConnectionPool(object):
@@ -30,19 +28,16 @@ class RedisConnectionPool(object):
     connection_pool = None
 
     @staticmethod
-    def get_connection_pool(flags_dict=None):
+    def get_connection_pool():
         if not RedisConnectionPool.connection_pool:
             redis_passwd = os.environ.get('REDIS_PASSWD')
             if not redis_passwd:
                 return None
-            if not flags_dict:
-                flags_dict = flags.FLAGS.flag_values_dict()
             RedisConnectionPool.connection_pool = redis.ConnectionPool(
-                host=flags_dict['redis_server_ip'],
-                port=flags_dict['redis_port'],
+                host=SERVER_HOST, port=SERVER_PORT,
                 password=redis_passwd,
                 decode_responses=True,
-                socket_connect_timeout=flags_dict['redis_timeout'])
+                socket_connect_timeout=TIMEOUT)
         return RedisConnectionPool.connection_pool
 
 

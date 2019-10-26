@@ -17,7 +17,9 @@ from job_processor import JobProcessor
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
-flags.DEFINE_integer('workers', 5, 'Workers to run.')
+
+
+WORKERS = 5
 
 
 class FuelJob(flask_restful.Resource):
@@ -49,7 +51,7 @@ class ProductionApp(gunicorn.app.base.BaseApplication):
     def load_config(self):
         """Load config."""
         self.cfg.set('bind', '0.0.0.0:443')
-        self.cfg.set('workers', flags.FLAGS.workers)
+        self.cfg.set('workers', WORKERS)
         self.cfg.set('proc_name', 'BaeProxy')
         self.cfg.set('certfile', 'ssl_keys/cert.pem')
         self.cfg.set('keyfile', 'ssl_keys/key.pem')
