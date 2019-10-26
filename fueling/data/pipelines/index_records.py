@@ -12,6 +12,7 @@ from fueling.data.record_parser import RecordParser
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 
@@ -82,7 +83,7 @@ class IndexRecords(BasePipeline):
             if record_meta is None:
                 redis_utils.redis_incr(self.metrics_prefix + 'broken_records')
                 continue
-            doc = Mongo.pb_to_doc(record_meta)
+            doc = proto_utils.pb_to_dict(record_meta)
             collection.replace_one({'path': doc['path']}, doc, upsert=True)
             new_indexed.append(record)
             logging.info('Indexed record {}'.format(record))

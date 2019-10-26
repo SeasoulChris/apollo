@@ -15,6 +15,7 @@ import pymongo
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
 from res_map_lookup import MapLookup
@@ -69,7 +70,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     }
     task_records = collections.defaultdict(list)
     for doc in mongo_col.find(query, kFields):
-        task_records[doc['dir']].append(Mongo.doc_to_pb(doc, RecordMeta()))
+        task_records[doc['dir']].append(proto_utils.dict_to_pb(doc, RecordMeta()))
     tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
@@ -81,7 +82,7 @@ def task_hdl(task_path):
     """Handler of the task detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'task')
     docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
-    records = [Mongo.doc_to_pb(doc, RecordMeta()) for doc in docs]
+    records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
     return flask.render_template('record.tpl', record=task, sub_records=records)
 
@@ -108,7 +109,7 @@ def records_hdl(page_idx=1):
     docs = Mongo().record_collection().find({}, kFields)
     page_count = (docs.count() + G.page_size - 1) // G.page_size
     offset = G.page_size * (page_idx - 1)
-    records = [Mongo.doc_to_pb(doc, RecordMeta())
+    records = [proto_utils.dict_to_pb(doc, RecordMeta())
                for doc in docs.sort(kSort).skip(offset).limit(G.page_size)]
     return flask.render_template(
         'records.tpl', page_count=page_count, current_page=page_idx, records=records)
@@ -119,7 +120,7 @@ def record_hdl(record_path):
     """Handler of the record detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'record')
     doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
-    record = Mongo.doc_to_pb(doc, RecordMeta())
+    record = proto_utils.dict_to_pb(doc, RecordMeta())
     return flask.render_template('record.tpl', record=record)
 
 

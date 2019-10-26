@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Protobuf utils."""
 
+import google.protobuf.json_format as json_format
 import google.protobuf.text_format as text_format
 
 
@@ -34,3 +35,13 @@ def get_pb_from_file(filename, pb_value):
             print('Error: Cannot parse {} as binary or text proto'.format(filename))
 
     return None
+
+
+def pb_to_dict(pb, include_default_value_fields=False, preserve_proto_field_name=True):
+    """Convert proto to dict."""
+    return json_format.MessageToDict(pb, include_default_value_fields, preserve_proto_field_name)
+
+
+def dict_to_pb(input_dict, pb_value, ignore_unknown_fields=True):
+    """Convert dict to proto."""
+    return json_format.ParseDict(input_dict, pb_value, ignore_unknown_fields)

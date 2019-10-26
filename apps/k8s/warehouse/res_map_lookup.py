@@ -4,6 +4,7 @@ from flask_restful import Resource
 
 from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
 
@@ -29,7 +30,7 @@ class MapLookup(Resource):
 
         result = []
         for doc in Mongo().record_collection().find(query, fields):
-            record_meta = Mongo.doc_to_pb(doc, RecordMeta())
+            record_meta = proto_utils.dict_to_pb(doc, RecordMeta())
             points = record_meta.stat.driving_path
             min_diff = 1.0
             min_index = -1

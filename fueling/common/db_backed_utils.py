@@ -11,8 +11,8 @@ DB-backed utils.
    handle missing data by yourself.
 """
 
-from fueling.common.mongo_utils import Mongo
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.proto_utils as proto_utils
 
 
 def lookup_existing_records(records, collection):
@@ -27,7 +27,7 @@ def lookup_header_for_records(records, collection):
     query = {'path': {'$in': records}}
     fields = {'path': 1, 'header': 1}
     docs = collection.find(query, fields)
-    return {doc['path']: Mongo.doc_to_pb(doc, RecordMeta()).header for doc in docs}
+    return {doc['path']: proto_utils.dict_to_pb(doc, RecordMeta()).header for doc in docs}
 
 
 def lookup_stat_for_records(records, collection):
@@ -35,7 +35,7 @@ def lookup_stat_for_records(records, collection):
     query = {'path': {'$in': records}}
     fields = {'path': 1, 'stat': 1}
     docs = collection.find(query, fields)
-    return {doc['path']: Mongo.doc_to_pb(doc, RecordMeta()).stat for doc in docs}
+    return {doc['path']: proto_utils.dict_to_pb(doc, RecordMeta()).stat for doc in docs}
 
 
 def lookup_map_for_dirs(record_dirs, collection):
