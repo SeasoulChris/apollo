@@ -25,14 +25,12 @@ def index():
 
 @app.route('/submit_job', methods=['GET', 'POST'])
 def submit_job():
-    # request_json = request.get_json()
-    # print(request.get_json())
 
     if request.json['bos']:
         storage = {'bos': {
             'bucket': request.json['bucket'],
             'access_key': request.json['access_key'],
-            'access_secret': request.json['access_secret']}
+            'secret_key': request.json['access_secret']}
         }
     elif request.json['blob']:
         storage = {'blob': {
@@ -52,18 +50,18 @@ def submit_job():
 
     print("parsed data is {}".format(request_json))
 
-    response = requests.post('https://apollofuel0.bceapp.com:8443', json=request_json,
-                             verify='../bae-proxy/ssl_keys/cert.pem')
-    response = json.loads(response.json()) if response.json() else {}
+    request_post = requests.post('https://apollofuel0.bceapp.com:8443', json=request_json,
+                                 verify='../bae-proxy/ssl_keys/cert.pem')
+    response = json.loads(request_post.json()) if request_post.json() else {}
     print('raw response: {}'.format(response))
-    if response.ok:
+    if request_post.ok:
         logging.info(response.get('message') or 'OK')
     else:
         logging.error(
             response.get('message') or
-            'Request failed with HTTP code {}'.format(response.status_code))
+            'Request failed with HTTP code {}'.format(request_post.status_code))
 
-    return "success"
+    return response
 
 
 def main(argv):

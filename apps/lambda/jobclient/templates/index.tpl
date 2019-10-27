@@ -226,11 +226,10 @@
                 url: "http://localhost:5000/submit_job",
                 data: JSON.stringify(data),
                 contentType: 'application/json;charset=UTF-8',
-                success: function (text) {
-                    if (text == "success") {
-                        console.log(text);
-                        window.location = "htp://localhost:5000"
-                    }
+                success: function (response) {
+                    console.log(response);
+                    //window.alert(response.message);
+                    window.location = "http://localhost:5000"
                 }
             });
         }
