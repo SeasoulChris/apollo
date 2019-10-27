@@ -50,8 +50,8 @@ def submit_job():
 
     print("parsed data is {}".format(request_json))
 
-    request_post = requests.post('https://apollofuel0.bceapp.com:8443', json=request_json,
-                                 verify='../bae-proxy/ssl_keys/cert.pem')
+    request_post = requests.post(flags.FLAGS.fuel_proxy, json=request_json,
+                                 verify=flags.FLAGS.certfile)
     response = json.loads(request_post.json()) if request_post.json() else {}
     print('raw response: {}'.format(response))
     if request_post.ok:

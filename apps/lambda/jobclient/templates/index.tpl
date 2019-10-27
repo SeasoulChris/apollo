@@ -228,7 +228,7 @@
                 contentType: 'application/json;charset=UTF-8',
                 success: function (response) {
                     console.log(response);
-                    //window.alert(response.message);
+                    window.alert(response.message);
                     window.location = "http://localhost:5000"
                 }
             });
