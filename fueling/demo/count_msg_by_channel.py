@@ -6,7 +6,7 @@ Prerequisite:
     python rosbag_helper.py demo_3.5.record
 
 Run with:
-    ./tools/submit-job-to-k8s.py --entrypoint=fueling/demo/count_msg_by_channel.py
+    ./tools/submit-job-to-k8s.py --main=fueling/demo/count_msg_by_channel.py
 """
 #!/usr/bin/env python
 

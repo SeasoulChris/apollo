@@ -20,25 +20,25 @@ import requests
 flags.DEFINE_string('running_role', None, 'Running as another role instead of the job submitter.')
 
 # Env.
-flags.DEFINE_string('docker_image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
-flags.DEFINE_string('conda_env', 'fuel-py27-cyber', 'Conda env name.')
+flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
+flags.DEFINE_string('env', 'fuel-py27-cyber', 'Conda env name.')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
 
 # Job.
-flags.DEFINE_string('entrypoint', None, 'Job entrypoint.')
+flags.DEFINE_string('main', None, 'Job entrypoint.')
 flags.DEFINE_string('fueling_zip_path', None, 'Fueling zip path.')
-flags.DEFINE_string('job_flags', None, 'Job flags.')
+flags.DEFINE_string('flags', None, 'Job flags.')
 flags.DEFINE_boolean('with_learning_algorithms', False,
                      'Whether to package the learning_algorithms folder.')
 flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 
 # Worker.
-flags.DEFINE_integer('worker_count', 1, 'Worker count.')
-flags.DEFINE_integer('worker_cpu', 1, 'Worker CPU cores.')
-flags.DEFINE_integer('worker_memory', 12, 'Worker memory in GB.')
-flags.DEFINE_integer('worker_disk', 20, 'Worker disk in GB.')
+flags.DEFINE_integer('workers', 1, 'Worker count.')
+flags.DEFINE_integer('cpu', 1, 'Worker CPU cores.')
+flags.DEFINE_integer('memory', 12, 'Worker memory in GB.')
+flags.DEFINE_integer('disk', 20, 'Worker disk in GB.')
 
 # Partner.
 flags.DEFINE_boolean('partner_storage_writable', False, 'Mount partner storage as writable.')
@@ -62,8 +62,8 @@ def get_user():
 
 def get_env():
     return {
-        'conda_env': flags.FLAGS.conda_env,
-        'docker_image': flags.FLAGS.docker_image,
+        'conda_env': flags.FLAGS.env,
+        'docker_image': flags.FLAGS.image,
         'node_selector': flags.FLAGS.node_selector,
         'log_verbosity': flags.FLAGS.log_verbosity,
     }
@@ -71,8 +71,8 @@ def get_env():
 
 def get_job():
     job = {
-        'entrypoint': flags.FLAGS.entrypoint,
-        'flags': flags.FLAGS.job_flags,
+        'entrypoint': flags.FLAGS.main,
+        'flags': flags.FLAGS.flags,
     }
     if flags.FLAGS.fueling_zip_path:
         # Use pre-packaged code in cloud.
@@ -98,10 +98,10 @@ def get_job():
 
 def get_worker():
     return {
-        'count': flags.FLAGS.worker_count,
-        'cpu': flags.FLAGS.worker_cpu,
-        'memory': flags.FLAGS.worker_memory,
-        'disk': flags.FLAGS.worker_disk,
+        'count': flags.FLAGS.workers,
+        'cpu': flags.FLAGS.cpu,
+        'memory': flags.FLAGS.memory,
+        'disk': flags.FLAGS.disk,
     }
 
 

@@ -7,8 +7,7 @@
 CMD="autopep8 --in-place --max-line-length 100 -a"
 
 if [ -z $(which autopep8) ]; then
-  # Install autopep8 for Ubuntu and MacOS.
-  sudo apt-get install -y python-autopep8 || brew install autopep8
+  sudo pip install autopep8
 fi
 
 function FixDir {

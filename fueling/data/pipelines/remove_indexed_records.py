@@ -3,8 +3,8 @@
 Remove indexed records by prefix.
 Usage:
 
-./tools/submit-job-to-k8s.py --entrypoint=fueling/data/pipelines/remove_indexed_records.py \
-    --job_flags="--prefix_of_indexed_records_to_remove=/mnt/bos/..."
+./tools/submit-job-to-k8s.py --main=fueling/data/pipelines/remove_indexed_records.py \
+    --flags="--prefix_of_indexed_records_to_remove=/mnt/bos/..."
 """
 
 from absl import flags

@@ -3,8 +3,8 @@
 A simple demo PySpark job with GPU training.
 
 Run with:
-    ./tools/submit-job-to-k8s.py --node_selector=GPU --conda_env=fuel-py36 \
-        --entrypoint=fueling/demo/gpu_training_with_pytorch.py
+    ./tools/submit-job-to-k8s.py --main=fueling/demo/gpu_training_with_pytorch.py \
+        --node_selector=GPU --env=fuel-py36
 """
 
 # Standard packages

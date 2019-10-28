@@ -133,7 +133,7 @@ If you are pretty familliar with the infra, please:
    ./tools/submit-job-to-k8s.py --help
 
    # Start a cloud job.
-   ./tools/submit-job-to-k8s.py --entrypoint=/path/to/spark/job.py [other options]
+   ./tools/submit-job-to-k8s.py --main=/path/to/spark/job.py [other options]
 
    # Find your job and access its Spark UI.
    ./tools/access-service-on-k8s.sh 4040
