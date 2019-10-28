@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import json
 import flask
@@ -9,13 +10,9 @@ from absl import logging
 from absl import app as absl_app
 
 app = flask.Flask(__name__)
-FLASK_DEBUG = 1
 
 flags.DEFINE_string('fuel_proxy', 'https://apollofuel0.bceapp.com:8443',
                     'Endpoint of Apollo-Fuel proxy.')
-
-flags.DEFINE_string(
-    'certfile', '../bae-proxy/ssl_keys/cert.pem', 'certfication file')
 
 
 @app.route('/')
@@ -48,10 +45,8 @@ def submit_job():
 
     request_json = json.dumps(request_dict)
 
-    print("parsed data is {}".format(request_json))
-
     request_post = requests.post(flags.FLAGS.fuel_proxy, json=request_json,
-                                 verify=flags.FLAGS.certfile)
+                                 verify='../bae-proxy/ssl_keys/cert.pem')
     response = json.loads(request_post.json()) if request_post.json() else {}
     print('raw response: {}'.format(response))
     if request_post.ok:
@@ -65,7 +60,7 @@ def submit_job():
 
 
 def main(argv):
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
 
 
 if __name__ == '__main__':
