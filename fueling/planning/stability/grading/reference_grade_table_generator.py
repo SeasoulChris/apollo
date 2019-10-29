@@ -115,7 +115,7 @@ if __name__ == "__main__":
         generator.process_folder(folders[i])
     generator.grade_table_normalization()
 
-    with open("grade_table.json", 'w') as f:
+    with open("reference_grade_table.json", 'w') as f:
         data_str = json.dumps(generator.grade_table_data)
         data_str = data_str.replace("\"-0.0\"", "\"0.0\"")
         f.write(data_str)

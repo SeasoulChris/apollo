@@ -9,7 +9,7 @@ import matplotlib.animation as animation
 from cyber_py import cyber
 from modules.localization.proto import localization_pb2
 
-from fueling.planning.stability.grading import stability_grader
+from fueling.planning.stability.grading import imu_stability_grader
 from fueling.planning.stability.libs.imu_angular_velocity import ImuAngularVelocity
 from fueling.planning.stability.libs.imu_speed_jerk import ImuSpeedJerk
 
@@ -29,7 +29,7 @@ PLOT_DATA_LENGTH = 500
 lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
 lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
 av_processor = ImuAngularVelocity()
-grader = stability_grader.Grader()
+grader = imu_stability_grader.Grader()
 
 
 def callback(pose_pb):
