@@ -52,8 +52,7 @@ if [ -z "${JOB_FILE}" ]; then
   exit 1
 fi
 
-source /usr/local/miniconda/bin/activate ${CONDA_ENV}
-source /apollo/scripts/apollo_base.sh
+source tools/source-env.sh ${CONDA_ENV}
 export LOG_VERBOSITY=${LOG_VERBOSITY}
 
 spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@ | grep -v ' INFO  '
