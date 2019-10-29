@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import json
+
 import flask
 from flask import request
-import requests
-
 from absl import flags
 from absl import logging
 from absl import app as absl_app
+import requests
 
 app = flask.Flask(__name__)
 
