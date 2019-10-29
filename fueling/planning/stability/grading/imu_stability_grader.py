@@ -18,7 +18,7 @@ class Grader:
         self.key_lon_jerk_av = grade_table_utils.KEY_LON_JERK_AV_SCORE
 
         table_path = os.path.dirname(os.path.realpath(__file__))
-        table_path_file = table_path + "/" + "reference_grade_table.json"
+        table_path_file = os.path.join(table_path, "reference_grade_table.json")
 
         with open(table_path_file, 'r') as f:
             self.grade_table = json.loads(f.read())

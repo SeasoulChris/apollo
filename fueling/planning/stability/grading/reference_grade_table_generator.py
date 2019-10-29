@@ -101,6 +101,7 @@ class GradeTableGenerator:
 
 if __name__ == "__main__":
     import sys
+    import os
     import json
     import matplotlib.pyplot as plt
     from mpl_toolkits import mplot3d
@@ -115,7 +116,10 @@ if __name__ == "__main__":
         generator.process_folder(folders[i])
     generator.grade_table_normalization()
 
-    with open("reference_grade_table.json", 'w') as f:
+    table_path = os.path.dirname(os.path.realpath(__file__))
+    table_path_file = os.path.join(table_path, "reference_grade_table.json")
+
+    with open(table_path_file, 'w') as f:
         data_str = json.dumps(generator.grade_table_data)
         data_str = data_str.replace("\"-0.0\"", "\"0.0\"")
         f.write(data_str)
