@@ -217,11 +217,11 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
                 pred_input = torch.cat((ht.view(N, -1), img_embedding), 1)
                 curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
                 pred_traj[:, t - self.observation_len, :] = curr_obs_pos_step
-                curr_obs_pos = curr_obs_pos + curr_obs_pos_step
+                curr_obs_pos = curr_obs_pos + curr_obs_pos_step[:, 0:2]
                 pred_traj[:, t - self.observation_len, 0:2] = curr_obs_pos
 
 
-            disp_embedding = self.disp_embed(curr_obs_pos_step.clone()).view(N, 1, -1)
+            disp_embedding = self.disp_embed(curr_obs_pos_step[:, 0:2]).view(N, 1, -1)
 
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
