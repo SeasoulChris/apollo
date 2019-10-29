@@ -185,7 +185,7 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
             param.requires_grad = True
 
         self.disp_embed = torch.nn.Sequential(
-            nn.Linear(5, embed_size),
+            nn.Linear(2, embed_size),
             nn.ReLU(),
         )
 
@@ -206,18 +206,18 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        curr_obs_pos_step = torch.zeros((N, 5), device = img.device)
+        curr_obs_pos_step = torch.zeros((N, 2), device = img.device)
         pred_traj = torch.zeros((N, self.pred_len, 5), device = img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
-                curr_obs_pos_step[:, 0:2] = obs_pos_step[:, t, :].float()
+                curr_obs_pos_step = obs_pos_step[:, t, :].float()
                 curr_obs_pos = obs_pos[:, t, :].float()
             else:
                 pred_input = torch.cat((ht.view(N, -1), img_embedding), 1)
                 curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
                 pred_traj[:, t - self.observation_len, :] = curr_obs_pos_step
-                curr_obs_pos = curr_obs_pos + curr_obs_pos_step[:, 0:2]
+                curr_obs_pos = curr_obs_pos + curr_obs_pos_step
                 pred_traj[:, t - self.observation_len, 0:2] = curr_obs_pos
 
 
