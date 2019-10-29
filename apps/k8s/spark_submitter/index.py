@@ -30,6 +30,7 @@ flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 
 class SparkSubmitJob(flask_restful.Resource):
     """SparkSubmit job restful service"""
+
     def get(self):
         """Get job status."""
         job_id = flask.request.args.get('job_id')

@@ -79,7 +79,7 @@ class MergeLabels(BasePipeline):
             merge_dicts(src_dir, dict_name='visited_lane_segment')
             logging.info('Successfuly processed {}'.format(src_dir))
             return 1
-        except:
+        except BaseException:
             logging.error('Failed to process {}'.format(src_dir))
         return 0
 

@@ -670,7 +670,7 @@ def highlight_gradings(task, grading_file):
                             'lateral_err_peak',
                             'heading_err_peak',
                             'total_time_peak']
-    
+
     std_scores = []
     peak_scores = []
     std_samples = []
@@ -693,7 +693,7 @@ def highlight_gradings(task, grading_file):
                     for idx in range(len(gradings)):
                         if not gradings[idx] in (highlight_std_items + highlight_peak_items):
                             continue
-   
+
                         # Store the mapping of task->score in Redis
                         cur_redis_prefix = '{}.{}'.format(control_redis_prefix, gradings[idx])
                         cur_redis_mapping = {os.path.basename(task): gradings[idx + 1].strip('%')}

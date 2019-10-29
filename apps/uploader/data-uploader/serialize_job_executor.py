@@ -8,8 +8,10 @@ from executor import Executor
 import global_settings as settings
 import utils as utils
 
+
 class SerializeJobTaskExecutor(Executor):
     """Execute syncing."""
+
     def __init__(self, src_dst_map):
         Executor.__init__(self, src_dst_map)
         self._bos_root = 'bos:/apollo-platform'

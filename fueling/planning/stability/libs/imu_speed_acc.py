@@ -57,7 +57,6 @@ if __name__ == "__main__":
     from os.path import isfile, join
     from fueling.planning.stability.libs.record_reader import RecordItemReader
 
-
     def plot_freq(x, y, ax, color):
         Fs = len(y) / float(x[-1] - x[0])
         n = len(y)
@@ -69,7 +68,6 @@ if __name__ == "__main__":
         Y = np.fft.fft(y) / n
         Y = Y[range(int(n / 2))]
         ax.plot(frq, abs(Y), c=color)
-
 
     folders = sys.argv[1:]
     fig, ax = plt.subplots(2, 2)
@@ -84,8 +82,7 @@ if __name__ == "__main__":
         folder = folders[i]
         color = colors[i % len(colors)]
         marker = markers[i % len(markers)]
-        fns = [f for f in listdir(folder) if isfile(join(folder, f))]
-        fns.sort()
+        fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
             reader = RecordItemReader(folder + "/" + fn)
             lat_acc_processor = ImuSpeedAcc(is_lateral=True)

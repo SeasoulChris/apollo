@@ -189,18 +189,18 @@ def plot_metrics(data):
         'list': ['bar', 'dot'],
         'hash': ['line', 'pie'],
     }
-   
+
     redis_type = redis_utils.redis_type(redis_key)
     if redis_type not in redis_type_2_plot_type:
         logging.error('do not support display for given redis type: {}'.format(redis_type))
         return
-  
+
     if not plot_type:
         plot_type = redis_type_2_plot_type[redis_type][0]
     elif plot_type not in redis_type_2_plot_type[redis_type]:
         logging.error('do not support display for given plot type: {}'.format(plot_type))
         return
-   
+
     width, height = 10, 5.5
     plt.style.use('ggplot')
     fig, axs = plt.subplots(1, 1)
@@ -210,13 +210,13 @@ def plot_metrics(data):
               if redis_type == 'list' else redis_utils.redis_get_dict(redis_key))
 
     if plot_type == 'bar':
-       plot_bar(axs, values)
+        plot_bar(axs, values)
     elif plot_type == 'dot':
-       plot_dot(axs, values)
+        plot_dot(axs, values)
     elif plot_type == 'pie':
-       plot_pie(plt, axs, values)
+        plot_pie(plt, axs, values)
     elif plot_type == 'line':
-       plot_line(axs, redis_key, values)
+        plot_line(axs, redis_key, values)
 
     plt.tight_layout()
     html = mpld3.fig_to_html(fig)
@@ -252,7 +252,7 @@ def plot_line(axs, redis_key, values):
 def plot_pie(plt, axs, values):
     """Plot pie"""
     labels = values.keys()
-    sizes = [round(float(values[x]), 1) for x in values] 
+    sizes = [round(float(values[x]), 1) for x in values]
     explode = [0] * len(sizes)
     axs.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
     plt.axis('equal')

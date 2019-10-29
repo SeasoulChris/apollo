@@ -19,14 +19,14 @@ class ImuSpeed:
         self.timestamp_list.append(timestamp_sec)
         if self.is_lateral:
             speed = -1 * location_est.pose.linear_velocity.x \
-                    * math.sin(location_est.pose.heading) + \
-                    location_est.pose.linear_velocity.y * \
-                    math.cos(location_est.pose.heading)
+                * math.sin(location_est.pose.heading) + \
+                location_est.pose.linear_velocity.y * \
+                math.cos(location_est.pose.heading)
         else:
             speed = location_est.pose.linear_velocity.x \
-                    * math.cos(location_est.pose.heading) + \
-                    location_est.pose.linear_velocity.y * \
-                    math.sin(location_est.pose.heading)
+                * math.cos(location_est.pose.heading) + \
+                location_est.pose.linear_velocity.y * \
+                math.sin(location_est.pose.heading)
         self.speed_list.append(speed)
 
     def get_speed_list(self):

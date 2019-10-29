@@ -55,18 +55,18 @@ def test_gp(args, dataset, GaussianProcess):
         for i in range(len(input_data)):
             logging.debug("Input Dim {}".format(input_data[i: i + 1].size()))
             logging.debug("Label Dim {}".format(gt_data[i].size()))
-            predicted_mean, predicted_var = gp_model(input_data[i : i + 1])
+            predicted_mean, predicted_var = gp_model(input_data[i: i + 1])
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
                                                       predicted_mean[1]]).unsqueeze(0)), 0)
             logging.info("predicted mean:{}".format(predicted_mean))
             logging.info("predicted variance:{}".format(predicted_var))
             logging.info("ground-truth residual error:{}".format(gt_data[i]))
-        
-        #TODO(all): Debug 'Cannot insert a Tensor that requires grad as a constant.' Error
+
+        # TODO(all): Debug 'Cannot insert a Tensor that requires grad as a constant.' Error
         gp_model.eval()
         # traced_script_module = torch.jit.trace(gp_model, input_data[0 : 1].detach())
-        traced_script_module = pyro.poutine.trace(gp_model).get_trace(input_data[0 : 1])
+        traced_script_module = pyro.poutine.trace(gp_model).get_trace(input_data[0: 1])
         # AttributeError: 'Trace' object has no attribute 'save'
         traced_script_module.save(os.path.join(args.eval_result_path, "gp_model.pt"))
         # AttributeError: 'GaussianProcess' object has no attribute 'save'

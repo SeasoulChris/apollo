@@ -9,8 +9,10 @@ from listener import Status
 import global_settings as settings
 import utils as utils
 
+
 class SerializeJobTaskListener(Listener):
     """SerializeJob listener that listens to file system"""
+
     def __init__(self):
         Listener.__init__(self)
         conf = utils.load_yaml_settings('conf/uploader_conf.yaml')
@@ -69,7 +71,7 @@ class SerializeJobTaskListener(Listener):
             if not os.path.exists(os.path.join(record_dir_in_data_path, 'COMPLETE')):
                 return False
         return True
-    
+
     def _task_eligible(self, task_path):
         """Check whether task is eligible"""
         check_pattern = '_apollo_sensor_camera_front_6mm_image_compressed'
@@ -87,8 +89,7 @@ class SerializeJobTaskListener(Listener):
     def _record_to_stream_path(self, record_path, root_dir, data_path):
         """Convert absolute path to the corresponding stream path"""
         if record_path.startswith(root_dir):
-            relative_path = record_path.replace(root_dir+'/', '', 1).strip()
+            relative_path = record_path.replace(root_dir + '/', '', 1).strip()
         else:
             relative_path = record_path.strip('/ \n')
         return os.path.join(data_path, relative_path)
-

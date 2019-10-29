@@ -9,6 +9,7 @@ import os
 import time
 import utils as utils
 
+
 class Executor(object):
     """Execute syncing."""
     # Static namedtuple defination
@@ -32,7 +33,9 @@ class Executor(object):
         ProcessingStat = namedtuple('ProcessingStat',
                                     ['Source', 'Files', 'Size', 'Destination', 'Estimate'])
         content = []
-        total_size = 0.0; total_files = 0; total_time = 0
+        total_size = 0.0
+        total_files = 0
+        total_time = 0
         for statistic in self._statistics:
             content.append(ProcessingStat(
                 Source=statistic.Source,
@@ -52,12 +55,13 @@ class Executor(object):
             Estimate=utils.get_readable_time(total_time)
         ))
         return content
-        
+
     def get_stastic_after_executing(self):
         """Return statistics after executing"""
         CompleteStat = namedtuple('CompleteStat', ['Source', 'Destination', 'Speed', 'Time'])
         content = []
-        total_size = 0.0; total_time = 0
+        total_size = 0.0
+        total_time = 0
         for statistic in self._statistics:
             content.append(CompleteStat(
                 Source=statistic.Source,
@@ -82,7 +86,7 @@ class Executor(object):
             logger.log(error_msg)
             settings.set_param(
                 task_id,
-                settings.get_param(task_id)._replace(ErrorCode=settings.ErrorCode.NO_CONTENT, 
+                settings.get_param(task_id)._replace(ErrorCode=settings.ErrorCode.NO_CONTENT,
                                                      ErrorMsg=error_msg))
             return
         self.before_sync_all(task_id, logger)
@@ -112,7 +116,7 @@ class Executor(object):
         self.after_sync_all(task_id, logger)
         settings.set_param(
             task_id, settings.get_param(task_id)._replace(ErrorCode=settings.ErrorCode.SUCCESS))
-    
+
     def before_sync_all(self, task_id, logger):
         """Run any possible commands for preparations before sync everything"""
         raise Exception('before_sync_all is Not Implemented for base class')
@@ -123,8 +127,8 @@ class Executor(object):
 
     def after_sync_one(self, src, dst, logger):
         """Run any possible commands for closure after sync each single target"""
-        raise Exception('after_sync_one is Not Implemented for base class')       
-    
+        raise Exception('after_sync_one is Not Implemented for base class')
+
     def after_sync_all(self, task_id, logger):
         """Run any possible commands for closure after sync everything"""
         # Notify Serialize_Records job

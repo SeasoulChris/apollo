@@ -59,7 +59,7 @@ class Yolov3Training(BasePipeline):
                 engine.step(data)
         makedirs(MODEL_OUTPUT_PATH)
         shutil.copyfile("/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py",
-                os.path.join(MODEL_OUTPUT_PATH, "config.py"))
+                        os.path.join(MODEL_OUTPUT_PATH, "config.py"))
         data.foreach(_executor)
 
 

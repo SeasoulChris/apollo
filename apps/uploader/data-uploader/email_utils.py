@@ -7,21 +7,26 @@ from email.mime.text import MIMEText
 import os
 import smtplib
 
+
 def send_email_info(title, content, logger, receivers=None):
     """Send email with normal information"""
     send_email(title, 'blue', content, logger, receivers)
+
 
 def send_email_warn(title, content, logger, receivers=None):
     """Send email with warning information"""
     send_email(title, 'yellow', content, logger, receivers)
 
+
 def send_email_complete(title, content, logger, receivers=None):
     """Send email with complete information"""
     send_email(title, 'black', content, logger, receivers)
 
+
 def send_email_error(title, content, logger, receivers=None):
     """Send email with error information"""
     send_email(title, 'red', content, logger, receivers)
+
 
 def send_email(title, title_color, content, logger, receivers=None):
     """
@@ -47,8 +52,8 @@ def send_email(title, title_color, content, logger, receivers=None):
     """
     host = 'email.baidu.com'
     port = 25
-    from_addr='apollo-uploading@baidu.com'
-    mail_passwd='j8FuBMQGWf'
+    from_addr = 'apollo-uploading@baidu.com'
+    mail_passwd = 'j8FuBMQGWf'
     subject = 'Apollo data uploading status'
     smtp = smtplib.SMTP()
     try:
@@ -67,6 +72,7 @@ def send_email(title, title_color, content, logger, receivers=None):
     message['Subject'] = subject
     smtp.sendmail(from_addr, to_addrs, message.as_string())
     smtp.quit()
+
 
 def get_html_content(title, title_color, content):
     """Help function to constuct HTML message body"""
@@ -105,7 +111,7 @@ def get_html_content(title, title_color, content):
               <h1 align="center" style="color:%(title_color)s;">%(title)s</h1>
               <table border="1" cellspacing="0" align="center">
                   %(header)s
-                <tbody> 
+                <tbody>
                   %(html_content)s
                 </tbody>
               </table>
@@ -113,8 +119,8 @@ def get_html_content(title, title_color, content):
             </body>
             </html>
         ''' % {
-            'title_color': title_color,
-            'title': title,
-            'header': header or '',
-            'html_content': html_content
-        }
+        'title_color': title_color,
+        'title': title,
+        'header': header or '',
+        'html_content': html_content
+    }

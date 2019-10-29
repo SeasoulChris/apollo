@@ -27,7 +27,7 @@ def touch(file_path):
         if not os.path.exists(file_path):
             logging.info('Touch file: {}'.format(file_path))
             os.mknod(file_path)
-    except:
+    except BaseException:
         logging.error('Failed to touch file ' + file_path)
         raise
     return file_path

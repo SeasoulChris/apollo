@@ -3,7 +3,7 @@
 import numpy as np
 
 
-#=============== NETWORK SETTINGS ================
+# =============== NETWORK SETTINGS ================
 Input_width = 1440  # must be multiple of 32
 Input_height = 800  # must be multiple of 32
 original_width = 1920
@@ -17,7 +17,7 @@ num_angle_bins = 1
 bin_overlap_fraction = 1 / 6   # The final overlap will be 2*bin_overlap_fraction
 num_output_layers = 5 + 4 * num_classes + 3 * num_angle_bins
 
-#=================== DATA FILTER SETTINGS =====================
+# =================== DATA FILTER SETTINGS =====================
 truncation_rate = 10    # objs with truncation rate higher than this will be filtered out
 occlusion = 5           # objs with occlusion code higher than this will be filtered out
 
@@ -27,11 +27,11 @@ anchors = np.array([[284, 181], [426, 340], [734, 545],  # [116,90], [156, 198],
 anchor_mask = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
 num_anchor_boxes_per_scale = len(anchor_mask[0])
 
-#========= NMS SETTINGS ============
+# ========= NMS SETTINGS ============
 nms_confidence_threshold = 0.9
 nms_iou_threshold = 0.3
 
-#===================== TRAINING AND INFERENCE SETTINGS ======================
+# ===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True  # Set to False for training and True for inference
 inference_only_2d = True
 

@@ -3,6 +3,7 @@
 
 import fueling.common.redis_utils as redis_utils
 
+
 def get_metrics_by_prefix(prefix):
     max_count, range_left, range_right = 50, 0, 10
     # ignore some testing keys
@@ -31,4 +32,4 @@ def get_metrics_by_prefix(prefix):
         max_count -= 1
         if max_count <= 0:
             break
-    return metrics 
+    return metrics

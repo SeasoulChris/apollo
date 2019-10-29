@@ -8,13 +8,15 @@ import colored_glog as glog
 
 import utils as utils
 
+
 class Logger(object):
     """Logging util. Each task has its own log file therefore logger."""
+
     def __init__(self, cur_folder, log_file_name):
         log_folder = os.path.join(cur_folder, 'log')
         utils.makedirs(log_folder)
         self._log_file_path = os.path.join(log_folder, log_file_name)
-    
+
     def log(self, message):
         """Do the logging"""
         glog.info(message)

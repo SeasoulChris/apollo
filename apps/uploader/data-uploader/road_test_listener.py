@@ -14,8 +14,10 @@ from sqliter import SqlLite3_DB
 import global_settings as settings
 import utils as utils
 
+
 class RoadTestTaskListener(Listener):
     """RoadTest listener that listens to SqlLite DB"""
+
     def __init__(self):
         Listener.__init__(self)
         SqlLite3_DB.create_table()
@@ -50,7 +52,7 @@ class RoadTestTaskListener(Listener):
         logger.log('all src dirs: {}'.format(src_dirs))
         src_dst_map = self._get_src_dst_map(src_dirs)
         for src in src_dst_map:
-            collect_map.append(((src, len(os.listdir(src)), utils.get_size(src)), 
+            collect_map.append(((src, len(os.listdir(src)), utils.get_size(src)),
                                 src_dst_map[src]))
         logger.log('all jobs: {}'.format(collect_map))
         return collect_map
@@ -74,7 +76,7 @@ class RoadTestTaskListener(Listener):
             if len(records) > 0:
                 if len(records) < len(all_files):
                     self._move_rests_to_other(src,
-                        [f for f in all_files if f not in records], other_folder)
+                                              [f for f in all_files if f not in records], other_folder)
                     src_dst_map[other_folder] = 'public-test/{}'.format(
                         self._get_other_dst(other_folder, other_pattern))
                 src_dst_map[src] = 'public-test/{}'.format(self._get_record_dst(records[0]))
@@ -83,7 +85,7 @@ class RoadTestTaskListener(Listener):
             if len(bags) > 0:
                 if len(bags) < len(all_files):
                     self._move_rests_to_other(src,
-                        [f for f in all_files if f not in bags], other_folder)
+                                              [f for f in all_files if f not in bags], other_folder)
                     src_dst_map[other_folder] = 'public-test/{}'.format(
                         self._get_other_dst(other_folder, other_pattern))
                 src_dst_map[src] = 'stale-rosbags/{}'.format(
@@ -111,7 +113,7 @@ class RoadTestTaskListener(Listener):
     def _get_bag_dst(self, src, folder_pattern, first_file_in_src):
         """Get dst for bags folder"""
         # bag format: 2019-04-18-15-18-27_39.bag
-        # path format: 2019-04-18-16-26-25 
+        # path format: 2019-04-18-16-26-25
         match_target = first_file_in_src
         if re.match(folder_pattern, src):
             match_target = src
@@ -125,7 +127,7 @@ class RoadTestTaskListener(Listener):
 
     def _get_other_dst(self, src, other_pattern):
         """Get dst for others folder"""
-        se = re.search(other_pattern, src, re.M|re.I)
+        se = re.search(other_pattern, src, re.M | re.I)
         YYYY = se.group(1)
         MM = se.group(2)
         DD = se.group(3)

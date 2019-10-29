@@ -24,6 +24,7 @@ import utils as utils
 gflags.DEFINE_boolean('hotfix', False, 'Whether run hotfix mode')
 gflags.DEFINE_boolean('email_to_all', True, 'Whether send email to everyone')
 
+
 def thread_main(task, listener):
     """Main thread that connects each part and get the job done"""
     # Get src->dst list from listener's collector. src will be a tuple (src_dir, files_num, size)
@@ -58,6 +59,7 @@ def thread_main(task, listener):
                                      receivers)
     logger.log('Main Thread, All Done with task: {}'.format(task_id))
 
+
 def running_context(task_id, task, listener, logger):
     """Wrapper to get executor, receivers and other running context"""
     receivers = utils.get_recipients(gflags.FLAGS.email_to_all)
@@ -69,6 +71,7 @@ def running_context(task_id, task, listener, logger):
         executor = SerializeJobTaskExecutor(listener.collect(task_id, task, logger))
     return receivers, title_object, executor
 
+
 def main():
     """Entrance."""
     gflags.FLAGS(sys.argv)
@@ -78,7 +81,7 @@ def main():
     listeners = [
         RoadTestTaskListener(),
     ]
-    
+
     heart_beat = 0
     while True:
         for listener in listeners:
@@ -90,8 +93,9 @@ def main():
                 task = listener.get_available_task()
         if heart_beat == 0:
             print ('sleeping 10 times, each for 30 secs...')
-        heart_beat = (heart_beat+1)%10
+        heart_beat = (heart_beat + 1) % 10
         time.sleep(30)
+
 
 if __name__ == '__main__':
     main()

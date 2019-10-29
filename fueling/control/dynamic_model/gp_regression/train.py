@@ -37,7 +37,7 @@ class DeepEncodingNet(nn.Module):
             nn.Conv1d(200, 100, u_dim, stride=3),  # 9
             nn.ReLU(),
             nn.Conv1d(100, 100, u_dim, stride=3),  # 2
-            nn.ReLU()      
+            nn.ReLU()
         )
         self.fc = nn.Linear(200, kernel_dim)
 

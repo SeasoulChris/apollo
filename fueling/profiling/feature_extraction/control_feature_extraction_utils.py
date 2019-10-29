@@ -37,7 +37,8 @@ def verify_vehicle_controller(task):
     logging.info('{} messages for record file {}'.format(
         len(messages), record_file))
     vehicle_message = get_message_by_topic(messages, record_utils.HMI_STATUS_CHANNEL)
-    if vehicle_message and hasattr(record_utils.message_to_proto(vehicle_message), 'current_vehicle'):
+    if vehicle_message and hasattr(
+            record_utils.message_to_proto(vehicle_message), 'current_vehicle'):
         vehicle_type = record_utils.message_to_proto(vehicle_message).current_vehicle
     else:
         logging.info('no vehicle messages found in task {} record {}; \
@@ -46,7 +47,7 @@ def verify_vehicle_controller(task):
     control_message = get_message_by_topic(messages, record_utils.CONTROL_CHANNEL)
     if control_message and hasattr(record_utils.message_to_proto(control_message), 'debug'):
         if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug') and
-            hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
+                hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
             controller_type = "Lon_Lat_Controller"
         elif hasattr(grecord_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
             controller_type = "MPC_Controller"
@@ -208,7 +209,7 @@ def extract_control_data_from_msg(msg):
     input_debug = getattr(getattr(msg_proto, 'debug', float('NaN')),
                           'input_debug', float('NaN'))
     if (hasattr(getattr(msg_proto, 'debug'), 'simple_lon_debug') and
-        hasattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')):
+            hasattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')):
         control_lon = msg_proto.debug.simple_lon_debug
         control_lat = msg_proto.debug.simple_lat_debug
         data_array = np.array([
@@ -352,9 +353,9 @@ def extract_localization_data_from_msg(msg):
         getattr(localization_header, 'sequence_num', float('NaN')),                    # 1
         # Features: "Pose" category
         getattr(getattr(localization_pose, 'position',
-                float('NaN')), 'x', float('NaN')),                                     # 2
+                        float('NaN')), 'x', float('NaN')),                             # 2
         getattr(getattr(localization_pose, 'position',
-                float('NaN')), 'y', float('NaN')),                                     # 3
+                        float('NaN')), 'y', float('NaN')),                             # 3
         getattr(localization_pose, 'heading', float('NaN'))                            # 4
     ])
     return data_array

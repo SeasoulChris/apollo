@@ -3,11 +3,13 @@
 """Integrate the leanring wheel odometry and UMU errors algorithm"""
 """and invoke the algorithm for kaist data"""
 
+
+
+
 import argparse
 import glob
 import os
 import pickle
-
 from liegroups.torch import SE3, SO3
 from scipy.signal import savgol_filter
 import numpy as np
@@ -15,12 +17,9 @@ import progressbar
 import pyro
 import pyro.contrib.gp as gp
 import torch
-
 from dataset import NCLTDataset, KAISTDataset
 from filter import KAISTFilter, NCLTFilter
 from train import train_gp, GpOdoFog, GpImu, FNET, HNET
-
-
 def read_data_nclt(args):
     """Read the raw data in the NCLT format"""
 

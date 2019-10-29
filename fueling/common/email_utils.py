@@ -35,7 +35,7 @@ PREDICTION_TEAM = [
 
 SIMPlEHDMAP_TEAM = [
     'hukuang@baidu.com',
-    'v_panxuechao@baidu.com',    
+    'v_panxuechao@baidu.com',
     'v_wangxitong02@baidu.com',
 ]
 

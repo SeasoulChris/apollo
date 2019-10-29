@@ -168,7 +168,7 @@ def compute_loss(yolo_outputs, y_true, anchors, num_classes,
         object_mask_bool = K.cast(object_mask, 'bool')
 
         def loop_body(b, ignore_mask):
-            #(row, col, 3, 4), (row, col, 3) -> (?, 4)
+            # (row, col, 3, 4), (row, col, 3) -> (?, 4)
             true_box = tf.boolean_mask(y_true[l][b, ..., 0:4], object_mask_bool[b, ..., 0])
             # (cel_row, cel_col, anchors_per_box, ?)
             iou = box_IoU(pred_box[b], true_box)

@@ -226,7 +226,7 @@ class kitti_obj_cam_interaction(Camera):
         bbox_direction_on_xz = bbox_direction
         bbox_direction_on_xz[1] = 0
 
-        #============= car direction ==============
+        # ============= car direction ==============
         angle = obj.ry
         h, w, l = obj.h, obj.w, obj.l
         R = self.rotation_matrix(y=angle)  # (3, 3)
@@ -235,7 +235,7 @@ class kitti_obj_cam_interaction(Camera):
         car_direction_on_xz = car_direction
         car_direction_on_xz[1] = 0
 
-        #============= compute angle ==============
+        # ============= compute angle ==============
         cos = np.dot(bbox_direction_on_xz.transpose(), car_direction_on_xz) /\
             (np.linalg.norm(bbox_direction_on_xz, ord=2) *
              np.linalg.norm(car_direction_on_xz, ord=2))

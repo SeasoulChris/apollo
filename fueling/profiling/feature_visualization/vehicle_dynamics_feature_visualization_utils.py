@@ -155,7 +155,7 @@ def plot_h5_features_time(data_rdd):
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                  .format(dir_data))
+                        .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
@@ -192,10 +192,10 @@ def plot_h5_features_time(data_rdd):
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             if feature is "steering" or feature is "acceleration":
-                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
+                data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] - bias_y) / slope_y
             else:
                 data_plot_y0 = np.maximum(0, (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]
-                                                 - bias_y) / slope_y)
+                                              - bias_y) / slope_y)
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
@@ -247,7 +247,7 @@ def plot_h5_features_time(data_rdd):
                 data_plot_y0 = data_plot_y0 * var_polyfit[0] + var_polyfit[1]
             else:
                 data_plot_y0[data_alivezone_y0] = np.maximum(0.0, data_plot_y0[data_alivezone_y0]
-                                                                  * var_polyfit[0] + var_polyfit[1])
+                                                             * var_polyfit[0] + var_polyfit[1])
             bias_y += slope_y * var_polyfit[1]
             slope_y *= var_polyfit[0]
             text_addon = "cmd-act scaling slope = {0:.3f}, \ncmd-act scaling bias = {1:.3f}, \
@@ -270,14 +270,14 @@ def plot_h5_features_freq(data_rdd):
     dir_data, data = data_rdd
     if len(data) == 0:
         logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
-                  .format(dir_data))
+                        .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
     if grading_dir:
         vehicle_controller = os.path.basename(grading_dir[0]).replace(
             'control_performance_grading.txt', '')
         pdffile = os.path.join(dir_data, vehicle_controller +
-                                         'control_data_visualization_frequency_domain.pdf')
+                               'control_data_visualization_frequency_domain.pdf')
     else:
         pdffile = os.path.join(dir_data, 'control_data_visualization_frequency_domain.pdf')
     with PdfPages(pdffile) as pdf:
@@ -298,7 +298,7 @@ def plot_h5_features_freq(data_rdd):
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
             data_plot_x1 = (data[:, DYNAMICS_FEATURE_IDX["chassis_timestamp_sec"]] -
                             data[0, DYNAMICS_FEATURE_IDX["timestamp_sec"]])
-            data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]]- bias_y) / slope_y
+            data_plot_y0 = (data[:, DYNAMICS_FEATURE_IDX[feature + "_cmd"]] - bias_y) / slope_y
             data_plot_y1 = data[:, DYNAMICS_FEATURE_IDX[feature]]
             data_alivezone_y0 = np.where(np.abs(data_plot_y0) > MIN_EPSILON)[0]
             plt.figure(figsize=(4, 4))

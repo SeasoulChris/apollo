@@ -33,6 +33,7 @@ LANE_WIDTH = 3.3
 flags.DEFINE_string('input_data_path', 'test/simplehdmap',
                     'simple hdmap input/output data path.')
 
+
 class MapGenSingleLine(BasePipeline):
 
     """map_gen_single_line pipeline."""
@@ -56,7 +57,7 @@ class MapGenSingleLine(BasePipeline):
     def run_prod(self):
         dir_prefix = self.FLAGS.get('input_data_path')
         job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')        
+        job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
 
         #src_prefix = 'simplehdmap/data'
@@ -68,14 +69,14 @@ class MapGenSingleLine(BasePipeline):
         object_storage = self.partner_object_storage() or bos_client
 
         origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
-        target_dir = object_storage.abs_path(origin_prefix)        
+        target_dir = object_storage.abs_path(origin_prefix)
 
         if not os.path.exists(target_dir):
             logging.warning('bos path: {} not exists'.format(target_dir))
             file_utils.makedirs(target_dir)
         else:
-            logging.info("target_prefix: {}".format(target_dir))  
-        
+            logging.info("target_prefix: {}".format(target_dir))
+
         source_dir = object_storage.abs_path(src_prefix)
 
         logging.info("source_prefix: {}".format(source_dir))
@@ -137,7 +138,7 @@ class MapGenSingleLine(BasePipeline):
         length = int(path.length)
 
         extra_roi_extension = 1.0
-        
+
         base_map_txt = os.path.join(self.dst_prefix, 'base_map.txt')
         logging.info("base_map_txt_path: {}".format(base_map_txt))
 

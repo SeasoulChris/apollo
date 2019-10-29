@@ -10,6 +10,7 @@ import os
 
 import colored_glog as glog
 
+
 class RulesChain(object):
     """Rules organizor"""
     # The static list of rules that will apply one by one
@@ -29,8 +30,10 @@ class RulesChain(object):
             glog.info('after rule: {}, left frames: {}'.format(rule.name, len(frames)))
         return frames
 
+
 class BaseRule(object):
     """Base class for rules"""
+
     def __init__(self, name):
         """Constructor"""
         self.name = name
@@ -40,8 +43,10 @@ class BaseRule(object):
         """Apply the rule"""
         raise Exception('{}::apply() not implemented for base class'.format(self.name))
 
+
 class EvenIntervalRule(BaseRule):
     """The rule to make frames as even as possible, for example one frame per 1 ms"""
+
     def __init__(self):
         """Constructor"""
         BaseRule.__init__(self, 'Even-Interval-Rule')
@@ -53,19 +58,21 @@ class EvenIntervalRule(BaseRule):
         """
         idx = 0
         filtered_frames = list()
-        frames_in_float = [float(os.path.basename(frame)[6:-5])/(10**9) for frame in frames]
+        frames_in_float = [float(os.path.basename(frame)[6:-5]) / (10**9) for frame in frames]
         while idx < len(frames_in_float):
             filtered_frames.append(frames[idx])
-            next_idx = idx+1
-            while next_idx+1 < len(frames_in_float) and \
-                (abs(self._interval - (frames_in_float[next_idx+1]-frames_in_float[idx])) < \
-                abs(self._interval - (frames_in_float[next_idx]-frames_in_float[idx]))):
+            next_idx = idx + 1
+            while next_idx + 1 < len(frames_in_float) and \
+                (abs(self._interval - (frames_in_float[next_idx + 1] - frames_in_float[idx])) <
+                 abs(self._interval - (frames_in_float[next_idx] - frames_in_float[idx]))):
                 next_idx += 1
             idx = next_idx
         return filtered_frames
 
+
 class MovingCarRule(BaseRule):
     """The rule to filter out the frames where vehicle is standing still, by using GPS info"""
+
     def __init__(self):
         """Constructor"""
         BaseRule.__init__(self, 'Moving-Car-Rule')
@@ -83,7 +90,8 @@ class MovingCarRule(BaseRule):
             ypos = float(next(gps_info for gps_info in gps_data if gps_info.find('"y":') != -1)
                          .split(':')[1].strip(', \n'))
             if self._pre_xpos and self._pre_ypos:
-                if math.sqrt((xpos-self._pre_xpos)**2 + (ypos-self._pre_ypos)**2) > self._distance:
+                if math.sqrt((xpos - self._pre_xpos)**2 +
+                             (ypos - self._pre_ypos)**2) > self._distance:
                     filtered_frames.append(frame)
             else:
                 filtered_frames.append(frame)
@@ -100,8 +108,10 @@ class MovingCarRule(BaseRule):
         with open(frame_file_path) as frame_file:
             return [next(frame_file) for x in range(lines_number)]
 
+
 class ExactBatchSizeRule(BaseRule):
     """The rule to get an exact number of frames per task"""
+
     def __init__(self):
         """Constructor"""
         BaseRule.__init__(self, 'Exact-BatchSize-Rule')
@@ -112,6 +122,7 @@ class ExactBatchSizeRule(BaseRule):
         if len(frames) < self._batch_size:
             return []
         return frames[:50]
+
 
 def form_chains():
     """Chain all the rules together"""

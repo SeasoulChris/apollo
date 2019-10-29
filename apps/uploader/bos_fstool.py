@@ -9,10 +9,12 @@ from Crypto.Cipher import DES
 
 import fueling.common.s3_utils as s3_utils
 
+
 def decrypt(ciber_text, passwd):
     """Decrypt a ciber text"""
     des = DES.new(passwd, DES.MODE_ECB)
     return des.decrypt(base64.b64decode(ciber_text))
+
 
 def get_aws_keys():
     """Validate keys by decrypting from cibered keys"""
@@ -20,6 +22,7 @@ def get_aws_keys():
     aws_ak = decrypt('5eJsLHCWBfNANHv57FBa1ADoeD/34zoVBjzK2eIGUqc=', passwd)
     aws_sk = decrypt('qZU1bTVmWihKuYRfOoOm7yofoTzkW+t9TgvWoxr64zA=', passwd)
     return aws_ak, aws_sk
+
 
 def main():
     """Main function"""
@@ -35,6 +38,7 @@ def main():
 
     bucket = 'apollo-platform'
     s3_utils.upload_file(bucket, opts.src, opts.dst, get_aws_keys())
+
 
 if __name__ == '__main__':
     main()

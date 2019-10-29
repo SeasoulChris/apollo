@@ -8,6 +8,7 @@ import os
 import global_settings as settings
 import utils as utils
 
+
 class Status(Enum):
     """Status enum."""
     UNKNOWN = 1
@@ -15,8 +16,10 @@ class Status(Enum):
     PROCESSING = 3
     DONE = 4
 
+
 class Listener(object):
     """Base class of listeners."""
+
     def __init__(self):
         # Map of tasks and their status
         self._tasks = {}
@@ -35,6 +38,7 @@ class Listener(object):
     def collect(self, task_id, task, logger):
         """Collector, collects the src and dst as well as their related information"""
         raise Exception('collect is Not Implemented for base class')
+
 
 class DiskManagement(object):
     @staticmethod
@@ -64,12 +68,12 @@ class DiskManagement(object):
     def unmount(disk_label):
         """Unmount the disk"""
         os.system('umount -l {}'.format(disk_label))
-    
+
     @staticmethod
     def is_mounted(disk_label):
         """Check if already mounted"""
         valid_mount_cols = 6
-        mount_info = utils.check_output('lsblk | grep {}'.format(disk_label.split('/')[-1 :]))
+        mount_info = utils.check_output('lsblk | grep {}'.format(disk_label.split('/')[-1:]))
         return mount_info and len(mount_info[0].split()) > valid_mount_cols
 
     @staticmethod
@@ -97,5 +101,3 @@ class DiskManagement(object):
         return (len(mount_info) == 1 and len(mount_info[0].split()) >= valid_mount_cols and (
             mount_info[0].split()[valid_mount_cols - 1].endswith(b'T') or
             mount_info[0].split()[valid_mount_cols - 1].endswith(b'G')))
-
-

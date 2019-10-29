@@ -54,7 +54,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
 
     offset = PAGE_SIZE * (page_idx - 1)
     task_dirs = sorted(list(task_dirs), reverse=True)
-    query = {'dir': {'$in': task_dirs[offset : offset + PAGE_SIZE]}}
+    query = {'dir': {'$in': task_dirs[offset: offset + PAGE_SIZE]}}
     kFields = {
         'dir': 1,
         'header.begin_time': 1,
@@ -76,6 +76,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
         'records.tpl', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
         is_tasks=True)
 
+
 @app.route('/task/<path:task_path>')
 def task_hdl(task_path):
     """Handler of the task detail page."""
@@ -84,6 +85,7 @@ def task_hdl(task_path):
     records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
     return flask.render_template('record.tpl', record=task, sub_records=records)
+
 
 @app.route('/records')
 @app.route('/records/<int:page_idx>')
@@ -150,7 +152,7 @@ def metrics_ajax():
 def metrics_request_event(message):
     """Handler of socketio client request"""
     server_response_channel = 'server_response_metrics'
-    metrics = metrics_util.get_metrics_by_prefix(message['prefix']) 
+    metrics = metrics_util.get_metrics_by_prefix(message['prefix'])
     flask_socketio.emit(server_response_channel, metrics)
 
 
@@ -164,6 +166,7 @@ def plot_img():
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
     """A wrapper to run flask app."""
+
     def __init__(self, flask_app):
         flask_app.debug = flags.FLAGS.debug
         self.application = flask_app

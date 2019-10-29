@@ -107,8 +107,7 @@ if __name__ == '__main__':
     listener()
     fig, ax = plt.subplots()
     X = range(PLOT_DATA_LENGTH)
-    Xs = [i * -1 for i in X]
-    Xs.sort()
+    Xs = sorted([-i for i in X])
     lat_stability_line, = ax.plot(
         LAT_STABILITY_TIME, LAT_STABILITY_SCORE, 'b.', lw=2, alpha=0.5, label='lat stability')
 

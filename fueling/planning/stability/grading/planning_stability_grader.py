@@ -75,8 +75,7 @@ class Grader:
 
     def grade_folder(self, folder):
         folder_score_list = []
-        fns = [f for f in listdir(folder) if isfile(join(folder, f))]
-        fns.sort()
+        fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
             score_list = self.grade_record_file(folder, fn)
             # print(score_list)

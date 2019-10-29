@@ -17,18 +17,20 @@ import scaleapi
 
 import filtering_rules as rules
 
+
 def list_tasks(target_dir):
     """List tasks containing frames that have not been uploaded yet"""
     glog.info('target dir: {}'.format(target_dir))
     tasks = list()
     for (root, _, files) in os.walk(target_dir):
         if any(cur_file.startswith('frame-') for cur_file in files) and \
-            os.path.basename(root) == 'frames':
+                os.path.basename(root) == 'frames':
             cur_task = os.path.dirname(root)
             if not os.path.exists(os.path.join(cur_task, 'FRAME-UPLOADED')):
                 tasks.append(cur_task)
     glog.info('todo tasks: {}'.format(tasks))
     return tasks
+
 
 def list_uploaded_tasks(target_dir, qualified_tasks_path):
     """List tasks that have been uploaded already"""
@@ -39,13 +41,14 @@ def list_uploaded_tasks(target_dir, qualified_tasks_path):
         qualified_tasks = [task.strip() for task in qualified_tasks_file.readlines()]
     for (root, _, files) in os.walk(target_dir):
         if any(cur_file.startswith('frame-') for cur_file in files) and \
-            os.path.basename(root) == 'frames':
+                os.path.basename(root) == 'frames':
             cur_task = os.path.dirname(root)
             if os.path.exists(os.path.join(cur_task, 'FRAME-UPLOADED')) and \
-                urllib.parse.quote(os.path.basename(cur_task), safe='') in qualified_tasks:
+                    urllib.parse.quote(os.path.basename(cur_task), safe='') in qualified_tasks:
                 tasks.append(cur_task)
     glog.info('uploaded tasks: {}'.format(tasks))
     return tasks
+
 
 def list_images(target_dir, task):
     """List images end files in specified task"""
@@ -58,6 +61,7 @@ def list_images(target_dir, task):
                 os.path.join(root, cur_dir)))))
     return images
 
+
 def pickup_frames(task):
     """Pick up frames based on varies of rules"""
     frames_dir = os.path.join(task, 'frames')
@@ -65,6 +69,7 @@ def pickup_frames(task):
                      if frame.startswith('frame-') and frame.endswith('.json')])
     filtered_frames = rules.RulesChain.do_filter(frames)
     return [os.path.basename(frame) for frame in filtered_frames]
+
 
 def upload_frames(task, frames, s3_client):
     """Upload frames to AWS"""
@@ -79,17 +84,18 @@ def upload_frames(task, frames, s3_client):
             s3_upload_file(s3_client, frame_src, frame_dst)
     os.mknod(os.path.join(task, 'FRAME-UPLOADED'))
 
+
 def upload_images(task, s3_client):
     """Upload images to AWS"""
     if os.path.exists(os.path.join(task, 'IMAGE-UPLOADED')):
         glog.info('images for task {} have been uploaded'.format(task))
         return True
     image_task = os.path.basename(os.path.dirname(task))
-    streaming_image_path = os.path.join(task[:task.index('modules')+len('modules')],
+    streaming_image_path = os.path.join(task[:task.index('modules') + len('modules')],
                                         'perception/videos/decoded', image_task, 'images')
     image_links = os.listdir(os.path.join(task, 'images'))
     for image_name in image_links:
-        image_src = os.path.join(streaming_image_path, image_name) 
+        image_src = os.path.join(streaming_image_path, image_name)
         if not image_bin:
             glog.error('no image found for : {}'.format(image_src))
             return False
@@ -97,6 +103,7 @@ def upload_images(task, s3_client):
         s3_upload_file(s3_client, image_src, image_dst)
     os.mknod(os.path.join(task, 'IMAGE-UPLOADED'))
     return True
+
 
 def get_uploaded_front6mm_images(task, frames):
     """Get uploaded images for specified task"""
@@ -107,6 +114,7 @@ def get_uploaded_front6mm_images(task, frames):
             images.extend([image['image_url'] for image in json_data['images']
                            if image['image_url'].find('front_6mm') > 0])
     return images
+
 
 def send_lidar_request(task, frames, access_key):
     """Send scale requests with frames in AWS"""
@@ -120,9 +128,9 @@ def send_lidar_request(task, frames, access_key):
     payload = {
         'project': 'scale_labeling_2019Q2',
         'callback_url': 'http://www.example.com/callback',
-        'instruction': '<iframe style="width:100%;height:800px"' \
-                        'src="https://docs.google.com/document/d/e/2PACX-1vRcJA1TH3XYO8xW4ORcCC8' \
-                        'XKtYJwRj-U08_QtHul8E7MRBACEGuT3KifCoc7jVKVSi_iWMyeKmFX0qI/pub?' \
+        'instruction': '<iframe style="width:100%;height:800px"'
+                        'src="https://docs.google.com/document/d/e/2PACX-1vRcJA1TH3XYO8xW4ORcCC8'
+                        'XKtYJwRj-U08_QtHul8E7MRBACEGuT3KifCoc7jVKVSi_iWMyeKmFX0qI/pub?'
                         'embedded=true"></iframe>',
         'attachment_type': 'json',
         'attachments': attachments,
@@ -140,13 +148,14 @@ def send_lidar_request(task, frames, access_key):
     glog.info('submitted lidar task to scale, task id: {}'.format(response_json['task_id']))
     return response_json
 
+
 def send_2d_3d_linking_request(scale_lidar_task_id, access_key):
     """Send requests for 2D/3D linking tasks"""
     payload = {
         'project': 'scale_labeling_2019Q2_2d3dlinking',
         'callback_url': 'http://www.example.com/callback',
-        'instruction': '<iframe src="https://docs.google.com/document/d/e/' \
-                       '2PACX-1vS6hRcfulf58CPRlFYwWgz29VqCEq8NDLivNY2RBQ3P5' \
+        'instruction': '<iframe src="https://docs.google.com/document/d/e/'
+                       '2PACX-1vS6hRcfulf58CPRlFYwWgz29VqCEq8NDLivNY2RBQ3P5'
                        'UBi_uIoN2btNnkDd_gCrq3mirRzVNQsc-gS/pub?embedded=true"></iframe>',
         'camera_ids': [1],
         'attachment_type': 'image',
@@ -162,14 +171,15 @@ def send_2d_3d_linking_request(scale_lidar_task_id, access_key):
     glog.info('submitted 2d/3d task to scale, task id: {}'.format(response_json['task_id']))
     return response_json
 
+
 def send_laneline_request(lidar_task_id, image_url, access_key):
     """Send scale request for LaneLine labeling"""
     client = scaleapi.ScaleClient(access_key)
     response = client.create_lineannotation_task(
         project='scale_labeling_2019Q2_laneline',
         callback_url='http://www.example.com/callback',
-        instruction='<iframe src="https://docs.google.com/document/d/e/2PACX-1vQvKZEaYMG4fBKP' \
-                    'JLqleaJHH26smz0TN60ur7OdIgddXlUtbmkkVNuUuopHionuapEl8eeGfp6_r5V3/pub?' \
+        instruction='<iframe src="https://docs.google.com/document/d/e/2PACX-1vQvKZEaYMG4fBKP'
+                    'JLqleaJHH26smz0TN60ur7OdIgddXlUtbmkkVNuUuopHionuapEl8eeGfp6_r5V3/pub?'
                     'embedded=true"></iframe>',
         attachment_type='image',
         attachment=image_url,
@@ -236,6 +246,7 @@ def send_laneline_request(lidar_task_id, image_url, access_key):
     glog.info('submitted LaneLine task to scale, task id: {}'.format(response_json['task_id']))
     return response_json
 
+
 def record_task_response(task, contents, scale_response):
     """Record the tasks that have been uploaded for tracking"""
     task_record_file_path = os.path.join(task, 'response.txt')
@@ -246,6 +257,7 @@ def record_task_response(task, contents, scale_response):
         task_record_file.write('{}\n'.format(contents))
         task_record_file.write('{}\n'.format(scale_response))
 
+
 def create_s3_client():
     """Create AWS client"""
     aws_ak = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -254,10 +266,12 @@ def create_s3_client():
         raise ValueError('no AWS AK or SK provided')
     return boto3.client('s3', aws_access_key_id=aws_ak, aws_secret_access_key=aws_sk)
 
+
 def s3_upload_file(s3_client, src, dst):
     """Upload a file to AWS"""
     bucket = 'scale-labeling'
-    s3_client.upload_file(src, bucket, dst, ExtraArgs={'ACL':'public-read'})
+    s3_client.upload_file(src, bucket, dst, ExtraArgs={'ACL': 'public-read'})
+
 
 def main():
     """Main function"""
@@ -308,13 +322,14 @@ def main():
             # Send Laneline tasks
             front6mm_uploaded_images = get_uploaded_front6mm_images(task, frames)
             glog.info('got {} pictures from frames: {}'
-                    .format(len(front6mm_uploaded_images), front6mm_uploaded_images))
+                      .format(len(front6mm_uploaded_images), front6mm_uploaded_images))
             for front6mm_image in front6mm_uploaded_images:
                 laneline_response = send_laneline_request(task, front6mm_image, scale_access_key)
                 record_task_response(task, front6mm_uploaded_images[0], laneline_response)
         sucessful_tasks_counter += 1
         glog.info('successfully submitted task {}'.format(task))
     glog.info('All Done. Submitted {}/{} tasks'.format(sucessful_tasks_counter, len(tasks)))
+
 
 if __name__ == '__main__':
     main()

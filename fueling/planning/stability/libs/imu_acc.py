@@ -16,9 +16,9 @@ class ImuAcc:
     def add(self, location_est):
         timestamp = location_est.measurement_time
         acc = location_est.pose.linear_acceleration.x * \
-              math.cos(location_est.pose.heading) + \
-              location_est.pose.linear_acceleration.y * \
-              math.sin(location_est.pose.heading)
+            math.cos(location_est.pose.heading) + \
+            location_est.pose.linear_acceleration.y * \
+            math.sin(location_est.pose.heading)
 
         if self.last_corrected_acc is not None:
             corrected_acc = self._correct_acc(acc, self.last_corrected_acc)

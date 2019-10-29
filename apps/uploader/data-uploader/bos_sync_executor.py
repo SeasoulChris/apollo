@@ -7,8 +7,10 @@ import os
 from executor import Executor
 import utils as utils
 
+
 class BosSyncExecutor(Executor):
     """Execute syncing."""
+
     def __init__(self, src_dst_map):
         Executor.__init__(self, src_dst_map)
         self._bos_root = 'bos:/apollo-platform'

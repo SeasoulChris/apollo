@@ -31,7 +31,7 @@ class ImuAngularVelocity:
         if self.last_corrected_angular_velocity is None:
             return angular_velocity
         delta = abs(angular_velocity - self.last_corrected_angular_velocity) \
-                / abs(self.last_corrected_angular_velocity)
+            / abs(self.last_corrected_angular_velocity)
 
         if delta > 0.25:
             corrected = angular_velocity / 2.0
@@ -82,8 +82,7 @@ if __name__ == "__main__":
         folder = folders[i]
         color = colors[i % len(colors)]
         marker = markers[i % len(markers)]
-        fns = [f for f in listdir(folder) if isfile(join(folder, f))]
-        fns.sort()
+        fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
             reader = RecordItemReader(folder + "/" + fn)
             processor = ImuAngularVelocity()

@@ -24,6 +24,7 @@ WORKERS = 5
 
 class FuelJob(flask_restful.Resource):
     """Fuel job restful service"""
+
     def post(self):
         """Accept user request, verify and process."""
         try:
@@ -44,6 +45,7 @@ api.add_resource(FuelJob, '/')
 
 class ProductionApp(gunicorn.app.base.BaseApplication):
     """A wrapper to run flask app."""
+
     def __init__(self, flask_app):
         self.application = flask_app
         super(ProductionApp, self).__init__()

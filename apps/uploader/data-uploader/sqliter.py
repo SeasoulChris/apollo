@@ -9,6 +9,7 @@ import colored_glog as glog
 import sqlite3
 import textwrap
 
+
 class SqlLite3_DB(object):
     """SqlLite DB utils"""
     _db_file_path = '/home/apollo/Documents/AutoCopy/mounted_disk_db.sqlite'
@@ -32,7 +33,7 @@ class SqlLite3_DB(object):
         """Delete a row"""
         sql = 'DELETE FROM {} WHERE path="{}"'.format(SqlLite3_DB._table_name, task_path)
         SqlLite3_DB._execute_sql(sql)
-    
+
     @staticmethod
     def insert(task_path, status):
         """Insert a row"""
@@ -55,12 +56,12 @@ class SqlLite3_DB(object):
           %(column_1)s integer PRIMARY KEY AUTOINCREMENT,
           %(column_2)s text NOT NULL UNIQUE,
           %(column_3)s text NOT NULL);
-        """%{
+        """ % {
             'table_name': SqlLite3_DB._table_name,
             'column_1': 'id',
             'column_2': 'path',
             'column_3': 'status',
-            })
+        })
         SqlLite3_DB._execute_sql(sql)
 
     @staticmethod
@@ -74,6 +75,7 @@ class SqlLite3_DB(object):
         connection.close()
         return result
 
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         glog.error('Invalid Arguments.')
@@ -83,13 +85,12 @@ if __name__ == '__main__':
     opr = sys.argv[1]
     task = sys.argv[2]
     SqlLite3_DB.create_table()
-    
+
     if opr == 'remove' or opr == 'delete':
         SqlLite3_DB.delete(task)
         glog.info('Removed {} from DB'.format(task))
     elif opr == 'insert':
         SqlLite3_DB.insert(task, 'INITIAL')
         glog.info('Inserted {} into DB'.format(task))
-    
+
     glog.info('\nDB rows now:\n {}'.format(SqlLite3_DB.search_all()))
-    

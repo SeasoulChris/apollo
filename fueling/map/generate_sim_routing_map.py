@@ -16,6 +16,7 @@ from fueling.common.storage.bos_client import BosClient
 flags.DEFINE_string('input_data_path', 'test/simplehdmap',
                     'simple hdmap input/output data path.')
 
+
 def execute_task(source_dir):
     """Execute task by task"""
     logging.info('executing task with src_dir: {}'.format(source_dir))
@@ -87,12 +88,13 @@ class SimMapPipeline(BasePipeline):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
 
-        self.run(source_path)               
+        self.run(source_path)
 
     def run(self, original_path):
         """Run the pipeline with given parameters"""
         # RDD(task_path)
         self.to_rdd([original_path]).foreach(execute_task)
+
 
 if __name__ == '__main__':
     SimMapPipeline().main()

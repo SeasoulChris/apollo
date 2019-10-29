@@ -94,15 +94,15 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
     logging.info('Now executors start the hard working.  target_dir: {}'.format(target_dir))
 
     # target_dir looks like:
-    #'modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05/20181113152909#SS0
+    # 'modules/data/labeling/2019/2019-01-03/2019-01-03-14-56-05/20181113152909#SS0
     # msgs like:
-    #(
+    # (
     #  'lidar_1_topic-lidar_1_time',
     #  'camera_1_topic-camera_1_time',
     #  'lidar_2_topic-lidar_2_time',
     #  'camera_2_topic-camera_2_time'
     #  ...
-    #)
+    # )
 
     msg_map = Counter(msgs)
     logging.info('Total messages: {}'.format(sum(msg_map.itervalues())))

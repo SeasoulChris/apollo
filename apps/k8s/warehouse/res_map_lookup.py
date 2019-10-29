@@ -16,7 +16,7 @@ class MapLookup(Resource):
         try:
             lat = float(lat)
             lon = float(lon)
-        except:
+        except BaseException:
             return 'Error: Cannot parse input as float numbers.'
 
         query = {

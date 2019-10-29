@@ -200,8 +200,8 @@ class Yolov3Evaluate(BasePipeline):
 
     def run_prod(self):
         dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_CLOUD, "*"))
-        dataset_result_list = \
-                [(dataset, EVALUATE_RESULT_DATA_CLOUD) for dataset in dataset_dir_list]
+        dataset_result_list = [(dataset, EVALUATE_RESULT_DATA_CLOUD)
+                               for dataset in dataset_dir_list]
         # RDD(file_path) for training dataset.
         dataset_result_rdd = self.to_rdd(dataset_result_list)
         data = (

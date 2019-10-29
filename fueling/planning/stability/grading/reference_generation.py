@@ -65,8 +65,7 @@ class GradeTableGenerator:
                     self.process_data(lat_jerk, lon_jerk, av)
 
     def process_folder(self, folder):
-        fns = [f for f in listdir(folder) if isfile(join(folder, f))]
-        fns.sort()
+        fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
             path_file = folder + "/" + fn
             self.process_file(path_file)
