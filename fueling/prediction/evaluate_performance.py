@@ -27,7 +27,7 @@ class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'evaluate-performance')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

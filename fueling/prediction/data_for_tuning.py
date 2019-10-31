@@ -13,7 +13,7 @@ class DataForTuning(BasePipeline):
     """Records to DataForTuning proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'data-for-tuning')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

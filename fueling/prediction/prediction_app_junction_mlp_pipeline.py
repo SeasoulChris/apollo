@@ -12,7 +12,7 @@ class JunctionMlpPipeline(BasePipeline):
     """Junction mlp pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'prediction junction mlp pipeline')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

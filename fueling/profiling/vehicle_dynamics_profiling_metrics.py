@@ -23,7 +23,7 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
 
     def __init__(self):
         """Initialize """
-        BasePipeline.__init__(self, 'vehicle dynamics profiling metrics')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

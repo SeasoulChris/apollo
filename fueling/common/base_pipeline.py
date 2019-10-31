@@ -23,21 +23,21 @@ class BasePipeline(object):
     """Fueling base pipeline."""
     SPARK_CONTEXT = None
 
-    def __init__(self, name):
+    def __init__(self):
         """Pipeline constructor."""
         # Values constructed on driver and broadcast to executors.
-        self.name = name
+        self.name = self.__class__.__name__
         self.FLAGS = None
         # Values constructed on driver and not shared.
         BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName(self.name))
 
     def run_test(self):
         """Run the pipeline in test mode."""
-        raise Exception('{}::run_test not implemented!'.format(self.name))
+        raise Exception('Not implemented!')
 
     def run_prod(self):
         """Run the pipeline in production mode."""
-        raise Exception('{}::run_prod not implemented!'.format(self.name))
+        raise Exception('Not implemented!')
 
     # Helper functions.
     @classmethod
@@ -92,3 +92,20 @@ class BasePipeline(object):
 
     def main(self):
         app.run(self.__main__)
+
+
+class SequentialPipeline(BasePipeline):
+    def __init__(self, phases):
+        """Pipeline constructor."""
+        BasePipeline.__init__(self)
+        self.phases = [phase() for phase in phases]
+
+    def run_test(self):
+        """Run the pipeline in test mode."""
+        for phase in self.phases:
+            phase.run_test()
+
+    def run_prod(self):
+        """Run the pipeline in production mode."""
+        for phase in self.phases:
+            phase.run_prod()

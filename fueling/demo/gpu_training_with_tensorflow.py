@@ -25,7 +25,7 @@ class TensorflowTraining(BasePipeline):
     """Demo pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'TensorflowTraining')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

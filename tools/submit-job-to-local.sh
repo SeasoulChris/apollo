@@ -55,4 +55,5 @@ fi
 source tools/source-env.sh ${CONDA_ENV}
 export LOG_VERBOSITY=${LOG_VERBOSITY}
 
-spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@ | grep -v ' INFO  '
+spark-submit --master "local[${EXECUTOR_CORES}]" "${JOB_FILE}" --running_mode=TEST $@ 2>&1 | \
+    grep -v ' INFO '

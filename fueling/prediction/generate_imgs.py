@@ -18,7 +18,7 @@ class GenerateImgs(BasePipeline):
     """generate imgs from FrameEnv."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'generate-imgs')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

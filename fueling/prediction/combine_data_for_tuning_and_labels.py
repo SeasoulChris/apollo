@@ -19,7 +19,7 @@ class DataForTuningLabelsCombine(BasePipeline):
     """Records to DataForTuning proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'combine-data-for-tuning-and-labels')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

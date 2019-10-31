@@ -13,7 +13,7 @@ class DeleteDirs(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'delete-dirs')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

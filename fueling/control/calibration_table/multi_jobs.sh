@@ -13,7 +13,7 @@ INPUT_DATA_PATH="modules/control/apollo_calibration_table"
 JOB="fueling/control/calibration_table/multi_job_feature_extraction.py"
 ENV="fuel-py27-cyber"
 FLAGS="--job_id=${JOB_ID} --input_data_path=${INPUT_DATA_PATH}"
-${SUBMITTER} --main=${JOB} --env=${ENV} --flags="${FLAGS}"
+${SUBMITTER} --main=${JOB} --env=${ENV} --wait --flags="${FLAGS}"
 
 # Training, result visualization and distribution.
 JOB="fueling/control/calibration_table/multi_job_train_vis_dist.py"

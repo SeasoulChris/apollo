@@ -82,7 +82,7 @@ class ScenarioExtractionPipeline(BasePipeline):
 
     def __init__(self):
         """Initialize"""
-        BasePipeline.__init__(self, 'scenario_extraction')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Local mini test."""

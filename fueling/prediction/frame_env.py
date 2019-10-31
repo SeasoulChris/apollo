@@ -13,7 +13,7 @@ class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'frame-env')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

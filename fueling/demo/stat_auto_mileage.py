@@ -23,7 +23,7 @@ class StatAutoMileage(BasePipeline):
     """pipeline to stat auto mileage"""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'stat-auto-mileage')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

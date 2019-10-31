@@ -21,12 +21,7 @@ def generate_segments(h5s):
     for h5 in h5s:
         logging.info('Loading %s' % str(h5))
         with h5py.File(h5, 'r+') as fin:
-            names = list(fin.keys())
-            if len(names) < 1:
-                continue
-            for name in names:
-                ds = np.array(fin[name])
-                segments.append(ds)
+            segments.extend(map(np.array, fin.values()))
     # shuffle(segments)
     print('Segments count: ', len(segments))
     return segments
@@ -65,14 +60,13 @@ def train_model(data_sets, layer, train_alpha):
     return model
 
 
-def write_table(elem, target_dir,
+def write_table(model, target_dir,
                 speed_min, speed_max, speed_segment_num,
                 axis_cmd_min, axis_cmd_max, cmd_segment_num,
                 table_filename):
     """
     write calibration table
     """
-    model = elem
     calibration_table_pb = calibration_table_pb2.ControlCalibrationTable()
 
     speed_array = np.linspace(speed_min, speed_max, num=speed_segment_num)

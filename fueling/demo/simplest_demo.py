@@ -13,7 +13,7 @@ class SquareSum(BasePipeline):
     """Demo pipeline."""
 
     def __init__(self, n):
-        BasePipeline.__init__(self, 'demo')
+        BasePipeline.__init__(self)
         self.n = n
 
     def run_test(self):

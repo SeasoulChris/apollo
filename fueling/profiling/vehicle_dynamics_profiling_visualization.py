@@ -24,7 +24,7 @@ class VehicleDynamicsProfilingVisualization(BasePipeline):
 
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'vehicle_dynamics_profiling_visualization')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

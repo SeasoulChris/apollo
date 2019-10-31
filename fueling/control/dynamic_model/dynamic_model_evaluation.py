@@ -26,7 +26,7 @@ def extract_scenario_name(dataset_path):
 
 class DynamicModelEvaluation(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, 'dynamic_model')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         platform_path = '/apollo/modules/data/fuel/testdata/control/learning_based_model/'

@@ -16,7 +16,7 @@ class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'generate-labels')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

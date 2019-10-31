@@ -22,7 +22,7 @@ class RemoveIndexedRecords(BasePipeline):
     """RemoveIndexedRecords pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'remove-indexed-records')
+        BasePipeline.__init__(self)
 
     def run_prod(self):
         """Run prod."""

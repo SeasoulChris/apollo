@@ -16,7 +16,7 @@ class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'dump-feature-proto')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

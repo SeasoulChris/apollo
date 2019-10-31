@@ -16,7 +16,7 @@ class MergeLabels(BasePipeline):
     """Records to MergeLabels proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'merge-labels')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

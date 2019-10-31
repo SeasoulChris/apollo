@@ -26,7 +26,7 @@ class GeneralFeatureExtraction(BasePipeline):
 
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'general_feature_extraction')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

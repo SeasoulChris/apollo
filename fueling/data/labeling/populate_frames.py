@@ -192,7 +192,7 @@ class PopulateFramesPipeline(BasePipeline):
     """PopulateFrames pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'populate-frames')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

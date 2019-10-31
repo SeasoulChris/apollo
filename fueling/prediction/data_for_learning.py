@@ -13,7 +13,7 @@ class DataForLearning(BasePipeline):
     """Records to DataForLearning proto pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'data-for-learning')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

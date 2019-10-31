@@ -28,7 +28,7 @@ class ReorgSmallRecords(BasePipeline):
     """ReorgSmallRecords pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'reorg-small-records')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

@@ -65,7 +65,7 @@ class DecodeVideoPipeline(BasePipeline):
     """PopulateFrames pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'decode-videos')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

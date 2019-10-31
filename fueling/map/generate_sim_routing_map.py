@@ -52,7 +52,7 @@ class SimMapPipeline(BasePipeline):
 
     def __init__(self):
         """Initialize"""
-        BasePipeline.__init__(self, 'sim_map')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Local mini test."""

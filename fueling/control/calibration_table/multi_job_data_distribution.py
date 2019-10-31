@@ -42,7 +42,7 @@ def read_hdf5(hdf5_file_list):
 
 class MultiJobDataDistribution(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, 'Multi_Vehicle_Data_Distribution')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated'

@@ -28,7 +28,7 @@ def extract_scenario_name(dataset_path):
 class IMUEvaluation(BasePipeline):
     def __init__(self):
         """init"""
-        BasePipeline.__init__(self, 'IMU_Evaluation')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """run test"""

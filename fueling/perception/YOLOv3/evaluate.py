@@ -170,7 +170,7 @@ def compile_categories(gt_dt):
 
 class Yolov3Evaluate(BasePipeline):
     def __init__(self):
-        BasePipeline.__init__(self, "yolov3_evaluate")
+        BasePipeline.__init__(self)
 
     def run_test(self):
         dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_LOCAL, "*"))

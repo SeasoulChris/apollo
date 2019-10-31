@@ -24,7 +24,7 @@ class PytorchTraining(BasePipeline):
     """Demo pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self, 'PytorchTraining')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

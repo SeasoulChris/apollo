@@ -94,7 +94,7 @@ def mark_complete(valid_segment, origin_prefix, target_prefix, MARKER):
 class MultiJobFeatureExtraction(BasePipeline):
     def __init__(self):
         """ initialize """
-        BasePipeline.__init__(self, 'multi_job_feature_extraction')
+        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""
