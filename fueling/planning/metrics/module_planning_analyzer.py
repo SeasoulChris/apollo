@@ -143,11 +143,11 @@ class PlannigAnalyzer:
         print(PrintColors.HEADER + "--- Planning Trajectory Frechet Distance (m) ---" + PrintColors.ENDC)
         StatisticalAnalyzer().print_statistical_results(self.frechet_distance_list)
 
-    def print_sim_results(self):
+    def get_sim_results(self):
         """
         dreamland metrics for planning v2
         """
-        results = {}
+        results = dict()
 
         # acceleration
         results["accel"] = self.lon_acceleration_analyzer.get_acceleration()
@@ -175,7 +175,7 @@ class PlannigAnalyzer:
         results["reference_line"] = self.reference_line.get()
 
         # output final reuslts
-        print(json.dumps(results))
+        return results
 
     def plot_path(self, plt, adc_trajectory):
         path_coords = self.trim_path_by_distance(adc_trajectory, 5.0)

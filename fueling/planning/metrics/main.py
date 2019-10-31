@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import json
 import sys
 import argparse
 import matplotlib.pyplot as plt
@@ -13,6 +13,7 @@ from module_planning_analyzer import PlannigAnalyzer
 from modules.perception.proto import perception_obstacle_pb2
 from modules.prediction.proto import prediction_obstacle_pb2
 from fueling.planning.metrics.lidar_endtoend_analyzer import LidarEndToEndAnalyzer
+from fueling.planning.stability.grading.planning_stability_grader import Grader
 
 
 def process(control_analyzer, planning_analyzer, lidar_endtoend_analyzer,
@@ -123,7 +124,16 @@ if __name__ == "__main__":
             args.planningrefpath, args.alldata)
 
     if args.simulation:
-        planning_analyzer.print_sim_results()
+        score_list = Grader().grade_record_file(record_file)
+
+        results = planning_analyzer.get_sim_results()
+        if len(results) > 0:
+            stability_score = dict()
+            stability_score["avg"] = sum(score_list) / float(len(score_list))
+            stability_score["max"] = max(score_list)
+            stability_score["min"] = min(score_list)
+            results["stability"] = stability_score
+        print(json.dumps(results))
     elif args.planningpath or args.planningrefpath:
         plt.axis('equal')
         plt.show()

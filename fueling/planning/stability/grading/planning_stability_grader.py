@@ -48,8 +48,8 @@ class Grader:
                 score_lon_jerk_av = self.grade_table[self.key_lon_jerk_av][lon_jerk][angular_velocity]
         return score_lat_jerk_av * score_lon_jerk_av
 
-    def grade_record_file(self, folder, fn):
-        reader = RecordItemReader(folder + "/" + fn)
+    def grade_record_file(self, pathfile):
+        reader = RecordItemReader(pathfile)
         planning_lat_jerk_processor = PlanningLatJerk()
         planning_lon_jerk_processor = PlanningJerk()
         planning_av_processor = PlanningAv()
@@ -77,7 +77,8 @@ class Grader:
         folder_score_list = []
         fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
-            score_list = self.grade_record_file(folder, fn)
+            pathfile = folder + "/" + fn
+            score_list = self.grade_record_file(pathfile)
             # print(score_list)
             folder_score_list.extend(score_list)
 

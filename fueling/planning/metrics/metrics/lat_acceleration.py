@@ -16,14 +16,14 @@ class LatAcceleration:
         centripetal_jerk = 2 * init_point.v * init_point.a \
             * init_point.path_point.kappa + init_point.v \
                 * init_point.v * init_point.path_point.dkappa
-        if not math.isnan(centripetal_jerk):
+        if (not math.isnan(centripetal_jerk)) and centripetal_jerk != float('inf'):
             self.centripetal_jerk_list.append(centripetal_jerk)
 
         # centripetal_accel
         centripetal_accel = init_point.v * init_point.v \
             * init_point.path_point.kappa
 
-        if not math.isnan(centripetal_accel):
+        if not math.isnan(centripetal_accel) and centripetal_accel != float('inf'):
             self.centripetal_accel_list.append(centripetal_accel)
 
     def get_acceleration(self):
