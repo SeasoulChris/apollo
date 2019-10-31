@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import json
 
@@ -8,6 +8,8 @@ from absl import flags
 from absl import logging
 from absl import app as absl_app
 import requests
+
+from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig, JobConfig
 
 app = flask.Flask(__name__)
 
@@ -20,7 +22,7 @@ def index():
     return flask.render_template('index.tpl')
 
 
-@app.route('/submit_job', methods=['GET', 'POST'])
+@app.route('/submit_job', methods=['POST'])
 def submit_job():
 
     if request.json['bos']:
@@ -36,19 +38,25 @@ def submit_job():
             'storage_account_key': request.json['access_secret']}
         }
 
+    partner_storage_writable = request.json['partner_storage_writable']
+
     request_dict = {
         'partner_id': request.json['partner_id'],
         'job_type': request.json['job_type'],
         'input_data_path': request.json['input_data_path'],
         'storage': storage
+        # 'partner_storage_writable': partner_storage_writable
     }
 
-    request_json = json.dumps(request_dict)
+    if request.json['job_type'] == JobConfig.SIMPLE_HDMAP:
+        request_dict['zone_id'] = request.json['zone_id']
+        request_dict['lidar_type'] = request.json['lidar_type']
 
+    request_json = json.dumps(request_dict)
     request_post = requests.post(flags.FLAGS.fuel_proxy, json=request_json,
                                  verify='../bae-proxy/ssl_keys/cert.pem')
     response = json.loads(request_post.json()) if request_post.json() else {}
-    print('raw response: {}'.format(response))
+
     if request_post.ok:
         logging.info(response.get('message') or 'OK')
     else:

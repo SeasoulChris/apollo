@@ -209,6 +209,9 @@
             var input_data_path = $("#input_data_path").val();
             var bos = $("#bos").is(':checked');
             var blob = $("#blob").is(':checked');
+            var partner_storage_writable = $("#writable").is(':checked');
+            var zone_id = $("#zone_id").val();
+            var lidar_type = $("#lidar_type").val();
 
             var data = {
                 "partner_id": partner_id,
@@ -218,7 +221,10 @@
                 "bucket":bucket,
                 "access_key":access_key,
                 "access_secret":access_secret,
-                "input_data_path": input_data_path
+                "input_data_path": input_data_path,
+                "partner_storage_writable":partner_storage_writable,
+                "zone_id":zone_id,
+                "lidar_type":lidar_type
             }
 
             $.ajax({
