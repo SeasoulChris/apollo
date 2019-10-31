@@ -10,7 +10,6 @@ from absl import flags
 from pyspark import SparkConf, SparkContext
 
 import fueling.common.logging as logging
-import fueling.common.storage.blob_client as blob_client
 import fueling.common.storage.bos_client as bos_client
 
 
@@ -59,6 +58,7 @@ class BasePipeline(object):
             is_partner = True
             return bos_client.BosClient(is_partner)
         elif os.environ.get('AZURE_STORAGE_ACCOUNT'):
+            import fueling.common.storage.blob_client as blob_client
             return blob_client.BlobClient()
         return None
 
@@ -103,7 +103,7 @@ class SequentialPipeline(BasePipeline):
 
     def init(self):
         """Init all sub-pipelines."""
-        BasePipeline.init(self)
+        super().init()
         for phase in self.phases:
             phase.init()
 

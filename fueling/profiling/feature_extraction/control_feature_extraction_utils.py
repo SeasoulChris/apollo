@@ -30,7 +30,7 @@ def verify_vehicle_controller(task):
         logging.warning('no valid record file found in task: {}'.format(task))
         return False
     # Read two topics together to avoid looping all messages in the record file twice
-    logging.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
+    logging.info('verifying vehicle controller in task {}, record {}'.format(task, record_file))
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)
@@ -67,13 +67,13 @@ def data_matches_config(data_vehicle_type, data_controller_type):
     conf_vehicle_type = get_config_control_profiling().vehicle_type
     conf_controller_type = get_config_control_profiling().controller_type
     if not conf_vehicle_type:
-        logging.info('No requred vehicle type; arbitrary one can be processed for profiling')
+        logging.info('No required vehicle type; arbitrary one can be processed for profiling')
     elif conf_vehicle_type != data_vehicle_type:
         logging.warning('mismatch between record vehicle {} and configed vehicle {}'
                         .format(data_vehicle_type, conf_vehicle_type))
         return False
     if not conf_controller_type:
-        logging.info('No requred controller type; arbitrary one ccan be processed for profiling')
+        logging.info('No required controller type; arbitrary one ccan be processed for profiling')
     elif conf_controller_type != data_controller_type:
         logging.warning('mismatch between record controller {} and configed controller {}'
                         .format(data_controller_type, conf_controller_type))

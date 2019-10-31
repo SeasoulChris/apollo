@@ -528,8 +528,8 @@ def evaluate(model_info, dataset_info, platform_path):
                                                     evaluation_results)
 
     with open(evaluation_result_path, 'w') as txt_file:
-        txt_file.write('evaluted on model: {} \n'.format(model_info[1]))
-        txt_file.write('evaluted on record: {} \n'.format(dataset_info[1]))
+        txt_file.write('evaluated on model: {} \n'.format(model_info[1]))
+        txt_file.write('evaluated on record: {} \n'.format(dataset_info[1]))
         txt_file.write(text_format.MessageToString(evaluation_results))
 
     # Output the trajectory visualization plots to a pdf file

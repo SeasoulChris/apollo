@@ -47,7 +47,7 @@ class YOLOv3(object):
 
     def __init__(self, x, anchors, num_classes, is_training=True):
         """
-        Create the graph ofthe YOLOv3 model
+        Create the graph of the YOLOv3 model
         :param x: Placeholder for the input tensor: (normalised image (416, 416, 3)/255.)
         :param num_classes: Number of classes in the dataset
                if it isn't in the same folder as this code

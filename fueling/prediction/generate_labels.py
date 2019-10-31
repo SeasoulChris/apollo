@@ -60,7 +60,7 @@ class GenerateLabels(BasePipeline):
         try:
             label_gen.LoadFeaturePBAndSaveLabelFiles(src_file)
             label_gen.Label()
-            logging.info('Successfuly labeled {}'.format(src_file))
+            logging.info('Successfully labeled {}'.format(src_file))
             return 1
         except BaseException:
             logging.error('Failed to process {}'.format(src_file))

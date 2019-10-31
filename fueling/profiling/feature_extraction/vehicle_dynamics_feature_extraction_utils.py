@@ -30,7 +30,7 @@ def verify_vehicle_controller(task):
         logging.warning('no valid record file found in task: {}'.format(task))
         return False
     # Read two topics together to avoid looping all messages in the record file twice
-    logging.info('verifying vehicle controler in task {}, record {}'.format(task, record_file))
+    logging.info('verifying vehicle controller in task {}, record {}'.format(task, record_file))
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)

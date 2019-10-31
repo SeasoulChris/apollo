@@ -145,21 +145,21 @@ def rotation_to_quaternion(rot):
 
 def generate_transform(qtn, dev):
     """Generate a matrix with rotation and deviation/translation."""
-    tranform = np.zeros(shape=(4, 4), dtype=float)
-    tranform[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
-    tranform[0][1] = 2 * (qtn.qx * qtn.qy - qtn.qw * qtn.qz)
-    tranform[0][2] = 2 * (qtn.qx * qtn.qz + qtn.qw * qtn.qy)
-    tranform[1][0] = 2 * (qtn.qx * qtn.qy + qtn.qw * qtn.qz)
-    tranform[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
-    tranform[1][2] = 2 * (qtn.qy * qtn.qz - qtn.qw * qtn.qx)
-    tranform[2][0] = 2 * (qtn.qx * qtn.qz - qtn.qw * qtn.qy)
-    tranform[2][1] = 2 * (qtn.qy * qtn.qz + qtn.qw * qtn.qx)
-    tranform[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
-    tranform[0][3] = dev.x
-    tranform[1][3] = dev.y
-    tranform[2][3] = dev.z
-    tranform[3] = [0, 0, 0, 1]
-    return tranform
+    transform = np.zeros(shape=(4, 4), dtype=float)
+    transform[0][0] = qtn.qw**2 + qtn.qx**2 - qtn.qy**2 - qtn.qz**2
+    transform[0][1] = 2 * (qtn.qx * qtn.qy - qtn.qw * qtn.qz)
+    transform[0][2] = 2 * (qtn.qx * qtn.qz + qtn.qw * qtn.qy)
+    transform[1][0] = 2 * (qtn.qx * qtn.qy + qtn.qw * qtn.qz)
+    transform[1][1] = qtn.qw**2 - qtn.qx**2 + qtn.qy**2 - qtn.qz**2
+    transform[1][2] = 2 * (qtn.qy * qtn.qz - qtn.qw * qtn.qx)
+    transform[2][0] = 2 * (qtn.qx * qtn.qz - qtn.qw * qtn.qy)
+    transform[2][1] = 2 * (qtn.qy * qtn.qz + qtn.qw * qtn.qx)
+    transform[2][2] = qtn.qw**2 - qtn.qx**2 - qtn.qy**2 + qtn.qz**2
+    transform[0][3] = dev.x
+    transform[1][3] = dev.y
+    transform[2][3] = dev.z
+    transform[3] = [0, 0, 0, 1]
+    return transform
 
 
 def get_rotation_from_tranform(transform):

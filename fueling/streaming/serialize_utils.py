@@ -53,7 +53,7 @@ def parse_record(record_file, root_dir):
                                           streaming_utils.STREAMING_CONF, 'serialize_conf.yaml')
     settings = list(yaml.load_all(file(yaml_file_path, 'r')))
     record_file = record_file.strip()
-    logging.info('Executor: processsing record file : {}'.format(record_file))
+    logging.info('Executor: processing record file : {}'.format(record_file))
     if not record_utils.is_record_file(record_file):
         return
     record_dir = streaming_utils.record_to_stream_path(record_file,

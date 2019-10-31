@@ -182,13 +182,13 @@ class Yolov3Evaluate(BasePipeline):
             # in a dataset and the result directory
             .map(match_label_to_result)
             # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
-            # image information as a dictionay
+            # image information as a dictionary
             .map(compile_images)
             # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
             # add the annotation list for that image example
             .map(compile_annotations)
             # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
-            # ground truth dictionary and a inference result matrix
+            # ground truth dictionary and an inference result matrix
             .map(read_results)
             # RDD((gt_dict, complete_result_matrix)), add the category list to the
             # gt_dict
@@ -209,13 +209,13 @@ class Yolov3Evaluate(BasePipeline):
             # in a dataset and the result directory
             .map(match_label_to_result)
             # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
-            # image information as a dictionay
+            # image information as a dictionary
             .map(compile_images)
             # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
             # add the annotation list for that image example
             .map(compile_annotations)
             # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
-            # ground truth dictionary and a inference result matrix
+            # ground truth dictionary and an inference result matrix
             .map(read_results)
             # RDD((gt_dict, complete_result_matrix)), add the category list to the
             # gt_dict

@@ -59,7 +59,7 @@ class PredictionResult(BasePipeline):
             'modules/tools/prediction/data_pipelines/scripts/records_to_prediction_result.sh '
             '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
         if os.system(command) == 0:
-            logging.info('Successfuly processed {} to {}'.format(record_dir, target_dir))
+            logging.info('Successfully processed {} to {}'.format(record_dir, target_dir))
             return 1
         else:
             logging.error('Failed to process {} to {}'.format(record_dir, target_dir))

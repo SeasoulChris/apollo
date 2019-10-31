@@ -246,6 +246,6 @@ def combine_gradings(grading_x, grading_y):
 
 
 def output_gradings(target_grading):
-    """Write the grading results to files in coresponding target dirs"""
+    """Write the grading results to files in corresponding target dirs"""
     # TODO(fengzongbao): Need to complete
     pass

@@ -95,7 +95,7 @@ class GoldenSet(BasePipeline):
             # PairRDD(dir, record_file)
             .keyBy(os.path.dirname))
 
-        logging.info('todo_recors: %s' % todo_records.collect())
+        logging.info('todo_records: %s' % todo_records.collect())
         self.run(todo_records, origin_dir, target_dir)
 
     def run_prod(self):

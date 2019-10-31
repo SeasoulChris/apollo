@@ -118,7 +118,7 @@ class Camera(object):
 
     def back_project(self, pix_coor):
         """
-        Compute the vector backprojected from camera thru a pixel coordiante.
+        Compute the vector backprojected from camera thru a pixel coordinate.
         pix_coor: np.array([[x],
                             [y]]) of the pixel coordinate on the image plane. shape=(2, n)
         return: a direction vector of the back-projection. Have not been normalized. shape=(3, 1)
@@ -187,7 +187,7 @@ class kitti_obj_cam_interaction(Camera):
         intrinsic: the KITTI-style camera intrinsics, shape=(3, 4)
         points: points in cam coor, shape=(n, 3)
         point_in_ref_cam: bool, True if points are expressed in the reference
-            camera coordiante.
+            camera coordinate.
         return: xy coor in image, shape=(2,n)
         """
         if point_in_ref_cam:

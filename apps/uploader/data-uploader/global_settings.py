@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Global settings that can be shared and used accross files"""
+"""Global settings that can be shared and used across files"""
 
 from collections import namedtuple
 from enum import Enum

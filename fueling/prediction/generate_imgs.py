@@ -72,7 +72,7 @@ class GenerateImgs(BasePipeline):
                 img = obstacle_mapping.crop_by_history(history)
                 filename = os.path.join(target_dir, key + ".png")
                 cv.imwrite(filename, img)
-                logging.info('Successfuly write img to: ' + filename)
+                logging.info('Successfully write img to: ' + filename)
             return 1
         except BaseException:
             logging.error('Failed to process this frame.')

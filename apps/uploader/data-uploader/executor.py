@@ -12,7 +12,7 @@ import utils as utils
 
 class Executor(object):
     """Execute syncing."""
-    # Static namedtuple defination
+    # Static namedtuple definition
     Statistic = namedtuple('Statistic',
                            ['Source', 'Files', 'Size', 'Destination', 'Estimate', 'Time', 'Speed'])
 

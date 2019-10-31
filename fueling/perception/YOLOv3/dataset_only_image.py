@@ -27,7 +27,7 @@ class DatasetOnlyImage:
         """
         Initialize a Dataset object. This Dataset class uses multi-threading to process input data.
         params:
-        dataset_path: path to the directory that containes txt file, each txt file includes the
+        dataset_path: path to the directory that contains txt file, each txt file includes the
                       labels for 1 image. "class_name, x_min,y_min,x_max,y_max,x,x,x,x,x,x,x,x,
                       class_id, x,x,x,x,x,x,x,x"
         batch_size: number of examples per batch

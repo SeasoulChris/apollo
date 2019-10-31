@@ -614,7 +614,7 @@ def combine_gradings(grading_x, grading_y):
 
 
 def output_gradings(target_grading):
-    """Write the grading results to files in coresponding target dirs"""
+    """Write the grading results to files in corresponding target dirs"""
     target_dir, grading = target_grading
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_output_path = os.path.join(target_dir,

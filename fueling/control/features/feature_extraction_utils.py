@@ -82,12 +82,12 @@ def gen_pre_segment(dir_to_msg):
 
 
 def gen_key(elem):
-    """ generate a key contians both folder path and time stamp """
+    """ generate a key contains both folder path and timestamp """
     return ((elem[0], (int)(elem[1].header.timestamp_sec / 60)), elem[1])
 
 
 def process_seg(elem):
-    """group Chassis and Localization msgs to list seperately"""
+    """group Chassis and Localization msgs to list separately"""
     chassis = []
     pose = []
     for each_elem in elem:

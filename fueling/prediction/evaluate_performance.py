@@ -24,7 +24,7 @@ FILTERED_PREDICTOR = None
 
 
 class PerformanceEvaluator(BasePipeline):
-    """Evaluate performace pipeline."""
+    """Evaluate performance pipeline."""
 
     def run_test(self):
         """Run test."""

@@ -5,7 +5,7 @@ DB-backed utils.
 ** Cautious!! **
 1. This util only works in cluster.
 2. You'd better run it with things like `mapPartitions()` to gain best
-   performace, as it processes looking up in batch mode.
+   performance, as it processes looking up in batch mode.
 3. The input should be generally a LIST. Avoid generators or iterators.
 4. The output is generally a dict which may NOT contain all elements. You should
    handle missing data by yourself.

@@ -263,7 +263,7 @@ class PopulateFramesPipeline(BasePipeline):
                          (target_meta[0], target_meta[1].timestamp, target_meta[1].topic))
                     .cache())
 
-        # Transform RDD to DataFrame, run SQL and tranform back when done
+        # Transform RDD to DataFrame, run SQL and transform back when done
         logging.info('SQL query to search closest sensor messages')
         sql_context = SQLContext(BasePipeline.SPARK_CONTEXT)
         sql_query = get_sql_query(sql_context, msgs_rdd)

@@ -131,7 +131,7 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
         return True
 
     if email_receivers:
-        title = 'Error occured during vehicle-calibration data sanity check for {}'.format(
+        title = 'Error occurred during vehicle-calibration data sanity check for {}'.format(
             job_owner)
         content = 'job_id={} input_folder={}\n{}'.format(job_id, input_folder, cgi.escape(err_msg))
         email_utils.send_email_error(title, content, email_receivers)

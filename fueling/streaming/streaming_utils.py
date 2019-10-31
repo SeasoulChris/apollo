@@ -32,7 +32,7 @@ def get_todo_records(root_dir, target_dir=None):
     Parameters:
     1. root_dir, for example '/mnt/bos' for production, and '/apollo' for test
     2. target_dir, the directory where results are generated, it's purely a setting that
-    the application defines by itself.  For example 'modules/perception/whatever/generated'.
+    the application defines by itself. For example, 'modules/perception/whatever/generated'.
     After processing successfully we would want to put a COMPLETE file under the task to avoid it
     being processed again.
     ---
@@ -172,7 +172,7 @@ def get_streaming_records(root_dir):
 def get_message_id(timestamp, topic):
     """
     Form a message ID by using timestamp and topic name,
-    which combined together should be able to represent an unique message
+    which combined together should be able to represent a unique message
     """
     return '{}{}'.format(timestamp, topic_to_file_name(topic))
 

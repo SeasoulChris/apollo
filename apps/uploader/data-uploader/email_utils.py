@@ -47,7 +47,7 @@ def send_email(title, title_color, content, logger, receivers=None):
            'Failed': 2000,
            'Total': 2100
        )
-    4. receivers, recepients of the notification. Default should be a group account, but can also
+    4. receivers, recipients of the notification. Default should be a group account, but can also
        be specified explicitly.
     """
     host = 'email.baidu.com'
@@ -75,7 +75,7 @@ def send_email(title, title_color, content, logger, receivers=None):
 
 
 def get_html_content(title, title_color, content):
-    """Help function to constuct HTML message body"""
+    """Help function to construct HTML message body"""
     header_row_prefix = '<thead>\n<tr>\n'
     header_row_suffix = '</tr>\n</thead>\n'
     header_col_prefix = '<th style="text-align:center;font-family:Arial;font-size:18px;">'
@@ -102,7 +102,7 @@ def get_html_content(title, title_color, content):
         html_content += row_suffix
     # TODO: we should consider loading template files from storage if there are more than one
     # in the future.  And a better idea might be loading html directly from web application
-    # frontend so we dont have to put together all the pieces here
+    # frontend so we don't have to put together all the pieces here
     return '''
             <html>
             <head></head>
