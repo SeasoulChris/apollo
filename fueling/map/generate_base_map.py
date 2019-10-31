@@ -35,11 +35,7 @@ flags.DEFINE_string('input_data_path', 'test/simplehdmap',
 
 
 class MapGenSingleLine(BasePipeline):
-
     """map_gen_single_line pipeline."""
-
-    def __init__(self):
-        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

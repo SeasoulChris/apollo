@@ -24,10 +24,6 @@ MARKER = 'CompleteBackwardSampleSet'
 class BackwardSampleSet(BasePipeline):
     """ Generate sample set feature extraction hdf5 files from records """
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)

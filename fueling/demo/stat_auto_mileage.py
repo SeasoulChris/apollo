@@ -22,9 +22,6 @@ import fueling.data.record_parser as record_parser
 class StatAutoMileage(BasePipeline):
     """pipeline to stat auto mileage"""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
 

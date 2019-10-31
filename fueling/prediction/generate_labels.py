@@ -15,9 +15,6 @@ SKIP_EXISTING_DST_FILE = False
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(bin_files)

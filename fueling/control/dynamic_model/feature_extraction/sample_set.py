@@ -118,9 +118,6 @@ def write_conf(conf_value, vehicle_param_conf, conf_path, conf):
 
 
 class SampleSet(BasePipeline):
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

@@ -22,10 +22,6 @@ import fueling.profiling.feature_visualization.control_feature_visualization_uti
 class ControlProfilingVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features"""
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'

@@ -17,9 +17,6 @@ import fueling.common.logging as logging
 class GenerateImgs(BasePipeline):
     """generate imgs from FrameEnv."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(dir_path)

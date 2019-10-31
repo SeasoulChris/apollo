@@ -23,9 +23,6 @@ import fueling.common.logging as logging
 class PytorchTraining(BasePipeline):
     """Demo pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         logging.info('nvidia-smi on Driver:')

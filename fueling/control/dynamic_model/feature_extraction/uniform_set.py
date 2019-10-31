@@ -49,9 +49,6 @@ def write_to_file(target_prefix, elem):
 
 
 class UniformSet(BasePipeline):
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
 
     def run_test(self):
         """Run test."""

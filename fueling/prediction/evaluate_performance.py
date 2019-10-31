@@ -26,9 +26,6 @@ FILTERED_PREDICTOR = None
 class PerformanceEvaluator(BasePipeline):
     """Evaluate performace pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         result_files = self.to_rdd(

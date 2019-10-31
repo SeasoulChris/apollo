@@ -191,9 +191,6 @@ def mark_complete(todo_tasks, target_dir, root_dir):
 class PopulateFramesPipeline(BasePipeline):
     """PopulateFrames pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         root_dir = '/apollo'

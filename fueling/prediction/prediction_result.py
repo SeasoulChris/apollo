@@ -12,9 +12,6 @@ import fueling.common.record_utils as record_utils
 class PredictionResult(BasePipeline):
     """Records to PredictionResult proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(dir_path)

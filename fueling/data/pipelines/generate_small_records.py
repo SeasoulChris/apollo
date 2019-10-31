@@ -67,9 +67,6 @@ MARKER = 'COMPLETE'
 class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(record_path)

@@ -24,9 +24,6 @@ import fueling.common.logging as logging
 class CountMsgByChannel(BasePipeline):
     """Demo pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         # Spark cascade style programming.
         pprint.PrettyPrinter().pprint(

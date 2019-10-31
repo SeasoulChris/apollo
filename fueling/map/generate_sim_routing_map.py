@@ -47,12 +47,7 @@ def execute_task(source_dir):
 
 
 class SimMapPipeline(BasePipeline):
-
     """generate sim routing map"""
-
-    def __init__(self):
-        """Initialize"""
-        BasePipeline.__init__(self)
 
     def run_test(self):
         """Local mini test."""

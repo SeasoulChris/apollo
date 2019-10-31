@@ -21,10 +21,6 @@ import fueling.profiling.grading_evaluation.vehicle_dynamics_grading_utils as gr
 
 class VehicleDynamicsProfilingMetrics(BasePipeline):
 
-    def __init__(self):
-        """Initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
 

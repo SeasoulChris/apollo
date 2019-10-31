@@ -33,9 +33,6 @@ def get_data_from_hdf5(hdf5_rdd):
 
 
 class MultiJobTrain(BasePipeline):
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
 
     def get_feature_hdf5_prod(self, feature_dir, throttle_or_brake, train_or_test):
         return (

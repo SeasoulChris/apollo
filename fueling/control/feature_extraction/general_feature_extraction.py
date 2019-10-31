@@ -24,10 +24,6 @@ MARKER = 'CompleteGeneralSet'
 class GeneralFeatureExtraction(BasePipeline):
     """ Generate general feature extraction hdf5 files from records """
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)

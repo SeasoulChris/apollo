@@ -21,9 +21,6 @@ flags.DEFINE_string('prefix_of_indexed_records_to_remove', None,
 class RemoveIndexedRecords(BasePipeline):
     """RemoveIndexedRecords pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_prod(self):
         """Run prod."""
         prefix = self.FLAGS.get('prefix_of_indexed_records_to_remove')

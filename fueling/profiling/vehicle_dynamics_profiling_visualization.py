@@ -22,10 +22,6 @@ import fueling.profiling.feature_visualization.vehicle_dynamics_feature_visualiz
 class VehicleDynamicsProfilingVisualization(BasePipeline):
     """ Vehicle Dynamics Profiling: Visualize Control Features"""
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/vehicle_dynamics/generated'

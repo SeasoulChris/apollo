@@ -12,9 +12,6 @@ import fueling.common.logging as logging
 class MatchImgLabel(BasePipeline):
     """Records to MatchImgLabel proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(png_img)

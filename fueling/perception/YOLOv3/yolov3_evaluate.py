@@ -25,8 +25,6 @@ INFERENCE_DATA_DIR_CLOUD = cfg.inference_data_dir_cloud
 
 
 class Yolov3Inference(BasePipeline):
-    def __init__(self):
-        BasePipeline.__init__(self)
 
     def run_test(self):
         training_datasets = glob.glob(os.path.join(INFERENCE_DATA_DIR_LOCAL, "*"))

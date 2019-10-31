@@ -62,10 +62,6 @@ def execute_task(source_dir):
 class LidarBenchmarkPipeline(BasePipeline):
     """Extract logsim scenarios from records and save the bag/json pair"""
 
-    def __init__(self):
-        """Initialize"""
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Local mini test."""
         original_path = '/apollo/benchmark-data'

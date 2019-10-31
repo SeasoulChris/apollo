@@ -17,7 +17,6 @@ class DeserializeRecordsPipeline(BasePipeline):
     """Deserialize records pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self)
         # For working around "process_stream", which is not able to accept packed parameters
         self._root_dir = '/apollo'
 

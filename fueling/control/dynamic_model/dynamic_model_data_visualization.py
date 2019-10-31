@@ -25,8 +25,6 @@ VEHICLE_ID = feature_config["vehicle_id"]
 
 
 class DynamicModelDatasetDistribution(BasePipeline):
-    def __init__(self):
-        BasePipeline.__init__(self)
 
     def run_test(self):
         # hdf5 data directory

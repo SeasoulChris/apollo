@@ -23,10 +23,6 @@ import fueling.profiling.grading_evaluation.control_performance_grading_utils as
 class ControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling'

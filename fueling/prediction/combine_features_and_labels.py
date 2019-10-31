@@ -14,9 +14,6 @@ import fueling.common.logging as logging
 class FeaturesAndLabelsCombine(BasePipeline):
     """Records to DataForLearning proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         datalearn_files = self.to_rdd(glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))

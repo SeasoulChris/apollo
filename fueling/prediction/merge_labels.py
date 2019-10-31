@@ -15,9 +15,6 @@ SKIP_EXISTING_DST_FILE = False
 class MergeLabels(BasePipeline):
     """Records to MergeLabels proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(npy_file)

@@ -15,9 +15,6 @@ SKIP_EXISTING_DST_FILE = False
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
 
-    def __init__(self):
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         # RDD(dir_path)

@@ -24,12 +24,7 @@ flags.DEFINE_string('lidar_type', 'velodyne16',
 
 
 class LocalMapPipeline(BasePipeline):
-
     """generate local map"""
-
-    def __init__(self):
-        """Initialize"""
-        BasePipeline.__init__(self)
 
     def run_test(self):
         """Local mini test."""

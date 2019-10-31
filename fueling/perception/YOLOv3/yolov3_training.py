@@ -22,8 +22,6 @@ MODEL_OUTPUT_PATH = cfg.model_output_path
 
 
 class Yolov3Training(BasePipeline):
-    def __init__(self):
-        BasePipeline.__init__(self)
 
     def run_test(self):
         training_datasets = glob.glob(os.path.join(TRAIN_DATA_DIR_LOCAL, "*"))

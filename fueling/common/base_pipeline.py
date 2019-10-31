@@ -21,15 +21,13 @@ flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 
 class BasePipeline(object):
     """Fueling base pipeline."""
+    # Class variables are only available on drivers.
     SPARK_CONTEXT = None
 
-    def __init__(self):
-        """Pipeline constructor."""
-        # Values constructed on driver and broadcast to executors.
-        self.name = self.__class__.__name__
-        self.FLAGS = None
-        # Values constructed on driver and not shared.
-        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName(self.name))
+    def init(self):
+        """Should be called explicitly after app inited."""
+        # Member variables are available on both driver and executors.
+        self.FLAGS = flags.FLAGS.flag_values_dict()
 
     def run_test(self):
         """Run the pipeline in test mode."""
@@ -40,16 +38,15 @@ class BasePipeline(object):
         raise Exception('Not implemented!')
 
     # Helper functions.
+    # TODO(xiaoxq): Retire later.
     @classmethod
     def context(cls):
         """Get the SparkContext."""
-        if cls.SPARK_CONTEXT is None:
-            cls.SPARK_CONTEXT = SparkContext.getOrCreate(SparkConf().setAppName('BasePipeline'))
-        return cls.SPARK_CONTEXT
+        return BasePipeline.SPARK_CONTEXT
 
     def to_rdd(self, data):
         """Get an RDD of data."""
-        return self.context().parallelize(data)
+        return BasePipeline.SPARK_CONTEXT.parallelize(data)
 
     # TODO(xiaoxq): Retire later.
     def bos(self):
@@ -73,32 +70,48 @@ class BasePipeline(object):
 
     def __main__(self, argv):
         """Run the pipeline."""
-        self.FLAGS = flags.FLAGS.flag_values_dict()
+        self.init()
         mode = self.FLAGS.get('running_mode')
         if mode is None:
-            logging.fatal('No running mode is specified! Please run the pipeline with '
-                          './tools/submit-job-to-xxx instead of calling native "python".')
+            logging.fatal('No running mode is specified! Please run the pipeline with either\n'
+                          '    tools/submit-job-to-local.sh\n'
+                          '    tools/submit-job-to-k8s.py')
             sys.exit(1)
         if not self.FLAGS.get('job_id'):
             self.FLAGS['job_id'] = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
-        logging.info('Running {} job in {} mode, owner={}, id={}'.format(
-            self.name, mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))
+        logging.info('Running job in {} mode, owner={}, id={}'.format(
+            mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))
         if mode == 'TEST':
             self.run_test()
         else:
             self.run_prod()
-        self.context().stop()
 
     def main(self):
+        # Values constructed on driver and not shared.
+        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
+            SparkConf().setAppName(self.__class__.__name__))
         app.run(self.__main__)
+        BasePipeline.SPARK_CONTEXT.stop()
 
 
 class SequentialPipeline(BasePipeline):
+    """
+    A sequential of sub-pipelines. Run it like
+        SequentialPipeline([
+            Pipeline1(),
+            Pipeline2(arg1),
+            Pipeline3(),
+        ]).main()
+    """
     def __init__(self, phases):
-        """Pipeline constructor."""
-        BasePipeline.__init__(self)
-        self.phases = [phase() for phase in phases]
+        self.phases = phases
+
+    def init(self):
+        """Init all sub-pipelines."""
+        BasePipeline.init(self)
+        for phase in self.phases:
+            phase.init()
 
     def run_test(self):
         """Run the pipeline in test mode."""

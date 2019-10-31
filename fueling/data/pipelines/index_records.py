@@ -24,7 +24,6 @@ class IndexRecords(BasePipeline):
     """IndexRecords pipeline."""
 
     def __init__(self):
-        BasePipeline.__init__(self)
         self.metrics_prefix = 'data.pipelines.index_records.'
 
     def run_test(self):

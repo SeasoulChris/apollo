@@ -77,10 +77,6 @@ def get_data_point(elem):
 class GoldenSet(BasePipeline):
     """ Generate sample set feature extraction hdf5 files from records """
 
-    def __init__(self):
-        """ initialize """
-        BasePipeline.__init__(self)
-
     def run_test(self):
         """Run test."""
         logging.info('VEHICLE: %s' % VEHICLE)

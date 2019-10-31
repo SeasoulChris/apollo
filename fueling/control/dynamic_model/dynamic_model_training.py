@@ -21,8 +21,6 @@ IS_BACKWARD = feature_config["is_backward"]
 
 
 class DynamicModelTraining(BasePipeline):
-    def __init__(self):
-        BasePipeline.__init__(self)
 
     def run_test(self):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
