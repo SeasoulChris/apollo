@@ -13,10 +13,12 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.record_utils as record_utils
 
 
 BINARY = '/apollo/bazel-bin/modules/data/tools/rosbag_to_record/rosbag_to_record'
 MARKER = 'COMPLETE'
+PROCESS_LAST_N_DAYS = 30
 
 
 class BagToRecord(BasePipeline):
@@ -57,7 +59,9 @@ class BagToRecord(BasePipeline):
 
         # PairRDD(dst_record, src_bag)
         record_to_bag = spark_op.substract_keys(
-            record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record')))
+            record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record'))
+        ).filter(spark_op.filter_key(record_utils.filter_last_n_days_records(PROCESS_LAST_N_DAYS)))
+
         self.run(record_to_bag.map(spark_op.swap_kv))
 
     def run(self, bag_to_record):
