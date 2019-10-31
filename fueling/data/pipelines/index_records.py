@@ -39,7 +39,7 @@ class IndexRecords(BasePipeline):
         ]
         bos = self.bos()
         # RDD(record_path)
-        records_rdd = self.context().union([
+        records_rdd = BasePipeline.SPARK_CONTEXT.union([
             self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
 

@@ -38,12 +38,6 @@ class BasePipeline(object):
         raise Exception('Not implemented!')
 
     # Helper functions.
-    # TODO(xiaoxq): Retire later.
-    @classmethod
-    def context(cls):
-        """Get the SparkContext."""
-        return BasePipeline.SPARK_CONTEXT
-
     def to_rdd(self, data):
         """Get an RDD of data."""
         return BasePipeline.SPARK_CONTEXT.parallelize(data)

@@ -265,7 +265,7 @@ class PopulateFramesPipeline(BasePipeline):
 
         # Transform RDD to DataFrame, run SQL and tranform back when done
         logging.info('SQL query to search closest sensor messages')
-        sql_context = SQLContext(self.context())
+        sql_context = SQLContext(BasePipeline.SPARK_CONTEXT)
         sql_query = get_sql_query(sql_context, msgs_rdd)
         (sql_context.sql(sql_query)
          # RDD(target, lidar_topic, lidar_time, other_topic, MINIMAL_time)

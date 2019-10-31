@@ -34,7 +34,7 @@ class DeserializeRecordsPipeline(BasePipeline):
 
     def run(self):
         """Run streaming process"""
-        stream_context = StreamingContext(self.context(), 30)
+        stream_context = StreamingContext(BasePipeline.SPARK_CONTEXT, 30)
 
         record_path = streaming_utils.get_streaming_records(self._root_dir)
         logging.info('Streaming monitors at {}'.format(record_path))
