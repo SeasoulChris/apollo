@@ -11,7 +11,7 @@ dependencies:
 
   # Google infra
   - absl-py
-  - protobuf
+  - protobuf = 3.6  # Compatible with locked tensorflow.
 
   # Data science
   - boto3
@@ -26,11 +26,11 @@ dependencies:
   - keras-gpu
   - opencv
   - pillow
-  - pytorch = 1.1.0  # TODO(all): Explain why it's locked.
+  - pytorch = 1.1.0  # Newer torch changes API and we need to fix our code.
   - scikit-learn
   - torchvision
-  - tensorflow-gpu
-
+  - tensorflow = 1.14.0  # Newer tensorflow introduces API change.
+  - gast = 0.2.2  # Required by yolov3 training.
   # Other
   - future
   - progressbar2
