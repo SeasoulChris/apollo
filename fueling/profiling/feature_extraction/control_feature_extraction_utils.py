@@ -49,7 +49,7 @@ def verify_vehicle_controller(task):
         if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug') and
                 hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
             controller_type = "Lon_Lat_Controller"
-        elif hasattr(grecord_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
+        elif hasattr(record_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
             controller_type = "MPC_Controller"
         else:
             logging.info('no known controller type found in task {} record {}; \
