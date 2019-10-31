@@ -49,7 +49,6 @@ dependencies:
   - jupyter_core
 
   - pip:
-    - auto-sklearn
     - azure.storage.blob
     - liegroups
     - pycocotools
