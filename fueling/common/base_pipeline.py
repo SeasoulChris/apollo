@@ -64,6 +64,8 @@ class BasePipeline(object):
 
     def __main__(self, argv):
         """Run the pipeline."""
+        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
+            SparkConf().setAppName(self.__class__.__name__))
         self.init()
         mode = self.FLAGS.get('running_mode')
         if mode is None:
@@ -80,13 +82,11 @@ class BasePipeline(object):
             self.run_test()
         else:
             self.run_prod()
+        BasePipeline.SPARK_CONTEXT.stop()
 
     def main(self):
-        # Values constructed on driver and not shared.
-        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
-            SparkConf().setAppName(self.__class__.__name__))
+        """Kick off everything."""
         app.run(self.__main__)
-        BasePipeline.SPARK_CONTEXT.stop()
 
 
 class SequentialPipeline(BasePipeline):
