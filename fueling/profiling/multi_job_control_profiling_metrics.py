@@ -25,10 +25,9 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling'
-        target_prefix = '/{}/{}'.format(job_owner, job_id)
+        target_prefix = '/{}/{}'.format(self.FLAGS.get('job_owner'),
+                                        self.FLAGS.get('job_id'))
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, 'Road_Test'),
@@ -40,11 +39,9 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')
         original_prefix = 'small-records/2019'
         target_prefix = '{}/{}/modules/control/control_profiling_hf5'.format(
-            job_owner, job_id)
+            self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
         # RDD(tasks), the task dirs
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
                                                 dir_utils.get_todo_tasks(original_prefix, target_prefix))
