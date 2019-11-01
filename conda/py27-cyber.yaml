@@ -5,6 +5,7 @@ dependencies:
   - pyspark = 2.4.4  # Align with pre-built server image.
 
   # Language tools
+  - future
   - pip
   - pylint
 
