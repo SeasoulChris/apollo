@@ -1,12 +1,26 @@
-FROM apolloauto/apollo:dev-18.04-x86_64-20190822_1616
+FROM ubuntu:18.04
 
-RUN apt-get update && apt-get install -y netbase
+RUN apt update && \
+    apt install -y netbase python3-pip && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
-COPY apps/k8s/warehouse/deploy/conda-py37.yaml /tmp/conda-py37.yaml
-RUN /usr/local/miniconda/bin/conda env update -f /tmp/conda-py37.yaml && \
-    /usr/local/miniconda/bin/conda clean -a -y
+RUN pip3 install --no-cache-dir \
+        absl-py \
+        eventlet \
+        flask \
+        flask-restful \
+        flask-socketio \
+        gunicorn \
+        matplotlib \
+        mpld3 \
+        protobuf \
+        pymongo \
+        pytz \
+        redis
 
-COPY py_proto /apollo/py_proto
-COPY fueling /apollo/modules/data/fuel/fueling
-COPY apps/k8s/warehouse /apollo/modules/data/fuel/apps/k8s/warehouse
-ENTRYPOINT [ "/apollo/modules/data/fuel/apps/k8s/warehouse/deploy/entrypoint.sh" ]
+COPY apps/k8s/warehouse /home/warehouse
+COPY fueling /home/warehouse/fueling
+COPY py_proto /home/warehouse/
+
+WORKDIR /home/warehouse
+ENTRYPOINT ["python3", "index.py"]
