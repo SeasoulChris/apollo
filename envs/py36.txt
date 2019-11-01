@@ -1,0 +1,61 @@
+# Spark
+pyspark == 2.4.4  # Align with pre-built server image.
+pyspark-utils
+
+# Language tools
+cython
+pylint
+
+# Google infra
+absl-py
+protobuf == 3.6  # Compatible with locked tensorflow.
+
+# Data science
+azure.storage.blob
+boto3
+h5py
+matplotlib
+# sudo -H pip3 install numpy
+pymongo
+redis
+
+# Learning
+# apt install cuda-toolkit-10-0  # Align with Apollo base image cuda version.
+keras
+opencv-python
+pillow
+scikit-learn
+torch == 1.1.0  # Newer torch changes API and we need to fix our code.
+torchvision
+tensorflow == 1.14.0  # Newer tensorflow introduces API change.
+gast == 0.2.2  # Required by yolov3 training.
+
+# Other
+future
+progressbar2
+pyproj
+pytz
+requests
+
+# Audio
+seaborn
+pywavelets
+
+# Jupyter notebook
+jupyter
+jupyter_client
+jupyter_console
+jupyter_core
+
+liegroups
+pycocotools
+pyro-ppl == 0.3.3  # 0.4.1+ requires pytorch 1.2.0+
+scaleapi
+websocket
+
+# Audio
+eyed3
+librosa
+moviepy
+pydub
+youtube-dl

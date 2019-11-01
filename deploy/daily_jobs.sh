@@ -9,7 +9,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 # The bag-to-record job is code-freezed.
 JOB="/apollo/modules/data/fuel/fueling/data/pipelines/bag_to_record.py"
 FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718" ./tools/submit-job-to-k8s.sh \
-    --workers 30 --memory 20g --disk 500 \
+    --workers 10 --memory 20g --disk 500 \
     --image "hub.baidubce.com/apollo/spark:ubuntu-14.04_spark-2.4.0" \
     --fueling "/mnt/bos/modules/data/jobs/deploy/fueling-latest.zip" \
     ${JOB}
