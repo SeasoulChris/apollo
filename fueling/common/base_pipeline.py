@@ -103,7 +103,7 @@ class SequentialPipeline(BasePipeline):
 
     def init(self):
         """Init all sub-pipelines."""
-        super().init()
+        BasePipeline.init(self)
         for phase in self.phases:
             phase.init()
 
