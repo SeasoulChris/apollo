@@ -41,6 +41,6 @@ def list_completed_dirs(prefix, marker):
     # RDD(files in prefix folders)
     return (
         # RDD(files_end_with_marker)
-        BasePipeline.context().parallelize(BosClient().list_files(prefix, marker))
+        BasePipeline.SPARK_CONTEXT.parallelize(BosClient().list_files(prefix, marker))
         # RDD(dirs_of_file_end_with_marker)
         .map(os.path.dirname))

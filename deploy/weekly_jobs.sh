@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Jobs that run once every week, starting at 6:00 a.m. on Saturday.
-# Crontab example: 0 6 * * 6 /this/script.sh
+# Crontab example: @weekly /this/script.sh
 
 set -e
 

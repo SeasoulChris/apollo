@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run once everyday hour.
-# Crontab example: 0 */1 * * * /this/script.sh
+# Crontab example: @hourly /this/script.sh
 
 set -e
 
