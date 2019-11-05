@@ -70,9 +70,9 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        todo_records = self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
-        src_prefix = 'docs/demo_guide'
-        dst_prefix = 'data'
+        todo_records = self.to_rdd(['/apollo/modules/data/fuel/testdata/data/small.record'])
+        src_prefix = '/apollo/modules/data'
+        dst_prefix = '/tmp/generate_small_records'
         self.run(todo_records, src_prefix, dst_prefix)
 
     def run_prod(self):
