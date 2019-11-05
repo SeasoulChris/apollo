@@ -97,9 +97,6 @@ practices are:
 1. Use `absl.flags` for script argument. refer to
    [Flags And Logging guide](docs/flags-and-logging-guide.md) for more
    information.
-
-   Always run pipeline with our tools, and follow the pattern:
-   `tools/submit-job-to-*.sh [tool-flags ...] <your-job.py> [job-gflags ...]`.
 1. For Apollo data access, we use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya)
    to mount Apollo's BOS storage at `/mnt/bos`, which can be used as a POSIX
    file system. But if you want to list many files under a folder, a better way
@@ -120,6 +117,11 @@ practices are:
 ./tools/submit-job-to-local.sh [options] /path/to/spark/job.py [job-gflags]
 # Go to http://localhost:4040 when the server is launched successfully.
 ```
+
+As the environment changes and libraries upgrade frequently, you'd better mount
+your job to the [regression test train](deploy/regression_test.sh), which we
+keep a close eye on, and make sure it passes before pushing a new docker image,
+so as to minimize the chance to surprise you.
 
 ### Run pipeline in cluster
 
