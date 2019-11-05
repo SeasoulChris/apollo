@@ -16,5 +16,13 @@ CONDA_ENV="fuel-py27-cyber"
 ${SUBMITTER} -e ${CONDA_ENV} fueling/data/pipelines/index_records.py
 ${SUBMITTER} -e ${CONDA_ENV} fueling/data/pipelines/reorg_small_records.py
 ${SUBMITTER} -e ${CONDA_ENV} fueling/data/pipelines/generate_small_records.py
+# Add your job here.
 
+CONDA_ENV="fuel-py36"
+# Add your job here.
+
+CONDA_ENV="fuel-py36-pyro"
+# Add your job here.
+
+echo "====================================================="
 echo "All tests passed!"
