@@ -13,6 +13,7 @@ MODE_IDX = {
     # Additional Modes extracted from Lincoln vehicle type
     "throttle_chassis": 4,
     "brake_chassis": 5,
+    "steering_chassis": 6,
 }
 
 FEATURE_IDX = {
@@ -44,20 +45,26 @@ FEATURE_IDX = {
     "heading_rate": 24,
     "heading_acceleration": 25,
     "heading_jerk": 26,
-    "total_time": 27,
-    "total_time_exceeded": 28,
-    "timestamp_sec": 29,
-    "sequence_num": 30,
-    "localization_timestamp_sec": 31,
-    "localization_sequence_num": 32,
-    "chassis_timestamp_sec": 33,
-    "chassis_sequence_num": 34,
-    "trajectory_timestamp_sec": 35,
-    "trajectory_sequence_num": 36,
+    "reference_position_x": 27,
+    "reference_position_y": 28,
+    "total_time": 29,
+    "total_time_exceeded": 30,
+    "timestamp_sec": 31,
+    "sequence_num": 32,
+    "localization_timestamp_sec": 33,
+    "localization_sequence_num": 34,
+    "chassis_timestamp_sec": 35,
+    "chassis_sequence_num": 36,
+    "trajectory_timestamp_sec": 37,
+    "trajectory_sequence_num": 38,
     # Additional Features extracted from Chassis Channel
-    "throttle_chassis": 37,
-    "brake_chassis": 38,
-    "pose_heading_offset": 39,
+    "throttle_chassis": 39,
+    "brake_chassis": 40,
+    "steering_chassis": 41,
+    "pose_position_x": 42,
+    "pose_position_y": 43,
+    "pose_heading": 44,
+    "pose_heading_offset": 45,
 }
 
 POSE_IDX = {
@@ -73,10 +80,11 @@ FEATURE_NAMES = ["station_reference", "speed_reference", "acceleration_reference
                  "curvature_reference", "path_remain", "station_error", "speed_error", "lateral_error", "lateral_error_rate",
                  "heading_error", "heading_error_rate", "throttle_cmd", "brake_cmd", "acceleration_cmd", "steering_cmd", "station",
                  "speed", "acceleration", "jerk", "lateral_acceleration", "lateral_jerk", "heading_angle", "heading_rate",
-                 "heading_acceleration", "heading_jerk", "total_time", "total_time_exceeded", "timestamp_sec", "sequence_num",
-                 "localization_timestamp_sec", "localization_sequence_num", "chassis_timestamp_sec", "chassis_sequence_num",
-                 "trajectory_timestamp_sec", "trajectory_sequence_num", "throttle_chassis", "brake_chassis", "pose_heading_offset"]
-
+                 "heading_acceleration", "heading_jerk", "reference_position_x", "reference_position_y", "total_time",
+                 "total_time_exceeded", "timestamp_sec", "sequence_num", "localization_timestamp_sec", "localization_sequence_num",
+                 "chassis_timestamp_sec", "chassis_sequence_num", "trajectory_timestamp_sec", "trajectory_sequence_num",
+                 "throttle_chassis", "brake_chassis", "steering_chassis", "pose_position_x", "pose_position_y", "pose_heading",
+                 "pose_heading_offset"]
 
 """Vehicle Dynamics Profiling Index and Names: """
 
