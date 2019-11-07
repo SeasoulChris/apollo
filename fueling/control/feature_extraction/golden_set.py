@@ -51,8 +51,13 @@ def gen_segment(elem):
     pre_time = elem[0][0]
     data_set = np.array(elem[0][1])
     counter = 1  # count segment length first element
+    gear = elem[0][1][-1]
+    logging.info('gear is %s' % gear)
     for i in range(1, len(elem)):
-
+        # gear sanity check
+        if elem[i][1][-1] != gear:
+            logging.error("gear inconsistent, stop processing data")
+            return []
         if (elem[i][0] - pre_time) <= MAX_PHASE_DELTA_SEGMENT:
             data_set = np.vstack([data_set, elem[i][1]])
             counter += 1
@@ -81,8 +86,8 @@ class GoldenSet(BasePipeline):
         """Run test."""
         logging.info('VEHICLE: %s' % VEHICLE)
 
-        origin_dir = '/apollo/data/GoldenSet'
-        target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+        origin_dir = '/apollo/data/fuel'
+        target_dir = os.path.join('/apollo/data/fuel/',
                                   'GoldenSet', VEHICLE)
         # RDD(record_dirs)
         todo_tasks = self.to_rdd([origin_dir])
@@ -91,7 +96,7 @@ class GoldenSet(BasePipeline):
             'todo_records',
             todo_tasks
             # RDD(record_file)
-            .flatMap(lambda path: glob.glob(os.path.join(path, '*/*/*recover')))
+            .flatMap(lambda path: glob.glob(os.path.join(path, '*/*.record*')))
             # PairRDD(dir, record_file)
             .keyBy(os.path.dirname))
 
