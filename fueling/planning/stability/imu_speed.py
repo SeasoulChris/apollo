@@ -4,7 +4,7 @@
 import math
 
 
-class ImuSpeed:
+class ImuSpeed(object):
 
     def __init__(self, is_lateral=False):
         self.timestamp_list = []

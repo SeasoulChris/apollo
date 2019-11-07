@@ -3,11 +3,15 @@
 
 import collections
 import os
+import sys
 
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from cyber_py.record import RecordReader, RecordWriter
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader, RecordWriter
+else:
+    from cyber_py.record import RecordReader, RecordWriter
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils

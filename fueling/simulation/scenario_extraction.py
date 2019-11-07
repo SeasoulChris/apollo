@@ -4,8 +4,12 @@ This is a module to extraction logsim scenarios from records
 based on disengage info
 """
 import os
+import sys
 
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging

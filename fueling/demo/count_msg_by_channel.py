@@ -14,7 +14,7 @@ Run with:
 import pprint
 
 # Apollo packages
-from cyber_py.record import RecordReader
+from cyber_py.record_py3 import RecordReader
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline

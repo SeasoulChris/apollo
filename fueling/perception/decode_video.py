@@ -6,12 +6,17 @@ import collections
 import glob
 import operator
 import os
+import sys
 import time
 
 import cv2
 import pyspark_utils.helper as spark_helper
 
-from cyber_py.record import RecordReader, RecordWriter
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader, RecordWriter
+else:
+    from cyber_py.record import RecordReader, RecordWriter
+
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 
 from fueling.common.base_pipeline import BasePipeline

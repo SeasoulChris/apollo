@@ -6,9 +6,10 @@ Run with:
 
 # Standard packages
 import glob
-import time
-import os
 import math
+import os
+import sys
+import time
 
 # Third-party packages
 from absl import flags
@@ -16,7 +17,10 @@ from shapely.geometry import LineString, Point
 import pyspark_utils.helper as spark_helper
 
 # Apollo packages
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
 from modules.map.proto import map_road_pb2

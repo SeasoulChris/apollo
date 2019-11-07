@@ -4,6 +4,7 @@
 import gc
 import math
 import os
+import sys
 
 from google.protobuf.json_format import MessageToJson
 from pyquaternion import Quaternion as PyQuaternion
@@ -12,7 +13,10 @@ import numpy as np
 import pypcd
 import yaml
 
-from cyber_py import record
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 from modules.data.proto import frame_pb2
 from modules.common.proto.geometry_pb2 import Point3D
 from modules.common.proto.geometry_pb2 import PointENU
@@ -290,15 +294,14 @@ def get_interp_pose(timestamp, pose_left, pose_right):
 
 def read_messages_func(record_file):
     """Define a util function to read messages from record file"""
-    freader = record.RecordReader(record_file)
-    return freader.read_messages()
+    return RecordReader(record_file).read_messages()
 
 
 def get_messages_number(record_file, channels):
     """Return a set of message numbers for specified channels"""
     message_numbers = []
     try:
-        freader = record.RecordReader(record_file)
+        freader = RecordReader(record_file)
         for channel in channels:
             message_numbers.append(freader.get_messagenumber(channel))
     except Exception:

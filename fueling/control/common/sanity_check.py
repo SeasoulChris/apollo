@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 import cgi
 import collections
-import os
 import math
+import os
+import sys
 
 import google.protobuf.text_format as text_format
 
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 import fueling.common.email_utils as email_utils

@@ -3,11 +3,15 @@
 """Utility functions for the serialize job"""
 
 import os
+import sys
 import time
 
 import yaml
 
-from cyber_py import record
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -64,19 +68,18 @@ def parse_record(record_file, root_dir):
     if os.path.exists(os.path.join(record_dir, 'COMPLETE')):
         logging.info('target has been generated, do nothing')
         return
-    topic_files = [os.path.join(record_dir,
-                                streaming_utils.topic_to_file_name(x.get('topic'))) for x in settings]
+    topic_files = [os.path.join(record_dir, streaming_utils.topic_to_file_name(x.get('topic')))
+                   for x in settings]
     topic_file_handles = {}
     try:
         topic_file_handles = build_file_handles(topic_files)
-        freader = record.RecordReader(record_file)
+        freader = RecordReader(record_file)
         # Sometimes reading right after opening reader can cause no messages are read
         time.sleep(2)
         for message in freader.read_messages():
             renamed_topic = streaming_utils.topic_to_file_name(message.topic)
             if renamed_topic in topic_file_handles:
-                fields = next(x for x in settings if x.get('topic') == message.topic)\
-                    .get('fields')
+                fields = next(x for x in settings if x.get('topic') == message.topic).get('fields')
                 header_time, meta = build_meta_with_fields(fields, message)
                 topic_file_handles[renamed_topic].write('{}\n'.format(meta))
                 streaming_utils.write_message_obj(record_dir, renamed_topic, message, header_time)

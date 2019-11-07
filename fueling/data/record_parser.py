@@ -11,7 +11,11 @@ import math
 import os
 import sys
 
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
+
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.gps_pb2 import Gps
 from modules.localization.proto.localization_pb2 import LocalizationEstimate

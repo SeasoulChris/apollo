@@ -4,9 +4,13 @@
 import collections
 import fnmatch
 import os
+import sys
 
 from cyber.proto.record_pb2 import Header
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py.record_py3 import RecordReader
+else:
+    from cyber_py.record import RecordReader
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.control.proto.control_cmd_pb2 import ControlCommand
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus

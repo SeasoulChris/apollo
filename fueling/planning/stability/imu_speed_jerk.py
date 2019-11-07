@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8-*-
 
-from imu_speed_acc import ImuSpeedAcc
+from fueling.planning.stability.imu_speed_acc import ImuSpeedAcc
 
 
-class ImuSpeedJerk:
+class ImuSpeedJerk(object):
 
     def __init__(self, is_lateral=False):
         self.timestamp_list = []

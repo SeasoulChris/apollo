@@ -7,7 +7,7 @@ from fueling.planning.stability.imu_speed import ImuSpeed
 from fueling.planning.stability.imu_speed_jerk import ImuSpeedJerk
 
 
-class SpeedJerkStability:
+class SpeedJerkStability(object):
 
     def __init__(self, is_lateral=False):
         self.speed_jerk_cnt = defaultdict(lambda: defaultdict(int))
