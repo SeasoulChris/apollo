@@ -10,10 +10,17 @@ import sys
 import time
 import zipfile
 
-from absl import app
-from absl import flags
-from absl import logging
-import requests
+try:
+    from absl import app
+    from absl import flags
+    from absl import logging
+except:
+    print('Cannot import absl, you may need to run "sudo python3 -m pip install absl-py".')
+
+try:
+    import requests
+except:
+    print('Cannot import requests, you may need to run "sudo python3 -m pip install requests".')
 
 
 # User.
@@ -21,7 +28,7 @@ flags.DEFINE_string('running_role', None, 'Running as another role instead of th
 
 # Env.
 flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
-flags.DEFINE_string('env', 'fuel-py27-cyber', 'Conda env name.')
+flags.DEFINE_string('env', 'fuel-py36', 'Conda env name.')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')

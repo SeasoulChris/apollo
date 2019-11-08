@@ -17,12 +17,9 @@ FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718" ./tools/submit-job-to-k
 set -e
 
 # Job: Daily jobs.
-JOB="fueling/daily_jobs.py"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=10 --memory=24 --disk=800 --wait
+SUBMITTER="./tools/submit-job-to-k8s.py --env=fuel-py36 --workers=10 --memory=24 --wait"
+${SUBMITTER} --main="fueling/daily_jobs.py" --disk=800
 
 # Job: Control profiling.
-JOB="fueling/profiling/control_profiling_metrics.py"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=10 --memory=24 --wait
-JOB="fueling/profiling/control_profiling_visualization.py"
-CONDA_ENV="fuel-py36"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=10 --memory=24 --env=${CONDA_ENV} --wait
+${SUBMITTER} --main="fueling/profiling/control_profiling_metrics.py"
+${SUBMITTER} --main="fueling/profiling/control_profiling_visualization.py"
