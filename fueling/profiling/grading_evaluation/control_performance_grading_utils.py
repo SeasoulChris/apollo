@@ -227,7 +227,7 @@ def compute_h5_and_gradings(target_groups):
             std_filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
             std_filter_mode=[0],
-            std_norm_name='heading_error',
+            std_norm_name='heading_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
