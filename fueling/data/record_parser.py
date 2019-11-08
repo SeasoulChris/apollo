@@ -23,6 +23,8 @@ from modules.planning.proto.planning_pb2 import ADCTrajectory
 
 from fueling.common.coord_utils import CoordUtils
 from fueling.planning.metrics.latency import LatencyMetrics
+from fueling.planning.stability.grading.imu_stability_grader import ImuStabilityGrader
+from fueling.planning.stability.grading.planning_stability_grader import PlanningStabilityGrader
 from fueling.planning.stability.speed_jerk_stability import SpeedJerkStability
 from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.logging as logging
@@ -74,6 +76,8 @@ class RecordParser(object):
             for jerk, cnt in jerk_cnt.items():
                 speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
+        record.stat.planning_stat.stability.imu_stability_score = parser._imu_stability_grader.get_score()
+        record.stat.planning_stat.stability.planning_stability_score = parser._planning_stability_grader.get_score()
         return record
 
     def __init__(self, record_file):
@@ -92,6 +96,8 @@ class RecordParser(object):
         self._planning_latency_analyzer = LatencyMetrics()
         self._lon_stability_analyzer = SpeedJerkStability(is_lateral=False)
         self._lat_stability_analyzer = SpeedJerkStability(is_lateral=True)
+        self._imu_stability_grader = ImuStabilityGrader()
+        self._planning_stability_grader = PlanningStabilityGrader()
 
     def ParseMeta(self):
         """
@@ -162,6 +168,7 @@ class RecordParser(object):
         planning = ADCTrajectory()
         planning.ParseFromString(msg)
         self._planning_latency_analyzer.process(planning)
+        self._planning_stability_grader.grade_message(planning)
 
     def _process_position(self, time_sec, position):
         # Stat mileages.
@@ -199,6 +206,7 @@ class RecordParser(object):
         self._process_position(localization.header.timestamp_sec, localization.pose.position)
         self._lon_stability_analyzer.add(localization)
         self._lat_stability_analyzer.add(localization)
+        self._imu_stability_grader.grade_message(localization)
 
     def ProcessGnssOdometry(self, msg):
         """Process GPS, stat mileages and save driving path."""

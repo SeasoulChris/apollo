@@ -211,6 +211,14 @@
           <td>Latency 200 ms and up</td>
           <td>{{ record.stat.planning_stat.latency.latency_hist["latency_200_up_ms"] }}</td>
         </tr>
+        <tr>
+          <td>Imu based stability score</td>
+          <td>{{ record.stat.planning_stat.stability.imu_stability_score }}</td>
+        </tr>
+        <tr>
+          <td>Planning based stability score</td>
+          <td>{{ record.stat.planning_stat.stability.planning_stability_score }}</td>
+        </tr>
       </tbody>
     </table>
     <div>{{ record | plot_record }}</div>

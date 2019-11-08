@@ -29,7 +29,7 @@ PLOT_DATA_LENGTH = 500
 lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
 lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
 av_processor = ImuAngularVelocity()
-grader = imu_stability_grader.Grader()
+grader = imu_stability_grader.ImuStabilityGrader()
 
 
 def callback(pose_pb):

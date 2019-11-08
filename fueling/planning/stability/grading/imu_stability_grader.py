@@ -12,10 +12,15 @@ from fueling.planning.stability.libs.imu_speed_jerk import ImuSpeedJerk
 from fueling.planning.stability.libs.record_reader import RecordItemReader
 
 
-class Grader:
+class ImuStabilityGrader(object):
     def __init__(self):
         self.key_lat_jerk_av = grade_table_utils.KEY_LAT_JERK_AV_SCORE
         self.key_lon_jerk_av = grade_table_utils.KEY_LON_JERK_AV_SCORE
+
+        self.lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
+        self.lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
+        self.av_processor = ImuAngularVelocity()
+        self.score_list = []
 
         table_path = os.path.dirname(os.path.realpath(__file__))
         table_path_file = os.path.join(table_path, "reference_grade_table.json")
@@ -47,30 +52,33 @@ class Grader:
                 score_lon_jerk_av = self.grade_table[self.key_lon_jerk_av][lon_jerk][angular_velocity]
         return score_lat_jerk_av * score_lon_jerk_av
 
+    def grade_message(self, pose_data):
+        self.av_processor.add(pose_data)
+        self.lat_jerk_processor.add(pose_data)
+        self.lon_jerk_processor.add(pose_data)
+
+        av = self.av_processor.get_latest_corrected_angular_velocity()
+        if av is None:
+            return
+        lat_jerk = self.lat_jerk_processor.get_lastest_jerk()
+        lon_jerk = self.lon_jerk_processor.get_lastest_jerk()
+        if lat_jerk is not None and lon_jerk is not None:
+            score = self.grade(lat_jerk, lon_jerk, av)
+            self.score_list.append(score)
+
     def grade_record_file(self, folder, fn):
         reader = RecordItemReader(folder + "/" + fn)
-        lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
-        lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
-        av_processor = ImuAngularVelocity()
+        self.lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
+        self.lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
+        self.av_processor = ImuAngularVelocity()
 
-        score_list = []
+        self.score_list = []
         topics = ["/apollo/localization/pose"]
         for data in reader.read(topics):
             if "pose" in data:
                 pose_data = data["pose"]
-                av_processor.add(pose_data)
-                lat_jerk_processor.add(pose_data)
-                lon_jerk_processor.add(pose_data)
-
-                av = av_processor.get_latest_corrected_angular_velocity()
-                if av is None:
-                    continue
-                lat_jerk = lat_jerk_processor.get_lastest_jerk()
-                lon_jerk = lon_jerk_processor.get_lastest_jerk()
-                if lat_jerk is not None and lon_jerk is not None:
-                    score = self.grade(lat_jerk, lon_jerk, av)
-                    score_list.append(score)
-        return score_list
+                self.grade_message(pose_data)
+        return self.score_list
 
     def grade_folder(self, folder):
         folder_score_list = []
@@ -82,13 +90,18 @@ class Grader:
 
         return folder_score_list
 
+    def get_score(self):
+        if len(self.score_list) == 0:
+            return 0
+        return sum(self.score_list) / float(len(self.score_list))
+
 
 if __name__ == "__main__":
 
     folders = sys.argv[1:]
     for i in range(len(folders)):
         folder = folders[i]
-        score_list = Grader().grade_folder(folder)
+        score_list = ImuStabilityGrader().grade_folder(folder)
         print("-----------------------------------------------")
         print("FOLDER = ", folder)
         print("score = ", sum(score_list) / float(len(score_list)))

@@ -9,7 +9,7 @@ from fueling.planning.stability.libs.imu_speed_jerk import ImuSpeedJerk
 from fueling.planning.stability.libs.record_reader import RecordItemReader
 
 
-class GradeTableGenerator:
+class GradeTableGenerator(object):
     def __init__(self):
         self.grade_table_data = dict()
         self.grade_table_data[grade_table_utils.KEY_LAT_JERK_AV_SCORE] = {}

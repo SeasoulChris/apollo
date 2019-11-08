@@ -18,7 +18,7 @@ from module_planning_analyzer import PlannigAnalyzer
 from modules.perception.proto import perception_obstacle_pb2
 from modules.prediction.proto import prediction_obstacle_pb2
 from fueling.planning.metrics.lidar_endtoend_analyzer import LidarEndToEndAnalyzer
-from fueling.planning.stability.grading.planning_stability_grader import Grader
+from fueling.planning.stability.grading.planning_stability_grader import PlanningStabilityGrader
 
 
 def process(control_analyzer, planning_analyzer, lidar_endtoend_analyzer,
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             args.planningrefpath, args.alldata)
 
     if args.simulation:
-        score_list = Grader().grade_record_file(record_file)
+        score_list = PlanningStabilityGrader().grade_record_file(record_file)
 
         results = planning_analyzer.get_sim_results()
         if len(results) > 0:
