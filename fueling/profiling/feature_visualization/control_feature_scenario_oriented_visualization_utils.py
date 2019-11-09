@@ -54,13 +54,40 @@ def generate_data(segments):
     return data
 
 
-def plot_feature_vs_time(data_plot_x, data_plot_y, label_plot, feature, title_addon):
+def plot_features_vs_time(data_plot_x, data_plot_y, label_plot, features, title_addon):
     """ control feature y v.s. time x """
     for i in range(0, len(data_plot_x)):
-        plt.plot(data_plot_x[i], data_plot_y[i], label=label_plot[i], linewidth=0.2)
+        for j in range(0, len(data_plot_y)):
+            plt.plot(data_plot_x[i], data_plot_y[j][i],
+                     label=(label_plot[j][i] + ": " + features[j]), linewidth=0.2)
+    label_features = features[0]
+    title_features = FEATURE_NAMES[FEATURE_IDX[features[0]]]
+    if len(features) > 1:
+        for i in range(1, len(features)):
+            label_features += (" v.s. " + features[i])
+            title_features += (" v.s. " + FEATURE_NAMES[FEATURE_IDX[features[i]]])
     plt.xlabel('timestamp_sec /sec')
-    plt.ylabel(feature)
-    plt.title(FEATURE_NAMES[FEATURE_IDX[feature]] + " (" + title_addon + ")", fontsize=10)
+    plt.ylabel(label_features)
+    plt.title(title_features + " (" + title_addon + ")", fontsize=10)
+    plt.legend(fontsize=6)
+    plt.tight_layout()
+
+
+def plot_feature_vs_feature(data_plot_x, data_plot_y, label_plot, features, title_addon):
+    """ control feature y v.s. feature x """
+    if len(features) is not 2:
+        logging.warning('The input feature size is not 2,'
+                        'which does not match the default setting for feature_vs_feature plots')
+        return
+    for i in range(0, len(data_plot_x)):
+        plt.plot(data_plot_x[i], data_plot_y[i],
+                 label=(label_plot[i] + ": " + features[0] + " - " + features[1]),
+                 linewidth=0.2)
+    plt.xlabel(features[0])
+    plt.ylabel(features[1])
+    plt.title(FEATURE_NAMES[FEATURE_IDX[features[0]]] + " v.s. " +
+              FEATURE_NAMES[FEATURE_IDX[features[1]]] + " (" + title_addon + ")",
+              fontsize=8)
     plt.legend(fontsize=6)
     plt.tight_layout()
 
@@ -92,14 +119,35 @@ def plot_h5_features_per_scenario(data_list):
         pdffile = os.path.join(dir_data[0], 'control_data_visualization_per_scenario.pdf')
     # Plot the selected features
     with PdfPages(pdffile) as pdf:
-        plot_features = ["station_error", "speed_error", "lateral_error", "heading_error",
-                         "steering_chassis"]
-        for feature in plot_features:
+        # Plot features vs timestap
+        plot_features = [["station_error"], ["speed_error"], ["lateral_error"],
+                         ["heading_error"], ["steering_cmd", "steering_chassis"]]
+        for features in plot_features:
             title_addon = str(len(data)) + " test cases"
             data_plot_x = [array[:, FEATURE_IDX["timestamp_sec"]] for array in data]
-            data_plot_y = [array[:, FEATURE_IDX[feature]] for array in data]
+            data_plot_y = []
+            label_plot = []
+            for feature in features:
+                data_plot_y_sub = [array[:, FEATURE_IDX[feature]] for array in data]
+                data_plot_y.append(data_plot_y_sub)
+                label_plot_sub = [os.path.basename(dir) for dir in dir_data]
+                label_plot.append(label_plot_sub)
+            plt.figure(figsize=(4, 4))
+            plot_features_vs_time(data_plot_x, data_plot_y, label_plot, features, title_addon)
+            pdf.savefig()
+            plt.close()
+        # Plot feature vs feature
+        plot_features = [["reference_position_x", "reference_position_y"],
+                         ["pose_position_x", "pose_position_y"]]
+        for features in plot_features:
+            # Input feature size must be 2 for feature v.s. feature plotting
+            if len(features) is not 2:
+                continue
+            title_addon = str(len(data)) + " test cases"
+            data_plot_x = [array[:, FEATURE_IDX[features[0]]] for array in data]
+            data_plot_y = [array[:, FEATURE_IDX[features[1]]] for array in data]
             label_plot = [os.path.basename(dir) for dir in dir_data]
             plt.figure(figsize=(4, 4))
-            plot_feature_vs_time(data_plot_x, data_plot_y, label_plot, feature, title_addon)
+            plot_feature_vs_feature(data_plot_x, data_plot_y, label_plot, features, title_addon)
             pdf.savefig()
             plt.close()
