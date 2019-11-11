@@ -21,12 +21,24 @@ class ImuStabilityGrader(object):
         self.lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
         self.av_processor = ImuAngularVelocity()
         self.score_list = []
+        self.lat_jerk_av_table = dict()
+        self.lon_jerk_av_table = dict()
 
         table_path = os.path.dirname(os.path.realpath(__file__))
         table_path_file = os.path.join(table_path, "reference_grade_table.json")
 
         with open(table_path_file, 'r') as f:
             self.grade_table = json.loads(f.read())
+
+    def update_table(self, jerk_av_table, jerk, av):
+        if jerk in jerk_av_table:
+            if av in jerk_av_table[jerk]:
+                jerk_av_table[jerk][av] += 1
+            else:
+                jerk_av_table[jerk][av] = 1
+        else:
+            jerk_av_table[jerk] = {}
+            jerk_av_table[jerk][av] = 1
 
     def grade(self, lat_jerk, lon_jerk, angular_velocity):
         score_lat_jerk_av = 0
@@ -43,6 +55,9 @@ class ImuStabilityGrader(object):
         lon_jerk = str(grade_table_utils.get_jerk_grid(lon_jerk))
         if lon_jerk == "-0.0":
             lon_jerk = "0.0"
+
+        self.update_table(self.lat_jerk_av_table, lat_jerk, angular_velocity)
+        self.update_table(self.lon_jerk_av_table, lon_jerk, angular_velocity)
 
         if lat_jerk in self.grade_table[self.key_lat_jerk_av]:
             if angular_velocity in self.grade_table[self.key_lat_jerk_av][lat_jerk]:
@@ -66,8 +81,8 @@ class ImuStabilityGrader(object):
             score = self.grade(lat_jerk, lon_jerk, av)
             self.score_list.append(score)
 
-    def grade_record_file(self, folder, fn):
-        reader = RecordItemReader(folder + "/" + fn)
+    def grade_record_file(self, fn):
+        reader = RecordItemReader(fn)
         self.lat_jerk_processor = ImuSpeedJerk(is_lateral=True)
         self.lon_jerk_processor = ImuSpeedJerk(is_lateral=False)
         self.av_processor = ImuAngularVelocity()
@@ -84,7 +99,7 @@ class ImuStabilityGrader(object):
         folder_score_list = []
         fns = sorted([f for f in listdir(folder) if isfile(join(folder, f))])
         for fn in fns:
-            score_list = self.grade_record_file(folder, fn)
+            score_list = self.grade_record_file(folder + "/" + fn)
             # print(score_list)
             folder_score_list.extend(score_list)
 
