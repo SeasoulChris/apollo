@@ -9,18 +9,20 @@ import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import prediction_conf_pb2
+from modules.prediction.proto import feature_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
 
-TIME_RANGES = [1.0, 3.0, 8.0]
+TIME_RANGES = [3.0, 1.0, 8.0]
 REGIONS = ['sunnyvale', 'san_mateo']
 
 DISTANCE_THRESHOLD = 1.5
 
-FILTERED_EVALUATOR = None
-FILTERED_PREDICTOR = None
+FILTERED_EVALUATOR = None  # prediction_conf_pb2.ObstacleConf.SEMANTIC_LSTM_EVALUATOR
+FILTERED_PREDICTOR = None  # prediction_conf_pb2.ObstacleConf.EXTRAPOLATION_PREDICTOR
+FILTERED_PRIORITY = None  # feature_pb2.ObstaclePriority.CAUTION
 
 
 class PerformanceEvaluator(BasePipeline):
@@ -86,6 +88,9 @@ class PerformanceEvaluator(BasePipeline):
             if FILTERED_PREDICTOR is not None and \
                prediction_result.obstacle_conf.predictor_type != FILTERED_PREDICTOR:
                 continue
+            if FILTERED_PRIORITY is not None and \
+               prediction_result.obstacle_conf.priority_type != FILTERED_PRIORITY:
+                continue
             portion_correct_predicted, num_obstacle, num_trajectory = \
                 CorrectlyPredictePortion(prediction_result, future_status_dict, time_range)
             portion_correct_predicted_sum += portion_correct_predicted
@@ -108,7 +113,7 @@ def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
         predicted_y = predicted_traj.trajectory_point[i].path_point.y
         diff_x = abs(predicted_x - future_point[0])
         diff_y = abs(predicted_y - future_point[1])
-        if diff_x < DISTANCE_THRESHOLD and diff_y < DISTANCE_THRESHOLD:
+        if diff_x * diff_x + diff_y * diff_y < DISTANCE_THRESHOLD * DISTANCE_THRESHOLD:
             return True
     return False
 
