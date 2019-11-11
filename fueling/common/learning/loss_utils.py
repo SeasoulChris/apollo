@@ -9,7 +9,11 @@ import torch.nn as nn
 
 
 class TrajectoryBivariateGaussianLoss:
-    def loss_fn(self, y_pred, y_true, eps=1e-5):
+    def __init__(self, eps=1e-5, reduction='mean'):
+        self.eps_ = eps
+        self.reduction_ = reduction
+
+    def loss_fn(self, y_pred, y_true):
         if y_pred is None:
             return cuda(torch.tensor(0))
         # y_pred: N x pred_len x 5
@@ -21,18 +25,21 @@ class TrajectoryBivariateGaussianLoss:
         if N == 0:
             return cuda(torch.tensor(0))
 
-        corr = torch.clamp(corr, min=-1 + eps, max=1 - eps)
-        z = (x - mux)**2 / (sigma_x**2 + eps) + (y - muy)**2 / (sigma_y**2 + eps) - 2 * \
-            corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + eps)
-        z = torch.clamp(z, min=eps)
+        corr = torch.clamp(corr, min=-1 + self.eps_, max=1 - self.eps_)
+        z = (x - mux)**2 / (sigma_x**2 + self.eps_) + (y - muy)**2 / (sigma_y**2 + self.eps_) - 2 * \
+            corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + self.eps_)
+        z = torch.clamp(z, min=self.eps_)
 
         P = 1 / (2 * np.pi * torch.sqrt((sigma_x * sigma_y)**2) *
-                 torch.sqrt(1 - corr**2) + eps) * torch.exp(-z / (2 * (1 - corr**2)))
+                 torch.sqrt(1 - corr**2) + self.eps_) * torch.exp(-z / (2 * (1 - corr**2)))
 
-        loss = torch.clamp(P, min=eps)
+        loss = torch.clamp(P, min=self.eps_)
         loss = -loss.log()
 
-        return torch.sum(loss) / N
+        if self.reduction_ == 'mean':
+            return torch.sum(loss) / N
+        else:
+            return loss
 
     def loss_info(self, y_pred, y_true):
         diff = y_pred[:, :, :2] - y_true
