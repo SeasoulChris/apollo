@@ -77,6 +77,8 @@ class PerformanceEvaluator(BasePipeline):
         portion_correct_predicted_sum = 0.0
         num_obstacle_sum = 0.0
         num_trajectory_sum = 0.0
+        disp_sum = 0.0
+        num_valid_disp = 0.0
 
         list_prediction_result = offline_features_pb2.ListPredictionResult()
         with open(result_file, 'rb') as f:
@@ -97,9 +99,17 @@ class PerformanceEvaluator(BasePipeline):
             num_obstacle_sum += num_obstacle
             num_trajectory_sum += num_trajectory
 
+            disp = DisplacementError(prediction_result, future_status_dict, time_range)
+            if disp is not None:
+                print(disp)
+                disp_sum += disp
+                num_valid_disp += 1
+
         return [('portion_correct_predicted_sum', portion_correct_predicted_sum),
                 ('num_obstacle_sum', num_obstacle_sum),
-                ('num_trajectory_sum', num_trajectory_sum)]
+                ('num_trajectory_sum', num_trajectory_sum),
+                ('disp_sum', disp_sum),
+                ('num_valid_disp', num_valid_disp)]
 
 
 def IsCorrectlyPredicted(future_point, curr_time, prediction_result):
@@ -144,6 +154,50 @@ def CorrectlyPredictePortion(prediction_result, future_status_dict, time_range):
     portion_correct_predicted = correct_future_point_count / total_future_point_count
 
     return portion_correct_predicted, 1.0, len(prediction_result.trajectory)
+
+
+def PointDisplacement(future_point, curr_time, prediction_result):
+    disp_sum = 0.0
+    num_valid_trajectory_point = 0.0
+    future_relative_time = future_point[6] - curr_time
+    for predicted_traj in prediction_result.trajectory:
+        i = 0
+        while i + 1 < len(predicted_traj.trajectory_point) and \
+                predicted_traj.trajectory_point[i + 1].relative_time < future_relative_time:
+            i += 1
+        predicted_x = predicted_traj.trajectory_point[i].path_point.x
+        predicted_y = predicted_traj.trajectory_point[i].path_point.y
+        diff_x = abs(predicted_x - future_point[0])
+        diff_y = abs(predicted_y - future_point[1])
+        disp_sum += np.sqrt(diff_x * diff_x + diff_y * diff_y)
+        num_valid_trajectory_point += 1.0
+    return (disp_sum, num_valid_trajectory_point)
+
+
+def DisplacementError(prediction_result, future_status_dict, time_range):
+    dict_key = "{}@{:.3f}".format(prediction_result.id, prediction_result.timestamp)
+    if dict_key not in future_status_dict:
+        return None
+    obstacle_future_status = future_status_dict[dict_key]
+    if not obstacle_future_status:
+        return None
+    if len(prediction_result.trajectory) == 0:
+        return None
+
+    curr_timestamp = obstacle_future_status[0][6]
+    total_future_point_count = 0.0
+    disp_error_sum = 0.0
+    num_trajectory_point = 0.0
+    for future_point in obstacle_future_status:
+        if future_point[6] - curr_timestamp > time_range:
+            break
+        total_future_point_count += 1.0
+        (disp_sum, num_valid_trajectory_point) = \
+            PointDisplacement(future_point, curr_timestamp, prediction_result)
+        disp_error_sum += disp_sum
+        num_trajectory_point += num_valid_trajectory_point
+
+    return disp_error_sum / (1e-6 + num_trajectory_point)
 
 
 if __name__ == '__main__':
