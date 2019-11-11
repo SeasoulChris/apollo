@@ -11,6 +11,7 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
+import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 
 def compute_h5_and_gradings(target_groups):
@@ -19,21 +20,18 @@ def compute_h5_and_gradings(target_groups):
     logging.info(
         'computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
+    vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(
+        target)
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
                                                                profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         logging.warning('no valid element in {} items in group {} for task {}'
                         .format(len(msgs), group_id, target))
         return (target, None)
-    # mkdir for vehicle_type and controller_type
-    hdf5_dir = '{}/{}/{}'.format(target, profiling_conf.vehicle_type,
-                                 profiling_conf.controller_type)
-    if not os.path.exists(hdf5_dir):
-        os.makedirs(hdf5_dir)
     h5_output_file = '{:05d}'.format(group_id)
     logging.info('writing {} messages to h5 file {} for target {}'
-                 .format(grading_mtx.shape[0], h5_output_file, hdf5_dir))
-    h5_utils.write_h5(grading_mtx, hdf5_dir, h5_output_file)
+                 .format(grading_mtx.shape[0], h5_output_file, target))
+    h5_utils.write_h5(grading_mtx, target, h5_output_file)
     grading_results = namedtuple('grading_results',
                                  ['station_err_std',
                                   'station_err_std_harsh',
@@ -160,7 +158,7 @@ def compute_h5_and_gradings(target_groups):
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-            * profiling_conf.vehicle_wheelbase
+            * vehicle_param.wheel_base
         )),
         lateral_err_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
@@ -172,7 +170,7 @@ def compute_h5_and_gradings(target_groups):
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-            * profiling_conf.vehicle_wheelbase
+            * vehicle_param.wheel_base
         )),
         lateral_err_rate_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['speed_reference'],
@@ -182,7 +180,7 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
-            std_denorm_weight=profiling_conf.vehicle_wheelbase
+            std_denorm_weight=vehicle_param.wheel_base
         )),
         lateral_err_rate_std_harsh=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['curvature_reference'],
@@ -193,7 +191,7 @@ def compute_h5_and_gradings(target_groups):
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
-            std_denorm_weight=profiling_conf.vehicle_wheelbase
+            std_denorm_weight=vehicle_param.wheel_base
         )),
         heading_err_std=compute_std(grading_mtx, grading_arguments(
             std_filter_name=['speed_reference'],
@@ -620,13 +618,18 @@ def combine_gradings(grading_x, grading_y):
 def output_gradings(target_grading):
     """Write the grading results to files in coresponding target dirs"""
     target_dir, grading = target_grading
+    # target dir like
+    # /apollo/2019-11-08-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
+    # get copied vehicle parameter conf
+    vehicle_param_dir_splited = target_dir.split('/')
+    # Get control prifiling conf
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_output_path = os.path.join(target_dir,
                                        '{}_{}_control_performance_grading.txt'
-                                       .format(profiling_conf.vehicle_type,
-                                               profiling_conf.controller_type))
-    vehicle_param_conf_output_path = os.path.join(target_dir, '{}/vehicle_param.pb.txt'
-                                                  .format(profiling_conf.vehicle_type))
+                                       .format(vehicle_param_dir_splited[3],
+                                               vehicle_param_dir_splited[4]))
+    vehicle_param_conf_output_path = os.path.join(
+        target_dir, '{}_control_conf.pb.txt'.format(profiling_conf.controller_type))
     logging.info('writing grading output {} to {}'.format(
         grading, grading_output_path))
     if not grading:
