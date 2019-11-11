@@ -42,24 +42,38 @@ class TrajectoryBivariateGaussianLoss:
 
 
 '''
-y_pred: N x num_of_modes x y_true_dim[1:]
+y_pred: N x num_of_modes x sequence_length x 2 (or 5)
 y_true: N x sequence_length x 2 (ground_truth_x, ground_truth_y)
 '''
+class MultiModalLoss:
+    def __init__(self, base_loss_fn, base_loss_info):
+        self.base_loss_fn_ = base_loss_fn
+        self.base_loss_info_ = base_loss_info
 
+    def loss_fn(self, y_pred, y_true):
+        N = y_pred.size(0)
+        num_modes = y_pred.size(1)
+        loss_matrix = torch.zeros(N, num_modes).cuda()
+        for i in range(num_modes):
+            y_pred_curr_mode = y_pred[:, i, :, :]
+            loss_curr_mode = self.base_loss_fn_(y_pred_curr_mode, y_true)
+            loss_matrix[:, i] = loss_curr_mode
 
-def multi_modal_loss(y_pred, y_true):
-    N = y_pred.size(0)
-    num_mode = y_pred.size(1)
-    loss_matrix = torch.zeros(N, num_mode).cuda()
-    loss_fn = nn.MSELoss(reduction='none')
-    for i in range(y_pred.size(1)):
-        y_pred_curr = y_pred[:, i, :]
-        loss_curr = loss_fn(y_pred_curr, y_true)
-        loss_curr = torch.mean(loss_curr, dim=1)
-        loss_matrix[:, i] = loss_curr
+        final_loss = torch.min(loss_matrix, dim=1)
+        final_loss = torch.mean(final_loss)
 
-    min_loss_idx = torch.argmin(loss_matrix, dim=1)
-    final_loss = loss_matrix[:, min_loss_idx]
-    final_loss = torch.mean(final_loss)
+        return final_loss
 
-    return final_loss
+    def loss_info(self, y_pred, y_true):
+        N = y_pred.size(0)
+        num_modes = y_pred.size(1)
+        loss_matrix = torch.zeros(N, num_modes).cuda()
+        for i in range(num_modes):
+            y_pred_curr_mode = y_pred[:, i, :, :]
+            loss_curr_mode = self.base_loss_info_(y_pred_curr_mode, y_true)
+            loss_matrix[:, i] = loss_curr_mode
+
+        final_loss_info = torch.min(loss_matrix, dim=1)
+        final_loss_info = torch.mean(final_loss_info)
+
+        return final_loss_info
