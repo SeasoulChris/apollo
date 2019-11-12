@@ -66,7 +66,7 @@ class MultiModalLoss:
             loss_curr_mode = self.base_loss_fn_(y_pred_curr_mode, y_true)
             loss_matrix[:, i] = loss_curr_mode
 
-        final_loss = torch.min(loss_matrix, dim=1)
+        final_loss, _ = torch.min(loss_matrix, dim=1)
         final_loss = torch.mean(final_loss)
 
         return final_loss
@@ -80,7 +80,7 @@ class MultiModalLoss:
             loss_curr_mode = self.base_loss_info_(y_pred_curr_mode, y_true)
             loss_matrix[:, i] = loss_curr_mode
 
-        final_loss_info = torch.min(loss_matrix, dim=1)
+        final_loss_info, _ = torch.min(loss_matrix, dim=1)
         final_loss_info = torch.mean(final_loss_info)
 
         return final_loss_info
