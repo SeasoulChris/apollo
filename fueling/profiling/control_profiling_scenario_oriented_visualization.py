@@ -15,7 +15,8 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.feature_visualization.control_feature_scenario_oriented_visualization_utils \
-       as visual_utils
+    as visual_utils
+
 
 class ControlProfilingScenarioOrientedVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features per Scenario"""
@@ -47,20 +48,23 @@ class ControlProfilingScenarioOrientedVisualization(BasePipeline):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         datalist = (todo_tasks
-         # PairRDD(target_dir, task), the map of target dirs and source dirs
-         .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
-         # PairRDD(target_dir, task), filter out non-existed target dirs
-         .filter(spark_op.filter_key(os.path.isdir))
-         # PairRDD(target_dir, hdf5_file)
-         .mapValues(lambda task: glob.glob(os.path.join(task, '*.hdf5')))
-         # PairRDD(target_dir, list of data_array),
-         .mapValues(visual_utils.generate_segments)
-         # PairRDD(target_dir, data_array), by merging the arraies in "segments" into one array
-         .mapValues(visual_utils.generate_data)
-         # List[(target_dir, data_array), (target_dir, data_array), ...], transform the RDD to List
-         .collect())
-         # List[(target_dir, data_array), (target_dir, data_array) -> Plots
+                    # PairRDD(target_dir, task), the map of target dirs and source dirs
+                    .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
+                    # PairRDD(target_dir, task), filter out non-existed target dirs
+                    .filter(spark_op.filter_key(os.path.isdir))
+                    # PairRDD(target_dir, hdf5_file)
+                    .mapValues(lambda task: glob.glob(os.path.join(task, '*.hdf5')))
+                    # PairRDD(target_dir, list of data_array),
+                    .mapValues(visual_utils.generate_segments)
+                    # PairRDD(target_dir, data_array), by merging the arraies in "segments"
+                    # into one array
+                    .mapValues(visual_utils.generate_data)
+                    # List[(target_dir, data_array), (target_dir, data_array), ...], transform
+                    # the RDD to List
+                    .collect())
+        # List[(target_dir, data_array), (target_dir, data_array) -> Plots
         visual_utils.plot_h5_features_per_scenario(datalist)
+
 
 if __name__ == '__main__':
     ControlProfilingScenarioOrientedVisualization().main()

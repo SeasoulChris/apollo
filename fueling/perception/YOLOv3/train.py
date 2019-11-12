@@ -68,6 +68,7 @@ def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     return [x.name for x in local_device_protos]
 
+
 class training:
 
     def __init__(self, num_gpu=1):
@@ -381,7 +382,7 @@ class training:
         feed_dict = {self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
             cls_box_map_lists, objs_list, calib_list, _, _ = data
-        run_options = tf.RunOptions(report_tensor_allocations_upon_oom = True)
+        run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
 
         feed_dict.update({
             self.gpu_placeholders[self.num_gpu - 1]["input_image"]: (image_batch / 255.),

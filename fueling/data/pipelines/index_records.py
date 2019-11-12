@@ -31,11 +31,11 @@ class IndexRecords(BasePipeline):
         # RDD(record_path)
         records = ['/apollo/modules/data/fuel/testdata/data/small.record']
         indexed_records = (self.to_rdd(records)
-            # RDD(RecordMeta)
-            .map(RecordParser.Parse)
-            # RDD(RecordMeta), which is not None.
-            .filter(lambda meta: meta is not None)
-            .count())
+                           # RDD(RecordMeta)
+                           .map(RecordParser.Parse)
+                           # RDD(RecordMeta), which is not None.
+                           .filter(lambda meta: meta is not None)
+                           .count())
         logging.info('Indexed {}/{} records'.format(indexed_records, len(records)))
 
     def run_prod(self):

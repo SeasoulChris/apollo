@@ -56,6 +56,6 @@ class LidarEndToEndAnalyzer(object):
             analyzer = StatisticalAnalyzer()
             analyzer.print_statistical_results(self.endtoend_latency[m])
 
-            print(PrintColors.FAIL + "  - MISS # OF LIDAR: " + \
-                  str(len(self.unprocessed_lidar_timestamps[m])) + \
+            print(PrintColors.FAIL + "  - MISS # OF LIDAR: " +
+                  str(len(self.unprocessed_lidar_timestamps[m])) +
                   PrintColors.ENDC)

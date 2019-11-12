@@ -46,7 +46,7 @@ def get_all_paths(image_path):
     image_dir, file_name = os.path.split(image_path)
     file_name, _ = os.path.splitext(file_name)
     data_dir, _ = os.path.split(image_dir)
-     
+
     #label_path = os.path.join(os.path.join(data_dir, "label"), "{}.txt".format(file_name))
     #calib_path = os.path.join(os.path.join(data_dir, "calib"), "{}.txt".format(file_name))
     label_path = os.path.join(os.path.join(data_dir, "label_all"), "{}.txt".format(file_name))

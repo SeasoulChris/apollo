@@ -242,8 +242,6 @@ def draw_gt_boxes(objs, img, orig_size, calib):
         draw_3d_box(img, image_points.transpose())
 
 
-
-
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib=None, is_letter_box_image=False, cls_box_map=None):
     """

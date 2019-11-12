@@ -98,6 +98,7 @@ class SequentialPipeline(BasePipeline):
             Pipeline3(),
         ]).main()
     """
+
     def __init__(self, phases):
         self.phases = phases
 

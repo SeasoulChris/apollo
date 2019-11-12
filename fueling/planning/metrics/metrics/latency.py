@@ -14,14 +14,14 @@ class Latency:
     def get(self):
         if len(self.latency_list) > 0:
             planning_latency = {
-                "max" : max(self.latency_list),
-                "min" : min(self.latency_list),
-                "avg" : np.average(self.latency_list)
+                "max": max(self.latency_list),
+                "min": min(self.latency_list),
+                "avg": np.average(self.latency_list)
             }
         else:
             planning_latency = {
-                "max" : 0.0,
-                "min" : 0.0,
-                "avg" : 0.0            
+                "max": 0.0,
+                "min": 0.0,
+                "avg": 0.0
             }
         return planning_latency

@@ -247,11 +247,11 @@ def extract_control_data_from_msg(msg):
             getattr(control_lat, 'heading_jerk', float('NaN')),                    # 26
             # Features: "Pose" category
             getattr(getattr(getattr(control_lon, 'current_reference_point',
-                            float('NaN')), 'path_point', float('NaN')),
-                            'x', float('NaN')),                                    # 27
+                                    float('NaN')), 'path_point', float('NaN')),
+                    'x', float('NaN')),                                    # 27
             getattr(getattr(getattr(control_lon, 'current_reference_point',
-                            float('NaN')), 'path_point', float('NaN')),
-                            'y', float('NaN')),                                    # 28
+                                    float('NaN')), 'path_point', float('NaN')),
+                    'y', float('NaN')),                                    # 28
             # Features: "Latency" category
             getattr(control_latency, 'total_time_ms', float('NaN')),               # 29
             getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 30
@@ -308,11 +308,11 @@ def extract_control_data_from_msg(msg):
             getattr(control_mpc, 'heading_jerk', float('NaN')),                    # 26
             # Features: "Pose" category
             getattr(getattr(getattr(control_mpc, 'current_reference_point',
-                                    float('NaN')),'path_point', float('NaN')),
-                                    'x', float('NaN')),                            # 27
+                                    float('NaN')), 'path_point', float('NaN')),
+                    'x', float('NaN')),                            # 27
             getattr(getattr(getattr(control_mpc, 'current_reference_point',
                                     float('NaN')), 'path_point', float('NaN')),
-                                    'y', float('NaN')),                            # 28
+                    'y', float('NaN')),                            # 28
             # Features: "Latency" category
             getattr(control_latency, 'total_time_ms', float('NaN')),               # 29
             getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 30

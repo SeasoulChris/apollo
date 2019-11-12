@@ -95,8 +95,8 @@ def plot_feature_vs_feature(data_plot_x, data_plot_y, label_plot, features, titl
 def plot_h5_features_per_scenario(data_list):
     """plot the scenario-oriented data of all the selected variables in the data array"""
     # Initialize the data structure
-    dir_data = [];
-    data = [];
+    dir_data = []
+    data = []
     for list in data_list:
         dir, array = list
         if len(array) == 0:

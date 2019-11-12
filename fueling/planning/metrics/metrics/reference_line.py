@@ -6,7 +6,7 @@ import numpy as np
 
 
 class ReferenceLine:
-    
+
     def __init__(self):
         self.rl_is_offroad_cnt = 0
         self.rl_minimum_boundary = sys.float_info.max
@@ -20,7 +20,7 @@ class ReferenceLine:
             if ref_line_debug.HasField("is_offroad") and ref_line_debug.is_offroad:
                 self.rl_is_offroad_cnt += 1
             if ref_line_debug.HasField("minimum_boundary") and \
-                ref_line_debug.minimum_boundary < self.rl_minimum_boundary:
+                    ref_line_debug.minimum_boundary < self.rl_minimum_boundary:
                 self.rl_minimum_boundary = ref_line_debug.minimum_boundary
             if ref_line_debug.HasField("kappa_rms"):
                 self.rl_kappa_rms_list.append(ref_line_debug.kappa_rms)
@@ -52,11 +52,11 @@ class ReferenceLine:
             dkappa_max_abs = max(self.rl_dkappa_max_abs_list)
 
         reference_line = {
-            "is_offroad" : self.rl_is_offroad_cnt,
-            "minimum_boundary" : self.rl_minimum_boundary,
-            "kappa_rms" : kappa_rms,
-            "dkappa_rms" : dkappa_rms,
-            "kappa_max_abs" : kappa_max_abs,
-            "dkappa_max_abs" : dkappa_max_abs
+            "is_offroad": self.rl_is_offroad_cnt,
+            "minimum_boundary": self.rl_minimum_boundary,
+            "kappa_rms": kappa_rms,
+            "dkappa_rms": dkappa_rms,
+            "kappa_max_abs": kappa_max_abs,
+            "dkappa_max_abs": dkappa_max_abs
         }
         return reference_line

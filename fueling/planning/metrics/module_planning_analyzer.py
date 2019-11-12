@@ -140,7 +140,10 @@ class PlannigAnalyzer:
         print(PrintColors.HEADER + "--- Planning Error Msg Distribution ---" + PrintColors.ENDC)
         self.error_msg_analyzer.print_results()
 
-        print(PrintColors.HEADER + "--- Planning Trajectory Frechet Distance (m) ---" + PrintColors.ENDC)
+        print(
+            PrintColors.HEADER +
+            "--- Planning Trajectory Frechet Distance (m) ---" +
+            PrintColors.ENDC)
         StatisticalAnalyzer().print_statistical_results(self.frechet_distance_list)
 
     def get_sim_results(self):

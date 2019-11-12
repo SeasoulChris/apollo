@@ -16,5 +16,5 @@ class DistributionAnalyzer:
 
         for k, v in data.items():
             percentage = "{0:.2f}".format((float(v) / total) * 100)
-            print(PrintColors.OKBLUE + k + " = " + str(v) + \
-                "(" + percentage + "%)" + PrintColors.ENDC)
+            print(PrintColors.OKBLUE + k + " = " + str(v) +
+                  "(" + percentage + "%)" + PrintColors.ENDC)

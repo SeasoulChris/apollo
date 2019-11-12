@@ -34,7 +34,7 @@ def frechet_distance(P, Q):
     dist = None
     try:
         dist = _c(ca, len(P) - 1, len(Q) - 1, P, Q)
-    except:
+    except BaseException:
         print("calculate frechet_distance exception.")
     return dist
 

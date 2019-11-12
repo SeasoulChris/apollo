@@ -52,6 +52,8 @@ class TrajectoryBivariateGaussianLoss:
 y_pred: N x num_of_modes x sequence_length x 2 (or 5)
 y_true: N x sequence_length x 2 (ground_truth_x, ground_truth_y)
 '''
+
+
 class MultiModalLoss:
     def __init__(self, base_loss_fn, base_loss_info):
         self.base_loss_fn_ = base_loss_fn

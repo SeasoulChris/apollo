@@ -102,7 +102,8 @@ class ControlProfilingMetrics(BasePipeline):
             'todo_tasks',
             dir_utils.get_todo_tasks(original_prefix, target_prefix))
 
-        if not sanity_check(origin_vehicle_dir, self.FLAGS.get['job_owner'], self.FLAGS.get['job_id']):
+        if not sanity_check(origin_vehicle_dir,
+                            self.FLAGS.get['job_owner'], self.FLAGS.get['job_id']):
             return
 
         conf_target_prefix = target_prefix
