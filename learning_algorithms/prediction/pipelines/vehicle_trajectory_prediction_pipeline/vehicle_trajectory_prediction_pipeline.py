@@ -39,10 +39,23 @@ if __name__ == "__main__":
     # model = SemanticMapSelfLSTMModel(30, 20)
     # loss = SemanticMapLoss()
 
-    model = SemanticMapSelfLSTMModelWithUncertainty(30, 20)
-    loss = TrajectoryBivariateGaussianLoss()
+    model = SemanticMapSelfLSTMMultiModal(30, 20, num_modes=2)
+    # loss = TrajectoryBivariateGaussianLoss()
 
-    # print(model)
+    def base_loss_fn(y_pred, y_true):
+        diff = y_pred[:, :, :2] - y_true
+        diff = torch.sqrt(torch.sum(diff ** 2, 2))
+        out = torch.mean(diff, dim=1)
+        return out
+    
+    def base_loss_info(y_pred, y_true):
+        diff = y_pred[:, :, :2] - y_true
+        diff = torch.sqrt(torch.sum(diff ** 2, 2))
+        out = torch.mean(diff)
+        return out
+    
+    loss = MultiModalLoss(base_loss_fn, base_loss_info)
+
     learning_rate = 3e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(

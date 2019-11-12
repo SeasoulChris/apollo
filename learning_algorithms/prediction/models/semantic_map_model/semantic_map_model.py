@@ -78,7 +78,7 @@ Model definition
 
 class SemanticMapModel(nn.Module):
     def __init__(self, num_pred_points, num_history_points,
-                 cnn_net=models.resnet50, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapModel, self).__init__()
 
         self.cnn = cnn_net(pretrained=pretrained)
@@ -122,7 +122,7 @@ class SemanticMapLoss():
 class SemanticMapSelfLSTMModel(nn.Module):
     def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128,
-                 cnn_net=models.resnet50, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapSelfLSTMModel, self).__init__()
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
@@ -175,7 +175,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
 class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
     def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128,
-                 cnn_net=models.resnet50, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapSelfLSTMModelWithUncertainty, self).__init__()
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
@@ -227,13 +227,66 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
 
         return pred_traj
 
+class SemanticMapSelfLSTMMultiModal(nn.Module):
+    def __init__(self, pred_len, observation_len,
+                 embed_size=64, hidden_size=128, num_modes=2,
+                 cnn_net=models.mobilenet_v2, pretrained=True):
+        super(SemanticMapSelfLSTMMultiModal, self).__init__()
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
+        self.pred_len = pred_len
+        self.observation_len = observation_len
+        self.num_modes = num_modes
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+        self.disp_embed = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+
+        self.h0, self.c0 = generate_lstm_states(hidden_size)
+        self.lstm = [nn.LSTM(embed_size, hidden_size,
+                             num_layers=1, batch_first=True)] * self.num_modes
+
+        self.pred_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size + self.cnn_out_size, 2),
+        )
+
+    def forward(self, X):
+        img = X[0]
+        obs_pos = X[3]
+        obs_pos_step = X[4]
+        N = obs_pos.size(0)
+
+        img_embedding = self.cnn(img)
+        img_embedding = img_embedding.view(img_embedding.size(0), -1)
+        pred_traj = torch.zeros((N, self.num_modes, self.pred_len, 2), device = img.device)
+
+        for i in range(self.num_modes):
+            ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
+            self.lstm[i].to(device = img.device)
+            for t in range(1, self.observation_len + self.pred_len):
+                if t < self.observation_len:
+                    curr_obs_pos_step = obs_pos_step[:, t, :].float()
+                    curr_obs_pos = obs_pos[:, t, :].float()
+                else:
+                    pred_input = torch.cat((ht.view(N, -1), img_embedding), 1)
+                    curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
+                    curr_obs_pos = curr_obs_pos + curr_obs_pos_step
+                    pred_traj[:, i, t - self.observation_len, :] = curr_obs_pos.clone()
+                disp_embedding = self.disp_embed(curr_obs_pos_step.clone()).view(N, 1, -1)
+
+                _, (ht, ct) = self.lstm[i](disp_embedding, (ht, ct))
+
+        return pred_traj
+
 class SemanticMapSocialAttentionModel(nn.Module):
     '''
     Semantic map model with social attention
     '''
     def __init__(self, pred_len, num_history_points,
                  embed_size=64, edge_hidden_size=256, node_hidden_size=128, attention_dim=64,
-                 cnn_net=models.resnet50, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapSocialAttentionModel, self).__init__()
         self.pred_len = pred_len
 
