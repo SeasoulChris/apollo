@@ -18,8 +18,7 @@ SUBMITER="./tools/submit-job-to-k8s.sh --fueling ${FUELING} ${BASH_ARGS}"
 # Training.
 JOB="./fueling/perception/YOLOv3/yolov3_training.py"
 ENV="fuel-py36"
-${SUBMITER} --env ${ENV} --workers 1 --gpu --memory 20g ${JOB} ${PY_ARGS} \
+${SUBMITER} --env ${ENV} --workers 1 --memory 20g --gpu --partner_storage_writable ${JOB} ${PY_ARGS} \
     --input_training_data_path="${INPUT_TRAINING_DATA_PATH}" \
-    --output_trained_data_path="${OUTPUT_TRAINED_MODEL_PATH}" \
-    --partner_storage_writable
+    --output_trained_data_path="${OUTPUT_TRAINED_MODEL_PATH}" 
 
