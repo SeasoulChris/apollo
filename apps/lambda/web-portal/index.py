@@ -40,7 +40,15 @@ class FuelJob(flask_restful.Resource):
 
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
+# TODO: We add a duplicate route for the restful service for a while, later the
+# '/' route will be pointing to the portal '/index'.
 api.add_resource(FuelJob, '/')
+api.add_resource(FuelJob, '/proxy')
+
+# @app.route('/')
+@app.route('/index')
+def index():
+    return flask.render_template('index.tpl')
 
 
 class ProductionApp(gunicorn.app.base.BaseApplication):
