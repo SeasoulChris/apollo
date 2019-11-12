@@ -36,7 +36,8 @@ class Yolov3Training(BasePipeline):
         self.run(data)
 
     def run_prod(self):
-        training_datasets = glob.glob(os.path.join("/mnt/bos", TRAIN_DATA_DIR_CLOUD, "*"))
+        #training_datasets = glob.glob(os.path.join("/mnt/bos", TRAIN_DATA_DIR_CLOUD, "*"))
+        training_datasets = [os.path.join("/mnt/bos", TRAIN_DATA_DIR_CLOUD)]
         # RDD(file_path) for training dataset.
         training_datasets_rdd = self.to_rdd(training_datasets)
         data = (

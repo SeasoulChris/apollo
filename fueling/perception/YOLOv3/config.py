@@ -33,22 +33,29 @@ nms_iou_threshold = 0.3
 
 # ===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True  # Set to False for training and True for inference
-inference_only_2d = True
+inference_only_2d = False
 
 restore_training = False
 start_from_coco = False
-restore_path = "testdata/perception/YOLOv3/models/models-119999"
-model_output_path = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019/san_mateo_2018/models"
-inference_output_path = "./testdata/perception/YOLOv3/infer_output/models-119999/google_images/emergency-vehicle"
+#restore_path = "testdata/perception/YOLOv3/models/models-119999"
+restore_path = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/models/models-51000"
+#model_output_path = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019/san_mateo_2018/models"
+#model_output_path = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/models"
+inference_output_path = "./testdata/perception/YOLOv3/infer_output/models-51000/"
 
-train_data_dir_local = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019"
+#train_data_dir_local = "/media/2tb/kawai_data/Beijing_labeled_2019_Q1/front_6mm_2d3d_Q1_2019"
+train_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
 inference_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
 evaluate_data_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/train"
 evaluate_result_dir_local = "/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output"
-train_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
-inference_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
-evaluate_data_dir_cloud = "modules/perception/camera_obj/YOLOv3/train"
-evaluate_result_dir_cloud = "modules/perception/camera_obj/YOLOv3/test_output"
+#train_data_dir_cloud = "modules/perception/camera_object"
+#inference_data_dir_cloud = "modules/perception/camera_object"
+#evaluate_data_dir_cloud = "modules/perception/camera_object"
+model_output_path = "/mnt/bos/modules/perception/front_6mm_2d3d_Q1_2019/"
+train_data_dir_cloud = "modules/perception/front_6mm_2d3d_Q1_2019"
+inference_data_dir_cloud = "modules/perception/front_6mm_2d3d_Q1_2019"
+evaluate_data_dir_cloud = "modules/perception/front_6mm_2d3d_Q1_2019"
+evaluate_result_dir_cloud = "modules/perception/front_6mm_2d3d_Q1_2019/test_output"
 
 train_only_variables = ["yolo-v3/Conv_6",     # to train all layers, set this variable to None
                         "yolo-v3/Conv_14",
@@ -62,9 +69,12 @@ decay_rate = 0.5
 max_iter = 2100 * 30
 start_iter = 1
 num_threads = 2
-batch_size = 8
-save_interval = 10000
-print_interval = 200
+#batch_size = 3
+batch_size=1
+#save_interval = 10000
+save_interval = 5000
+print_interval = 1
+#print_interval = 200
 summary_interval = 500
 
 negative_ignore_thresh = 0.4

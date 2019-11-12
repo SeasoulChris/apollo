@@ -65,8 +65,10 @@ class Yolov3Inference(BasePipeline):
                 engine.run(data, output_dir)
         label_output_path = os.path.join(output_dir, "label")
         images_output_path = os.path.join(output_dir, "images")
+        images_gt_output_path = os.path.join(output_dir, "images_gt")
         makedirs(label_output_path)
         makedirs(images_output_path)
+        makedirs(images_gt_output_path)
         data_rdd.foreach(_executor)
 
 

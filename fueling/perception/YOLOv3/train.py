@@ -62,6 +62,12 @@ os.environ["CUDA_VISIBLE_DEVICES"] = GPU
 slim = tf.contrib.slim
 
 
+from tensorflow.python.client import device_lib
+
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos]
+
 class training:
 
     def __init__(self, num_gpu=1):
@@ -176,7 +182,7 @@ class training:
             variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
             restore_saver = tf.train.Saver(var_list=variables)
         restore_saver.restore(sess, RESTORE_PATH)
-        print ("Restored weights from {}.".format(RESTORE_PATH))
+        logging.info("Restored weights from {}.".format(RESTORE_PATH))
 
     def _image_summary(self, image_batch, xy_wh_conf_value, calib_list, cls_box_map=None):
         """
@@ -276,6 +282,7 @@ class training:
         """
         Start training.
         """
+        tf.debugging.set_log_device_placement(True)
         with tf.device("/cpu:0"):
             # Set random seed
             tf.set_random_seed(2)
@@ -353,7 +360,7 @@ class training:
                                                          _type="image")
 
             #  start session and train
-            config = tf.ConfigProto(allow_soft_placement=True)
+            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
             self.sess.run(tf.local_variables_initializer(),
@@ -374,14 +381,15 @@ class training:
         feed_dict = {self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: True}
         image_batch, label_batch_scale1, label_batch_scale2, label_batch_scale3, \
             cls_box_map_lists, objs_list, calib_list, _, _ = data
+        run_options = tf.RunOptions(report_tensor_allocations_upon_oom = True)
+
         feed_dict.update({
             self.gpu_placeholders[self.num_gpu - 1]["input_image"]: (image_batch / 255.),
             self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale2"]: label_batch_scale2,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale3"]: label_batch_scale3})
         xy_, wh_, positive_conf_, negative_conf_, cls_, loss_train, alpha_, hwl_, _ = \
-            self.sess.run(self.ops, feed_dict=feed_dict)
-
+            self.sess.run(self.ops, feed_dict=feed_dict, options=run_options)
         if self.cur_step % SUMMARY_INTERVAL == 0:
             feed_dict[self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]] = False
             xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
@@ -394,7 +402,6 @@ class training:
                               feed_dict=feed_dict)
             self.summary_writer_train.add_summary(summary_train, global_step=self.cur_step)
             self.summary_writer_train.add_summary(summary_image, global_step=self.cur_step)
-
         if self.cur_step % PRINT_INTERVAL == 0:
             logging.info("step = {}, Loss = {}".format(self.cur_step, loss_train))
             logging.info("xy_loss = {}, wh_loss = {}, \
@@ -403,7 +410,6 @@ class training:
                           cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
                          .format(xy_, wh_, positive_conf_,
                                  negative_conf_, cls_, alpha_, hwl_))
-
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
             self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH),

@@ -252,6 +252,8 @@ JOB_NAME=${SUBMITTER}-$(basename "${JOB_FILE}" | cut -d "." -f 1 | sed "s/_/-/g"
 
 ./tools/k8s-job-watcher.sh "${JOB_NAME}" &
 
+export PYTHONPATH=/apollo/modules/data/fuel
+
 # Submit job with fueling package.
 spark-submit \
     --master "k8s://${K8S}" \

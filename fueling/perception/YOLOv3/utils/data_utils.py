@@ -29,7 +29,8 @@ CLS_TO_CONSIDER = cfg.classes_to_consider
 
 
 def get_all_image_paths(dataset_path):
-    image_dir = os.path.join(dataset_path, "images")
+    #image_dir = os.path.join(dataset_path, "images")
+    image_dir = os.path.join(dataset_path, "images_all")
     image_path_list = glob.glob(os.path.join(image_dir, "*.jpg"))
     image_path_list += glob.glob(os.path.join(image_dir, "*.png"))
     return image_path_list
@@ -45,9 +46,11 @@ def get_all_paths(image_path):
     image_dir, file_name = os.path.split(image_path)
     file_name, _ = os.path.splitext(file_name)
     data_dir, _ = os.path.split(image_dir)
-
-    label_path = os.path.join(os.path.join(data_dir, "label"), "{}.txt".format(file_name))
-    calib_path = os.path.join(os.path.join(data_dir, "calib"), "{}.txt".format(file_name))
+     
+    #label_path = os.path.join(os.path.join(data_dir, "label"), "{}.txt".format(file_name))
+    #calib_path = os.path.join(os.path.join(data_dir, "calib"), "{}.txt".format(file_name))
+    label_path = os.path.join(os.path.join(data_dir, "label_all"), "{}.txt".format(file_name))
+    calib_path = os.path.join(os.path.join(data_dir, "calib_all"), "{}.txt".format(file_name))
     return (label_path, image_path, calib_path)
 
 

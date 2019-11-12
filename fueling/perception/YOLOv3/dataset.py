@@ -40,8 +40,8 @@ class Dataset:
         self.one_shot = one_shot
         self.one_shot_complete = False
 
-        self._txt_files_queue = Queue(maxsize=10000)
-        self._example_queue = Queue(maxsize=100)
+        self._txt_files_queue = Queue(maxsize=10)
+        self._example_queue = Queue(maxsize=10)
 
         self._txt_files = self.image_file_paths
 

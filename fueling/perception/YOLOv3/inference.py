@@ -21,7 +21,7 @@ from fueling.perception.YOLOv3.utils.projected_utils import kitti_obj_cam_intera
 from fueling.perception.YOLOv3.utils.projected_utils import read_camera_params
 from fueling.perception.YOLOv3.utils.yolo_utils import accumulate_obj
 from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
-from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
+from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes, draw_gt_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
 import fueling.common.logging as logging
 
@@ -107,6 +107,8 @@ class Inference:
         Perform 1 update on the model with input training data.
         """
         has_label = len(data) == 9
+        logging.info('has label {} len data {}'.format(has_label, len(data)))
+        
         if has_label:
             image_batch, _, _, _, cls_box_map_lists, objs_list, \
                 calib_list, image_name_list, original_image_list = data
@@ -141,5 +143,15 @@ class Inference:
                            cls_box_map=cls_box_map_lists[i] if has_label else None)
                 original_image_list[i].save(os.path.join(output_dir, "images",
                                                          "{}.jpg".format(image_name_list[i])))
+
+        def _write_gt_image():
+            for i in range(len(objs_list)):
+                draw_gt_boxes(objs_list[i], original_image_list[i],
+                             (ORIGINAL_WIDTH, ORIGINAL_HEIGHT), calib=calib_list[i])
+                original_image_list[i].save(os.path.join(output_dir,
+                             "images_gt", "{}.jpg".format(image_name_list[i])))
+
+
         _write_output()
         _write_image()
+        _write_gt_image()

@@ -228,6 +228,22 @@ def accumulate_obj(xy_wh_conf_value,
     return detection_string_list_batch, boxes
 
 
+def draw_gt_boxes(objs, img, orig_size, calib):
+    draw = ImageDraw.Draw(img)
+    if calib is not None:
+        interactor = kitti_obj_cam_interaction(calib)
+
+    original_width, original_height = orig_size
+    for obj in objs:
+        local_angle = obj.alpha + obj.ry
+        points_cam = interactor.bbox_from_local_angle_translation_dimension(obj, local_angle)
+        # image_points shape: (2, n)
+        image_points = interactor.project_to_image(points_cam, point_in_ref_cam=False)
+        draw_3d_box(img, image_points.transpose())
+
+
+
+
 def draw_boxes(boxes, img, cls_names, detection_size,
                orig_size, calib=None, is_letter_box_image=False, cls_box_map=None):
     """
@@ -282,7 +298,7 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                     #obj.t = tuple(np.array(translation) - interactor.offset.reshape((3,)) )
                 objs.append(obj)
 
-            draw.rectangle(box, outline=color)
+            #draw.rectangle(box, outline=color)
             # TODO[KaWai]: uncomment below to write class name and score for each bbox.
             # draw.text(box[:2], '{} {:.2f}%'.format(
             #    cls_names[cls], score * 100), fill=color, font=font)
@@ -294,7 +310,7 @@ def draw_boxes(boxes, img, cls_names, detection_size,
                 box = convert_to_original_size(box, np.array(detection_size),
                                                np.array(img.size),
                                                is_letter_box_image)
-                draw.rectangle(box, outline=color)
+                #draw.rectangle(box, outline=color)
 
     return objs
 
@@ -337,7 +353,8 @@ def process_label_file(label_path, image_path, calib_path, input_shape, anchors,
 
     image_np = np.asarray(original_image, dtype=np.uint8)
     start_x, start_y, crop_width, crop_height = None, None, None, None
-    flip_switch = random_flip and random.uniform(0.0, 1.0) < flip_chance
+    #flip_switch = random_flip and random.uniform(0.0, 1.0) < flip_chance
+    flip_switch = False
     if random_color_shift:
         image_np = random_hsv_shift(image_np, low=1 - color_shift_percentage,
                                     high=1 + color_shift_percentage)
@@ -557,8 +574,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                     angle_mask = np.logical_and(lower_mask, upper_mask)
                     angle_mask[0] = np.logical_or(lower_mask[0], upper_mask[0])
                     angle_mask[-1] = np.logical_or(lower_mask[-1], upper_mask[-1])
-                    assert (np.sum(angle_mask) <= 2,
-                            "obj angles should not fall into more than 2 angle bins.")
+                    #assert (np.sum(angle_mask) <= 2, "obj angles should not fall into more than 2 angle bins.")
                     bins = np.where(angle_mask == True)[0]
                     regression_angles = np.array([valid_objs[t, 5] -
                                                   (idx * principle_angle + (principle_angle / 2))
