@@ -61,6 +61,10 @@ class JobProcessor(object):
                 self.job_config.input_data_path,
                 self.job_config.zone_id,
                 self.job_config.lidar_type)
+        elif self.job_config.job_type == JobConfig.PERCEPTION_MODEL_TRAINING:
+            job_exec = 'bash perception_model_training.sh {} {}'.format(
+                self.job_config.input_data_path,
+                self.job_config.output_trained_model_path)
         else:
             return HTTPStatus.BAD_REQUEST, 'Unsupported job type.'
 
