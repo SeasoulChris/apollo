@@ -3,6 +3,7 @@
 import json
 import sys
 import os
+from collections import defaultdict
 from os import listdir
 from os.path import isfile, join
 
@@ -22,24 +23,14 @@ class PlanningStabilityGrader(object):
         self.planning_lon_jerk_processor = PlanningJerk()
         self.planning_av_processor = PlanningAv()
         self.score_list = []
-        self.lat_jerk_av_table = dict()
-        self.lon_jerk_av_table = dict()
+        self.lat_jerk_av_table = defaultdict(lambda: defaultdict(int))
+        self.lon_jerk_av_table = defaultdict(lambda: defaultdict(int))
 
         table_path = os.path.dirname(os.path.realpath(__file__))
         table_path_file = os.path.join(table_path, "reference_grade_table.json")
 
         with open(table_path_file, 'r') as f:
             self.grade_table = json.loads(f.read())
-
-    def update_table(self, jerk_av_table, jerk, av):
-        if jerk in jerk_av_table:
-            if av in jerk_av_table[jerk]:
-                jerk_av_table[jerk][av] += 1
-            else:
-                jerk_av_table[jerk][av] = 1
-        else:
-            jerk_av_table[jerk] = {}
-            jerk_av_table[jerk][av] = 1
 
     def grade(self, lat_jerk, lon_jerk, angular_velocity):
         score_lat_jerk_av = 0
@@ -57,8 +48,8 @@ class PlanningStabilityGrader(object):
         if lon_jerk == "-0.0":
             lon_jerk = "0.0"
 
-        self.update_table(self.lat_jerk_av_table, lat_jerk, angular_velocity)
-        self.update_table(self.lon_jerk_av_table, lon_jerk, angular_velocity)
+        self.lat_jerk_av_table[lat_jerk][angular_velocity] += 1
+        self.lon_jerk_av_table[lon_jerk][angular_velocity] += 1
 
         if lat_jerk in self.grade_table[self.key_lat_jerk_av]:
             if angular_velocity in self.grade_table[self.key_lat_jerk_av][lat_jerk]:
