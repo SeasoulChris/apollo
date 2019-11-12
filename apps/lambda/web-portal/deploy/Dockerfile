@@ -1,7 +1,7 @@
 FROM apolloauto/fuel-client:20191022_1411
 
 ENV IN_CLIENT_DOCKER=true
-ENV SUBMITTER=bae-proxy
+ENV SUBMITTER=web-portal
 
 RUN python3 -m pip install \
     absl-py \
@@ -17,5 +17,5 @@ COPY fueling/common /apollo/modules/data/fuel/fueling/common
 COPY tools /apollo/modules/data/fuel/tools
 COPY kube.config /root/.kube/config
 
-COPY apps/lambda/bae-proxy/deploy/entrypoint.sh /home/bae/entrypoint.sh
+COPY apps/lambda/web-portal/deploy/entrypoint.sh /home/bae/entrypoint.sh
 ENTRYPOINT [ "/home/bae/entrypoint.sh" ]

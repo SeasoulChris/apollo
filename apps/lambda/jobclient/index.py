@@ -54,7 +54,7 @@ def submit_job():
 
     request_json = json.dumps(request_dict)
     request_post = requests.post(flags.FLAGS.fuel_proxy, json=request_json,
-                                 verify='../bae-proxy/ssl_keys/cert.pem')
+                                 verify='../web-portal/ssl_keys/cert.pem')
     response = json.loads(request_post.json()) if request_post.json() else {}
 
     if request_post.ok:

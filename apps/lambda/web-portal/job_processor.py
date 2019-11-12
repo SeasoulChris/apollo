@@ -31,7 +31,7 @@ class JobProcessor(object):
         self.job_config = job_config
 
     def process(self):
-        metrics_prefix = 'apps.bae-proxy.job-processor.'
+        metrics_prefix = 'apps.web-portal.job-processor.'
 
         # User authentication.
         partner = self.job_config.partner_id

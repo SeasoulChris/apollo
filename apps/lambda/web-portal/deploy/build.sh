@@ -15,7 +15,7 @@ bash ../apollo/apollo_docker.sh build_py
 cp -r ../apollo/py_proto ./
 cp ~/.kube/config ./kube.config
 
-docker build -t ${IMAGE} --network host -f apps/lambda/bae-proxy/deploy/Dockerfile .
+docker build -t ${IMAGE} --network host -f apps/lambda/web-portal/deploy/Dockerfile .
 
 # Please provide credential if you want to login automatically.
 DOCKER_USER=""
@@ -28,5 +28,5 @@ if [ "$1" = "push" ]; then
   docker push ${IMAGE}
 else
   echo "Now you can test the image with:
-        docker run -it --rm --net host -v $(pwd)/apps/lambda/bae-proxy:/home/bae/app ${IMAGE} --debug"
+        docker run -it --rm --net host -v $(pwd)/apps/lambda/web-portal:/home/bae/app ${IMAGE} --debug"
 fi
