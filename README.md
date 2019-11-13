@@ -25,22 +25,9 @@
    Then to install and activate environments:
 
    ```bash
-   conda env update --prune -f conda/py27-cyber.yaml
-   source activate fuel-py27-cyber
-
-   # Sometimes we encounter PYTHONPATH issue, you may need to run something like
-   # this to hard-reset:
-   SITE_PACKAGE=$(python -c "import site; print(site.getsitepackages()[0])")
-   ENV_PACKAGE=$(dirname ${SITE_PACKAGE})
-   export PYTHONPATH="/apollo/modules/data/fuel:/apollo/py_proto:${ENV_PACKAGE}:${SITE_PACKAGE}:${PYTHONPATH}"
+   conda env update --prune -f conda/py36.yaml
+   source activate fuel-py36
    ```
-
-   Available envs are:
-   * `fuel-py27-cyber` conda/py27-cyber.yaml
-   * `fuel-py36`       conda/py36.yaml
-
-   Use the Cyber compatible env if you need to read, write Cyber records, or
-   call Cyber functions. Otherwise, please use the standard envs.
 
 ## Develop pipeline jobs
 
