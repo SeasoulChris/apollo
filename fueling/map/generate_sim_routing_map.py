@@ -9,12 +9,11 @@ import glob
 from absl import flags
 
 import fueling.common.logging as logging
-import fueling.common.file_utils as file_utils
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
-flags.DEFINE_string('input_data_path', 'test/simplehdmap',
-                    'simple hdmap input/output data path.')
+
+flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 
 
 def execute_task(source_dir):
@@ -35,8 +34,8 @@ def execute_task(source_dir):
 
     routing_topo_creator_bin = '/apollo/bazel-bin/modules/routing/topo_creator/topo_creator'
 
-    routing_command = '{} --flagfile=/apollo/modules/routing/conf/routing.conf -alsologtostderr --map_dir={}'.format(
-        routing_topo_creator_bin, source_dir)
+    routing_command = ('{} --flagfile=/apollo/modules/routing/conf/routing.conf '
+                       '-alsologtostderr --map_dir={}'.format(routing_topo_creator_bin, source_dir))
     return_code = os.system(routing_command)
     logging.info("return code for gen routing map command is {}".format(return_code))
 

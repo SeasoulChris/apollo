@@ -8,8 +8,6 @@ Run with:
 import glob
 import math
 import os
-import sys
-import time
 
 # Third-party packages
 from absl import flags
@@ -17,25 +15,21 @@ from shapely.geometry import LineString, Point
 import pyspark_utils.helper as spark_helper
 
 # Apollo packages
-if sys.version_info[0] >= 3:
-    from cyber_py3.record import RecordReader
-else:
-    from cyber_py.record import RecordReader
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
 from modules.map.proto import map_road_pb2
-from modules.localization.proto import localization_pb2
 
 # Apollo-fuel packages
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
+import fueling.common.record_utils as record_utils
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
+
 LANE_WIDTH = 3.3
 
-flags.DEFINE_string('input_data_path', 'test/simplehdmap',
-                    'simple hdmap input/output data path.')
+flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 
 
 class MapGenSingleLine(BasePipeline):
@@ -95,32 +89,24 @@ class MapGenSingleLine(BasePipeline):
         """Run the pipeline with given arguments."""
         # Spark cascade style programming.
         self.dst_prefix = dst_prefix
-        record_points = spark_helper.cache_and_log('map_gen_single_line',
-                                                   # RDD(source_dir)
-                                                   todo_records
-                                                   # RDD(points)
-                                                   .map(self.process_topic)
-                                                   # RDD(map)
-                                                   .map(self.map_gen))
+        spark_helper.cache_and_log('map_gen_single_line',
+                                   # RDD(source_dir)
+                                   todo_records
+                                   # RDD(points)
+                                   .map(self.process_topic)
+                                   # RDD(map)
+                                   .map(self.map_gen))
 
     def process_topic(self, source_dir):
         points = []
         bi_points = []
         fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         logging.info('fbags: {}'.format(fbags))
+        reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
         for fbag in fbags:
-            reader = RecordReader(fbag)
-            msgs = [msg for msg in reader.read_messages()]
-
-            logging.info('Success to read localization topic message {}'.format(len(msgs)))
-
-            for msg in msgs:
-                if msg.topic == "/apollo/localization/pose":
-                    localization = localization_pb2.LocalizationEstimate()
-                    localization.ParseFromString(msg.message)
-                    x = float(localization.pose.position.x)
-                    y = float(localization.pose.position.y)
-                    points.append((x, y))
+            for msg in reader(fbag):
+                pos = record_utils.message_to_proto(msg).pose.position
+                points.append((pos.x, pos.y))
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
         if len(points) == 0:
@@ -248,36 +234,38 @@ class MapGenSingleLine(BasePipeline):
     def convert(self, point, point2, distance):
         delta_y = point2.y - point.y
         delta_x = point2.x - point.x
-        # print math.atan2(delta_y, delta_x)
+        # print(math.atan2(delta_y, delta_x))
         left_angle = math.atan2(delta_y, delta_x) + math.pi / 2.0
         right_angle = math.atan2(delta_y, delta_x) - math.pi / 2.0
-        # print angle
-        left_point = []
-        left_point.append(point.x + (math.cos(left_angle) * distance))
-        left_point.append(point.y + (math.sin(left_angle) * distance))
-
-        right_point = []
-        right_point.append(point.x + (math.cos(right_angle) * distance))
-        right_point.append(point.y + (math.sin(right_angle) * distance))
+        # print(angle)
+        left_point = [
+            point.x + (math.cos(left_angle) * distance),
+            point.y + (math.sin(left_angle) * distance),
+        ]
+        right_point = [
+            point.x + (math.cos(right_angle) * distance),
+            point.y + (math.sin(right_angle) * distance),
+        ]
         return left_point, right_point
 
     def shift(self, point, point2, distance, isleft=True):
         delta_y = point2.y - point.y
         delta_x = point2.x - point.x
-        # print math.atan2(delta_y, delta_x)
+        # print(math.atan2(delta_y, delta_x))
         angle = 0
         if isleft:
             angle = math.atan2(delta_y, delta_x) + math.pi / 2.0
         else:
             angle = math.atan2(delta_y, delta_x) - math.pi / 2.0
-        # print angle
-        p1n = []
-        p1n.append(point.x + (math.cos(angle) * distance))
-        p1n.append(point.y + (math.sin(angle) * distance))
-
-        p2n = []
-        p2n.append(point2.x + (math.cos(angle) * distance))
-        p2n.append(point2.y + (math.sin(angle) * distance))
+        # print(angle)
+        p1n = [
+            point.x + (math.cos(angle) * distance),
+            point.y + (math.sin(angle) * distance),
+        ]
+        p2n = [
+            point2.x + (math.cos(angle) * distance),
+            point2.y + (math.sin(angle) * distance),
+        ]
         return Point(p1n), Point(p2n)
 
     def create_lane(self, base_map, line_id):

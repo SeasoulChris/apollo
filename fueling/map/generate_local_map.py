@@ -16,11 +16,10 @@ from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
-flags.DEFINE_string('input_data_path', 'test/simplehdmap',
-                    'simple hdmap input/output data path.')
+
+flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
-flags.DEFINE_string('lidar_type', 'velodyne16',
-                    'compensator pointcloud topic.')
+flags.DEFINE_string('lidar_type', 'velodyne16', 'compensator pointcloud topic.')
 
 
 class LocalMapPipeline(BasePipeline):
@@ -100,11 +99,11 @@ class LocalMapPipeline(BasePipeline):
         self.dst_prefix = dst_prefix
         self.zone_id = zone_id
         self.lidar_type = lidar_type
-        record_points = spark_helper.cache_and_log('gen_local_map',
-                                                   # RDD(source_dir)
-                                                   todo_records
-                                                   # RDD(map)
-                                                   .map(self.execute_task))
+        spark_helper.cache_and_log('gen_local_map',
+                                   # RDD(source_dir)
+                                   todo_records
+                                   # RDD(map)
+                                   .map(self.execute_task))
 
     def execute_task(self, source_dir):
         """Execute task by task"""
@@ -119,12 +118,10 @@ class LocalMapPipeline(BasePipeline):
             self.zone_id, self.dst_prefix, self.lidar_type)
         logging.info('local_map_creator command is {}'.format(local_command))
         return_code = os.system(local_command)
-        logging.info("return code for local_map_gen is {}".format(return_code))
-
-        if return_code != 0:
-            logging.error('failed to generate local map')
-            return
-        logging.info('Successed to generate local map')
+        if return_code == 0:
+            logging.info('Successed to generate local map')
+        else:
+            logging.error('Failed to generate local map')
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
 
 set -e
 
-SUBMITTER="./tools/submit-job-to-k8s.py --workers=5 --cpu=5 --memory=60"
+SUBMITTER="./tools/submit-job-to-k8s.py --workers=5 --cpu=5 --memory=60 --wait"
 JOB_ID=$(date +%Y-%m-%d-%H)
 INPUT_DATA_PATH="test/simplehdmap"
 ZONE_ID=50
