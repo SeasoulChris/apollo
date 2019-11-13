@@ -10,7 +10,6 @@ SUBMITTER="./tools/submit-job-to-k8s.py --wait"
 # Make sure you are calling run_prod() instead of run_test()!
 # Feature extraction.
 JOB="fueling/control/feature_extraction/sample_set_feature_extraction.py"
-ENV="fuel-py27-cyber"
 ${SUBMITTER} --main=${JOB} --workers=16 --cpu=2 --memory=20
 
 # Training.
