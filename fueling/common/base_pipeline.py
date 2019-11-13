@@ -66,18 +66,19 @@ class BasePipeline(object):
         """Run the pipeline."""
         BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
             SparkConf().setAppName(self.__class__.__name__))
-        self.init()
-        mode = self.FLAGS.get('running_mode')
+        mode = flags.FLAGS.running_mode
         if mode is None:
             logging.fatal('No running mode is specified! Please run the pipeline with either\n'
                           '    tools/submit-job-to-local.sh\n'
                           '    tools/submit-job-to-k8s.py')
             sys.exit(1)
-        if not self.FLAGS.get('job_id'):
-            self.FLAGS['job_id'] = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        if not flags.FLAGS.job_id:
+            flags.FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
         logging.info('Running job in {} mode, owner={}, id={}'.format(
-            mode, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id')))
+            mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))
+
+        self.init()
         if mode == 'TEST':
             self.run_test()
         else:
