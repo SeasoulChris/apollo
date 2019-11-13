@@ -46,7 +46,6 @@ NMS_IOU_THRESHOLD = cfg.nms_iou_threshold
 CLASS_MAP = cfg.class_map
 ORIGINAL_WIDTH = cfg.original_width
 ORIGINAL_HEIGHT = cfg.original_height
-MODEL_OUTPUT_PATH = cfg.model_output_path
 TRAIN_ONLY_VARIABLES = cfg.train_only_variables
 LEARNING_RATE = cfg.learning_rate
 DECAY_STEPS = cfg.decay_steps
@@ -209,11 +208,11 @@ class training:
             images.append(np.uint8(np.array(img)))
         return images
 
-    def _init_summary_writer(self, suffix):
+    def _init_summary_writer(self, suffix, output_trained_model_path):
         """
         Initialize a summary writer.
         """
-        return tf.summary.FileWriter(os.path.join(MODEL_OUTPUT_PATH, suffix))
+        return tf.summary.FileWriter(os.path.join(output_trained_model_path, suffix))
 
     def _add_to_summary(self, tensor, name, _type="scalar"):
         """
@@ -279,7 +278,7 @@ class training:
             average_grads.append(grad_and_var)
         return average_grads
 
-    def setup_training(self):
+    def setup_training(self, output_trained_model_path):
         """
         Start training.
         """
@@ -345,7 +344,7 @@ class training:
             self.saver = self._init_model_saver()
 
             # ====================All summaries ====================
-            self.summary_writer_train = self._init_summary_writer("summary")
+            self.summary_writer_train = self._init_summary_writer("summary", output_trained_model_path)
 
             summary_tensor_map_train = {loss: "TRAIN_total_loss",
                                         xy_loss: "TRAIN_xy_loss",
@@ -375,7 +374,7 @@ class training:
             self.ops = [xy_loss, wh_loss, positive_conf_loss, negative_conf_loss,
                         cls_loss, loss, alpha_loss, hwl_loss, train_op]
 
-    def step(self, data):
+    def step(self, data, output_trained_model_path):
         """
         Perform 1 update on the model with input training data.
         """
@@ -413,7 +412,7 @@ class training:
                                  negative_conf_, cls_, alpha_, hwl_))
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
-            self.saver.save(self.sess, "{}/models".format(MODEL_OUTPUT_PATH),
+            self.saver.save(self.sess, "{}/models".format(output_trained_model_path),
                             global_step=self.cur_step)
-            logging.info("Model saved in file: {}".format(MODEL_OUTPUT_PATH))
+            logging.info("Model saved in file: {}".format(output_trained_model_path))
         self.cur_step += 1
