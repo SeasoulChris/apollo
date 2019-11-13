@@ -6,7 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 
 if sys.version_info[0] >= 3:
-    from cyber_py.record_py3 import RecordReader
+    from cyber_py3.record import RecordReader
 else:
     from cyber_py.record import RecordReader
 from modules.control.proto import control_cmd_pb2

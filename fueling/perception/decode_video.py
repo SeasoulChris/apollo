@@ -13,7 +13,7 @@ import cv2
 import pyspark_utils.helper as spark_helper
 
 if sys.version_info[0] >= 3:
-    from cyber_py.record_py3 import RecordReader, RecordWriter
+    from cyber_py3.record import RecordReader, RecordWriter
 else:
     from cyber_py.record import RecordReader, RecordWriter
 

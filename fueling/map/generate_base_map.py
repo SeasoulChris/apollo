@@ -18,7 +18,7 @@ import pyspark_utils.helper as spark_helper
 
 # Apollo packages
 if sys.version_info[0] >= 3:
-    from cyber_py.record_py3 import RecordReader
+    from cyber_py3.record import RecordReader
 else:
     from cyber_py.record import RecordReader
 from modules.map.proto import map_pb2

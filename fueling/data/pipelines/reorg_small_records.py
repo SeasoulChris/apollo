@@ -9,7 +9,7 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 if sys.version_info[0] >= 3:
-    from cyber_py.record_py3 import RecordReader, RecordWriter
+    from cyber_py3.record import RecordReader, RecordWriter
 else:
     from cyber_py.record import RecordReader, RecordWriter
 
