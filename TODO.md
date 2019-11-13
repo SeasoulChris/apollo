@@ -3,13 +3,7 @@
 对任何项目感兴趣，请直接联系Owner，然后把自己加进去。对于无主项目请直接领取并把自己列为Owner。欢迎任何新idea，请发
 proposal到 usa-data@baidu.com 或直接在pysparker群里讨论。
 
-## 2019 Q3
-
-### 感知“数据标准”制定，收集数据X万帧
-1. 涉及到Lidar、Camera、Lane Detection等，需整合数据需求；但如果因此产生极大delay，就一项一项做。
-1. PM：Natasha
-1. 感知：Kawai（Camera），Guang（Lidar），Yuliang（Lane Detection）
-1. 数据：Longtao，Xiangquan
+## 2019 Q4
 
 ### 传感器标定
 1. PM：Natasha
@@ -21,8 +15,6 @@ proposal到 usa-data@baidu.com 或直接在pysparker群里讨论。
    息进行邮件报警，在Dashboard上作图展示。
 1. 可参考pandas的 DataFrame.describe()
 
-## 2019 Q4
-
 ### 基于Redis的 Pipeline Metrics Service and Dashboard
 对分布式数据处理而言，一个比较重要的基础工具就是 Metrics Service & Dashboard，既可以用作实时进度跟踪，
 也可以用作性能、压力、吞吐量等的白盒测量，再往下可以搭建服务监测和报警体系。在Google内部对应的工具就是Monarch。
@@ -33,29 +25,19 @@ proposal到 usa-data@baidu.com 或直接在pysparker群里讨论。
    Key为路径样式，如 /prediction/a/b/c 。
 1. 在K8S上搭建Dashboard服务，可以按前缀展示Redis中的 Metrics 列表并自动刷新。
 
-### 淘汰 fuel-py27 环境
-1. 上游 Python 2.7 的官方自持将在Q4结束，我们希望Pipeline都逐渐迁移到Python 3.6，这也可以缓解我们Docker image
-   size 逐渐增大的问题。
-1. 但由于现在CyberRT尚未升级，所有需要读写Record的Pipeline只能使用 fuel-py27-cyber 环境。而其他只需fuel-py27的
-   Pipeline需要逐渐升级到 fuel-py36。参考代码：
-   a) https://github.com/ApolloAuto/apollo-fuel/commit/a3268505711bcdc7f2af47d133039a328ac07c93
-   b) https://github.com/ApolloAuto/apollo-fuel/commit/3e7fec26f3ff5eebde35c0309fa0503cf51bdb3d
-1. 季度末的时候我们将删除 fuel-py27 环境。
-
-## 候选项目
-
 ### 开放服务的Web前端
 1. 现有的命令行工具的等价替代：
    https://github.com/ApolloAuto/apollo/blob/master/modules/tools/fuel_proxy/submit_job.py
 1. 需要至少一个最简化的合作伙伴管理系统，可以登录和提交任务
 1. 需部署于Baidu BAE Pro应用引擎
 
+## 候选项目
+
 ### 数据流水线性能的量化度量
 1. 可自研白盒度量标准和工具
 1. 可调研Kubernetes、Spark其他的黑盒度量工具
 
 ## 持续调研和学习
-
 1. Spark和K8S都在持续迭代，即时关注新特性有助于我们更好地优化框架。
 1. AI计算需求持续增加，业余持续学习PyTorch、TensorFlow和PaddlePaddle等框架，有助于提出更好的支持方案。
 1. 列式数据库仍有可能是我们存储数据的终极形态，国内也有一些尝试。我们可以拿small-records来做实验。但资源消耗仍然巨大，
