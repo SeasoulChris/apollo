@@ -5,7 +5,6 @@ import math
 import shutil
 import os
 
-from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -23,9 +22,8 @@ import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
+
 # TODO(SHU): redesign proto
-flags.DEFINE_string('input_data_path', 'modules/control/data/records',
-                    'Multi-vehicle dynamic model input data path.')
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 100
@@ -176,7 +174,7 @@ class SampleSet(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        origin_prefix = self.FLAGS.get('input_data_path')
+        origin_prefix = self.FLAGS.get('input_data_path', 'modules/control/data/records')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
 

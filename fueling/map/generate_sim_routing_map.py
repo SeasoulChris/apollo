@@ -6,14 +6,9 @@ This is a module to gen sim map
 import os
 import glob
 
-from absl import flags
-
 import fueling.common.logging as logging
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
-
-
-flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 
 
 def execute_task(source_dir):
@@ -56,7 +51,7 @@ class SimMapPipeline(BasePipeline):
 
     def run_prod(self):
         """Production."""
-        dir_prefix = self.FLAGS.get('input_data_path')
+        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)

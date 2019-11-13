@@ -16,6 +16,7 @@ import fueling.common.storage.bos_client as bos_client
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
+flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
 
 
 class BasePipeline(object):

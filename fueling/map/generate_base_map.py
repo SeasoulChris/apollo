@@ -10,7 +10,6 @@ import math
 import os
 
 # Third-party packages
-from absl import flags
 from shapely.geometry import LineString, Point
 import pyspark_utils.helper as spark_helper
 
@@ -28,8 +27,6 @@ from fueling.common.storage.bos_client import BosClient
 
 
 LANE_WIDTH = 3.3
-
-flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 
 
 class MapGenSingleLine(BasePipeline):
@@ -49,7 +46,7 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run_prod(self):
-        dir_prefix = self.FLAGS.get('input_data_path')
+        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)

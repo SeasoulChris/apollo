@@ -17,7 +17,6 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 
 
-flags.DEFINE_string('input_data_path', 'test/simplehdmap', 'simple hdmap input/output data path.')
 flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
 flags.DEFINE_string('lidar_type', 'velodyne16', 'compensator pointcloud topic.')
 
@@ -44,7 +43,7 @@ class LocalMapPipeline(BasePipeline):
 
     def run_prod(self):
         """Production."""
-        dir_prefix = self.FLAGS.get('input_data_path')
+        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         zone_id = self.FLAGS.get('zone_id')
