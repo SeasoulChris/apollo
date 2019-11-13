@@ -14,15 +14,12 @@ ENV="fuel-py27-cyber"
 
 # Training.
 JOB="fueling/control/dynamic_model/dynamic_model_training.py"
-ENV="fuel-py36"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=2 --cpu=20 --memory=100 --env=${ENV}
+./tools/submit-job-to-k8s.py --main=${JOB} --workers=2 --cpu=20 --memory=100
 
 # Model Evaluation
 JOB="fueling/control/dynamic_model/dynamic_model_evaluation.py"
-ENV="fuel-py36"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=16 --cpu=2 --memory=20 --env=${ENV}
+./tools/submit-job-to-k8s.py --main=${JOB} --workers=16 --cpu=2 --memory=20
 
 # Training Data Visualization
 JOB="fueling/control/dynamic_model/dynamic_model_data_visualization.py"
-ENV="fuel-py36"
-./tools/submit-job-to-k8s.py --main=${JOB} --workers=2 --cpu=20 --memory=100 --env=${ENV}
+./tools/submit-job-to-k8s.py --main=${JOB} --workers=2 --cpu=20 --memory=100
