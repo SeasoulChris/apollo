@@ -31,8 +31,6 @@ class JobProcessor(object):
         self.job_config = job_config
 
     def process(self):
-        metrics_prefix = 'apps.web-portal.job-processor.'
-
         # User authentication.
         partner = self.job_config.partner_id
         if partner not in self.PARTNERS:
@@ -51,11 +49,12 @@ class JobProcessor(object):
         bash_args = self.storage_config_to_cmd_args()
         if bash_args is None:
             return HTTPStatus.BAD_REQUEST, 'job_config format error!'
-        py_args = '--job_owner={} --job_id={}'.format(partner, job_id)
+        py_args = f'--job_owner={partner} --job_id={job_id}'
 
         # Dispatch job.
         if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
-            job_exec = 'bash vehicle_calibration.sh {}'.format(self.job_config.input_data_path)
+            job_exec = 'bash vehicle_calibration.sh'
+            py_args += f' --input_data_path={self.job_config.input_data_path}'
         elif self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
             job_exec = 'bash generate_simple_hdmap.sh {} {} {}'.format(
                 self.job_config.input_data_path,
