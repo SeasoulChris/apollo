@@ -37,8 +37,6 @@ flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'F
 flags.DEFINE_string('main', None, 'Job entrypoint.')
 flags.DEFINE_string('fueling_zip_path', None, 'Fueling zip path.')
 flags.DEFINE_string('flags', None, 'Job flags.')
-flags.DEFINE_boolean('with_learning_algorithms', False,
-                     'Whether to package the learning_algorithms folder.')
 flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 
 # Worker.
@@ -76,6 +74,13 @@ def get_env():
     }
 
 
+def _filter_file_to_zip(file_path):
+    if not os.path.isfile(file_path):
+        return False
+    _, ext = os.path.splitext(file_path)
+    return ext in {'.json', '.proto', '.py', '.sh', '.txt', '.yaml'}
+
+
 def get_job():
     job = {
         'entrypoint': flags.FLAGS.main,
@@ -90,12 +95,11 @@ def get_job():
             # Write in_mem_zip.
             with zipfile.ZipFile(in_mem_zip, 'w', zipfile.ZIP_DEFLATED) as fueling_zip:
                 for f in glob.glob('fueling/**', recursive=True):
-                    if os.path.isfile(f):
+                    if _filter_file_to_zip(f):
                         fueling_zip.write(f)
-                if flags.FLAGS.with_learning_algorithms:
-                    for f in glob.glob('learning_algorithms/**', recursive=True):
-                        if os.path.isfile(f):
-                            fueling_zip.write(f)
+                for f in glob.glob('learning_algorithms/**', recursive=True):
+                    if _filter_file_to_zip(f):
+                        fueling_zip.write(f)
 
             fueling_zip = in_mem_zip.getvalue()
             logging.info('fueling.zip has %.2fMB.' % (len(fueling_zip) / (2**20)))
