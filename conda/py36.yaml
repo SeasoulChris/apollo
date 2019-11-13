@@ -37,6 +37,7 @@ dependencies:
   - pyproj
   - pytz
   - requests
+  - shapely
 
   # Audio
   - seaborn
