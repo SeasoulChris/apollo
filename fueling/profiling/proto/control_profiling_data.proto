@@ -1,0 +1,62 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.profiling.proto.control_profiling_data;
+
+
+message ControlFeatures {
+    repeated double station_reference = 1;
+    repeated double speed_reference = 2;
+    repeated double acceleration_reference = 3;
+    repeated double heading_reference = 4;
+    repeated double heading_rate_reference = 5;
+    repeated double curvature_reference = 6;
+
+    repeated double path_remain = 7;
+    repeated double station_error = 8;
+    repeated double speed_error = 9;
+    repeated double lateral_error = 10;
+    repeated double lateral_error_rate = 11;
+    repeated double heading_error = 12;
+    repeated double heading_error_rate= 13;
+
+    repeated double throttle_cmd = 14;
+    repeated double brake_cmd = 15;
+    repeated double acceleration_cmd = 16;
+    repeated double steering_cmd = 17;
+
+    repeated double station = 18;
+    repeated double speed = 19;
+    repeated double acceleration = 20;
+    repeated double jerk = 21;
+    repeated double lateral_acceleration = 22;
+    repeated double lateral_jerk = 23;
+    repeated double heading_angle = 24;
+    repeated double heading_rate = 25;
+    repeated double heading_acceleration = 26;
+    repeated double heading_jerk = 27;
+
+    repeated double reference_position_x = 28;
+    repeated double reference_position_y = 29;
+
+    repeated double total_time = 30;
+    repeated double total_time_exceeded = 31;
+
+    repeated double timestamp_sec = 32;
+    repeated double sequence_num= 33;
+    repeated double localization_timestamp_sec = 34;
+    repeated double localization_sequence_num = 35;
+    repeated double chassis_timestamp_sec = 36;
+    repeated double chassis_sequence_num = 37;
+    repeated double trajectory_timestamp_sec = 38;
+    repeated double trajectory_sequence_num = 39;
+
+    repeated double throttle_chassis = 40;
+    repeated double brake_chassis = 41;
+    repeated double steering_chassis = 42;
+
+    repeated double pose_position_x = 43;
+    repeated double pose_position_y = 44;
+    repeated double pose_heading = 45;
+
+    repeated double pose_heading_offset= 46;
+}
