@@ -24,7 +24,7 @@ class ControlProfilingVisualization(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/control_profiling/generated'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
         target_prefix = origin_prefix
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
@@ -50,7 +50,7 @@ class ControlProfilingVisualization(BasePipeline):
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
-        (todo_tasks
+        data_rdd = (todo_tasks
          # PairRDD(target_dir, task), the map of target dirs and source dirs
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # PairRDD(target_dir, task), filter out non-existed target dirs
@@ -61,9 +61,11 @@ class ControlProfilingVisualization(BasePipeline):
          .mapValues(visual_utils.generate_segments)
          # PairRDD(target_dir, data_array), by merging the arraies within the
          # "segments" into one array
-         .mapValues(visual_utils.generate_data)
-         # PairRDD(target_dir, data_array)
-         .foreach(visual_utils.plot_h5_features_hist))
+         .mapValues(visual_utils.generate_data))
+        # PairRDD(target_dir, data_array)
+        data_rdd.foreach(visual_utils.write_data_json_file)
+        # PairRDD(target_dir, data_array)
+        data_rdd.foreach(visual_utils.plot_h5_features_hist)
 
 
 def summarize_tasks(tasks, original_prefix, target_prefix):

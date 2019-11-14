@@ -13,8 +13,11 @@ import numpy as np
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
 from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
+from modules.data.fuel.fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
+import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+import fueling.profiling.common.json_utils as json_utils
 
 
 def generate_segments(h5s):
@@ -44,6 +47,48 @@ def generate_data(segments):
         data = np.vstack([data, segments[i]])
     print('Data_Set length is: ', len(data))
     return data
+
+
+def write_data_json_file(data_rdd):
+    """ generate feature data and statistics json files for the given data array"""
+    # PairRDD(target_dir, data_array)
+    dir_data, data = data_rdd
+    if len(data) == 0:
+        logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
+                        .format(dir_data))
+        return
+    if data.shape[1] is not len(ControlFeatures().DESCRIPTOR.fields):
+        logging.warning('The data size {} from hdf5 files does not match the proto field size {}'
+                        .format(data.shape[1],  len(ControlFeatures().DESCRIPTOR.fields)))
+        return
+    # define the control feature data file and feature statistics file names
+    grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
+    if grading_dir:
+        json_data_file = os.path.basename(grading_dir[0]).replace(
+            'control_performance_grading.txt', 'control_feature_data')
+        json_statistics_file = os.path.basename(grading_dir[0]).replace(
+            'control_performance_grading.txt', 'control_feature_statistics')
+    else:
+        json_data_file = 'control_feature_data'
+        json_statistics_file = 'control_feature_statistics'
+    # write the control feature data into the json files
+    control_features = ControlFeatures()
+    json_utils.get_pb_from_numpy_array(data, control_features)
+    data_json = proto_utils.pb_to_dict(control_features)
+    data_json['labels'] = {'x_label': 'timestamp_sec',
+                           'y_label': [key for key in data_json.keys()
+                                           if key is not 'timestamp_sec']}
+    logging.info('transforming {} messages to json file {} for target {}'
+                 .format(data.shape[0], json_data_file, dir_data))
+    json_utils.write_json(data_json, dir_data, json_data_file)
+    # write the control feature statistic values into the json files
+    statistics_json = dict()
+    for i in range(0, data.shape[1]):
+        key = ControlFeatures().DESCRIPTOR.fields[i].name
+        statistics_json[key] = {'mean': float('%.6f' % np.mean(data[:, i], axis=0)),
+                                'standard deviation': float('%.6f' % np.std(data[:, i],
+                                                                            axis=0))}
+    json_utils.write_json(statistics_json, dir_data, json_statistics_file)
 
 
 def clean_data(data, seq):
