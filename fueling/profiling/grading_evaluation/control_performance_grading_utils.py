@@ -2,6 +2,7 @@
 """ Control performance grading related utils. """
 
 from collections import namedtuple
+import json
 import math
 import numpy as np
 import os
@@ -24,12 +25,14 @@ def compute_h5_and_gradings(target_groups):
         logging.warning('no valid element in {} items in group {} for task {}'
                         .format(len(msgs), group_id, target))
         return (target, None)
+    # write the control feature matrix for grading into the hdf5 files
     h5_output_file = '{}_{}_{:05d}'.format(profiling_conf.vehicle_type,
                                            profiling_conf.controller_type,
                                            group_id)
     logging.info('writing {} messages to h5 file {} for target {}'
                  .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
+    # compute the control profiling grading results
     grading_results = namedtuple('grading_results',
                                  ['station_err_std',
                                   'station_err_std_harsh',
@@ -627,6 +630,7 @@ def output_gradings(target_grading):
         logging.warning('No grading results written to {}'.format(
             grading_output_path))
     else:
+        grading_dict = grading._asdict()
         with open(grading_output_path, 'w') as grading_file:
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
@@ -645,18 +649,32 @@ def output_gradings(target_grading):
                                                .format(name + '_trajectory_' + str(idx),
                                                        value[0][0][idx], value[1],
                                                        value[0][1][idx]))
+                            new_name = name + '_trajectory_' + str(idx)
+                            grading_dict[new_name] = {'score': float('%.6f' %
+                                                                     value[0][0][idx]),
+                                                      'sample_size': value[1],
+                                                      'timestamp': float('%.6f' %
+                                                                         value[0][1][idx])}
+                        del grading_dict[name]
                     if 'peak' in name:
                         grading_file.write('Grading_output: \t ' +
                                            '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
                                            .format(name, value[0][0], value[1], value[0][1]))
+                        grading_dict[name] = {'score': float('%.6f' % value[0][0]),
+                                              'sample_size': value[1],
+                                              'timestamp': float('%.6f' % value[0][1])}
                 # For the other values, the data are stored as one float variable in the first
                 # element of value tuples
                 else:
                     grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
+                    grading_dict[name] = {'score': float('%.6f' % value[0]),
+                                          'sample_size': value[1]}
             grading_file.write(
                 '\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
+        with open(grading_output_path.replace('.txt','.json'), 'w') as grading_json:
+            grading_json.write(json.dumps(grading_dict))
 
 
 def highlight_gradings(task, grading_file):
