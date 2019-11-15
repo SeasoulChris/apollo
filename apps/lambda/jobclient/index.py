@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+from http import HTTPStatus
 
 import flask
 from flask import request
@@ -9,12 +10,12 @@ from absl import logging
 from absl import app as absl_app
 import requests
 
+from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig, JobConfig
 
+from modules.data.fuel.apps.lambda.web-portal.vehicle_calibration import VehicleCalibration
 
 app = flask.Flask(__name__)
-flags.DEFINE_string('fuel_proxy', 'https://apollofuel0.bceapp.com:8443',
-                    'Endpoint of Apollo-Fuel proxy.')
 
 
 @app.route('/')
@@ -25,46 +26,54 @@ def index():
 @app.route('/submit_job', methods=['POST'])
 def submit_job():
 
+    # TODO(zongbao) Sanity Check
     if request.json['bos']:
         storage = {'bos': {
             'bucket': request.json['bucket'],
             'access_key': request.json['access_key'],
             'secret_key': request.json['access_secret']}
         }
-    elif request.json['blob']:
-        storage = {'blob': {
-            'blob_container': request.json['bucket'],
-            'storage_account': request.json['access_key'],
-            'storage_account_key': request.json['access_secret']}
-        }
 
-    partner_storage_writable = request.json['partner_storage_writable']
-
-    request_dict = {
-        'partner_id': request.json['partner_id'],
-        'job_type': request.json['job_type'],
-        'input_data_path': request.json['input_data_path'],
-        'storage': storage
-        # 'partner_storage_writable': partner_storage_writable
+    # TODO(zongbao) should be a global config
+    PARTNERS = {
+        'apollo',
+        'apollo-evangelist',
+        'apollo-qa',
+        'udelv2019',
+        'coolhigh',
     }
 
-    if request.json['job_type'] == JobConfig.SIMPLE_HDMAP:
-        request_dict['zone_id'] = request.json['zone_id']
-        request_dict['lidar_type'] = request.json['lidar_type']
+    if request.json['partner_id'] not in PARTNERS:
+        msg = 'Sorry, you are not authorized to access this service!'
+        return HTTPStatus.UNAUTHORIZED, msg
 
-    request_json = json.dumps(request_dict)
-    request_post = requests.post(flags.FLAGS.fuel_proxy, json=request_json,
-                                 verify='../web-portal/ssl_keys/cert.pem')
-    response = json.loads(request_post.json()) if request_post.json() else {}
+    job_config = {
+        'partner_id': request.json['partner_id'],
+        'job_type': request.json['job_type'],
+        'input_data_path': request.json['input_data_path']
+    }
 
-    if request_post.ok:
-        logging.info(response.get('message') or 'OK')
-    else:
-        logging.error(
-            response.get('message') or
-            'Request failed with HTTP code {}'.format(request_post.status_code))
+    # Wait for service SIMPLE_HDMAP ready
+    # if request.json['job_type'] == JobConfig.SIMPLE_HDMAP:
+    #     job_config['zone_id'] = request.json['zone_id']
+    #     job_config['lidar_type'] = request.json['lidar_type']
 
-    return response
+    job_id = datetime.datetime.fromtimestamp(
+        time.time()).strftime('%Y-%m-%d-%H-%M')
+    spark_submit_arg = SparkSubmitArg()
+    partner = request.json['partner_id']
+    spark_submit_arg.user.submitter = 'job_client'
+    spark_submit_arg.user.running_role = partner
+    spark_submit_arg.job.flags = f'--job_owner={partner} --job_id={job_id}'
+    spark_submit_arg.partner.bos.bucket = storage['bucket']
+    spark_submit_arg.partner.bos.access_key = storage['access_key']
+    spark_submit_arg.partner.bos.secret_key = storage['secret_key']
+    # Dispatch job.
+    if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
+        VehicleCalibration().submit(job_config, spark_submit_arg)
+        msg = (f'Your job {job_id} is in process now! You will receive a notification in your '
+               'corresponding email when it is finished.')
+        return HTTPStatus.ACCEPTED, msg
 
 
 def main(argv):
