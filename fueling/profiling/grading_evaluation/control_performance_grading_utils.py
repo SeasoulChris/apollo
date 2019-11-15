@@ -631,7 +631,7 @@ def output_gradings(target_grading):
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
                                        'Event Timestamp'))
-            for name, value in grading._asdict().iteritems():
+            for name, value in grading._asdict().items():
                 if not value:
                     logging.warning('grading value for {} is None'.format(name))
                     continue

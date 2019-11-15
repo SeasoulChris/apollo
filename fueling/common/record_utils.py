@@ -135,7 +135,7 @@ def messages_to_proto_dict(sort_by_msg_time=True, sort_by_header_time=False):
             result[msg.topic].append(message_to_proto(msg))
 
         if sort_by_header_time:
-            for topic, protos in result.iteritems():
+            for topic, protos in result.items():
                 result[topic] = sorted(protos, key=lambda proto: proto.header.timestamp_sec)
         return result
     return converter_func
