@@ -9,7 +9,8 @@ RUN python3 -m pip install \
     flask-restful \
     gunicorn \
     protobuf \
-    pyopenssl
+    pyopenssl \
+    requests
 
 COPY py_proto /apollo/py_proto
 COPY apps/local /apollo/modules/data/fuel/apps/local

@@ -113,8 +113,8 @@ class SparkSubmitJob(flask_restful.Resource):
             ENVS.update({
                 'PARTNER_BOS_REGION': arg.partner.bos.region,
                 'PARTNER_BOS_BUCKET': arg.partner.bos.bucket,
-                'PARTNER_BOS_ACCESS': arg.partner.bos.access,
-                'PARTNER_BOS_SECRET': arg.partner.bos.secret,
+                'PARTNER_BOS_ACCESS': arg.partner.bos.access_key,
+                'PARTNER_BOS_SECRET': arg.partner.bos.secret_key,
             })
         if arg.partner.blob.storage_account:
             ENVS.update({
@@ -162,22 +162,13 @@ class SparkSubmitJob(flask_restful.Resource):
                       '--conf spark.kubernetes.executor.secretKeyRef.%(key)s=%(value)s ' % {
                           'key': key, 'value': value})
 
-        job_name = 'job-{}-{}-{}'.format(
-            job_id, submitter, os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-'))
-        cmd = ('%(dist_packages)s/pyspark/bin/spark-submit '
-               '--deploy-mode cluster '
-               '--master %(k8s_master)s '
-               '--name %(job_name)s '
-               '%(confs)s '
-               '"%(entrypoint)s" '
-               '%(flags)s' % {
-                   'dist_packages': site.getsitepackages()[0],
-                   'k8s_master': K8S_MASTER,
-                   'job_name': job_name,
-                   'confs': confs,
-                   'entrypoint': os.path.join(EXTRACTED_PATH, arg.job.entrypoint),
-                   'flags': '--running_mode=PROD ' + arg.job.flags,
-               })
+        job_filename = os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-')
+        job_name = f'job-{job_id}-{submitter}-{job_filename}'
+        site_package = site.getsitepackages()[0]
+        entrypoint = os.path.join(EXTRACTED_PATH, arg.job.entrypoint)
+        cmd = (f'{site_package}/pyspark/bin/spark-submit --deploy-mode cluster '
+               f'--master {K8S_MASTER} --name {job_name} {confs} '
+               f'"{entrypoint}" --running_mode=PROD {arg.job.flags}')
         # Execute command.
         logging.debug('SHELL > {}'.format(cmd))
         os.system(cmd)

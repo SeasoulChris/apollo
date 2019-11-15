@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: spark-submitter
-        image: hub.baidubce.com/apollo/spark_submitter:20191025_0911
+        image: hub.baidubce.com/apollo/spark_submitter:20191114_1635
         ports:
         - containerPort: 8000
         env:

@@ -8,7 +8,10 @@ import time
 
 from absl import logging
 
+from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig, JobConfig
+
+from vehicle_calibration import VehicleCalibration
 
 
 class JobProcessor(object):
@@ -45,17 +48,28 @@ class JobProcessor(object):
             return HTTPStatus.TOO_MANY_REQUESTS, msg
         os.makedirs(mnt_path)
 
+        ############################################################## New style
+        # Construct arguments.
+        spark_submit_arg = SparkSubmitArg()
+        if not self.populate_storage_config(spark_submit_arg):
+            return HTTPStatus.BAD_REQUEST, 'job_config format error!'
+        spark_submit_arg.user.submitter = 'web_portal'
+        spark_submit_arg.user.running_role = partner
+        spark_submit_arg.job.flags = f'--job_owner={partner} --job_id={job_id}'
+        # Dispatch job.
+        if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
+            VehicleCalibration().submit(self.job_config, spark_submit_arg)
+            msg = (f'Your job {job_id} is in process now! You will receive a notification in your '
+                   'corresponding email when it is finished.')
+            return HTTPStatus.ACCEPTED, msg
+
+        ############################################################## Old style
         # Construct arguments.
         bash_args = self.storage_config_to_cmd_args()
         if bash_args is None:
             return HTTPStatus.BAD_REQUEST, 'job_config format error!'
         py_args = f'--job_owner={partner} --job_id={job_id}'
-
-        # Dispatch job.
-        if self.job_config.job_type == JobConfig.VEHICLE_CALIBRATION:
-            job_exec = 'bash vehicle_calibration.sh'
-            py_args += f' --input_data_path={self.job_config.input_data_path}'
-        elif self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
+        if self.job_config.job_type == JobConfig.SIMPLE_HDMAP:
             job_exec = 'bash generate_simple_hdmap.sh {} {} {}'.format(
                 self.job_config.input_data_path,
                 self.job_config.zone_id,
@@ -110,3 +124,31 @@ class JobProcessor(object):
                         blob_conf.storage_access_key,
                         blob_conf.blob_container))
         return None
+
+    def populate_storage_config(self, spark_submit_arg):
+        """
+        Populate spark_submit_arg from modules.tools.fuel_proxy.proto.job_config_pb2.Storage.
+        """
+        storage = self.job_config.storage
+        if storage.HasField('bos'):
+            bos_conf = storage.bos
+            # Bos config sanity check.
+            if (set(bos_conf.bucket) > self.BOS_BUCKET_CHARSET or
+                set(bos_conf.access_key) > self.BOS_KEY_CHARSET or
+                set(bos_conf.secret_key) > self.BOS_KEY_CHARSET):
+                return False
+            spark_submit_arg.partner.bos.bucket = bos_conf.bucket
+            spark_submit_arg.partner.bos.region = bos_conf.region
+            spark_submit_arg.partner.bos.access_key = bos_conf.access_key
+            spark_submit_arg.partner.bos.secret_key = bos_conf.secret_key
+        elif storage.HasField('blob'):
+            # Blob config sanity check.
+            blob_conf = storage.blob
+            if (set(blob_conf.storage_account) > self.BLOB_ACCOUNT_CHARSET or
+                set(blob_conf.storage_access_key) > self.BLOB_ACCESS_CHARSET or
+                set(blob_conf.blob_container) > self.BLOB_CONTAINER_CHARSET):
+                return False
+            spark_submit_arg.partner.blob.storage_account = blob_conf.storage_account
+            spark_submit_arg.partner.blob.storage_access_key = blob_conf.storage_access_key
+            spark_submit_arg.partner.blob.blob_container = blob_conf.blob_container
+        return True

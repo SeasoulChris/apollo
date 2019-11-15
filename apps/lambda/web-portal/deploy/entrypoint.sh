@@ -6,6 +6,10 @@ mkdir -p /apollo/modules/data/fuel/deploy
 
 cd /home/bae/app
 
+# Start k8s proxy.
+kubectl proxy &
+
+# Start web server.
 if [ "$1" = "--debug" ]; then
   python3 index.py $@
 else
