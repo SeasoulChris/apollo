@@ -51,17 +51,17 @@ class ControlProfilingVisualization(BasePipeline):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         data_rdd = (todo_tasks
-         # PairRDD(target_dir, task), the map of target dirs and source dirs
-         .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
-         # PairRDD(target_dir, task), filter out non-existed target dirs
-         .filter(spark_op.filter_key(os.path.isdir))
-         # PairRDD(target_dir, hdf5_file)
-         .mapValues(lambda task: glob.glob(os.path.join(task, '*.hdf5')))
-         # PairRDD(target_dir, list of data_array),
-         .mapValues(visual_utils.generate_segments)
-         # PairRDD(target_dir, data_array), by merging the arraies within the
-         # "segments" into one array
-         .mapValues(visual_utils.generate_data))
+                    # PairRDD(target_dir, task), the map of target dirs and source dirs
+                    .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
+                    # PairRDD(target_dir, task), filter out non-existed target dirs
+                    .filter(spark_op.filter_key(os.path.isdir))
+                    # PairRDD(target_dir, hdf5_file)
+                    .mapValues(lambda task: glob.glob(os.path.join(task, '*.hdf5')))
+                    # PairRDD(target_dir, list of data_array),
+                    .mapValues(visual_utils.generate_segments)
+                    # PairRDD(target_dir, data_array), by merging the arraies within the
+                    # "segments" into one array
+                    .mapValues(visual_utils.generate_data))
         # PairRDD(target_dir, data_array)
         data_rdd.foreach(visual_utils.write_data_json_file)
         # PairRDD(target_dir, data_array)

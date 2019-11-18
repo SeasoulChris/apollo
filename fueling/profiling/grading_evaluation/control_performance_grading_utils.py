@@ -673,7 +673,7 @@ def output_gradings(target_grading):
             grading_file.write(
                 '\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
             grading_file.write('{}\n\n'.format(profiling_conf))
-        with open(grading_output_path.replace('.txt','.json'), 'w') as grading_json:
+        with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
             grading_json.write(json.dumps(grading_dict))
 
 

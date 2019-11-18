@@ -59,7 +59,7 @@ def write_data_json_file(data_rdd):
         return
     if data.shape[1] is not len(ControlFeatures().DESCRIPTOR.fields):
         logging.warning('The data size {} from hdf5 files does not match the proto field size {}'
-                        .format(data.shape[1],  len(ControlFeatures().DESCRIPTOR.fields)))
+                        .format(data.shape[1], len(ControlFeatures().DESCRIPTOR.fields)))
         return
     # define the control feature data file and feature statistics file names
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
@@ -77,7 +77,7 @@ def write_data_json_file(data_rdd):
     data_json = proto_utils.pb_to_dict(control_features)
     data_json['labels'] = {'x_label': 'timestamp_sec',
                            'y_label': [key for key in data_json.keys()
-                                           if key is not 'timestamp_sec']}
+                                       if key is not 'timestamp_sec']}
     logging.info('transforming {} messages to json file {} for target {}'
                  .format(data.shape[0], json_data_file, dir_data))
     json_utils.write_json(data_json, dir_data, json_data_file)

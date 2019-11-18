@@ -344,7 +344,8 @@ class training:
             self.saver = self._init_model_saver()
 
             # ====================All summaries ====================
-            self.summary_writer_train = self._init_summary_writer("summary", output_trained_model_path)
+            self.summary_writer_train = self._init_summary_writer(
+                "summary", output_trained_model_path)
 
             summary_tensor_map_train = {loss: "TRAIN_total_loss",
                                         xy_loss: "TRAIN_xy_loss",

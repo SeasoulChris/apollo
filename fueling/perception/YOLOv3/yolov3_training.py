@@ -24,7 +24,7 @@ flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained mo
 
 class Yolov3Training(BasePipeline):
     """Model training pipeline."""
-    
+
     def run_test(self):
         """Run test."""
         training_datasets = glob.glob(os.path.join(cfg.train_data_dir_local, '*'))
@@ -56,9 +56,8 @@ class Yolov3Training(BasePipeline):
                 data_batch = data_pool.batch
                 engine.step(data_batch, output_trained_model_path)
 
-
         logging.info('input training data path: {}'.format(training_datasets))
-        
+
         config_path = '/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py'
         model_output_path = self.FLAGS.get('output_trained_model_path') or cfg.model_output_path
         object_storage = self.partner_object_storage() or BosClient()
