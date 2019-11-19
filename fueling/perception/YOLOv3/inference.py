@@ -36,13 +36,11 @@ NUM_OUTPUT_LAYERS = cfg.num_output_layers
 ANCHORS = cfg.anchors
 NUM_CLASSES = cfg.num_classes
 NUM_ANGLE_BINS = cfg.num_angle_bins
-RESTORE_PATH = cfg.restore_path
 NMS_CONFIDENCE_THRESHOLD = cfg.nms_confidence_threshold
 NMS_IOU_THRESHOLD = cfg.nms_iou_threshold
 CLASS_MAP = cfg.class_map
 ORIGINAL_WIDTH = cfg.original_width
 ORIGINAL_HEIGHT = cfg.original_height
-MODEL_OUTPUT_PATH = cfg.model_output_path
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU
@@ -51,8 +49,9 @@ slim = tf.contrib.slim
 
 class Inference:
 
-    def __init__(self):
-        pass
+    def __init__(self, output_inference_path, restore_path):
+        self.output_inference_path = output_inference_path
+        self.inference_restore_path = restore_path
 
     def _init_essential_placeholders(self):
         """
@@ -81,8 +80,8 @@ class Inference:
         Restore training from a checkpoint.
         """
         restore_saver = tf.train.Saver()
-        restore_saver.restore(sess, RESTORE_PATH)
-        logging.info("Restored weights from {}.".format(RESTORE_PATH))
+        restore_saver.restore(sess, self.inference_restore_path)
+        logging.info("Restored weights from {}.".format(self.inference_restore_path))
 
     def setup_network(self):
         """

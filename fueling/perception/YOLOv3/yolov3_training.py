@@ -27,17 +27,19 @@ class Yolov3Training(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        training_datasets = glob.glob(os.path.join(cfg.train_data_dir_local, '*'))
-        self.run(training_datasets)
+        training_datasets = glob.glob(
+            os.path.join('/apollo/modules/data/fuel/testdata/perception/YOLOv3/train', '*'))
+        self.run(training_datasets, '/apollo/modules/data/fuel/testdata/perception/YOLOv3/models')
 
     def run_prod(self):
         """Run prod."""
-        input_data_path = self.FLAGS.get('input_training_data_path') or cfg.train_data_dir_cloud
+        input_data_path = self.FLAGS.get('input_training_data_path')
+        output_model_path = self.FLAGS.get('output_trained_model_path')
         object_storage = self.partner_object_storage() or BosClient()
+        self.run([object_storage.abs_path(input_data_path)],
+                 object_storage.abs_path(output_model_path))
 
-        self.run([object_storage.abs_path(input_data_path)])
-
-    def run(self, training_datasets):
+    def run(self, datasets, output_dir):
         """Run the actual pipeline job."""
 
         def _executor(image_paths, output_trained_model_path):
@@ -48,36 +50,32 @@ class Yolov3Training(BasePipeline):
 
             logging.info('current image set size: {}'.format(len(image_paths)))
 
-            engine = training()
-            engine.setup_training(output_trained_model_path)
+            restore_path = os.path.join(output_trained_model_path, cfg.restore_path)
+            engine = training(output_trained_model_path, restore_path)
+            engine.setup_training()
             data_pool = Dataset(image_paths)
 
             for _ in range(cfg.max_iter):
                 data_batch = data_pool.batch
-                engine.step(data_batch, output_trained_model_path)
+                engine.step(data_batch)
 
-        logging.info('input training data path: {}'.format(training_datasets))
+        logging.info('input training data path: {}'.format(datasets))
+        logging.info('output trained model path: {}'.format(output_dir))
 
         config_path = '/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py'
-        model_output_path = self.FLAGS.get('output_trained_model_path') or cfg.model_output_path
-        object_storage = self.partner_object_storage() or BosClient()
-        model_output_path = object_storage.abs_path(model_output_path)
+        file_utils.makedirs(output_dir)
+        shutil.copyfile(config_path, os.path.join(output_dir, 'config.py'))
 
-        logging.info('output trained model path: {}'.format(model_output_path))
-
-        file_utils.makedirs(model_output_path)
-        shutil.copyfile(config_path, os.path.join(model_output_path, 'config.py'))
-
-        training_datasets_rdd = self.to_rdd(training_datasets)
         image_paths_set = (
             # RDD(directory_path), directory containing a dataset
-            training_datasets_rdd
+            self.to_rdd(datasets) 
             # RDD(file_path), paths of all label txt files
             .map(data_utils.get_all_image_paths)
             .cache())
 
-        image_paths_set.foreach(lambda image_paths: _executor(image_paths, model_output_path))
+        image_paths_set.foreach(lambda image_paths: _executor(image_paths, output_dir))
 
 
 if __name__ == "__main__":
     Yolov3Training().main()
+

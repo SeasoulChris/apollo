@@ -12,12 +12,9 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.YOLOv3 import config as cfg
 import fueling.common.logging as logging
 
-
 CLASS_NAME_ID_MAP = cfg.class_map
-EVALUATE_DATA_DIR_LOCAL = cfg.evaluate_data_dir_local
-EVALUATE_RESULT_DIR_LOCAL = cfg.evaluate_result_dir_local
-EVALUATE_DATA_DIR_CLOUD = cfg.evaluate_data_dir_cloud
-EVALUATE_RESULT_DIR_CLOUD = cfg.evaluate_result_dir_cloud
+
+flags.DEFINE_string('input_evaluate_data_path', '', 'Input data path for evaluate.')
 
 
 def match_label_to_result(dataset_result_dir):
@@ -169,62 +166,30 @@ def compile_categories(gt_dt):
 
 
 class Yolov3Evaluate(BasePipeline):
+    """Evaluate pipeline."""
 
     def run_test(self):
-        dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_LOCAL, "*"))
-        dataset_result_list = [(dataset, EVALUATE_RESULT_DIR_LOCAL) for dataset in dataset_dir_list]
-        # RDD(file_path) for training dataset.
-        dataset_result_rdd = self.to_rdd(dataset_result_list)
-        data = (
-            # RDD((label_dataset, result_dir)), each dataset to be evaluatued
-            dataset_result_rdd
-            # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
-            # in a dataset and the result directory
-            .map(match_label_to_result)
-            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
-            # image information as a dictionary
-            .map(compile_images)
-            # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
-            # add the annotation list for that image example
-            .map(compile_annotations)
-            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
-            # ground truth dictionary and an inference result matrix
-            .map(read_results)
-            # RDD((gt_dict, complete_result_matrix)), add the category list to the
-            # gt_dict
-            .map(compile_categories)
-        )
-        self.run(data)
+        """Run test."""
+        datasets_dir = glob.glob(
+            os.path.join('/apollo/modules/data/fuel/testdata/perception/YOLOv3/train', '*'))
+        datasets = [(dataset, '/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output')
+                    for dataset in datasets_dir]
+        self.run(datasets)
 
     def run_prod(self):
-        dataset_dir_list = glob.glob(os.path.join(EVALUATE_DATA_DIR_CLOUD, "*"))
-        dataset_result_list = [(dataset, EVALUATE_RESULT_DATA_CLOUD)
-                               for dataset in dataset_dir_list]
-        # RDD(file_path) for training dataset.
-        dataset_result_rdd = self.to_rdd(dataset_result_list)
-        data = (
-            # RDD((label_dataset, result_dir)), each dataset to be evaluatued
-            dataset_result_rdd
-            # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
-            # in a dataset and the result directory
-            .map(match_label_to_result)
-            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
-            # image information as a dictionary
-            .map(compile_images)
-            # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
-            # add the annotation list for that image example
-            .map(compile_annotations)
-            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
-            # ground truth dictionary and an inference result matrix
-            .map(read_results)
-            # RDD((gt_dict, complete_result_matrix)), add the category list to the
-            # gt_dict
-            .map(compile_categories)
-        )
-        self.run(data)
+        """Run prod."""
+        object_storage = self.partner_object_storage() or BosClient()
+        input_evaluate_path = self.FLAGS.get('input_evaluate_data_path')
+        output_evaluate_path = os.path.join(input_evaluate_path, cfg.evaluate_path)
+        datasets_dir = glob.glob(object_storage.abs_path(input_evaluate_path))
+        datasets = [(dataset, output_evaluate_path) for dataset in datasets_dir]
+        self.run(datasets)
 
-    def run(self, data_rdd):
+    def run(self, datasets):
+        """Run the actual pipeline job."""
+
         def _executor(gt_dt):
+            """Executor task that runs on workers"""
             gt, dt = gt_dt
             coco_obj = COCO()
             coco_obj.dataset = gt
@@ -234,6 +199,27 @@ class Yolov3Evaluate(BasePipeline):
             evaluator.evaluate()
             evaluator.accumulate()
             evaluator.summarize()
+
+        data_rdd = (
+            # RDD((label_dataset, result_dir)), each dataset to be evaluatued
+            self.to_rdd(datasets)
+            # RDD([(label_txt_path, result_txt_path, uid),...]), list all txt files
+            # in a dataset and the result directory
+            .map(match_label_to_result)
+            # RDD([(image_dic, label_txt_path, result_txt_path, uid),...]), add the
+            # image information as a dictionary
+            .map(compile_images)
+            # RDD([(image_dict, ann_list, label_txt_path, result_txt_path, uid),...]),
+            # add the annotation list for that image example
+            .map(compile_annotations)
+            # RDD((gt_dict, complete_result_matrix)), consolidate the list into a
+            # ground truth dictionary and an inference result matrix
+            .map(read_results)
+            # RDD((gt_dict, complete_result_matrix)), add the category list to the
+            # gt_dict
+            .map(compile_categories)
+        )
+
         data_rdd.foreach(_executor)
 
 

@@ -40,7 +40,6 @@ NUM_CLASSES = cfg.num_classes
 NUM_ANGLE_BINS = cfg.num_angle_bins
 NEGATIVE_IGNORE_THRESH = cfg.negative_ignore_thresh
 START_FROM_COCO = cfg.start_from_coco
-RESTORE_PATH = cfg.restore_path
 NMS_CONFIDENCE_THRESHOLD = cfg.nms_confidence_threshold
 NMS_IOU_THRESHOLD = cfg.nms_iou_threshold
 CLASS_MAP = cfg.class_map
@@ -69,12 +68,14 @@ def get_available_gpus():
 
 class training:
 
-    def __init__(self, num_gpu=1):
+    def __init__(self, model_path, restore_path, num_gpu=1):
         self.cur_step = START_ITER
         self.last_save_step = -1
         self.num_gpu = num_gpu
         self.epoch = 0
         self.global_step = tf.Variable(self.cur_step, name="global_step", trainable=False)
+        self.output_trained_model_path = model_path
+        self.model_restore_path = restore_path
 
     def _init_essential_placeholders(self):
         """
@@ -180,8 +181,8 @@ class training:
         else:
             variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
             restore_saver = tf.train.Saver(var_list=variables)
-        restore_saver.restore(sess, RESTORE_PATH)
-        logging.info("Restored weights from {}.".format(RESTORE_PATH))
+        restore_saver.restore(sess, self.model_restore_path)
+        logging.info("Restored weights from {}.".format(self.model_restore_path))
 
     def _image_summary(self, image_batch, xy_wh_conf_value, calib_list, cls_box_map=None):
         """
@@ -207,11 +208,11 @@ class training:
             images.append(np.uint8(np.array(img)))
         return images
 
-    def _init_summary_writer(self, suffix, output_trained_model_path):
+    def _init_summary_writer(self, suffix):
         """
         Initialize a summary writer.
         """
-        return tf.summary.FileWriter(os.path.join(output_trained_model_path, suffix))
+        return tf.summary.FileWriter(os.path.join(self.output_trained_model_path, suffix))
 
     def _add_to_summary(self, tensor, name, _type="scalar"):
         """
@@ -277,7 +278,7 @@ class training:
             average_grads.append(grad_and_var)
         return average_grads
 
-    def setup_training(self, output_trained_model_path):
+    def setup_training(self):
         """
         Start training.
         """
@@ -343,7 +344,7 @@ class training:
 
             # ====================All summaries ====================
             self.summary_writer_train = self._init_summary_writer(
-                "summary", output_trained_model_path)
+                "summary")
 
             summary_tensor_map_train = {loss: "TRAIN_total_loss",
                                         xy_loss: "TRAIN_xy_loss",
@@ -373,7 +374,7 @@ class training:
             self.ops = [xy_loss, wh_loss, positive_conf_loss, negative_conf_loss,
                         cls_loss, loss, alpha_loss, hwl_loss, train_op]
 
-    def step(self, data, output_trained_model_path):
+    def step(self, data):
         """
         Perform 1 update on the model with input training data.
         """
@@ -411,8 +412,8 @@ class training:
                                  negative_conf_, cls_, alpha_, hwl_))
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
-            self.saver.save(self.sess, "{}/models".format(output_trained_model_path),
+            self.saver.save(self.sess, "{}/models".format(self.output_trained_model_path),
                             global_step=self.cur_step)
-            logging.info("Model saved in file: {}".format(output_trained_model_path))
+            logging.info("Model saved in file: {}".format(self.output_trained_model_path))
         logging.info(self.sess.run(tf.contrib.memory_stats.MaxBytesInUse()))
         self.cur_step += 1
