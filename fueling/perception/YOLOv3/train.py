@@ -57,7 +57,6 @@ SUMMARY_INTERVAL = cfg.summary_interval
 PRINT_INTERVAL = cfg.print_interval
 SAVE_INTERVAL = cfg.save_interval
 
-os.environ["CUDA_VISIBLE_DEVICES"] = GPU
 slim = tf.contrib.slim
 
 
@@ -282,7 +281,6 @@ class training:
         """
         Start training.
         """
-        tf.debugging.set_log_device_placement(True)
         with tf.device("/cpu:0"):
             # Set random seed
             tf.set_random_seed(2)
@@ -361,7 +359,7 @@ class training:
                                                          _type="image")
 
             #  start session and train
-            config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+            config = tf.ConfigProto(allow_soft_placement=True)
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
             self.sess.run(tf.local_variables_initializer(),
@@ -416,4 +414,5 @@ class training:
             self.saver.save(self.sess, "{}/models".format(output_trained_model_path),
                             global_step=self.cur_step)
             logging.info("Model saved in file: {}".format(output_trained_model_path))
+        logging.info(self.sess.run(tf.contrib.memory_stats.MaxBytesInUse()))
         self.cur_step += 1

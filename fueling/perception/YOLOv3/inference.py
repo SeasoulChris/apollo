@@ -153,4 +153,3 @@ class Inference:
 
         _write_output()
         _write_image()
-        _write_gt_image()

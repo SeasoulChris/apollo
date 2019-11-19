@@ -105,6 +105,10 @@ class Calibration(object):
 
     def __init__(self, calib_filepath):
         calibs = self.read_calib_file(calib_filepath)
+        if not calibs:
+            self.status = False
+            return
+
         # Projection matrix from rect camera coord to image2 coord
         self.P = calibs['P2']
         self.P = np.reshape(self.P, [3, 4])
@@ -123,6 +127,7 @@ class Calibration(object):
         self.f_v = self.P[1, 1]
         self.b_x = self.P[0, 3] / (-self.f_u)  # relative
         self.b_y = self.P[1, 3] / (-self.f_v)
+        self.status = True
 
     def read_calib_file(self, filepath):
         ''' Read in a calibration file and parse into a dictionary.

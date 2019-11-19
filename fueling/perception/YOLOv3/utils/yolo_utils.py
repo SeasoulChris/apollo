@@ -347,6 +347,10 @@ def process_label_file(label_path, image_path, calib_path, input_shape, anchors,
     if not os.path.exists(calib_path):
         raise RuntimeError("Calibration file path : {} does not exist.".format(calib_path))
     calib = read_camera_params(calib_path)
+
+    if not calib.status:
+        raise RuntimeError("Calibration file path :{} content has issue".format(calib_path))
+
     interactor = kitti_obj_cam_interaction(calib)
 
     image_np = np.asarray(original_image, dtype=np.uint8)

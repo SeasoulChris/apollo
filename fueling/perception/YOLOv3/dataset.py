@@ -85,18 +85,21 @@ class Dataset:
         Parse example from txt line.
         """
         while not self.one_shot_complete:
-            image_path = self._txt_files_queue.get()
-            all_paths = data_utils.get_all_paths(image_path)
-            processed = data_utils.process_data(all_paths)
-            # Filter out classes that is not being considered
-            image_data, y_true, cls_box_map, objs, calib, original_image = \
-                data_utils.filter_classes(processed)
-            scale1, scale2, scale3 = y_true
-            #image_data = np.expand_dims(image_data, axis=0)
-            image_name = os.path.basename(image_path).split(".")[0]
-            final_data = (image_data, scale1, scale2, scale3, cls_box_map,
-                          objs, calib, image_name, original_image)
-            self._example_queue.put(final_data)
+            try:
+                image_path = self._txt_files_queue.get()
+                all_paths = data_utils.get_all_paths(image_path)
+                processed = data_utils.process_data(all_paths)
+                # Filter out classes that is not being considered
+                image_data, y_true, cls_box_map, objs, calib, original_image = \
+                    data_utils.filter_classes(processed)
+                scale1, scale2, scale3 = y_true
+                #image_data = np.expand_dims(image_data, axis=0)
+                image_name = os.path.basename(image_path).split(".")[0]
+                final_data = (image_data, scale1, scale2, scale3, cls_box_map,
+                              objs, calib, image_name, original_image)
+                self._example_queue.put(final_data)
+            except RuntimeError as err:
+                logging.error('cannot process file {} err {}'.format(image_path, err))
 
     @property
     def dataset_size(self):

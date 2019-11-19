@@ -34,7 +34,6 @@ nms_iou_threshold = 0.3
 # ===================== TRAINING AND INFERENCE SETTINGS ======================
 inference = True  # Set to False for training and True for inference
 inference_only_2d = False
-
 restore_training = False
 start_from_coco = False
 #restore_path = "testdata/perception/YOLOv3/models/models-119999"
@@ -69,8 +68,7 @@ decay_rate = 0.5
 max_iter = 2100 * 30
 start_iter = 1
 num_threads = 2
-#batch_size = 3
-batch_size = 1
+batch_size = 12
 #save_interval = 10000
 save_interval = 5000
 print_interval = 1

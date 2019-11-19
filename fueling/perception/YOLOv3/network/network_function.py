@@ -7,7 +7,6 @@ import tensorflow as tf
 
 
 np.random.seed(101)
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 slim = tf.contrib.slim
 
 
