@@ -5,9 +5,11 @@
 from collections import namedtuple
 import glob
 import os
+import sys
 import tarfile
 import time
 
+from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -19,17 +21,30 @@ import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.feature_visualization.control_feature_visualization_utils as visual_utils
 
 
+flags.DEFINE_string('input_path_local',
+                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    'input data directory for local run_test')
+flags.DEFINE_string('output_path_local',
+                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    'output data directory for local run_test')
+flags.DEFINE_string('todo_tasks_local', '', 'todo_taks directory for local run_test')
+flags.DEFINE_boolean('simulation_only_test', False,
+                     'if simulation-only, then generate .json data file; otherwise, plotting')
+flags.DEFINE_string('input_path_k8s', 'modules/control/control_profiling_hf5',
+                    'input data directory for run_prod')
+flags.DEFINE_string('output_path_k8s', 'modules/control/control_profiling_hf5',
+                    'output data directory for run_pod')
+
 class ControlProfilingVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features"""
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
-        target_prefix = origin_prefix
+        origin_prefix = flags.FLAGS.input_path_local
+        target_prefix = flags.FLAGS.output_path_local
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
-            os.path.join(origin_prefix, 'Road_Test'),
-            os.path.join(origin_prefix, 'Sim_Test')
+            os.path.join(origin_prefix, flags.FLAGS.todo_tasks_local),
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
@@ -37,8 +52,8 @@ class ControlProfilingVisualization(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = 'modules/control/control_profiling_hf5'
-        target_prefix = original_prefix
+        original_prefix = flags.FLAGS.input_path_k8s
+        target_prefix = flags.FLAGS.output_path_k8s
         # RDD(tasks), the task dirs
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
                                                 dir_utils.get_todo_tasks(original_prefix, target_prefix,
