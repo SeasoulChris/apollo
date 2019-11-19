@@ -25,7 +25,7 @@ class PlanningDav:
         if self.last_timestamp is not None and self.last_av is not None:
             delta_av = current_av - self.last_av
             delta_t = current_timestamp - self.last_timestamp
-            dav = delta_av / float(delta_t)
+            dav = 0 if delta_t <= 0 else delta_av / float(delta_t)
             self.dav_list.append(dav)
             self.timestamp_list.append(current_timestamp)
 

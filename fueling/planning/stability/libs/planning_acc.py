@@ -26,7 +26,7 @@ class PlanningAcc:
         if self.last_timestamp is not None and self.last_speed is not None:
             delta_speed = current_speed - self.last_speed
             delta_t = current_timestamp - self.last_timestamp
-            derived_acc = delta_speed / float(delta_t)
+            derived_acc = 0 if delta_t <= 0 else delta_speed / float(delta_t)
             self.derived_acc_list.append(derived_acc)
         else:
             self.derived_acc_list.append(acc)

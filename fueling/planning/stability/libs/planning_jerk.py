@@ -25,7 +25,7 @@ class PlanningJerk:
         if self.last_timestamp is not None and self.last_acc is not None:
             delta_acc = current_acc - self.last_acc
             delta_t = current_timestamp - self.last_timestamp
-            derived_jerk = delta_acc / float(delta_t)
+            derived_jerk = 0 if delta_t <= 0 else delta_acc / float(delta_t)
             self.derived_jerk_list.append(derived_jerk)
         else:
             self.derived_jerk_list.append(jerk)
