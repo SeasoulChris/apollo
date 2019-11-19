@@ -77,10 +77,12 @@ class ControlProfilingVisualization(BasePipeline):
                     # PairRDD(target_dir, data_array), by merging the arraies within the
                     # "segments" into one array
                     .mapValues(visual_utils.generate_data))
-        # PairRDD(target_dir, data_array)
-        data_rdd.foreach(visual_utils.write_data_json_file)
-        # PairRDD(target_dir, data_array)
-        data_rdd.foreach(visual_utils.plot_h5_features_hist)
+        if flags.FLAGS.simulation_only_test:
+            # PairRDD(target_dir, data_array)
+            data_rdd.foreach(visual_utils.write_data_json_file)
+        else:
+            # PairRDD(target_dir, data_array)
+            data_rdd.foreach(visual_utils.plot_h5_features_hist)
 
 
 def summarize_tasks(tasks, original_prefix, target_prefix):
