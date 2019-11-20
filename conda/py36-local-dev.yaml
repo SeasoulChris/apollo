@@ -43,6 +43,12 @@ dependencies:
   - seaborn
   - pywavelets
 
+  # Jupyter notebook
+  - jupyter
+  - jupyter_client
+  - jupyter_console
+  - jupyter_core
+
   - pip:
     - azure.storage.blob
     - liegroups
