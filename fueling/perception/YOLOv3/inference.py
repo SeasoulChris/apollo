@@ -49,8 +49,7 @@ slim = tf.contrib.slim
 
 class Inference:
 
-    def __init__(self, output_inference_path, restore_path):
-        self.output_inference_path = output_inference_path
+    def __init__(self, restore_path):
         self.inference_restore_path = restore_path
 
     def _init_essential_placeholders(self):

@@ -59,16 +59,13 @@ class Yolov3Training(BasePipeline):
                 data_batch = data_pool.batch
                 engine.step(data_batch)
 
+        file_utils.makedirs(output_dir)
         logging.info('input training data path: {}'.format(datasets))
         logging.info('output trained model path: {}'.format(output_dir))
+
         infer_outpath = os.path.join(output_dir, cfg.inference_path)
         train_list_path = os.path.join(infer_outpath, cfg.train_list)
         test_list_path = os.path.join(infer_outpath, cfg.test_list)
-        logging.info('input training data path: {}'.format(datasets))
-
-        config_path = '/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py'
-        file_utils.makedirs(output_dir)
-        shutil.copyfile(config_path, os.path.join(output_dir, 'config.py'))
 
         image_paths_set = (
             # RDD(directory_path), directory containing a dataset

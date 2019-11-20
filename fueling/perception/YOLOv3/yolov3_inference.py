@@ -17,7 +17,6 @@ import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
 flags.DEFINE_string('input_inference_data_path', '', 'Input data path for inference.')
-flags.DEFINE_string('output_inference_path', '', 'Output path for inference.')
 
 
 class Yolov3Inference(BasePipeline):
@@ -31,24 +30,25 @@ class Yolov3Inference(BasePipeline):
     def run_prod(self):
         """Run prod."""
         object_storage = self.partner_object_storage() or BosClient()
-        self.run([object_storage.abs_path(self.FLAGS.get('input_inference_data_path'))],
-                 object_storage.abs_path(os.path.join(self.FLAGS.get('output_inference_path'),
-                                                      cfg.inference_path)))
+        input_data_path = object_storage.abs_path(self.FLAGS.get('input_inference_data_path'))
+        output_data_path = os.path.join(input_data_path, cfg.inference_path)
+        self.run([input_data_path], output_data_path)
 
     def run(self, input_dir, output_dir):
         """Run the actual pipeline job."""
 
-        def _executor(image_paths, input_path, output_path):
+        def _executor(image_paths, trained_model_path, infer_output_path):
             """Executor task that runs on workers"""
             if not image_paths:
-                logging.warn('no images found in this set')
+                logging.warn('no images found in this set for inference')
                 return
 
             logging.info('current image set size: {}'.format(len(image_paths)))
 
-            restore_path = os.path.join(input_path, cfg.restore_path)
+            restore_path = os.path.join(trained_model_path, cfg.restore_path)
             logging.info('restore path is {}'.format(restore_path))
-            engine = Inference(input_path, restore_path)
+
+            engine = Inference(restore_path)
             engine.setup_network()
             if cfg.inference_only_2d:
                 data_pool = DatasetOnlyImage(image_paths)
@@ -56,16 +56,17 @@ class Yolov3Inference(BasePipeline):
                 data_pool = Dataset(image_paths)
             for _ in range((data_pool.dataset_size + 1) // cfg.batch_size):
                 data = data_pool.batch
-                engine.run(data, output_path)
+                engine.run(data, infer_output_path)
 
         logging.info('input inference data path: {}'.format(input_dir))
         logging.info('output inference data path: {}'.format(output_dir))
-        infer_path = os.path.join(input_dir, cfg.inference_path)
-        test_list_path = os.path.join(infer_path, cfg.test_list)
-        image_paths_set = BasePipeline.SPARK_CONTEXT.pickleFile(test_list_path)
+
         file_utils.makedirs(os.path.join(output_dir, "label"))
         file_utils.makedirs(os.path.join(output_dir, "images"))
         file_utils.makedirs(os.path.join(output_dir, "images_gt"))
+
+        test_list_path = os.path.join(output_dir, cfg.test_list)
+        image_paths_set = BasePipeline.SPARK_CONTEXT.pickleFile(test_list_path)
         image_paths_set.foreach(lambda image_paths: _executor(image_paths, input_dir, output_dir))
 
 
