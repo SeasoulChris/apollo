@@ -3,10 +3,14 @@ import cgi
 import collections
 import os
 import math
+import sys
 
 import google.protobuf.text_format as text_format
 
-from cyber_py.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py3.record import RecordReader
+else:
+    from cyber_py.record import RecordReader
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 import fueling.common.email_utils as email_utils
@@ -14,8 +18,6 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
-import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils \
-    as feature_utils
 
 
 def list_records(path):
@@ -32,13 +34,13 @@ def list_records(path):
     return records
 
 
-def missing_file(path):
+def missing_file(path, conf_pb):
     vehicles = multi_vehicle_utils.get_vehicle(path)
     logging.info("vehicles %s" % vehicles)
     for vehicle in vehicles:
         # config file
         conf = os.path.join(
-            path, vehicle, feature_utils.CONF_FILE)
+            path, vehicle, conf_pb)
         logging.info("vehicles conf %s" % conf)
         if os.path.exists(conf) is False:
             logging.error('Missing configuration file in %s' % vehicle)
@@ -52,12 +54,12 @@ def missing_file(path):
     return False
 
 
-def parse_error(path):
+def parse_error(path, conf_pb):
     vehicles = multi_vehicle_utils.get_vehicle(path)
     pb_value = vehicle_config_pb2.VehicleConfig()
     for vehicle in vehicles:
         conf = os.path.join(
-            path, vehicle, feature_utils.CONF_FILE)
+            path, vehicle, conf_pb)
         try:
             proto_utils.get_pb_from_text_file(conf, pb_value)
             return False
@@ -75,12 +77,12 @@ def check_vehicle_id(conf):
     return False
 
 
-def missing_field(path):
+def missing_field(path, conf_pb):
     vehicles = multi_vehicle_utils.get_vehicle(path)
     logging.info("vehicles in missing field: %s" % vehicles)
     for vehicle in vehicles:
         conf_file = os.path.join(
-            path, vehicle, feature_utils.CONF_FILE)
+            path, vehicle, conf_pb)
         logging.info("conf_file: %s" % conf_file)
         # reset for each vehicle to avoid overwrited
         pb_value = vehicle_config_pb2.VehicleConfig()
@@ -98,7 +100,7 @@ def missing_field(path):
     return False
 
 
-def missing_message_data(path, channels=feature_utils.CHANNELS):
+def missing_message_data(path, channels):
     for record in list_records(path):
         logging.info("reading records %s" % record)
         reader = RecordReader(record)
@@ -114,9 +116,9 @@ def control_message_check(message):
     message_proto = record_utils.message_to_proto(message).debug
     if (hasattr(message_proto, 'simple_lon_debug') and
             hasattr(message_proto, 'simple_lat_debug')):
-        lon_lat_control_fields = [message_proto.simple_log_debug.station_error,
-                                  message_proto.simple_log_debug.speed_error,
-                                  message_proto.simple_log_debug.speed_reference,
+        lon_lat_control_fields = [message_proto.simple_lon_debug.station_error,
+                                  message_proto.simple_lon_debug.speed_error,
+                                  message_proto.simple_lon_debug.speed_reference,
                                   message_proto.simple_lat_debug.lateral_error,
                                   message_proto.simple_lat_debug.heading_error,
                                   message_proto.simple_lat_debug.curvature]
@@ -138,15 +140,15 @@ def control_message_check(message):
     return True
 
 
-def sanity_check(input_folder, job_owner, job_id):
+def sanity_check(input_folder, conf_pb, channels, job_owner, job_id):
     err_msg = None
-    if missing_file(input_folder):
+    if missing_file(input_folder, conf_pb):
         err_msg = "One or more files are missing in %s" % input_folder
-    elif parse_error(input_folder):
+    elif parse_error(input_folder, conf_pb):
         err_msg = "Config file cannot be parsed in %s" % input_folder
-    elif missing_field(input_folder):
+    elif missing_field(input_folder, conf_pb):
         err_msg = "One or more fields are missing in config file %s" % input_folder
-    elif missing_message_data(input_folder):
+    elif missing_message_data(input_folder, channels):
         err_msg = "Messages are missing in records of %s" % input_folder
     else:
         logging.info("%s Passed sanity check." % input_folder)
