@@ -13,14 +13,9 @@ import requests
 from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
 from modules.tools.fuel_proxy.proto.job_config_pb2 import BosConfig, JobConfig
 
-from modules.data.fuel.apps.lambda.web-portal.vehicle_calibration import VehicleCalibration
+from vehicle_calibration import VehicleCalibration
 
 app = flask.Flask(__name__)
-
-
-@app.route('/')
-def index():
-    return flask.render_template('index.tpl')
 
 
 @app.route('/submit_job', methods=['POST'])
@@ -58,8 +53,7 @@ def submit_job():
     #     job_config['zone_id'] = request.json['zone_id']
     #     job_config['lidar_type'] = request.json['lidar_type']
 
-    job_id = datetime.datetime.fromtimestamp(
-        time.time()).strftime('%Y-%m-%d-%H-%M')
+    job_id = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d-%H-%M')
     spark_submit_arg = SparkSubmitArg()
     partner = request.json['partner_id']
     spark_submit_arg.user.submitter = 'job_client'

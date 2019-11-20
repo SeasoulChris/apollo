@@ -32,14 +32,14 @@ def execute_task(message_meta):
         return
 
     # Add lib path
-    new_lib = '/apollo/modules/data/fuel/fueling/perception/sensor_calibration/executable_bin/multi_lidar_to_gnss/'
-    if not new_lib in os.environ['LD_LIBRARY_PATH']:
+    new_lib = os.path.join(os.path.dirname(__file__), 'executable_bin/multi_lidar_to_gnss')
+    if new_lib not in os.environ['LD_LIBRARY_PATH']:
         os.environ['LD_LIBRARY_PATH'] += ':' + new_lib
 
     # set command and config file example
     config_file = ('/apollo/modules/data/fuel/fueling/perception/sensor_calibration/'
                    'config_example/udelv_multi_lidar_gnss_calibrator_config.yaml')
-    command = '{} --config {}'.format(executable_bin, config_file)
+    command = f'{executable_bin} --config {config_file}'
     logging.info('sensor calibration executable command is {}'.format(command))
 
     return_code = os.system(command)
