@@ -11,7 +11,7 @@ from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import Cont
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-import fueling.common.sanity_check as sanity_check
+import fueling.profiling.common.sanity_check as sanity_check
 
 # Message number in each segment
 MSG_PER_SEGMENT = 3000

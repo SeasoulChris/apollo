@@ -23,9 +23,6 @@ import fueling.profiling.feature_extraction.multi_job_control_feature_extraction
 import fueling.profiling.grading_evaluation.multi_job_control_performance_grading_utils as grading_utils
 
 
-VEHICLE_CONF = 'vehicle_param.pb.txt'
-
-
 class ControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
@@ -71,8 +68,10 @@ class ControlProfilingMetrics(BasePipeline):
             target_param_conf).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
-                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0],
+                                                                         feature_utils.CONF_FILE),
+                                                            os.path.join(src_dst[1],
+                                                                         feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
         self.summarize_tasks(todo_task_dirs.collect(),
@@ -102,7 +101,7 @@ class ControlProfilingMetrics(BasePipeline):
             'todo_tasks',
             dir_utils.get_todo_tasks(original_prefix, target_prefix))
 
-        if not sanity_check(origin_vehicle_dir,
+        if not sanity_check(origin_vehicle_dir, feature_utils.CONF_FILE, feature_utils.CHANNELS,
                             self.FLAGS.get['job_owner'], self.FLAGS.get['job_id']):
             return
 
@@ -119,8 +118,8 @@ class ControlProfilingMetrics(BasePipeline):
             target_param_conf).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], VEHICLE_CONF),
-                                                            os.path.join(src_dst[1], VEHICLE_CONF)))
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
+                                                            os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_tasks, original_prefix, target_prefix)
         self.summarize_tasks(todo_tasks.collect(),
