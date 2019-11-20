@@ -21,7 +21,6 @@ import fueling.perception.YOLOv3.utils.data_utils as data_utils
 flags.DEFINE_string('input_training_data_path', '', 'Input data path for training.')
 flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained model.')
 
-
 class Yolov3Training(BasePipeline):
     """Model training pipeline."""
 
@@ -61,6 +60,10 @@ class Yolov3Training(BasePipeline):
 
         logging.info('input training data path: {}'.format(datasets))
         logging.info('output trained model path: {}'.format(output_dir))
+        infer_outpath = os.path.join(output_dir, cfg.inference_path)
+        train_list_path = os.path.join(infer_outpath, cfg.train_list) 
+        test_list_path = os.path.join(infer_outpath, cfg.test_list)
+        logging.info('input training data path: {}'.format(datasets))
 
         config_path = '/apollo/modules/data/fuel/fueling/perception/YOLOv3/config.py'
         file_utils.makedirs(output_dir)
@@ -70,10 +73,13 @@ class Yolov3Training(BasePipeline):
             # RDD(directory_path), directory containing a dataset
             self.to_rdd(datasets) 
             # RDD(file_path), paths of all label txt files
-            .map(data_utils.get_all_image_paths)
+            .map(lambda data: data_utils.get_all_image_paths(data, sample=1))
             .cache())
-
-        image_paths_set.foreach(lambda image_paths: _executor(image_paths, output_dir))
+        train_rdd = image_paths_set.map(lambda xy : xy[0]).cache()
+        test_rdd = image_paths_set.map(lambda xy : xy[1]).cache()
+        train_rdd.saveAsPickleFile(train_list_path)
+        test_rdd.saveAsPickleFile(test_list_path)
+        train_rdd.foreach(lambda image_paths: _executor(image_paths, output_dir))
 
 
 if __name__ == "__main__":

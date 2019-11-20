@@ -5,6 +5,7 @@ import sys
 
 import glob
 import numpy as np
+import random
 
 from fueling.perception.YOLOv3.utils.yolo_utils import process_label_file
 import fueling.perception.YOLOv3.config as cfg
@@ -28,13 +29,21 @@ JITTER_PERCENTAGE = cfg.jitter_percentage
 CLS_TO_CONSIDER = cfg.classes_to_consider
 
 
-def get_all_image_paths(dataset_path):
+def get_all_image_paths(dataset_path, sample=0):
     #image_dir = os.path.join(dataset_path, "images")
-    image_dir = os.path.join(dataset_path, "images_all")
+    image_dir = os.path.join(dataset_path, "images")
     image_path_list = glob.glob(os.path.join(image_dir, "*.jpg"))
     image_path_list += glob.glob(os.path.join(image_dir, "*.png"))
-    return image_path_list
-
+    train_data = []
+    test_data = []
+    if sample:
+         random.shuffle(image_path_list)
+         idx = int(0.8 * len(image_path_list))
+         train_data = image_path_list[:idx]
+         test_data = image_path_list[idx:]   
+         return (train_data, test_data)
+    else:
+         return image_path_list
 
 def get_all_paths(image_path):
     """

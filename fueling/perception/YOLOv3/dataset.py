@@ -8,6 +8,7 @@ from random import shuffle
 from threading import Thread
 import numpy as np
 
+import fueling.common.logging as logging
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.utils import data_utils
 
