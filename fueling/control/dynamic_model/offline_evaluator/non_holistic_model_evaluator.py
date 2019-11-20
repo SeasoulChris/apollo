@@ -124,13 +124,27 @@ def location(scenario_segments, platform_path):
     logging.info("tmp_x shape {}".format(tmp_x.shape))
     with PdfPages(pdf_file_path) as pdf_file:
         plt.figure(figsize=(4, 3))
-        plt.plot(segment_origin[:, segment_index["x"]], segment_origin[:, segment_index["y"]], "y--",
-                 alpha=ALPHA, label="Direct location", linewidth=1)
-        plt.plot(segment_d[:, segment_index["x"]], segment_d[:, segment_index["y"]], color="blue",
-                 alpha=ALPHA, label="location_1", linewidth=1)
-        plt.plot(segment_dd[:, segment_index["x"]], segment_dd[:, segment_index["y"]], "r--",
-                 label="location_2", linewidth=0.3)
-        plt.plot(tmp_x[:], tmp_y[:], "g--", label="location_3", linewidth=0.4)
+        plt.plot(segment_origin[:, segment_index["x"]],
+                 segment_origin[:, segment_index["y"]],
+                 "y--",
+                 alpha=ALPHA,
+                 label="Direct location",
+                 linewidth=1)
+        plt.plot(segment_d[:, segment_index["x"]],
+                 segment_d[:, segment_index["y"]],
+                 color="blue",
+                 alpha=ALPHA,
+                 label="location_1",
+                 linewidth=1)
+        plt.plot(segment_dd[:, segment_index["x"]],
+                 segment_dd[:, segment_index["y"]],
+                 "r--",
+                 label="location_2",
+                 linewidth=0.3)
+        plt.plot(tmp_x[:], tmp_y[:],
+                 "g--",
+                 label="location_3",
+                 linewidth=0.4)
         plt.legend()
         pdf_file.savefig()  # saves the current figure into a pdf page
         plt.close()

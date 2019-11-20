@@ -363,8 +363,8 @@ class LabelGenerator(object):
                                 lane_sequence.time_to_lane_center = -1.0
 
                 for lane_sequence in feature.lane.lane_graph.lane_sequence:
-                    lane_sequence_dict[lane_sequence.lane_sequence_id] = [lane_sequence.label,
-                                                                          lane_sequence.time_to_lane_center, lane_sequence.time_to_lane_edge]
+                    lane_sequence_dict[lane_sequence.lane_sequence_id] = [
+                        lane_sequence.label, lane_sequence.time_to_lane_center, lane_sequence.time_to_lane_edge]
                 self.cruise_label_dict["{}@{:.3f}".format(
                     feature.id, feature.timestamp)] = lane_sequence_dict
         np.save(self.filepath + '.cruise_label.npy', self.cruise_label_dict)

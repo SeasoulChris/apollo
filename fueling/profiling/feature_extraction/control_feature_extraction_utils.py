@@ -133,8 +133,8 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     for control_idx in range(control_mtx_rtn.shape[0]):
         chassis_timestamp = round(control_mtx_rtn[control_idx,
                                                   FEATURE_IDX['chassis_timestamp_sec']], 3)
-        localization_timestamp = round(control_mtx_rtn[control_idx,
-                                                       FEATURE_IDX['localization_timestamp_sec']], 3)
+        localization_timestamp = round(
+            control_mtx_rtn[control_idx, FEATURE_IDX['localization_timestamp_sec']], 3)
         while (round(chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']], 3) !=
                chassis_timestamp):
             chassis_idx += 1

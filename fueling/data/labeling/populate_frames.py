@@ -138,8 +138,13 @@ def construct_frames(root_dir, frames, slice_size, agent, diff):
             msg_new = get_next_message(msg, msg_map, msgs_iterator)
             while msg_new is not None and msg_new.timestamp == msg.timestamp \
                     and msg_new.topic == msg.topic:
-                builder_manager.throw_to_pool(populate_utils.MessageStruct(message_struct.message,
-                                                                           message_struct.pose_left, message_struct.pose_right), agent, diff)
+                builder_manager.throw_to_pool(
+                    populate_utils.MessageStruct(
+                        message_struct.message,
+                        message_struct.pose_left,
+                        message_struct.pose_right),
+                    agent,
+                    diff)
                 msg_new = get_next_message(msg, msg_map, msgs_iterator)
             msg = msg_new
             message_struct = populate_utils.MessageStruct(msg, None, None)
@@ -181,8 +186,8 @@ def mark_complete(todo_tasks, target_dir, root_dir):
     for task in todo_tasks:
         task_path = os.path.join(root_dir, target_dir, os.path.basename(task))
         if not os.path.exists(task_path):
-            logging.warning('No data generated for task: {}, check if there are qualified frames'.format(
-                task_path))
+            logging.warning(
+                'No data generated for task: {}, check if there are qualified frames'.format(task_path))
             continue
         streaming_utils.write_to_file(
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))

@@ -26,11 +26,11 @@ class DynamicModelTraining(BasePipeline):
         data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(data_dir, 'dynamic_model_output')
         if IS_BACKWARD:
-            training_dataset = glob.glob(os.path.join(data_dir,
-                                                      'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
+            training_dataset = glob.glob(
+                os.path.join(data_dir, 'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
         else:
-            training_dataset = glob.glob(os.path.join(data_dir,
-                                                      'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
+            training_dataset = glob.glob(
+                os.path.join(data_dir, 'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
         # RDD(file_path) for training dataset.
         training_dataset_rdd = self.to_rdd(training_dataset)
         self.run(training_dataset_rdd, output_dir)

@@ -26,8 +26,8 @@ class TrajectoryBivariateGaussianLoss:
             return cuda(torch.tensor(0))
 
         corr = torch.clamp(corr, min=-1 + self.eps_, max=1 - self.eps_)
-        z = (x - mux)**2 / (sigma_x**2 + self.eps_) + (y - muy)**2 / (sigma_y**2 + self.eps_) - 2 * \
-            corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + self.eps_)
+        z = (x - mux)**2 / (sigma_x**2 + self.eps_) + (y - muy)**2 / (sigma_y**2 + self.eps_) - \
+            2 * corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + self.eps_)
         z = torch.clamp(z, min=self.eps_)
 
         P = 1 / (2 * np.pi * torch.sqrt((sigma_x * sigma_y)**2) *

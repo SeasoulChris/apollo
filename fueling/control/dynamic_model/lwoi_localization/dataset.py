@@ -49,8 +49,8 @@ class KAISTDataset(Dataset):
         self.datasets_validation = self.cross_validation_sequences
         self.datasets_train = []
         for dataset in self.datasets:
-            if ((not dataset in self.datasets_test) and
-                    (not dataset in self.datasets_validation)):
+            if ((dataset not in self.datasets_test) and
+                    (dataset not in self.datasets_validation)):
                 self.datasets_train.append(dataset)
 
     def dataset_name(self, idx):

@@ -19,13 +19,14 @@ import fueling.perception.YOLOv3.utils.data_utils as data_utils
 flags.DEFINE_string('input_inference_data_path', '', 'Input data path for inference.')
 flags.DEFINE_string('output_inference_path', '', 'Output path for inference.')
 
+
 class Yolov3Inference(BasePipeline):
     """Inference pipeline."""
 
     def run_test(self):
         """Run local."""
-        self.run('/apollo/modules/data/fuel/testdata/perception/YOLOv3/models', 
-             '/apollo/modules/data/fuel/testdata/perception/YOLOv3/infer_output/models-51000/')
+        self.run('/apollo/modules/data/fuel/testdata/perception/YOLOv3/models',
+                 '/apollo/modules/data/fuel/testdata/perception/YOLOv3/infer_output/models-51000/')
 
     def run_prod(self):
         """Run prod."""

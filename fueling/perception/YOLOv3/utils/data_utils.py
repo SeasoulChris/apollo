@@ -37,13 +37,14 @@ def get_all_image_paths(dataset_path, sample=0):
     train_data = []
     test_data = []
     if sample:
-         random.shuffle(image_path_list)
-         idx = int(0.8 * len(image_path_list))
-         train_data = image_path_list[:idx]
-         test_data = image_path_list[idx:]   
-         return (train_data, test_data)
+        random.shuffle(image_path_list)
+        idx = int(0.8 * len(image_path_list))
+        train_data = image_path_list[:idx]
+        test_data = image_path_list[idx:]
+        return (train_data, test_data)
     else:
-         return image_path_list
+        return image_path_list
+
 
 def get_all_paths(image_path):
     """

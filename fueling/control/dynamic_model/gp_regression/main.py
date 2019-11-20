@@ -49,16 +49,26 @@ async def run_model(websocket, path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
-    parser.add_argument('--training_data_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/training")
-    parser.add_argument('--testing_data_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/testing")
-    parser.add_argument('--gp_model_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
-    parser.add_argument('--eval_result_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
-    parser.add_argument('--online_gp_model_path', type=str,
-                        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model/20191004-130454")
+    parser.add_argument(
+        '--training_data_path',
+        type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/training")
+    parser.add_argument(
+        '--testing_data_path',
+        type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/testing")
+    parser.add_argument(
+        '--gp_model_path',
+        type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
+    parser.add_argument(
+        '--eval_result_path',
+        type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
+    parser.add_argument(
+        '--online_gp_model_path',
+        type=str,
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model/20191004-130454")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)

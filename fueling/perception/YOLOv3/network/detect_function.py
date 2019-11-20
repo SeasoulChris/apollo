@@ -158,7 +158,7 @@ def yolo_head(feature_maps, anchors, num_classes,
                        [bs, grid_shape[0], grid_shape[1], num_anchors, 1])
         box_cs = tf.concat([tf.cos(box_angle), tf.sin(box_angle)], axis=-1)
 
-    if calc_loss == True:
+    if calc_loss:
         return grid, \
             [feature_xy_reshape,
                 feature_wh_reshape,

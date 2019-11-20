@@ -144,8 +144,10 @@ def feature_generate(elems, vehicle_param_conf):
 def gen_cmd_list(vehicle_param_conf, train_conf):
     segment_brake_list = np.linspace(-1 * train_conf.brake_max, -1 * vehicle_param_conf.brake_deadzone,
                                      num=train_conf.brake_segment).tolist()
-    segment_throttle_list = np.linspace(vehicle_param_conf.throttle_deadzone, train_conf.throttle_max,
-                                        num=train_conf.throttle_segment).tolist()
+    segment_throttle_list = np.linspace(
+        vehicle_param_conf.throttle_deadzone,
+        train_conf.throttle_max,
+        num=train_conf.throttle_segment).tolist()
     return segment_brake_list + segment_throttle_list
 
 

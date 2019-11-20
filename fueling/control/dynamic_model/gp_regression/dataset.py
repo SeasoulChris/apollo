@@ -48,8 +48,8 @@ class GPDataSet(Dataset):
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))
                 # Smoothing noisy acceleration data
-                input_segment[:, input_index["a"]] = savgol_filter(input_segment[:, input_index["a"]],
-                                                                   WINDOW_SIZE, POLYNOMINAL_ORDER)
+                input_segment[:, input_index["a"]] = savgol_filter(
+                    input_segment[:, input_index["a"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
                 input_segment = torch.from_numpy(input_segment)
                 input_segment = input_segment.view(1, INPUT_LENGTH, DIM_INPUT)
                 # Get output data
@@ -73,8 +73,8 @@ class GPDataSet(Dataset):
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))
                 # Smoothing noisy acceleration data
-                input_segment[:, input_index["a"]] = savgol_filter(input_segment[:, input_index["a"]],
-                                                                   WINDOW_SIZE, POLYNOMINAL_ORDER)
+                input_segment[:, input_index["a"]] = savgol_filter(
+                    input_segment[:, input_index["a"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
                 input_segment = torch.from_numpy(input_segment)
                 input_segment = input_segment.view(1, INPUT_LENGTH, DIM_INPUT)
                 # Get output data

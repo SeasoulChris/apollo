@@ -118,8 +118,8 @@ class Inference:
             self.essential_placeholders["input_image"]: (image_batch / 255.)}
 
         xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
-        detection_string_list_batch, boxes = accumulate_obj(xy_wh_conf_value,
-                                                            calib_batch=calib_list if has_label else None)
+        detection_string_list_batch, boxes = accumulate_obj(
+            xy_wh_conf_value, calib_batch=calib_list if has_label else None)
 
         def _write_output():
             for batch_id, image_dets in enumerate(detection_string_list_batch):

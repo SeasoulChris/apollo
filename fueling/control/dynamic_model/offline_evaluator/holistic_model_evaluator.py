@@ -268,8 +268,8 @@ def evaluate(model_info, dataset_info, platform_path):
     # Evaluate the accuracy of vehicle states by first integration over time
     vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
         vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
-    trajectory_imu, trajectory_fnn, trajectory_point_mass = evaluate_trajectory(trajectory_gps,
-                                                                                vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+    trajectory_imu, trajectory_fnn, trajectory_point_mass = evaluate_trajectory(
+        trajectory_gps, vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
     with open(evaluation_result_path, 'w') as txt_file:
         txt_file.write('evaluated on model: {} \n'.format(model_info[1]))
         txt_file.write('evaluated on record: {} \n'.format(dataset_info[1]))
