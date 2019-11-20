@@ -47,7 +47,7 @@ api.add_resource(FuelJob, '/proxy')
 # @app.route('/')
 @app.route('/index')
 def index():
-    return flask.render_template('index.tpl')
+    return flask.render_template('index.html')
 
 
 class ProductionApp(gunicorn.app.base.BaseApplication):

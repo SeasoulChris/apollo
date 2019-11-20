@@ -1,9 +1,8 @@
-{% extends "base.tpl" %}
+{% extends "base.html" %}
 
 {% block head %}
 
 <title>Apollo Fuel - Metrics</title>
-
 
 <style>
 .topic_options {
@@ -30,20 +29,18 @@ input[type=text]:focus {
   width: 100%;
 }
 @media (min-width: 1120px) {
-   .modal-xl {
-      width: 70%;
-   }
+  .modal-xl {
+    width: 70%;
+  }
 }
-.modal-dialog,
-.modal-content {
-    height: 90%;
+.modal-dialog, .modal-content {
+  height: 90%;
 }
 .modal-body {
-    max-height: calc(100% - 130px);
-    overflow-y: scroll;
+  max-height: calc(100% - 130px);
+  overflow-y: scroll;
 }
 </style>
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
@@ -70,10 +67,10 @@ input[type=text]:focus {
     link.setAttribute('data-serveraddr', serverAddr);
     link.addEventListener('click', function(e) {
         attachFrame(e.srcElement.getAttribute('data-key'), e.srcElement.getAttribute('data-serveraddr'));
-      }, false);
+      },
+      false);
     td.appendChild(link);
   }
-
 
   function buildTable(metrics, serverAddr) {
     var keys = Object.keys(metrics);
@@ -102,7 +99,6 @@ input[type=text]:focus {
     table.appendChild(tbody);
   }
 
-
   $(document).ready(function() {
     // TODO(Longtao): Fix the hardcoded URL later, which BTW is not working for socketio anyways
     var serverAddr = 'http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy';
@@ -115,18 +111,15 @@ input[type=text]:focus {
     buildTable(metrics, serverAddr);
 
     setInterval(function() {
-        if ($('#theModal').is(':visible')) {
-          return;
-        }
-        $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
-          buildTable(serverMetrics, serverAddr);
-        });
-      }, timeInterval);
-
+      if ($('#theModal').is(':visible')) {
+        return;
+      }
+      $.getJSON(serverAddr + metricsAjax, {'prefix': prefix}, function(serverMetrics) {
+        buildTable(serverMetrics, serverAddr);
+      });
+    }, timeInterval);
   });
 </script>
-
-
 
 {% endblock %}
 
@@ -152,7 +145,6 @@ input[type=text]:focus {
   </div>
 </div>
 
-
 <div class="modal fade" id="theModal" tabindex="-1" role="dialog" aria-labelledby="theModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -171,6 +163,5 @@ input[type=text]:focus {
     </div>
   </div>
 </div>
-
 
 {% endblock %}

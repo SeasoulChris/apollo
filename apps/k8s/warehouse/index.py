@@ -50,7 +50,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     page_count = (len(task_dirs) + PAGE_SIZE - 1) // PAGE_SIZE
     if page_idx > page_count:
         flask.flash('Page index out of bound')
-        return flask.render_template('base.tpl')
+        return flask.render_template('base.html')
 
     offset = PAGE_SIZE * (page_idx - 1)
     task_dirs = sorted(list(task_dirs), reverse=True)
@@ -73,7 +73,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
-        'records.tpl', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
+        'records.html', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
         is_tasks=True)
 
 
@@ -84,7 +84,7 @@ def task_hdl(task_path):
     docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
     records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
-    return flask.render_template('record.tpl', record=task, sub_records=records)
+    return flask.render_template('record.html', record=task, sub_records=records)
 
 
 @app.route('/records')
@@ -112,7 +112,7 @@ def records_hdl(page_idx=1):
     records = [proto_utils.dict_to_pb(doc, RecordMeta())
                for doc in docs.sort(kSort).skip(offset).limit(PAGE_SIZE)]
     return flask.render_template(
-        'records.tpl', page_count=page_count, current_page=page_idx, records=records)
+        'records.html', page_count=page_count, current_page=page_idx, records=records)
 
 
 @app.route('/record/<path:record_path>')
@@ -121,7 +121,7 @@ def record_hdl(record_path):
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'record')
     doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
     record = proto_utils.dict_to_pb(doc, RecordMeta())
-    return flask.render_template('record.tpl', record=record)
+    return flask.render_template('record.html', record=record)
 
 
 @app.route('/bos-ask', methods=['POST'])
@@ -138,7 +138,7 @@ def metrics_hdl():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
     prefix = flask.request.args.get('prefix') or ''
     metrics = metrics_util.get_metrics_by_prefix(prefix)
-    return flask.render_template('metrics.tpl', prefix=prefix, metrics=metrics)
+    return flask.render_template('metrics.html', prefix=prefix, metrics=metrics)
 
 
 @app.route('/metrics_ajax')
@@ -161,7 +161,7 @@ def plot_img():
     """Handler of profiling plot request"""
     redis_key = flask.request.args.get('key')
     plot_type = flask.request.args.get('type')
-    return flask.render_template('plot.tpl', data={'key': redis_key, 'type': plot_type})
+    return flask.render_template('plot.html', data={'key': redis_key, 'type': plot_type})
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
