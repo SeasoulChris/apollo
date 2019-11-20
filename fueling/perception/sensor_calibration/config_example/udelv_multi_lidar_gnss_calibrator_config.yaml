@@ -1,0 +1,79 @@
+# multi-LiDAR-GNSS calibration configurations
+data:
+    odometry: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/_apollo_sensor_gnss_odometry/new/Odometry.bin"
+    lidars:
+       #- velodyne16_left:
+       #    path: "/home/caros/data/bag/calibration/export/multi_lidar_gnss/_sensor_velodyne16_left_VelodyneScan/"
+#        - velodyne128:
+#            path: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/_apollo_sensor_lidar128_PointCloud2/new"
+        - velodyne16_rear_left:
+            path: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/_apollo_sensor_lidar16_rear_left_PointCloud2/new"
+        - velodyne16_rear_right:
+            path: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/_apollo_sensor_lidar16_rear_right_PointCloud2/new"
+        - velodyne16_front_center:
+            path: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/_apollo_sensor_lidar16_front_center_PointCloud2/new"
+
+    result: "/apollo/data/Lidar_GNSS_Calibration-2019-07-12-15-25/lidar_gnss_tmp_result"
+    calib_height: false
+    frame: "UTM"
+calibration:
+    init_extrinsics:
+       velodyne16_rear_left:
+           rotation: 
+               x: 0
+               y: 0
+               z: 0.96593
+               w: 0.25882
+           translation:
+               x: -0.9144
+               y: -1.7339
+               z: 0.22543
+       velodyne16_rear_right:
+           rotation:
+               x: 0
+               y: 0
+               z: 0.25882
+               w: 0.96593
+           translation:
+               x: 0.9144
+               y: -1.7339
+               z: 0.22542
+       velodyne16_front_center:
+           translation:
+               z: 0.0984
+               x: 0
+               y: 2.8083
+           rotation:
+               x: 0
+               z: 0.7071
+               w: 0.7071
+               y: 0
+       velodyne128:
+           translation:
+               z: 1.8025
+               x: 0
+               y: -0.2536
+           rotation:
+               x: 0
+               z: 0.7071
+               w: 0.7071
+               y: 0
+    steps:
+        - source_lidars: ["velodyne16_front_center"]
+          target_lidars: ["velodyne16_front_center"]
+          lidar_type: "multiple"
+          fix_target_lidars: false
+          fix_z: true
+          iteration: 3
+        - source_lidars: ["velodyne16_rear_left"]
+          target_lidars: ["velodyne16_rear_left"]
+          lidar_type: "multiple"
+          fix_target_lidars: false
+          fix_z: true
+          iteration: 3
+        - source_lidars: ["velodyne16_rear_right"]
+          target_lidars: ["velodyne16_rear_right"]
+          lidar_type: "multiple"
+          fix_target_lidars: true
+          fix_z: true
+          iteration: 3
