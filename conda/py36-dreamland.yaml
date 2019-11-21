@@ -1,0 +1,21 @@
+name: fuel-py36-dreamland
+dependencies:
+  # Core
+  - python = 3.6
+  - pyspark = 2.4.4  # Align with pre-built server image.
+
+  # Language tools
+  - pip
+
+  # Google infra
+  - absl-py
+  - protobuf = 3.6  # Compatible with locked tensorflow.
+
+  # Data science
+  - h5py
+  - matplotlib
+  - numpy
+
+  - pip:
+    - azure.storage.blob
+    - pyspark-utils
