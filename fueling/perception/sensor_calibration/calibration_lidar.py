@@ -33,15 +33,15 @@ def execute_task(message_meta):
 
     # Add lib path
     new_lib = os.path.join(os.path.dirname(__file__), 'executable_bin/multi_lidar_to_gnss')
-    if new_lib not in os.environ['LD_LIBRARY_PATH']:
-        os.environ['LD_LIBRARY_PATH'] += ':' + new_lib
+    if  not new_lib in os.environ['LD_LIBRARY_PATH']:
+        os.environ['LD_LIBRARY_PATH'] = new_lib+':'+ os.environ['LD_LIBRARY_PATH'] 
 
     # set command and config file example
     config_file = ('/apollo/modules/data/fuel/fueling/perception/sensor_calibration/'
-                   'config_example/udelv_multi_lidar_gnss_calibrator_config.yaml')
+                   'data/sample_data/config.yaml')
     command = f'{executable_bin} --config {config_file}'
     logging.info('sensor calibration executable command is {}'.format(command))
-
+    os.system("echo $LD_LIBRARY_PATH")
     return_code = os.system(command)
     if return_code == 0:
         logging.info('Finished sensor caliration.')
@@ -54,8 +54,8 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_test(self):
         """local mini test"""
-        root_dir = '/apollo/data/extraced_data'
-        original_path =  os.path.join(root_dir, 'Camera_Lidar_Calibration-2019-10-24-12-01')
+        root_dir = '/apollo/modules/data/fuel/fueling/perception/sensor_calibration/data'
+        original_path = os.path.join(root_dir, 'sample_data/')
         task_name = "Lidar_to_Gnss"
         self.run(original_path, task_name)
 
