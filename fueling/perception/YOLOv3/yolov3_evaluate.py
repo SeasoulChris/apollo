@@ -3,18 +3,18 @@
 import glob
 import os
 
+from absl import flags
 from PIL import Image
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
 import fueling.common.logging as logging
 
 CLASS_NAME_ID_MAP = cfg.class_map
-
-flags.DEFINE_string('input_evaluate_data_path', '', 'Input data path for evaluate.')
 
 
 def match_label_to_result(dataset_result_dir):
@@ -24,16 +24,21 @@ def match_label_to_result(dataset_result_dir):
     result txt file with the same name. Also append a
     unique id number to each match file pairs.
     """
+    logging.info('currrent dataset_result_dir: {}'.format(dataset_result_dir))
+
     dataset_dir, result_dir = dataset_result_dir
-    _, dataset_name = os.path.split(dataset_dir)
-    result_dir = os.path.join(result_dir, dataset_name, "label")
-    label_dir = os.path.join(dataset_dir, "label")
+    result_dir = os.path.join(result_dir, 'label')
+    label_dir = os.path.join(dataset_dir, 'label_all')
+
+    logging.info('result dir: {}'.format(result_dir))
+    logging.info('label dir: {}'.format(label_dir))
+
     match_list = []
     for uid, txt_name in enumerate(os.listdir(label_dir)):
         label_path = os.path.join(label_dir, txt_name)
         result_path = os.path.join(result_dir, txt_name)
         if not os.path.exists(result_path):
-            logging.error("Result file {} does not exist.".format(result_path))
+            continue
         match_list.append((label_path, result_path, uid))
     return match_list
 
@@ -55,7 +60,7 @@ def compile_images(label_result_uid_list):
             image_name = txt_name + ".png"
             width, height = Image.open(os.path.join(image_dir_path, image_name)).size
         else:
-            raise RuntimeError("Image {} does not exists.".format(txt_name))
+            raise Exception("Image {} does not exists.".format(txt_name))
 
         image_info = {}
         image_info["coco_url"] = None
@@ -90,10 +95,10 @@ def compile_annotations(image_label_result_uid_list):
         for obj in objs:
             x0, y0, x1, y1 = obj[0][3:7]
             # TODO[KWT]: uncomment below to clip out-of-image-bound bboxes
-            #x0 = round(max(0, min(width, x0)), 3)
-            #x1 = round(max(0, min(width, x1)), 3)
-            #y0 = round(max(0, min(height, y0)), 3)
-            #y1 = round(max(0, min(height, y1)), 3)
+            # x0 = round(max(0, min(width, x0)), 3)
+            # x1 = round(max(0, min(width, x1)), 3)
+            # y0 = round(max(0, min(height, y0)), 3)
+            # y1 = round(max(0, min(height, y1)), 3)
             cat_id = obj[1]
 
             obj_dic = {"area": round((x1 - x0 + 1) * (y1 - y0 + 1), 2),
@@ -179,11 +184,10 @@ class Yolov3Evaluate(BasePipeline):
     def run_prod(self):
         """Run prod."""
         object_storage = self.partner_object_storage() or BosClient()
-        input_evaluate_path = self.FLAGS.get('input_evaluate_data_path')
-        output_evaluate_path = os.path.join(input_evaluate_path, cfg.evaluate_path)
-        datasets_dir = glob.glob(object_storage.abs_path(input_evaluate_path))
-        datasets = [(dataset, output_evaluate_path) for dataset in datasets_dir]
-        self.run(datasets)
+        ground_truth_path = object_storage.abs_path(self.FLAGS.get('input_training_data_path'))
+        inference_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
+        inference_data_path = os.path.join(inference_data_path, cfg.inference_path) 
+        self.run([(ground_truth_path, inference_data_path)])
 
     def run(self, datasets):
         """Run the actual pipeline job."""

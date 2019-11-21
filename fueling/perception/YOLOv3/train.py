@@ -23,6 +23,7 @@ from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
 from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
 import fueling.common.logging as logging
+import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
 GPU = cfg.gpu
@@ -49,12 +50,12 @@ TRAIN_ONLY_VARIABLES = cfg.train_only_variables
 LEARNING_RATE = cfg.learning_rate
 DECAY_STEPS = cfg.decay_steps
 DECAY_RATE = cfg.decay_rate
-RESTORE_TRAINING = cfg.restore_training
 START_ITER = cfg.start_iter
 MAX_ITER = cfg.max_iter
 SUMMARY_INTERVAL = cfg.summary_interval
 PRINT_INTERVAL = cfg.print_interval
 SAVE_INTERVAL = cfg.save_interval
+MODEL_NAME_PREFIX = cfg.model_name_prefix
 
 slim = tf.contrib.slim
 
@@ -68,13 +69,12 @@ def get_available_gpus():
 
 class training:
 
-    def __init__(self, model_path, restore_path, num_gpu=1):
+    def __init__(self, restore_path, num_gpu=1):
         self.cur_step = START_ITER
         self.last_save_step = -1
         self.num_gpu = num_gpu
         self.epoch = 0
         self.global_step = tf.Variable(self.cur_step, name="global_step", trainable=False)
-        self.output_trained_model_path = model_path
         self.model_restore_path = restore_path
 
     def _init_essential_placeholders(self):
@@ -176,7 +176,6 @@ class training:
                                                               "yolo-v3/Conv_22" not in v.name and
                                                               "yolo-v3/Conv_6" not in v.name and
                                                               "beta1_power" not in v.name and "beta2_power" not in v.name)]
-            #print ([v.name for v in variables])
             restore_saver = tf.train.Saver(var_list=variables)
         else:
             variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
@@ -212,7 +211,7 @@ class training:
         """
         Initialize a summary writer.
         """
-        return tf.summary.FileWriter(os.path.join(self.output_trained_model_path, suffix))
+        return tf.summary.FileWriter(os.path.join(self.model_restore_path, suffix))
 
     def _add_to_summary(self, tensor, name, _type="scalar"):
         """
@@ -368,7 +367,7 @@ class training:
             self.sess.run(tf.global_variables_initializer(),
                           feed_dict={self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]: False})
 
-            if RESTORE_TRAINING:
+            if data_utils.get_latest_model(self.model_restore_path, MODEL_NAME_PREFIX):
                 self._restore_from_checkpoint(self.sess)
 
             self.ops = [xy_loss, wh_loss, positive_conf_loss, negative_conf_loss,
@@ -412,8 +411,8 @@ class training:
                                  negative_conf_, cls_, alpha_, hwl_))
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
-            self.saver.save(self.sess, "{}/models".format(self.output_trained_model_path),
+            self.saver.save(self.sess, "{}/{}".format(self.model_restore_path, MODEL_NAME_PREFIX),
                             global_step=self.cur_step)
-            logging.info("Model saved in file: {}".format(self.output_trained_model_path))
+            logging.info("Model saved in file: {}".format(self.model_restore_path))
         logging.info(self.sess.run(tf.contrib.memory_stats.MaxBytesInUse()))
         self.cur_step += 1

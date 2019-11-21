@@ -51,7 +51,8 @@ class Yolov3Training(BasePipeline):
             logging.info('current image set size: {}'.format(len(image_paths)))
 
             restore_path = os.path.join(output_trained_model_path, cfg.restore_path)
-            engine = training(output_trained_model_path, restore_path)
+            file_utils.makedirs(restore_path)
+            engine = training(restore_path)
             engine.setup_training()
             data_pool = Dataset(image_paths)
 
@@ -59,13 +60,23 @@ class Yolov3Training(BasePipeline):
                 data_batch = data_pool.batch
                 engine.step(data_batch)
 
+            # After training is done, copy the single model file over to user specified folder
+            latest_model_file = data_utils.get_latest_model(restore_path, cfg.model_name_prefix)
+            if latest_model_file:
+                shutil.copyfile(os.path.join(restore_path, latest_model_file),
+                                os.path.join(output_trained_model_path, latest_model_file))
+            logging.info('moved model {} from {} to {}'.format(latest_model_file,
+                restore_path, output_trained_model_path))
+
+
         file_utils.makedirs(output_dir)
         logging.info('input training data path: {}'.format(datasets))
         logging.info('output trained model path: {}'.format(output_dir))
 
         infer_outpath = os.path.join(output_dir, cfg.inference_path)
-        train_list_path = os.path.join(infer_outpath, cfg.train_list)
         test_list_path = os.path.join(infer_outpath, cfg.test_list)
+        if (os.path.exists(test_list_path)):
+            shutil.rmtree(test_list_path)
 
         image_paths_set = (
             # RDD(directory_path), directory containing a dataset
@@ -73,9 +84,9 @@ class Yolov3Training(BasePipeline):
             # RDD(file_path), paths of all label txt files
             .map(lambda data: data_utils.get_all_image_paths(data, sample=1))
             .cache())
-        train_rdd = image_paths_set.map(lambda xy: xy[0]).cache()
-        test_rdd = image_paths_set.map(lambda xy: xy[1]).cache()
-        train_rdd.saveAsPickleFile(train_list_path)
+
+        train_rdd = image_paths_set.map(lambda xy: xy[0])
+        test_rdd = image_paths_set.map(lambda xy: xy[1])
         test_rdd.saveAsPickleFile(test_list_path)
         train_rdd.foreach(lambda image_paths: _executor(image_paths, output_dir))
 

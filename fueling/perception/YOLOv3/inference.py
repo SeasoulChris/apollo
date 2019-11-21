@@ -24,6 +24,7 @@ from fueling.perception.YOLOv3.utils.yolo_utils import convert_to_original_size
 from fueling.perception.YOLOv3.utils.yolo_utils import draw_boxes, draw_gt_boxes
 from fueling.perception.YOLOv3.utils.yolo_utils import non_max_suppression
 import fueling.common.logging as logging
+import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
 GPU = cfg.gpu
@@ -79,8 +80,15 @@ class Inference:
         Restore training from a checkpoint.
         """
         restore_saver = tf.train.Saver()
-        restore_saver.restore(sess, self.inference_restore_path)
-        logging.info("Restored weights from {}.".format(self.inference_restore_path))
+        # TODO(longtao): figure why restore need a file name but not checkpoint folder
+        # restore_saver.restore(sess, self.inference_restore_path)
+        latest_model_file = data_utils.get_latest_model(self.inference_restore_path,
+            cfg.model_name_prefix)
+        if latest_model_file:
+            restore_file_path = os.path.join(self.inference_restore_path,
+                latest_model_file.split('.')[0])
+            restore_saver.restore(sess, restore_file_path)
+            logging.info("Restored weights from {}.".format(restore_file_path))
 
     def setup_network(self):
         """

@@ -6,6 +6,7 @@ import numpy as np
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.dataset import Dataset
 from fueling.perception.YOLOv3.dataset_only_image import DatasetOnlyImage
@@ -14,9 +15,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
-
-
-flags.DEFINE_string('input_inference_data_path', '', 'Input data path for inference.')
 
 
 class Yolov3Inference(BasePipeline):
@@ -30,9 +28,9 @@ class Yolov3Inference(BasePipeline):
     def run_prod(self):
         """Run prod."""
         object_storage = self.partner_object_storage() or BosClient()
-        input_data_path = object_storage.abs_path(self.FLAGS.get('input_inference_data_path'))
+        input_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
         output_data_path = os.path.join(input_data_path, cfg.inference_path)
-        self.run([input_data_path], output_data_path)
+        self.run(input_data_path, output_data_path)
 
     def run(self, input_dir, output_dir):
         """Run the actual pipeline job."""
