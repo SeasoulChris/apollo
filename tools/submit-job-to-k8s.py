@@ -179,7 +179,7 @@ def main(argv):
     if not flags.FLAGS.wait:
         return
     WAIT_INTERVAL_SECONDS = 3
-    END_STATUS = {'Completed', 'Error'}
+    END_STATUS = {'Completed', 'Error', 'UnexpectedAdmissionError'}
     job_status = None
     while job_status not in END_STATUS:
         time.sleep(WAIT_INTERVAL_SECONDS)

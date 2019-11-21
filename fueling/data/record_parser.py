@@ -108,7 +108,7 @@ class RecordParser(object):
         for chan in self._reader.get_channellist():
             self.record.channels[chan] = self._reader.get_messagenumber(chan)
         if len(self.record.channels) == 0:
-            logging.error('No message found in record')
+            logging.error(f'No message found in record {self.record.path}')
             return False
         if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL) and
                 not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):

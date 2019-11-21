@@ -18,7 +18,7 @@ import fueling.common.record_utils as record_utils
 
 BINARY = '/apollo/bazel-bin/modules/data/tools/rosbag_to_record/rosbag_to_record'
 MARKER = 'COMPLETE'
-PROCESS_LAST_N_DAYS = 30
+PROCESS_LAST_N_DAYS = 20
 
 
 class BagToRecord(BasePipeline):
