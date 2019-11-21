@@ -21,16 +21,16 @@ import fueling.profiling.feature_extraction.control_feature_extraction_utils as 
 import fueling.profiling.grading_evaluation.control_performance_grading_utils as grading_utils
 
 
-flags.DEFINE_string('input_path_local',
+flags.DEFINE_string('ctl_metrics_input_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/control_profiling',
                     'input data directory for local run_test')
-flags.DEFINE_string('output_path_local',
+flags.DEFINE_string('ctl_metrics_output_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
-flags.DEFINE_string('todo_tasks_local', '', 'todo_taks directory for local run_test')
-flags.DEFINE_string('input_path_k8s', 'small-records/2019',
+flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_taks directory for local run_test')
+flags.DEFINE_string('ctl_metrics_input_path_k8s', 'small-records/2019',
                     'input data directory for run_prod')
-flags.DEFINE_string('output_path_k8s', 'modules/control/control_profiling_hf5',
+flags.DEFINE_string('ctl_metrics_output_path_k8s', 'modules/control/control_profiling_hf5',
                     'output data directory for run_pod')
 
 
@@ -39,11 +39,11 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = flags.FLAGS.input_path_local
-        target_prefix = flags.FLAGS.output_path_local
+        origin_prefix = flags.FLAGS.ctl_metrics_input_path_local
+        target_prefix = flags.FLAGS.ctl_metrics_output_path_local
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
-            os.path.join(origin_prefix, flags.FLAGS.todo_tasks_local),
+            os.path.join(origin_prefix, flags.FLAGS.ctl_metrics_todo_tasks_local),
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
@@ -51,8 +51,8 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = flags.FLAGS.input_path_k8s
-        target_prefix = flags.FLAGS.output_path_k8s
+        original_prefix = flags.FLAGS.ctl_metrics_input_path_k8s
+        target_prefix = flags.FLAGS.ctl_metrics_output_path_k8s
         # RDD(tasks), the task dirs
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
                                                 dir_utils.get_todo_tasks(original_prefix,

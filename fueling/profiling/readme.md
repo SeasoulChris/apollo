@@ -16,10 +16,10 @@ data_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/Sim_Te
 results_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
 
 # Run the control profiling metrics command (generating performance_grading.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control_profiling_metrics.py -input_path_local $data_path -output_path_local $results_path
+./tools/submit-job-to-local.sh fueling/profiling/control_profiling_metrics.py -ctl_metrics_input_path_local $data_path -ctl_metrics_output_path_local $results_path
 
 # Run the control profiling visualization command (generating feature_data.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control_profiling_visualization.py -input_path_local $results_path -output_path_local $results_path --simulation_only_test
+./tools/submit-job-to-local.sh fueling/profiling/control_profiling_visualization.py -ctl_visual_input_path_local $results_path -ctl_visual_output_path_local $results_path --ctl_visual_simulation_only_test
 ```
 
 ### Output Data Format
@@ -44,3 +44,13 @@ For example,
 
 `{"station_reference": [-0.202164, -0.134776, -0.134776, -0.067388, -0.067388, ...], ... ,
 "labels": {"x_label": "timestamp_sec", "y_label": ["station_reference", "speed_reference", ...]}}`
+
+#### 3. Control Feature Statistics .json file
+
+The dictionary data structure included in the **...control_data_statistics.json** file contains 46 control features (each feature contains several statistic fields) with format of
+
+`{"feature_key1": {"statistic_field1": value1, "statistic_field2": value2, ...}, ... }`
+
+For example,
+
+`{"station_reference": {"mean": -0.138802, "standard deviation": 0.400271}, ... }`
