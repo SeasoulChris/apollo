@@ -49,8 +49,10 @@
       <div style="width:100%; height:350px;">
         <div id="gmap_canvas" style="width: 100%; height: 100%;"></div>
         <script>
+          {% autoescape false %}
           {{ record.stat.driving_path | draw_path_on_gmap('gmap_canvas') }}
           {{ record | draw_disengagements_on_gmap }}
+          {% endautoescape %}
         </script>
       </div>
 
@@ -221,7 +223,11 @@
         </tr>
       </tbody>
     </table>
-    <div>{{ record | plot_record }}</div>
+    <div>
+      {% autoescape false %}
+      {{ record | plot_record }}
+      {% endautoescape %}
+    </div>
   </div>
 </div>
 {% endif %}
