@@ -16,6 +16,9 @@ import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
+flags.DEFINE_string('input_training_data_path', '', 'Input data path for training.')
+flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained model.')
+
 
 class Yolov3Inference(BasePipeline):
     """Inference pipeline."""

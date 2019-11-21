@@ -16,6 +16,9 @@ import fueling.common.logging as logging
 
 CLASS_NAME_ID_MAP = cfg.class_map
 
+flags.DEFINE_string('input_training_data_path', '', 'Input data path for training.')
+flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained model.')
+
 
 def match_label_to_result(dataset_result_dir):
     """
