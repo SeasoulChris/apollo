@@ -42,7 +42,7 @@
             <td>{{ record.hmi_status.current_map }}</td>
             <td>{{ record.hmi_status.current_vehicle }}</td>
             <td>{{ record.header.begin_time | timestamp_ns_to_time }}</td>
-            <td>{{ ((record.header.end_time - record.header.begin_time) / 1000000000.0) | round(1) }} s</td>
+            <td>{{ (record.header.end_time - record.header.begin_time) | ns_to_duration }}</td>
             <td>{{ record.header.size | readable_data_size }}</td>
             <td>{{ (record.disengagements | length) + (record.drive_events | length) }}</td>
             <td>{{ record.stat.mileages['COMPLETE_AUTO_DRIVE'] | meter_to_miles }} /

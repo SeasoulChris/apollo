@@ -30,7 +30,7 @@ flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 HOST = '0.0.0.0'
 PORT = 8000
 WORKERS = 5
-PAGE_SIZE = 20
+PAGE_SIZE = 30
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
 
 app = flask.Flask(__name__)

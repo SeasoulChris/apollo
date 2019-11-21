@@ -34,6 +34,15 @@ def timestamp_ns_to_time(timestamp):
     return timestamp_to_time(timestamp / 1e9)
 
 
+def ns_to_duration(ns):
+    """Convert ns to readable duration."""
+    seconds = int(ns / 1e9)
+    hours = seconds / 3600
+    minutes = (seconds % 3600) / 60
+    seconds %= 60
+    return '%d:%02d:%02d' % (hours, minutes, seconds)
+
+
 def draw_path_on_gmap(driving_path, canvas_id):
     """Draw driving path on Google map."""
     if not driving_path:
@@ -265,6 +274,7 @@ utils = {
     'readable_data_size': readable_data_size,
     'timestamp_to_time': timestamp_to_time,
     'timestamp_ns_to_time': timestamp_ns_to_time,
+    'ns_to_duration': ns_to_duration,
     'drive_event_type_name': drive_event_type_name,
     'meter_to_miles': meter_to_miles,
     'plot_record': plot_record,
