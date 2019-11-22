@@ -25,6 +25,7 @@ class LogInit(object):
         elif verbosity == 'FATAL':
             set_verbosity(FATAL)
         cls.INITED = True
+        use_absl_handler()
         info('Absl.logging inited with verbosity ' + verbosity)
 
 
