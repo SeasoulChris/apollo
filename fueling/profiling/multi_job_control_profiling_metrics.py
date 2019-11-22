@@ -29,8 +29,9 @@ class ControlProfilingMetrics(BasePipeline):
     def run_test(self):
         """Run test."""
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job'
-        target_prefix = '/{}/{}'.format(self.FLAGS.get('job_owner'),
-                                        self.FLAGS.get('job_id'))
+        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job/genanrated/{}/{}'\
+            .format(self.FLAGS.get('job_owner'),
+                    self.FLAGS.get('job_id'))
 
         """origin vehicle directory"""
         # RDD(origin_dir)
@@ -53,6 +54,7 @@ class ControlProfilingMetrics(BasePipeline):
             origin_vehicle_dir
             # PairRDD(vehicle_type, list_of_records)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
+            .values()
             .distinct())
 
         logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
@@ -131,17 +133,17 @@ class ControlProfilingMetrics(BasePipeline):
 
         # PairRDD (vehicle , tasks)
         (todo_tasks
-         # PairRDD((vehicle ,controller), tasks)
+         # PairRDD(target, tasks)
          .map(feature_utils.verify_vehicle_controller)
-         # PairRDD((vehicle ,controller), record_file)
+         # PairRDD(target, record_file)
          .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
                         glob.glob(os.path.join(task, '*bag*')))
-         # PairRDD((vehicle ,controller), record_file), filter out unqualified files
+         # PairRDD(target_dir, record_file), filter out unqualified files
          .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
                                        record_utils.is_bag_file(file)))
-         # PairRDD((vehicle ,controller), message)
+         # PairRDD(target_dir, message)
          .flatMapValues(record_utils.read_record(feature_utils.CHANNELS))
-         #  # PairRDD((vehicle ,controller), messages)
+         #  # PairRDD(target_dir, messages)
          .groupByKey()
          # RDD(target, group_id, group of (message)s), divide messages into groups
          .flatMap(self.partition_data)
@@ -155,17 +157,7 @@ class ControlProfilingMetrics(BasePipeline):
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
         logging.info('target messages:{}'.format(target_msgs))
-        (vehicle, controller_type, record_prefix), msgs = target_msgs
-        # Update same job from BasePipeline
-        target = '/{}/{}/{}/{}/{}'.format(self.FLAGS.get('job_owner'),
-                                          self.FLAGS.get('job_id'), vehicle, controller_type, record_prefix)
-
-        # Update vehicle controller map
-        map_key = '{}-{}'.format(vehicle, record_prefix)
-        # global vehicle_controller_map
-        self.FLAGS[map_key] = controller_type
-        logging.info('add vehicle controller map_key is: {}, map after updated:{}'.format(
-            map_key, self.FLAGS.get(map_key)))
+        target, msgs = target_msgs
 
         logging.info(
             'partition data for {} messages in target {}'.format(len(msgs), target))
@@ -187,30 +179,10 @@ class ControlProfilingMetrics(BasePipeline):
         tar = None
         for task in tasks:
             logging.info('processing task is {}'.format(task))
+            # TODO: TARGET_DIR NEED UPDATE here
             task = task[1]
             target_dir = task.replace(original_prefix, target_prefix, 1)
-            logging.info('target_dir :{}'.format(target_dir))
-
-            splited = target_dir.split('/')
-            vehicle = splited[-3]
-            record_prefix = '{}/{}'.format(splited[-2], splited[-1])
-
-            # Get the controller by vehicle-record_prefix key
-            try:
-                map_key = '{}-{}'.format(vehicle, record_prefix)
-                logging.info('map_key is :{}'.format(map_key))
-                # TODO(ZONGBAO): COULD NOT GET FLAGS VALUE OR GLOBAL DICT OR CLASS DICT HERE, WILL FIX IT LATER
-                # controller_type = self.FLAGS.get(map_key)
-                controller_type = 'Lon_Lat_Controller'
-            except KeyError:
-                logging.warning(
-                    'There is NO Granding Results for vehicle and record:{}'.format(map_key))
-                continue
-
-            target_dir = '/{}/{}/{}/{}/{}'.format(self.FLAGS.get('job_owner'),
-                                                  self.FLAGS.get('job_id'), vehicle, controller_type, record_prefix)
-
-            logging.info('target_dir: {}'.format(target_dir))
+            logging.warning('target_dir in summarize_tasks :{}'.format(target_dir))
 
             target_file = glob.glob(os.path.join(
                 target_dir, '*performance_grading*'))

@@ -25,9 +25,9 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
             record_utils.LOCALIZATION_CHANNEL, record_utils.CONTROL_CHANNEL}
 
 
-def verify_vehicle_controller(task_tulple):
+def verify_vehicle_controller(task):
     """Verify if the task has any record file whose controller/vehicle types match config"""
-    vehicle, task = task_tulple
+    # vehicle, task = task_tulple
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
@@ -40,7 +40,6 @@ def verify_vehicle_controller(task_tulple):
     record_dir_splited = task.split('/')
     record_prefix = '{}/{}'.format(
         record_dir_splited[-2], record_dir_splited[-1])
-    # logging.info('record file prefix {}'.format(record_prefix))
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)
@@ -73,7 +72,8 @@ def verify_vehicle_controller(task_tulple):
         logging.warning('no control messages found in task {} record {}; \
                          stop control profiling procedure'.format(task, record_file))
         return False
-    return ((vehicle_type, controller_type, record_prefix), task)
+    target_vcr_dir = '{}/{}/{}'.format(vehicle_type, controller_type, record_prefix)
+    return (target_vcr_dir, task)
 
 
 def data_matches_config(data_vehicle_type, data_controller_type):
