@@ -189,7 +189,7 @@ def main(argv):
             logging.info('Job is {}...'.format(job_status))
         else:
             logging.error('Failed to get job status.')
-    if job_status == 'Error':
+    if job_status != 'Completed':
         sys.exit(1)
 
 

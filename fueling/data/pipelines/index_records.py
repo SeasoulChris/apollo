@@ -17,7 +17,7 @@ import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 
 
-PROCESS_LAST_N_DAYS = 30
+PROCESS_LAST_N_DAYS = 7
 
 
 class IndexRecords(BasePipeline):
