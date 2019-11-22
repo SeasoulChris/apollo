@@ -12,8 +12,16 @@ from fueling.perception.sensor_calibration.calibration_config import Calibration
 
 def execute_task(message_meta):
     """example task executing"""
-    source_dir, task_name = message_meta
+    source_dir = message_meta
+    # from input config file, generating final fuel-using config file
+    in_config_file = os.path.join(source_dir, 'sample_config.yaml')
+    calib_config = CalibrationConfig()
+    config_file = calib_config.generate_task_config_yaml(
+                    root_path=source_dir,
+                    source_config_file=in_config_file)
+    task_name = calib_config.get_task_name()
     """Execute task by task"""
+    logging.info('type of {} is {}'.format(task_name, type(task_name)))
     logging.info('executing task: {} with src_dir: {}'.format(task_name, source_dir))
     # Invoke benchmark binary
     logging.info('start to execute sensor calbiration service')
@@ -31,13 +39,6 @@ def execute_task(message_meta):
         logging.error('not support {} yet'.format(task_name))
         return
 
-    # from input config file, generating final fuel-using config file
-    in_config_file = os.path.join(source_dir, 'sample_config.yaml')
-    config_file = os.path.join(source_dir, task_name+'_calibration_config.yaml')
-    calib_config = CalibrationConfig(task_name=task_name)
-    calib_config.generate_task_config_yaml(source_config_file=in_config_file,
-                                            dest_config_file=config_file,
-                                            root_path=source_dir)
     # set command
     command = f'{executable_bin} --config {config_file}'
     logging.info('sensor calibration executable command is {}'.format(command))
@@ -51,24 +52,28 @@ def execute_task(message_meta):
 
 class SensorCalibrationPipeline(BasePipeline):
     """Apply sensor calbiration to smartly extracted sensor frames"""
+    def _get_subdirs(self, d):
+        """list add 1st-level task data directories under the root directory
+        ignore hidden folders"""
+        return list(filter(os.path.isdir,
+            [os.path.join(d,f) for f in os.listdir(d) if not f.startswith('.')]))
 
     def run_test(self):
         """local mini test"""
-        task_name = 'lidar_to_gnss'
-        root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration'
-        original_path = os.path.join(root_dir, task_name)
-        self.run(original_path, task_name)
+        root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/'
+        self.run(root_dir)
 
-    def run_prod(self, task_name='lidar_to_gnss'):
+    def run_prod(self):
         """Run Prod. production version"""
-        root_dir = bos_client.BOS_MOUNT_PATH
-        original_path = os.path.join(root_dir, 'modules/tools/sensor_calibration/data')
-        self.run(original_path, task_name)
+        bos_mnt_dir = bos_client.BOS_MOUNT_PATH
+        root_dir = os.path.join(root_dir, 'sensor_calibration/data')
+        self.run(root_dir)
 
-    def run(self, original_path, task_name):
+    def run(self, root_dir):
+        original_paths = self._get_subdirs(root_dir)
         """Run the pipeline with given parameters"""
-        self.to_rdd([(original_path, task_name)]).foreach(execute_task)
-        logging.info("Sensor Calibration for {} on {}: All Done".format(task_name, original_path))
+        self.to_rdd(original_paths).foreach(execute_task)
+        logging.info("Sensor Calibration on data {}: All Done".format(original_paths))
 
 
 if __name__ == '__main__':

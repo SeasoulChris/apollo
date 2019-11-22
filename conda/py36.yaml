@@ -42,8 +42,6 @@ dependencies:
   # Audio
   - seaborn
   - pywavelets
-  # file format
-  # - pyyaml
 
   - pip:
     - azure.storage.blob

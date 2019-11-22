@@ -1,5 +1,6 @@
 #LiDAR-to-GNSS calibration data service configurations
 #Sensor names: calibrate the source_sensor in destination_sensor coordinate
+calibration_task: "lidar_to_gnss"
 source_sensor: "velodyne128"
 destination_sensor: "novatel"
 
