@@ -4,15 +4,11 @@
 import os
 from datetime import datetime
 
-import cv2
-
-from modules.drivers.proto.sensor_image_pb2 import CompressedImage
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
-
+from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
 
 def execute_task(message_meta):
     """example task executing"""
@@ -22,7 +18,6 @@ def execute_task(message_meta):
     # Invoke benchmark binary
     logging.info('start to execute sensor calbiration service')
 
-    file_utils.makedirs(os.path.join(source_dir, 'outputs'))
     executable_dir =  os.path.join(os.path.dirname(__file__), 'executable_bin')
     if task_name == 'lidar_to_gnss':
         executable_bin = os.path.join(executable_dir, 'multi_lidar_to_gnss',
@@ -36,8 +31,14 @@ def execute_task(message_meta):
         logging.error('not support {} yet'.format(task_name))
         return
 
-    # set command and config file example
-    config_file = os.path.join(source_dir, 'config.yaml')
+    # from input config file, generating final fuel-using config file
+    in_config_file = os.path.join(source_dir, 'sample_config.yaml')
+    config_file = os.path.join(source_dir, task_name+'_calibration_config.yaml')
+    calib_config = CalibrationConfig(task_name=task_name)
+    calib_config.generate_task_config_yaml(source_config_file=in_config_file,
+                                            dest_config_file=config_file,
+                                            root_path=source_dir)
+    # set command
     command = f'{executable_bin} --config {config_file}'
     logging.info('sensor calibration executable command is {}'.format(command))
 
@@ -71,4 +72,13 @@ class SensorCalibrationPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
+    # original_path =  '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/lidar_to_gnss'
+    # task_name = 'lidar_to_gnss'
+    # source_config_file = os.path.join(original_path, 'sample_config.yaml')
+
+    # dest_config_file = os.path.join(original_path, task_name+'_calibration_config.yaml')
+    # calib_config = CalibrationConfig(task_name=task_name)
+    # calib_config.generate_task_config_yaml(source_config_file=source_config_file,
+    #                                         dest_config_file=dest_config_file,
+    #                                         root_path=original_path)
     SensorCalibrationPipeline().main()
