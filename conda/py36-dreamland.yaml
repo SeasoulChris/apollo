@@ -12,9 +12,11 @@ dependencies:
   - protobuf = 3.6  # Compatible with locked tensorflow.
 
   # Data science
+  - boto3
   - h5py
   - matplotlib
   - numpy
+  - redis-py
 
   - pip:
     - azure.storage.blob
