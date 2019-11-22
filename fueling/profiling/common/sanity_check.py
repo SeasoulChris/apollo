@@ -111,35 +111,6 @@ def missing_message_data(path, channels):
     return False
 
 
-def control_message_check(message):
-    """Check controll message import field"""
-    message_proto = record_utils.message_to_proto(message).debug
-    if (hasattr(message_proto, 'simple_lon_debug') and
-            hasattr(message_proto, 'simple_lat_debug')):
-        lon_lat_control_fields = [message_proto.simple_lon_debug.station_error,
-                                  message_proto.simple_lon_debug.speed_error,
-                                  message_proto.simple_lon_debug.speed_reference,
-                                  message_proto.simple_lat_debug.lateral_error,
-                                  message_proto.simple_lat_debug.heading_error,
-                                  message_proto.simple_lat_debug.curvature]
-        for field in lon_lat_control_fields:
-            if math.isnan(field):
-                return False
-
-    elif hasattr(message_proto, 'simple_mpc_debug'):
-        mpc_control_fields = [message_proto.simple_mpc_debug.station_error,
-                              message_proto.simple_mpc_debug.speed_error,
-                              message_proto.simple_mpc_debug.speed_reference,
-                              message_proto.simple_mpc_debug.lateral_error,
-                              message_proto.simple_mpc_debug.heading_error,
-                              message_proto.simple_mpc_debug.curvature]
-        for field in mpc_control_fields:
-            if math.isnan(field):
-                return False
-
-    return True
-
-
 def sanity_check(input_folder, conf_pb, channels, job_owner, job_id):
     err_msg = None
     if missing_file(input_folder, conf_pb):

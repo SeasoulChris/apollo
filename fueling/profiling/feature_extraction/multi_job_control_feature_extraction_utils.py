@@ -59,10 +59,6 @@ def verify_vehicle_controller(task_tulple):
     control_message = get_message_by_topic(
         messages, record_utils.CONTROL_CHANNEL)
     # Check control important field
-    if not sanity_check.control_message_check(control_message):
-        logging.warning(
-            'some control field must be specified, stop control profiling procedure.')
-        return False
     if control_message and hasattr(record_utils.message_to_proto(control_message), 'debug'):
         if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug') and
                 hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):

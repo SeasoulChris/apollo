@@ -216,17 +216,6 @@ class MultiJobFeatureExtraction(BasePipeline):
             # PairRDD(vehicle_type, files)
             .flatMapValues(object_storage.list_files))
 
-        # todo_task_dirs1 = spark_helper.cache_and_log(
-        #     'todo_jobs',
-        #     todo_task_dirs
-        #     # TODO: find a better way to get the folder dirs
-        #     # PairRDD(vehicle_type, 'COMPLETE'_files)
-        #     .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
-        #     # PairRDD(vehicle_type, absolute_path_to_records)
-        #     .mapValues(os.path.dirname)
-        #     .distinct())
-        # print('todo_task_dirs1: ', todo_task_dirs1.collect())
-
         todo_task_dirs = spark_helper.cache_and_log(
             'todo_jobs',
             todo_task_dirs
