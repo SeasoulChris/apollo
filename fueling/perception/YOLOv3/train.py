@@ -180,8 +180,13 @@ class training:
         else:
             variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
             restore_saver = tf.train.Saver(var_list=variables)
-        restore_saver.restore(sess, self.model_restore_path)
-        logging.info("Restored weights from {}.".format(self.model_restore_path))
+
+        # TODO(longtao): figure why restore need a file name but not checkpoint folder
+        restore_file_path = data_utils.get_restore_file_path(self.model_restore_path,
+            cfg.model_name_prefix)
+        if restore_file_path:
+            restore_saver.restore(sess, restore_file_path)
+            logging.info("Restored weights from {}.".format(restore_file_path))
 
     def _image_summary(self, image_batch, xy_wh_conf_value, calib_list, cls_box_map=None):
         """

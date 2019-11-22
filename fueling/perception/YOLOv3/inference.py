@@ -80,15 +80,13 @@ class Inference:
         Restore training from a checkpoint.
         """
         restore_saver = tf.train.Saver()
+
         # TODO(longtao): figure why restore need a file name but not checkpoint folder
-        # restore_saver.restore(sess, self.inference_restore_path)
-        latest_model_file = data_utils.get_latest_model(self.inference_restore_path,
+        restore_file_path = data_utils.get_restore_file_path(self.inference_restore_path,
             cfg.model_name_prefix)
-        if latest_model_file:
-            restore_file_path = os.path.join(self.inference_restore_path,
-                latest_model_file.split('.')[0])
+        if restore_file_path:
             restore_saver.restore(sess, restore_file_path)
-            logging.info("Restored weights from {}.".format(restore_file_path))
+            logging.info("Inference Restored weights from {}.".format(restore_file_path))
 
     def setup_network(self):
         """

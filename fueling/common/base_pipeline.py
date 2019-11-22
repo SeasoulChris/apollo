@@ -79,12 +79,14 @@ class BasePipeline(object):
         logging.info('Running job in {} mode, owner={}, id={}'.format(
             mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))
 
-        self.init()
-        if mode == 'TEST':
-            self.run_test()
-        else:
-            self.run_prod()
-        BasePipeline.SPARK_CONTEXT.stop()
+        try:
+            self.init()
+            if mode == 'TEST':
+                self.run_test()
+            else:
+                self.run_prod()
+        finally:
+            BasePipeline.SPARK_CONTEXT.stop()
 
     def main(self):
         """Kick off everything."""

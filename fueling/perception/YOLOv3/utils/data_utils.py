@@ -130,3 +130,10 @@ def get_latest_model(model_folder_path, model_name_prefix):
             latest_model = file_name
     return latest_model
 
+def get_restore_file_path(model_folder_path, model_name_prefix):
+    """Get restore path_filename_prefix that satifies the TF restore method"""
+    latest_model_file = get_latest_model(model_folder_path, model_name_prefix)
+    if latest_model_file:
+        return os.path.join(model_folder_path, latest_model_file.split('.')[0])
+    return None
+
