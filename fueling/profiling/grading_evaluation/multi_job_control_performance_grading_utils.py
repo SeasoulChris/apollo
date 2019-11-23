@@ -618,18 +618,16 @@ def combine_gradings(grading_x, grading_y):
 def output_gradings(target_grading):
     """Write the grading results to files in coresponding target dirs"""
     target_dir, grading = target_grading
-    # target dir like
-    # /apollo/2019-11-08-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
     # get copied vehicle parameter conf
-    vehicle_param_dir_splited = target_dir.split('/')
+    vehicle_type = multi_vehicle_utils.get_vehicle_by_target(target_dir)
+    controller_type = multi_vehicle_utils.get_controller_by_target(target_dir)
     # Get control prifiling conf
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_output_path = os.path.join(target_dir,
                                        '{}_{}_control_performance_grading.txt'
-                                       .format(vehicle_param_dir_splited[3],
-                                               vehicle_param_dir_splited[4]))
+                                       .format(vehicle_type, controller_type))
     vehicle_param_conf_output_path = os.path.join(
-        target_dir, '{}_control_conf.pb.txt'.format(profiling_conf.controller_type))
+        target_dir, '{}_control_conf.pb.txt'.format(controller_type))
     logging.info('writing grading output {} to {}'.format(
         grading, grading_output_path))
     if not grading:

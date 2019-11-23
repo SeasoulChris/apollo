@@ -23,12 +23,29 @@ def get_vehicle_param(folder_dir):
     return VEHICLE_PARAM_CONF.vehicle_param
 
 
-def get_vehicle_param_by_target(target_dir):
+def get_controller_dir_by_target(target_dir):
     # target dir like
-    # /apollo/modules/data/fuel/testdata/profiling/multi_job/genanrated/apollo/
-    # 2019-11-08-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
+    # /apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/apollo/
+    # 2019-11-22-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
+    logging.info(
+        "target_dir in get_controller_dir_by_target is {}".format(target_dir))
     controller_pos = target_dir.find('Controller')
-    controller_dir = target_dir[:controller_pos]
+    return target_dir[:controller_pos]
+
+
+def get_vehicle_by_target(target_dir):
+    controller_dir = get_controller_dir_by_target(target_dir)
+    return controller_dir.split('/')[-2]
+
+
+def get_controller_by_target(target_dir):
+    controller_dir = get_controller_dir_by_target(target_dir)
+
+    return '{}Controller'.format(controller_dir.split('/')[-1])
+
+
+def get_vehicle_param_by_target(target_dir):
+    controller_dir = get_controller_dir_by_target(target_dir)
 
     vehicle_param_dir = '/'.join(controller_dir.split('/')[:-1])
     return get_vehicle_param(vehicle_param_dir)

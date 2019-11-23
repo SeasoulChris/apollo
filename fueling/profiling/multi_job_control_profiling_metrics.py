@@ -29,7 +29,7 @@ class ControlProfilingMetrics(BasePipeline):
     def run_test(self):
         """Run test."""
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job'
-        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job/genanrated/{}/{}'\
+        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/{}/{}'\
             .format(self.FLAGS.get('job_owner'),
                     self.FLAGS.get('job_id'))
 
@@ -54,6 +54,7 @@ class ControlProfilingMetrics(BasePipeline):
             origin_vehicle_dir
             # PairRDD(vehicle_type, list_of_records)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
+            # RDD list_of_records to parse vehicle type and controller to organize new key
             .values()
             .distinct())
 
@@ -61,13 +62,14 @@ class ControlProfilingMetrics(BasePipeline):
 
         conf_target_prefix = target_prefix
         logging.info(conf_target_prefix)
-        target_param_conf = origin_vehicle_dir.mapValues(
+        generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
-        logging.info('target_param_conf: %s' % target_param_conf.collect())
+        logging.info('generated_vehicle_dir: %s' %
+                     generated_vehicle_dir.collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
-            target_param_conf).values().cache()
+            generated_vehicle_dir).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0],
@@ -76,8 +78,6 @@ class ControlProfilingMetrics(BasePipeline):
                                                                          feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
-        self.summarize_tasks(todo_task_dirs.collect(),
-                             origin_prefix, target_prefix)
         logging.info('Control Profiling: All Done, TEST')
 
     def run_prod(self):
@@ -124,18 +124,33 @@ class ControlProfilingMetrics(BasePipeline):
                                                             os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_tasks, original_prefix, target_prefix)
-        self.summarize_tasks(todo_tasks.collect(),
-                             original_prefix, target_prefix)
         logging.info('Control Profiling: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
 
-        # PairRDD (vehicle , tasks)
-        (todo_tasks
-         # PairRDD(target, tasks)
-         .map(feature_utils.verify_vehicle_controller)
-         # PairRDD(target, record_file)
+        """Reorgnize RDD key from vehicle type/controller/record_prefix to absolute path"""
+        def _reorg_target_dir(target_task):
+            # parameter vehicle_controller_parsed like
+            # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
+            vehicle_controller_parsed, task = target_task
+            target_dir = os.path.join(target_prefix, vehicle_controller_parsed)
+            return target_dir, task
+
+        # RDD tasks
+        reorged_target = (todo_tasks
+                          # PairRDD(vehicle_controller_parsed, tasks)
+                          .map(feature_utils.parse_vehicle_controller)
+                          # TODO(zongbao): handle false Result by function parse_vehicle_controller
+                          #  .filter(lambda task: not False))
+                          # PairRDD(target_dir, task)
+                          .map(_reorg_target_dir))
+
+        logging.info('target_paidrdd after reorg_target_dir:%s' %
+                     reorged_target.collect())
+
+        (reorged_target
+         # PairRDD(target_dir, record_file)
          .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
                         glob.glob(os.path.join(task, '*bag*')))
          # PairRDD(target_dir, record_file), filter out unqualified files
@@ -153,6 +168,12 @@ class ControlProfilingMetrics(BasePipeline):
          .reduceByKey(grading_utils.combine_gradings)
          # PairRDD(target, combined_grading_result), output grading results for each target
          .foreach(grading_utils.output_gradings))
+
+        logging.info('target_paidrdd:%s' %
+                     reorged_target.keys().collect())
+        # Summarize by new tasks contains Controller type
+        self.summarize_tasks(reorged_target.keys().collect(),
+                             original_prefix, target_prefix)
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
@@ -179,10 +200,9 @@ class ControlProfilingMetrics(BasePipeline):
         tar = None
         for task in tasks:
             logging.info('processing task is {}'.format(task))
-            # TODO: TARGET_DIR NEED UPDATE here
-            task = task[1]
-            target_dir = task.replace(original_prefix, target_prefix, 1)
-            logging.warning('target_dir in summarize_tasks :{}'.format(target_dir))
+            target_dir = task
+            logging.warning(
+                'target_dir in summarize_tasks :{}'.format(target_dir))
 
             target_file = glob.glob(os.path.join(
                 target_dir, '*performance_grading*'))

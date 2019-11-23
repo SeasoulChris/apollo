@@ -25,14 +25,14 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
             record_utils.LOCALIZATION_CHANNEL, record_utils.CONTROL_CHANNEL}
 
 
-def verify_vehicle_controller(task):
-    """Verify if the task has any record file whose controller/vehicle types match config"""
+def parse_vehicle_controller(task):
+    """Parse controller/vehicle type by task"""
     # vehicle, task = task_tulple
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
     if not record_file:
-        logging.warning('no valid record file found in task: {}'.format(task))
+        logging.warning('no valid record file found in task: {}'.format(task)) 2
         return False
     # Read two topics together to avoid looping all messages in the record file twice
     logging.info(
@@ -72,8 +72,8 @@ def verify_vehicle_controller(task):
         logging.warning('no control messages found in task {} record {}; \
                          stop control profiling procedure'.format(task, record_file))
         return False
-    target_vcr_dir = '{}/{}/{}'.format(vehicle_type, controller_type, record_prefix)
-    return (target_vcr_dir, task)
+    vehicle_controller_parsed_dir = '{}/{}/{}'.format(vehicle_type, controller_type, record_prefix)
+    return (vehicle_controller_parsed_dir, task)
 
 
 def data_matches_config(data_vehicle_type, data_controller_type):
