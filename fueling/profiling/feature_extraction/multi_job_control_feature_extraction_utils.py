@@ -32,7 +32,7 @@ def parse_vehicle_controller(task):
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
     if not record_file:
-        logging.warning('no valid record file found in task: {}'.format(task)) 2
+        logging.warning('no valid record file found in task: {}'.format(task))
         return False
     # Read two topics together to avoid looping all messages in the record file twice
     logging.info(

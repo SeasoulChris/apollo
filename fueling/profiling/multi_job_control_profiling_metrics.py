@@ -72,17 +72,14 @@ class ControlProfilingMetrics(BasePipeline):
             generated_vehicle_dir).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0],
-                                                                         feature_utils.CONF_FILE),
-                                                            os.path.join(src_dst[1],
-                                                                         feature_utils.CONF_FILE)))
+        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
+                                                            os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
         logging.info('Control Profiling: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        # test online /mnt/bos/modules/control/apollo_calibration_table/Mkz7/2019-05-31/
         original_prefix = 'small-records/2019'
         target_prefix = '{}/{}/modules/control/control_profiling_hf5'.format(
             self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
@@ -109,15 +106,15 @@ class ControlProfilingMetrics(BasePipeline):
 
         conf_target_prefix = target_prefix
         logging.info(conf_target_prefix)
-        target_param_conf = origin_vehicle_dir.mapValues(
+        generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(original_prefix, conf_target_prefix, 1))
-        logging.info('target_param_conf: %s' % target_param_conf.collect())
+        logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
         print("origin_vehicle_dir.join", origin_vehicle_dir.join(
-            target_param_conf).collect())
+            generated_vehicle_dir).collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
-            target_param_conf).values().cache()
+            generated_vehicle_dir).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
