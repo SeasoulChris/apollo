@@ -108,7 +108,8 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info(conf_target_prefix)
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(original_prefix, conf_target_prefix, 1))
-        logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
+        logging.info('generated_vehicle_dir: %s' %
+                     generated_vehicle_dir.collect())
         print("origin_vehicle_dir.join", origin_vehicle_dir.join(
             generated_vehicle_dir).collect())
 
@@ -135,18 +136,18 @@ class ControlProfilingMetrics(BasePipeline):
             return target_dir, task
 
         # RDD tasks
-        reorged_target = (todo_tasks
-                          # PairRDD(vehicle_controller_parsed, tasks)
-                          .map(feature_utils.parse_vehicle_controller)
-                          # TODO(zongbao): handle false Result by function parse_vehicle_controller
-                          #  .filter(lambda task: not False))
-                          # PairRDD(target_dir, task)
-                          .map(_reorg_target_dir))
+        reorgnized_target = (todo_tasks
+                             # PairRDD(vehicle_controller_parsed, tasks)
+                             .map(feature_utils.parse_vehicle_controller)
+                             # TODO(zongbao): handle false result by function parse_vehicle_controller
+                             #  .filter(lambda task: not False))
+                             # PairRDD(target_dir, task)
+                             .map(_reorg_target_dir))
 
-        logging.info('target_paidrdd after reorg_target_dir:%s' %
-                     reorged_target.collect())
+        logging.info('reorgnized_target after reorg_target_dir:%s' %
+                     reorgnized_target.collect())
 
-        (reorged_target
+        (reorgnized_target
          # PairRDD(target_dir, record_file)
          .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
                         glob.glob(os.path.join(task, '*bag*')))
@@ -166,10 +167,10 @@ class ControlProfilingMetrics(BasePipeline):
          # PairRDD(target, combined_grading_result), output grading results for each target
          .foreach(grading_utils.output_gradings))
 
-        logging.info('target_paidrdd:%s' %
-                     reorged_target.keys().collect())
+        logging.info('reorgnized_target:%s' %
+                     reorgnized_target.keys().collect())
         # Summarize by new tasks contains Controller type
-        self.summarize_tasks(reorged_target.keys().collect(),
+        self.summarize_tasks(reorgnized_target.keys().collect(),
                              original_prefix, target_prefix)
 
     def partition_data(self, target_msgs):
