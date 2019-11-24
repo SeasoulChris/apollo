@@ -49,3 +49,10 @@ def get_vehicle_param_by_target(target_dir):
 
     vehicle_param_dir = '/'.join(controller_dir.split('/')[:-1])
     return get_vehicle_param(vehicle_param_dir)
+
+def get_vehicle_by_task(task_dir):
+    # task dir like 
+    # /apollo/modules/data/fuel/testdata/profiling/multi_job/Mkz7/Sim_Test-2019-05-01/20190501110414/
+    vehicle_type_parsed_from_dir = task_dir.split('/')[-4]
+    return vehicle_type_parsed_from_dir
+ 

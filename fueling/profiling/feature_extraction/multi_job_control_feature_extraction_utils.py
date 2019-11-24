@@ -12,6 +12,7 @@ import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.sanity_check as sanity_check
+import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 # Message number in each segment
 MSG_PER_SEGMENT = 3000
@@ -27,7 +28,6 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
 
 def parse_vehicle_controller(task):
     """Parse controller/vehicle type by task"""
-    # vehicle, task = task_tulple
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
@@ -36,7 +36,7 @@ def parse_vehicle_controller(task):
         return False
     # Read two topics together to avoid looping all messages in the record file twice
     logging.info(
-        'verifying vehicle controller in task {}, record {}'.format(task, record_file))
+        'Parse vehicle controller in task {}, record {}'.format(task, record_file))
     record_dir_splited = task.split('/')
     record_prefix = '{}/{}'.format(
         record_dir_splited[-2], record_dir_splited[-1])
@@ -55,6 +55,12 @@ def parse_vehicle_controller(task):
         logging.info('no vehicle messages found in task {} record {}; \
                       use "Arbitrary" as the current vehicle type'.format(task, record_file))
         vehicle_type = "Arbitrary"
+    # Compare the vehicle_type from parsed HMI_status channel and the vehicle_type from the input file system.
+    vehicle_type_parsed_from_dir = multi_vehicle_utils.get_vehicle_by_task(task)
+    if vehicle_type.lower() != vehicle_type_parsed_from_dir.lower():
+        logging.info('vehicle type parsed from hmi_status {} does not match input data path {},\
+                     we will process by vehicle type from hmi_status \
+                      '.format(vehicle_type, vehicle_type_parsed_from_dir))
     control_message = get_message_by_topic(
         messages, record_utils.CONTROL_CHANNEL)
     # Check control important field
