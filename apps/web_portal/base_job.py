@@ -18,6 +18,6 @@ class BaseJob(object):
                      'http:spark-submitter-service:8000/proxy/')
         res = requests.post(SUBMITTER, json=MessageToJson(spark_submit_arg))
         if res.ok:
-            logging.info('Submit job successfully: {spark_submit_arg}')
+            logging.info(f'Submit job successfully: {spark_submit_arg}')
         else:
-            logging.error('Failed to submit job: {spark_submit_arg}')
+            logging.error(f'Failed to submit job: {spark_submit_arg}')
