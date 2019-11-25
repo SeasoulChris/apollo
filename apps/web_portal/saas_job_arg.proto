@@ -1,0 +1,46 @@
+syntax = "proto2";
+
+package apollo.data.fuel;
+
+import "modules/data/fuel/apps/k8s/spark_submitter/spark_submit_arg.proto";
+
+// Will be translated to SparkSubmitArg with pre-defined workflow.
+message SaasJobArg {
+  optional SaasPartner partner = 1;
+  optional SaasJob job = 2;
+}
+
+message SaasPartner {
+  optional string id = 1;
+  optional BosConfig bos = 2;
+  optional AzureBlobConfig blob = 3;
+}
+
+message SaasJob {
+  enum JobType {
+    UNKNOWN = 0;
+    VEHICLE_CALIBRATION = 1;
+    SIMPLE_HDMAP = 2;
+  }
+  optional JobType job_type = 1;
+
+  // For object storage like BOS and Blob, the path should be a key.
+  optional string input_data_path = 2;
+  // We'll write to the path and anything existed inside could be wiped.
+  // If it's not provided, we'll not write to user's storage.
+  optional string output_data_path = 3;
+
+  // Additional job specific arguments.
+  message SimpleHDMap {
+    // 1. zone_id is required in local_map generator
+    // 2. e.g., if you are in Beijing, then zone_id is 50
+    optional uint32 zone_id = 1;
+
+    // 1. lidar_type is required in local_map generator
+    // 2. e.g., if the compensator pointcloud topic is
+    // "/apollo/sensor/velodyne16/compensator/PointCloud2",
+    // then lidar_type is velodyne16
+    optional string lidar_type = 2;
+  }
+  optional SimpleHDMap simple_hdmap = 4;
+}

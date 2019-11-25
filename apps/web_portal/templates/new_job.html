@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Apollo Fuel - Submit New Job</title>
+<style>
+  .bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  @media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+      font-size: 3.5rem;
+    }
+  }
+
+  .container {
+    max-width: 960px;
+  }
+
+  .lh-condensed {
+    line-height: 1.25;
+  }
+</style>
+{% endblock %}
+
+{% block container %}
+
+<div class="card w-100">
+  <div class="card-body">
+    <h4 class="card-title">Job Arguments</h4>
+
+    <div class="row">
+    <div class="col-md-8 order-md-1">
+    <form class="needs-validation" novalidate>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="partner_id">Partner ID</label>
+          <input type="text" class="form-control" id="partner_id" required>
+          <div class="invalid-feedback">
+            Partner ID is required. You can set it up with our BD team: idg-apollo@baidu.com
+          </div>
+        </div>
+      </div>
+  
+      <hr class="mb-4">
+      <div class="d-block my-3">
+        <div class="custom-control custom-radio custom-control-inline">
+          <input type="radio" id="bos" name="storage" class="custom-control-input" checked required>
+          <label class="custom-control-label" for="bos">Baidu BOS</label>
+        </div>
+        <div class="custom-control custom-radio custom-control-inline">
+          <input type="radio" id="blob" name="storage" class="custom-control-input" disabled>
+          <label class="custom-control-label" for="blob">Azure Blob</label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="cc-name">Access Key</label>
+          <input type="text" class="form-control" id="access_key" placeholder="" required>
+          <div class="invalid-feedback">Access Key is required.</div>
+        </div>
+       <div class="col-md-6 mb-3">
+          <label for="cc-number">Secret Key</label>
+          <input type="password" class="form-control" id="secret_key" placeholder="" required>
+          <div class="invalid-feedback">Secret Key is required.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="input_data_path">Input Data Path</label>
+          <input type="text" class="form-control" id="input_data_path" placeholder="" required>
+          <div class="invalid-feedback">Input Data Path is required for this job.</div>
+        </div>
+
+        {% if job_type == 'SIMPLE_HDMAP' %}
+        <div class="col-md-6 mb-3">
+          <label for="output_data_path">Output Data Path</label>
+          <input type="text" class="form-control" id="output_data_path" placeholder="" required>
+          <div class="invalid-feedback">Output Data Path is required for this job.</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <hr class="mb-4">
+      <button class="btn btn-primary btn-lg btn-block" type="submit">Submit Job</button>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+  // Example starter JavaScript for disabling form submissions if there are invalid fields
+  job_type = "{{ job_type }}";
+  jQuery(document).ready(function($) {
+    'use strict'
+
+    window.addEventListener('load', function () {
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.getElementsByClassName('needs-validation')
+
+      // Loop over them and prevent submission
+      Array.prototype.filter.call(forms, function (form) {
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          if (form.checkValidity() === false) {
+            event.stopPropagation();
+          } else {
+            submitForm();
+          }
+          form.classList.add('was-validated');
+        }, false)
+      })
+    }, false);
+
+    function submitForm() {
+      // Construct a dict following SaasJobArg.
+      var job_arg = {
+        "partner": {
+          "id": $("#partner_id").val(),
+        },
+        "job": {
+          "job_type": job_type,
+          "input_data_path": $("#input_data_path").val(),
+        },
+      };
+      if (job_type === 'SIMPLE_HDMAP') {
+        job_arg["job"]["output_data_path"] = $("#output_data_path").val();
+      }
+      if ($("#bos").is(':checked')) {
+        job_arg["partner"]["bos"] = {
+          "access_key": $("#access_key").val(),
+          "secret_key": $("#secret_key").val(),
+         };
+      } else if ($("#blob").is(':checked')) {
+        job_arg["partner"]["blob"] = {
+          "storage_account": $("#storage_account").val(),
+          "storage_access_key": $("#storage_access_key").val(),
+        };
+      }
+  
+      $.ajax({
+        type: "POST",
+        url: "{{ url_for('submit_job') }}",
+        data: JSON.stringify(job_arg),
+        contentType: 'application/json;charset=UTF-8',
+        success: function (response) {
+          window.location = "{{ url_for('my_jobs') }}";
+        },
+        error: function (response) {
+          alert(response.responseText);
+        },
+      });
+    }
+  });
+</script>
+{% endblock %}
