@@ -29,7 +29,7 @@ def list_records(path):
         for filename in filenames:
             end_file = os.path.join(dirpath, filename)
             logging.info("end_files: %s" % end_file)
-            if record_utils.is_record_file(end_file):
+            if record_utils.is_record_file(end_file) or record_utils.is_bag_file(end_file):
                 records.append(end_file)
     return records
 

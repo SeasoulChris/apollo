@@ -15,6 +15,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+from fueling.common.storage.bos_client import BosClient
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
 from fueling.profiling.common.sanity_check import sanity_check
@@ -44,9 +45,6 @@ class ControlProfilingMetrics(BasePipeline):
             .keyBy(lambda vehicle: vehicle)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
-
-        logging.info('vehicle directory:{}'.format(
-            origin_vehicle_dir.collect()))
 
         # # RDD(origin_vehicle_dir)
         todo_task_dirs = spark_helper.cache_and_log(
@@ -80,38 +78,53 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = 'small-records/2019'
-        target_prefix = '{}/{}/modules/control/control_profiling_hf5'.format(
-            self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
+        original_prefix = self.FLAGS.get(
+            'input_data_path', 'modules/control/profiling/multi_job')
+
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        target_prefix = os.path.join(
+            dir_utils.inter_result_folder, job_owner, job_id)
+
+        bucket_apollo_platform = BosClient()
+        target_dir = bucket_apollo_platform.abs_path(target_prefix)
+        # target_dir /mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-39-38
+        logging.info('target_dir %s' % target_dir)
+
+        # Access partner's storage if provided.
+        object_storage = self.partner_object_storage() or bucket_apollo_platform
+        origin_dir = object_storage.abs_path(original_prefix)
+
+        #  origin_dir: /mnt/bos/modules/control/profiling/multi_job
+        logging.info("origin_dir: %s" % origin_dir)
+
+        # Sanity Check
+        if not sanity_check(origin_dir, feature_utils.CONF_FILE, feature_utils.CHANNELS,
+                            job_owner, job_id):
+            return
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',
-            self.to_rdd([original_prefix])
+            self.to_rdd([origin_dir])
             # RDD([vehicle_type])
             .flatMap(multi_vehicle_utils.get_vehicle)
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
+            .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
+        # [('Mkz7', '/mnt/bos/modules/control/profiling/multi_job/Mkz7'), ...]
+        logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
-        # RDD(tasks), the task dirs
-        todo_tasks = spark_helper.cache_and_log(
-            'todo_tasks',
-            dir_utils.get_todo_tasks(original_prefix, target_prefix))
-
-        if not sanity_check(origin_vehicle_dir, feature_utils.CONF_FILE, feature_utils.CHANNELS,
-                            self.FLAGS.get['job_owner'], self.FLAGS.get['job_id']):
-            return
-
-        conf_target_prefix = target_prefix
+        # Copy vehicle parameter config file
+        conf_target_prefix = target_dir
         logging.info(conf_target_prefix)
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
-            lambda path: path.replace(original_prefix, conf_target_prefix, 1))
+            lambda path: path.replace(origin_dir, conf_target_prefix, 1))
+        # generated_vehicle_dir: [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),
+        # ('Transit', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Transit')]
         logging.info('generated_vehicle_dir: %s' %
                      generated_vehicle_dir.collect())
-        print("origin_vehicle_dir.join", origin_vehicle_dir.join(
-            generated_vehicle_dir).collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
@@ -120,6 +133,54 @@ class ControlProfilingMetrics(BasePipeline):
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
                                                             os.path.join(src_dst[1], feature_utils.CONF_FILE)))
+
+        def _list_files(vehicle_dir):
+            return object_storage.list_files(vehicle_dir)
+
+        logging.info('object_storage list files%s' % object_storage.list_files(
+            '/mnt/bos/modules/control/profiling/multi_job/Mkz7'))
+
+        """ get to do jobs """
+        todo_task_dirs = spark_helper.cache_and_log(
+            'todo_jobs',
+            # PairRDD(vehicle_type, relative_path_to_vehicle_type)
+            origin_vehicle_dir
+            # PairRDD(vehicle_type, files)
+            .flatMapValues(object_storage.list_files)
+        )
+
+        todo_task_dirs = spark_helper.cache_and_log(
+            'todo_jobs',
+            todo_task_dirs
+            # PairRDD(vehicle_type, absolute_path_to_records)
+            .mapValues(os.path.dirname)
+            .distinct()
+        )
+
+        logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
+
+        def _reorg_target_dir(target_task):
+            # parameter vehicle_controller_parsed like
+            # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
+            vehicle_controller_parsed, task = target_task
+            target_ = os.path.join(target_dir, vehicle_controller_parsed)
+            return target_
+
+        processed_dirs = spark_helper.cache_and_log(
+            'processed_dirs',
+            target_dir
+            # PairRDD(vehicle, task_dir_with_target_prefix)
+            # .mapValues(lambda path: path.replace(original_prefix, target_prefix, 1))
+            .map(feature_utils.parse_vehicle_controller)
+            # PairRDD(target_dir, task_dir)
+            .map(_reorg_target_dir)
+            .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
+            .mapValues(os.path.dirname)
+        )
+
+        todo_tasks = todo_task_dirs.subtract(processed_dirs)
+
+        logging.info('todo_tasks subtracted %s' % todo_tasks.collect())
 
         self.run(todo_tasks, original_prefix, target_prefix)
         logging.info('Control Profiling: All Done, PROD')

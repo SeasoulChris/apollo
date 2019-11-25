@@ -6,6 +6,9 @@ import os
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
+import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
+
+inter_result_folder = 'modules/control/tmp/results'
 
 
 def get_todo_tasks(origin_prefix, target_prefix,
