@@ -14,7 +14,7 @@ from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 from job_processor import JobProcessor
 
 
-flags.DEFINE_boolean('debug', False, 'Start local debug instance.')
+flags.DEFINE_boolean('debug', True, 'Start local debug instance.')
 
 
 ################################# Web Handlers #################################
