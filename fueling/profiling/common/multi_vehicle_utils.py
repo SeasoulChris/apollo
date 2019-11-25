@@ -27,8 +27,6 @@ def get_controller_dir_by_target(target_dir):
     # target dir like
     # /apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/apollo/
     # 2019-11-22-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
-    logging.info(
-        "target_dir in get_controller_dir_by_target is {}".format(target_dir))
     controller_pos = target_dir.find('Controller')
     return target_dir[:controller_pos]
 
@@ -50,9 +48,8 @@ def get_vehicle_param_by_target(target_dir):
     vehicle_param_dir = '/'.join(controller_dir.split('/')[:-1])
     return get_vehicle_param(vehicle_param_dir)
 
+
 def get_vehicle_by_task(task_dir):
-    # task dir like 
-    # /apollo/modules/data/fuel/testdata/profiling/multi_job/Mkz7/Sim_Test-2019-05-01/20190501110414/
-    vehicle_type_parsed_from_dir = task_dir.split('/')[-4]
-    return vehicle_type_parsed_from_dir
- 
+    # task dir like
+    # /apollo/modules/data/fuel/testdata/profiling/multi_job/Mkz7/Sim_Test-2019-05-01/20190501110414
+    return task_dir.split('/')[-3]
