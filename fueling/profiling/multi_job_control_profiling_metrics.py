@@ -78,8 +78,7 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = self.FLAGS.get(
-            'input_data_path', 'modules/control/profiling/multi_job')
+        original_prefix = self.FLAGS.get('input_data_path', 'modules/control/profiling/multi_job')
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -121,10 +120,9 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info(conf_target_prefix)
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_dir, conf_target_prefix, 1))
-        # generated_vehicle_dir: [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),
-        # ('Transit', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Transit')]
-        logging.info('generated_vehicle_dir: %s' %
-                     generated_vehicle_dir.collect())
+        # generated_vehicle_dir: 
+        # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
+        logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
@@ -163,18 +161,20 @@ class ControlProfilingMetrics(BasePipeline):
             # parameter vehicle_controller_parsed like
             # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
             vehicle_controller_parsed, task = target_task
+            vehicle = vehicle_controller_parsed.split('/')[0]
             target_ = os.path.join(target_dir, vehicle_controller_parsed)
-            return target_
+            return vehicle, target_
 
         processed_dirs = spark_helper.cache_and_log(
             'processed_dirs',
             target_dir
-            # PairRDD(vehicle, task_dir_with_target_prefix)
-            # .mapValues(lambda path: path.replace(original_prefix, target_prefix, 1))
+            # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
             .map(feature_utils.parse_vehicle_controller)
-            # PairRDD(target_dir, task_dir)
+            # PairRDD(vehicle_type, task_dir)
             .map(_reorg_target_dir)
+            # PairRDD(vehicle_type, task_dir)
             .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
+            # PairRDD(vehicle_type, task_dir)
             .mapValues(os.path.dirname)
         )
 
