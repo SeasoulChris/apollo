@@ -79,7 +79,7 @@ class Dataset:
         if not self.one_shot:
             raise RuntimeError(
                 "Method 'one_shot_completed' can be called only when self.one_shot is True.")
-        return self.on_shot_complete
+        return self.one_shot_complete
 
     def _parse_example(self):
         """
