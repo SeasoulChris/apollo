@@ -168,7 +168,8 @@ class SparkSubmitJob(flask_restful.Resource):
         entrypoint = os.path.join(EXTRACTED_PATH, arg.job.entrypoint)
         cmd = (f'{site_package}/pyspark/bin/spark-submit --deploy-mode cluster '
                f'--master {K8S_MASTER} --name {job_name} {confs} '
-               f'"{entrypoint}" --running_mode=PROD {arg.job.flags}')
+               f'"{entrypoint}" --running_mode=PROD {arg.job.flags} '
+               f'--job_owner="{submitter}"')
         # Execute command.
         logging.debug('SHELL > {}'.format(cmd))
         os.system(cmd)

@@ -9,7 +9,7 @@ import time
 from absl import logging
 
 from fueling.common.partners import partners
-import modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 as spark_submit_arg_pb2
+from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
 
 from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJob
 from vehicle_calibration import VehicleCalibration
@@ -32,7 +32,7 @@ class JobProcessor(object):
             msg = 'Sorry, you are not authorized to access this service!'
             return HTTPStatus.UNAUTHORIZED, msg
         # Construct arguments.
-        spark_submit_arg = spark_submit_arg_pb2.SparkSubmitArg()
+        spark_submit_arg = SparkSubmitArg()
         if not self.populate_storage_config(spark_submit_arg):
             return HTTPStatus.BAD_REQUEST, 'job_arg format error!'
         spark_submit_arg.user.submitter = self.job_arg.partner.id
@@ -55,8 +55,7 @@ class JobProcessor(object):
                 logging.error('User provided invalid information.')
                 return False
             spark_submit_arg.partner.bos.bucket = self.partner_account.bos_bucket
-            spark_submit_arg.partner.bos.region = spark_submit_arg_pb2.BosConfig.Region.Value(
-                self.partner_account.bos_region)
+            spark_submit_arg.partner.bos.region = self.partner_account.bos_region
             spark_submit_arg.partner.bos.access_key = bos.access_key
             spark_submit_arg.partner.bos.secret_key = bos.secret_key
         elif self.job_arg.partner.blob.storage_account:
