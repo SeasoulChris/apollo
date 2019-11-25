@@ -45,8 +45,8 @@ dependencies:
 
   - pip:
     - azure.storage.blob
+    - git+https://github.com/cocodataset/cocoapi.git#egg=cocoapi&subdirectory=PythonAPI # pycocotools
     - liegroups
-    - pycocotools
     - pyro-ppl == 0.3.3  # 0.4.1+ requires pytorch 1.2.0+
     - pyspark-utils
     - scaleapi
