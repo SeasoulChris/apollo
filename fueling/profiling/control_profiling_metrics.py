@@ -41,9 +41,10 @@ class ControlProfilingMetrics(BasePipeline):
         """Run test."""
         origin_prefix = flags.FLAGS.ctl_metrics_input_path_local
         target_prefix = flags.FLAGS.ctl_metrics_output_path_local
+        todo_tasks_postfix = flags.FLAGS.ctl_metrics_todo_tasks_local.split(',')
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([
-            os.path.join(origin_prefix, flags.FLAGS.ctl_metrics_todo_tasks_local),
+            os.path.join(origin_prefix, task) for task in todo_tasks_postfix
         ]).cache()
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
