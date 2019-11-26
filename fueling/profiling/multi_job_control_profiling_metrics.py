@@ -78,7 +78,8 @@ class ControlProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = self.FLAGS.get('input_data_path', 'modules/control/profiling/multi_job')
+        original_prefix = self.FLAGS.get(
+            'input_data_path', 'modules/control/profiling/multi_job')
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -94,7 +95,7 @@ class ControlProfilingMetrics(BasePipeline):
         object_storage = self.partner_object_storage() or bucket_apollo_platform
         origin_dir = object_storage.abs_path(original_prefix)
 
-        #  origin_dir: /mnt/bos/modules/control/profiling/multi_job
+        # origin_dir: /mnt/bos/modules/control/profiling/multi_job
         logging.info("origin_dir: %s" % origin_dir)
 
         # Sanity Check
@@ -111,7 +112,7 @@ class ControlProfilingMetrics(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
+            .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
         # [('Mkz7', '/mnt/bos/modules/control/profiling/multi_job/Mkz7'), ...]
         logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
@@ -120,7 +121,7 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info(conf_target_prefix)
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_dir, conf_target_prefix, 1))
-        # generated_vehicle_dir: 
+        # generated_vehicle_dir:
         # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
         logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
 
@@ -131,12 +132,6 @@ class ControlProfilingMetrics(BasePipeline):
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
                                                             os.path.join(src_dst[1], feature_utils.CONF_FILE)))
-
-        def _list_files(vehicle_dir):
-            return object_storage.list_files(vehicle_dir)
-
-        logging.info('object_storage list files%s' % object_storage.list_files(
-            '/mnt/bos/modules/control/profiling/multi_job/Mkz7'))
 
         """ get to do jobs """
         todo_task_dirs = spark_helper.cache_and_log(
@@ -150,6 +145,9 @@ class ControlProfilingMetrics(BasePipeline):
         todo_task_dirs = spark_helper.cache_and_log(
             'todo_jobs',
             todo_task_dirs
+            # PairRDD(vehicle_type, filterd absolute_path_to_records)
+            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
+                                          record_utils.is_bag_file(file)))
             # PairRDD(vehicle_type, absolute_path_to_records)
             .mapValues(os.path.dirname)
             .distinct()
@@ -157,6 +155,20 @@ class ControlProfilingMetrics(BasePipeline):
 
         logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
 
+        # RDD(origin_dir)
+        target_vehicle_dir = spark_helper.cache_and_log(
+            'target_dir_vehicle_dir',
+            self.to_rdd([target_dir])
+            # RDD([vehicle_type])
+            .flatMap(multi_vehicle_utils.get_vehicle)
+            # PairRDD(vehicle_type, [vehicle_type])
+            .keyBy(lambda vehicle_type: vehicle_type)
+            # PairRDD(vehicle_type, path_to_vehicle_type)
+            .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
+
+        logging.info('target_vehicle_dir: %s' % target_vehicle_dir.collect())
+
+        """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs path target"""
         def _reorg_target_dir(target_task):
             # parameter vehicle_controller_parsed like
             # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
@@ -167,7 +179,7 @@ class ControlProfilingMetrics(BasePipeline):
 
         processed_dirs = spark_helper.cache_and_log(
             'processed_dirs',
-            target_dir
+            target_vehicle_dir
             # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
             .map(feature_utils.parse_vehicle_controller)
             # PairRDD(vehicle_type, task_dir)
@@ -188,7 +200,7 @@ class ControlProfilingMetrics(BasePipeline):
     def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
 
-        """Reorgnize RDD key from vehicle type/controller/record_prefix to absolute path"""
+        """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
         def _reorg_target_dir(target_task):
             # parameter vehicle_controller_parsed like
             # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
