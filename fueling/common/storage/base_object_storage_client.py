@@ -38,5 +38,5 @@ class BaseObjectStorageClient(object):
         files = self.list_keys(prefix)
         dirs = set(map(os.path.dirname, files))
         if to_abs_path:
-            return map(self.abs_path, dirs)
+            return list(map(self.abs_path, dirs))
         return list(dirs)
