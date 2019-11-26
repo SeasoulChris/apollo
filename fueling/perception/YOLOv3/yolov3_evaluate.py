@@ -4,6 +4,7 @@ import glob
 import os
 
 from absl import flags
+from datetime import datetime
 from PIL import Image
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
@@ -12,6 +13,7 @@ import numpy as np
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
+from fueling.perception.YOLOv3.utils import yolo_utils as utils
 import fueling.common.logging as logging
 
 CLASS_NAME_ID_MAP = cfg.class_map
@@ -180,7 +182,7 @@ class Yolov3Evaluate(BasePipeline):
         """Run test."""
         datasets_dir = glob.glob(
             os.path.join('/apollo/modules/data/fuel/testdata/perception/YOLOv3/train', '*'))
-        datasets = [(dataset, '/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output')
+        datasets = [(dataset, '/apollo/modules/data/fuel/testdata/perception/YOLOv3/test_output/san_mateo_2018')
                     for dataset in datasets_dir]
         self.run(datasets)
 
@@ -193,8 +195,15 @@ class Yolov3Evaluate(BasePipeline):
         self.run([(ground_truth_path, inference_data_path)])
 
     def run(self, datasets):
-        """Run the actual pipeline job."""
 
+
+        """Save metrics file to cloud"""
+        def _dump_stats(folder, stats):
+            filename = '{}/{}-metrics.txt'.format(folder, datetime.today().strftime('%Y-%m-%d-%H-%M-%S'))
+            with open(filename, 'w') as f:
+                print('\n'.join(stats), file=f)
+
+        """Run the actual pipeline job."""
         def _executor(gt_dt):
             """Executor task that runs on workers"""
             gt, dt = gt_dt
@@ -205,7 +214,8 @@ class Yolov3Evaluate(BasePipeline):
             evaluator = COCOeval(coco_obj, dt_obj, iouType="bbox")
             evaluator.evaluate()
             evaluator.accumulate()
-            evaluator.summarize()
+            stats = utils.summarize(evaluator)
+            _dump_stats(datasets[0][1], stats)
 
         data_rdd = (
             # RDD((label_dataset, result_dir)), each dataset to be evaluatued

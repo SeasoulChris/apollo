@@ -26,7 +26,7 @@ class Yolov3Inference(BasePipeline):
     def run_test(self):
         """Run local."""
         self.run('/apollo/modules/data/fuel/testdata/perception/YOLOv3/models',
-                 '/apollo/modules/data/fuel/testdata/perception/YOLOv3/infer_output/models-51000/')
+                 '/apollo/modules/data/fuel/testdata/perception/YOLOv3/models/inference_/')
 
     def run_prod(self):
         """Run prod."""
@@ -47,7 +47,8 @@ class Yolov3Inference(BasePipeline):
             logging.info('current image set size: {}'.format(len(image_paths)))
 
             restore_path = os.path.join(trained_model_path, cfg.restore_path)
-            logging.info('restore path is {}'.format(restore_path))
+            logging.info('infer output path {} restore path is {}'
+                        .format(infer_output_path, restore_path))
 
             engine = Inference(restore_path)
             engine.setup_network()
@@ -55,6 +56,10 @@ class Yolov3Inference(BasePipeline):
                 data_pool = DatasetOnlyImage(image_paths)
             else:
                 data_pool = Dataset(image_paths)
+            
+            logging.info('dataset size {} with config batch size {}'
+                        .format(data_pool.dataset_size, cfg.batch_size))
+            
             for _ in range((data_pool.dataset_size + 1) // cfg.batch_size):
                 data = data_pool.batch
                 engine.run(data, infer_output_path)

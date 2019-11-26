@@ -594,3 +594,61 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes,
                             np.sin(reg_ang)
                     break
     return y_true
+
+
+def summarize(evaluator):
+    '''
+    Compute and display summary metrics for evaluation results.
+    Note this functin can *only* be applied on the default parameter setting
+    '''
+    def _summarize( ap=1, iouThr=None, areaRng='all', maxDets=100 ):
+        p = evaluator.params
+        iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
+        titleStr = 'Average Precision' if ap == 1 else 'Average Recall'
+        typeStr = '(AP)' if ap==1 else '(AR)'
+        iouStr = '{:0.2f}:{:0.2f}'.format(p.iouThrs[0], p.iouThrs[-1]) \
+            if iouThr is None else '{:0.2f}'.format(iouThr)
+
+        aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng]
+        mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
+        if ap == 1:
+            # dimension of precision: [TxRxKxAxM]
+            s = evaluator.eval['precision']
+            # IoU
+            if iouThr is not None:
+                t = np.where(iouThr == p.iouThrs)[0]
+                s = s[t]
+            s = s[:,:,:,aind,mind]
+        else:
+            # dimension of recall: [TxKxAxM]
+            s = evaluator.eval['recall']
+            if iouThr is not None:
+                t = np.where(iouThr == p.iouThrs)[0]
+                s = s[t]
+            s = s[:,:,aind,mind]
+        if len(s[s>-1])==0:
+            mean_s = -1
+        else:
+            mean_s = np.mean(s[s>-1])
+        return iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s)
+
+    def _summarizeDets():
+        METRIC_SIZE = 12 # represents the number of metrics calculated
+        stats = [0] * METRIC_SIZE 
+        stats[0] = _summarize(1)
+        stats[1] = _summarize(1, iouThr=.5, maxDets=evaluator.params.maxDets[2])
+        stats[2] = _summarize(1, iouThr=.75, maxDets=evaluator.params.maxDets[2])
+        stats[3] = _summarize(1, areaRng='small', maxDets=evaluator.params.maxDets[2])
+        stats[4] = _summarize(1, areaRng='medium', maxDets=evaluator.params.maxDets[2])
+        stats[5] = _summarize(1, areaRng='large', maxDets=evaluator.params.maxDets[2])
+        stats[6] = _summarize(0, maxDets=evaluator.params.maxDets[0])
+        stats[7] = _summarize(0, maxDets=evaluator.params.maxDets[1])
+        stats[8] = _summarize(0, maxDets=evaluator.params.maxDets[2])
+        stats[9] = _summarize(0, areaRng='small', maxDets=evaluator.params.maxDets[2])
+        stats[10] = _summarize(0, areaRng='medium', maxDets=evaluator.params.maxDets[2])
+        stats[11] = _summarize(0, areaRng='large', maxDets=evaluator.params.maxDets[2])
+        return stats
+
+    summ_func = _summarizeDets
+  
+    return summ_func()
