@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """This is a module to run perception benchmark on lidar data"""
 
-import os
 from datetime import datetime
+import os
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
@@ -35,6 +35,9 @@ def execute_task(message_meta):
         if  not new_lib in os.environ['LD_LIBRARY_PATH']:
             os.environ['LD_LIBRARY_PATH'] = new_lib+':'+ os.environ['LD_LIBRARY_PATH']
         os.system("echo $LD_LIBRARY_PATH")
+    elif task_name == 'camera_to_lidar':
+        logging.info('executable not ready, stay for tune')
+        return
     else:
         logging.error('not support {} yet'.format(task_name))
         return
@@ -60,7 +63,9 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_test(self):
         """local mini test"""
-        root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/mkz5'
+        # root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/camera_to_lidar'
+        # self.run(root_dir)
+        root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration'
         self.run(root_dir)
 
     def run_prod(self):
