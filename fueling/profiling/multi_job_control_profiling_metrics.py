@@ -52,7 +52,8 @@ class ControlProfilingMetrics(BasePipeline):
             origin_vehicle_dir
             # PairRDD(vehicle_type, list_of_records)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
-            # RDD list_of_records to parse vehicle type and controller to organize new key
+            # RDD list_of_records to parse vehicle type and controller to
+            # organize new key
             .values()
             .distinct())
 
@@ -70,8 +71,11 @@ class ControlProfilingMetrics(BasePipeline):
             generated_vehicle_dir).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
-                                                            os.path.join(src_dst[1], feature_utils.CONF_FILE)))
+        src_dst_rdd.foreach(
+            lambda src_dst: shutil.copyfile(
+                os.path.join(
+                    src_dst[0], feature_utils.CONF_FILE), os.path.join(
+                    src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
         logging.info('Control Profiling: All Done, TEST')
@@ -82,8 +86,10 @@ class ControlProfilingMetrics(BasePipeline):
             'input_data_path', 'modules/control/profiling/multi_job')
 
         job_owner = self.FLAGS.get('job_owner')
-        # Use year as the job_id if data from apollo-plarform, to avoid processing same data repeatedly
-        job_id = self.FLAGS.get('job_id') if self.has_partner() else self.FLAGS.get('job_id')[:4]
+        # Use year as the job_id if data from apollo-plarform, to avoid
+        # processing same data repeatedly
+        job_id = self.FLAGS.get('job_id') if self.has_partner(
+        ) else self.FLAGS.get('job_id')[:4]
         target_prefix = os.path.join(
             dir_utils.inter_result_folder, job_owner, job_id)
 
@@ -100,8 +106,12 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info("origin_dir: %s" % origin_dir)
 
         # Sanity Check
-        if not sanity_check(origin_dir, feature_utils.CONF_FILE, feature_utils.CHANNELS,
-                            job_owner, job_id):
+        if not sanity_check(
+                origin_dir,
+                feature_utils.CONF_FILE,
+                feature_utils.CHANNELS,
+                job_owner,
+                job_id):
             return
 
         # RDD(origin_dir)
@@ -124,15 +134,20 @@ class ControlProfilingMetrics(BasePipeline):
             lambda path: path.replace(origin_dir, conf_target_prefix, 1))
         # generated_vehicle_dir:
         # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
-        logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
+        logging.info(
+            'generated_vehicle_dir: %s' %
+            generated_vehicle_dir.collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
             generated_vehicle_dir).values().cache()
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(lambda src_dst: shutil.copyfile(os.path.join(src_dst[0], feature_utils.CONF_FILE),
-                                                            os.path.join(src_dst[1], feature_utils.CONF_FILE)))
+        src_dst_rdd.foreach(
+            lambda src_dst: shutil.copyfile(
+                os.path.join(
+                    src_dst[0], feature_utils.CONF_FILE), os.path.join(
+                    src_dst[1], feature_utils.CONF_FILE)))
 
         """ get to do jobs """
         todo_task_dirs = spark_helper.cache_and_log(
@@ -168,7 +183,9 @@ class ControlProfilingMetrics(BasePipeline):
                 # PairRDD(vehicle_type, path_to_vehicle_type)
                 .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
 
-            logging.info('target_vehicle_dir: %s' % target_vehicle_dir.collect())
+            logging.info(
+                'target_vehicle_dir: %s' %
+                target_vehicle_dir.collect())
 
             """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs path target"""
             def _reorg_target_dir(target_task):
@@ -232,13 +249,17 @@ class ControlProfilingMetrics(BasePipeline):
          .flatMapValues(record_utils.read_record(feature_utils.CHANNELS))
          #  # PairRDD(target_dir, messages)
          .groupByKey()
-         # RDD(target, group_id, group of (message)s), divide messages into groups
+         # RDD(target, group_id, group of (message)s), divide messages into
+         # groups
          .flatMap(self.partition_data)
-         # PairRDD(target, grading_result), for each group get the gradings and write h5 files
+         # PairRDD(target, grading_result), for each group get the gradings and
+         # write h5 files
          .map(grading_utils.compute_h5_and_gradings)
-         # PairRDD(target, combined_grading_result), combine gradings for each target/task
+         # PairRDD(target, combined_grading_result), combine gradings for each
+         # target/task
          .reduceByKey(grading_utils.combine_gradings)
-         # PairRDD(target, combined_grading_result), output grading results for each target
+         # PairRDD(target, combined_grading_result), output grading results for
+         # each target
          .foreach(grading_utils.output_gradings))
 
         logging.info('reorgnized_target:%s' %
@@ -253,16 +274,19 @@ class ControlProfilingMetrics(BasePipeline):
         target, msgs = target_msgs
 
         logging.info(
-            'partition data for {} messages in target {}'.format(len(msgs), target))
+            'partition data for {} messages in target {}'.format(
+                len(msgs), target))
         msgs = sorted(msgs, key=lambda msg: msg.timestamp)
         msgs_groups = [msgs[idx: idx + feature_utils.MSG_PER_SEGMENT]
                        for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]
-        return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
+        return [(target, group_id, group)
+                for group_id, group in enumerate(msgs_groups)]
 
     def summarize_tasks(self, tasks, original_prefix, target_prefix):
         """Make summaries to specified tasks"""
-        SummaryTuple = namedtuple('Summary', ['Task', 'Records', 'HDF5s', 'Profling',
-                                              'Primary_Gradings', 'Sample_Sizes'])
+        SummaryTuple = namedtuple(
+            'Summary', [
+                'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
         title = 'Control Profiling Gradings Results'
         receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
         email_content = []
@@ -294,9 +318,9 @@ class ControlProfilingMetrics(BasePipeline):
                         tar.close()
                         attachments.append(output_filename)
                     target_dir_daily = os.path.dirname(target_dir)
-                    output_filename = os.path.join(target_dir_daily,
-                                                   '{}_gradings.tar.gz'
-                                                   .format(os.path.basename(target_dir_daily)))
+                    output_filename = os.path.join(
+                        target_dir_daily, '{}_gradings.tar.gz' .format(
+                            os.path.basename(target_dir_daily)))
                     tar = tarfile.open(output_filename, 'w:gz')
                 task_name = os.path.basename(target_dir)
                 file_name = os.path.basename(target_file[0])

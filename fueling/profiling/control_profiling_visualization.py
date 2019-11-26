@@ -27,7 +27,8 @@ flags.DEFINE_string('ctl_visual_input_path_local',
 flags.DEFINE_string('ctl_visual_output_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
-flags.DEFINE_string('ctl_visual_todo_tasks_local', '', 'todo_taks directory for local run_test')
+flags.DEFINE_string('ctl_visual_todo_tasks_local', '',
+                    'todo_taks directory for local run_test')
 flags.DEFINE_boolean('ctl_visual_simulation_only_test', False,
                      'if simulation-only, then generate .json data file; otherwise, plotting')
 flags.DEFINE_string('ctl_visual_input_path_k8s', 'modules/control/control_profiling_hf5',
@@ -89,7 +90,8 @@ class ControlProfilingVisualization(BasePipeline):
 
 def summarize_tasks(tasks, original_prefix, target_prefix):
     """Make summaries to specified tasks"""
-    SummaryTuple = namedtuple('Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
+    SummaryTuple = namedtuple(
+        'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
     timestr = time.strftime("%Y%m%d-%H%M%S")
     title = 'Control Profiling Visualization Results' + ' _ %s' % timestr
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
@@ -118,7 +120,8 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
                 tar = tarfile.open(output_filename, 'w:gz')
             task_name = os.path.basename(target_dir)
             file_name = os.path.basename(target_file[0])
-            tar.add(target_file[0], arcname='{}_{}'.format(task_name, file_name))
+            tar.add(target_file[0], arcname='{}_{}'.format(
+                task_name, file_name))
         file_utils.touch(os.path.join(target_dir, 'COMPLETE_PLOT'))
     if tar:
         tar.close()

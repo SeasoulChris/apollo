@@ -17,7 +17,7 @@ from modules.data.fuel.fueling.profiling.proto.control_profiling_data_pb2 import
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-import fueling.profiling.common.json_utils as json_utils
+import fueling.common.json_utils as json_utils
 
 
 def generate_segments(h5s):
