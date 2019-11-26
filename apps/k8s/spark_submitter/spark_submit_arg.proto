@@ -11,6 +11,19 @@ message SparkSubmitArg {
   optional Partner partner = 5;
 }
 
+// Will be stored in MongoDB.
+message JobRecord {
+  optional string id = 1;
+  optional SparkSubmitArg arg = 2;
+  enum Status {
+    SUBMITTED = 0;
+    ALIVE = 1;  // Means we can see it in "kubectl get pods".
+    DELETED = 2;
+  }
+  optional Status status = 3;
+  optional string alive_status = 4;  // Result of "kubectl get pods <driver>".
+}
+
 message User {
   // 1. We will check if the submitter has the permission to run as the role.
   // 2. Then we will check if the role has the permission to run the job.

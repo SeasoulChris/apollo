@@ -24,7 +24,7 @@ except:
 
 
 # User.
-flags.DEFINE_string('running_role', None, 'Running as another role instead of the job submitter.')
+flags.DEFINE_string('running_role', 'apollo', 'Running as another role instead of the job submitter.')
 
 # Env.
 flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
@@ -61,7 +61,7 @@ flags.DEFINE_string('partner_azure_blob_container', None, 'Partner Azure blob co
 def get_user():
     return {
         'submitter': getpass.getuser(),
-        'running_role': flags.FLAGS.running_role or getpass.getuser(),
+        'running_role': flags.FLAGS.running_role,
     }
 
 

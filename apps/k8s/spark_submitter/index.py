@@ -22,7 +22,7 @@ import google.protobuf.json_format as json_format
 from fueling.common.mongo_utils import Mongo
 import fueling.common.proto_utils as proto_utils
 
-from spark_submit_arg_pb2 import SparkSubmitArg, Env
+from spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
@@ -99,12 +99,8 @@ class SparkSubmitJob(flask_restful.Resource):
 
         # Update job database.
         if not flags.FLAGS.debug:
-            # See apps/warehouse/proto/spark_job.proto
-            spark_job = {
-                'id': job_id,
-                'arg': proto_utils.pb_to_dict(arg),
-            }
-            Mongo().job_collection().insert_one(spark_job)
+            job_record = JobRecord(id=job_id, arg=arg)
+            Mongo().job_collection().insert_one(proto_utils.pb_to_dict(job_record))
 
         # Partner storage.
         if arg.partner.storage_writable:
@@ -169,7 +165,7 @@ class SparkSubmitJob(flask_restful.Resource):
         cmd = (f'{site_package}/pyspark/bin/spark-submit --deploy-mode cluster '
                f'--master {K8S_MASTER} --name {job_name} {confs} '
                f'"{entrypoint}" --running_mode=PROD {arg.job.flags} '
-               f'--job_owner="{submitter}"')
+               f'--job_owner="{submitter}" --job_id="{job_id}"')
         # Execute command.
         logging.debug('SHELL > {}'.format(cmd))
         os.system(cmd)

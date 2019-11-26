@@ -124,6 +124,12 @@ def record_hdl(record_path):
     return flask.render_template('record.html', record=record)
 
 
+@app.route('/jobs')
+def jobs_hdl():
+    # Call K8S API.
+    return flask.render_template('jobs.html')
+
+
 @app.route('/bos-ask', methods=['POST'])
 def bos_ask():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'bos-ask')
