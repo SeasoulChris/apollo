@@ -27,7 +27,7 @@ class BaseObjectStorageClient(object):
         if suffix:
             files = [path for path in files if path.endswith(suffix)]
         if to_abs_path:
-            files = map(self.abs_path, files)
+            files = list(map(self.abs_path, files))
         return files
 
     def list_end_dirs(self, prefix, to_abs_path=True):
