@@ -8,7 +8,7 @@ import boto3
 import botocore.client
 import botocore.exceptions
 
-from fueling.common.storage.base_object_storage_client import BaseObjectStorageClient
+from fueling.common.storage.base_storage import BaseStorage
 import fueling.common.logging as logging
 
 
@@ -17,18 +17,18 @@ BOS_MOUNT_PATH = '/mnt/bos'
 PARTNER_BOS_MOUNT_PATH = '/mnt/partner'
 
 
-class BosClient(BaseObjectStorageClient):
+class BosClient(BaseStorage):
     """A Baidu BOS client."""
 
     def __init__(self, is_partner=False):
         if is_partner:
-            BaseObjectStorageClient.__init__(self, PARTNER_BOS_MOUNT_PATH)
+            BaseStorage.__init__(self, PARTNER_BOS_MOUNT_PATH)
             self.region = os.environ.get('PARTNER_BOS_REGION')
             self.bucket = os.environ.get('PARTNER_BOS_BUCKET')
             self.access_key = os.environ.get('PARTNER_BOS_ACCESS')
             self.secret_key = os.environ.get('PARTNER_BOS_SECRET')
         else:
-            BaseObjectStorageClient.__init__(self, BOS_MOUNT_PATH)
+            BaseStorage.__init__(self, BOS_MOUNT_PATH)
             self.region = os.environ.get('BOS_REGION')
             self.bucket = os.environ.get('BOS_BUCKET')
             self.access_key = os.environ.get('BOS_ACCESS')

@@ -30,7 +30,7 @@ class Yolov3Inference(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        object_storage = self.partner_object_storage() or BosClient()
+        object_storage = self.partner_storage() or BosClient()
         input_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
         output_data_path = os.path.join(input_data_path, cfg.inference_path)
         self.run(input_data_path, output_data_path)

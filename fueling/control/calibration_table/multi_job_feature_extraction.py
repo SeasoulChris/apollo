@@ -148,7 +148,7 @@ class MultiJobFeatureExtraction(BasePipeline):
         logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
-        object_storage = self.partner_object_storage() or our_bos
+        object_storage = self.partner_storage() or our_bos
         origin_dir = object_storage.abs_path(origin_prefix)
 
         logging.info("origin_dir: %s" % origin_dir)

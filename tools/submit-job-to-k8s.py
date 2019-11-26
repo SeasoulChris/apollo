@@ -24,11 +24,12 @@ except:
 
 
 # User.
-flags.DEFINE_string('running_role', 'apollo', 'Running as another role instead of the job submitter.')
+flags.DEFINE_string('role', 'apollo', 'Running as another role instead of the job submitter.')
 
 # Env.
-flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.')
-flags.DEFINE_string('env', 'fuel-py36', 'Conda env name.')
+flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.',
+                    short_name='i')
+flags.DEFINE_string('env', 'fuel-py36', 'Conda env name.', short_name='e')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
@@ -40,10 +41,10 @@ flags.DEFINE_string('flags', None, 'Job flags.')
 flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 
 # Worker.
-flags.DEFINE_integer('workers', 1, 'Worker count.')
-flags.DEFINE_integer('cpu', 1, 'Worker CPU cores.')
-flags.DEFINE_integer('memory', 12, 'Worker memory in GB.')
-flags.DEFINE_integer('disk', 20, 'Worker disk in GB.')
+flags.DEFINE_integer('workers', 1, 'Worker count.', short_name='w')
+flags.DEFINE_integer('cpu', 1, 'Worker CPU cores.', short_name='c')
+flags.DEFINE_integer('memory', 12, 'Worker memory in GB.', short_name='m')
+flags.DEFINE_integer('disk', 20, 'Worker disk in GB.', short_name='d')
 
 # Partner.
 flags.DEFINE_boolean('partner_storage_writable', False, 'Mount partner storage as writable.')
@@ -61,7 +62,7 @@ flags.DEFINE_string('partner_azure_blob_container', None, 'Partner Azure blob co
 def get_user():
     return {
         'submitter': getpass.getuser(),
-        'running_role': flags.FLAGS.running_role,
+        'running_role': flags.FLAGS.role,
     }
 
 

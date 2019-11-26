@@ -188,7 +188,7 @@ class Yolov3Evaluate(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        object_storage = self.partner_object_storage() or BosClient()
+        object_storage = self.partner_storage() or BosClient()
         ground_truth_path = object_storage.abs_path(self.FLAGS.get('input_training_data_path'))
         inference_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
         inference_data_path = os.path.join(inference_data_path, cfg.inference_path) 

@@ -48,13 +48,13 @@ class BasePipeline(object):
         return bos_client.BosClient()
 
     @staticmethod
-    def has_partner():
-        """Test if we have partner bos."""
+    def is_partner_job():
+        """Test if it's partner's job."""
         return os.environ.get('PARTNER_BOS_REGION') or os.environ.get('AZURE_STORAGE_ACCOUNT')
 
     @staticmethod
-    def partner_object_storage():
-        """Get partner's object storage client."""
+    def partner_storage():
+        """Get partner's storage instance."""
         if os.environ.get('PARTNER_BOS_REGION'):
             is_partner = True
             return bos_client.BosClient(is_partner)

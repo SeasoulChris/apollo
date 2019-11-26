@@ -35,7 +35,7 @@ class Yolov3Training(BasePipeline):
         """Run prod."""
         input_data_path = self.FLAGS.get('input_training_data_path')
         output_model_path = self.FLAGS.get('output_trained_model_path')
-        object_storage = self.partner_object_storage() or BosClient()
+        object_storage = self.partner_storage() or BosClient()
         self.run([object_storage.abs_path(input_data_path)],
                  object_storage.abs_path(output_model_path))
 

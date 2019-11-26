@@ -4,7 +4,7 @@
 import os
 
 
-class BaseObjectStorageClient(object):
+class BaseStorage(object):
     """An object storage client."""
 
     def __init__(self, mnt_path):
@@ -13,6 +13,14 @@ class BaseObjectStorageClient(object):
     def abs_path(self, key):
         """Return absolute mounting path of the given key."""
         return os.path.join(self.mnt_path, key)
+
+    def path_to_key(self, path):
+        """Remove mnt_path it is abs_path."""
+        if path.startswith(self.mnt_path):
+            path = path[len(self.mnt_path):]
+        if path.startswith('/'):
+            path = path[1:]
+        return path
 
     def list_keys(self, prefix):
         """Get a list of keys with given prefix."""
@@ -38,5 +46,5 @@ class BaseObjectStorageClient(object):
         files = self.list_keys(prefix)
         dirs = set(map(os.path.dirname, files))
         if to_abs_path:
-            return list(map(self.abs_path, dirs))
+            dirs = map(self.abs_path, dirs)
         return list(dirs)

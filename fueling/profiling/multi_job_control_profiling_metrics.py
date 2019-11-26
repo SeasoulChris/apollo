@@ -63,8 +63,7 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info(conf_target_prefix)
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
-        logging.info('generated_vehicle_dir: %s' %
-                     generated_vehicle_dir.collect())
+        logging.info('generated_vehicle_dir: %s' % generated_vehicle_dir.collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
         src_dst_rdd = origin_vehicle_dir.join(
@@ -88,10 +87,8 @@ class ControlProfilingMetrics(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         # Use year as the job_id if data from apollo-plarform, to avoid
         # processing same data repeatedly
-        job_id = self.FLAGS.get('job_id') if self.has_partner(
-        ) else self.FLAGS.get('job_id')[:4]
-        target_prefix = os.path.join(
-            dir_utils.inter_result_folder, job_owner, job_id)
+        job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
+        target_prefix = os.path.join(dir_utils.inter_result_folder, job_owner, job_id)
 
         bucket_apollo_platform = BosClient()
         target_dir = bucket_apollo_platform.abs_path(target_prefix)
@@ -171,7 +168,7 @@ class ControlProfilingMetrics(BasePipeline):
 
         logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
 
-        if not self.has_partner():
+        if not self.is_partner_job():
             # RDD(origin_dir)
             target_vehicle_dir = spark_helper.cache_and_log(
                 'target_dir_vehicle_dir',

@@ -54,7 +54,7 @@ class LocalMapPipeline(BasePipeline):
         dst_prefix = os.path.join(dir_prefix, 'result')
 
         bos_client = BosClient()
-        object_storage = self.partner_object_storage() or bos_client
+        object_storage = self.partner_storage() or bos_client
         source_dir = object_storage.abs_path(src_prefix)
         logging.info('source_dir path is {}'.format(source_dir))
 
