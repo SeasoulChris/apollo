@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 import glob
 import os
 
 from absl import flags
-from datetime import datetime
 from PIL import Image
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
@@ -29,14 +29,13 @@ def match_label_to_result(dataset_result_dir):
     result txt file with the same name. Also append a
     unique id number to each match file pairs.
     """
-    logging.info('currrent dataset_result_dir: {}'.format(dataset_result_dir))
+    logging.info(f'currrent dataset_result_dir: {dataset_result_dir}')
 
     dataset_dir, result_dir = dataset_result_dir
     result_dir = os.path.join(result_dir, 'label')
     label_dir = os.path.join(dataset_dir, 'label_all')
 
-    logging.info('result dir: {}'.format(result_dir))
-    logging.info('label dir: {}'.format(label_dir))
+    logging.info(f'result dir: {result_dir}, label dir: {label_dir}')
 
     match_list = []
     for uid, txt_name in enumerate(os.listdir(label_dir)):
@@ -65,7 +64,7 @@ def compile_images(label_result_uid_list):
             image_name = txt_name + ".png"
             width, height = Image.open(os.path.join(image_dir_path, image_name)).size
         else:
-            raise Exception("Image {} does not exists.".format(txt_name))
+            raise Exception(f'Image {txt_name} does not exists.')
 
         image_info = {}
         image_info["coco_url"] = None
@@ -198,7 +197,7 @@ class Yolov3Evaluate(BasePipeline):
         """Save metrics file to cloud"""
         def _dump_stats(folder, stats):
             filename = os.path.join(folder,
-                '{}-metrics.txt'.format(datetime.today().strftime('%Y-%m-%d-%H-%M-%S')))
+                                    f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
             with open(filename, 'w') as f:
                 print('\n'.join(stats), file=f)
 

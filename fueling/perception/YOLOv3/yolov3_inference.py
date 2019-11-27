@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import os
 import glob
-import numpy as np
+import os
+
 from absl import flags
+import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
@@ -44,11 +45,10 @@ class Yolov3Inference(BasePipeline):
                 logging.warn('no images found in this set for inference')
                 return
 
-            logging.info('current image set size: {}'.format(len(image_paths)))
+            logging.info(f'current image set size: {len(image_paths)}')
 
             restore_path = os.path.join(trained_model_path, cfg.restore_path)
-            logging.info('infer output path {} restore path is {}'
-                         .format(infer_output_path, restore_path))
+            logging.info(f'infer output {infer_output_path}, restore path {restore_path}')
 
             engine = Inference(restore_path)
             engine.setup_network()
@@ -65,12 +65,12 @@ class Yolov3Inference(BasePipeline):
                 data = data_pool.batch
                 engine.run(data, infer_output_path)
 
-        logging.info('input inference data path: {}'.format(input_dir))
-        logging.info('output inference data path: {}'.format(output_dir))
+        logging.info(f'input inference data path: {input_dir}')
+        logging.info(f'output inference data path: {output_dir}')
 
-        file_utils.makedirs(os.path.join(output_dir, "label"))
-        file_utils.makedirs(os.path.join(output_dir, "images"))
-        file_utils.makedirs(os.path.join(output_dir, "images_gt"))
+        file_utils.makedirs(os.path.join(output_dir, 'label'))
+        file_utils.makedirs(os.path.join(output_dir, 'images'))
+        file_utils.makedirs(os.path.join(output_dir, 'images_gt'))
 
         test_list_path = os.path.join(output_dir, cfg.test_list)
         image_paths_set = BasePipeline.SPARK_CONTEXT.pickleFile(test_list_path)

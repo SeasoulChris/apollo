@@ -3,10 +3,10 @@
 import os
 import shutil
 
+from absl import flags
 import glob
 import numpy as np
 
-from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
@@ -48,7 +48,7 @@ class Yolov3Training(BasePipeline):
                 logging.warn('no images found in this set')
                 return
 
-            logging.info('current image set size: {}'.format(len(image_paths)))
+            logging.info(f'current image set size: {len(image_paths)}')
 
             restore_path = os.path.join(output_trained_model_path, cfg.restore_path)
             file_utils.makedirs(restore_path)
@@ -66,11 +66,11 @@ class Yolov3Training(BasePipeline):
                 shutil.copyfile(os.path.join(restore_path, latest_model_file),
                                 os.path.join(output_trained_model_path, latest_model_file))
             logging.info(
-                'moved {latest_model_file} from {restore_path} to {output_trained_model_path}')
+                f'moved {latest_model_file} from {restore_path} to {output_trained_model_path}')
 
         file_utils.makedirs(output_dir)
-        logging.info('input training data path: {}'.format(datasets))
-        logging.info('output trained model path: {}'.format(output_dir))
+        logging.info(f'input training data path: {datasets}')
+        logging.info(f'output trained model path: {output_dir}')
 
         infer_outpath = os.path.join(output_dir, cfg.inference_path)
         test_list_path = os.path.join(infer_outpath, cfg.test_list)
