@@ -13,6 +13,7 @@ from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import Spar
 
 from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJob
 from vehicle_calibration import VehicleCalibration
+from control_profiling import ControlProfilingMetrics
 
 
 class JobProcessor(object):
@@ -39,8 +40,11 @@ class JobProcessor(object):
         # Dispatch job.
         if self.job_arg.job.job_type == SaasJob.VEHICLE_CALIBRATION:
             VehicleCalibration().submit(self.job_arg, spark_submit_arg)
-            return (HTTPStatus.ACCEPTED, 'Your job is in process now! You will receive a '
-                    'notification in your corresponding email when it is finished.')
+        elif self.job_arg.job.job_type == SaasJob.CONTROL_PROFILING:
+            ControlProfilingMetrics().submit(self.job_arg, spark_submit_arg)
+        return (HTTPStatus.ACCEPTED, 'Your job is in process now! You will receive a '
+                'notification in your corresponding email when it is finished.')
+
 
     def populate_storage_config(self, spark_submit_arg):
         """Populate spark_submit_arg from saas_job_arg and stored partner_account."""

@@ -21,6 +21,7 @@ message SaasJob {
     UNKNOWN = 0;
     VEHICLE_CALIBRATION = 1;
     SIMPLE_HDMAP = 2;
+    CONTROL_PROFILING = 3;
   }
   optional JobType job_type = 1;
 
