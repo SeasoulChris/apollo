@@ -1,26 +1,66 @@
 # How to use storage and database
 
-## Baidu BOS for internal and external data
+## File Storage
 
-## Azure Blob for external data
+We have multiple file storage utils available in
+[fueling/common/storage](https://github.com/ApolloAuto/apollo-fuel/tree/master/fueling/common/storage),
+all of which are an sub-class of
+[BaseStorage](https://github.com/ApolloAuto/apollo-fuel/blob/master/fueling/common/storage/base_storage.py).
+So please read it first to get familiar with the APIs you can use in pipeline.
 
-## MongoDB for internal data indexing
+### Local Filesystem [for Test Purpose]
+
+When you run job at local, `BasePipeline.our_stroage()` will return a local filesystem whose root is
+`/apollo/modules/data/fuel`. So you can get files with code like:
+
+```python
+BasePipeline.our_stroage().list_files('testdata/control')
+```
+
+### Our Baidu BOS
+
+When you run job in cloud, `BasePipeline.our_stroage()` will return a BOS client whose root is
+`/mnt/bos`. It's the same with that in your daily Apollo dev container.
+
+The `/mnt/bos/modules/<module_name>` sub-paths are writable, so feel free to save your intermediate
+results somewhere reasonable.
+
+### Partner's Baidu BOS or Azure Blob
+
+If the job is from partner, they will provide their credentials to us. With
+`BasePipeline.partner_stroage()` you'll get either a BOS or a Blob instance whose root is
+`/mnt/partner`. Note that it might NOT be writable! And actually we don't recommend to write
+to partner's storage directly.
+
+For intermediate results, always write to `our_storage()` to avoid unnecessary safety and leaking
+issue. And leverage the `self.FLAGS["job_owner"]` and `self.FLAGS["job_id"]` information to make
+your pipeline parallelism friendly.
 
 ## Redis for distributed metrics collection
 
-Metrics are used for recording and monitoring various of intereted points of data pipeline jobs, for example how many tasks have been processed, how much resource has been used and etc.  We use Redis to make sure the metrics recording is consistent and persistent in the distributed system.
+Metrics are used for recording and monitoring various of intereted points of data pipeline jobs, for
+example how many tasks have been processed, how much resource has been used and etc.  We use Redis
+to make sure the metrics recording is consistent and persistent in the distributed system.
 
 ### Metrics Collection
 
-The collection of metrics means checking, inserting or updating keys to Redis database.  We are now supporting the following APIs:
-* redis_set(redis_key, redis_value): insert a key to Redis if it does not exist, otherwise update its value
+The collection of metrics means checking, inserting or updating keys to Redis database.  We are now
+supporting the following APIs:
+* redis_set(redis_key, redis_value): insert a key to Redis if it does not exist, otherwise update
+  its value
 * redis_get(redis_key): get value by using key
 * redis_incr(redis_key, amount=1): increase the key's value by certain mount
-* redis_extend(redis_key, values): create a key with list type of value if it does not exist, otherwise extend its value
-* redis_range(redis_key, left=0, right=-1): get list type of value by using key with given range, by default it returns the whole list
-* get_redis_instance(): return a raw Redis client instance that can directly execute standard [Redis operations](https://redis-py.readthedocs.io/en/latest/)
+* redis_extend(redis_key, values): create a key with list type of value if it does not exist,
+  otherwise extend its value
+* redis_range(redis_key, left=0, right=-1): get list type of value by using key with given range, by
+  default it returns the whole list
+* get_redis_instance(): return a raw Redis client instance that can directly execute standard
+  [Redis operations](https://redis-py.readthedocs.io/en/latest/)
 
-All these APIs have encapsulated retrying and error handling mechanism, except for "get_redis_instance()".  By default the failure of APIs execution will *not* throw execptions but just log the error messages.  But for "get_redis_instance()" you have to handle errors or timeouts by your own if necessary. 
+All these APIs have encapsulated retrying and error handling mechanism, except for
+"get_redis_instance()".  By default the failure of APIs execution will *not* throw execptions but
+just log the error messages.  But for "get_redis_instance()" you have to handle errors or timeouts
+by your own if necessary. 
 
 Usage example: 
 
@@ -35,6 +75,8 @@ print(redis_utils.get('abc.123.xxx'))
 
 ### Metrics Dashboard
 
-You can view the metrics by going to [Dashboard](http://usa-data.baidu.com), and clicking the "Metrics" navigate button.  Currently it shows all the keys in the system by default.
+You can view the metrics by going to [Dashboard](http://usa-data.baidu.com), and clicking the
+"Metrics" navigate button.  Currently it shows all the keys in the system by default.
 
-You can narrow down the scope by using the "Prefix..." form, which will then retrieve only the keys with specified prefix.
+You can narrow down the scope by using the "Prefix..." form, which will then retrieve only the keys
+with specified prefix.
