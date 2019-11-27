@@ -65,8 +65,8 @@ class Yolov3Training(BasePipeline):
             if latest_model_file:
                 shutil.copyfile(os.path.join(restore_path, latest_model_file),
                                 os.path.join(output_trained_model_path, latest_model_file))
-            logging.info('moved model {} from {} to {}'.format(latest_model_file,
-                                                               restore_path, output_trained_model_path))
+            logging.info(
+                'moved {latest_model_file} from {restore_path} to {output_trained_model_path}')
 
         file_utils.makedirs(output_dir)
         logging.info('input training data path: {}'.format(datasets))

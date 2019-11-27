@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from tensorflow.python.client import device_lib
 import io
 import math
 import os
@@ -8,6 +7,7 @@ import sys
 import time
 
 from PIL import Image
+from tensorflow.python.client import device_lib
 from tensorflow.python.ops import control_flow_ops
 import json
 import numpy as np

@@ -197,8 +197,8 @@ class Yolov3Evaluate(BasePipeline):
     def run(self, datasets):
         """Save metrics file to cloud"""
         def _dump_stats(folder, stats):
-            filename = '{}/{}-metrics.txt'.format(folder,
-                                                  datetime.today().strftime('%Y-%m-%d-%H-%M-%S'))
+            filename = os.path.join(folder,
+                '{}-metrics.txt'.format(datetime.today().strftime('%Y-%m-%d-%H-%M-%S')))
             with open(filename, 'w') as f:
                 print('\n'.join(stats), file=f)
 

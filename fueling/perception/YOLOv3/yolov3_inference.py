@@ -57,8 +57,7 @@ class Yolov3Inference(BasePipeline):
             else:
                 data_pool = Dataset(image_paths)
 
-            logging.info('dataset size {} with config batch size {}'
-                         .format(data_pool.dataset_size, cfg.batch_size))
+            logging.info(f'dataset size {data_pool.dataset_size}, batch size {cfg.batch_size}')
 
             rounds = 0 if data_pool.dataset_size == 0 else max(
                 1, (data_pool.dataset_size + 1) // cfg.batch_size)
