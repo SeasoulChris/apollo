@@ -54,3 +54,60 @@ The dictionary data structure included in the **...control_data_statistics.json*
 For example,
 
 `{"station_reference": {"mean": -0.138802, "standard deviation": 0.400271}, ... }`
+
+
+## Data Upload
+
+## Prerequest
+
+To use this platform, you must have a partner account with us.Please contact our BD team to set it up.
+
+This is **essential** before you can get enjoy control profiling or other Apollo Fuel based cloud service.
+
+## Folder Structure Requirement
+
+Before uploading your data, take a note of:
+1. The folder structure to be maintained is:
+   ![](../control/images/file_system1.png)
+
+1. As seen above, the file structure to be maintained is
+   ```
+   Origin Folder -> Vehicle Folder -> Records + Configuration files
+   ```
+1. A vehicle folder needs to be created for your vehicle. The name of the folder
+   should be the same as seen in Dreamview
+1. Inside your folder, create a **Records** folder to hold the data
+1. Store all the **Configuration files** along with the Records folder, within
+   the **Vehicle** folder
+
+## Upload
+
+Use [bosfs](https://cloud.baidu.com/doc/BOS/BOSCLI/8.5CBOS.20FS.html) to mount
+your bucket to local, for example,
+
+```
+BUCKET=<bucket>
+AK=<access key>
+SK=<secret key>
+MOUNT=/mnt/bos
+REGION=bj
+# It's required to provide correct BOS region. Please read the document
+# https://cloud.baidu.com/doc/BOS/S3.html#.E6.9C.8D.E5.8A.A1.E5.9F.9F.E5.90.8D
+
+mkdir -p ${MOUNT}
+bosfs ${BUCKET} ${MOUNT} -o allow_other,logfile=/tmp/bos-${BUCKET}.log,endpoint=http://su.${REGION}.bcebos.com,ak=${AK},sk=${SK}
+```
+
+Then you can copy the prepared data folder to somewhere under /mnt/bos.
+
+## Download
+
+No download needed, the results will be sent to your email associated with your BOS bucket.
+
+## Result Visualization
+You can view the control profiling metrics by going to [Dashboard](http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/metrics).
+
+
+This is the resukt of `control.profiling.Mkz7 Concord.Lon_Lat_Controller.station_err_peak`:
+
+![](images/control_profiling_result.png)
