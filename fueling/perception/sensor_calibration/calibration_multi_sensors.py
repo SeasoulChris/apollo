@@ -3,6 +3,7 @@
 
 from datetime import datetime
 import os
+import shutil
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
@@ -69,12 +70,23 @@ class SensorCalibrationPipeline(BasePipeline):
     def run_prod(self):
         """Run Prod. production version"""
         self.run(self.FLAGS.get('input_data_path'))
+        # TODO: Send result.
 
-    def run(self, root_dir):
-        storage = self.partner_storage() or self.our_storage()
-        root_dir = storage.abs_path(root_dir)
-        original_paths = self._get_subdirs(root_dir)
-        """Run the pipeline with given parameters"""
+    def run(self, job_dir):
+        storage = self.our_storage()
+        # If it's a partner job, move origin data to our storage before processing.
+        if self.is_partner_job():
+            old_job_dir = self.partner_storage().abs_path(job_dir)
+            # TODO: Quick check on partner data.
+
+            job_dir = storage.abs_path(os.path.join('modules/perception/sensor_calibration',
+                                                    self.FLAGS['job_owner'], self.FLAGS['job_id']))
+            shutil.copytree(old_job_dir, job_dir)
+        else:
+            job_dir = storage.abs_path(job_dir)
+
+        original_paths = self._get_subdirs(job_dir)
+        # Run the pipeline with given parameters.
         self.to_rdd(original_paths).foreach(execute_task)
         logging.info("Sensor Calibration on data {}: All Done".format(original_paths))
 
