@@ -65,16 +65,15 @@ class SensorCalibrationPipeline(BasePipeline):
         """local mini test"""
         # root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/camera_to_lidar'
         # self.run(root_dir)
-        root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration'
-        self.run(root_dir)
+        self.run('testdata/perception/sensor_calibration')
 
     def run_prod(self):
         """Run Prod. production version"""
-        bos_mnt_dir = bos_client.BOS_MOUNT_PATH
-        root_dir = os.path.join(root_dir, 'sensor_calibration/data')
-        self.run(root_dir)
+        self.run(self.FLAGS.get('input_data_path'))
 
     def run(self, root_dir):
+        storage = self.partner_storage() or self.our_storage()
+        root_dir = storage.abs_path(root_dir)
         original_paths = self._get_subdirs(root_dir)
         """Run the pipeline with given parameters"""
         self.to_rdd(original_paths).foreach(execute_task)
@@ -82,13 +81,4 @@ class SensorCalibrationPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    # original_path =  '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/lidar_to_gnss'
-    # task_name = 'lidar_to_gnss'
-    # source_config_file = os.path.join(original_path, 'sample_config.yaml')
-
-    # dest_config_file = os.path.join(original_path, task_name+'_calibration_config.yaml')
-    # calib_config = CalibrationConfig(task_name=task_name)
-    # calib_config.generate_task_config_yaml(source_config_file=source_config_file,
-    #                                         dest_config_file=dest_config_file,
-    #                                         root_path=original_path)
     SensorCalibrationPipeline().main()

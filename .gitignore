@@ -1,3 +1,10 @@
+testdata/perception/sensor_calibration/camera_to_lidar1/camera_to_lidar_calibration_config.yaml
+testdata/perception/sensor_calibration/camera_to_lidar1/results/
+testdata/perception/sensor_calibration/lidar_to_gnss1/lidar_to_gnss_calibration_config.yaml
+testdata/perception/sensor_calibration/lidar_to_gnss1/results/
+testdata/perception/sensor_calibration/lidar_to_gnss2/lidar_to_gnss_calibration_config.yaml
+testdata/perception/sensor_calibration/lidar_to_gnss2/results/
+
 apollo/
 py_proto/
 kube.config
