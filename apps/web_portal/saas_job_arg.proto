@@ -22,6 +22,7 @@ message SaasJob {
     VEHICLE_CALIBRATION = 1;
     SIMPLE_HDMAP = 2;
     CONTROL_PROFILING = 3;
+    SENSOR_CALIBRATION = 4;
   }
   optional JobType job_type = 1;
 

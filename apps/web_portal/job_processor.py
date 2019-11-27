@@ -10,10 +10,11 @@ from absl import logging
 
 from fueling.common.partners import partners
 from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
-
 from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJob
-from vehicle_calibration import VehicleCalibration
+
 from control_profiling import ControlProfilingMetrics
+from sensor_calibration import SensorCalibration
+from vehicle_calibration import VehicleCalibration
 
 
 class JobProcessor(object):
@@ -22,6 +23,12 @@ class JobProcessor(object):
     # Blob charsets.
     BLOB_ACCOUNT_CHARSET = set(string.ascii_lowercase + string.digits)
     BLOB_ACCESS_CHARSET = set(string.ascii_letters + string.digits + '+=/')  # Base64 encoding.
+
+    JOB_PROCESSORS = {
+        SaasJob.CONTROL_PROFILING: ControlProfilingMetrics,
+        SaasJob.SENSOR_CALIBRATION: SensorCalibration,
+        SaasJob.VEHICLE_CALIBRATION: VehicleCalibration,
+    }
 
     def __init__(self, job_arg):
         self.job_arg = job_arg
@@ -38,10 +45,10 @@ class JobProcessor(object):
             return HTTPStatus.BAD_REQUEST, 'job_arg format error!'
         spark_submit_arg.user.submitter = self.job_arg.partner.id
         # Dispatch job.
-        if self.job_arg.job.job_type == SaasJob.VEHICLE_CALIBRATION:
-            VehicleCalibration().submit(self.job_arg, spark_submit_arg)
-        elif self.job_arg.job.job_type == SaasJob.CONTROL_PROFILING:
-            ControlProfilingMetrics().submit(self.job_arg, spark_submit_arg)
+        processor = self.JOB_PROCESSORS.get(self.job_arg.job.job_type)
+        if processor is None:
+            return HTTPStatus.BAD_REQUEST, 'Unsupported job type.'
+        processor().submit(self.job_arg, spark_submit_arg)
         return (HTTPStatus.ACCEPTED, 'Your job is in process now! You will receive a '
                 'notification in your corresponding email when it is finished.')
 
