@@ -14,12 +14,13 @@ import fueling.common.storage.bos_client as bos_client
 
 def execute_task(message_meta):
     """example task executing"""
-    source_dir = message_meta
+    source_dir, output_dir = message_meta
     # from input config file, generating final fuel-using config file
     in_config_file = os.path.join(source_dir, 'sample_config.yaml')
     calib_config = CalibrationConfig()
+
     config_file = calib_config.generate_task_config_yaml(root_path=source_dir,
-                                                         source_config_file=in_config_file)
+                    output_path=output_dir, source_config_file=in_config_file)
     task_name = calib_config.get_task_name()
     """Execute task by task"""
     logging.info('type of {} is {}'.format(task_name, type(task_name)))
@@ -60,8 +61,8 @@ class SensorCalibrationPipeline(BasePipeline):
     def _get_subdirs(self, d):
         """list add 1st-level task data directories under the root directory
         ignore hidden folders"""
-        return list(filter(os.path.isdir,
-                           [os.path.join(d, f) for f in os.listdir(d) if not f.startswith('.')]))
+        return [f for f in os.listdir(d) if not f.startswith('.') and
+                os.path.isdir(os.path.join(d, f))]
 
     def run_test(self):
         """local mini test"""
@@ -73,22 +74,26 @@ class SensorCalibrationPipeline(BasePipeline):
         # TODO: Send result.
 
     def run(self, job_dir):
-        storage = self.our_storage()
         # If it's a partner job, move origin data to our storage before processing.
         if self.is_partner_job():
-            old_job_dir = self.partner_storage().abs_path(job_dir)
+            job_dir = self.partner_storage().abs_path(job_dir)
+            job_output_dir = self.our_storage().abs_path(
+                    os.path.join('modules/perception/sensor_calibration',
+                    self.FLAGS['job_owner'], self.FLAGS['job_id']))
+            file_utils.makedirs(job_output_dir)
             # TODO: Quick check on partner data.
 
-            job_dir = storage.abs_path(os.path.join('modules/perception/sensor_calibration',
-                                                    self.FLAGS['job_owner'], self.FLAGS['job_id']))
-            shutil.copytree(old_job_dir, job_dir)
         else:
-            job_dir = storage.abs_path(job_dir)
+            job_dir = self.our_storage().abs_path(job_dir)
+            job_output_dir = job_dir
 
-        original_paths = self._get_subdirs(job_dir)
+        subjobs = self._get_subdirs(job_dir)
+        message_meta =[(os.path.join(job_dir, j), os.path.join(job_output_dir, j))
+                    for j in subjobs]
+
         # Run the pipeline with given parameters.
-        self.to_rdd(original_paths).foreach(execute_task)
-        logging.info("Sensor Calibration on data {}: All Done".format(original_paths))
+        self.to_rdd(message_meta).foreach(execute_task)
+        logging.info("Sensor Calibration on data {}: All Done".format(job_dir))
 
 
 if __name__ == '__main__':

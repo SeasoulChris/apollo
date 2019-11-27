@@ -106,7 +106,7 @@ class CalibrationConfig(object):
                     'are: {}'.format(self._supported_tasks)))
         return self._task_name
 
-    def generate_task_config_yaml(self, root_path, source_config_file):
+    def generate_task_config_yaml(self, root_path, output_path, source_config_file):
         try:
             with open(source_config_file, 'r') as f:
                 data = yaml.safe_load(f)
@@ -115,10 +115,10 @@ class CalibrationConfig(object):
             return None
 
         self._task_name = data['calibration_task']
-        dest_config_file = os.path.join(root_path, self._task_name + '_calibration_config.yaml')
+        dest_config_file = os.path.join(output_path, self._task_name + '_calibration_config.yaml')
         logging.info('convert: ' + source_config_file + ' to: ' + dest_config_file)
 
-        result_path = os.path.join(root_path, 'results')
+        result_path = os.path.join(output_path, 'results')
         file_utils.makedirs(result_path)
 
         if not self._task_name in self._supported_tasks:
