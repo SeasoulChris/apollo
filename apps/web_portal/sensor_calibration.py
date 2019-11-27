@@ -9,7 +9,7 @@ class SensorCalibration(BaseJob):
         """Submit job."""
         spark_submit_arg.job.entrypoint = \
             'fueling/perception/sensor_calibration/calibration_multi_sensors.py'
-        spark_submit_arg.job.flags += f' --input_data_path={job_arg.job.input_data_path}'
+        spark_submit_arg.job.flags += f' --input_data_path={job_arg.flags.get("input_data_path")}'
         spark_submit_arg.worker.count = 2
         spark_submit_arg.worker.cpu = 1
         spark_submit_arg.worker.memory = 24

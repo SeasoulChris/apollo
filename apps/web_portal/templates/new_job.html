@@ -79,7 +79,7 @@
           <div class="invalid-feedback">Input Data Path is required for this job.</div>
         </div>
 
-        {% if job_type == 'SIMPLE_HDMAP' %}
+        {% if job_type == "SIMPLE_HDMAP" or job_type == "PERCEPTION_MODEL_TRAINING" %}
         <div class="col-md-6 mb-3">
           <label for="output_data_path">Output Data Path</label>
           <input type="text" class="form-control" id="output_data_path" placeholder="" required>
@@ -88,6 +88,22 @@
         {% endif %}
       </div>
 
+      {% if job_type == "SIMPLE_HDMAP" %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="zone_id">Zone ID</label>
+          <input type="text" class="form-control" id="zone_id" placeholder="" required>
+          <div class="invalid-feedback">Zone is required for this job.</div>
+        </div>
+  
+        <div class="col-md-6 mb-3">
+          <label for="lidar_type">Lidar Type</label>
+          <input type="text" class="form-control" id="lidar_type" placeholder="" required>
+          <div class="invalid-feedback">Lidar type is required for this job.</div>
+        </div>
+      </div>
+      {% endif %}
+  
       <hr class="mb-4">
       <button class="btn btn-primary btn-lg btn-block" type="submit">Submit Job</button>
     </form>
@@ -103,37 +119,40 @@
   jQuery(document).ready(function($) {
     'use strict'
 
-    window.addEventListener('load', function () {
-      // Fetch all the forms we want to apply custom Bootstrap validation styles to
-      var forms = document.getElementsByClassName('needs-validation')
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.getElementsByClassName('needs-validation');
 
-      // Loop over them and prevent submission
-      Array.prototype.filter.call(forms, function (form) {
-        form.addEventListener('submit', function (event) {
-          event.preventDefault();
-          if (form.checkValidity() === false) {
-            event.stopPropagation();
-          } else {
-            submitForm();
-          }
-          form.classList.add('was-validated');
-        }, false)
-      })
-    }, false);
+    // Loop over them and prevent submission
+    Array.prototype.filter.call(forms, function (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (form.checkValidity() === false) {
+          event.stopPropagation();
+        } else {
+          submitForm();
+        }
+        form.classList.add('was-validated');
+      }, false)
+    });
 
     function submitForm() {
       // Construct a dict following SaasJobArg.
       var job_arg = {
+        "job_type": job_type,
         "partner": {
           "id": $("#partner_id").val(),
         },
-        "job": {
-          "job_type": job_type,
+        "flags": {
           "input_data_path": $("#input_data_path").val(),
         },
       };
       if (job_type === 'SIMPLE_HDMAP') {
-        job_arg["job"]["output_data_path"] = $("#output_data_path").val();
+        job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
+        job_arg["flags"]["zone_id"] = $("#zone_id").val();
+        job_arg["flags"]["lidar_type"] = $("#lidar_type").val();
+      }
+      if (job_type === 'PERCEPTION_MODEL_TRAINING') {
+        job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
       }
       if ($("#bos").is(':checked')) {
         job_arg["partner"]["bos"] = {
