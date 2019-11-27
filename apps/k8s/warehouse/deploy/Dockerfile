@@ -19,7 +19,8 @@ RUN pip3 install --no-cache-dir \
         redis
 
 COPY apps/k8s/warehouse /home/warehouse
-COPY fueling /home/warehouse/fueling
+COPY fueling/common /home/warehouse/fueling/common
+RUN touch /home/warehouse/fueling/__init__.py
 COPY py_proto /home/warehouse/
 
 WORKDIR /home/warehouse

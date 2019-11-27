@@ -6,6 +6,8 @@
 
 {% block body %}
 
-<div align="center">{{ data | plot_metrics }}</div>
+<div align="center">
+  {% autoescape false %} {{ data | plot_metrics }} {% endautoescape %}
+</div>
 
 {% endblock %}
