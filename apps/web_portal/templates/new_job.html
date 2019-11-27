@@ -176,7 +176,7 @@
           window.location = "{{ url_for('index') }}";
         },
         error: function (response) {
-          alert(response.responseText);
+          alert(response.statusText);
         },
       });
     }

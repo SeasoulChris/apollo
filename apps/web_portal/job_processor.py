@@ -25,6 +25,8 @@ class JobProcessor(object):
     # Blob charsets.
     BLOB_ACCOUNT_CHARSET = set(string.ascii_lowercase + string.digits)
     BLOB_ACCESS_CHARSET = set(string.ascii_letters + string.digits + '+=/')  # Base64 encoding.
+    # Flag value charsets.
+    DISALLOWED_FLAG_VALUE_CHARSET = set('&|;\n\r')
 
     JOB_PROCESSORS = {
         SaasJobArg.CONTROL_PROFILING:         ControlProfilingMetrics,
@@ -39,6 +41,11 @@ class JobProcessor(object):
         self.partner_account = partners.get(job_arg.partner.id)
 
     def process(self):
+        # Check flag values.
+        for flag_value in self.job_arg.flags.values():
+            if set(flag_value).intersection(self.DISALLOWED_FLAG_VALUE_CHARSET):
+                return HTTPStatus.BAD_REQUEST, 'Please check your input.'
+
         # User authentication.
         if self.partner_account is None:
             msg = 'Sorry, you are not authorized to access this service!'
