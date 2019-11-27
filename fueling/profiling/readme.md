@@ -60,7 +60,7 @@ For example,
 
 ## Prerequest
 
-To use this platform, you must have a partner account with us.Please contact our BD team to set it up.
+To use this platform, you must have a partner account with us.Please contact our BD team(idg-apollo@baidu.com) to set it up.
 
 This is **essential** before you can get enjoy control profiling or other Apollo Fuel based cloud service.
 
@@ -68,15 +68,15 @@ This is **essential** before you can get enjoy control profiling or other Apollo
 
 Before uploading your data, take a note of:
 1. The folder structure to be maintained is:
-   ![](../control/images/file_system1.png)
+   ![](images/folder_struc.png)
 
 1. As seen above, the file structure to be maintained is
    ```
    Origin Folder -> Vehicle Folder -> Records + Configuration files
    ```
 1. A vehicle folder needs to be created for your vehicle. The name of the folder
-   should be the same as seen in Dreamview
-1. Inside your folder, create a **Records** folder to hold the data
+   should be the same as seen in Dreamview(ignore case)
+1. Inside your folder, create folders to hold the data
 1. Store all the **Configuration files** along with the Records folder, within
    the **Vehicle** folder
 
