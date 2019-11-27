@@ -24,22 +24,21 @@ class StatAutoMileage(BasePipeline):
 
     def run_test(self):
         """Run test."""
-
-        # RDD(record)
-        records = self.to_rdd(glob.glob(
-            '/apollo/modules/data/fuel/testdata/control/control_profiling/Road_Test/*record*'))
-        self.run(records)
+        self.run('testdata/control')
 
     def run_prod(self):
         """Run prod."""
-        # RDD(record)
-        records = (
-            self.to_rdd(self.bos().list_files('small-records/2018/2018-04-03/2018-04-03-09-33-50'))
-            .filter(record_utils.is_record_file))
-        self.run(records)
+        self.run('small-records/2018/2018-04-03/2018-04-03-09-33-50')
 
-    def run(self, records):
-        mileage = records.map(self.calculate).sum()
+    def run(self, prefix):
+        mileage = (
+            # RDD(file_path)
+            self.to_rdd(self.our_storage().list_files(prefix))
+            # RDD(file_path), which is a record
+            .filter(record_utils.is_record_file)
+            # RDD(auto_mileage)
+            .map(self.calculate)
+            .sum())
         logging.info('Calculated auto mileage is: {}'.format(mileage))
 
     def calculate(self, record):

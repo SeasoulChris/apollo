@@ -74,15 +74,16 @@ class DynamicModelEvaluation(BasePipeline):
                                              'dynamic_model_output/h5_model/lstm/forward')
         data_predix = os.path.join(platform_path, 'hdf5_evaluation', VEHICLE_ID, evaluation_set)
 
-        bos = self.bos()
+        storage = self.our_storage()
         # PairRDD('mlp', folder_path)
-        mlp_model_rdd = self.to_rdd(bos.list_end_dirs(mlp_model_prefix)).keyBy(lambda _: 'mlp')
+        mlp_model_rdd = self.to_rdd(storage.list_end_dirs(mlp_model_prefix)).keyBy(lambda _: 'mlp')
         # PairRDD('lstm', folder_path)
-        lstm_model_rdd = self.to_rdd(bos.list_end_dirs(lstm_model_prefix)).keyBy(lambda _: 'lstm')
+        lstm_model_rdd = self.to_rdd(
+            storage.list_end_dirs(lstm_model_prefix)).keyBy(lambda _: 'lstm')
 
         evaluation_dataset_rdd = (
             # RDD(file_path) for evaluation dataset
-            self.to_rdd(bos.list_files(data_predix, '.hdf5'))
+            self.to_rdd(storage.list_files(data_predix, '.hdf5'))
             # PairRDD(driving_scenario, file_path) for evaluation dataset
             .keyBy(extract_scenario_name))
 

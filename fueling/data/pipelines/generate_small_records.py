@@ -84,10 +84,10 @@ class GenerateSmallRecords(BasePipeline):
         src_prefix = 'public-test/2019/'
         dst_prefix = 'modules/data/public-test-small/2019/'
 
-        bos = self.bos()
+        storage = self.our_storage()
         # RDD(src_file)
-        src_files = self.to_rdd(bos.list_files(src_prefix)).cache()
-        dst_files = self.to_rdd(bos.list_files(dst_prefix)).cache()
+        src_files = self.to_rdd(storage.list_files(src_prefix)).cache()
+        dst_files = self.to_rdd(storage.list_files(dst_prefix)).cache()
         # Only process those COMPLETE folders.
 
         def is_marker(path): return path.endswith(MARKER)

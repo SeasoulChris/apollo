@@ -29,7 +29,7 @@ class DataForTuningLabelsCombine(BasePipeline):
         origin_prefix = 'modules/prediction/tuning'
 
         # RDD(datatuning_file)
-        datatuning_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
+        datatuning_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*datatuning.*.bin']))
 
         self.run(datatuning_file_rdd)

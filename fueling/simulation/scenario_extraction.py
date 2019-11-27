@@ -106,7 +106,7 @@ class ScenarioExtractionPipeline(BasePipeline):
 
         # RDD(tasks)
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,
-                                    lambda path: self.to_rdd(self.bos().list_files(path)))
+                                    lambda path: self.to_rdd(self.our_storage().list_files(path)))
         logging.info('todo tasks: {}'.format(todo_tasks.collect()))
 
         self.run(todo_tasks, original_prefix, target_prefix)

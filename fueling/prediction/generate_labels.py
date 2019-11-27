@@ -27,11 +27,11 @@ class GenerateLabels(BasePipeline):
 
         # RDD(bin_files)
         bin_files = (
-            self.to_rdd(self.bos().list_files(source_prefix)).filter(
+            self.to_rdd(self.our_storage().list_files(source_prefix)).filter(
                 spark_op.filter_path(['*feature.*.bin'])))
         labeled_bin_files = (
             # RDD(label_files)
-            self.to_rdd(self.bos().list_files(source_prefix, '.bin.future_status.npy'))
+            self.to_rdd(self.our_storage().list_files(source_prefix, '.bin.future_status.npy'))
             # RDD(bin_files)
             .map(lambda label_file: label_file.replace('.bin.future_status.npy', '.bin')))
         # RDD(todo_bin_files)

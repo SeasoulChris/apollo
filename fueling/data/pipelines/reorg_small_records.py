@@ -44,11 +44,11 @@ class ReorgSmallRecords(BasePipeline):
         src_prefix = 'modules/data/public-test-small/2019/'
         dst_prefix = 'small-records/2019/'
 
-        bos = self.bos()
+        storage = self.our_storage()
         # RDD(src_file)
-        src_files = self.to_rdd(bos.list_files(src_prefix)).cache()
+        src_files = self.to_rdd(storage.list_files(src_prefix)).cache()
         # RDD(dst_file)
-        dst_files = self.to_rdd(bos.list_files(dst_prefix)).cache()
+        dst_files = self.to_rdd(storage.list_files(dst_prefix)).cache()
 
         def is_complete_marker(path): return path.endswith(MARKER)
         # RDD(src_dir)

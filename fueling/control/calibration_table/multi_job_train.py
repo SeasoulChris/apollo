@@ -42,7 +42,7 @@ class MultiJobTrain(BasePipeline):
             .mapValues(lambda feature_dir: os.path.join(feature_dir,
                                                         throttle_or_brake, train_or_test))
             # PairRDD(vehicle, all files in throttle/brake train/test folder)
-            .flatMapValues(lambda path: self.bos().list_files(path, '.hdf5'))
+            .flatMapValues(lambda path: self.our_storage().list_files(path, '.hdf5'))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files)
             .map(lambda vehicle_h5: ((vehicle_h5[0], throttle_or_brake), vehicle_h5[1]))
             # PairRDD((vehicle, 'throttle or brake'), hdf5 files RDD)

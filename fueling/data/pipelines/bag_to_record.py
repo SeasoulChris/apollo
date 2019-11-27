@@ -38,13 +38,13 @@ class BagToRecord(BasePipeline):
         src_prefix = 'stale-rosbags/2019/'
         dst_prefix = 'small-records/2019/'
 
-        bos = self.bos()
+        storage = self.our_storage()
         # PairRDD(src_dir, src_bag)
         marked_dir_to_bag = spark_op.filter_keys(
             # PairRDD(src_dir, src_bag)
-            self.to_rdd(bos.list_files(src_prefix, '.bag')).keyBy(os.path.dirname),
+            self.to_rdd(storage.list_files(src_prefix, '.bag')).keyBy(os.path.dirname),
             # RDD(src_dir), which has a MARKER.
-            self.to_rdd(bos.list_files(src_prefix, MARKER)).map(os.path.dirname))
+            self.to_rdd(storage.list_files(src_prefix, MARKER)).map(os.path.dirname))
 
         # PairRDD(dst_record, src_bag)
         record_to_bag = (
@@ -59,7 +59,7 @@ class BagToRecord(BasePipeline):
 
         # PairRDD(dst_record, src_bag)
         record_to_bag = spark_op.substract_keys(
-            record_to_bag, self.to_rdd(bos.list_files(dst_prefix, '.record'))
+            record_to_bag, self.to_rdd(storage.list_files(dst_prefix, '.record'))
         ).filter(spark_op.filter_key(record_utils.filter_last_n_days_records(PROCESS_LAST_N_DAYS)))
 
         self.run(record_to_bag.map(spark_op.swap_kv))

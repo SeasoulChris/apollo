@@ -9,8 +9,9 @@ from absl import app
 from absl import flags
 from pyspark import SparkConf, SparkContext
 
+from fueling.common.storage.bos_client import BosClient
+from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
-import fueling.common.storage.bos_client as bos_client
 
 
 flags.DEFINE_string('running_mode', None, 'Pipeline running mode: TEST, PROD or GRPC.')
@@ -42,10 +43,9 @@ class BasePipeline(object):
         """Get an RDD of data."""
         return BasePipeline.SPARK_CONTEXT.parallelize(data)
 
-    # TODO(xiaoxq): Retire later.
-    def bos(self):
-        """Get a BOS client."""
-        return bos_client.BosClient()
+    def our_storage(self):
+        """Get a BOS client if in PROD mode, or local filesystem if in TEST mode."""
+        return Filesystem() if self.FLAGS.get('running_mode') == 'TEST' else BosClient()
 
     @staticmethod
     def is_partner_job():
@@ -57,7 +57,7 @@ class BasePipeline(object):
         """Get partner's storage instance."""
         if os.environ.get('PARTNER_BOS_REGION'):
             is_partner = True
-            return bos_client.BosClient(is_partner)
+            return BosClient(is_partner)
         elif os.environ.get('AZURE_STORAGE_ACCOUNT'):
             import fueling.common.storage.blob_client as blob_client
             return blob_client.BlobClient()

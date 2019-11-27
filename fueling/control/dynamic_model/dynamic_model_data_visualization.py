@@ -55,7 +55,7 @@ class DynamicModelDatasetDistribution(BasePipeline):
         result_file = os.path.join(output_dir, file_name)
         logging.info('Result File: %s', result_file)
 
-        hdf5_file_list = self.to_rdd(self.bos().list_files(prefix, '.hdf5'))
+        hdf5_file_list = self.to_rdd(self.our_storage().list_files(prefix, '.hdf5'))
         self.run(hdf5_file_list, result_file)
 
     def run(self, hdf5_file_list, result_file):

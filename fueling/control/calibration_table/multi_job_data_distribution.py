@@ -158,7 +158,7 @@ class MultiJobDataDistribution(BasePipeline):
                          multi_vehicle_plot_utils.plot_feature_hist(vehicle_feature, target_dir)))
 
     def list_end_files_prod(self, path):
-        return self.bos().list_files(path, '.hdf5')
+        return self.our_storage().list_files(path, '.hdf5')
 
 
 if __name__ == '__main__':

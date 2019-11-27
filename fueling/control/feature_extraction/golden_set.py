@@ -112,7 +112,7 @@ class GoldenSet(BasePipeline):
         todo_records = spark_helper.cache_and_log(
             'todo_records',
             # RDD(record_file)
-            self.to_rdd(self.bos().list_files(origin_prefix, '.recover'))
+            self.to_rdd(self.our_storage().list_files(origin_prefix, '.recover'))
             # PairRDD(dir, record_file)
             .keyBy(os.path.dirname))
 

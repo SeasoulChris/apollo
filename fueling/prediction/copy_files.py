@@ -27,7 +27,7 @@ class CopyFiles(BasePipeline):
 
         files_rdd = (
             # RDD(file), start with origin_prefix
-            self.to_rdd(self.bos().list_files(origin_prefix))
+            self.to_rdd(self.our_storage().list_files(origin_prefix))
             # RDD(file), which is unique
             .distinct()
             .cache())

@@ -45,7 +45,7 @@ class PerformanceEvaluator(BasePipeline):
                 """Run prod."""
                 origin_prefix = os.path.join('modules/prediction/results', region)
                 # RDD(file) result files with the pattern prediction_result.*.bin
-                result_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
+                result_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
                     spark_op.filter_path(['*prediction_result.*.bin']))
                 metrics = self.run(result_file_rdd, time_range)
                 saved_filename = 'metrics_{}_{}.npy'.format(time_range, region)

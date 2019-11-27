@@ -27,7 +27,7 @@ class DataForLearning(BasePipeline):
 
         records_dir = (
             # RDD(file), start with origin_prefix
-            self.to_rdd(self.bos().list_files(origin_prefix))
+            self.to_rdd(self.our_storage().list_files(origin_prefix))
             # RDD(record_file)
             .filter(record_utils.is_record_file)
             # RDD(record_dir), with record_file inside

@@ -27,7 +27,7 @@ class MergeLabels(BasePipeline):
 
         npy_dirs = (
             # RDD(npy_files)
-            self.to_rdd(self.bos().list_files(source_prefix, '.npy'))
+            self.to_rdd(self.our_storage().list_files(source_prefix, '.npy'))
             # RDD(target_dir), in absolute path
             .map(os.path.dirname)
             # RDD(target_dir), in absolute path and unique
@@ -35,7 +35,7 @@ class MergeLabels(BasePipeline):
 
         merged_dirs = (
             # RDD(merged_label_files)
-            self.to_rdd(self.bos().list_files(source_prefix, '/future_status.npy'))
+            self.to_rdd(self.our_storage().list_files(source_prefix, '/future_status.npy'))
             # RDD(target_dir), in absolute path
             .map(os.path.dirname)
             # RDD(target_dir), in absolute path and unique

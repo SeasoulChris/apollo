@@ -95,7 +95,7 @@ class FeatureExtraction(BasePipeline):
             # RDD(relative_path_to_vehicle_type)
             task
             # RDD(files)
-            .flatMap(self.bos().list_files)
+            .flatMap(self.our_storage().list_files)
             # RDD(folders)
             .map(os.path.dirname)
             # RDD(distinct folders)

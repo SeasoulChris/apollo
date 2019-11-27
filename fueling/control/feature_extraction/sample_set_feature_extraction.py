@@ -50,7 +50,7 @@ class SampleSetFeatureExtraction(BasePipeline):
         # todo_task_dirs = spark_helper.cache_and_log(
         #     'todo_jobs',
         #     # RDD(relative_path_to_vehicle_type)
-        #     self.to_rdd([self.bos().list_files(origin_prefix)])
+        #     self.to_rdd([self.our_storage().list_files(origin_prefix)])
         #     # RDD('COMPLETE'_files)
         #     .filter(lambda path: path.endswith('COMPLETE'))
         #     # RDD(absolute_path_to_'COMPLETE')

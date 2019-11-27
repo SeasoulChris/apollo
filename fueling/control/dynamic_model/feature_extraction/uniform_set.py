@@ -109,7 +109,7 @@ class UniformSet(BasePipeline):
         hdf5_files = spark_helper.cache_and_log(
             'hdf5_files',
             origin_vehicle_dir
-            .flatMapValues(lambda path: self.bos().list_files(path, '.hdf5')))
+            .flatMapValues(lambda path: self.our_storage().list_files(path, '.hdf5')))
 
         self.run(hdf5_files, origin_vehicle_dir, target_dir)
 

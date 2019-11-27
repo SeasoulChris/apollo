@@ -24,7 +24,7 @@ class FeaturesAndLabelsCombine(BasePipeline):
         origin_prefix = 'modules/prediction/features-san-mateo'
 
         # RDD(datalearn_file)
-        datalearn_file_rdd = self.to_rdd(self.bos().list_files(origin_prefix)).filter(
+        datalearn_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*datalearn.*.bin']))
 
         self.run(datalearn_file_rdd)

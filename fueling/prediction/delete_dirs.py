@@ -24,7 +24,7 @@ class DeleteDirs(BasePipeline):
         target_prefix = 'modules/prediction/ground_truth/'
         files = (
             # RDD(file), start with target_prefix
-            self.to_rdd(self.bos().list_files(target_prefix))
+            self.to_rdd(self.our_storage().list_files(target_prefix))
             # remove everyfile
             .foreach(os.remove))
 

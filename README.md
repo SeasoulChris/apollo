@@ -87,7 +87,7 @@ practices are:
 1. For Apollo data access, we use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya)
    to mount Apollo's BOS storage at `/mnt/bos`, which can be used as a POSIX
    file system. But if you want to list many files under a folder, a better way
-   is to call [`a_BasePipeline_instance.bos().list_files(...)`](fueling/common/bos_client.py#L74)
+   is to call [`a_BasePipeline_instance.our_storage().list_files(...)`](fueling/common/bos_client.py#L74)
    which leverages [boto3](https://cloud.baidu.com/doc/BOS/s/ojwvyq973#aws-sdk-for-python)
    to do efficient S3-style queries. Please read these documents carefully,
    which will improve your pipeline a lot.

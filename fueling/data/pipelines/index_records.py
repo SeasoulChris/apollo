@@ -44,10 +44,9 @@ class IndexRecords(BasePipeline):
             'public-test/2019/',
             'small-records/2019/',
         ]
-        bos = self.bos()
         # RDD(record_path)
         records_rdd = BasePipeline.SPARK_CONTEXT.union([
-            self.to_rdd(bos.list_files(prefix)).filter(record_utils.is_record_file)
+            self.to_rdd(self.our_storage().list_files(prefix)).filter(record_utils.is_record_file)
             for prefix in prefixes])
 
         # RDD(record_path), which is like /mnt/bos/small-records/2019/2019-09-09/...

@@ -22,7 +22,7 @@ class MatchImgLabel(BasePipeline):
         """Run prod."""
         source_prefix = 'modules/prediction/junction_img/'
         # RDD(png_img)
-        png_img_rdd = self.to_rdd(self.bos().list_files(source_prefix, '.png'))
+        png_img_rdd = self.to_rdd(self.our_storage().list_files(source_prefix, '.png'))
         self.run(png_img_rdd)
 
     def run(self, png_img_rdd):
