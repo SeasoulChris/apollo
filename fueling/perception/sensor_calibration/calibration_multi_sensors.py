@@ -5,10 +5,11 @@ from datetime import datetime
 import os
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.storage.bos_client as bos_client
-from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
+
 
 def execute_task(message_meta):
     """example task executing"""
@@ -16,9 +17,8 @@ def execute_task(message_meta):
     # from input config file, generating final fuel-using config file
     in_config_file = os.path.join(source_dir, 'sample_config.yaml')
     calib_config = CalibrationConfig()
-    config_file = calib_config.generate_task_config_yaml(
-                    root_path=source_dir,
-                    source_config_file=in_config_file)
+    config_file = calib_config.generate_task_config_yaml(root_path=source_dir,
+                                                         source_config_file=in_config_file)
     task_name = calib_config.get_task_name()
     """Execute task by task"""
     logging.info('type of {} is {}'.format(task_name, type(task_name)))
@@ -26,14 +26,14 @@ def execute_task(message_meta):
     # Invoke benchmark binary
     logging.info('start to execute sensor calbiration service')
 
-    executable_dir =  os.path.join(os.path.dirname(__file__), 'executable_bin')
+    executable_dir = os.path.join(os.path.dirname(__file__), 'executable_bin')
     if task_name == 'lidar_to_gnss':
         executable_bin = os.path.join(executable_dir, 'multi_lidar_to_gnss',
-                                    'multi_lidar_gnss_calibrator')
+                                      'multi_lidar_gnss_calibrator')
         # Add lib path
         new_lib = os.path.join(executable_dir, 'multi_lidar_to_gnss')
-        if  not new_lib in os.environ['LD_LIBRARY_PATH']:
-            os.environ['LD_LIBRARY_PATH'] = new_lib+':'+ os.environ['LD_LIBRARY_PATH']
+        if new_lib not in os.environ['LD_LIBRARY_PATH']:
+            os.environ['LD_LIBRARY_PATH'] = new_lib + ':' + os.environ['LD_LIBRARY_PATH']
         os.system("echo $LD_LIBRARY_PATH")
     elif task_name == 'camera_to_lidar':
         logging.info('executable not ready, stay for tune')
@@ -55,16 +55,15 @@ def execute_task(message_meta):
 
 class SensorCalibrationPipeline(BasePipeline):
     """Apply sensor calbiration to smartly extracted sensor frames"""
+
     def _get_subdirs(self, d):
         """list add 1st-level task data directories under the root directory
         ignore hidden folders"""
         return list(filter(os.path.isdir,
-            [os.path.join(d,f) for f in os.listdir(d) if not f.startswith('.')]))
+                           [os.path.join(d, f) for f in os.listdir(d) if not f.startswith('.')]))
 
     def run_test(self):
         """local mini test"""
-        # root_dir = '/apollo/modules/data/fuel/testdata/perception/sensor_calibration/camera_to_lidar'
-        # self.run(root_dir)
         self.run('testdata/perception/sensor_calibration')
 
     def run_prod(self):
