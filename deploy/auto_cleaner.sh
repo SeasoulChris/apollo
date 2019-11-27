@@ -8,6 +8,7 @@ set -e
 DRIVERS=$(kubectl get pods | grep '\-driver')
 COMPLETED_DRIVERS=$(echo "${DRIVERS}" | grep Completed | awk '{print $1}')
 ERROR_DRIVERS=$(echo "${DRIVERS}" | grep Error | awk '{print $1}')
+UnexpectedAdmissionError_DRIVERS=$(echo "${DRIVERS}" | grep UnexpectedAdmissionError | awk '{print $1}')
 
 function DeletePod() {
   CUT_TIME=$1
@@ -27,5 +28,6 @@ function DeletePod() {
   done
 }
 
+DeletePod '1 hour ago' ${UnexpectedAdmissionError_DRIVERS}
 DeletePod '12 hours ago' ${COMPLETED_DRIVERS}
 DeletePod '24 hours ago' $(echo ${ERROR_DRIVERS} | grep -v prediction-app-performance-evaluation)
