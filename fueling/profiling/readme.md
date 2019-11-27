@@ -68,7 +68,7 @@ This is **essential** before you can get enjoy control profiling or other Apollo
 
 Before uploading your data, take a note of:
 1. The folder structure to be maintained is:
-   ![](images/folder_struc.png)
+   ![](images/folder_struct.png)
 
 1. As seen above, the file structure to be maintained is
    ```
