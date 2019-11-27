@@ -96,7 +96,7 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
-        object_storage = self.partner_object_storage() or bucket_apollo_platform
+        object_storage = self.partner_storage() or bucket_apollo_platform
         origin_dir = object_storage.abs_path(original_prefix)
 
         # origin_dir: /mnt/bos/modules/control/profiling/multi_job
