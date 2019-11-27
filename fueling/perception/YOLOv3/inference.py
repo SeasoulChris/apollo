@@ -83,7 +83,7 @@ class Inference:
 
         # TODO(longtao): figure why restore need a file name but not checkpoint folder
         restore_file_path = data_utils.get_restore_file_path(self.inference_restore_path,
-            cfg.model_name_prefix)
+                                                             cfg.model_name_prefix)
         if restore_file_path:
             restore_saver.restore(sess, restore_file_path)
             logging.info("Inference Restored weights from {}.".format(restore_file_path))

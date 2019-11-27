@@ -48,7 +48,7 @@ class Yolov3Inference(BasePipeline):
 
             restore_path = os.path.join(trained_model_path, cfg.restore_path)
             logging.info('infer output path {} restore path is {}'
-                        .format(infer_output_path, restore_path))
+                         .format(infer_output_path, restore_path))
 
             engine = Inference(restore_path)
             engine.setup_network()
@@ -56,11 +56,13 @@ class Yolov3Inference(BasePipeline):
                 data_pool = DatasetOnlyImage(image_paths)
             else:
                 data_pool = Dataset(image_paths)
-            
+
             logging.info('dataset size {} with config batch size {}'
-                        .format(data_pool.dataset_size, cfg.batch_size))
-            
-            for _ in range((data_pool.dataset_size + 1) // cfg.batch_size):
+                         .format(data_pool.dataset_size, cfg.batch_size))
+
+            rounds = 0 if data_pool.dataset_size == 0 else max(
+                1, (data_pool.dataset_size + 1) // cfg.batch_size)
+            for _ in range(rounds):
                 data = data_pool.batch
                 engine.run(data, infer_output_path)
 

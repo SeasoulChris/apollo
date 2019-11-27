@@ -191,15 +191,14 @@ class Yolov3Evaluate(BasePipeline):
         object_storage = self.partner_storage() or BosClient()
         ground_truth_path = object_storage.abs_path(self.FLAGS.get('input_training_data_path'))
         inference_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
-        inference_data_path = os.path.join(inference_data_path, cfg.inference_path) 
+        inference_data_path = os.path.join(inference_data_path, cfg.inference_path)
         self.run([(ground_truth_path, inference_data_path)])
 
     def run(self, datasets):
-
-
         """Save metrics file to cloud"""
         def _dump_stats(folder, stats):
-            filename = '{}/{}-metrics.txt'.format(folder, datetime.today().strftime('%Y-%m-%d-%H-%M-%S'))
+            filename = '{}/{}-metrics.txt'.format(folder,
+                                                  datetime.today().strftime('%Y-%m-%d-%H-%M-%S'))
             with open(filename, 'w') as f:
                 print('\n'.join(stats), file=f)
 

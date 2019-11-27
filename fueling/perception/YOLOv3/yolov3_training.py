@@ -59,7 +59,6 @@ class Yolov3Training(BasePipeline):
             for _ in range(cfg.max_iter):
                 data_batch = data_pool.batch
                 engine.step(data_batch)
-            
 
             # After training is done, copy the single model file over to user specified folder
             latest_model_file = data_utils.get_latest_model(restore_path, cfg.model_name_prefix)
@@ -67,8 +66,7 @@ class Yolov3Training(BasePipeline):
                 shutil.copyfile(os.path.join(restore_path, latest_model_file),
                                 os.path.join(output_trained_model_path, latest_model_file))
             logging.info('moved model {} from {} to {}'.format(latest_model_file,
-                restore_path, output_trained_model_path))
-
+                                                               restore_path, output_trained_model_path))
 
         file_utils.makedirs(output_dir)
         logging.info('input training data path: {}'.format(datasets))

@@ -124,11 +124,12 @@ def get_latest_model(model_folder_path, model_name_prefix):
     """Get the path of latest model from given folder"""
     latest_idx, latest_model = 0, None
     for file_name in os.listdir(model_folder_path):
-        se = re.search(r'^{}-(\d+)\.data-[\S]*'.format(model_name_prefix), file_name, re.M|re.I)
+        se = re.search(r'^{}-(\d+)\.data-[\S]*'.format(model_name_prefix), file_name, re.M | re.I)
         if se and int(se.group(1)) > latest_idx:
             latest_idx = int(se.group(1))
             latest_model = file_name
     return latest_model
+
 
 def get_restore_file_path(model_folder_path, model_name_prefix):
     """Get restore path_filename_prefix that satifies the TF restore method"""
@@ -136,4 +137,3 @@ def get_restore_file_path(model_folder_path, model_name_prefix):
     if latest_model_file:
         return os.path.join(model_folder_path, latest_model_file.split('.')[0])
     return None
-

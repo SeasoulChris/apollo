@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from tensorflow.python.client import device_lib
 import io
 import math
 import os
@@ -59,8 +60,6 @@ MODEL_NAME_PREFIX = cfg.model_name_prefix
 
 slim = tf.contrib.slim
 
-
-from tensorflow.python.client import device_lib
 
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
@@ -183,7 +182,7 @@ class training:
 
         # TODO(longtao): figure why restore need a file name but not checkpoint folder
         restore_file_path = data_utils.get_restore_file_path(self.model_restore_path,
-            cfg.model_name_prefix)
+                                                             cfg.model_name_prefix)
         if restore_file_path:
             restore_saver.restore(sess, restore_file_path)
             logging.info("Restored weights from {}.".format(restore_file_path))
