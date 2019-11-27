@@ -10,7 +10,7 @@ So please read it first to get familiar with the APIs you can use in pipeline.
 
 ### Local Filesystem [for Test Purpose]
 
-When you run job at local, `self.our_stroage()` will return a local filesystem whose root is
+When you run job at local, `self.our_storage()` will return a local filesystem whose root is
 `/apollo/modules/data/fuel`. So you can get files with code like:
 
 ```python
@@ -19,7 +19,7 @@ self.our_stroage().list_files('testdata/control')
 
 ### Our Baidu BOS
 
-When you run job in cloud, `self.our_stroage()` will return a BOS client whose root is `/mnt/bos`.
+When you run job in cloud, `self.our_storage()` will return a BOS client whose root is `/mnt/bos`.
 It's the same with that in your daily Apollo dev container.
 
 The `/mnt/bos/modules/<module_name>` sub-paths are writable, so feel free to save your intermediate
