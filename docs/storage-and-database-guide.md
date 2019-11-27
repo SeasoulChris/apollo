@@ -14,7 +14,7 @@ When you run job at local, `self.our_storage()` will return a local filesystem w
 `/apollo/modules/data/fuel`. So you can get files with code like:
 
 ```python
-self.our_stroage().list_files('testdata/control')
+self.our_storage().list_files('testdata/control')
 ```
 
 ### Our Baidu BOS
@@ -27,7 +27,7 @@ results somewhere reasonable.
 
 ### Partner's Baidu BOS or Azure Blob
 
-If the job is from partner, they will provide their credentials to us. With `self.partner_stroage()`
+If the job is from partner, they will provide their credentials to us. With `self.partner_storage()`
 you'll get either a BOS or a Blob instance whose root is `/mnt/partner`. Note that it might NOT be
 writable! And actually we don't recommend to write to partner's storage directly.
 
