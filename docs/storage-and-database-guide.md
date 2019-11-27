@@ -10,27 +10,26 @@ So please read it first to get familiar with the APIs you can use in pipeline.
 
 ### Local Filesystem [for Test Purpose]
 
-When you run job at local, `BasePipeline.our_stroage()` will return a local filesystem whose root is
+When you run job at local, `self.our_stroage()` will return a local filesystem whose root is
 `/apollo/modules/data/fuel`. So you can get files with code like:
 
 ```python
-BasePipeline.our_stroage().list_files('testdata/control')
+self.our_stroage().list_files('testdata/control')
 ```
 
 ### Our Baidu BOS
 
-When you run job in cloud, `BasePipeline.our_stroage()` will return a BOS client whose root is
-`/mnt/bos`. It's the same with that in your daily Apollo dev container.
+When you run job in cloud, `self.our_stroage()` will return a BOS client whose root is `/mnt/bos`.
+It's the same with that in your daily Apollo dev container.
 
 The `/mnt/bos/modules/<module_name>` sub-paths are writable, so feel free to save your intermediate
 results somewhere reasonable.
 
 ### Partner's Baidu BOS or Azure Blob
 
-If the job is from partner, they will provide their credentials to us. With
-`BasePipeline.partner_stroage()` you'll get either a BOS or a Blob instance whose root is
-`/mnt/partner`. Note that it might NOT be writable! And actually we don't recommend to write
-to partner's storage directly.
+If the job is from partner, they will provide their credentials to us. With `self.partner_stroage()`
+you'll get either a BOS or a Blob instance whose root is `/mnt/partner`. Note that it might NOT be
+writable! And actually we don't recommend to write to partner's storage directly.
 
 For intermediate results, always write to `our_storage()` to avoid unnecessary safety and leaking
 issue. And leverage the `self.FLAGS["job_owner"]` and `self.FLAGS["job_id"]` information to make
