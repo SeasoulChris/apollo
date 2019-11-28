@@ -20,8 +20,7 @@ def compute_h5_and_gradings(target_groups):
     logging.info(
         'computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
-    vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(
-        target)
+    vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(target)
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
                                                                profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
