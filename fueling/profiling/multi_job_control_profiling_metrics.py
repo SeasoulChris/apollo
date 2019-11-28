@@ -121,7 +121,7 @@ class ControlProfilingMetrics(BasePipeline):
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
-        # [('Mkz7', '/mnt/bos/modules/control/profiling/multi_job/Mkz7'), ...]
+        # [('Mkz7', 'modules/control/profiling/multi_job/Mkz7'), ...]
         logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
         # Copy vehicle parameter config file
@@ -130,7 +130,7 @@ class ControlProfilingMetrics(BasePipeline):
         generated_vehicle_dir = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_dir, conf_target_prefix, 1))
         # generated_vehicle_dir:
-        # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
+        # [('Mkz7', 'modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
         logging.info(
             'generated_vehicle_dir: %s' %
             generated_vehicle_dir.collect())
@@ -187,7 +187,7 @@ class ControlProfilingMetrics(BasePipeline):
                 target_vehicle_dir.collect())
 
             """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs path target"""
-            def _reorg_target_dir(target_task):
+            def _reorg_rdd_by_vehicle(target_task):
                 # parameter vehicle_controller_parsed like
                 # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
                 vehicle_controller_parsed, task = target_task
@@ -202,7 +202,7 @@ class ControlProfilingMetrics(BasePipeline):
                 # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
                 .map(feature_utils.parse_vehicle_controller)
                 # PairRDD(vehicle_type, task_dir)
-                .map(_reorg_target_dir)
+                .map(_reorg_rdd_by_vehicle)
                 # PairRDD(vehicle_type, task_dir)
                 .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
                 # PairRDD(vehicle_type, task_dir)
