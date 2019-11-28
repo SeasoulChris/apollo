@@ -120,7 +120,7 @@ class ControlProfilingMetrics(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
+            .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
         # [('Mkz7', '/mnt/bos/modules/control/profiling/multi_job/Mkz7'), ...]
         logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
@@ -178,7 +178,9 @@ class ControlProfilingMetrics(BasePipeline):
                 # PairRDD(vehicle_type, [vehicle_type])
                 .keyBy(lambda vehicle_type: vehicle_type)
                 # PairRDD(vehicle_type, path_to_vehicle_type)
-                .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
+                .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type))
+                .flatMapValues(object_storage.list_files)
+                .mapValues(os.path.dirname))
 
             logging.info(
                 'target_vehicle_dir: %s' %
@@ -196,6 +198,7 @@ class ControlProfilingMetrics(BasePipeline):
             processed_dirs = spark_helper.cache_and_log(
                 'processed_dirs',
                 target_vehicle_dir
+                .values()
                 # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
                 .map(feature_utils.parse_vehicle_controller)
                 # PairRDD(vehicle_type, task_dir)
@@ -206,10 +209,11 @@ class ControlProfilingMetrics(BasePipeline):
                 .mapValues(os.path.dirname))
 
             todo_tasks = todo_task_dirs.subtract(processed_dirs)
+            todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
 
-        logging.info('todo_tasks to run %s' % todo_tasks.collect())
+        logging.info('todo_tasks to run %s' % todo_task_dirs.collect())
 
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run(todo_task_dirs, original_prefix, target_prefix)
         logging.info('Control Profiling: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
