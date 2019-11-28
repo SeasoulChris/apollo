@@ -120,7 +120,7 @@ class ControlProfilingMetrics(BasePipeline):
             # PairRDD(vehicle_type, [vehicle_type])
             .keyBy(lambda vehicle_type: vehicle_type)
             # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type)))
+            .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
         # [('Mkz7', '/mnt/bos/modules/control/profiling/multi_job/Mkz7'), ...]
         logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
@@ -143,7 +143,7 @@ class ControlProfilingMetrics(BasePipeline):
         src_dst_rdd.foreach(
             lambda src_dst: shutil.copyfile(
                 os.path.join(
-                    src_dst[0], feature_utils.CONF_FILE), os.path.join(
+                    object_storage.mnt_path, src_dst[0], feature_utils.CONF_FILE), os.path.join(
                     src_dst[1], feature_utils.CONF_FILE)))
 
         """ get to do jobs """
@@ -171,7 +171,7 @@ class ControlProfilingMetrics(BasePipeline):
         if not self.is_partner_job():
             # RDD(origin_dir)
             target_vehicle_dir = spark_helper.cache_and_log(
-                'target_dir_vehicle_dir',
+                'target_vehicle_dir',
                 self.to_rdd([target_dir])
                 # RDD([vehicle_type])
                 .flatMap(multi_vehicle_utils.get_vehicle)
@@ -208,12 +208,11 @@ class ControlProfilingMetrics(BasePipeline):
                 # PairRDD(vehicle_type, task_dir)
                 .mapValues(os.path.dirname))
 
-            todo_tasks = todo_task_dirs.subtract(processed_dirs)
-            todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
+            todo_task_dirs = todo_task_dirs.subtract(processed_dirs).values()
 
         logging.info('todo_tasks to run %s' % todo_task_dirs.collect())
 
-        self.run(todo_task_dirs, original_prefix, target_prefix)
+        self.run(todo_task_dirs, original_prefix, target_dir)
         logging.info('Control Profiling: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
