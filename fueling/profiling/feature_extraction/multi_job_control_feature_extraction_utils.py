@@ -28,6 +28,9 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
 
 def parse_vehicle_controller(task):
     """Parse controller/vehicle type by task"""
+    if not os.path.exists(task):
+        logging.warning('task directory is invalid: {}'.format(task))
+        return False
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)

@@ -169,46 +169,72 @@ class ControlProfilingMetrics(BasePipeline):
         logging.info('todo_task_dirs %s' % todo_task_dirs.collect())
 
         if not self.is_partner_job():
-            # RDD(origin_dir)
-            target_vehicle_dir = spark_helper.cache_and_log(
-                'target_vehicle_dir',
+            processed_dirs = spark_helper.cache_and_log(
+                'processed_dirs',
                 self.to_rdd([target_dir])
                 # RDD([vehicle_type])
+                # TODO(zongbao): vehicle folder maybe not exist
                 .flatMap(multi_vehicle_utils.get_vehicle)
                 # PairRDD(vehicle_type, [vehicle_type])
                 .keyBy(lambda vehicle_type: vehicle_type)
                 # PairRDD(vehicle_type, path_to_vehicle_type)
-                .mapValues(lambda vehicle_type: os.path.join(origin_dir, vehicle_type))
+                .mapValues(lambda vehicle_type: os.path.join(target_prefix, vehicle_type))
+                # PairRDD(vehicle_type, records)
                 .flatMapValues(object_storage.list_files)
-                .mapValues(os.path.dirname))
-
-            logging.info(
-                'target_vehicle_dir: %s' %
-                target_vehicle_dir.collect())
-
-            """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs path target"""
-            def _reorg_rdd_by_vehicle(target_task):
-                # parameter vehicle_controller_parsed like
-                # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
-                vehicle_controller_parsed, task = target_task
-                vehicle = vehicle_controller_parsed.split('/')[0]
-                target_ = os.path.join(target_dir, vehicle_controller_parsed)
-                return vehicle, target_
-
-            processed_dirs = spark_helper.cache_and_log(
-                'processed_dirs',
-                target_vehicle_dir
-                .values()
-                # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
-                .map(feature_utils.parse_vehicle_controller)
-                # PairRDD(vehicle_type, task_dir)
-                .map(_reorg_rdd_by_vehicle)
-                # PairRDD(vehicle_type, task_dir)
+                # PairRDD(vehicle_type, COMPLETED)
                 .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
-                # PairRDD(vehicle_type, task_dir)
-                .mapValues(os.path.dirname))
+                # PairRDD(vehicle_type, path)
+                .mapValues(os.path.dirname)
+                .distinct()
+            )
+            # if processed same key before, result just like
+            # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19
+            # /Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414'),...]
+            logging.info('processed_dirs: %s' % processed_dirs.collect())
 
-            todo_task_dirs = todo_task_dirs.subtract(processed_dirs).values()
+            if not processed_dirs.isEmpty():
+                """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs path target"""
+                def _reorg_rdd_by_vehicle(target_task):
+                    # parameter vehicle_controller_parsed like
+                    # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
+                    vehicle, (vehicle_controller_parsed, task) = target_task
+                    # vehicle = vehicle_controller_parsed.split('/')[0]
+                    target_ = os.path.join(
+                        target_dir, vehicle_controller_parsed)
+                    return vehicle, target_
+
+                target_vehicle_dir = spark_helper.cache_and_log(
+                    'target_vehicle_dir',
+                    origin_vehicle_dir
+                    # PairRDD(vehicle_type, records)
+                    .flatMapValues(object_storage.list_files)
+                    # PairRDD(vehicle_type, filterd absolute_path_to_records)
+                    .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
+                                                  record_utils.is_bag_file(file)))
+                    # PairRDD(vehicle_type, absolute_path_to_records)
+                    .mapValues(os.path.dirname)
+                    # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
+                    .mapValues(feature_utils.parse_vehicle_controller)
+                    # PairRDD(vehicle_type, task_dir)
+                    .map(_reorg_rdd_by_vehicle)
+                    .distinct()
+                )
+                logging.info('target_vehicle_dir %s' % target_vehicle_dir.collect())
+
+                todo_task_dirs = target_vehicle_dir.subtract(processed_dirs)
+
+                logging.info('todo_tasks after substrct %s' % todo_task_dirs.collect())
+                # REMOVE CONTROLLER AND REPLACE ORIGIN PREFIX
+                todo_task_dirs = spark_helper.cache_and_log(
+                    'todo_task_dirs',
+                    todo_task_dirs
+                    # PairRDD(vehicle_type, directory replaced by origin_dir)
+                    .mapValues(lambda dir: dir.replace(target_dir, origin_dir, 1))
+                    # PairRDD(vehicle_type, origin directory)
+                    .mapValues(multi_vehicle_utils.get_target_removed_controller)
+                    .values()
+                )
+                logging.info('todo_tasks after postprocess %s' % todo_task_dirs.collect())
 
         logging.info('todo_tasks to run %s' % todo_task_dirs.collect())
 
