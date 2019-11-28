@@ -25,7 +25,6 @@ CONTROL_TEAM = [
     'luoqi06@baidu.com',
     'shujiang@baidu.com',
     'yuwang01@baidu.com',
-    'runxinhe@baidu.com',
     'jinyunzhou@baidu.com',
 ]
 PREDICTION_TEAM = [
@@ -33,11 +32,14 @@ PREDICTION_TEAM = [
     'jiachengpan@baidu.com',
     'xukecheng@baidu.com',
 ]
-
 SIMPlEHDMAP_TEAM = [
     'hukuang@baidu.com',
     'v_panxuechao@baidu.com',
     'v_wangxitong02@baidu.com',
+]
+PERCEPTION_TEAM = [
+    'chenguang09@baidu.com',
+    'zhangweide@baidu.com',
 ]
 
 

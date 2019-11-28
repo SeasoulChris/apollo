@@ -9,11 +9,14 @@ from PIL import Image
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import numpy as np
+import tarfile
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.partners import partners
 from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.utils import yolo_utils as utils
+import fueling.common.email_utils as email_utils
 import fueling.common.logging as logging
 
 CLASS_NAME_ID_MAP = cfg.class_map
@@ -64,7 +67,7 @@ def compile_images(label_result_uid_list):
             image_name = txt_name + ".png"
             width, height = Image.open(os.path.join(image_dir_path, image_name)).size
         else:
-            raise Exception(f'Image {txt_name} does not exists.')
+            raise Exception(f'Image {os.path.join(image_dir_path, txt_name)} does not exist.')
 
         image_info = {}
         image_info["coco_url"] = None
@@ -174,6 +177,28 @@ def compile_categories(gt_dt):
     return (gt, dt)
 
 
+def notify_results(result_dir, job_owner, job_id):
+    """Send email to partners for notification"""
+    result_file_path = os.path.join(result_dir,
+                                    f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
+    with open(result_file_path, 'w') as result_file:
+        result_file.write('\n'.join(stats))
+
+    title = 'Your model training job is done!'
+    receivers = email_utils.DATA_TEAM + email_utils.PERCEPTION_TEAM
+    partner = partners.get(job_owner)
+    if partner:
+        receivers.append(partner.email)
+    content = {'Job Owner': job_owner, 'Job ID': job_id}
+
+    tar_file_path = f'{result_file_path}.tar.gz'
+    tar = tarfile.open(tar_file_path, 'w:gz')
+    tar.add(result_file_path, os.path.basename(result_file_path))
+    tar.close()
+
+    email_utils.send_email_info(title, content, receivers, [tar_file_path])
+
+
 class Yolov3Evaluate(BasePipeline):
     """Evaluate pipeline."""
 
@@ -194,14 +219,8 @@ class Yolov3Evaluate(BasePipeline):
         self.run([(ground_truth_path, inference_data_path)])
 
     def run(self, datasets):
-        """Save metrics file to cloud"""
-        def _dump_stats(folder, stats):
-            filename = os.path.join(folder,
-                                    f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
-            with open(filename, 'w') as f:
-                print('\n'.join(stats), file=f)
-
         """Run the actual pipeline job."""
+
         def _executor(gt_dt):
             """Executor task that runs on workers"""
             gt, dt = gt_dt
@@ -213,7 +232,7 @@ class Yolov3Evaluate(BasePipeline):
             evaluator.evaluate()
             evaluator.accumulate()
             stats = utils.summarize(evaluator)
-            _dump_stats(datasets[0][1], stats)
+            notify_results(datasets[0][1], self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
 
         data_rdd = (
             # RDD((label_dataset, result_dir)), each dataset to be evaluatued
