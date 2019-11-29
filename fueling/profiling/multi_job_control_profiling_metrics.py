@@ -85,7 +85,7 @@ class ControlProfilingMetrics(BasePipeline):
             'input_data_path', 'modules/control/profiling/multi_job')
 
         job_owner = self.FLAGS.get('job_owner')
-        # Use year as the job_id if data from apollo-plarform, to avoid
+        # Use year as the job_id if data from apollo-platform, to avoid
         # processing same data repeatedly
         job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
         target_prefix = os.path.join(dir_utils.inter_result_folder, job_owner, job_id)
@@ -183,7 +183,7 @@ class ControlProfilingMetrics(BasePipeline):
                 .mapValues(lambda vehicle_type: os.path.join(target_prefix, vehicle_type))
                 # PairRDD(vehicle_type, records)
                 .flatMapValues(object_storage.list_files)
-                # PairRDD(vehicle_type, file endwith COMPLETED)
+                # PairRDD(vehicle_type, file endwith COMPLETE)
                 .filter(lambda key_path: key_path[1].endswith('COMPLETE'))
                 # PairRDD(vehicle_type, path)
                 .mapValues(os.path.dirname)
