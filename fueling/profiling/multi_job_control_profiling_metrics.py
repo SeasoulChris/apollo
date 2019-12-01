@@ -99,7 +99,8 @@ class ControlProfilingMetrics(BasePipeline):
         object_storage = self.partner_storage() or bucket_apollo_platform
         origin_dir = object_storage.abs_path(original_prefix)
 
-        # origin_dir: /mnt/bos/modules/control/profiling/multi_job
+        # origin_dir: our: /mnt/bos/modules/control/profiling/multi_job
+        # partner: /mnt/partner/profiling/multi_job
         logging.info("origin_dir: %s" % origin_dir)
 
         # Sanity Check
@@ -122,22 +123,21 @@ class ControlProfilingMetrics(BasePipeline):
             # PairRDD(vehicle_type, path_to_vehicle_type)
             .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
         # [('Mkz7', 'modules/control/profiling/multi_job/Mkz7'), ...]
+        # Partner [('Mkz7', 'profiling/multi_job/Mkz7'), ...]
         logging.info('origin_vehicle_dir: %s' % origin_vehicle_dir.collect())
 
         # Copy vehicle parameter config file
         conf_target_prefix = target_dir
         logging.info(conf_target_prefix)
-        generated_vehicle_dir = origin_vehicle_dir.mapValues(
-            lambda path: path.replace(original_prefix, conf_target_prefix, 1))
-        # generated_vehicle_dir:
-        # [('Mkz7', 'modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
-        logging.info(
-            'generated_vehicle_dir: %s' %
-            generated_vehicle_dir.collect())
+        target_vehicle_dir = origin_vehicle_dir
+            .map(lambda path: object_storage.abs_path)
+            .mapValues(lambda path: path.replace(origin_dir, conf_target_prefix, 1))
+        # target_vehicle_dir:
+        # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
+        logging.info('target_vehicle_dir: %s' % target_vehicle_dir.collect())
 
         # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
-        src_dst_rdd = origin_vehicle_dir.join(
-            generated_vehicle_dir).values().cache()
+        src_dst_rdd = origin_vehicle_dir.join(target_vehicle_dir).values().cache()
         # touch target dir avoiding to copy failed
         file_utils.makedirs(target_dir)
         # Create dst dirs and copy conf file to them.
@@ -145,7 +145,7 @@ class ControlProfilingMetrics(BasePipeline):
         src_dst_rdd.foreach(
             lambda src_dst: shutil.copyfile(
                 os.path.join(
-                    object_storage.mnt_path, src_dst[0], feature_utils.CONF_FILE), os.path.join(
+                    src_dst[0], feature_utils.CONF_FILE), os.path.join(
                     src_dst[1], feature_utils.CONF_FILE)))
 
         """ get to do jobs """
