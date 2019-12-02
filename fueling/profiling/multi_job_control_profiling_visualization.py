@@ -39,7 +39,7 @@ flags.DEFINE_string('ctl_visual_output_path_k8s', 'modules/control/tmp/results',
                     'output data directory for run_pod')
 
 
-class ControlProfilingVisualization(BasePipeline):
+class MultiJobControlProfilingVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features"""
 
     def run_test(self):
@@ -203,4 +203,4 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
 
 
 if __name__ == '__main__':
-    ControlProfilingVisualization().main()
+    MultiJobControlProfilingVisualization().main()

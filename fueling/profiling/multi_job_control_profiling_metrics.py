@@ -24,7 +24,7 @@ import fueling.profiling.feature_extraction.multi_job_control_feature_extraction
 import fueling.profiling.grading_evaluation.multi_job_control_performance_grading_utils as grading_utils
 
 
-class ControlProfilingMetrics(BasePipeline):
+class MultiJobControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
     def run_test(self):
@@ -372,4 +372,4 @@ class ControlProfilingMetrics(BasePipeline):
 
 
 if __name__ == '__main__':
-    ControlProfilingMetrics().main()
+    MultiJobControlProfilingMetrics().main()
