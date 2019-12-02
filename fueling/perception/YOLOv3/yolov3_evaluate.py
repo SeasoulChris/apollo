@@ -21,9 +21,6 @@ import fueling.common.logging as logging
 
 CLASS_NAME_ID_MAP = cfg.class_map
 
-flags.DEFINE_string('input_training_data_path', '', 'Input data path for training.')
-flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained model.')
-
 
 def match_label_to_result(dataset_result_dir):
     """
@@ -213,8 +210,8 @@ class Yolov3Evaluate(BasePipeline):
     def run_prod(self):
         """Run prod."""
         object_storage = self.partner_storage() or BosClient()
-        ground_truth_path = object_storage.abs_path(self.FLAGS.get('input_training_data_path'))
-        inference_data_path = object_storage.abs_path(self.FLAGS.get('output_trained_model_path'))
+        ground_truth_path = object_storage.abs_path(self.FLAGS.get('input_data_path'))
+        inference_data_path = object_storage.abs_path(self.FLAGS.get('output_data_path'))
         inference_data_path = os.path.join(inference_data_path, cfg.inference_path)
         self.run([(ground_truth_path, inference_data_path)])
 

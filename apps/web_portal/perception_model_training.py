@@ -8,7 +8,7 @@ class PerceptionModelTraining(BaseJob):
 
     def submit(self, job_arg, spark_submit_arg):
         """Submit job."""
-        spark_submit_arg.job.entrypoint = 'fueling/perception/YOLOv3/yolov3_training.py'
+        spark_submit_arg.job.entrypoint = 'fueling/perception/YOLOv3/model_training_pipeline_jobs.py'
         spark_submit_arg.job.flags += (
             f' --input_data_path={job_arg.flags.get("input_data_path")}'
             f' --output_data_path={job_arg.flags.get("output_data_path")}')

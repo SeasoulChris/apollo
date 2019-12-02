@@ -18,10 +18,6 @@ import fueling.common.storage.bos_client as bos_client
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 
-flags.DEFINE_string('input_training_data_path', '', 'Input data path for training.')
-flags.DEFINE_string('output_trained_model_path', '', 'Output path for trained model.')
-
-
 class Yolov3Training(BasePipeline):
     """Model training pipeline."""
 
@@ -33,8 +29,8 @@ class Yolov3Training(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        input_data_path = self.FLAGS.get('input_training_data_path')
-        output_model_path = self.FLAGS.get('output_trained_model_path')
+        input_data_path = self.FLAGS.get('input_data_path')
+        output_model_path = self.FLAGS.get('output_data_path')
         object_storage = self.partner_storage() or BosClient()
         self.run([object_storage.abs_path(input_data_path)],
                  object_storage.abs_path(output_model_path))
