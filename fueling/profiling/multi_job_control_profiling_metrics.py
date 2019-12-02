@@ -128,18 +128,24 @@ class ControlProfilingMetrics(BasePipeline):
 
         # Copy vehicle parameter config file
         conf_target_prefix = target_dir
-        logging.info(conf_target_prefix)
-        target_vehicle_dir = origin_vehicle_dir
-            .map(lambda path: object_storage.abs_path)
+        target_vehicle_abs_dir = spark_helper.cache_and_log(
+            origin_vehicle_dir
+            .mapValues(object_storage.abs_path)
             .mapValues(lambda path: path.replace(origin_dir, conf_target_prefix, 1))
-        # target_vehicle_dir:
+        )
+        # target_vehicle_abs_dir:
         # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
-        logging.info('target_vehicle_dir: %s' % target_vehicle_dir.collect())
+        logging.info('target_vehicle_abs_dir: %s' %
+                     target_vehicle_abs_dir.collect())
 
-        # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
-        src_dst_rdd = origin_vehicle_dir.join(target_vehicle_dir).values().cache()
-        # touch target dir avoiding to copy failed
-        file_utils.makedirs(target_dir)
+        origin_vehicle_abs_dir = origin_vehicle_dir.mapValues(
+            object_storage.abs_path)
+        # PairRDD(origin_vehicle_abs_dir, dest_vehicle_abs_dir)
+        src_dst_rdd = origin_vehicle_abs_dir.join(
+            target_vehicle_abs_dir).values().cache()
+        # src_dst_rdd: [('/mnt/bos/modules/control/profiling/multi_job/Mkz7',
+        #  '/mnt/bos/modules/control/tmp/results/apollo/2019/Mkz7'),...]
+        logging.info('src_dst_rdd: %s' % src_dst_rdd.collect())
         # Create dst dirs and copy conf file to them.
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(
