@@ -38,10 +38,17 @@ class ReorgSmallRecords(BasePipeline):
         target_dir = self.our_storage().abs_path(target_prefix)
 
         # TODO: test get vehicles by dir mongo_utils, get empty now
-        dir_vehicle_list = self.get_vehicles(
-            '/mnt/bos/small-records/2019/2019-01-03/2019-01-03-15-49-43')
-        logging.info(
-            'dir_vehicle_list for /mnt/bos/small-records/2019/2019-01-03/2019-01-03-15-49-43 {}'.format(dir_vehicle_list))
+
+        self.get_vehicles(
+            'small-records/2019/2019-11-27/2019-11-27-10-25-44/20191127102544.record')
+
+        self.get_vehicles(
+            'small-records/2019/2019-02-25/2019-02-25-16-24-27/20190225163700.record')
+
+        self.get_vehicles(
+            'small-records/2019/2019-02-25/2019-02-25-16-24-27')
+
+        exit(1)
 
         # RDD(small-records dir)
         origin_small_records_dir = spark_helper.cache_and_log(
@@ -73,7 +80,7 @@ class ReorgSmallRecords(BasePipeline):
         # )
         # logging.info('processed_dirs: %s' % processed_dirs.collect())
 
-        self.run(origin_small_records_dir, origin_dir, target_dir)
+        # self.run(origin_small_records_dir, origin_dir, target_dir)
 
     def run(self, record_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
