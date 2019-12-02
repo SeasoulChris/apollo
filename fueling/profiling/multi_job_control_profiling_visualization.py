@@ -107,12 +107,12 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         target_prefix = os.path.join(
             flags.FLAGS.ctl_visual_output_path_k8s, job_owner, job_id)
 
-        bucket_apollo_platform = BosClient()
-        target_dir = bucket_apollo_platform.abs_path(target_prefix)
+        our_storage = self.our_storage()
+        target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir {}'.format(target_dir))
 
         # Access partner's storage if provided.
-        object_storage = self.partner_storage() or bucket_apollo_platform
+        object_storage = self.partner_storage() or our_storage
         origin_dir = object_storage.abs_path(original_prefix)
 
         # PairRDD(target files)

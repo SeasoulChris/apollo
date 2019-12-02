@@ -224,7 +224,7 @@ class PopulateFramesPipeline(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        bos_client = BosClient()
+        bos_client = self.our_storage()
         root_dir = bos_client.mnt_path
         target_dir = 'modules/data/labeling/generated'
         file_utils.makedirs(bos_client.abs_path(target_dir))

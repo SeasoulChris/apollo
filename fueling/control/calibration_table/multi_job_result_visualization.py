@@ -40,9 +40,9 @@ class MultiJobResultVisualization(BasePipeline):
         # results in output folder
         origin_prefix = os.path.join(output_folder, job_owner, job_id)
 
-        bos_client = BosClient()
-        origin_dir = bos_client.abs_path(origin_prefix)
-        conf_dir = bos_client.abs_path(conf_prefix)
+        our_storage = self.our_storage()
+        origin_dir = our_storage.abs_path(origin_prefix)
+        conf_dir = our_storage.abs_path(conf_prefix)
 
         # RDD(plot_file)
         plot_files = self.run(origin_dir, conf_dir)

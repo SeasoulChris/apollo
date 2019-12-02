@@ -105,7 +105,7 @@ class MultiJobTrain(BasePipeline):
     def run_prod(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        bos_client = BosClient()
+        bos_client = self.our_storage()
 
         # intermediate result folder
         origin_prefix = os.path.join(inter_result_folder, job_owner, job_id)

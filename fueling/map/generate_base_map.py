@@ -55,9 +55,8 @@ class MapGenSingleLine(BasePipeline):
         src_prefix = os.path.join(dir_prefix, 'data')
         dst_prefix = os.path.join(dir_prefix, 'result')
 
-        bos_client = BosClient()
         # Access partner's storage if provided.
-        object_storage = self.partner_storage() or bos_client
+        object_storage = self.partner_storage() or self.our_storage()
 
         origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
         target_dir = object_storage.abs_path(origin_prefix)

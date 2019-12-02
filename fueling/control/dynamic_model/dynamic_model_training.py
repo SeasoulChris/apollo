@@ -43,7 +43,7 @@ class DynamicModelTraining(BasePipeline):
             prefix = os.path.join(dataset_dir, VEHICLE_ID, 'UniformDistributed/forward')
         # RDD(file_path) for training dataset
         training_dataset_rdd = self.to_rdd(self.our_storage().list_files(prefix, '.hdf5'))
-        output_dir = bos_client.BosClient().abs_path(
+        output_dir = self.our_storage().abs_path(
             'modules/control/learning_based_model/dynamic_model_output/')
         self.run(training_dataset_rdd, output_dir)
 

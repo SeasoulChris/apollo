@@ -143,12 +143,12 @@ class MultiJobFeatureExtraction(BasePipeline):
 
         # extract features to intermediate result folder
         target_prefix = os.path.join(inter_result_folder, job_owner, job_id)
-        our_bos = BosClient()
-        target_dir = our_bos.abs_path(target_prefix)
+        our_storage = self.our_storage()
+        target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
-        object_storage = self.partner_storage() or our_bos
+        object_storage = self.partner_storage() or our_storage
         origin_dir = object_storage.abs_path(origin_prefix)
 
         logging.info("origin_dir: %s" % origin_dir)

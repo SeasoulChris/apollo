@@ -39,7 +39,7 @@ class PerformanceEvaluator(BasePipeline):
             np.save(save_path, metrics)
 
     def run_prod(self):
-        bos_client = BosClient()
+        bos_client = self.our_storage()
         for time_range in TIME_RANGES:
             for region in REGIONS:
                 """Run prod."""

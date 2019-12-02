@@ -61,8 +61,7 @@ class SimMapPipeline(BasePipeline):
         origin_prefix = os.path.join(src_prefix, job_owner, job_id)
         logging.info("origin_prefix: %s" % origin_prefix)
 
-        bos_client = BosClient()
-        object_storage = self.partner_storage() or bos_client
+        object_storage = self.partner_storage() or self.our_storage()
         source_path = object_storage.abs_path(origin_prefix)
         logging.info('source_path path is {}'.format(source_path))
         base_map_path = os.path.join(source_path, 'base_map.txt')

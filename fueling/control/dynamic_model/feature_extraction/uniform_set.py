@@ -82,7 +82,7 @@ class UniformSet(BasePipeline):
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        bos_client = BosClient()
+        bos_client = self.our_storage()
 
         # intermediate result folder
         origin_prefix = os.path.join(INTER_FOLDER, job_owner, job_id)

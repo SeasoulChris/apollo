@@ -116,9 +116,9 @@ class GoldenSet(BasePipeline):
             # PairRDD(dir, record_file)
             .keyBy(os.path.dirname))
 
-        bos_client = BosClient()
-        target_dir = bos_client.abs_path(target_prefix)
-        origin_dir = bos_client.abs_path(origin_prefix)
+        our_storage = self.our_storage()
+        target_dir = our_storage.abs_path(target_prefix)
+        origin_dir = our_storage.abs_path(origin_prefix)
 
         self.run(todo_records, origin_dir, target_dir)
 

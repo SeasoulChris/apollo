@@ -90,13 +90,13 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
         target_prefix = os.path.join(dir_utils.inter_result_folder, job_owner, job_id)
 
-        bucket_apollo_platform = BosClient()
-        target_dir = bucket_apollo_platform.abs_path(target_prefix)
+        our_storage = self.our_storage()
+        target_dir = our_storage.abs_path(target_prefix)
         # target_dir /mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-39-38
         logging.info('target_dir %s' % target_dir)
 
         # Access partner's storage if provided.
-        object_storage = self.partner_storage() or bucket_apollo_platform
+        object_storage = self.partner_storage() or our_storage
         origin_dir = object_storage.abs_path(original_prefix)
 
         # origin_dir: our: /mnt/bos/modules/control/profiling/multi_job

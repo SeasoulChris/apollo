@@ -91,7 +91,7 @@ class UniformDistributionSet(BasePipeline):
         todo_tasks = spark_helper.cache_and_log(
             'todo_tasks',
             self.to_rdd(self.our_storage().list_files(origin_prefix, '.hdf5')))
-        target_dir = bos_client.BosClient().abs_path(target_dir)
+        target_dir = self.our_storage().abs_path(target_dir)
         self.run(todo_tasks, target_dir, sample_size)
 
     def run(self, todo_tasks, target_prefix, sample_size):
