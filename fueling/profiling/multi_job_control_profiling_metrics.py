@@ -32,7 +32,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job'
         target_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/{}/{}'\
             .format(self.FLAGS.get('job_owner'),
-                    self.FLAGS.get('job_id'))
+                    self.FLAGS.get('job_id')[:4])
 
         """origin vehicle directory"""
         # RDD(origin_dir)

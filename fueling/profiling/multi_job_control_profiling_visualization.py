@@ -24,7 +24,7 @@ import fueling.profiling.feature_visualization.control_feature_visualization_uti
 
 
 flags.DEFINE_string('ctl_visual_input_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/multi_job',
+                    '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated',
                     'input data directory for local run_test')
 flags.DEFINE_string('ctl_visual_output_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated',
@@ -45,17 +45,39 @@ class MultiJobControlProfilingVisualization(BasePipeline):
     def run_test(self):
         """Run test."""
         job_owner = self.FLAGS.get('job_owner')
-        job_id = self.FLAGS.get('job_id')
-        origin_prefix = flags.FLAGS.ctl_visual_input_path_local
-        target_prefix = os.path.join(
+        job_id = self.FLAGS.get('job_id')[:4]
+        origin_prefix = os.path.join(
             flags.FLAGS.ctl_visual_input_path_local, job_owner, job_id)
+        target_prefix = os.path.join(
+            flags.FLAGS.ctl_visual_output_path_local, job_owner, job_id)
 
         logging.info('target_prefix %s' % target_prefix)
 
-        # RDD(tasks), the task dirs
-        todo_tasks = self.to_rdd([
-            os.path.join(origin_prefix, task) for task in todo_tasks_postfix
-        ]).cache()
+        """origin vehicle directory"""
+        # RDD(origin_dir)
+        origin_vehicle_dir = spark_helper.cache_and_log(
+            'origin_vehicle_dir',
+            self.to_rdd([origin_prefix])
+            # RDD([vehicle_type])
+            .flatMap(multi_vehicle_utils.get_vehicle)
+            # PairRDD(vehicle_type, vehicle_type)
+            .keyBy(lambda vehicle: vehicle)
+            # PairRDD(vehicle_type, path_to_vehicle_type)
+            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle))
+        )
+
+        # # RDD(origin_vehicle_dir)
+        todo_tasks = spark_helper.cache_and_log(
+            'todo_tasks',
+            origin_vehicle_dir
+            # PairRDD(vehicle_type, list_of_records)
+            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*/*')))
+            # RDD list_of_records to parse vehicle type and controller to
+            # organize new key
+            .filter(spark_op.filter_value(lambda task: os.path.isdir(task)))
+            .values()
+            .distinct()
+        )
 
         logging.info('todo_tasks %s' % todo_tasks.collect())
 
