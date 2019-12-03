@@ -150,13 +150,11 @@ class SparkSubmitJob(flask_restful.Resource):
 
         # Envs.
         for key, value in ENVS.items():
-            confs += ('--conf spark.kubernetes.driverEnv.%(key)s=%(value)s '
-                      '--conf spark.executorEnv.%(key)s=%(value)s ' % {
-                          'key': key, 'value': value})
+            confs += (f'--conf spark.kubernetes.driverEnv.{key}={value} '
+                      f'--conf spark.executorEnv.{key}={value} ')
         for key, value in SECRET_ENVS.items():
-            confs += ('--conf spark.kubernetes.driver.secretKeyRef.%(key)s=%(value)s '
-                      '--conf spark.kubernetes.executor.secretKeyRef.%(key)s=%(value)s ' % {
-                          'key': key, 'value': value})
+            confs += (f'--conf spark.kubernetes.driver.secretKeyRef.{key}={value} '
+                      f'--conf spark.kubernetes.executor.secretKeyRef.{key}={value} ')
 
         job_filename = os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-')
         job_name = f'job-{job_id}-{submitter}-{job_filename}'

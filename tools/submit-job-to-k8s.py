@@ -132,6 +132,7 @@ def get_partner():
             'storage_access_key': flags.FLAGS.partner_azure_storage_access_key,
             'blob_container': flags.FLAGS.partner_azure_blob_container,
         }
+    return partner
 
 
 def main(argv):
