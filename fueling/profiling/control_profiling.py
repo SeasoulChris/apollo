@@ -9,5 +9,5 @@ from fueling.profiling.multi_job_control_profiling_visualization import MultiJob
 if __name__ == '__main__':
     SequentialPipeline([
         MultiJobControlProfilingMetrics(),
-        MultiJobControlProfilingVisualization()
+        MultiJobControlProfilingVisualization(),
     ]).main()
