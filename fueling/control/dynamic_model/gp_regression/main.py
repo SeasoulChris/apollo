@@ -7,19 +7,13 @@ import pickle
 from datetime import datetime
 
 import torch
-import asyncio
-import websockets
 from fueling.control.dynamic_model.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model.gp_regression.dreamview_server import load_gp, run_gp
 from fueling.control.dynamic_model.gp_regression.evaluation import test_gp
 from fueling.control.dynamic_model.gp_regression.gaussian_process import GaussianProcess
 from fueling.control.dynamic_model.gp_regression.train import train_gp
 
-
 def launch(args):
-    # tasks to launch
-    args.train_gp = False
-    args.test_gp = False
 
     dataset = GPDataSet(args)
     if args.train_gp:
@@ -28,23 +22,6 @@ def launch(args):
     if args.test_gp:
         # test Gaussian process model
         test_gp(args, dataset, GaussianProcess)
-
-
-async def run_model(websocket, path):
-    #dataset = GPDataSet(args)
-    input_string = await websocket.recv()
-    print(f"< {input_string}")
-    input_data = torch.zeros(1, 100, 6)
-    # load the trained GP model
-    #gp_f = load_gp(args, dataset)
-    # keep being called by the web-socket and return predicted mean and var
-    #(predicted_mean, predicted_var) = run_gp(gp_f, input_data)
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    output_string = f"Send back {input_string} at time {current_time}!"
-
-    await websocket.send(output_string)
-    print(f"> {output_string}")
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
@@ -83,9 +60,10 @@ if __name__ == '__main__':
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
     parser.add_argument('--compare', type=str, default="model")
 
+    # argment to train or test gp
+    parser.add_argument('--train_gp', type=bool, default=True)
+    parser.add_argument('--test_gp', type=bool, default=True)
+
+
     args = parser.parse_args()
     launch(args)
-
-    start_server = websockets.serve(run_model, "localhost", 8765)
-    asyncio.get_event_loop().run_until_complete(start_server)
-    asyncio.get_event_loop().run_forever()
