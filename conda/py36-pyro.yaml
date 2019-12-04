@@ -14,13 +14,15 @@ dependencies:
 
   # Data science
   - boto3
-  - cudatoolkit = 9.2
+  - cudatoolkit = 10.0
   - h5py
   - keras-gpu
   - matplotlib
   - numpy
   - pymongo
   - scikit-learn
+  - pytorch
+  - torchvision
 
   # Other
   - future
@@ -32,11 +34,10 @@ dependencies:
 
   - pip:
     - azure.storage.blob
-    - pyro-ppl == 0.3.3
+    - pyro-ppl == 1.0.0 # 1.0 requires pytorch and torch to be higher version
     - pyspark-utils
     - scaleapi
-    - torch == 1.1.0
-    - torchvision == 0.2.1
+    - torch
 
     # special install from VCS
     - git+https://github.com/utiasSTARS/liegroups.git
