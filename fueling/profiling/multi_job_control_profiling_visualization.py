@@ -89,7 +89,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
                 .distinct()
             )
 
-        logging.info('todo_tasks %s' % todo_tasks.collect())
+        logging.info(F'todo_tasks {todo_tasks.collect()}')
 
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
@@ -103,17 +103,18 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         job_id = self.FLAGS.get('job_id') if self.is_partner_job(
         ) else self.FLAGS.get('job_id')[:4]
         # same origin and target prefix
-        original_prefix = flags.FLAGS.ctl_visual_input_path_k8s
+        original_prefix = os.path.join(
+            flags.FLAGS.ctl_visual_input_path_k8s, job_owner, job_id)
         target_prefix = os.path.join(
             flags.FLAGS.ctl_visual_output_path_k8s, job_owner, job_id)
 
-        our_storage = self.our_storage()
-        target_dir = our_storage.abs_path(target_prefix)
-        logging.info('target_dir {}'.format(target_dir))
+        # In visualization application, the object_storage always points to apollo storage.
+        object_storage = self.our_storage()
+        target_dir = object_storage.abs_path(target_prefix)
+        logging.info(F'target_dir {target_dir}')
 
-        # Access partner's storage if provided.
-        object_storage = self.partner_storage() or our_storage
         origin_dir = object_storage.abs_path(original_prefix)
+        logging.info(F'origin_dir {origin_dir}')
 
         # PairRDD(target files)
         target_files = spark_helper.cache_and_log(
@@ -129,8 +130,8 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             # PairRDD(vehicle_type, records)
             .flatMapValues(object_storage.list_files)
         )
+        logging.info(F'target_files: {target_files.collect()}')
 
-        logging.info('target_files: %s' % target_files.collect())
         # PairRDD(processed plot dirs)
         processed_dirs = spark_helper.cache_and_log(
             'processed_dirs',
@@ -144,7 +145,8 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         # if processed same key before, result just like
         # /mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19
         # /Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414'
-        logging.info('processed_dirs: %s' % processed_dirs.collect())
+        logging.info(F'processed_dirs: {processed_dirs.collect()}')
+
         # PairRDD(todo profiled dirs)
         todo_tasks = spark_helper.cache_and_log(
             'todo_tasks',
@@ -155,12 +157,12 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             .mapValues(os.path.dirname)
             .distinct()
         )
-        logging.info('todo_tasks: %s' % todo_tasks.collect())
+        logging.info(F'todo_tasks before filtering: {todo_tasks.collect()}')
 
         if not processed_dirs.isEmpty():
             todo_tasks = todo_tasks.subtract(processed_dirs)
 
-        logging.info('todo_tasks to run : %s' % todo_tasks.values().collect())
+        logging.info(F'todo_tasks to run: {todo_tasks.values().collect()}')
 
         self.run(todo_tasks.values(), origin_dir, target_dir)
         summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir)
@@ -182,7 +184,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
                     # "segments" into one array
                     .mapValues(visual_utils.generate_data)
                     )
-        logging.info('data_rdd {}'.format(data_rdd.collect()))
+        logging.info(F'data_rdd {data_rdd.collect()}')
 
         if flags.FLAGS.ctl_visual_simulation_only_test:
             # PairRDD(target_dir, data_array)
@@ -205,7 +207,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix):
     output_filename = None
     tar = None
     for task in tasks:
-        logging.info('task in summarize_tasks {}'.format(task))
+        logging.info(F'task in summarize_tasks {task}')
         target_dir = task
         target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
         email_content.append(SummaryTuple(
