@@ -6,6 +6,7 @@ import glob
 import io
 import json
 import os
+import pprint
 import sys
 import time
 import zipfile
@@ -118,7 +119,7 @@ def get_worker():
 
 
 def get_partner():
-    partner = {'partner_storage_writable': flags.FLAGS.partner_storage_writable}
+    partner = {'storage_writable': flags.FLAGS.partner_storage_writable}
     if flags.FLAGS.partner_bos_bucket:
         partner['bos'] = {
             'bucket': flags.FLAGS.partner_bos_bucket,
@@ -166,6 +167,10 @@ def main(argv):
         sys.exit(1)
     res = requests.post(SUBMITTER, json=json.dumps(arg))
     payload = json.loads(res.json() or '{}')
+
+    arg['job']['fueling_zip_base64'] = ''
+    logging.info('SparkSubmitArg is')
+    pprint.PrettyPrinter(indent=2).pprint(arg)
 
     # Process result.
     if not res.ok:
