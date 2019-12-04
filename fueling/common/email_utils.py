@@ -126,10 +126,13 @@ class EmailService(object):
     @classmethod
     def send_email(cls, subject, content, receivers, attachments):
         attachments_dict = {}
+        i = 1
         for attachment in attachments:
             try:
                 with open(attachment, 'rb') as fin:
-                    attachments_dict[os.path.basename(attachment)] = fin.read()
+                    attachment_name = f'{i}_{os.path.basename(attachment)}'
+                    i += 1
+                    attachments_dict[attachment_name] = fin.read()
             except Exception as err:
                 logging.error('Failed to add attachment {}: {}'.format(attachment, err))
         cls.send_outlook_email(subject, content, receivers, attachments_dict)
