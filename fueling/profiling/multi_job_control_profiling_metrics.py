@@ -15,6 +15,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+from fueling.common.partners import partners
 from fueling.common.storage.bos_client import BosClient
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
@@ -85,6 +86,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             'input_data_path', 'modules/control/profiling/multi_job')
 
         job_owner = self.FLAGS.get('job_owner')
+        job_email = partners.get(job_owner).email if self.is_partner_job() else ''
         # Use year as the job_id if data from apollo-platform, to avoid
         # processing same data repeatedly
         job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
@@ -240,10 +242,10 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         logging.info(F'todo_tasks to run {todo_task_dirs.values().collect()}')
 
-        self.run(todo_task_dirs.values(), origin_dir, target_dir)
+        self.run(todo_task_dirs.values(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
 
         """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
@@ -293,7 +295,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         reorganized_target_keys = reorganized_target.keys().collect()
         logging.info(F'reorganized_target: {reorganized_target_keys}')
         # Summarize by scanning the target directory
-        self.summarize_tasks(reorganized_target_keys, original_prefix, target_prefix)
+        self.summarize_tasks(reorganized_target_keys,
+                             original_prefix, target_prefix, job_email)
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
@@ -308,13 +311,14 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         return [(target, group_id, group)
                 for group_id, group in enumerate(msgs_groups)]
 
-    def summarize_tasks(self, targets, original_prefix, target_prefix):
+    def summarize_tasks(self, targets, original_prefix, target_prefix, job_email):
         """Make summaries to specified tasks"""
         SummaryTuple = namedtuple(
             'Summary', [
                 'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
         title = 'Control Profiling Gradings Results'
         receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
+        receivers.append(job_email)
         email_content = []
         attachments = []
         target_dir_daily = None
