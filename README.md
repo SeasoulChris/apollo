@@ -16,14 +16,6 @@
 
 1. Install env and activate.
 
-   In order to install the conda-forge packages with conda, please set your conda environments (version >=4.6) with
-
-   ```bash
-   conda config --add channels conda-forge
-   conda config --set channel_priority strict
-   ```
-   Then to install and activate environments:
-
    ```bash
    conda env update --prune -f conda/py36.yaml
    source activate fuel-py36
