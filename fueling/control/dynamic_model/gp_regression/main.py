@@ -29,11 +29,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training_data_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/training")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/training")
     parser.add_argument(
         '--testing_data_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/tmp/testing")
+        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/testing")
     parser.add_argument(
         '--gp_model_path',
         type=str,
