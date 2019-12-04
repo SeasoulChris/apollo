@@ -11,7 +11,7 @@ message SaasJobArg {
     CONTROL_PROFILING = 1;
     PERCEPTION_MODEL_TRAINING = 2;
     SENSOR_CALIBRATION = 3;
-    SIMPLE_HDMAP = 4;
+    VIRTUAL_LANE_GENERATION = 4;
     VEHICLE_CALIBRATION = 5;
   }
   optional JobType job_type = 1;

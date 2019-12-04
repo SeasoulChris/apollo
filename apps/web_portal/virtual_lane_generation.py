@@ -3,7 +3,7 @@
 from base_job import BaseJob
 
 
-class SimpleHDMap(BaseJob):
+class VirtualLaneGeneration(BaseJob):
 
     def submit(self, job_arg, spark_submit_arg):
         """Submit job."""

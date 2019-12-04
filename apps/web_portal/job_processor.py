@@ -15,8 +15,8 @@ from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 from control_profiling import ControlProfilingMetrics
 from perception_model_training import PerceptionModelTraining
 from sensor_calibration import SensorCalibration
-from simple_hdmap import SimpleHDMap
 from vehicle_calibration import VehicleCalibration
+from virtual_lane_generation import VirtualLaneGeneration
 
 
 class JobProcessor(object):
@@ -32,8 +32,8 @@ class JobProcessor(object):
         SaasJobArg.CONTROL_PROFILING:         ControlProfilingMetrics,
         SaasJobArg.PERCEPTION_MODEL_TRAINING: PerceptionModelTraining,
         SaasJobArg.SENSOR_CALIBRATION:        SensorCalibration,
-        SaasJobArg.SIMPLE_HDMAP:              SimpleHDMap,
         SaasJobArg.VEHICLE_CALIBRATION:       VehicleCalibration,
+        SaasJobArg.VIRTUAL_LANE_GENERATION:   VirtualLaneGeneration,
     }
 
     def __init__(self, job_arg):
