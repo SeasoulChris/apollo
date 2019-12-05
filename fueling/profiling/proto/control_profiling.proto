@@ -48,7 +48,7 @@ message ControlProfiling {
     }
     optional string vehicle_type = 1;
     optional string controller_type = 2;
-    optional double vehicle_wheelbase = 3;
+    optional double vehicle_wheelbase = 3 [default = 3.06];  // by default, Mkz
     optional DrivingMode driving_mode = 4;
     repeated GearPosition gear_position = 5;
 

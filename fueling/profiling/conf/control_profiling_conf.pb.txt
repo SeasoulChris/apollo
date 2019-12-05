@@ -1,6 +1,5 @@
 vehicle_type: ""
 controller_type: ""
-vehicle_wheelbase: 3.06
 driving_mode: COMPLETE_AUTO_DRIVE
 gear_position: GEAR_DRIVE
 gear_position: GEAR_REVERSE

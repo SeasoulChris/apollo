@@ -1,6 +1,5 @@
 vehicle_type: "Mkz7"
 controller_type: "Lon_Lat_Controller"
-vehicle_wheelbase: 3.06
 driving_mode: COMPLETE_AUTO_DRIVE
 gear_position: GEAR_DRIVE
 gear_position: GEAR_REVERSE
