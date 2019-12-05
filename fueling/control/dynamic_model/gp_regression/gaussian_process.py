@@ -36,7 +36,4 @@ class GaussianProcess(Parameterized):
 
     def forward(self, input_data):
         """Call the VariantionalSparseGP with full_cov"""
-        # TypeError: guide() takes 1 positional argument but 2 were given
-        tr = pyro.poutine.trace(self.guide).get_trace(input_data)
-        return pyro.poutine.replay(self.model, tr)(input_data)
-        # return self.gp_f(input_data, full_cov=True)
+        return self.gp_f(input_data, full_cov=True)

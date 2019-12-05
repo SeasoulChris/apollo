@@ -55,7 +55,7 @@ def test_gp(args, dataset, GaussianProcess):
         for i in range(len(input_data)):
             logging.debug("Input Dim {}".format(input_data[i: i + 1].size()))
             logging.debug("Label Dim {}".format(gt_data[i].size()))
-            predicted_mean, predicted_var = gp_model(input_data[i: i + 1])
+            predicted_mean, predicted_var = gp_model.forward(input_data[i: i + 1])
             predicted_data = torch.cat((predicted_data,
                                         torch.tensor([predicted_mean[0],
                                                       predicted_mean[1]]).unsqueeze(0)), 0)
