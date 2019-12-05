@@ -19,16 +19,31 @@ import fueling.profiling.feature_extraction.multi_job_control_feature_extraction
 class ReorgSmallRecords(BasePipeline):
     """Reorg small Records by vehicle as the input data path to control profiling pipeline."""
 
-    def __init__(self):
-        self.collection = Mongo().record_collection()
-
     def run_test(self):
         """Run test."""
         # RDD(dir_path)
         records_dir = self.to_rdd(['small-records/2019'])
-        origin_prefix = 'small-records/2019'
+        origin_prefix = 'small-records/2019/2019-02-25'
         target_prefix = 'modules/control/small-records'
-        self.run(records_dir, origin_prefix, target_prefix)
+
+        # RDD(small-records dir)
+        origin_small_records_dir = spark_helper.cache_and_log(
+            'origin_small_records_dir',
+            # RDD(file), start with origin_prefix
+            self.to_rdd(self.our_storage().list_files(origin_prefix))
+            # RDD(record_file)
+            .filter(record_utils.is_record_file)
+            # RDD(record_dir), with record_file inside
+            .map(os.path.dirname)
+            # RDD(record_dir), which is unique
+            .distinct()
+            # .mapPartitions(self.get_vehicles)
+        )
+
+        logging.info('origin_small_records_dir {}'.format(
+            origin_small_records_dir.collect()))
+
+        # self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
         input_prefix = 'small-records/2019/2019-02-25'
@@ -37,8 +52,8 @@ class ReorgSmallRecords(BasePipeline):
         target_prefix = 'modules/control/small-records'
         target_dir = self.our_storage().abs_path(target_prefix)
 
-        # self.get_vehicles(
-        # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27')
+        # print(Mongo().user)
+        # print(Mongo().passwd)
 
         # RDD(small-records dir)
         origin_small_records_dir = spark_helper.cache_and_log(
@@ -51,14 +66,11 @@ class ReorgSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct()
-            .map(self.get_vehicles)
+            # .mapPartitions(self.get_vehicles)
         )
 
         logging.info('origin_small_records_dir {}'.format(
             origin_small_records_dir.collect()))
-
-        # self.get_vehicles(origin_small_records_dir.collect())
-
         # processed_dirs = spark_helper.cache_and_log(
         #     'processed_dirs',
         #     self.to_rdd([target_dir])
@@ -82,19 +94,34 @@ class ReorgSmallRecords(BasePipeline):
 
     def run(self, record_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
-        result = spark_helper.cache_and_log(
-            'result',
-            # RDD(record_dir)
-            record_dir_rdd
-            # PairRDD(record_dir, vehicle_name)
-            .map(self.get_vehicles)
-            # RDD(0/1), 1 for success
-            .map(lambda dir_map: self.process_dir(
-                dir_map[0],
-                dir_map[0].replace(origin_prefix,
-                                   os.path.join(target_prefix, dir_map[1] + '/'), 1),
-                dir_map[1], origin_prefix))
+
+        dir_vehicle_list = self.get_vehicles(record_dir_rdd.collect())
+
+        # dir_vehicle_list[('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27', 'Transit'),
+        # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', 'Transit')]
+        logging.info('dir_vehicle_list{}'.format(dir_vehicle_list))
+
+        dir_vehicle_rdd = spark_helper.cache_and_log(
+            'dir_vehicle_rdd',
+            self.to_rdd(dir_vehicle_list)
+            # .map(lambda path:)
         )
+
+        logging.info('dir_vehicle_rdd %s' % dir_vehicle_rdd.collect())
+
+        # result = spark_helper.cache_and_log(
+        #     'result',
+        #     # RDD(record_dir)
+        #     record_dir_rdd
+        #     # PairRDD(record_dir, vehicle_name)
+        #     .map(self.get_vehicles)
+        #     # RDD(0/1), 1 for success
+        #     .map(lambda dir_map: self.process_dir(
+        #         dir_map[0],
+        #         dir_map[0].replace(origin_prefix,
+        #                            os.path.join(target_prefix, dir_map[1] + '/'), 1),
+        #         dir_map[1], origin_prefix))
+        # )
 
         # logging.info('result %s' % result.collect())
 
@@ -128,11 +155,11 @@ class ReorgSmallRecords(BasePipeline):
     def get_vehicles(self, record_dirs):
         """Return the (record_dir, vehicle_name) pair"""
         logging.info('input record_dirs %s' % record_dirs)
-        record_dirs = list(record_dirs)
+        # record_dirs = list(record_dirs)
         # record_dirs ['/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27',...]
-        logging.info('after handling record_dirs %s' % record_dirs)
+        collection = Mongo().record_collection()
         dir_vehicle_dict = db_backed_utils.lookup_vehicle_for_dirs(
-            record_dirs, self.collection)
+            record_dirs, collection)
         # dir_vehicle_dict{'/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27': 'Transit',
         # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12': 'Transit'}
         logging.info('dir_vehicle_dict%s' % dir_vehicle_dict)
