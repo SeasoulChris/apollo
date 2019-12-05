@@ -14,6 +14,7 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.partners import partners
 from fueling.common.storage.bos_client import BosClient
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -89,7 +90,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
                 .distinct()
             )
 
-        logging.info(F'todo_tasks {todo_tasks.collect()}')
+        logging.info(F'todo_tasks: {todo_tasks.collect()}')
 
         self.run(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
@@ -100,8 +101,10 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         # Use year as the job_id if data from apollo-platform, to avoid
         # processing same data repeatedly
-        job_id = self.FLAGS.get('job_id') if self.is_partner_job(
-        ) else self.FLAGS.get('job_id')[:4]
+        job_id = self.FLAGS.get('job_id') if self.is_partner_job() else self.FLAGS.get('job_id')[:4]
+        job_email = partners.get(job_owner).email if self.is_partner_job() else ''
+        logging.info(F'email address of job owner: {job_email}')
+
         # same origin and target prefix
         original_prefix = os.path.join(
             flags.FLAGS.ctl_visual_input_path_k8s, job_owner, job_id)
@@ -111,10 +114,10 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         # In visualization application, the object_storage always points to apollo storage.
         object_storage = self.our_storage()
         target_dir = object_storage.abs_path(target_prefix)
-        logging.info(F'target_dir {target_dir}')
+        logging.info(F'target_dir: {target_dir}')
 
         origin_dir = object_storage.abs_path(original_prefix)
-        logging.info(F'origin_dir {origin_dir}')
+        logging.info(F'origin_dir: {origin_dir}')
 
         # PairRDD(target files)
         target_files = spark_helper.cache_and_log(
@@ -165,7 +168,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         logging.info(F'todo_tasks to run: {todo_tasks.values().collect()}')
 
         self.run(todo_tasks.values(), origin_dir, target_dir)
-        summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir)
+        summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Visualization: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix):
@@ -184,7 +187,7 @@ class MultiJobControlProfilingVisualization(BasePipeline):
                     # "segments" into one array
                     .mapValues(visual_utils.generate_data)
                     )
-        logging.info(F'data_rdd {data_rdd.collect()}')
+        logging.info(F'data_rdd: {data_rdd.collect()}')
 
         if flags.FLAGS.ctl_visual_simulation_only_test:
             # PairRDD(target_dir, data_array)
@@ -194,25 +197,25 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             data_rdd.foreach(visual_utils.plot_h5_features_hist)
 
 
-def summarize_tasks(tasks, original_prefix, target_prefix):
+def summarize_tasks(tasks, original_prefix, target_prefix, job_email=''):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple(
         'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    title = 'Control Profiling Visualization Results' + ' _ %s' % timestr
+    title = 'Control Profiling Visualization Results'
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
+    receivers.append(job_email)
     email_content = []
     attachments = []
     target_dir_daily = None
     output_filename = None
     tar = None
     for task in tasks:
-        logging.info(F'task in summarize_tasks {task}')
+        logging.info(F'task in summarize_tasks: {task}')
         target_dir = task
         target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
         email_content.append(SummaryTuple(
-            Task=task,
-            Target=target_dir,
+            Task=task.replace(original_prefix, '', 1),
+            Target=target_dir.replace(target_prefix, '', 1),
             HDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
             VisualPlot=len(glob.glob(os.path.join(target_dir, '*visualization*')))))
         if target_file:
