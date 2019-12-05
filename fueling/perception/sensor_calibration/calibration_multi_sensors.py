@@ -75,7 +75,11 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_prod(self):
         """Run Prod. production version"""
-        result_files = self.run(self.FLAGS.get('input_data_path'))
+        result_files = []
+        try:
+            result_files = self.run(self.FLAGS.get('input_data_path'))
+        except:
+            pass
 
         # Send result to job owner.
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM
