@@ -7,6 +7,7 @@ import pyro.contrib.gp as gp
 import pyro.infer as infer
 import pyro.optim as optim
 
+assert pyro.__version__.startswith('1.0.0')
 
 class GaussianProcess(Parameterized):
     """Gaussian process"""
