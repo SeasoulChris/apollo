@@ -623,15 +623,14 @@ def output_gradings(target_grading):
     # Get control prifiling conf
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_output_path = os.path.join(target_dir,
-                                       '{}_{}_control_performance_grading.txt'
-                                       .format(vehicle_type, controller_type))
-    vehicle_param_conf_output_path = os.path.join(
-        target_dir, '{}_control_conf.pb.txt'.format(controller_type))
-    logging.info('writing grading output {} to {}'.format(
-        grading, grading_output_path))
+                                       F'{vehicle_type}_{controller_type}_'
+                                       F'control_performance_grading.txt')
+    profiling_conf_output_path = os.path.join(target_dir,
+                                              F'{vehicle_type}_{controller_type}_'
+                                              F'control_profiling_conf.pb.txt')
+    logging.info(F'writing grading output {grading} to {grading_output_path}')
     if not grading:
-        logging.warning('No grading results written to {}'.format(
-            grading_output_path))
+        logging.warning(F'No grading results written to {grading_output_path}')
     else:
         with open(grading_output_path, 'w') as grading_file:
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
@@ -662,10 +661,8 @@ def output_gradings(target_grading):
                     grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
 
-        with open(vehicle_param_conf_output_path, 'w') as vehicle_param_file:
-            vehicle_param_file.write(
-                '\n\n\nMetrics in file control_profiling_conf.pb.txt\n\n')
-            vehicle_param_file.write('{}\n\n'.format(profiling_conf))
+        with open(profiling_conf_output_path, 'w') as profiling_conf_file:
+            profiling_conf_file.write(F'{profiling_conf}')
 
 
 def highlight_gradings(task, grading_file):
