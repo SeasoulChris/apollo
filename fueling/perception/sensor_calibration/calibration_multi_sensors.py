@@ -78,13 +78,20 @@ class SensorCalibrationPipeline(BasePipeline):
         result_files = self.run(self.FLAGS.get('input_data_path'))
 
         # Send result to job owner.
-        title = 'Your sensor calibration job is done!'
-        content = {'Job Owner': self.FLAGS['job_owner'], 'Job ID': self.FLAGS['job_id']}
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM
         partner = partners.get(self.FLAGS['job_owner'])
         if partner:
             receivers.append(partner.email)
-        email_utils.send_email_info(title, content, receivers, result_files)
+
+        if result_files:
+            title = 'Your sensor calibration job is done!'
+            content = {'Job Owner': self.FLAGS['job_owner'], 'Job ID': self.FLAGS['job_id']}
+            email_utils.send_email_info(title, content, receivers, result_files)
+        else:
+            title = 'Your sensor calibration job failed!'
+            content = (f'We are sorry. Please report the job id {self.FLAGS["job_id"]} to us at '
+                       'IDG-apollo@baidu.com, so we can investigate.')
+            email_utils.send_email_error(title, content, receivers)
 
     def run(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
