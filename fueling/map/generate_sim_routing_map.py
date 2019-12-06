@@ -8,7 +8,6 @@ import glob
 
 import fueling.common.logging as logging
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 
 
 def execute_task(source_dir):

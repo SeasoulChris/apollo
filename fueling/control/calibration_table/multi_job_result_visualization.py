@@ -14,7 +14,6 @@ import pyspark_utils.helper as spark_helper
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
 from fueling.common.partners import partners
-from fueling.common.storage.bos_client import BosClient
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.email_utils as email_utils

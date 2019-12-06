@@ -14,7 +14,6 @@ import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
 from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 
 
 flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')

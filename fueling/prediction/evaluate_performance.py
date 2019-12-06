@@ -12,7 +12,6 @@ from modules.prediction.proto import prediction_conf_pb2
 from modules.prediction.proto import feature_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 
 
 TIME_RANGES = [3.0, 1.0, 8.0]

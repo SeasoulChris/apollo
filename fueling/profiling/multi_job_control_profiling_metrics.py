@@ -16,7 +16,6 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.common.partners import partners
-from fueling.common.storage.bos_client import BosClient
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
 from fueling.profiling.common.sanity_check import sanity_check

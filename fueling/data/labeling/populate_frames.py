@@ -13,7 +13,6 @@ from pyspark.sql import Row
 from pyspark.sql import SQLContext
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging

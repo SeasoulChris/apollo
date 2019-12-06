@@ -13,7 +13,6 @@ import tarfile
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
-from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.utils import yolo_utils as utils
 import fueling.common.email_utils as email_utils

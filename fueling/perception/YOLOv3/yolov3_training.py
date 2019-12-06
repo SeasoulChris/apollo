@@ -9,7 +9,6 @@ import glob
 import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 from fueling.perception.YOLOv3 import config as cfg
 from fueling.perception.YOLOv3.dataset import Dataset
 from fueling.perception.YOLOv3.train import training

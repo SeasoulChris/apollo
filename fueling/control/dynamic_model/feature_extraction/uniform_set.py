@@ -6,7 +6,6 @@ import os
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.common.storage.bos_client import BosClient
 from fueling.control.dynamic_model.conf.model_config import feature_extraction
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
