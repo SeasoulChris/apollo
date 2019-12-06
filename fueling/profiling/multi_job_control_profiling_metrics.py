@@ -78,7 +78,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
-        logging.info('Control Profiling: All Done, TEST')
+        logging.info('Control Profiling Metrics: All Done, TEST')
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
@@ -108,12 +108,14 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         logging.info(F'origin_dir: {origin_dir}')
 
         # Sanity Check
-        if not sanity_check(
-                origin_dir,
-                feature_utils.CONF_FILE,
-                feature_utils.CHANNELS,
-                job_owner,
-                job_id):
+        sanity_status = sanity_check(origin_dir,
+                                     feature_utils.CONF_FILE, feature_utils.CHANNELS)
+        if sanity_status is "Sanity_Check: Passed.":
+            logging.info(sanity_status)
+        else:
+            logging.error(sanity_status)
+            summarize_tasks([], origin_dir, target_dir, job_email, sanity_status)
+            logging.info('Control Profiling Metrics: No Results, PROD')
             return
 
         # RDD(origin_dir)
@@ -244,8 +246,14 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         logging.info(F'todo_tasks to run: {todo_task_dirs.values().collect()}')
 
+        if not todo_task_dirs.collect():
+            error_msg = 'No grading results: no new qualified data uploaded.'
+            summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+            logging.info('Control Profiling Metrics: No Results, PROD')
+            return
+
         self.run(todo_task_dirs.values(), origin_dir, target_dir, job_email)
-        logging.info('Control Profiling: All Done, PROD')
+        logging.info('Control Profiling Metrics: All Done, PROD')
 
     def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
@@ -297,8 +305,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         reorganized_target_keys = reorganized_target.keys().collect()
         logging.info(F'reorganized_target: {reorganized_target_keys}')
         # Summarize by scanning the target directory
-        self.summarize_tasks(reorganized_target_keys,
-                             original_prefix, target_prefix, job_email)
+        summarize_tasks(reorganized_target_keys, original_prefix, target_prefix, job_email)
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
@@ -313,14 +320,15 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         return [(target, group_id, group)
                 for group_id, group in enumerate(msgs_groups)]
 
-    def summarize_tasks(self, targets, original_prefix, target_prefix, job_email):
-        """Make summaries to specified tasks"""
-        SummaryTuple = namedtuple(
-            'Summary', [
-                'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
-        title = 'Control Profiling Gradings Results'
-        receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
-        receivers.append(job_email)
+def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error_msg=''):
+    """Make summaries to specified tasks"""
+    SummaryTuple = namedtuple(
+        'Summary', [
+            'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
+    title = 'Control Profiling Gradings Results'
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
+    receivers.append(job_email)
+    if targets:
         email_content = []
         attachments = []
         target_dir_daily = None
@@ -366,8 +374,15 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         if tar:
             tar.close()
         attachments.append(output_filename)
-        email_utils.send_email_info(
-            title, email_content, receivers, attachments)
+    else:
+        logging.info('target_dir in summarize_tasks: None')
+        if error_msg:
+            email_content = error_msg
+        else:
+            email_content = 'No grading results: unknown reason.'
+        attachments = []
+    email_utils.send_email_info(
+        title, email_content, receivers, attachments)
 
 
 if __name__ == '__main__':
