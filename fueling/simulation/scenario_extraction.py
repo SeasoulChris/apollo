@@ -6,11 +6,6 @@ based on disengage info
 import os
 import sys
 
-if sys.version_info[0] >= 3:
-    from cyber_py3.record import RecordReader
-else:
-    from cyber_py.record import RecordReader
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -55,8 +50,8 @@ def execute_task(task):
         logging.warning('No records file found in {}'.format(source_dir))
         return
     map_dir = '/mnt/bos/modules/map/data/san_mateo'
-    message = next((x for x in RecordReader(os.path.join(source_dir, record_file)).read_messages()
-                    if x.topic == record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL), None)
+    reader = record_utils.read_record([record_utils.ROUTING_RESPONSE_HISTORY_CHANNEL])
+    message = next(reader(os.path.join(source_dir, record_file)), None)
     if message is not None:
         if record_utils.message_to_proto(message).map_version.startswith('sunnyvale'):
             map_dir = '/mnt/bos/modules/map/data/sunnyvale'

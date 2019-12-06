@@ -13,10 +13,7 @@ import numpy as np
 import pypcd
 import yaml
 
-if sys.version_info[0] >= 3:
-    from cyber_py3.record import RecordReader
-else:
-    from cyber_py.record import RecordReader
+from cyber_py3.record import RecordReader
 from modules.data.proto import frame_pb2
 from modules.common.proto.geometry_pb2 import Point3D
 from modules.common.proto.geometry_pb2 import PointENU
@@ -290,11 +287,6 @@ def get_interp_pose(timestamp, pose_left, pose_right):
     sensor_pose_interp.orientation.qz = pyqt_interp.z
     sensor_pose_interp.orientation.qw = pyqt_interp.w
     return sensor_pose_interp
-
-
-def read_messages_func(record_file):
-    """Define a util function to read messages from record file"""
-    return RecordReader(record_file).read_messages()
 
 
 def get_messages_number(record_file, channels):
