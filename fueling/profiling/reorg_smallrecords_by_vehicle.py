@@ -82,7 +82,7 @@ class ReorgSmallRecords(BasePipeline):
         def _filter_vehicle(vehicle):
             vehicle_parameter_conf_file = os.path.join(
                 target_prefix, vehicle, feature_utils.CONF_FILE)
-            return False if os.path.exists(vehicle_parameter_conf_file) else True
+            return not os.path.exists(vehicle_parameter_conf_file)
 
         # 1. Make vehicle directory and copy parameter config file
         # PairRDD(target_vehicle, source_dir)
@@ -102,9 +102,8 @@ class ReorgSmallRecords(BasePipeline):
         abs_vehicle_param_path = self.our_storage().abs_path(VECHILE_PARAM_CON_DIR)
         target_vehicle_rdd.foreach(
             lambda vehicle: shutil.copyfile(
-                os.path.join(
-                    abs_vehicle_param_path, vehicle.lower(), feature_utils.CONF_FILE), os.path.join(
-                    target_prefix, vehicle, feature_utils.CONF_FILE)
+                os.path.join(abs_vehicle_param_path, vehicle.lower(), feature_utils.CONF_FILE),
+                os.path.join(target_prefix, vehicle, feature_utils.CONF_FILE)
             )
         )
 
@@ -157,8 +156,7 @@ class ReorgSmallRecords(BasePipeline):
         logging.info(F'input record_dirs: {record_dirs}')
         # record_dirs = list(record_dirs)
         collection = Mongo().record_collection()
-        dir_vehicle_dict = db_backed_utils.lookup_vehicle_for_dirs(
-            record_dirs, collection)
+        dir_vehicle_dict = db_backed_utils.lookup_vehicle_for_dirs(record_dirs, collection)
         # dir_vehicle_dict{'/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27': 'Transit',
         # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12': 'Transit'}
         logging.info(F'dir_vehicle_dict: {dir_vehicle_dict}')
