@@ -95,11 +95,12 @@ def missing_field(path, conf_pb):
             status = id_status + F' in conf: {conf_pb} for vehicle: {vehicle}'
             return status
         # required field
-        fields = [conf.vehicle_param.wheel_base]
+        fields = ['wheel_base']
         # for value in conf.vehicle_param:
         # has field is always true since a default value is given
         for field in fields:
-            if math.isnan(field):
+            field_value = getattr(conf.vehicle_param, field, float('NaN'))
+            if math.isnan(field_value):
                 status = F'Missing field: {field} in conf: {conf_pb} for vehicle: {vehicle}'
                 return status
     return 'OK'
@@ -139,5 +140,5 @@ def sanity_check(input_folder, conf_pb, channels):
     if current_status is not 'OK':
         status_msg = error_message(current_status, input_folder)
         return status_msg
-    status_msg = "Sanity_Check: Passed."
+    status_msg = 'OK'
     return status_msg

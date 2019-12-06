@@ -110,8 +110,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         # Sanity Check
         sanity_status = sanity_check(origin_dir,
                                      feature_utils.CONF_FILE, feature_utils.CHANNELS)
-        if sanity_status is "Sanity_Check: Passed.":
-            logging.info(sanity_status)
+        if sanity_status is 'OK':
+            logging.info('Sanity_Check: Passed.')
         else:
             logging.error(sanity_status)
             summarize_tasks([], origin_dir, target_dir, job_email, sanity_status)
