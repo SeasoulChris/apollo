@@ -326,7 +326,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
         'Summary', [
             'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
     title = 'Control Profiling Gradings Results'
-    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.QA_TEAM
     receivers.append(job_email)
     if targets:
         email_content = []
@@ -337,8 +337,9 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
         for target_dir in targets:
             logging.info(F'target_dir in summarize_tasks: {target_dir}')
             target_postfix = target_dir.replace(target_prefix, '', 1)
-            controller = '/' + target_postfix.split('/')[2]
-            task = original_prefix + target_postfix.replace(controller, '', 1)
+            vehicle = target_postfix.split('/')[1]
+            controller = target_postfix.split('/')[2]
+            task = original_prefix + target_postfix.replace('/' + controller, '', 1)
             logging.info(F'task_dir in summarize_tasks: {task}')
             target_file = glob.glob(os.path.join(
                 target_dir, '*performance_grading*'))
@@ -363,7 +364,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
                     target_dir_daily = os.path.dirname(target_dir)
                     output_filename = os.path.join(
                         target_dir_daily,
-                        F'{os.path.basename(target_dir_daily)}_gradings.tar.gz')
+                        F'{vehicle}_{os.path.basename(target_dir_daily)}_gradings.tar.gz')
                     tar = tarfile.open(output_filename, 'w:gz')
                 task_name = os.path.basename(target_dir)
                 file_name = os.path.basename(target_file[0])

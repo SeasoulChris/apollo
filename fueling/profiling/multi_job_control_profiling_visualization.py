@@ -214,7 +214,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_m
     SummaryTuple = namedtuple(
         'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
     title = 'Control Profiling Visualization Results'
-    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.QA_TEAM
     receivers.append(job_email)
     if tasks:
         email_content = []
@@ -226,6 +226,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_m
             logging.info(F'task in summarize_tasks: {task}')
             target_dir = task
             target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
+            vehicle = task.replace(original_prefix, '', 1).split('/')[1]
             email_content.append(SummaryTuple(
                 Task=task.replace(original_prefix, '', 1),
                 Target=target_dir.replace(target_prefix, '', 1),
@@ -238,8 +239,9 @@ def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_m
                         attachments.append(output_filename)
                     target_dir_daily = os.path.dirname(target_dir)
                     output_filename = os.path.join(target_dir_daily,
-                                                   '{}_plots.tar.gz'
-                                                   .format(os.path.basename(target_dir_daily)))
+                                                   F'{vehicle}_'
+                                                   F'{os.path.basename(target_dir_daily)}_'
+                                                   F'plots.tar.gz')
                     tar = tarfile.open(output_filename, 'w:gz')
                 task_name = os.path.basename(target_dir)
                 file_name = os.path.basename(target_file[0])
