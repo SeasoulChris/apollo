@@ -59,7 +59,7 @@ class Yolov3Inference(BasePipeline):
             rounds = 0 if data_pool.dataset_size == 0 else max(
                 1, (data_pool.dataset_size + 1) // cfg.batch_size)
             for _ in range(rounds):
-                data = data_pool.batch
+                data = data_pool.batch()
                 engine.run(data, infer_output_path)
 
         logging.info(f'input inference data path: {input_dir}')

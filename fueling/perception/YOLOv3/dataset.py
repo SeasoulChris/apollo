@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import os
+import time
 
+from collections import deque
 from PIL import Image, ImageDraw
 from queue import Queue
 from random import shuffle
@@ -41,8 +43,8 @@ class Dataset:
         self.one_shot = one_shot
         self.one_shot_complete = False
 
-        self._txt_files_queue = Queue(maxsize=10000)
-        self._example_queue = Queue(maxsize=100)
+        self._txt_files_queue = Queue(cfg.max_txt_queue_size)
+        self._example_queue = deque([])
 
         self._txt_files = self.image_file_paths
 
@@ -86,19 +88,26 @@ class Dataset:
         Parse example from txt line.
         """
         while not self.one_shot_complete:
+            
+            if len(self._example_queue) >= cfg.max_image_queue_size:
+                time.sleep(cfg.thread_sleep_time)
+                continue
+
             try:
                 image_path = self._txt_files_queue.get()
+
                 all_paths = data_utils.get_all_paths(image_path)
                 processed = data_utils.process_data(all_paths)
-                # Filter out classes that is not being considered
                 image_data, y_true, cls_box_map, objs, calib, original_image = \
                     data_utils.filter_classes(processed)
                 scale1, scale2, scale3 = y_true
-                #image_data = np.expand_dims(image_data, axis=0)
                 image_name = os.path.basename(image_path).split(".")[0]
+
                 final_data = (image_data, scale1, scale2, scale3, cls_box_map,
                               objs, calib, image_name, original_image)
-                self._example_queue.put(final_data)
+                
+                self._example_queue.append(final_data)
+
             except RuntimeError as err:
                 logging.error('cannot process file {} err {}'.format(image_path, err))
 
@@ -109,7 +118,6 @@ class Dataset:
         """
         return len(self._txt_files)
 
-    @property
     def batch(self):
         """
         Get a batch of example.
@@ -117,6 +125,10 @@ class Dataset:
         image_batch: np array with shape (batch_size, Input_height, Input_width, 3)
         label_batch: a list with len==batch_size
         """
+
+        if len(self._example_queue) < self.batch_size:
+           return None
+
         # TODO[KWT] Add support for self.one_shot
         image_batch = np.zeros(shape=(self.batch_size, cfg.Input_height, cfg.Input_width, 3),
                                dtype=np.uint8)
@@ -128,9 +140,11 @@ class Dataset:
         calib_list = []
         image_name_list = []
         original_image_list = []
+
         for i in range(self.batch_size):
-            image_data, scale1, scale2, scale3, cls_box_map, objs, \
-                calib, image_name, original_image = self._example_queue.get()
+            image_data, scale1, scale2, scale3, cls_box_map, objs, calib, \
+                image_name, original_image = self._example_queue[0]
+            self._example_queue.popleft()
             image_batch[i] = image_data
             label_batch_scale1.append(scale1)
             label_batch_scale2.append(scale2)
@@ -140,7 +154,6 @@ class Dataset:
             calib_list.append(calib)
             image_name_list.append(image_name)
             original_image_list.append(original_image)
-
         assert not np.any(np.isnan(image_batch))
         assert not np.any(np.isnan(label_batch_scale1))
         assert not np.any(np.isnan(label_batch_scale2))

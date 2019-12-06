@@ -55,7 +55,7 @@ def compile_images(label_result_uid_list):
     for label_result_uid in label_result_uid_list:
         label_txt_path, result_txt_path, uid = label_result_uid
         label_dir_path, txt_name = os.path.split(label_txt_path)
-        image_dir_path = os.path.join(os.path.split(label_dir_path)[0], "images")
+        image_dir_path = os.path.join(os.path.split(label_dir_path)[0], "images_all")
         txt_name = txt_name.split(".")[0]
         if os.path.exists(os.path.join(image_dir_path, txt_name + ".jpg")):
             image_name = txt_name + ".jpg"
@@ -174,8 +174,9 @@ def compile_categories(gt_dt):
     return (gt, dt)
 
 
-def notify_results(result_dir, job_owner, job_id):
+def notify_results(result_dir, stats, job_owner, job_id):
     """Send email to partners for notification"""
+
     result_file_path = os.path.join(result_dir,
                                     f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
     with open(result_file_path, 'w') as result_file:
@@ -229,7 +230,8 @@ class Yolov3Evaluate(BasePipeline):
             evaluator.evaluate()
             evaluator.accumulate()
             stats = utils.summarize(evaluator)
-            notify_results(datasets[0][1], self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
+            notify_results(datasets[0][1], stats,
+                           self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
 
         data_rdd = (
             # RDD((label_dataset, result_dir)), each dataset to be evaluatued

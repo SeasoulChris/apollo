@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import time
 
 from absl import flags
 import glob
@@ -52,8 +53,13 @@ class Yolov3Training(BasePipeline):
             engine.setup_training()
             data_pool = Dataset(image_paths)
 
-            for _ in range(cfg.max_iter):
-                data_batch = data_pool.batch
+            curr_iter = 0
+            while cur_iter < cfg.max_iter:
+                data_batch = data_pool.batch()
+                if data_batch is None:
+                    time.sleep(cfg.thread_sleep_time)
+                    continue
+                cur_iter += 1
                 engine.step(data_batch)
 
             # After training is done, copy the single model file over to user specified folder
