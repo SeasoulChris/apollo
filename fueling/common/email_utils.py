@@ -41,6 +41,9 @@ PERCEPTION_TEAM = [
     'chenguang09@baidu.com',
     'zhangweide@baidu.com',
 ]
+QA_TEAM = [
+    'fuyiqun@baidu.com',
+]
 
 
 def send_email_info(title, content, receivers, attachments=[]):
