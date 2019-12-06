@@ -162,10 +162,22 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         )
         logging.info(F'todo_tasks before filtering: {todo_tasks.collect()}')
 
+        if not todo_tasks.collect():
+            error_msg = 'No visualization results: no new qualified data uploaded.'
+            summarize_tasks([], origin_dir, target_dir,job_email, error_msg)
+            logging.info('Control Profiling Visualization: No Results, PROD')
+            return
+
         if not processed_dirs.isEmpty():
             todo_tasks = todo_tasks.subtract(processed_dirs)
 
         logging.info(F'todo_tasks to run: {todo_tasks.values().collect()}')
+
+        if not todo_tasks.collect():
+            error_msg = 'No visualization results: all the uploaded data has been processed before.'
+            summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+            logging.info('Control Profiling Visualization: No Results, PROD')
+            return
 
         self.run(todo_tasks.values(), origin_dir, target_dir)
         summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_email)
@@ -197,45 +209,53 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             data_rdd.foreach(visual_utils.plot_h5_features_hist)
 
 
-def summarize_tasks(tasks, original_prefix, target_prefix, job_email=''):
+def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_msg=''):
     """Make summaries to specified tasks"""
     SummaryTuple = namedtuple(
         'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
     title = 'Control Profiling Visualization Results'
     receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     receivers.append(job_email)
-    email_content = []
-    attachments = []
-    target_dir_daily = None
-    output_filename = None
-    tar = None
-    for task in tasks:
-        logging.info(F'task in summarize_tasks: {task}')
-        target_dir = task
-        target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
-        email_content.append(SummaryTuple(
-            Task=task.replace(original_prefix, '', 1),
-            Target=target_dir.replace(target_prefix, '', 1),
-            HDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
-            VisualPlot=len(glob.glob(os.path.join(target_dir, '*visualization*')))))
-        if target_file:
-            if target_dir_daily != os.path.dirname(target_dir):
-                if output_filename and tar:
-                    tar.close()
-                    attachments.append(output_filename)
-                target_dir_daily = os.path.dirname(target_dir)
-                output_filename = os.path.join(target_dir_daily,
-                                               '{}_plots.tar.gz'
-                                               .format(os.path.basename(target_dir_daily)))
-                tar = tarfile.open(output_filename, 'w:gz')
-            task_name = os.path.basename(target_dir)
-            file_name = os.path.basename(target_file[0])
-            tar.add(target_file[0], arcname='{}_{}'.format(
-                task_name, file_name))
-        file_utils.touch(os.path.join(target_dir, 'COMPLETE_PLOT'))
-    if tar:
-        tar.close()
-    attachments.append(output_filename)
+    if tasks:
+        email_content = []
+        attachments = []
+        target_dir_daily = None
+        output_filename = None
+        tar = None
+        for task in tasks:
+            logging.info(F'task in summarize_tasks: {task}')
+            target_dir = task
+            target_file = glob.glob(os.path.join(target_dir, '*visualization*'))
+            email_content.append(SummaryTuple(
+                Task=task.replace(original_prefix, '', 1),
+                Target=target_dir.replace(target_prefix, '', 1),
+                HDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
+                VisualPlot=len(glob.glob(os.path.join(target_dir, '*visualization*')))))
+            if target_file:
+                if target_dir_daily != os.path.dirname(target_dir):
+                    if output_filename and tar:
+                        tar.close()
+                        attachments.append(output_filename)
+                    target_dir_daily = os.path.dirname(target_dir)
+                    output_filename = os.path.join(target_dir_daily,
+                                                   '{}_plots.tar.gz'
+                                                   .format(os.path.basename(target_dir_daily)))
+                    tar = tarfile.open(output_filename, 'w:gz')
+                task_name = os.path.basename(target_dir)
+                file_name = os.path.basename(target_file[0])
+                tar.add(target_file[0], arcname='{}_{}'.format(
+                    task_name, file_name))
+            file_utils.touch(os.path.join(target_dir, 'COMPLETE_PLOT'))
+        if tar:
+            tar.close()
+        attachments.append(output_filename)
+    else:
+        logging.info('task in summarize_tasks: None')
+        if error_msg:
+            email_content = error_msg
+        else:
+            email_content = 'No visualization results: unknown reason.'
+        attachments = []
     email_utils.send_email_info(title, email_content, receivers, attachments)
 
 
