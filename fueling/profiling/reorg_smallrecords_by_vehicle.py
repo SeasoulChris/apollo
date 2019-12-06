@@ -15,6 +15,8 @@ import fueling.common.record_utils as record_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
 
+VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
+
 
 class ReorgSmallRecords(BasePipeline):
     """Reorg small Records by vehicle as the input data path to control profiling pipeline."""
@@ -22,13 +24,12 @@ class ReorgSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(dir_path)
-        records_dir = self.to_rdd(['small-records/2019'])
-        origin_prefix = 'small-records/2019/2019-02-25'
+        origin_prefix = 'testdata/profiling'
         target_prefix = 'modules/control/small-records'
 
         # RDD(small-records dir)
-        origin_small_records_dir = spark_helper.cache_and_log(
-            'origin_small_records_dir',
+        records_dir = spark_helper.cache_and_log(
+            'records_dir',
             # RDD(file), start with origin_prefix
             self.to_rdd(self.our_storage().list_files(origin_prefix))
             # RDD(record_file)
@@ -39,25 +40,23 @@ class ReorgSmallRecords(BasePipeline):
             .distinct()
             # .mapPartitions(self.get_vehicles)
         )
+        # print(self.our_storage().list_files('testdata/control'))
+        logging.info(F'records_dir: {records_dir.collect()}')
 
-        logging.info('origin_small_records_dir {}'.format(
-            origin_small_records_dir.collect()))
-
-        # self.run(records_dir, origin_prefix, target_prefix)
+        self.run(records_dir, origin_prefix, target_prefix)
 
     def run_prod(self):
-        input_prefix = 'small-records/2019/2019-02-25'
+        # for testing need check a sub directory to save time
+        # input_prefix = 'small-records/2019/2019-06-13'
+        input_prefix = 'small-records/2019'
         origin_dir = self.our_storage().abs_path(input_prefix)
 
         target_prefix = 'modules/control/small-records'
         target_dir = self.our_storage().abs_path(target_prefix)
 
-        # print(Mongo().user)
-        # print(Mongo().passwd)
-
         # RDD(small-records dir)
-        origin_small_records_dir = spark_helper.cache_and_log(
-            'origin_small_records_dir',
+        records_dir = spark_helper.cache_and_log(
+            'records_dir',
             # RDD(file), start with origin_prefix
             self.to_rdd(self.our_storage().list_files(input_prefix))
             # RDD(record_file)
@@ -66,107 +65,107 @@ class ReorgSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct()
-            # .mapPartitions(self.get_vehicles)
         )
 
-        logging.info('origin_small_records_dir {}'.format(
-            origin_small_records_dir.collect()))
-        # processed_dirs = spark_helper.cache_and_log(
-        #     'processed_dirs',
-        #     self.to_rdd([target_dir])
-        #     # RDD([vehicle_type])
-        #     .flatMap(multi_vehicle_utils.get_vehicle)
-        #     # PairRDD(vehicle_type, [vehicle_type])
-        #     .keyBy(lambda vehicle_type: vehicle_type)
-        #     # PairRDD(vehicle_type, path_to_vehicle_type)
-        #     .mapValues(lambda vehicle_type: os.path.join(target_prefix, vehicle_type))
-        #     # PairRDD(vehicle_type, records)
-        #     .flatMapValues(self.our_storage().list_files)
-        #     # PairRDD(vehicle_type, file endwith REORG_COMPLETE)
-        #     .filter(lambda key_path: key_path[1].endswith('REORG_COMPLETE'))
-        #     # PairRDD(vehicle_type, path)
-        #     .mapValues(os.path.dirname)
-        #     .distinct()
-        # )
-        # logging.info('processed_dirs: %s' % processed_dirs.collect())
+        logging.info(F'records_dir {records_dir.collect()}')
 
-        # self.run(origin_small_records_dir, origin_dir, target_dir)
+        # TODO there are 2 plans to handler processed tasks: 1. insert MongoDB 2. touch FLAG file
+        self.run(records_dir, origin_dir, target_dir)
 
     def run(self, record_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
 
         dir_vehicle_list = self.get_vehicles(record_dir_rdd.collect())
+        # dir_vehicle_list[('Transit', '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27'),...]
+        logging.info(F'dir_vehicle_list{dir_vehicle_list}')
 
-        # dir_vehicle_list[('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27', 'Transit'),
-        # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', 'Transit')]
-        logging.info('dir_vehicle_list{}'.format(dir_vehicle_list))
+        def _filter_vehicle(vehicle):
+            vehicle_parameter_conf_file = os.path.join(
+                target_prefix, vehicle, feature_utils.CONF_FILE)
+            return False if os.path.exists(vehicle_parameter_conf_file) else True
 
+        # 1. Make vehicle directory and copy parameter config file
+        # PairRDD(target_vehicle, source_dir)
+        target_vehicle_rdd = spark_helper.cache_and_log(
+            'target_vehicle_rdd',
+            self.to_rdd(dir_vehicle_list)
+            # RDD(vehicle)
+            .keys()
+            # RDD(vehicle) don't have parameter conf file
+            .filter(_filter_vehicle)
+        )
+
+        # mkdir for vehicle
+        target_vehicle_rdd.foreach(lambda vehicle: file_utils.makedirs(
+            os.path.join(target_prefix, vehicle)))
+        # Copy vehicle parameter config file
+        abs_vehicle_param_path = self.our_storage().abs_path(VECHILE_PARAM_CON_DIR)
+        target_vehicle_rdd.foreach(
+            lambda vehicle: shutil.copyfile(
+                os.path.join(
+                    abs_vehicle_param_path, vehicle.lower(), feature_utils.CONF_FILE), os.path.join(
+                    target_prefix, vehicle, feature_utils.CONF_FILE)
+            )
+        )
+
+        def _update_rdd(pair_rdd):
+            source_dir, target_vehicle_dir = pair_rdd
+            # Vehicle is last
+            vehicle = target_vehicle_dir.split('/')[-1]
+            # Path replace to target directory with vehicle
+            target_vehicle_dir_new = os.path.join(target_prefix, vehicle, source_dir.replace(
+                '/mnt/bos/small-records/2019/', '', 1))
+            return (source_dir, target_vehicle_dir_new)
+
+        # 2.Copy records
+        # dir_vehicle_list[('Transit', '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27'),...)]
+        # PairRDD(source_dir, target_dir)
         dir_vehicle_rdd = spark_helper.cache_and_log(
             'dir_vehicle_rdd',
             self.to_rdd(dir_vehicle_list)
-            # .map(lambda path:)
+            # PairRDD (source_dir, target_dir)
+            .map(spark_op.swap_kv)
+            # PairRDD(source_dir, target_dir_with_vehicle)
+            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', '/mnt/bos/control/small-records/Transit')]
+            .mapValues(lambda vehicle: os.path.join(target_prefix, vehicle))
+            # PairRDD(source_dir, target_dir_with_vehicle) sample like:
+            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', '/mnt/bos/control/small-records/Transit/2019-02-25/2019-02-25-16-18-12')]
+            .map(_update_rdd)
+            # PairRDD(source_dir, target_dir_with_vehicle) value unique:
+            .filter(spark_op.filter_value(lambda task: not os.path.exists(task)))
         )
 
-        logging.info('dir_vehicle_rdd %s' % dir_vehicle_rdd.collect())
+        logging.info(F'dir_vehicle_rdd {dir_vehicle_rdd.collect()}')
 
-        # result = spark_helper.cache_and_log(
-        #     'result',
-        #     # RDD(record_dir)
-        #     record_dir_rdd
-        #     # PairRDD(record_dir, vehicle_name)
-        #     .map(self.get_vehicles)
-        #     # RDD(0/1), 1 for success
-        #     .map(lambda dir_map: self.process_dir(
-        #         dir_map[0],
-        #         dir_map[0].replace(origin_prefix,
-        #                            os.path.join(target_prefix, dir_map[1] + '/'), 1),
-        #         dir_map[1], origin_prefix))
-        # )
+        # dir_vehicle_rdd.values().foreach(file_utils.makedirs)
+        dir_vehicle_rdd.foreach(lambda path: shutil.copytree(path[0], path[1]))
 
-        # logging.info('result %s' % result.collect())
+        # 3. Add REORG TAG
+        source_dir_rdd = spark_helper.cache_and_log(
+            'dir_vehicle_rdd',
+            dir_vehicle_rdd
+            # RDD source_dir
+            .keys()
+            # RDD touch flag
+            .foreach(lambda path: file_utils.touch('REORG_COMPLETE'))
+        )
 
-        # logging.info(
-        # 'Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
-
-    def process_dir(self, record_dir, target_dir, vehicle, origin_dir):
-        # record_dir /mnt/bos/small-records/2019/2019-01-03/2019-01-03-15-49-43
-        # target_dir /mnt/bos/modules/control/small-records/Mkz7/2019-01-03/2019-01-03-15-49-43
-
-        logging.info('record_dir{}, target_dir{}, vehicle {}'.format(
-            record_dir, target_dir, vehicle))
-        # create target vehicles directory
-        # file_utils.makedirs(target_dir)
-
-        # # Copy record files
-        # shutil.copytree(record_dir, target_dir)
-
-        # # Copy vehicle_parameter.pb.txt /mnt/bos/modules/control/control_conf/mkz6/vehicle_param.pb.txt
-        # control_conf_prefix = '/mnt/bos/modules/control/control_conf'
-        # sorce_conf_dir = os.path.join(
-        #     record_dir.replace(origin_dir, control_conf_prefix, 1), feature_utils.CONF_FILE)
-        # target_conf_dir = os.path.join(
-        #     control_conf_prefix, vehicle, feature_utils.CONF_FILE)
-        # shutil.copyfile(sorce_conf_dir, target_conf_dir)
-
-        # # Touch Reorg tag
-        # # TODO(zongbao): need to add filter in multi_job_control_profiling_metrics.py
-        # file_utils.touch(os.path.join(target_dir, 'REORG_COMPLETE'))
+        logging.info('reorgize small records by vehicle: All Done, PROD')
 
     def get_vehicles(self, record_dirs):
         """Return the (record_dir, vehicle_name) pair"""
-        logging.info('input record_dirs %s' % record_dirs)
+        logging.info(F'input record_dirs: {record_dirs}')
         # record_dirs = list(record_dirs)
-        # record_dirs ['/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27',...]
         collection = Mongo().record_collection()
         dir_vehicle_dict = db_backed_utils.lookup_vehicle_for_dirs(
             record_dirs, collection)
         # dir_vehicle_dict{'/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27': 'Transit',
         # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12': 'Transit'}
-        logging.info('dir_vehicle_dict%s' % dir_vehicle_dict)
+        logging.info(F'dir_vehicle_dict: {dir_vehicle_dict}')
         dir_vehicle_list = []
         for record_dir, vehicle in dir_vehicle_dict.items():
-            # record_dir, Mkz7
-            dir_vehicle_list.append((record_dir, vehicle))
+            # Mkz7, record_dir
+            dir_vehicle_list.append((vehicle, record_dir))
         print(dir_vehicle_list)
         return dir_vehicle_list
 
