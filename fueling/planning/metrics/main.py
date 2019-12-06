@@ -5,7 +5,10 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from cyber_py3.record import RecordReader
+if sys.version_info[0] >= 3:
+    from cyber_py3.record import RecordReader
+else:
+    from cyber_py.record import RecordReader
 from modules.control.proto import control_cmd_pb2
 from modules.planning.proto import planning_pb2
 from modules.canbus.proto import chassis_pb2
