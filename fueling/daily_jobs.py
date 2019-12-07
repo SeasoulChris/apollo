@@ -20,7 +20,7 @@ if __name__ == '__main__':
         DecodeVideoPipeline(),
         # Control profiling.
         ReorgSmallRecordsByVehicle(),
-        # TODO(uncomment when get a smooth way pass the input_data_path reorgized by last job):
-        # MultiJobControlProfilingMetrics(),
-        # MultiJobControlProfilingVisualization(),
+        # INPUT_DATA_PATH="modules/control/small-records"
+        MultiJobControlProfilingMetrics(),
+        MultiJobControlProfilingVisualization(),
     ]).main()

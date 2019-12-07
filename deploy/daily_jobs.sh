@@ -14,6 +14,9 @@ FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718" ./tools/submit-job-to-k
     --fueling "/mnt/bos/modules/data/jobs/deploy/fueling-latest.zip" \
     ${JOB}
 
+# only for internal records control profiing and visualization
+INPUT_DATA_PATH="modules/control/small-records"
+
 # Job: Daily jobs.
 SUBMITTER="./tools/submit-job-to-k8s.py --env=fuel-py36 --workers=10 --memory=24"
-${SUBMITTER} --main="fueling/daily_jobs.py" --disk=800
+${SUBMITTER} --main="fueling/daily_jobs.py" --disk=800 --flags="${FLAGS}
