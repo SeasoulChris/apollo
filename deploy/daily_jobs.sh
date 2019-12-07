@@ -16,6 +16,7 @@ FUEL_CLIENT_IMAGE="apolloauto/fuel-client:20190821_1718" ./tools/submit-job-to-k
 
 # only for internal records control profiing and visualization
 INPUT_DATA_PATH="modules/control/small-records"
+FLAGS="--input_data_path=${INPUT_DATA_PATH}"
 
 # Job: Daily jobs.
 SUBMITTER="./tools/submit-job-to-k8s.py --env=fuel-py36 --workers=10 --memory=24"
