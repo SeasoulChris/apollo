@@ -2,11 +2,14 @@
 
 import sys
 
+if sys.version_info[0] >= 3:
+    from cyber_py3.record import RecordReader
+else:
+    from cyber_py.record import RecordReader
+
 from modules.canbus.proto import chassis_pb2
 from modules.localization.proto import localization_pb2
 from modules.planning.proto import planning_pb2
-
-import fueling.common.record_utils as record_utils
 
 
 class RecordItemReader:
@@ -14,25 +17,23 @@ class RecordItemReader:
         self.record_file = record_file
 
     def read(self, topics):
-        reader = record_utils.read_record([
-            record_utils.CHASSIS_CHANNEL,
-            record_utils.LOCALIZATION_CHANNEL,
-            record_utils.PLANNING_CHANNEL,
-        ])
-        for msg in reader(self.record_file):
-            if msg.topic == record_utils.CHASSIS_CHANNEL:
+        reader = RecordReader(self.record_file)
+        for msg in reader.read_messages():
+            if msg.topic not in topics:
+                continue
+            if msg.topic == "/apollo/canbus/chassis":
                 chassis = chassis_pb2.Chassis()
                 chassis.ParseFromString(msg.message)
                 data = {"chassis": chassis}
                 yield data
 
-            if msg.topic == record_utils.LOCALIZATION_CHANNEL:
+            if msg.topic == "/apollo/localization/pose":
                 location_est = localization_pb2.LocalizationEstimate()
                 location_est.ParseFromString(msg.message)
                 data = {"pose": location_est}
                 yield data
 
-            if msg.topic == record_utils.PLANNING_CHANNEL:
+            if msg.topic == "/apollo/planning":
                 planning = planning_pb2.ADCTrajectory()
                 planning.ParseFromString(msg.message)
                 data = {"planning": planning}
