@@ -16,6 +16,7 @@ import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
 
 VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
+REORG_TAG = 'REORG_COMPLETE'
 
 
 class ReorgSmallRecordsByVehicle(BasePipeline):
@@ -109,7 +110,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
 
         def _update_rdd(pair_rdd):
             source_dir, target_vehicle_dir = pair_rdd
-            # Vehicle is last
+            # Vehicle at last position
             vehicle = target_vehicle_dir.split('/')[-1]
             # Path replace to target directory with vehicle
             target_vehicle_dir_new = os.path.join(target_prefix, vehicle, source_dir.replace(
@@ -117,11 +118,12 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
             return (source_dir, target_vehicle_dir_new)
 
         # 2.Copy records
-        # dir_vehicle_list[('Transit', '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27'),...)]
         # PairRDD(source_dir, target_dir)
         dir_vehicle_rdd = spark_helper.cache_and_log(
             'dir_vehicle_rdd',
             self.to_rdd(dir_vehicle_list)
+            # PairRDD (vehicle, source_dir) which is not reorgized
+            .filter(spark_op.filter_value(lambda target: not os.path.exists(os.path.join(target, REORG_TAG))))
             # PairRDD (source_dir, target_dir)
             .map(spark_op.swap_kv)
             # PairRDD(source_dir, target_dir_with_vehicle)
@@ -146,7 +148,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
             # RDD source_dir
             .keys()
             # RDD touch flag
-            .foreach(lambda path: file_utils.touch('REORG_COMPLETE'))
+            .foreach(lambda path: file_utils.touch(REORG_TAG))
         )
 
         logging.info('reorgize small records by vehicle: All Done, PROD')

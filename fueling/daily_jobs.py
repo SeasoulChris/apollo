@@ -6,8 +6,9 @@ from fueling.data.pipelines.generate_small_records import GenerateSmallRecords
 from fueling.data.pipelines.index_records import IndexRecords
 from fueling.data.pipelines.reorg_small_records import ReorgSmallRecords
 from fueling.perception.decode_video import DecodeVideoPipeline
-from fueling.profiling.control_profiling_metrics import ControlProfilingMetrics
-from fueling.profiling.control_profiling_visualization import ControlProfilingVisualization
+from fueling.profiling.reorg_smallrecords_by_vehicle import ReorgSmallRecordsByVehicle
+from fueling.profiling.multi_job_control_profiling_metrics import MultiJobControlProfilingMetrics
+from fueling.profiling.multi_job_control_profiling_visualization import MultiJobControlProfilingVisualization
 
 
 if __name__ == '__main__':
@@ -18,6 +19,8 @@ if __name__ == '__main__':
         IndexRecords(),
         DecodeVideoPipeline(),
         # Control profiling.
-        ControlProfilingMetrics(),
-        ControlProfilingVisualization(),
+        ReorgSmallRecordsByVehicle(),
+        # TODO(uncomment when get a smooth way pass the input_data_path reorgized by last job):
+        # MultiJobControlProfilingMetrics(),
+        # MultiJobControlProfilingVisualization(),
     ]).main()
