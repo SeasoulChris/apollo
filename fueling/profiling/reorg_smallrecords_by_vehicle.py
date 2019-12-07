@@ -18,7 +18,7 @@ import fueling.profiling.feature_extraction.multi_job_control_feature_extraction
 VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
 
 
-class ReorgSmallRecords(BasePipeline):
+class ReorgSmallRecordsByVehicle(BasePipeline):
     """Reorg small Records by vehicle as the input data path to control profiling pipeline."""
 
     def run_test(self):
@@ -38,7 +38,6 @@ class ReorgSmallRecords(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct()
-            # .mapPartitions(self.get_vehicles)
         )
         # print(self.our_storage().list_files('testdata/control'))
         logging.info(F'records_dir: {records_dir.collect()}')
@@ -69,7 +68,6 @@ class ReorgSmallRecords(BasePipeline):
 
         logging.info(F'records_dir {records_dir.collect()}')
 
-        # TODO there are 2 plans to handler processed tasks: 1. insert MongoDB 2. touch FLAG file
         self.run(records_dir, origin_dir, target_dir)
 
     def run(self, record_dir_rdd, origin_prefix, target_prefix):
@@ -91,6 +89,8 @@ class ReorgSmallRecords(BasePipeline):
             self.to_rdd(dir_vehicle_list)
             # RDD(vehicle)
             .keys()
+            # RDD(vehicle) for case 'mkz7 concord'
+            .map(lambda vehicle: vehicle.replace(' ', '_', 1))
             # RDD(vehicle) don't have parameter conf file
             .filter(_filter_vehicle)
         )
@@ -154,19 +154,14 @@ class ReorgSmallRecords(BasePipeline):
     def get_vehicles(self, record_dirs):
         """Return the (record_dir, vehicle_name) pair"""
         logging.info(F'input record_dirs: {record_dirs}')
-        # record_dirs = list(record_dirs)
         collection = Mongo().record_collection()
         dir_vehicle_dict = db_backed_utils.lookup_vehicle_for_dirs(record_dirs, collection)
-        # dir_vehicle_dict{'/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27': 'Transit',
-        # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12': 'Transit'}
         logging.info(F'dir_vehicle_dict: {dir_vehicle_dict}')
         dir_vehicle_list = []
         for record_dir, vehicle in dir_vehicle_dict.items():
-            # Mkz7, record_dir
             dir_vehicle_list.append((vehicle, record_dir))
-        print(dir_vehicle_list)
         return dir_vehicle_list
 
 
 if __name__ == '__main__':
-    ReorgSmallRecords().main()
+    ReorgSmallRecordsByVehicle().main()
