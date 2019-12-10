@@ -7,8 +7,6 @@ import time
 import numpy as np
 import pyro
 import pyro.contrib.gp as gp
-import pyro.infer as infer
-import pyro.optim as optim
 import torch
 import torch.nn as nn
 import torch.nn.functional as Func
@@ -74,10 +72,10 @@ def train_gp(args, dataset, gp_class):
     gp_instante = gp_class(args, gp_f, dataset)
     # args.mate = preprocessing(args, dataset, gp_instante)
     # Pyro Adam opitmizer
-    optimizer = optim.ClippedAdam({"lr": args.lr, "lrd": args.lr_decay})
+    optimizer = pyro.optim.ClippedAdam({"lr": args.lr, "lrd": args.lr_decay})
     # svi: Stochastic variational inference
     # ELBO: Evidence Lower Boundary
-    svi = infer.SVI(gp_instante.model, gp_instante.guide, optimizer, infer.Trace_ELBO())
+    svi = pyro.infer.SVI(gp_instante.model, gp_instante.guide, optimizer, pyro.infer.Trace_ELBO())
 
     logging.info("Start of training")
     gp_instante.set_data(feature, label)
