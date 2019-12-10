@@ -35,4 +35,4 @@ class GaussianProcess(Parameterized):
 
     def forward(self, input_data):
         """Call the VariantionalSparseGP with full_cov"""
-        return self.gp_f(input_data, full_cov=True)
+        return self.gp_f.forward(input_data, full_cov=True)
