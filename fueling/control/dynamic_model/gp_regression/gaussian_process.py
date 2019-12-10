@@ -9,6 +9,7 @@ import pyro.optim as optim
 
 assert pyro.__version__.startswith('1.0.0')
 
+
 class GaussianProcess(Parameterized):
     """Gaussian process"""
     name = 'GaussianProcess'
@@ -21,12 +22,10 @@ class GaussianProcess(Parameterized):
 
     def model(self):
         """Gaussian process model"""
-        pyro.module("GaussianProcess", self)
         return self.gp_f.model()
 
     def guide(self):
         """Gaussian process guide"""
-        pyro.module("GaussianProcess", self)
         return self.gp_f.guide()
 
     def set_data(self, feature, label):
