@@ -14,7 +14,6 @@ from fueling.perception.YOLOv3.dataset import Dataset
 from fueling.perception.YOLOv3.train import training
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.storage.bos_client as bos_client
 import fueling.perception.YOLOv3.utils.data_utils as data_utils
 
 

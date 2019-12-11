@@ -12,7 +12,6 @@ from fueling.perception.sensor_calibration.calibration_config import Calibration
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.storage.bos_client as bos_client
 
 
 def execute_task(message_meta):
