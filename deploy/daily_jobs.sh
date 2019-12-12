@@ -20,4 +20,4 @@ FLAGS="--input_data_path=${INPUT_DATA_PATH}"
 
 # Job: Daily jobs.
 SUBMITTER="./tools/submit-job-to-k8s.py --env=fuel-py36 --workers=10 --memory=24"
-${SUBMITTER} --main="fueling/daily_jobs.py" --disk=800 --flags="${FLAGS}
+${SUBMITTER} --main="fueling/daily_jobs.py" --disk=800 --flags="${FLAGS}"
