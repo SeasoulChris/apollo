@@ -23,6 +23,8 @@ class PlanningStabilityGrader(object):
         self.planning_lon_jerk_processor = PlanningJerk()
         self.planning_av_processor = PlanningAv()
         self.score_list = []
+        self.lat_score_list = []
+        self.lon_score_list = []
         self.lat_jerk_av_table = defaultdict(lambda: defaultdict(int))
         self.lon_jerk_av_table = defaultdict(lambda: defaultdict(int))
 
@@ -57,7 +59,7 @@ class PlanningStabilityGrader(object):
         if lon_jerk in self.grade_table[self.key_lon_jerk_av]:
             if angular_velocity in self.grade_table[self.key_lon_jerk_av][lon_jerk]:
                 score_lon_jerk_av = self.grade_table[self.key_lon_jerk_av][lon_jerk][angular_velocity]
-        return score_lat_jerk_av * score_lon_jerk_av
+        return score_lat_jerk_av * score_lon_jerk_av, score_lat_jerk_av, score_lon_jerk_av
 
     def grade_message(self, planning_pb):
         self.planning_lat_jerk_processor.add(planning_pb)
@@ -70,8 +72,10 @@ class PlanningStabilityGrader(object):
         lat_jerk = self.planning_lat_jerk_processor.get_lastest_lat_jerk()
         lon_jerk = self.planning_lon_jerk_processor.get_lastest_derived_jerk()
         if lat_jerk is not None and lon_jerk is not None:
-            score = self.grade(lat_jerk, lon_jerk, av)
+            score, lat_score, lon_score = self.grade(lat_jerk, lon_jerk, av)
             self.score_list.append(score)
+            self.lat_score_list.append(lat_score)
+            self.lon_score_list.append(lon_score)
 
     def grade_record_file(self, pathfile):
         reader = RecordItemReader(pathfile)
@@ -80,6 +84,8 @@ class PlanningStabilityGrader(object):
         self.planning_av_processor = PlanningAv()
 
         self.score_list = []
+        self.lon_score_list = []
+        self.lat_score_list = []
         topics = ["/apollo/planning"]
         for data in reader.read(topics):
             if "planning" in data:
