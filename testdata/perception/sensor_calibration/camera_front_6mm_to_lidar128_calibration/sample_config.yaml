@@ -1,0 +1,7 @@
+beams: 128
+calibration_task: camera_to_lidar
+data_path: ./camera-lidar-pairs
+destination_sensor: lidar128
+extrinsic: ./init_params/camera_front_6mm_lidar128_extrinsics.yaml
+intrinsic: ./init_params/camera_front_6mm_intrinsics.yaml
+source_sensor: camera_front_6mm

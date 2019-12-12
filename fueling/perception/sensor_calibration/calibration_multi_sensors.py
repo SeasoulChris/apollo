@@ -30,19 +30,17 @@ def execute_task(message_meta):
     logging.info('executing task: {} with src_dir: {}'.format(task_name, source_dir))
     # Invoke benchmark binary
     logging.info('start to execute sensor calbiration service')
-
+    # Add lib path
     executable_dir = os.path.join(os.path.dirname(__file__), 'executable_bin')
+    if executable_dir not in os.environ['LD_LIBRARY_PATH']:
+        os.environ['LD_LIBRARY_PATH'] = executable_dir + ':' + os.environ['LD_LIBRARY_PATH']
+    os.system("echo $LD_LIBRARY_PATH")
     if task_name == 'lidar_to_gnss':
-        executable_bin = os.path.join(executable_dir, 'multi_lidar_to_gnss',
-                                      'multi_lidar_gnss_calibrator')
-        # Add lib path
-        new_lib = os.path.join(executable_dir, 'multi_lidar_to_gnss')
-        if new_lib not in os.environ['LD_LIBRARY_PATH']:
-            os.environ['LD_LIBRARY_PATH'] = new_lib + ':' + os.environ['LD_LIBRARY_PATH']
-        os.system("echo $LD_LIBRARY_PATH")
+        executable_bin = os.path.join(executable_dir, 'multi_lidar_gnss_calibrator')
     elif task_name == 'camera_to_lidar':
-        logging.info('executable not ready, stay for tune')
-        return None
+        executable_bin = os.path.join(executable_dir, 'multi_grid_lidar_camera_calibrator')
+        #logging.info('executable not ready, stay for tune')
+        #return None
     else:
         logging.error('not support {} yet'.format(task_name))
         return None

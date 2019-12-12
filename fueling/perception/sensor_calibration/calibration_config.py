@@ -70,7 +70,7 @@ class CalibrationConfig(object):
         out_data = {
             # set up the source_sensor(camera name) to dest sensor(lidar name)
             'frameid': in_data['destination_sensor'],
-            'child_frame_id': in_data['source_sensor'],
+            'child_frameid': in_data['source_sensor'],
             # set up the inputs: intrinsic, initial extrinsic,
             # input data path for paris of lidar-camera
             'intrinsic': os.path.abspath(os.path.join(root_path, in_data['intrinsic'])),

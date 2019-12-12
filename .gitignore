@@ -4,6 +4,8 @@ testdata/perception/sensor_calibration/lidar_to_gnss1/lidar_to_gnss_calibration_
 testdata/perception/sensor_calibration/lidar_to_gnss1/results/
 testdata/perception/sensor_calibration/lidar_to_gnss2/lidar_to_gnss_calibration_config.yaml
 testdata/perception/sensor_calibration/lidar_to_gnss2/results/
+testdata/perception/sensor_calibration/camera_front_6mm_to_lidar128_calibration/camera_to_lidar_calibration_config.yaml
+testdata/perception/sensor_calibration/camera_front_6mm_to_lidar128_calibration/results/
 
 apollo/
 py_proto/

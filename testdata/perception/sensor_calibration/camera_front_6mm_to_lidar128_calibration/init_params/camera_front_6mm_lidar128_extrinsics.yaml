@@ -1,0 +1,17 @@
+child_frame_id: camera_front_6mm
+header:
+  frame_id: lidar128
+  seq: 0
+  stamp:
+    nsecs: 0
+    secs: 0
+transform:
+  rotation:
+    w: 0.5
+    x: -0.5
+    y: 0.5
+    z: -0.5
+  translation:
+    x: 0.792
+    y: 0.109
+    z: -0.2667
