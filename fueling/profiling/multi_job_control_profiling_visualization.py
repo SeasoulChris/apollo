@@ -219,6 +219,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_m
         target_dir_daily = None
         output_filename = None
         tar = None
+        tasks.sort()
         for task in tasks:
             logging.info(F'task in summarize_tasks: {task}')
             target_dir = task

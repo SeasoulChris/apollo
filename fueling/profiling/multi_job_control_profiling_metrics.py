@@ -333,6 +333,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
         target_dir_daily = None
         output_filename = None
         tar = None
+        targets.sort()
         for target_dir in targets:
             logging.info(F'target_dir in summarize_tasks: {target_dir}')
             target_postfix = target_dir.replace(target_prefix, '', 1)
