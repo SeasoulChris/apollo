@@ -142,6 +142,22 @@ if __name__ == "__main__":
             stability_score["lon_avg"] = sum(lon_score_list) / float(len(lon_score_list))
             stability_score["max"] = max(score_list)
             stability_score["min"] = min(score_list)
+
+            stability_score["bin_high"] = 0
+            stability_score["bin_medium"] = 0
+            stability_score["bin_medium_low"] = 0
+            stability_score["bin_low"] = 0
+
+            for score in score_list:
+                if 0.2 <= score:
+                    stability_score["bin_high"] += 1
+                elif 0.1 <= score < 0.2:
+                    stability_score["bin_medium"] += 1
+                elif 0.02 <= score < 0.1:
+                    stability_score["bin_medium_low"] += 1
+                elif score < 0.02:
+                    stability_score["bin_low"] += 1
+
             results["stability"] = stability_score
         print(json.dumps(results))
     elif args.planningpath or args.planningrefpath:
