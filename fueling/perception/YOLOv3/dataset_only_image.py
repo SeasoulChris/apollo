@@ -89,7 +89,6 @@ class DatasetOnlyImage:
         """
         return len(self._txt_files)
 
-    @property
     def batch(self):
         """
         Get a batch of example.

@@ -7,8 +7,8 @@ from collections import deque
 from PIL import Image, ImageDraw
 from queue import Queue
 from random import shuffle
-from threading import Thread
 import numpy as np
+import threading
 
 import fueling.common.logging as logging
 from fueling.perception.YOLOv3 import config as cfg
@@ -43,35 +43,32 @@ class Dataset:
         self.one_shot = one_shot
         self.one_shot_complete = False
 
-        self._txt_files_queue = Queue(cfg.max_txt_queue_size)
+        self._txt_files = [f for f in range(len(self.image_file_paths))]
+        self._txt_files_queue = deque([])
         self._example_queue = deque([])
-
-        self._txt_files = self.image_file_paths
-
         self._idx = 0
-        self._num_files = len(self._txt_files)
+        self._parse_txt()
 
-        txt_parser_thread = Thread(target=self._parse_txt)
-        txt_parser_thread.daemon = True
-        txt_parser_thread.start()
-
+        self._mutex = threading.Lock()
         for _ in range(num_threads):
-            worker = Thread(target=self._parse_example)
+            worker = threading.Thread(target=self._parse_example)
             worker.daemon = True
             worker.start()
 
     def _parse_txt(self):
         """
-        Parse txt lines
+        Shuffle the to be processed files and load into queue
         """
-        while True:
-            if self._idx == self._num_files:
-                if self.one_shot:
-                    self.one_shot_complete = True
-                    break
-                self._idx = 0
-                shuffle(self._txt_files)
-            self._txt_files_queue.put(self._txt_files[self._idx])
+        if self._idx >= len(self._txt_files):
+            if self.one_shot:
+                self.one_shot_complete = True
+                break
+            self._idx = 0
+            shuffle(self._txt_files)
+        for _ in len(cfg.max_txt_queue_size):
+            if self._idx >= len(self._txt_files):
+                break;
+            self._txt_files_queue.append(self._txt_files[self._idx])
             self._idx += 1
 
     def one_shot_completed(self):
@@ -80,7 +77,7 @@ class Dataset:
         """
         if not self.one_shot:
             raise RuntimeError(
-                "Method 'one_shot_completed' can be called only when self.one_shot is True.")
+                'one_shot_completed can be called only when self.one_shot is True.')
         return self.one_shot_complete
 
     def _parse_example(self):
@@ -88,28 +85,35 @@ class Dataset:
         Parse example from txt line.
         """
         while not self.one_shot_complete:
-            
-            if len(self._example_queue) >= cfg.max_image_queue_size:
-                time.sleep(cfg.thread_sleep_time)
-                continue
+
+            with self._mutex:
+
+                if len(self._example_queue) >= cfg.max_image_queue_size:
+                    time.sleep(cfg.thread_sleep_time)
+                    continue
+
+                if len(self._txt_files_queue) == 0:
+                    self._parse_txt()
+
+                image_path = self.image_file_paths[self._txt_files_queue[0]]
+                self._txt_files_queue.popleft()
 
             try:
-                image_path = self._txt_files_queue.get()
-
                 all_paths = data_utils.get_all_paths(image_path)
                 processed = data_utils.process_data(all_paths)
                 image_data, y_true, cls_box_map, objs, calib, original_image = \
                     data_utils.filter_classes(processed)
                 scale1, scale2, scale3 = y_true
-                image_name = os.path.basename(image_path).split(".")[0]
+                image_name = os.path.basename(image_path).split('.')[0]
 
                 final_data = (image_data, scale1, scale2, scale3, cls_box_map,
                               objs, calib, image_name, original_image)
-                
+
+             with self._mutex:
                 self._example_queue.append(final_data)
 
             except RuntimeError as err:
-                logging.error('cannot process file {} err {}'.format(image_path, err))
+                logging.error(f'cannot process file {image_path} err {err}')
 
     @property
     def dataset_size(self):

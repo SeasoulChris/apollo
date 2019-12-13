@@ -140,8 +140,10 @@ def read_results(image_objs_label_result_uid_list):
                     object_instance[5] = float(line[15])
                     object_instance[6] = CLASS_NAME_ID_MAP[line[0]]
                     return_matrix.append(np.asarray(object_instance))
-        np.vstack(return_matrix)
-        return np.asarray(return_matrix)
+        if return_matrix:
+            np.vstack(return_matrix)
+            return np.asarray(return_matrix)
+        return None
 
     image_info_list = []
     ann_all_list = []
@@ -149,12 +151,13 @@ def read_results(image_objs_label_result_uid_list):
     for element in image_objs_label_result_uid_list:
         image_info, ann_list, label_txt_path, result_txt_path, uid = element
         result_matrix_np = _read_into_matrix(result_txt_path)
-        result_matrix.append(result_matrix_np)
-        image_info_list.append(image_info)
-        ann_all_list += ann_list
+        if result_matrix_np is not None:
+            result_matrix.append(result_matrix_np)
+            image_info_list.append(image_info)
+            ann_all_list += ann_list
     gt_dict = {"annotations": ann_all_list,
                "images": image_info_list}
-    complete_result_matrix = np.vstack(result_matrix)
+    complete_result_matrix = np.vstack(result_matrix) if result_matrix else []
 
     return (gt_dict, complete_result_matrix)
 

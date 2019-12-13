@@ -130,6 +130,12 @@ def get_latest_model(model_folder_path, model_name_prefix):
             latest_model = file_name
     return latest_model
 
+def get_lastest_step(model_folder_path, model_name_prefix):
+    """Get the latest step of existing training"""
+    lastest_model = get_latest_model(model_folder_path, model_name_prefix)
+    if not latest_model:
+        return 0 
+    return (int)(latest_model.split('-')[1].split('.')[0])
 
 def get_restore_file_path(model_folder_path, model_name_prefix):
     """Get restore path_filename_prefix that satifies the TF restore method"""
@@ -137,3 +143,4 @@ def get_restore_file_path(model_folder_path, model_name_prefix):
     if latest_model_file:
         return os.path.join(model_folder_path, latest_model_file.split('.')[0])
     return None
+

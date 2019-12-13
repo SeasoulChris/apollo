@@ -47,18 +47,22 @@ class Yolov3Training(BasePipeline):
 
             restore_path = os.path.join(output_trained_model_path, cfg.restore_path)
             file_utils.makedirs(restore_path)
-            engine = training(restore_path)
-            engine.setup_training()
-            data_pool = Dataset(image_paths)
 
-            curr_iter = 0
-            while cur_iter < cfg.max_iter:
-                data_batch = data_pool.batch()
-                if data_batch is None:
-                    time.sleep(cfg.thread_sleep_time)
-                    continue
-                cur_iter += 1
-                engine.step(data_batch)
+            data_pool = Dataset(image_paths)
+            for idx in range(cfg.max_iter // cfg.save_interval):
+                engine = training(restore_path, idx * cfg.save_interval + 1)
+                engine.setup_training()
+
+                cur_iter = 0
+                while cur_iter <= cfg.save_interval:
+                    data_batch = data_pool.batch()
+                    if data_batch is None:
+                        time.sleep(cfg.thread_sleep_time)
+                        continue
+                    cur_iter += 1
+                    engine.step(data_batch)
+
+                engine.reset_graph()
 
             # After training is done, copy the single model file over to user specified folder
             latest_model_file = data_utils.get_latest_model(restore_path, cfg.model_name_prefix)

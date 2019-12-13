@@ -52,14 +52,13 @@ gpu = "1"
 learning_rate = 0.00025
 decay_steps = 20000
 decay_rate = 0.5
-max_iter = 600
-start_iter = 1
+max_iter = 1000
 num_threads = 3
 max_image_queue_size = 20
-max_txt_queue_size = 200
+max_txt_queue_size = 1000
 thread_sleep_time = 0.01
 batch_size = 8
-save_interval = 5000
+save_interval = 1000
 print_interval = 1
 summary_interval = 500
 

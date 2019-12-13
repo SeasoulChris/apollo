@@ -3,6 +3,7 @@
 import io
 import math
 import os
+import resource
 import sys
 import time
 
@@ -51,7 +52,6 @@ TRAIN_ONLY_VARIABLES = cfg.train_only_variables
 LEARNING_RATE = cfg.learning_rate
 DECAY_STEPS = cfg.decay_steps
 DECAY_RATE = cfg.decay_rate
-START_ITER = cfg.start_iter
 MAX_ITER = cfg.max_iter
 SUMMARY_INTERVAL = cfg.summary_interval
 PRINT_INTERVAL = cfg.print_interval
@@ -66,53 +66,63 @@ def get_available_gpus():
     return [x.name for x in local_device_protos]
 
 
+def print_current_memory_usage(step_name):
+    mb_2_kb = 1024
+    meminfo = dict((m.split()[0].rstrip(':'), int(m.split()[1]))
+                   for m in open('/proc/meminfo').readlines())
+    total_mem = meminfo['MemTotal'] // mb_2_kb
+    used_mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // mb_2_kb
+    logging.info(f'step: {step_name}, total memory: {total_mem} MB, current memory: {used_mem} MB')
+
+
 class training:
 
-    def __init__(self, restore_path, num_gpu=1):
-        self.cur_step = START_ITER
+    def __init__(self, restore_path, start_step, num_gpu=1):
+        self.model_restore_path = restore_path
         self.last_save_step = -1
         self.num_gpu = num_gpu
         self.epoch = 0
-        self.global_step = tf.Variable(self.cur_step, name="global_step", trainable=False)
-        self.model_restore_path = restore_path
+        self.cur_step = start_step + data_utils.get_latest_step(restore_path, MODEL_NAME_PREFIX)
+        self.global_step = tf.Variable(self.cur_step, name='global_step', trainable=False)
 
     def _init_essential_placeholders(self):
         """
         Essential placeholders.
         """
         placeholders = {}
-        placeholders["input_image"] = tf.placeholder(tf.float32,
-                                                     shape=[BATCH_SIZE, INPUT_HEIGHT,
-                                                            INPUT_WIDTH, CHANNELS],
-                                                     name="Input")
-        placeholders["visual_image"] = tf.placeholder(tf.float32,
-                                                      shape=[1, INPUT_HEIGHT * VISUAL_SCALE,
-                                                             INPUT_WIDTH * VISUAL_SCALE, CHANNELS],
-                                                      name="visual_image")
-        placeholders["is_train_placeholder"] = tf.placeholder(tf.bool, shape=[])
+        placeholders["input_image"] = tf.compat.v1.placeholder(tf.float32,
+                                                               shape=[BATCH_SIZE, INPUT_HEIGHT,
+                                                                      INPUT_WIDTH, CHANNELS],
+                                                               name="Input")
+        placeholders["visual_image"] = tf.compat.v1.placeholder(tf.float32,
+                                                                shape=[1, INPUT_HEIGHT * VISUAL_SCALE,
+                                                                       INPUT_WIDTH * VISUAL_SCALE, CHANNELS],
+                                                                name="visual_image")
+        placeholders["is_train_placeholder"] = tf.compat.v1.placeholder(tf.bool, shape=[])
         with tf.name_scope("Target"):
 
             placeholders["label_scale1"] = \
-                tf.placeholder(tf.float32,
-                               shape=[BATCH_SIZE, INPUT_HEIGHT / 32, INPUT_WIDTH / 32,
-                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name="target_S1")
+                tf.compat.v1.placeholder(tf.float32,
+                                         shape=[BATCH_SIZE, INPUT_HEIGHT / 32, INPUT_WIDTH / 32,
+                                                NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                                         name="target_S1")
             placeholders["label_scale2"] = \
-                tf.placeholder(tf.float32,
-                               shape=[BATCH_SIZE, INPUT_HEIGHT / 16, INPUT_WIDTH / 16,
-                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name="target_S2")
+                tf.compat.v1.placeholder(tf.float32,
+                                         shape=[BATCH_SIZE, INPUT_HEIGHT / 16, INPUT_WIDTH / 16,
+                                                NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                                         name="target_S2")
             placeholders["label_scale3"] = \
-                tf.placeholder(tf.float32,
-                               shape=[BATCH_SIZE, INPUT_HEIGHT / 8, INPUT_WIDTH / 8,
-                                      NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
-                               name="target_S3")
+                tf.compat.v1.placeholder(tf.float32,
+                                         shape=[BATCH_SIZE, INPUT_HEIGHT / 8, INPUT_WIDTH / 8,
+                                                NUM_ANCHOR_BOXES_PER_SCALE, (NUM_OUTPUT_LAYERS)],
+                                         name="target_S3")
         return placeholders
 
     def _config_graph(self, input_tensor, is_training=True, reuse=False):
         """
         Configure the inference computation graph.
         """
+
         scale1, scale2, scale3, feature1, feature2, feature3 = \
             YOLOv3(input_tensor, ANCHORS, NUM_CLASSES, is_training)\
             .yolo_v3(num_layers=NUM_OUTPUT_LAYERS,
@@ -145,13 +155,13 @@ class training:
         """
         Initialize an optimizer.
         """
-        learning_rate = tf.train.exponential_decay(learning_rate=start_learning_rate,
-                                                   global_step=self.global_step,
-                                                   decay_steps=decay_steps,
-                                                   decay_rate=decay_rate,
-                                                   staircase=True)
+        learning_rate = tf.compat.v1.train.exponential_decay(learning_rate=start_learning_rate,
+                                                             global_step=self.global_step,
+                                                             decay_steps=decay_steps,
+                                                             decay_rate=decay_rate,
+                                                             staircase=True)
         with tf.name_scope("Optimizer"):
-            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+            optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
             grads = optimizer.compute_gradients(loss, variable_list,
                                                 colocate_gradients_with_ops=True)
         return grads, optimizer
@@ -160,7 +170,7 @@ class training:
         """
         Initialize a saver to save/restore model
         """
-        saver = tf.train.Saver(max_to_keep=None)
+        saver = tf.compat.v1.train.Saver(max_to_keep=None)
         return saver
 
     def _restore_from_checkpoint(self, sess):
@@ -168,24 +178,24 @@ class training:
         Restore training from a checkpoint.
         """
         if START_FROM_COCO:
-            variables = [v for v in tf.global_variables() if ("Adam" not in v.name and
-                                                              "global_step" not in v.name and
-                                                              "Optimizer" not in v.name and
-                                                              "yolo-v3/Conv_14" not in v.name and
-                                                              "yolo-v3/Conv_22" not in v.name and
-                                                              "yolo-v3/Conv_6" not in v.name and
-                                                              "beta1_power" not in v.name and "beta2_power" not in v.name)]
+            variables = [v for v in tf.compat.v1.global_variables() if ("Adam" not in v.name and
+                                                                        "global_step" not in v.name and
+                                                                        "Optimizer" not in v.name and
+                                                                        "yolo-v3/Conv_14" not in v.name and
+                                                                        "yolo-v3/Conv_22" not in v.name and
+                                                                        "yolo-v3/Conv_6" not in v.name and
+                                                                        "beta1_power" not in v.name and "beta2_power" not in v.name)]
             restore_saver = tf.train.Saver(var_list=variables)
         else:
-            variables = [v for v in tf.global_variables() if ("Adam" not in v.name)]
-            restore_saver = tf.train.Saver(var_list=variables)
+            variables = [v for v in tf.compat.v1.global_variables() if ("Adam" not in v.name)]
+            restore_saver = tf.compat.v1.train.Saver(var_list=variables)
 
         # TODO(longtao): figure why restore need a file name but not checkpoint folder
         restore_file_path = data_utils.get_restore_file_path(self.model_restore_path,
                                                              cfg.model_name_prefix)
         if restore_file_path:
             restore_saver.restore(sess, restore_file_path)
-            logging.info("Restored weights from {}.".format(restore_file_path))
+            logging.info(f'Restored weights from {restore_file_path}.')
 
     def _image_summary(self, image_batch, xy_wh_conf_value, calib_list, cls_box_map=None):
         """
@@ -215,16 +225,16 @@ class training:
         """
         Initialize a summary writer.
         """
-        return tf.summary.FileWriter(os.path.join(self.model_restore_path, suffix))
+        return tf.compat.v1.summary.FileWriter(os.path.join(self.model_restore_path, suffix))
 
     def _add_to_summary(self, tensor, name, _type="scalar"):
         """
         Write tensor to summary.
         """
         if _type == "scalar":
-            return tf.summary.scalar(name=name, tensor=tensor)
+            return tf.compat.v1.summary.scalar(name=name, tensor=tensor)
         elif _type == "image":
-            return tf.summary.image(name=name, tensor=tensor)
+            return tf.compat.v1.summary.image(name=name, tensor=tensor)
         else:
             raise RuntimeError("Currently only support scaler and image.")
 
@@ -235,7 +245,7 @@ class training:
         tensor_list = []
         for t, n in tensor_name_map.items():
             tensor_list.append(self._add_to_summary(t, n))
-        return tf.summary.merge(tensor_list)
+        return tf.compat.v1.summary.merge(tensor_list)
 
     def _add_all_image_summary(self, name_tensor_map):
         """
@@ -244,7 +254,7 @@ class training:
         tensor_list = []
         for n, t in name_tensor_map.items():
             tensor_list.append(self._add_to_summary(t, n, _type="image"))
-        return tf.summary.merge(tensor_list)
+        return tf.compat.v1.summary.merge(tensor_list)
 
     def _average_gradients(self, tower_grads):
         """Calculate the average gradient for each shared variable across all towers.
@@ -287,7 +297,7 @@ class training:
         """
         with tf.device("/cpu:0"):
             # Set random seed
-            tf.set_random_seed(2)
+            tf.compat.v1.set_random_seed(2)
 
             self.gpu_placeholders = []
             tower_grads = []
@@ -320,11 +330,10 @@ class training:
                     if TRAIN_ONLY_VARIABLES:
                         variables_to_train = set()
                         for n in TRAIN_ONLY_VARIABLES:
-                            temp = [v for v in tf.global_variables() if (n in v.name)]
+                            temp = [v for v in tf.compat.v1.global_variables() if (n in v.name)]
                             variables_to_train = variables_to_train.union(set(temp))
                         variables_to_train = list(variables_to_train)
-                        logging.info("=======Number of variables to train : {}========"
-                                     .format(len(variables_to_train)))
+                        logging.info(f'=======Number of variables to train : {len(variables_to_train)}========')
 
                     grads, optimizer = self._init_optimizer(loss + regularization_loss,
                                                             start_learning_rate=LEARNING_RATE,
@@ -339,7 +348,7 @@ class training:
             average_grads = self._average_gradients(tower_grads)
 
             # TODO[KaWai]: this is just an approximation of the real batch norm across multiple GPU.
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 train_op = optimizer.apply_gradients(average_grads)
 
@@ -377,6 +386,10 @@ class training:
             self.ops = [xy_loss, wh_loss, positive_conf_loss, negative_conf_loss,
                         cls_loss, loss, alpha_loss, hwl_loss, train_op]
 
+    def reset_graph(self):
+        """Reset default graph after training"""
+        tf.reset_default_graph()
+
     def step(self, data):
         """
         Perform 1 update on the model with input training data.
@@ -391,8 +404,10 @@ class training:
             self.gpu_placeholders[self.num_gpu - 1]["label_scale1"]: label_batch_scale1,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale2"]: label_batch_scale2,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale3"]: label_batch_scale3})
+
         xy_, wh_, positive_conf_, negative_conf_, cls_, loss_train, alpha_, hwl_, _ = \
             self.sess.run(self.ops, feed_dict=feed_dict, options=run_options)
+
         if self.cur_step % SUMMARY_INTERVAL == 0:
             feed_dict[self.gpu_placeholders[self.num_gpu - 1]["is_train_placeholder"]] = False
             xy_wh_conf_value = self.sess.run(self.xy_wh_conf, feed_dict=feed_dict)
@@ -406,17 +421,19 @@ class training:
             self.summary_writer_train.add_summary(summary_train, global_step=self.cur_step)
             self.summary_writer_train.add_summary(summary_image, global_step=self.cur_step)
         if self.cur_step % PRINT_INTERVAL == 0:
-            logging.info("step = {}, Loss = {}".format(self.cur_step, loss_train))
-            logging.info("xy_loss = {}, wh_loss = {}, \
-                          positive_conf_loss = {}, \
-                          negative_conf_loss = {}, \
-                          cls_loss = {}, alpha_loss = {}, hwl_loss = {}."
-                         .format(xy_, wh_, positive_conf_,
-                                 negative_conf_, cls_, alpha_, hwl_))
+            logging.info(f'step = {self.cur_step}, Loss = {loss_train}')
+            logging.info(f'xy_loss = {xy_}, wh_loss = {wh_}, \
+                          positive_conf_loss = {positive_conf_}, \
+                          negative_conf_loss = {negative_conf_}, \
+                          cls_loss = {cls_}, alpha_loss = {alpha_}, hwl_loss = {hwl_}.')
+
+        print_current_memory_usage(f'current step: {self.cur_step}')
+
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
             self.saver.save(self.sess, "{}/{}".format(self.model_restore_path, MODEL_NAME_PREFIX),
                             global_step=self.cur_step)
-            logging.info("Model saved in file: {}".format(self.model_restore_path))
+            logging.info(f'Model saved in file: {self.model_restore_path}')
         logging.info(self.sess.run(tf.contrib.memory_stats.MaxBytesInUse()))
         self.cur_step += 1
+

@@ -2,6 +2,7 @@
 
 import glob
 import os
+import time
 
 from absl import flags
 import numpy as np
@@ -56,9 +57,16 @@ class Yolov3Inference(BasePipeline):
 
             rounds = 0 if data_pool.dataset_size == 0 else max(
                 1, (data_pool.dataset_size + 1) // cfg.batch_size)
-            for _ in range(rounds):
+
+            cur_iter = 0
+            while cur_iter < rounds:
                 data = data_pool.batch()
+                if data is None:
+                    time.sleep(cfg.thread_sleep_time)
+                    continue
+                cur_iter += 1
                 engine.run(data, infer_output_path)
+
 
         logging.info(f'input inference data path: {input_dir}')
         logging.info(f'output inference data path: {output_dir}')
