@@ -19,8 +19,8 @@ if __name__ == '__main__':
         IndexRecords(),
         DecodeVideoPipeline(),
         # Control profiling.
-        ReorgSmallRecordsByVehicle(),
+        # ReorgSmallRecordsByVehicle(),
         # INPUT_DATA_PATH="modules/control/small-records"
-        MultiJobControlProfilingMetrics(),
-        MultiJobControlProfilingVisualization(),
+        # MultiJobControlProfilingMetrics(),
+        # MultiJobControlProfilingVisualization(),
     ]).main()
