@@ -148,8 +148,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
             # RDD source_dir
             .keys()
             # RDD touch flag
-            .foreach(lambda path: file_utils.touch(REORG_TAG))
-        )
+            .map(lambda path: file_utils.touch(REORG_TAG)))
 
         logging.info('reorgize small records by vehicle: All Done, PROD')
 
