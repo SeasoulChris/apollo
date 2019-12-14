@@ -47,6 +47,7 @@ class Dataset:
         self._txt_files_queue = deque([])
         self._example_queue = deque([])
         self._idx = 0
+        self._round = 0
         self._parse_txt()
 
         self._mutex = threading.Lock()
@@ -62,10 +63,11 @@ class Dataset:
         if self._idx >= len(self._txt_files):
             if self.one_shot:
                 self.one_shot_complete = True
-                break
+                return
             self._idx = 0
+            self._round += 1
             shuffle(self._txt_files)
-        for _ in len(cfg.max_txt_queue_size):
+        for _ in range(cfg.max_txt_queue_size):
             if self._idx >= len(self._txt_files):
                 break;
             self._txt_files_queue.append(self._txt_files[self._idx])
@@ -105,15 +107,13 @@ class Dataset:
                     data_utils.filter_classes(processed)
                 scale1, scale2, scale3 = y_true
                 image_name = os.path.basename(image_path).split('.')[0]
-
                 final_data = (image_data, scale1, scale2, scale3, cls_box_map,
                               objs, calib, image_name, original_image)
-
-             with self._mutex:
-                self._example_queue.append(final_data)
-
             except RuntimeError as err:
                 logging.error(f'cannot process file {image_path} err {err}')
+
+            with self._mutex:
+                self._example_queue.append(final_data)
 
     @property
     def dataset_size(self):
@@ -132,6 +132,8 @@ class Dataset:
 
         if len(self._example_queue) < self.batch_size:
            return None
+
+        logging.info(f'current round: {self._round}, current index: {self._idx}')
 
         # TODO[KWT] Add support for self.one_shot
         image_batch = np.zeros(shape=(self.batch_size, cfg.Input_height, cfg.Input_width, 3),

@@ -37,6 +37,10 @@ def match_label_to_result(dataset_result_dir):
     logging.info(f'result dir: {result_dir}, label dir: {label_dir}')
 
     match_list = []
+
+    if not os.path.exists(label_dir):
+        return match_list
+
     for uid, txt_name in enumerate(os.listdir(label_dir)):
         label_path = os.path.join(label_dir, txt_name)
         result_path = os.path.join(result_dir, txt_name)
@@ -178,25 +182,28 @@ def compile_categories(gt_dt):
 
 def notify_results(result_dir, stats, job_owner, job_id):
     """Send email to partners for notification"""
-
-    result_file_path = os.path.join(result_dir,
-                                    f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
-    with open(result_file_path, 'w') as result_file:
-        result_file.write('\n'.join(stats))
-
-    title = 'Your model training job is done!'
     receivers = email_utils.DATA_TEAM + email_utils.PERCEPTION_TEAM
     partner = partners.get(job_owner)
     if partner:
         receivers.append(partner.email)
-    content = {'Job Owner': job_owner, 'Job ID': job_id}
 
-    tar_file_path = f'{result_file_path}.tar.gz'
-    tar = tarfile.open(tar_file_path, 'w:gz')
-    tar.add(result_file_path, os.path.basename(result_file_path))
-    tar.close()
-
-    email_utils.send_email_info(title, content, receivers, [tar_file_path])
+    if result_dir and stats:
+        title = 'Your model training job is done!'
+        content = {'Job Owner': job_owner, 'Job ID': job_id}
+        result_file_path = os.path.join(result_dir,
+            f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
+        with open(result_file_path, 'w') as result_file:
+            result_file.write('\n'.join(stats))
+        tar_file_path = f'{result_file_path}.tar.gz'
+        tar = tarfile.open(tar_file_path, 'w:gz')
+        tar.add(result_file_path, os.path.basename(result_file_path))
+        tar.close()
+        email_utils.send_email_info(title, content, receivers, [tar_file_path])
+    else:
+        title = 'Your model training job could not complete'
+        content = {'Job Owner': job_owner, 'Job ID': job_id,
+                   'Error': 'please make sure input parameters are correct'}
+        email_utils.send_email_info(title, content, receivers)
 
 
 class Yolov3Evaluate(BasePipeline):
@@ -224,6 +231,9 @@ class Yolov3Evaluate(BasePipeline):
         def _executor(gt_dt):
             """Executor task that runs on workers"""
             gt, dt = gt_dt
+            if not gt or not dt:
+                notify_results(None, None, self.FLAGS.get('job_owner'), self.FLAGS.get('job_id'))
+                return
             coco_obj = COCO()
             coco_obj.dataset = gt
             coco_obj.createIndex()

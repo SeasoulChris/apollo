@@ -405,6 +405,8 @@ class training:
             self.gpu_placeholders[self.num_gpu - 1]["label_scale2"]: label_batch_scale2,
             self.gpu_placeholders[self.num_gpu - 1]["label_scale3"]: label_batch_scale3})
 
+        print_current_memory_usage(f'current step: {self.cur_step}')
+
         xy_, wh_, positive_conf_, negative_conf_, cls_, loss_train, alpha_, hwl_, _ = \
             self.sess.run(self.ops, feed_dict=feed_dict, options=run_options)
 
@@ -427,13 +429,10 @@ class training:
                           negative_conf_loss = {negative_conf_}, \
                           cls_loss = {cls_}, alpha_loss = {alpha_}, hwl_loss = {hwl_}.')
 
-        print_current_memory_usage(f'current step: {self.cur_step}')
-
         # store the model every SAVE_INTERVAL epochs
         if self.cur_step % SAVE_INTERVAL == 0 or self.cur_step == MAX_ITER:
             self.saver.save(self.sess, "{}/{}".format(self.model_restore_path, MODEL_NAME_PREFIX),
                             global_step=self.cur_step)
             logging.info(f'Model saved in file: {self.model_restore_path}')
-        logging.info(self.sess.run(tf.contrib.memory_stats.MaxBytesInUse()))
         self.cur_step += 1
 
