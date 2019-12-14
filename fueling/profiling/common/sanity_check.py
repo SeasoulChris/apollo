@@ -124,6 +124,9 @@ def sanity_check(input_folder, conf_pb, channels):
                    F'Detailed Reason: {status}; \n'
                    F'Data Directory: {folder}.')
         return message
+    if not os.path.isdir(input_folder):
+        status_msg = error_message(F'The input_data_path does not exist', input_folder)
+        return status_msg
     current_status = missing_file(input_folder, conf_pb)
     if current_status is not 'OK':
         status_msg = error_message(current_status, input_folder)
