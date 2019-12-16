@@ -325,7 +325,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
         'Summary', [
             'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
     title = 'Control Profiling Gradings Results'
-    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.QA_TEAM
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     receivers.append(job_email)
     if targets:
         email_content = []

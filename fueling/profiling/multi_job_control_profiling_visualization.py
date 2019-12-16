@@ -211,7 +211,7 @@ def summarize_tasks(tasks, original_prefix, target_prefix, job_email='', error_m
     SummaryTuple = namedtuple(
         'Summary', ['Task', 'Target', 'HDF5s', 'VisualPlot'])
     title = 'Control Profiling Visualization Results'
-    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.QA_TEAM
+    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM
     receivers.append(job_email)
     if tasks:
         email_content = []
