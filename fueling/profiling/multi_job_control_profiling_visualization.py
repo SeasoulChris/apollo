@@ -117,6 +117,12 @@ class MultiJobControlProfilingVisualization(BasePipeline):
         origin_dir = object_storage.abs_path(original_prefix)
         logging.info(F'origin_dir: {origin_dir}')
 
+        if not os.path.isdir(origin_dir):
+            error_msg = 'No visualization results: the source data path does not exist.'
+            summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+            logging.info('Control Profiling Visualization: No Results, PROD')
+            return
+
         # PairRDD(target files)
         target_files = spark_helper.cache_and_log(
             'target_files',
