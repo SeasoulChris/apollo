@@ -94,7 +94,7 @@ class CalibrationConfig(object):
             'gamma': [0.9],
             'sld_win': [50],
             'grid_num': [5, 5, 5, 5, 5, 5],
-            'grid_delta': [0.2, 0.2, 0.4, 0.05, 0.05, 0.05],
+            'grid_delta': [2.2, 2.2, 2.4, 0.1, 0.1, 0.1],
             'max_index': 6  # no idea what is this.
         }
         # copy intrinsic files to result_path folder.
