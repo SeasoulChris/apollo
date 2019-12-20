@@ -10,10 +10,9 @@ SUBMITTER="./tools/submit-job-to-local.sh -c ${EXECUTOR_CORES}"
 set -e  # Fail on error
 
 conda env update --prune -f conda/py36.yaml
-PY36_SUBMITTER="${SUBMITTER} -e fuel-py36"
-${PY36_SUBMITTER} fueling/data/pipelines/index_records.py
-${PY36_SUBMITTER} fueling/data/pipelines/reorg_small_records.py
-${PY36_SUBMITTER} fueling/data/pipelines/generate_small_records.py
+${SUBMITTER} fueling/data/pipelines/index_records.py
+${SUBMITTER} fueling/data/pipelines/reorg_small_records.py
+${SUBMITTER} fueling/data/pipelines/generate_small_records.py
 # Add your job here.
 
 

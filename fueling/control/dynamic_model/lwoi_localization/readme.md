@@ -125,11 +125,11 @@ The Main Codes are included in the lwoi_main.py.
 
 2. Core Dump due to version incompatibility:
 
-   The usage of the fuel-py36-pyro.yaml (instead of fuel-py36.yaml) is due to the incompatibility between the by-default pytorch version (`pytorch==1.1.0`, currently) and the stable version of pyro tool (`pyro-ppl==0.3.3`). This incompatibility will lead to some core-dump with information
+   The usage of the py36-pyro.yaml (instead of py36.yaml) is due to the incompatibility between the by-default pytorch version (`pytorch==1.1.0`, currently) and the stable version of pyro tool (`pyro-ppl==0.3.3`). This incompatibility will lead to some core-dump with information
 
    `Illegal instruction (core dumped)`
 
-   when the pyro.infer module is called. Thus, in fuel-py36-pyro.yaml, `torch==1.1.0` (which is not equivalent to `pytorch=1.10`) is uploaded.
+   when the pyro.infer module is called. Thus, in py36-pyro.yaml, `torch==1.1.0` (which is not equivalent to `pytorch=1.10`) is uploaded.
 
 3. Error Message:
    During running inside-docker, if a error message emerges similar to
