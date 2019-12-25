@@ -45,14 +45,15 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run_prod(self):
-        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
+        src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
+        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/data')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
 
-        #src_prefix = 'simplehdmap/data'
-        src_prefix = os.path.join(dir_prefix, 'data')
-        dst_prefix = os.path.join(dir_prefix, 'result')
+        if src_prefix == dst_prefix:
+            logging.error('The input data path must be different from the output data path!')
+            return
 
         # Access partner's storage if provided.
         object_storage = self.partner_storage() or self.our_storage()

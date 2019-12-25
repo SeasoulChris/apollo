@@ -42,15 +42,13 @@ class LocalMapPipeline(BasePipeline):
 
     def run_prod(self):
         """Production."""
-        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
+        src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
+        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         zone_id = self.FLAGS.get('zone_id')
         lidar_type = self.FLAGS.get('lidar_type')
         logging.info("job_id: %s" % job_id)
-
-        src_prefix = os.path.join(dir_prefix, 'data')
-        dst_prefix = os.path.join(dir_prefix, 'result')
 
         object_storage = self.partner_storage() or self.our_storage()
         source_dir = object_storage.abs_path(src_prefix)
@@ -71,7 +69,7 @@ class LocalMapPipeline(BasePipeline):
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)
-        title = 'Your simplehdmap generated is done!'
+        title = 'Your virtual lane is generated!'
         content = {'Job Owner': job_owner, 'Job ID': job_id}
 
         velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))

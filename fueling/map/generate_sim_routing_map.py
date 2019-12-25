@@ -50,14 +50,12 @@ class SimMapPipeline(BasePipeline):
 
     def run_prod(self):
         """Production."""
-        dir_prefix = self.FLAGS.get('input_data_path', 'test/simplehdmap')
+        dst_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/result')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
 
-        #src_prefix = 'simplehdmap/result'
-        src_prefix = os.path.join(dir_prefix, 'result')
-        origin_prefix = os.path.join(src_prefix, job_owner, job_id)
+        origin_prefix = os.path.join(dst_prefix, job_owner, job_id)
         logging.info("origin_prefix: %s" % origin_prefix)
 
         object_storage = self.partner_storage() or self.our_storage()
