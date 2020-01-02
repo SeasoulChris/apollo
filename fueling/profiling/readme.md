@@ -1,10 +1,6 @@
 # Profiling
 
-## 1. Control Profiling Application on Data Pipeline (for Road-Test)
-
-(under construction)
-
-## 2. Control Profiling Application on Dreamland (for Simulation-Test)
+## 1. Control Profiling Application on Dreamland (for Simulation-Test)
 
 ### Command Line Format
 (The following codes are executed under the path **/apollo/modules/data/fuel**)
@@ -56,31 +52,32 @@ For example,
 `{"station_reference": {"mean": -0.138802, "standard deviation": 0.400271}, ... }`
 
 
-## Data Upload
 
-## Prerequest
+## 2. Control Profiling Application on Data Pipeline (for Road-Test)
+
+### Prerequest
 
 To use this platform, you must have a partner account with us.Please contact our BD team(idg-apollo@baidu.com) to set it up.
 
 This is **essential** before you can get enjoy control profiling or other Apollo Fuel based cloud service.
 
-## Folder Structure Requirement
+### Folder Structure Requirement
 
 Before uploading your data, take a note of:
 1. The folder structure to be maintained is:
    ![](images/folder_struct.png)
 
-1. As seen above, the file structure to be maintained is
+2. As seen above, the file structure to be maintained is
    ```
    Origin Folder -> Vehicle Folder -> Records + Configuration files
    ```
-1. A vehicle folder needs to be created for your vehicle. The name of the folder
-   should be the same as seen in Dreamview(ignore case)
-1. Inside your folder, create folders to hold the data
-1. Store all the **Configuration files** along with the Records folder, within
+3. A vehicle folder needs to be created for your vehicle. The name of the folder
+   should be the same as seen in Dreamview (case-insensitive)
+4. Inside your folder, create folders to hold the data
+5. Store all the **Configuration files** along with the Records folder, within
    the **Vehicle** folder
 
-## Upload
+### Data Upload
 
 Use [bosfs](https://cloud.baidu.com/doc/BOS/BOSCLI/8.5CBOS.20FS.html) to mount
 your bucket to local, for example,
@@ -100,11 +97,23 @@ bosfs ${BUCKET} ${MOUNT} -o allow_other,logfile=/tmp/bos-${BUCKET}.log,endpoint=
 
 Then you can copy the prepared data folder to somewhere under /mnt/bos.
 
-## Download
+### Data Processing
+
+1. Open the link http://apollofuel.bceapp.com, Select `Control Profiling` from the `New Tasks` Tab
+
+2. Set up the `Partner ID`: your customized partner account
+
+3. Set up the `Input Data Path`: your customized Origin Folder under /mnt/bos/
+
+4. Set up the `Access Key` and `Secret Key`
+
+5. Submit the task
+
+### Data Download
 
 No download needed, the results will be sent to your email associated with your BOS bucket.
 
-## Result Visualization
+### Result Visualization
 You can view the control profiling metrics by going to [Dashboard](http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/metrics).
 
 
