@@ -37,7 +37,7 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = 'small-records/2019'
+        original_prefix = 'small-records/2020'
         target_prefix = 'modules/profiling/vehicle_dynamics_profiling_hf5'
         # RDD(tasks), the task dirs
         dir_todo_tasks = dir_utils.get_todo_tasks(original_prefix, target_prefix)

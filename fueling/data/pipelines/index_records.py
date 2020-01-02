@@ -41,8 +41,8 @@ class IndexRecords(BasePipeline):
     def run_prod(self):
         """Run prod."""
         prefixes = [
-            'public-test/2019/',
-            'small-records/2019/',
+            'public-test/2020/',
+            'small-records/2020/',
         ]
         # RDD(record_path)
         records_rdd = BasePipeline.SPARK_CONTEXT.union([

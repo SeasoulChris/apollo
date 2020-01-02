@@ -39,7 +39,7 @@ class GeneralFeatureExtraction(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        origin_prefix = 'small-records/2019/'
+        origin_prefix = 'small-records/2020/'
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
                                      WANTED_VEHICLE, 'GeneralSet')
         # RDD(record_dirs)

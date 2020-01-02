@@ -96,8 +96,8 @@ class ScenarioExtractionPipeline(BasePipeline):
 
     def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
-        original_prefix = 'small-records/2019'
-        target_prefix = 'modules/simulation/logsim_scenarios/2019'
+        original_prefix = 'small-records/2020'
+        target_prefix = 'modules/simulation/logsim_scenarios/2020'
 
         # RDD(tasks)
         todo_tasks = get_todo_tasks(original_prefix, target_prefix,

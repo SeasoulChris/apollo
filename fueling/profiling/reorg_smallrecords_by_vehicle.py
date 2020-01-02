@@ -48,7 +48,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
     def run_prod(self):
         # for testing need check a sub directory to save time
         # input_prefix = 'small-records/2019/2019-06-13'
-        input_prefix = 'small-records/2019'
+        input_prefix = 'small-records/2020'
         origin_dir = self.our_storage().abs_path(input_prefix)
 
         target_prefix = 'modules/control/small-records'
@@ -114,7 +114,7 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
             vehicle = target_vehicle_dir.split('/')[-1]
             # Path replace to target directory with vehicle
             target_vehicle_dir_new = os.path.join(target_prefix, vehicle, source_dir.replace(
-                '/mnt/bos/small-records/2019/', '', 1))
+                '/mnt/bos/small-records/2020/', '', 1))
             return (source_dir, target_vehicle_dir_new)
 
         # 2.Copy records

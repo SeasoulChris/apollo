@@ -78,8 +78,8 @@ class GenerateSmallRecords(BasePipeline):
 
     def run_prod(self):
         """Run prod."""
-        src_prefix = 'public-test/2019/'
-        dst_prefix = 'modules/data/public-test-small/2019/'
+        src_prefix = 'public-test/2020/'
+        dst_prefix = 'modules/data/public-test-small/2020/'
 
         storage = self.our_storage()
         # RDD(src_file)
