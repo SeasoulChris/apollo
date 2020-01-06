@@ -95,7 +95,7 @@ class MapGenSingleLine(BasePipeline):
 
     def process_topic(self, source_dir):
         points = []
-        bi_points = []
+        # bi_points = []
         fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         logging.info('fbags: {}'.format(fbags))
         reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
@@ -105,7 +105,7 @@ class MapGenSingleLine(BasePipeline):
                 points.append((pos.x, pos.y))
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
-        if len(points) == 0:
+        if 1:
             return points
         else:
             bi_points.extend(points)
