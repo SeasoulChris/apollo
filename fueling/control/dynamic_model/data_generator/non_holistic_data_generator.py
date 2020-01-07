@@ -44,7 +44,9 @@ VEHICLE_MODEL = point_mass_config["vehicle_model"]
 STD_EPSILON = 1e-6
 SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
 
-FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+FILENAME_VEHICLE_PARAM_CONF = os.path.join(
+    '/apollo/modules/calibration/data', VEHICLE_MODEL,'vehicle_param.pb.txt')
+logging.info("FILENAME_VEHICLE_PARAM_CONF: %s" % FILENAME_VEHICLE_PARAM_CONF)
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                                        vehicle_config_pb2.VehicleConfig())
 FILENAME_CALIBRATION_TABLE_CONF = os.path.join(

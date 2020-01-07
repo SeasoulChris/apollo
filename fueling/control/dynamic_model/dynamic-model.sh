@@ -3,23 +3,16 @@
 # Go to apollo-fuel root.
 cd "$( dirname "${BASH_SOURCE[0]}" )/../../.."
 
-set -e
-set -x
+JOB_ID=$(date +%Y-%m-%d-%H-%M)
 
-SUBMITTER="./tools/submit-job-to-k8s.py --wait"
-# Make sure you are calling run_prod() instead of run_test()!
-# Feature extraction.
-JOB="fueling/control/feature_extraction/sample_set_feature_extraction.py"
-${SUBMITTER} --main=${JOB} --workers=16 --cpu=2 --memory=20
+#!/usr/bin/env bash
 
-# Training.
-JOB="fueling/control/dynamic_model/dynamic_model_training.py"
-${SUBMITTER} --main=${JOB} --workers=2 --cpu=20 --memory=100
+# Go to apollo-fuel root.
+cd "$( dirname "${BASH_SOURCE[0]}" )/../../.."
 
-# Model Evaluation
-JOB="fueling/control/dynamic_model/dynamic_model_evaluation.py"
-${SUBMITTER} --main=${JOB} --workers=16 --cpu=2 --memory=20
+SUBMITTER="./tools/submit-job-to-k8s.py --workers=12 --cpu=6 --memory=60"
+INPUT_DATA_PATH="modules/control/data/records"
 
-# Training Data Visualization
-JOB="fueling/control/dynamic_model/dynamic_model_data_visualization.py"
-${SUBMITTER} --main=${JOB} --workers=2 --cpu=20 --memory=100
+JOB="fueling/control/dynamic_model/dynamic_model.py"
+FLAGS="--input_data_path=${INPUT_DATA_PATH} --job_id=${JOB_ID}"
+${SUBMITTER} --main=${JOB} --flags="${FLAGS}"

@@ -13,6 +13,7 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.dreamview.proto.hmi_status_pb2 import HMIStatus
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
+from fueling.control.dynamic_model.conf.model_config import point_mass_config
 from modules.common.configs.proto import vehicle_config_pb2
 from modules.data.fuel.fueling.control.proto.feature_key_pb2 import FeatureKey
 import fueling.common.h5_utils as h5_utils
@@ -22,12 +23,14 @@ import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.dynamic_model.conf.model_config as model_config
 
+VEHICLE_MODEL = point_mass_config["vehicle_model"]
 
 FILENAME_FEATURE_KEY_CONF = "/apollo/modules/data/fuel/fueling/control/conf/feature_key_conf.pb.txt"
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
 
 # vehicle param constant
-FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/calibration/data/mkz7/vehicle_param.pb.txt'
+FILENAME_VEHICLE_PARAM_CONF = os.path.join(
+    '/apollo/modules/calibration/data', VEHICLE_MODEL, 'vehicle_param.pb.txt')
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                                        vehicle_config_pb2.VehicleConfig())
 

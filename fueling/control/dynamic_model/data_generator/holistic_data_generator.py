@@ -37,7 +37,8 @@ SPEED_EPSILON = 1e-3   # Speed Threshold To Indicate Driving Directions
 # TODO(ALL): Deprecate the hard-code gear status and read from data
 GEAR_STATUS = 1  # 1: Driving Forward, 0: Natural, -1: Driving Backward
 
-FILENAME_VEHICLE_PARAM_CONF = '/apollo/modules/common/data/vehicle_param.pb.txt'
+FILENAME_VEHICLE_PARAM_CONF = os.path.join(
+    '/apollo/modules/calibration/data', VEHICLE_MODEL, 'vehicle_param.pb.txt')
 VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(FILENAME_VEHICLE_PARAM_CONF,
                                                        vehicle_config_pb2.VehicleConfig())
 FILENAME_CALIBRATION_TABLE_CONF = os.path.join(

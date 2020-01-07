@@ -6,7 +6,7 @@ import os
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_extraction
+from fueling.control.dynamic_model.conf.model_config import feature_extraction, feature_config
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.conf.model_config as model_config
@@ -14,7 +14,6 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 # parameters
-TODAY = str(date.today())
 INTER_FOLDER = feature_extraction['inter_result_folder']
 OUTPUT_FOLDER = feature_extraction['uniform_output_folder']
 SAMPLE_SIZE = feature_extraction['sample_size']
@@ -52,8 +51,19 @@ class UniformSet(BasePipeline):
     def run_test(self):
         """Run test."""
         # folder
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated/apollo/002'
+        origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated/'
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_uniform'
+
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        IS_BACKWARD = self.FLAGS.get('is_backward')
+
+        if IS_BACKWARD:
+            origin_prefix = os.path.join(origin_prefix, job_owner, 'backward', job_id)
+            target_prefix = os.path.join(target_prefix, job_owner, 'backward', job_id)
+        else:
+            origin_prefix = os.path.join(origin_prefix, job_owner, 'forward', job_id)
+            target_prefix = os.path.join(target_prefix, job_owner, 'forward', job_id)
 
         # get vehicles
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -69,7 +79,7 @@ class UniformSet(BasePipeline):
 
         # hdf5 files
         feature_dir = spark_helper.cache_and_log(
-            'throttle_train_files',
+            'hdf5_files',
             origin_vehicle_dir
             # PairRDD(vehicle, hdf5 file)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5'))))
@@ -81,14 +91,21 @@ class UniformSet(BasePipeline):
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
+        IS_BACKWARD = self.FLAGS.get('is_backward')
         bos_client = self.our_storage()
 
         # intermediate result folder
-        origin_prefix = os.path.join(INTER_FOLDER, job_owner, job_id)
+        if IS_BACKWARD:
+            origin_prefix = os.path.join(INTER_FOLDER, job_owner, 'backward', job_id)
+            target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, 'backward', job_id)
+        else:
+            origin_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
+            target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, 'forward', job_id)
+
         origin_dir = bos_client.abs_path(origin_prefix)
+        logging.info('origin dir: %s' % origin_dir)
 
         # output folder
-        target_prefix = os.path.join(OUTPUT_FOLDER, job_owner, job_id, TODAY)
         target_dir = bos_client.abs_path(target_prefix)
         logging.info('target dir: %s' % target_dir)
 

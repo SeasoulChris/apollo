@@ -9,8 +9,9 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_extraction
+from fueling.control.dynamic_model.conf.model_config import feature_extraction, feature_config
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -122,7 +123,12 @@ class SampleSet(BasePipeline):
         target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-        target_prefix = os.path.join(target_prefix, job_owner, job_id)
+        IS_BACKWARD = self.FLAGS.get('is_backward')
+
+        if IS_BACKWARD:
+            target_prefix =  os.path.join(target_prefix, job_owner, 'backward', job_id)
+        else:
+            target_prefix =  os.path.join(target_prefix, job_owner, 'forward', job_id)
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -151,7 +157,7 @@ class SampleSet(BasePipeline):
 
         conf_target_prefix = target_prefix
         logging.info('todo_task_dirs %s' % origin_vehicle_dir.collect())
-        logging.info(conf_target_prefix)
+        logging.info('conf_target_file: %s' % conf_target_prefix)
         target_param_conf = origin_vehicle_dir.mapValues(
             lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
         logging.info('target_param_conf: %s' % target_param_conf.collect())
@@ -176,9 +182,12 @@ class SampleSet(BasePipeline):
         origin_prefix = self.FLAGS.get('input_data_path', 'modules/control/data/records')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
-
+        IS_BACKWARD = self.FLAGS.get('is_backward')
         # extract features to intermediate result folder
-        target_prefix = os.path.join(INTER_FOLDER, job_owner, job_id)
+        if IS_BACKWARD:
+            target_prefix = os.path.join(INTER_FOLDER, job_owner, 'backward', job_id)
+        else:
+            target_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
         our_storage = self.our_storage()
         target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir %s' % target_dir)

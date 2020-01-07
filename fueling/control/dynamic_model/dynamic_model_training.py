@@ -4,47 +4,89 @@ import os
 
 import glob
 import h5py
+import shutil
 import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.file_utils as file_utils
+
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging
+import fueling.common.storage.bos_client as bos_client
+import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 
-VEHICLE_ID = feature_config["vehicle_id"]
-IS_BACKWARD = feature_config["is_backward"]
+MODEL_CONF = 'model_config.py'
 
 
 class DynamicModelTraining(BasePipeline):
 
     def run_test(self):
-        data_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
-        output_dir = os.path.join(data_dir, 'dynamic_model_output')
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        IS_BACKWARD = self.FLAGS.get('is_backward')
+        data_dir = '/apollo/modules/data/fuel/testdata/control/generated_uniform'
         if IS_BACKWARD:
-            training_dataset = glob.glob(
-                os.path.join(data_dir, 'hdf5_training/Mkz7/UniformDistributed/backward/*/*/*.hdf5'))
+            training_data_path = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
-            training_dataset = glob.glob(
-                os.path.join(data_dir, 'hdf5_training/Mkz7/UniformDistributed/forward/*/*/*.hdf5'))
-        # RDD(file_path) for training dataset.
-        training_dataset_rdd = self.to_rdd(training_dataset)
-        self.run(training_dataset_rdd, output_dir)
+            training_data_path = os.path.join(data_dir, job_owner, 'forward', job_id)
+        model_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
+        output_dir = os.path.join(model_dir, 'dynamic_model_output')
+        model_conf_prefix = '/apollo/modules/data/fuel/fueling/control/dynamic_model/conf'
+
+        vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
+        logging.info('vehicles = {}'.format(vehicles))
+        # run test as a vehicle ID
+        for vehicle in vehicles:
+            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
 
     def run_prod(self):
-        dataset_dir = 'modules/control/learning_based_model/hdf5_training'
+        # intermediate result folder
+        job_owner = self.FLAGS.get('job_owner')
+        job_id = self.FLAGS.get('job_id')
+        IS_BACKWARD = self.FLAGS.get('is_backward')
+        bos_client = self.our_storage()
+        data_dir = 'modules/control/tmp/uniform'
+
         if IS_BACKWARD:
-            prefix = os.path.join(dataset_dir, VEHICLE_ID, 'UniformDistributed/backward')
+            data_prefix = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
-            prefix = os.path.join(dataset_dir, VEHICLE_ID, 'UniformDistributed/forward')
-        # RDD(file_path) for training dataset
-        training_dataset_rdd = self.to_rdd(self.our_storage().list_files(prefix, '.hdf5'))
-        output_dir = self.our_storage().abs_path(
+            data_prefix = os.path.join(data_dir, job_owner, 'forward', job_id)
+
+        training_data_path = bos_client.abs_path(data_prefix)
+        output_dir = bos_client.abs_path(
             'modules/control/learning_based_model/dynamic_model_output/')
-        self.run(training_dataset_rdd, output_dir)
+        model_conf_prefix = '/apollo/modules/data/fuel/fueling/control/dynamic_model/conf'
+        # get vehicles
+        vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
+        logging.info('vehicles = {}'.format(vehicles))
+        # run proc as a vehicle ID
+        for vehicle in vehicles:
+            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
+
+    def execute_task(self, vehicle, model_conf_prefix, training_data_path, output_dir):
+        # load model_conf for vehicle
+        model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle)
+        file_utils.makedirs(model_conf_prefix)
+        shutil.copyfile (os.path.join(model_conf_target_prefix, MODEL_CONF),
+                            os.path.join(model_conf_prefix, MODEL_CONF))
+        logging.info('model_conf_target_prefix: %s' % model_conf_target_prefix)
+        # vehicle dir
+        vehicle_dir = os.path.join(training_data_path, vehicle)
+        # model output dir
+        model_output_dir = os.path.join(output_dir, vehicle)
+        logging.info('vehicle_dir = {}'.format(vehicle_dir))
+        logging.info('model_output_dir = {}'.format(model_output_dir))
+        # RDD hd5_dataset
+        hd5_files_path = glob.glob(os.path.join(vehicle_dir, '*/*.hdf5'))
+        logging.info('hd5_files_path = {}'.format(hd5_files_path))
+        # for file in files_path:
+        training_dataset_rdd = self.to_rdd(hd5_files_path)
+        self.run(training_dataset_rdd, model_output_dir)
 
     def run(self, training_dataset_rdd, output_dir):
         data = (
@@ -85,7 +127,6 @@ class DynamicModelTraining(BasePipeline):
             elif key == 'lstm_data':
                 lstm_keras.lstm_keras(input_data, output_data, param_norm, output_dir)
         data.foreach(_train)
-
 
 if __name__ == '__main__':
     DynamicModelTraining().main()
