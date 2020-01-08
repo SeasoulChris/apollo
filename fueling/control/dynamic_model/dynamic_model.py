@@ -13,4 +13,3 @@ if __name__ == '__main__':
         UniformSet(),
         DynamicModelTraining(),
     ]).main()
-
