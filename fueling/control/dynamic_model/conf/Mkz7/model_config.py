@@ -69,7 +69,7 @@ holistic_output_index = {
 
 feature_config = {
     "is_holistic": 0,  # if the current dynamic model is holistic
-    "is_backward": 1,  # if the feature is for backward driving scenario
+    "is_backward": 0,  # if the feature is for backward driving scenario
     "vehicle_id": 'Mkz7',  # the vehicle id for the feature
     "input_dim": 5,  # input feature dimension
     "holistic_input_dim": 8,  # holistic input feature dimension

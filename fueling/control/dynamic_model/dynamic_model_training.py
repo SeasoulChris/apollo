@@ -66,11 +66,15 @@ class DynamicModelTraining(BasePipeline):
         logging.info('vehicles = {}'.format(vehicles))
         # run proc as a vehicle ID
         for vehicle in vehicles:
-            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
+            self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir, IS_BACKWARD)
 
-    def execute_task(self, vehicle, model_conf_prefix, training_data_path, output_dir):
-        # load model_conf for vehicle
-        model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle)
+    def execute_task(self, vehicle, model_conf_prefix, training_data_path, output_dir, is_backward):
+        if is_backward:
+            # load backward model_conf for vehicle
+            model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle, 'backward')
+        else:
+            # load model_conf for vehicle
+            model_conf_target_prefix = os.path.join(model_conf_prefix, vehicle)
         file_utils.makedirs(model_conf_prefix)
         shutil.copyfile (os.path.join(model_conf_target_prefix, MODEL_CONF),
                             os.path.join(model_conf_prefix, MODEL_CONF))

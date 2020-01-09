@@ -29,7 +29,6 @@ channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 100
 MARKER = 'CompleteSampleSet'
 VEHICLE_CONF = 'vehicle_param.pb.txt'
-GEAR = feature_extraction['gear']
 INTER_FOLDER = feature_extraction['inter_result_folder']
 INCREMENTAL_PROCESS = feature_extraction['incremental_process']
 
@@ -80,7 +79,7 @@ def get_conf_value(msgs):
                 continue
         elif GEAR == 2:
             # keep only gear_reverse data
-            if int(chassis.gear_location) != 2 or chassis.speed_mps > 0:
+            if int(chassis.gear_location) != 2 or chassis.speed_mps < 0:
                 continue
         throttle_max = max(chassis.throttle_percentage, throttle_max)
         brake_max = max(chassis.brake_percentage, brake_max)
@@ -124,11 +123,13 @@ class SampleSet(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         IS_BACKWARD = self.FLAGS.get('is_backward')
-
+        global GEAR
         if IS_BACKWARD:
             target_prefix =  os.path.join(target_prefix, job_owner, 'backward', job_id)
+            GEAR = 2
         else:
             target_prefix =  os.path.join(target_prefix, job_owner, 'forward', job_id)
+            GEAR = 1
 
         # RDD(origin_dir)
         origin_vehicle_dir = spark_helper.cache_and_log(
@@ -183,11 +184,15 @@ class SampleSet(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         IS_BACKWARD = self.FLAGS.get('is_backward')
+        global GEAR
+
         # extract features to intermediate result folder
         if IS_BACKWARD:
             target_prefix = os.path.join(INTER_FOLDER, job_owner, 'backward', job_id)
+            GEAR = 2
         else:
             target_prefix = os.path.join(INTER_FOLDER, job_owner, 'forward', job_id)
+            GEAR = 1
         our_storage = self.our_storage()
         target_dir = our_storage.abs_path(target_prefix)
         logging.info('target_dir %s' % target_dir)

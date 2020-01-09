@@ -69,8 +69,8 @@ holistic_output_index = {
 
 feature_config = {
     "is_holistic": 0,  # if the current dynamic model is holistic
-    "is_backward": 0,  # if the feature is for backward driving scenario
-    "vehicle_id": 'zhongyun',  # the vehicle id for the feature
+    "is_backward": 1,  # if the feature is for backward driving scenario
+    "vehicle_id": 'ch1',  # the vehicle id for the feature
     "input_dim": 5,  # input feature dimension
     "holistic_input_dim": 8,  # holistic input feature dimension
     "output_dim": 2,  # output feature dimension
@@ -85,7 +85,7 @@ feature_config = {
 
 point_mass_config = {
     "calibration_dimension": 3,  # Calibration (speed, command, acceleration)
-    "vehicle_model": "zhongyun"
+    "vehicle_model": "dev_kit_v3"
 }
 
 lstm_model_config = {
@@ -116,6 +116,6 @@ feature_extraction = {
     "output_folder": "modules/control/result/dynamic_model",  # final result folder
     "uniform_output_folder": "modules/control/tmp/uniform",  # uniform distributed data set
     "incremental_process": False,  # turn on incremental data processing
-    "gear": 1,  # 1: gear_drive, 2:gear_reverse
+    "gear": 2,  # 1: gear_drive, 2:gear_reverse
     "sample_size": 6000  # 200 for local test
 }
