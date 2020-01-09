@@ -44,8 +44,9 @@ class SimMapPipeline(BasePipeline):
 
     def run_test(self):
         """Local mini test."""
-        original_path = '/apollo/data'
-        self.run(original_path)
+        dir_prefix = '/apollo/data/bag'
+        dst_prefix = os.path.join(dir_prefix, 'result')
+        self.run(dst_prefix)
         logging.info('sim map gen: Done, TEST')
 
     def run_prod(self):

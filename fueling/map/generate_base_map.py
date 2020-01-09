@@ -33,8 +33,9 @@ class MapGenSingleLine(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        src_prefix = '/apollo/data/bag'
-        dst_prefix = '/apollo/data'
+        dir_prefix = '/apollo/data/bag'
+        src_prefix = os.path.join(dir_prefix, 'data')
+        dst_prefix = os.path.join(dir_prefix, 'result')
         # RDD(record_path)
         todo_records = self.to_rdd([src_prefix])
         self.run(todo_records, src_prefix, dst_prefix)
@@ -105,18 +106,14 @@ class MapGenSingleLine(BasePipeline):
                 points.append((pos.x, pos.y))
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
-        if 1:
-            return points
-        else:
-            bi_points.extend(points)
-            points.reverse()
-            bi_points.extend(points)
-            return bi_points
-            # map_gen(points)
+        return points
+        # map_gen(points)
 
     def map_gen(self, points):
         logging.info('Success to read localization pose points {}'.format(len(points)))
         path = LineString(points)
+        points.reverse()
+        path_dup = LineString(points)
         length = int(path.length)
 
         extra_roi_extension = 1.0
@@ -125,97 +122,120 @@ class MapGenSingleLine(BasePipeline):
         logging.info("base_map_txt_path: {}".format(base_map_txt))
 
         fmap = open(base_map_txt, 'w')
-        line_id = 0
-        base_map = map_pb2.Map()
-        road = base_map.road.add()
-        road.id.id = "1"
-        section = road.section.add()
-        section.id.id = "2"
         lane = None
-        for i in range(length - 1):
-            if i % 100 == 0:
-                line_id += 1
-                if lane is not None:
-                    lane.successor_id.add().id = str(line_id)
-                lane, central, left_boundary, right_boundary = self.create_lane(base_map, line_id)
-                section.lane_id.add().id = str(line_id)
+        line_id = 0
+        road_id = 0
+        base_map = map_pb2.Map()
+        self.lane_length = length
 
-                left_edge = section.boundary.outer_polygon.edge.add()
-                left_edge.type = map_road_pb2.BoundaryEdge.LEFT_BOUNDARY
-                left_edge_segment = left_edge.curve.segment.add()
+        for j in range(2):
+            if j == 1:
+                path = path_dup
+            road = base_map.road.add()
+            road_id += 1
+            road.id.id = str(road_id)
+            section = road.section.add()
+            section.id.id = "2"
+            for i in range(length - 1):
+                if i % self.lane_length == 0:
+                    line_id += 1
+                    # if lane is not None:
+                    #     lane.successor_id.add().id = str(line_id)
+                    lane, central, left_boundary, right_boundary = self.create_lane(base_map, line_id)
+                    section.lane_id.add().id = str(line_id)
 
-                right_edge = section.boundary.outer_polygon.edge.add()
-                right_edge.type = map_road_pb2.BoundaryEdge.RIGHT_BOUNDARY
-                right_edge_segment = right_edge.curve.segment.add()
+                    left_edge = section.boundary.outer_polygon.edge.add()
+                    left_edge.type = map_road_pb2.BoundaryEdge.LEFT_BOUNDARY
+                    left_edge_segment = left_edge.curve.segment.add()
 
-                if i > 0:
-                    lane.predecessor_id.add().id = str(line_id - 1)
+                    right_edge = section.boundary.outer_polygon.edge.add()
+                    right_edge.type = map_road_pb2.BoundaryEdge.RIGHT_BOUNDARY
+                    right_edge_segment = right_edge.curve.segment.add()
+                    if j == 0:
+                        lane.self_reverse_lane_id.add().id = "2"
+                    else:
+                        lane.self_reverse_lane_id.add().id = "1"
 
-                    left_bound_point = left_boundary.line_segment.point.add()
-                    right_bound_point = right_boundary.line_segment.point.add()
-                    central_point = central.line_segment.point.add()
+                    if i > 0:
+                        # lane.predecessor_id.add().id = str(line_id - 1)                         
 
-                    right_edge_point = right_edge_segment.line_segment.point.add()
-                    left_edge_point = left_edge_segment.line_segment.point.add()
+                        left_bound_point = left_boundary.line_segment.point.add()
+                        right_bound_point = right_boundary.line_segment.point.add()
+                        central_point = central.line_segment.point.add()
 
-                    point = path.interpolate(i - 1)
-                    point2 = path.interpolate(i - 1 + 0.5)
-                    distance = LANE_WIDTH / 2.0
+                        right_edge_point = right_edge_segment.line_segment.point.add()
+                        left_edge_point = left_edge_segment.line_segment.point.add()
 
-                    lp, rp = self.convert(point, point2, distance)
-                    left_bound_point.y = lp[1]
-                    left_bound_point.x = lp[0]
-                    right_bound_point.y = rp[1]
-                    right_bound_point.x = rp[0]
+                        point = path.interpolate(i - 1)
+                        point2 = path.interpolate(i - 1 + 0.5)
+                        distance = LANE_WIDTH / 2.0
 
-                    lp, rp = self.convert(point, point2, distance + extra_roi_extension)
-                    left_edge_point.y = lp[1]
-                    left_edge_point.x = lp[0]
-                    right_edge_point.y = rp[1]
-                    right_edge_point.x = rp[0]
+                        lp, rp = self.convert(point, point2, distance)
+                        left_bound_point.y = lp[1]
+                        left_bound_point.x = lp[0]
+                        right_bound_point.y = rp[1]
+                        right_bound_point.x = rp[0]
 
-                    central_point.x = point.x
-                    central_point.y = point.y
+                        lp, rp = self.convert(point, point2, distance + extra_roi_extension)
+                        left_edge_point.y = lp[1]
+                        left_edge_point.x = lp[0]
+                        right_edge_point.y = rp[1]
+                        right_edge_point.x = rp[0]
 
-                    left_sample = lane.left_sample.add()
-                    left_sample.s = 0
-                    left_sample.width = LANE_WIDTH / 2.0
+                        central_point.x = point.x
+                        central_point.y = point.y
 
-                    right_sample = lane.right_sample.add()
-                    right_sample.s = 0
-                    right_sample.width = LANE_WIDTH / 2.0
+                        left_sample = lane.left_sample.add()
+                        left_sample.s = 0
+                        left_sample.width = LANE_WIDTH / 2.0
 
-            left_bound_point = left_boundary.line_segment.point.add()
-            right_bound_point = right_boundary.line_segment.point.add()
-            central_point = central.line_segment.point.add()
+                        right_sample = lane.right_sample.add()
+                        right_sample.s = 0
+                        right_sample.width = LANE_WIDTH / 2.0
 
-            right_edge_point = right_edge_segment.line_segment.point.add()
-            left_edge_point = left_edge_segment.line_segment.point.add()
+                left_bound_point = left_boundary.line_segment.point.add()
+                right_bound_point = right_boundary.line_segment.point.add()
+                central_point = central.line_segment.point.add()
 
-            point = path.interpolate(i)
-            point2 = path.interpolate(i + 0.5)
-            distance = LANE_WIDTH / 2.0
-            left_point, right_point = self.convert(point, point2, distance)
+                right_edge_point = right_edge_segment.line_segment.point.add()
+                left_edge_point = left_edge_segment.line_segment.point.add()
 
-            central_point.x = point.x
-            central_point.y = point.y
-            left_bound_point.y = left_point[1]
-            left_bound_point.x = left_point[0]
-            right_bound_point.y = right_point[1]
-            right_bound_point.x = right_point[0]
+                point = path.interpolate(i)
+                point2 = path.interpolate(i + 0.5)
+                distance = LANE_WIDTH / 2.0
+                left_point, right_point = self.convert(point, point2, distance)
 
-            left_edge_point.y = left_point[1]
-            left_edge_point.x = left_point[0]
-            right_edge_point.y = right_point[1]
-            right_edge_point.x = right_point[0]
+                central_point.x = point.x
+                central_point.y = point.y
+                left_bound_point.y = left_point[1]
+                left_bound_point.x = left_point[0]
+                right_bound_point.y = right_point[1]
+                right_bound_point.x = right_point[0]
 
-            left_sample = lane.left_sample.add()
-            left_sample.s = i % 100 + 1
-            left_sample.width = LANE_WIDTH / 2.0
+                if i == 0:
+                    central_start_pos = central.start_position
+                    left_bound_start_pos = left_boundary.start_position
+                    right_bound_start_pos = right_boundary.start_position
+                    
+                    central_start_pos.x = central_point.x
+                    central_start_pos.y = central_point.y                    
+                    left_bound_start_pos.x = left_bound_point.x
+                    left_bound_start_pos.y = left_bound_point.y
+                    right_bound_start_pos.x = right_bound_point.x
+                    right_bound_start_pos.y = right_bound_point.y
 
-            right_sample = lane.right_sample.add()
-            right_sample.s = i % 100 + 1
-            right_sample.width = LANE_WIDTH / 2.0
+                left_edge_point.y = left_point[1]
+                left_edge_point.x = left_point[0]
+                right_edge_point.y = right_point[1]
+                right_edge_point.x = right_point[0]               
+
+                left_sample = lane.left_sample.add()
+                left_sample.s = i % self.lane_length + 1
+                left_sample.width = LANE_WIDTH / 2.0
+
+                right_sample = lane.right_sample.add()
+                right_sample.s = i % self.lane_length + 1
+                right_sample.width = LANE_WIDTH / 2.0
 
         fmap.write(str(base_map))
         fmap.close()
@@ -269,7 +289,7 @@ class MapGenSingleLine(BasePipeline):
         lane.id.id = str(line_id)
         lane.type = map_lane_pb2.Lane.CITY_DRIVING
         lane.direction = map_lane_pb2.Lane.FORWARD
-        lane.length = 100.0
+        lane.length = self.lane_length
         lane.speed_limit = 20.0
         lane.turn = map_lane_pb2.Lane.NO_TURN
         # lane.predecessor_id.add().id = str(line_id - 1)
@@ -277,17 +297,17 @@ class MapGenSingleLine(BasePipeline):
         left_boundary = lane.left_boundary.curve.segment.add()
         right_boundary = lane.right_boundary.curve.segment.add()
         central = lane.central_curve.segment.add()
-        central.length = 100.0
+        central.length = self.lane_length
 
         left_boudary_type = lane.left_boundary.boundary_type.add()
         left_boudary_type.s = 0
         left_boudary_type.types.append(map_lane_pb2.LaneBoundaryType.DOTTED_YELLOW)
-        lane.right_boundary.length = 100.0
+        lane.right_boundary.length = self.lane_length
 
         right_boudary_type = lane.right_boundary.boundary_type.add()
         right_boudary_type.s = 0
         right_boudary_type.types.append(map_lane_pb2.LaneBoundaryType.DOTTED_YELLOW)
-        lane.left_boundary.length = 100.0
+        lane.left_boundary.length = self.lane_length
 
         return lane, central, left_boundary, right_boundary
 

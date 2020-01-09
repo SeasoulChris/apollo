@@ -17,7 +17,7 @@ from fueling.common.base_pipeline import BasePipeline
 
 
 flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
-flags.DEFINE_string('lidar_type', 'velodyne16', 'compensator pointcloud topic.')
+flags.DEFINE_string('lidar_type', 'lidar16', 'compensator pointcloud topic.')
 
 
 class LocalMapPipeline(BasePipeline):
