@@ -8,6 +8,7 @@ import os
 import tarfile
 import shutil
 
+from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
@@ -23,58 +24,78 @@ import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
 import fueling.profiling.grading_evaluation.multi_job_control_performance_grading_utils as grading_utils
 
+flags.DEFINE_string('ctl_metrics_input_path_local',
+                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling',
+                    'input data directory for local run_test')
+flags.DEFINE_string('ctl_metrics_output_path_local',
+                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    'output data directory for local run_test')
+flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_taks directory for local run_test')
+flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
+                     'if simulation-only, then skip the owner/id/vehicle/controller identification')
+
 
 class MultiJobControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job'
-        target_prefix = '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/{}/{}'\
-            .format(self.FLAGS.get('job_owner'),
-                    self.FLAGS.get('job_id')[:4])
+        origin_prefix = flags.FLAGS.ctl_metrics_input_path_local
+        if flags.FLAGS.ctl_metrics_simulation_only_test:
+            target_prefix = flags.FLAGS.ctl_metrics_output_path_local
+            todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks_local.split(',')
+            # RDD(tasks), the task dirs
+            todo_task_dirs = self.to_rdd([
+                os.path.join(origin_prefix, task) for task in todo_tasks
+            ]).cache()
+            logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+        else:
+            job_owner = self.FLAGS.get('job_owner')
+            # Use year as the job_id, just for local test
+            job_id = self.FLAGS.get('job_id')[:4]
+            target_prefix = os.path.join(
+                flags.FLAGS.ctl_metrics_output_path_local, job_owner, job_id)
 
-        """origin vehicle directory"""
-        # RDD(origin_dir)
-        origin_vehicle_dir = spark_helper.cache_and_log(
-            'origin_vehicle_dir',
-            self.to_rdd([origin_prefix])
-            # RDD([vehicle_type])
-            .flatMap(multi_vehicle_utils.get_vehicle)
-            # PairRDD(vehicle_type, vehicle_type)
-            .keyBy(lambda vehicle: vehicle)
-            # PairRDD(vehicle_type, path_to_vehicle_type)
-            .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
+            """origin vehicle directory"""
+            # RDD(origin_dir)
+            origin_vehicle_dir = spark_helper.cache_and_log(
+                'origin_vehicle_dir',
+                self.to_rdd([origin_prefix])
+                # RDD([vehicle_type])
+                .flatMap(multi_vehicle_utils.get_vehicle)
+                # PairRDD(vehicle_type, vehicle_type)
+                .keyBy(lambda vehicle: vehicle)
+                # PairRDD(vehicle_type, path_to_vehicle_type)
+                .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
-        # # RDD(origin_vehicle_dir)
-        todo_task_dirs = spark_helper.cache_and_log(
-            'todo_jobs',
-            origin_vehicle_dir
-            # PairRDD(vehicle_type, list_of_records)
-            .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
-            # RDD list_of_records to parse vehicle type and controller to
-            # organize new key
-            .values()
-            .distinct())
+            # # RDD(origin_vehicle_dir)
+            todo_task_dirs = spark_helper.cache_and_log(
+                'todo_jobs',
+                origin_vehicle_dir
+                # PairRDD(vehicle_type, list_of_records)
+                .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*')))
+                # RDD list_of_records to parse vehicle type and controller to
+                # organize new key
+                .values()
+                .distinct())
+            logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
-        logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+            conf_target_prefix = target_prefix
+            logging.info(conf_target_prefix)
+            generated_vehicle_dir = origin_vehicle_dir.mapValues(
+                lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
+            logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
 
-        conf_target_prefix = target_prefix
-        logging.info(conf_target_prefix)
-        generated_vehicle_dir = origin_vehicle_dir.mapValues(
-            lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
-        logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
-
-        # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
-        src_dst_rdd = origin_vehicle_dir.join(
-            generated_vehicle_dir).values().cache()
-        # Create dst dirs and copy conf file to them.
-        src_dst_rdd.values().foreach(file_utils.makedirs)
-        src_dst_rdd.foreach(
-            lambda src_dst: shutil.copyfile(
-                os.path.join(
-                    src_dst[0], feature_utils.CONF_FILE), os.path.join(
-                    src_dst[1], feature_utils.CONF_FILE)))
+            # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
+            src_dst_rdd = origin_vehicle_dir.join(
+                generated_vehicle_dir).values().cache()
+            # Create dst dirs and copy conf file to them.
+            src_dst_rdd.values().foreach(file_utils.makedirs)
+            src_dst_rdd.foreach(
+                lambda src_dst: shutil.copyfile(
+                    os.path.join(
+                        src_dst[0], feature_utils.CONF_FILE), os.path.join(
+                        src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
         logging.info('Control Profiling Metrics: All Done, TEST')
