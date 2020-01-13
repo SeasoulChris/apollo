@@ -35,15 +35,21 @@ def save_gp(args, gp_model, feature, kernel_net):
     model_saving_path = os.path.join(args.gp_model_path, timestr)
     if not os.path.exists(model_saving_path):
         os.makedirs(model_saving_path)
+
+    gp_model.eval()
+    kernel_net.eval()
+
     torch.save(gp_model.gp_f.state_dict(), os.path.join(model_saving_path, "gp_f.p"))
     torch.save(gp_model.gp_f.kernel.state_dict(), os.path.join(model_saving_path, "kernel.p"))
     torch.save(gp_model.gp_f.likelihood.state_dict(),
                os.path.join(model_saving_path, "likelihood.p"))
     torch.save(kernel_net.state_dict(), os.path.join(model_saving_path, "fnet.p"))
     predict_fn = Predict(gp_model.model, gp_model.guide)
-    predict_module = torch.jit.trace_module(predict_fn, {"forward": (feature,)}, check_trace=False)
+    #predict_module = torch.jit.trace_module(predict_fn, {"forward": (feature,)}, check_trace=False)
     # TypeError: guide() takes 1 positional argument but 2 were given
     # torch.jit.save(predict_module, '/tmp/reg_predict.pt')
+    encoder_module = torch.jit.trace_module(kernel_net, {"forward": (feature,)}, check_trace=False)
+    torch.jit.save(encoder_module, '/tmp/encoder_module.pt')
 
 
 def train_gp(args, dataset, gp_class):
