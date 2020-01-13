@@ -9,7 +9,7 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.control.dynamic_model.conf.model_config import feature_extraction, feature_config
+from fueling.control.dynamic_model.conf.model_config import feature_extraction
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 
 import fueling.common.file_utils as file_utils
@@ -21,7 +21,6 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
-
 
 # TODO(SHU): redesign proto
 

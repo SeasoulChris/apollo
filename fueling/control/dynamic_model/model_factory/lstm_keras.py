@@ -13,6 +13,7 @@ import h5py
 import numpy as np
 import tensorflow as tf
 
+from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config, lstm_model_config
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -88,8 +89,10 @@ def lstm_keras(lstm_input_data, lstm_output_data, param_norm, out_dir, model_nam
     # save norm_params and model_weights to hdf5
     if IS_BACKWARD:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/backward')
+        logging.info('IS_BACKWARD lstm: %s' % IS_BACKWARD)
     else:
         h5_model_dir = os.path.join(out_dir, 'h5_model/lstm/forward')
+        logging.info('IS_BACKWARD lstm: %s' % IS_BACKWARD)
 
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)

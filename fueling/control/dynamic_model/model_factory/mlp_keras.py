@@ -7,6 +7,7 @@ import glob
 import os
 import subprocess
 
+from absl import flags
 from keras.regularizers import l1, l2
 from keras.layers import Dense, Input
 from keras.layers import Activation
@@ -20,6 +21,7 @@ import h5py
 import numpy as np
 import tensorflow as tf
 
+from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.file_utils as file_utils
@@ -162,8 +164,10 @@ def mlp_keras(x_data, y_data, param_norm, out_dir):
     # save norm_params and model_weights to hdf5
     if IS_BACKWARD:
         h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/backward')
+        logging.info('IS_BACKWARD mlp: %s' % IS_BACKWARD)
     else:
         h5_model_dir = os.path.join(out_dir, 'h5_model/mlp/forward')
+        logging.info('IS_BACKWARD mlp: %s' % IS_BACKWARD)
 
     h5_file_dir = os.path.join(h5_model_dir, timestr)
     file_utils.makedirs(h5_file_dir)

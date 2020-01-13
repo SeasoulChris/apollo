@@ -9,7 +9,9 @@ from fueling.control.dynamic_model.dynamic_model_data_visualization import Dynam
 
 if __name__ == '__main__':
     SequentialPipeline([
-        SampleSet(),
-        UniformSet(),
+        # the total pipeline of dynamic model training does not work properly, please divide
+        # feature extration and model training
+        # SampleSet(),
+        # UniformSet(),
         DynamicModelTraining(),
     ]).main()

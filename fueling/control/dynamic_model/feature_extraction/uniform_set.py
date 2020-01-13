@@ -13,6 +13,7 @@ import fueling.control.dynamic_model.conf.model_config as model_config
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
+
 # parameters
 INTER_FOLDER = feature_extraction['inter_result_folder']
 OUTPUT_FOLDER = feature_extraction['uniform_output_folder']
@@ -61,9 +62,11 @@ class UniformSet(BasePipeline):
         if IS_BACKWARD:
             origin_prefix = os.path.join(origin_prefix, job_owner, 'backward', job_id)
             target_prefix = os.path.join(target_prefix, job_owner, 'backward', job_id)
+            logging.info('IS_BACKWARD uniform: %s' % IS_BACKWARD)
         else:
             origin_prefix = os.path.join(origin_prefix, job_owner, 'forward', job_id)
             target_prefix = os.path.join(target_prefix, job_owner, 'forward', job_id)
+            logging.info('IS_BACKWARD uniform: %s' % IS_BACKWARD)
 
         # get vehicles
         origin_vehicle_dir = spark_helper.cache_and_log(
