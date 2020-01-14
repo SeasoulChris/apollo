@@ -86,7 +86,8 @@ def train_gp(args, dataset, gp_class):
     optimizer = pyro.optim.ClippedAdam({"lr": args.lr, "lrd": args.lr_decay})
     # svi: Stochastic variational inference
     # ELBO: Evidence Lower Boundary
-    svi = pyro.infer.SVI(gp_instante.model, gp_instante.guide, optimizer, pyro.infer.Trace_ELBO())
+    svi = pyro.infer.SVI(gp_instante.model, gp_instante.guide,
+                         optimizer, pyro.infer.JitTrace_ELBO())
 
     logging.info("Start of training")
     gp_instante.set_data(feature, label)
