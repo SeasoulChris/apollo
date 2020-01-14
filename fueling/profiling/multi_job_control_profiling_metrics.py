@@ -24,6 +24,7 @@ import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
 import fueling.profiling.grading_evaluation.multi_job_control_performance_grading_utils as grading_utils
 
+
 flags.DEFINE_string('ctl_metrics_input_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/control_profiling',
                     'input data directory for local run_test')
@@ -33,6 +34,8 @@ flags.DEFINE_string('ctl_metrics_output_path_local',
 flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_taks directory for local run_test')
 flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
                      'if simulation-only, then skip the owner/id/vehicle/controller identification')
+flags.DEFINE_string('ctl_metrics_simulation_vehicle', 'Mkz7',
+                    'if simulation-only, then manually define the vehicle type in simulation')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -49,6 +52,24 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 os.path.join(origin_prefix, task) for task in todo_tasks
             ]).cache()
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+
+            conf_target_prefix = target_prefix
+            # RDD(target_vehicle_path), the target_vehicle dirs for .conf file
+            generated_vehicle_dir = self.to_rdd([
+                os.path.join(conf_target_prefix, flags.FLAGS.ctl_metrics_simulation_vehicle)
+            ]).cache()
+            logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
+
+            # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
+            src_dst_rdd = generated_vehicle_dir.keyBy(
+                lambda path: os.path.join('/mnt/bos/modules/control/control_conf',
+                                          os.path.basename(path).lower()))
+            # Create dst dirs and copy conf file to them.
+            src_dst_rdd.values().foreach(file_utils.makedirs)
+            src_dst_rdd.foreach(
+                lambda src_dst: shutil.copyfile(
+                    os.path.join(src_dst[0], feature_utils.CONF_FILE),
+                    os.path.join(src_dst[1], feature_utils.CONF_FILE)))
         else:
             job_owner = self.FLAGS.get('job_owner')
             # Use year as the job_id, just for local test
@@ -56,7 +77,6 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             target_prefix = os.path.join(
                 flags.FLAGS.ctl_metrics_output_path_local, job_owner, job_id)
 
-            """origin vehicle directory"""
             # RDD(origin_dir)
             origin_vehicle_dir = spark_helper.cache_and_log(
                 'origin_vehicle_dir',
@@ -68,7 +88,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 # PairRDD(vehicle_type, path_to_vehicle_type)
                 .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle)))
 
-            # # RDD(origin_vehicle_dir)
+            # RDD(origin_vehicle_dir)
             todo_task_dirs = spark_helper.cache_and_log(
                 'todo_jobs',
                 origin_vehicle_dir
@@ -81,7 +101,6 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
             conf_target_prefix = target_prefix
-            logging.info(conf_target_prefix)
             generated_vehicle_dir = origin_vehicle_dir.mapValues(
                 lambda path: path.replace(origin_prefix, conf_target_prefix, 1))
             logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
@@ -93,9 +112,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             src_dst_rdd.values().foreach(file_utils.makedirs)
             src_dst_rdd.foreach(
                 lambda src_dst: shutil.copyfile(
-                    os.path.join(
-                        src_dst[0], feature_utils.CONF_FILE), os.path.join(
-                        src_dst[1], feature_utils.CONF_FILE)))
+                    os.path.join(src_dst[0], feature_utils.CONF_FILE),
+                    os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
         self.run(todo_task_dirs, origin_prefix, target_prefix)
         logging.info('Control Profiling Metrics: All Done, TEST')
