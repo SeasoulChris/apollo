@@ -8,7 +8,6 @@ import shutil
 import numpy as np
 import pyspark_utils.op as spark_op
 
-
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 

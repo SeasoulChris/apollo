@@ -21,7 +21,6 @@ import h5py
 import numpy as np
 import tensorflow as tf
 
-from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
 from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.file_utils as file_utils

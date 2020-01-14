@@ -13,7 +13,6 @@ import h5py
 import numpy as np
 import tensorflow as tf
 
-from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config, lstm_model_config
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
