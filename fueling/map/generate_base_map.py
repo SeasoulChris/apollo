@@ -47,7 +47,7 @@ class MapGenSingleLine(BasePipeline):
 
     def run_prod(self):
         src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
-        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/data')
+        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
