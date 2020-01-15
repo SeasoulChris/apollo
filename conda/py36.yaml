@@ -31,6 +31,8 @@ dependencies:
   - torchvision
   - tensorflow = 1.14.0  # Newer tensorflow introduces API change.
   - gast = 0.2.2  # Required by yolov3 training.
+  # conda config --add channels conda-forge
+  - bayesian-optimization  # Required by bayesian auto-tuner
   # Other
   - future
   - progressbar2
