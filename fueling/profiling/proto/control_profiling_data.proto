@@ -49,14 +49,18 @@ message ControlFeatures {
     repeated double chassis_sequence_num = 37;
     repeated double trajectory_timestamp_sec = 38;
     repeated double trajectory_sequence_num = 39;
+    repeated double replan_timestamp_sec = 40;
+    repeated double replan_sequence_num = 41;
 
-    repeated double throttle_chassis = 40;
-    repeated double brake_chassis = 41;
-    repeated double steering_chassis = 42;
+    repeated double replan_flag = 42;
 
-    repeated double pose_position_x = 43;
-    repeated double pose_position_y = 44;
-    repeated double pose_heading = 45;
+    repeated double throttle_chassis = 43;
+    repeated double brake_chassis = 44;
+    repeated double steering_chassis = 45;
 
-    repeated double pose_heading_offset= 46;
+    repeated double pose_position_x = 46;
+    repeated double pose_position_y = 47;
+    repeated double pose_heading = 48;
+
+    repeated double pose_heading_offset= 49;
 }

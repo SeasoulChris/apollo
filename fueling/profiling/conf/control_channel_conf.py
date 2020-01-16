@@ -57,14 +57,17 @@ FEATURE_IDX = {
     "chassis_sequence_num": 36,
     "trajectory_timestamp_sec": 37,
     "trajectory_sequence_num": 38,
-    # Additional Features extracted from Chassis Channel
-    "throttle_chassis": 39,
-    "brake_chassis": 40,
-    "steering_chassis": 41,
-    "pose_position_x": 42,
-    "pose_position_y": 43,
-    "pose_heading": 44,
-    "pose_heading_offset": 45,
+    "replan_timestamp_sec": 39,
+    "replan_sequence_num": 40,
+    "replan_flag": 41,
+    # Additional Features extracted from Chassis and Localization Channel
+    "throttle_chassis": 42,
+    "brake_chassis": 43,
+    "steering_chassis": 44,
+    "pose_position_x": 45,
+    "pose_position_y": 46,
+    "pose_heading": 47,
+    "pose_heading_offset": 48,
 }
 
 POSE_IDX = {
@@ -116,6 +119,9 @@ FEATURE_NAMES = [
     "chassis_sequence_num",
     "trajectory_timestamp_sec",
     "trajectory_sequence_num",
+    "replan_timestamp_sec",
+    "replan_sequence_num",
+    "replan_flag",
     "throttle_chassis",
     "brake_chassis",
     "steering_chassis",
