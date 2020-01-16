@@ -1,16 +1,14 @@
-# Bayesian Optimization for Auto-tuning
+# Learning Based Auto Tuning
 
-## Environment Setup Steps:
+## Setup Environment:
 ```text
    conda config --add channels conda-forge
    conda env update --prune -f conda/py36.yaml
    source activate fuel-py36
-   python fueling/autotuner/main.py 
 ```
 
-Expected Results (Example):
-```text
-    optimizer 1 found a maximum value of: 0.9831053452160794
-    optimizer 2 found a maximum value of: 0.9843973327748019
-    optimizer 3 found a maximum value of: 0.9985724167335565
+## Test auto tuner at local:
+```bash
+    cd /apollo/modules/data/fuel
+   ./tools/submit-job-to-local.sh  fueling/autotuner/mrac_autotuner.py
 ```
