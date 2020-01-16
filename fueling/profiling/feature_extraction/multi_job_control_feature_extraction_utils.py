@@ -29,25 +29,23 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
 def parse_vehicle_controller(task):
     """Parse controller/vehicle type by task"""
     if not os.path.exists(task):
-        logging.warning('task directory is invalid: {}'.format(task))
+        logging.warning(F'task directory is invalid: {task}')
         return False
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
                         if (record_utils.is_record_file(record_file) or
                             record_utils.is_bag_file(record_file))), None)
     if not record_file:
-        logging.warning('no valid record file found in task: {}'.format(task))
+        logging.warning(F'no valid record file found in task: {task}')
         return False
     # Read two topics together to avoid looping all messages in the record file twice
-    logging.info(
-        'Parse vehicle controller in task {}, record {}'.format(task, record_file))
+    logging.info(F'Parse vehicle controller in task {task}, record {record_file}')
     record_dir_splited = task.split('/')
     record_prefix = '{}/{}'.format(
         record_dir_splited[-2], record_dir_splited[-1])
     read_record_func = record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                  record_utils.HMI_STATUS_CHANNEL])
     messages = read_record_func(record_file)
-    logging.info('{} messages for record file {}'.format(
-        len(messages), record_file))
+    logging.info(F'{len(messages)} messages for record file {record_file}')
     vehicle_message = get_message_by_topic(
         messages, record_utils.HMI_STATUS_CHANNEL)
     if vehicle_message and hasattr(
@@ -55,8 +53,8 @@ def parse_vehicle_controller(task):
         vehicle_type = record_utils.message_to_proto(
             vehicle_message).current_vehicle
     else:
-        logging.info('no vehicle messages found in task {} record {}; \
-                      use "Arbitrary" as the current vehicle type'.format(task, record_file))
+        logging.info(F'no vehicle messages found in task {task} record {record_file}; '
+                     F'use "Arbitrary" as the current vehicle type')
         vehicle_type = "Arbitrary"
     # Compare the vehicle_type from HMI_status channel and the vehicle_type from the input file system.
     vehicle_type_parsed_from_dir = multi_vehicle_utils.get_vehicle_by_task(task)
@@ -64,9 +62,9 @@ def parse_vehicle_controller(task):
         vehicle_type = vehicle_type_parsed_from_dir
     else:
         if vehicle_type.lower() != vehicle_type_parsed_from_dir.lower():
-            logging.info('vehicle type parsed from hmi_status {} does not match input data path {},\
-                          we will process by vehicle type from hmi_status \
-                      '.format(vehicle_type, vehicle_type_parsed_from_dir))
+            logging.info(F'vehicle type parsed from hmi_status {vehicle_type} '
+                         F'does not match input data path {vehicle_type_parsed_from_dir}, '
+                         F'we will process by vehicle type from hmi_status')
     control_message = get_message_by_topic(
         messages, record_utils.CONTROL_CHANNEL)
     # Check control important field
@@ -77,12 +75,12 @@ def parse_vehicle_controller(task):
         elif hasattr(record_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
             controller_type = "MPC_Controller"
         else:
-            logging.info('no known controller type found in task {} record {}; \
-                          use "Arbitrary" as the current controller type'.format(task, record_file))
+            logging.info(F'no known controller type found in task {task} record {record_file}; '
+                         F'use "Arbitrary" as the current controller type')
             controller_type = "Arbitrary"
     else:
-        logging.warning('no control messages found in task {} record {}; \
-                         stop control profiling procedure'.format(task, record_file))
+        logging.warning(F'no control messages found in task {task} record {record_file}; '
+                        F'stop control profiling procedure')
         return False
     vehicle_controller_parsed_dir = '{}/{}/{}'.format(vehicle_type, controller_type, record_prefix)
     return (vehicle_controller_parsed_dir, task)
@@ -93,18 +91,18 @@ def data_matches_config(data_vehicle_type, data_controller_type):
     conf_vehicle_type = get_config_control_profiling().vehicle_type
     conf_controller_type = get_config_control_profiling().controller_type
     if not conf_vehicle_type:
-        logging.info(
-            'No required vehicle type; arbitrary one can be processed for profiling')
+        logging.info(F'No required vehicle type; '
+                     F'arbitrary one can be processed for profiling')
     elif conf_vehicle_type != data_vehicle_type:
-        logging.warning('mismatch between record vehicle {} and configed vehicle {}'
-                        .format(data_vehicle_type, conf_vehicle_type))
+        logging.warning(F'mismatch between record vehicle {data_vehicle_type} and '
+                        F'configed vehicle {conf_vehicle_type}')
         return False
     if not conf_controller_type:
-        logging.info(
-            'No required controller type; arbitrary one can be processed for profiling')
+        logging.info(F'No required controller type; '
+                     F'arbitrary one can be processed for profiling')
     elif conf_controller_type != data_controller_type:
-        logging.warning('mismatch between record controller {} and configed controller {}'
-                        .format(data_controller_type, conf_controller_type))
+        logging.warning(F'mismatch between record controller {data_controller_type} and '
+                        F'configed controller {conf_controller_type}')
         return False
     return True
 
@@ -121,8 +119,8 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
                                               for msg in control_msgs] if data is not None])
     localization_mtx = np.array([data for data in [extract_localization_data_from_msg(msg)
                                                    for msg in localization_msgs] if data is not None])
-    logging.info('The original msgs size are: chassis {}, control {}, and localization: {}'
-                 .format(chassis_mtx.shape[0], control_mtx.shape[0], localization_mtx.shape[0]))
+    logging.info(F'The original msgs size are: chassis {chassis_mtx.shape[0]}, '
+                 F'control {control_mtx.shape[0]}, and localization {localization_mtx.shape[0]}')
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
     # First, filter the chassis data with desired driving modes and gear locations
@@ -148,8 +146,7 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
                                   control_idx_by_localization, :]
     # Third, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
-    inv_seq_chassis = (
-        np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_timestamp_sec']]) < 0.0)
+    inv_seq_chassis = (np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_timestamp_sec']]) < 0.0)
     inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
                             < 0.0)
     for inv in np.where(inv_seq_chassis | inv_seq_localization):
@@ -175,21 +172,27 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
     localization_mtx_rtn = np.take(
         localization_mtx, localization_idx_rtn, axis=0)
-    logging.info('The filtered msgs size are: chassis {}, control {}, and localization: {}'
-                 .format(chassis_mtx_rtn.shape[0], control_mtx_rtn.shape[0],
-                         localization_mtx_rtn.shape[0]))
+    logging.info(F'The filtered msgs size are: chassis {chassis_mtx_rtn.shape[0]}, '
+                 F'control {control_mtx_rtn.shape[0]}, and '
+                 F'localization {localization_mtx_rtn.shape[0]}')
     # Finally, rebuild the grading mtx with the control data combined with
     # chassis and localizaiton data
     if (control_mtx_rtn.shape[0] > 0):
-        # First, merge the chassis data into control data matrix
-        if (chassis_mtx_rtn.shape[1] > MODE_IDX['brake_chassis']):
-            grading_mtx = np.hstack((control_mtx_rtn,
-                                     chassis_mtx_rtn[:, [MODE_IDX['throttle_chassis'],
-                                                         MODE_IDX['brake_chassis']]]))
-        else:
-            grading_mtx = np.hstack((control_mtx_rtn,
-                                     np.zeros((control_mtx_rtn.shape[0], 2))))
-        # Second, merge the localization data into control data matrix
+        # First, merge the planning-related data into control data matrix
+        replan_flag = np.multiply(np.diff(
+            control_mtx_rtn[:, FEATURE_IDX['replan_sequence_num']]) > 0, 1)
+        grading_mtx = np.column_stack(
+            (control_mtx_rtn, np.append(replan_flag, [0], axis=0)))
+        # Second, merge the chassis data into control data matrix
+        grading_mtx = np.hstack((grading_mtx,
+                                 chassis_mtx_rtn[:, [MODE_IDX['throttle_chassis'],
+                                                     MODE_IDX['brake_chassis'],
+                                                     MODE_IDX['steering_chassis']]]))
+        # Third, merge the localization data into control data matrix
+        grading_mtx = np.hstack((grading_mtx,
+                                 localization_mtx_rtn[:, [POSE_IDX['pose_position_x'],
+                                                          POSE_IDX['pose_position_y'],
+                                                          POSE_IDX['pose_heading']]]))
         pose_heading_num = np.diff(
             localization_mtx_rtn[:, POSE_IDX['pose_position_y']])
         pose_heading_den = np.diff(
@@ -298,7 +301,11 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 38
+                    'sequence_num', float('NaN')),                                 # 38
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 39
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 40
         ])
     elif hasattr(getattr(msg_proto, 'debug'), 'simple_mpc_debug'):
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -359,7 +366,11 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 38
+                    'sequence_num', float('NaN')),                                 # 38
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 39
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 40
         ])
     else:
         # Return None for Non-recognized Controller Type
