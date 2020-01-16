@@ -63,7 +63,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
             src_dst_rdd = generated_vehicle_dir.keyBy(
                 lambda path: os.path.join('/mnt/bos/modules/control/control_conf',
-                                          os.path.basename(path).lower()))
+                                          os.path.basename(path).lower().replace(' ', '_', 1)))
             # Create dst dirs and copy conf file to them.
             src_dst_rdd.values().foreach(file_utils.makedirs)
             src_dst_rdd.foreach(
