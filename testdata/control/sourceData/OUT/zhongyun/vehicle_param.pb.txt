@@ -1,4 +1,8 @@
 vehicle_param {
+  brand: ZHONGYUN
+  vehicle_id {
+    other_unique_id: "zhongyun"
+  }
   front_edge_to_center: 0.29
   back_edge_to_center: 1.36
   left_edge_to_center: 0.46
@@ -17,6 +21,6 @@ vehicle_param {
   wheel_base: 1.25
   wheel_rolling_radius: 0.2
   max_abs_speed_when_stopped: 0.2
-  throttle_deadzone: 0.01
-  brake_deadzone: 0.01
+  throttle_deadzone: 5.0
+  brake_deadzone: 2.0
 }
