@@ -72,6 +72,7 @@ def compute_h5_and_gradings(target_groups):
                                   'total_time_usage',
                                   'total_time_peak',
                                   'total_time_exceeded_count',
+                                  'replan_trajectory_count',
                                   'pose_heading_offset_std',
                                   'pose_heading_offset_peak'])
     grading_arguments = namedtuple('grading_arguments',
@@ -391,6 +392,9 @@ def compute_h5_and_gradings(target_groups):
         total_time_exceeded_count=compute_count(grading_mtx, grading_arguments(
             count_feature_name='total_time_exceeded'
         )),
+        replan_trajectory_count=compute_count(grading_mtx, grading_arguments(
+            count_feature_name='replan_flag'
+        )),
         pose_heading_offset_std=compute_usage(grading_mtx, grading_arguments(
             usage_feature_name='pose_heading_offset',
             usage_filter_name=['speed_reference'],
@@ -503,14 +507,14 @@ def compute_beyond(grading_mtx, arg):
     """Compute the beyond_the_threshold counting value"""
     elem_num, _ = grading_mtx.shape
     return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.beyond_feature_name]]) >=
-                         arg.beyond_threshold)) / elem_num,
+                         arg.beyond_threshold)[0]) / elem_num,
             elem_num)
 
 
 def compute_count(grading_mtx, arg):
     """Compute the event (boolean true) counting value"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1)) / elem_num,
+    return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1)[0]) / elem_num,
             elem_num)
 
 

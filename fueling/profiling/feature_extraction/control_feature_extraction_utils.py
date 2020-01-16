@@ -152,12 +152,17 @@ def extract_data_at_multi_channels(msgs, driving_mode, gear_position):
     # Finally, rebuild the grading mtx with the control data combined with
     # chassis and localizaiton data
     if (control_mtx_rtn.shape[0] > 0):
-        # First, merge the chassis data into control data matrix
-        grading_mtx = np.hstack((control_mtx_rtn,
+        # First, merge the planning-related data into control data matrix
+        replan_flag = np.multiply(np.diff(
+            control_mtx_rtn[:, FEATURE_IDX['replan_sequence_num']]) > 0, 1)
+        grading_mtx = np.column_stack(
+            (control_mtx_rtn, np.append(replan_flag, [0], axis=0)))
+        # Second, merge the chassis data into control data matrix
+        grading_mtx = np.hstack((grading_mtx,
                                  chassis_mtx_rtn[:, [MODE_IDX['throttle_chassis'],
                                                      MODE_IDX['brake_chassis'],
                                                      MODE_IDX['steering_chassis']]]))
-        # Second, merge the localization data into control data matrix
+        # Third, merge the localization data into control data matrix
         grading_mtx = np.hstack((grading_mtx,
                                  localization_mtx_rtn[:, [POSE_IDX['pose_position_x'],
                                                           POSE_IDX['pose_position_y'],
@@ -270,7 +275,11 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 38
+                    'sequence_num', float('NaN')),                                 # 38
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 39
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 40
         ])
     elif hasattr(getattr(msg_proto, 'debug'), 'simple_mpc_debug'):
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -331,7 +340,11 @@ def extract_control_data_from_msg(msg):
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
                     'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 38
+                    'sequence_num', float('NaN')),                                 # 38
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'timestamp_sec', float('NaN')),                                # 39
+            getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
+                    'sequence_num', float('NaN'))                                  # 40
         ])
     else:
         # Return None for Non-recognized Controller Type
