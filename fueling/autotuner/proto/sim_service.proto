@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+service AutoTuner {
+  rpc TriggerBuildJob (GitInfo) returns (Status) {}
+  rpc RunScenario (JobInfo) returns (Status) {}
+}
+
+message GitInfo {
+  string commit = 1;
+  string repo = 2;
+}
+
+message JobInfo {
+    GitInfo git_info = 1;
+    int32 scenario = 2;  // number indicating which worldsim scenario should be run
+    map<string, string> model_config = 3;  // map from local config file path to serialized config
+    string output_path = 4;  // storage path for output record file
+    string output_file = 5;  // storage file name for output record file
+    string training_id = 6;  // used to identify which training task it belongs to
+}
+
+message Status {
+  int32 code = 1;
+  string message = 2;
+}
