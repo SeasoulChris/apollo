@@ -17,6 +17,7 @@
 1. Install env and activate.
 
    ```bash
+   conda config --add channels conda-forge
    conda env update --prune -f conda/py36.yaml
    source activate fuel-py36
    ```

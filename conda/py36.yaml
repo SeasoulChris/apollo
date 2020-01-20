@@ -33,6 +33,7 @@ dependencies:
   - gast = 0.2.2  # Required by yolov3 training.
   # conda config --add channels conda-forge
   - bayesian-optimization  # Required by bayesian auto-tuner
+  - optuna
   # Other
   - future
   - progressbar2
