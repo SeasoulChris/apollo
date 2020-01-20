@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+import "sim_service.proto";
+
+service CostComputation {
+  rpc ComputeMracCost (Request) returns (Response) {}
+}
+
+message ModelConfig {
+  map<string, string> model_config = 1;  // map from local config file path to serialized config
+}
+
+message Request {
+  GitInfo git_info = 1;
+  repeated ModelConfig config = 2;
+}
+
+message Response {
+  int32 code = 1; // exist code
+  string message = 2;
+  float score = 3; // weighted score
+}

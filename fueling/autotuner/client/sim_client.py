@@ -5,8 +5,8 @@ import grpc
 
 import fueling.common.logging as logging
 
-import fueling.autotuner.client.sim_service_pb2 as sim_service_pb2
-import fueling.autotuner.client.sim_service_pb2_grpc as sim_service_pb2_grpc
+import fueling.autotuner.grpc.sim_service_pb2 as sim_service_pb2
+import fueling.autotuner.grpc.sim_service_pb2_grpc as sim_service_pb2_grpc
 
 
 class SimClient(object):
@@ -17,12 +17,16 @@ class SimClient(object):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.AutoTunerStub(channel)
             git_info = sim_service_pb2.GitInfo(commit=commit)
-            logging.info(f"Triggering build with commit {commit} ...")
 
+            logging.info(f"Triggering build with commit {commit} ...")
             status = stub.TriggerBuildJob(git_info)
 
-        logging.info(f"Finish building: {status}")
-        return True
+        if status.code == 0:
+            logging.info(f"Done building apollo.")
+            return True
+        else:
+            logging.error(f"Failed to build apollo: {status.message}")
+            return False
 
     @classmethod
     def run_scenario(
@@ -40,7 +44,13 @@ class SimClient(object):
                 output_file=output_file,
                 training_id=training_id,
             )
+
+            logging.info(f"Running scenario {scenario} for {output_file} ...")
             status = stub.RunScenario(job_info)
 
-        logging.info(f"Finish running scenario: {status.message}")
-        return True
+        if status.code == 0:
+            logging.info(f"Done running scenario {scenario} for {output_file}.")
+            return True
+        else:
+            logging.error(f"Failed to run scenario {scenario} for {output_file}: {status.message}")
+            return False
