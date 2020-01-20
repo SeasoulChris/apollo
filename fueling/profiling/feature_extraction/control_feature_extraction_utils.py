@@ -253,33 +253,35 @@ def extract_control_data_from_msg(msg):
             # Features: "Pose" category
             getattr(getattr(getattr(control_lon, 'current_reference_point',
                                     float('NaN')), 'path_point', float('NaN')),
-                    'x', float('NaN')),                                    # 27
+                    'x', float('NaN')),                                            # 27
             getattr(getattr(getattr(control_lon, 'current_reference_point',
                                     float('NaN')), 'path_point', float('NaN')),
-                    'y', float('NaN')),                                    # 28
+                    'y', float('NaN')),                                            # 28
+            # Features: "Status" category
+            getattr(control_lat, 'steer_mrac_enable_status', float('NaN')),        # 29
             # Features: "Latency" category
-            getattr(control_latency, 'total_time_ms', float('NaN')),               # 29
-            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 30
+            getattr(control_latency, 'total_time_ms', float('NaN')),               # 30
+            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 31
             # Features: "Header" category
-            getattr(control_header, 'timestamp_sec', float('NaN')),                # 31
-            getattr(control_header, 'sequence_num', float('NaN')),                 # 32
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 33
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 33
             # Features: "Input Info" category
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 33
+                    'timestamp_sec', float('NaN')),                                # 34
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 34
+                    'sequence_num', float('NaN')),                                 # 35
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 35
+                    'timestamp_sec', float('NaN')),                                # 36
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 36
+                    'sequence_num', float('NaN')),                                 # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 37
+                    'timestamp_sec', float('NaN')),                                # 38
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 38
+                    'sequence_num', float('NaN')),                                 # 39
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 39
+                    'timestamp_sec', float('NaN')),                                # 40
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 40
+                    'sequence_num', float('NaN'))                                  # 41
         ])
     elif hasattr(getattr(msg_proto, 'debug'), 'simple_mpc_debug'):
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -318,33 +320,35 @@ def extract_control_data_from_msg(msg):
             # Features: "Pose" category
             getattr(getattr(getattr(control_mpc, 'current_reference_point',
                                     float('NaN')), 'path_point', float('NaN')),
-                    'x', float('NaN')),                            # 27
+                    'x', float('NaN')),                                            # 27
             getattr(getattr(getattr(control_mpc, 'current_reference_point',
                                     float('NaN')), 'path_point', float('NaN')),
-                    'y', float('NaN')),                            # 28
+                    'y', float('NaN')),                                            # 28
+            # Features: "Status" category
+            getattr(control_mpc, 'steer_mrac_enable_status', float('NaN')),        # 29
             # Features: "Latency" category
-            getattr(control_latency, 'total_time_ms', float('NaN')),               # 29
-            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 30
+            getattr(control_latency, 'total_time_ms', float('NaN')),               # 30
+            getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 31
             # Features: "Header" category
-            getattr(control_header, 'timestamp_sec', float('NaN')),                # 31
-            getattr(control_header, 'sequence_num', float('NaN')),                 # 32
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 32
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 33
             # Features: "Input Info" category
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 33
+                    'timestamp_sec', float('NaN')),                                # 34
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 34
+                    'sequence_num', float('NaN')),                                 # 35
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 35
+                    'timestamp_sec', float('NaN')),                                # 36
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 36
+                    'sequence_num', float('NaN')),                                 # 37
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 37
+                    'timestamp_sec', float('NaN')),                                # 38
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 38
+                    'sequence_num', float('NaN')),                                 # 39
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 39
+                    'timestamp_sec', float('NaN')),                                # 40
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 40
+                    'sequence_num', float('NaN'))                                  # 41
         ])
     else:
         # Return None for Non-recognized Controller Type
