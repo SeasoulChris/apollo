@@ -14,13 +14,14 @@ import fueling.profiling.feature_extraction.multi_job_control_feature_extraction
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 
-def compute_h5_and_gradings(target_groups):
+def compute_h5_and_gradings(target_groups, flags):
     """Do computing against one group"""
     target, group_id, msgs = target_groups
     logging.info(F'computing {len(msgs)} messages for target {target}')
     profiling_conf = feature_utils.get_config_control_profiling()
     vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(target)
-    grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
+    grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, flags,
+                                                               profiling_conf.driving_mode,
                                                                profiling_conf.gear_position)
     if grading_mtx.shape[0] == 0:
         logging.warning(F'no valid element in {len(msgs)} items in group {group_id}'

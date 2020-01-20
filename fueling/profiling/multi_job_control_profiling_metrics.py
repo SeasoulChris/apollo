@@ -36,7 +36,8 @@ flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
                      'if simulation-only, then skip the owner/id/vehicle/controller identification')
 flags.DEFINE_string('ctl_metrics_simulation_vehicle', 'Mkz7',
                     'if simulation-only, then manually define the vehicle type in simulation')
-
+flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
+                     'if filter_by_MRAC True, then filter out all the data without MRAC message')
 
 class MultiJobControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
@@ -296,8 +297,10 @@ class MultiJobControlProfilingMetrics(BasePipeline):
     def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
 
-        """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
+        ctl_flags = flags.FLAGS.flag_values_dict()
+
         def _reorg_target_dir(target_task):
+            """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
             # parameter vehicle_controller_parsed like
             # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
             vehicle_controller_parsed, task = target_task
@@ -332,7 +335,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
          .flatMap(self.partition_data)
          # PairRDD(target, grading_result), for each group get the gradings and
          # write h5 files
-         .map(grading_utils.compute_h5_and_gradings)
+         .map(lambda target_groups: grading_utils.compute_h5_and_gradings(target_groups,
+                                                                          ctl_flags))
          # PairRDD(target, combined_grading_result), combine gradings for each
          # target/task
          .reduceByKey(grading_utils.combine_gradings)
