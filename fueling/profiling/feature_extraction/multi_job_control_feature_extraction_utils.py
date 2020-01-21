@@ -89,27 +89,6 @@ def parse_vehicle_controller(task, flags):
     return (vehicle_controller_parsed_dir, task)
 
 
-def data_matches_config(data_vehicle_type, data_controller_type):
-    """Compare the data retrieved in record file and configured value and see if matches"""
-    conf_vehicle_type = get_config_control_profiling().vehicle_type
-    conf_controller_type = get_config_control_profiling().controller_type
-    if not conf_vehicle_type:
-        logging.info(F'No required vehicle type; '
-                     F'arbitrary one can be processed for profiling')
-    elif conf_vehicle_type != data_vehicle_type:
-        logging.warning(F'mismatch between record vehicle {data_vehicle_type} and '
-                        F'configed vehicle {conf_vehicle_type}')
-        return False
-    if not conf_controller_type:
-        logging.info(F'No required controller type; '
-                     F'arbitrary one can be processed for profiling')
-    elif conf_controller_type != data_controller_type:
-        logging.warning(F'mismatch between record controller {data_controller_type} and '
-                        F'configed controller {conf_controller_type}')
-        return False
-    return True
-
-
 def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position):
     """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
