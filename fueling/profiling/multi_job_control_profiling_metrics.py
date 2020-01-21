@@ -39,6 +39,7 @@ flags.DEFINE_string('ctl_metrics_simulation_vehicle', 'Mkz7',
 flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
                      'if filter_by_MRAC True, then filter out all the data without MRAC message')
 
+
 class MultiJobControlProfilingMetrics(BasePipeline):
     """ Control Profiling: Feature Extraction and Performance Grading """
 
@@ -241,8 +242,9 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             logging.info(F'processed_dirs: {processed_dirs.collect()}')
 
             if not processed_dirs.isEmpty():
-                """Reorgnize RDD key from vehicle/controller/record_prefix to vehicle=>abs target"""
                 def _reorg_rdd_by_vehicle(target_task):
+                    """Reorgnize RDD key from vehicle/controller/record_prefix """
+                    """to vehicle=>abs target"""
                     # parameter vehicle_controller_parsed like
                     # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
                     vehicle, (vehicle_controller_parsed, task) = target_task
@@ -262,7 +264,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     # PairRDD(vehicle_type, absolute_path_to_records)
                     .mapValues(os.path.dirname)
                     # PairRDD(vehicle_controller_parsed, task_dir_with_target_prefix)
-                    .mapValues(feature_utils.parse_vehicle_controller)
+                    .mapValues(lambda task:
+                               feature_utils.parse_vehicle_controller(task, self.FLAGS))
                     # PairRDD(vehicle_type, task_dir)
                     .map(_reorg_rdd_by_vehicle)
                     .distinct()
@@ -294,10 +297,9 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         self.run(todo_task_dirs.values(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Metrics: All Done, PROD')
 
+
     def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
-
-        ctl_flags = flags.FLAGS.flag_values_dict()
 
         def _reorg_target_dir(target_task):
             """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
@@ -310,7 +312,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         # RDD tasks
         reorganized_target = (todo_tasks
                               # PairRDD(vehicle_controller_parsed, tasks)
-                              .map(feature_utils.parse_vehicle_controller)
+                              .map(lambda task:
+                                   feature_utils.parse_vehicle_controller(task, self.FLAGS))
                               # PairRDD(vehicle_controller_parsed, tasks)
                               .filter(spark_op.filter_value(lambda task: os.path.exists(task)))
                               # PairRDD(target_dir, task)
@@ -335,8 +338,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
          .flatMap(self.partition_data)
          # PairRDD(target, grading_result), for each group get the gradings and
          # write h5 files
-         .map(lambda target_groups: grading_utils.compute_h5_and_gradings(target_groups,
-                                                                          ctl_flags))
+         .map(lambda target_groups:
+              grading_utils.compute_h5_and_gradings(target_groups, self.FLAGS))
          # PairRDD(target, combined_grading_result), combine gradings for each
          # target/task
          .reduceByKey(grading_utils.combine_gradings)
@@ -361,6 +364,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                        for idx in range(0, len(msgs), feature_utils.MSG_PER_SEGMENT)]
         return [(target, group_id, group)
                 for group_id, group in enumerate(msgs_groups)]
+
 
 def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error_msg=''):
     """Make summaries to specified tasks"""

@@ -27,7 +27,7 @@ CHANNELS = {record_utils.CHASSIS_CHANNEL,
             record_utils.LOCALIZATION_CHANNEL, record_utils.CONTROL_CHANNEL}
 
 
-def parse_vehicle_controller(task):
+def parse_vehicle_controller(task, flags):
     """Parse controller/vehicle type by task"""
     if not os.path.exists(task):
         logging.warning(F'task directory is invalid: {task}')
@@ -53,6 +53,8 @@ def parse_vehicle_controller(task):
             record_utils.message_to_proto(vehicle_message), 'current_vehicle'):
         vehicle_type = record_utils.message_to_proto(
             vehicle_message).current_vehicle
+    elif flags['ctl_metrics_simulation_only_test']:
+        vehicle_type = flags['ctl_metrics_simulation_vehicle']
     else:
         logging.info(F'no vehicle messages found in task {task} record {record_file}; '
                      F'use "Arbitrary" as the current vehicle type')
