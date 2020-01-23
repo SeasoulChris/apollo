@@ -5,8 +5,8 @@ import grpc
 
 import fueling.common.logging as logging
 
-import fueling.autotuner.grpc.sim_service_pb2 as sim_service_pb2
-import fueling.autotuner.grpc.sim_service_pb2_grpc as sim_service_pb2_grpc
+import modules.data.fuel.fueling.autotuner.proto.sim_service_pb2 as sim_service_pb2
+import modules.data.fuel.fueling.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 
 
 class SimClient(object):
@@ -15,7 +15,7 @@ class SimClient(object):
     @classmethod
     def trigger_build(cls, commit):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
-            stub = sim_service_pb2_grpc.AutoTunerStub(channel)
+            stub = sim_service_pb2_grpc.SimServiceStub(channel)
             git_info = sim_service_pb2.GitInfo(commit=commit)
 
             logging.info(f"Triggering build with commit {commit} ...")
@@ -33,7 +33,7 @@ class SimClient(object):
         cls, training_id, commit, scenario, config, output_path, output_file
     ):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
-            stub = sim_service_pb2_grpc.AutoTunerStub(channel)
+            stub = sim_service_pb2_grpc.SimServiceStub(channel)
 
             git_info = sim_service_pb2.GitInfo(commit=commit)
             job_info = sim_service_pb2.JobInfo(

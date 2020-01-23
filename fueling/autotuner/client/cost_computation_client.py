@@ -2,10 +2,11 @@
 
 import grpc
 
-# import fueling.autotuner.grpc.sim_service_pb2 as sim_service_pb2
-import fueling.autotuner.grpc.cost_computation_service_pb2 as cost_service_pb2
-import fueling.autotuner.grpc.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+
 import fueling.common.logging as logging
+
 
 class CostComputationClient(object):
     """The Python implementation of the Cost Computation GRPC client."""
@@ -25,11 +26,13 @@ class CostComputationClient(object):
                 request.config.append(proto_config)
 
             logging.info(f"Triggering compute with commit {commit} ...")
-            status = stub.ComputeMracCost(request)
+            response = stub.ComputeMracCost(request)
 
+        status = response.status
         if status.code == 0:
-            logging.info(f"Done computing cost {status.score}")
-            return status.score
+            logging.info(f"Done computing cost {response.score}")
+            return response.score
         else:
             logging.error(f"Failed to compute cost: {status.message}")
-            return float('nan')
+            return None
+

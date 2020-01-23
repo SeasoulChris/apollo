@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
-service AutoTuner {
+service SimService {
   rpc TriggerBuildJob (GitInfo) returns (Status) {}
   rpc RunScenario (JobInfo) returns (Status) {}
 }

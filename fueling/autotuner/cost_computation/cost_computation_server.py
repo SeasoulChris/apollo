@@ -11,8 +11,9 @@ from absl import flags
 import grpc
 
 # Apollo-fuel packages
-import fueling.autotuner.grpc.cost_computation_service_pb2 as cost_service_pb2
-import fueling.autotuner.grpc.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
@@ -36,9 +37,17 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         else:
             self.submit_job_cmd = "./tools/submit-job-to-local.sh"
 
+    def CreateResponse(self, exit_code, message="", score=None):
+        response = cost_service_pb2.Response()
+        response.status.code = exit_code
+        response.status.message = message
+        if score is not None:
+            response.score = score
+        return response
+
     def ComputeMracCost(self, request, context):
         if not request.git_info.commit:
-            return cost_service_pb2.Response(code=1, message="Commit ID not specified")
+            return self.CreateResponse(exit_code=1, message="Commit ID not specified.")
 
         training_id = uuid.uuid1().hex
         tmp_dir = f"{TMP_ROOT_DIR}/{training_id}"
@@ -55,17 +64,19 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
         if exit_code != 0:
-            return cost_service_pb2.Response(code=ret, message="ERROR")
+            return self.CreateResponse(
+                exit_code=exit_code, message="Error running mrac_cost_computation."
+            )
 
         # read and return score
         try:
             with open(f"{tmp_dir}/score.out") as score_file:
                 score = float(score_file.readline())
-                return cost_service_pb2.Response(code=0, message="Done", score=score)
+                return self.CreateResponse(exit_code=0, message="Done.", score=score)
         except Exception as error:
             logging.error(f"Failed to get weighted score.\n\t{error}")
-            return cost_service_pb2.Response(
-                code=1, message="Failed to get weighted score."
+            return self.CreateResponse(
+                exit_code=1, message="Failed to get weighted score."
             )
 
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
-import "sim_service.proto";
+import "modules/data/fuel/fueling/autotuner/proto/sim_service.proto";
 
 service CostComputation {
   rpc ComputeMracCost (Request) returns (Response) {}
@@ -18,7 +18,6 @@ message Request {
 }
 
 message Response {
-  int32 code = 1; // exist code
-  string message = 2;
-  float score = 3; // weighted score
+  Status status = 1;
+  float score = 2; // weighted score
 }

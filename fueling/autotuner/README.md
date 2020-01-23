@@ -6,16 +6,12 @@
    conda env update --prune -f conda/py36.yaml
    source activate fuel-py36
 ```
-
 ### Generate the gRPC interface from .proto service
-This is needed only if there're changes in the *.proto files:
+-This is needed only if there're changes in the *.proto files:
 ```bash
-   cd /apollo/modules/data/fuel/fueling/autotuner
-   python -m grpc_tools.protoc -I./proto --python_out=./grpc --grpc_python_out=./grpc ./proto/sim_service.proto
-   python -m grpc_tools.protoc -I./proto --python_out=./grpc --grpc_python_out=./grpc ./proto/cost_computation_service.proto
+    bash /apollo/apollo.sh build_py
 ```
 
-Once generated, change the import path in xxx_pb2.py and xxxx_pb2_grpc.py to absolute path
 
 ## Run one iteration of the cost function at local:
 

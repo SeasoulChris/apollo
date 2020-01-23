@@ -3,10 +3,12 @@
 import random
 from datetime import datetime
 
+import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+
 from fueling.autotuner.cost_computation.base_cost_computation import BaseCostComputation
-import fueling.autotuner.grpc.cost_computation_service_pb2 as cost_service_pb2
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+
 
 
 class MracCostComputation(BaseCostComputation):
@@ -43,14 +45,14 @@ class MracCostComputation(BaseCostComputation):
         (key, bag_path) = input
         logging.info(f"Calculating score for: {bag_path}")
         random.seed(datetime.now())
-        return (key, random.random())
+        return (key, [random.random(), random.random()])
 
     def calculate_weighted_score(self, config_2_score):
         # TODO: implement me
         if not len(config_2_score):
             return float('nan')
 
-        total = sum([score for (config, score) in config_2_score])
+        total = sum([sum(scores) for (config, scores) in config_2_score])
         avg = total / len(config_2_score)
         return avg
 

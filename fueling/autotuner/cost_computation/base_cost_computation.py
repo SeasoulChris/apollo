@@ -118,9 +118,11 @@ class BaseCostComputation(BasePipeline):
         return f"{output_path}/{output_file}"
 
     def calculate_individual_score(self, input):
+        """Return score(s) from the given Cyber record"""
         raise Exception("Not implemented!")
 
     def calculate_weighted_score(self, config_2_score):
+        """Return a weighted score from (config, scenario) -> score(s) map"""
         raise Exception("Not implemented!")
 
     def get_temp_dir(self):
