@@ -12,6 +12,7 @@ dependencies:
   # Google infra
   - absl-py
   - protobuf = 3.6  # Compatible with locked tensorflow.
+  - grpcio
 
   # Data science
   - boto3
