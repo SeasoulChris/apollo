@@ -127,7 +127,6 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position):
     control_mtx_rtn = control_mtx[control_idx_by_chassis &
                                   control_idx_by_localization, :]
     # Third, filter the control data with specific status flags
-    logging.info(F'FLAGS are {flags}')
     if flags['ctl_metrics_filter_by_MRAC']:
         MRAC_condition = (control_mtx_rtn[:, FEATURE_IDX['steer_mrac_enable_status']] != 1)
         control_mtx_rtn = np.delete(control_mtx_rtn, np.where(MRAC_condition)[0], axis=0)

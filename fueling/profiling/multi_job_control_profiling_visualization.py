@@ -202,7 +202,6 @@ class MultiJobControlProfilingVisualization(BasePipeline):
                     # "segments" into one array
                     .mapValues(visual_utils.generate_data)
                     )
-        logging.info(F'data_rdd: {data_rdd.collect()}')
 
         if flags.FLAGS.ctl_visual_simulation_only_test:
             # PairRDD(target_dir, data_array)
