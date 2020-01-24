@@ -12,7 +12,7 @@ dependencies:
   # Google infra
   - absl-py
   - protobuf = 3.6  # Compatible with locked tensorflow.
-  - grpcio
+
 
   # Data science
   - boto3
@@ -55,6 +55,7 @@ dependencies:
     - pyspark-utils
     - scaleapi
     - websocket
+    - grpcio #Conda install grpcio can not be found.
 
     # Audio
     - eyed3
