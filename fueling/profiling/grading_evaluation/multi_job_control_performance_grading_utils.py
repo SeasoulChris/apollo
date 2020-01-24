@@ -2,11 +2,12 @@
 """ Control performance grading related utils. """
 
 from collections import namedtuple
+import json
 import math
 import numpy as np
 import os
 
-from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
+from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, WEIGHTED_SCORE
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
@@ -617,7 +618,7 @@ def combine_gradings(grading_x, grading_y):
     return grading_x
 
 
-def output_gradings(target_grading):
+def output_gradings(target_grading, flags):
     """Write the grading results to files in coresponding target dirs"""
     target_dir, grading = target_grading
     # get copied vehicle parameter conf
@@ -631,15 +632,26 @@ def output_gradings(target_grading):
     profiling_conf_output_path = os.path.join(target_dir,
                                               F'{vehicle_type}_{controller_type}_'
                                               F'control_profiling_conf.pb.txt')
-    logging.info(F'writing grading output {grading} to {grading_output_path}')
     if not grading:
         logging.warning(F'No grading results written to {grading_output_path}')
     else:
+        grading_dict = grading._asdict()
+        score_dict = WEIGHTED_SCORE[flags['ctl_metrics_weighted_score']]
+        score = 0.0
+        sample = 0.0
+        for key, weighting in score_dict.items():
+            if 'peak' in key:
+                score += grading_dict[key][0][0] * weighting
+            else:
+                score += grading_dict[key][0] * weighting
+            sample = (grading_dict[key][1] if grading_dict[key][1] > sample else sample)
+        grading_dict.update({'weighted_score': (score, sample)})
+        logging.info(F'writing grading output {grading_dict} to {grading_output_path}')
         with open(grading_output_path, 'w') as grading_file:
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
                                        'Event Timestamp'))
-            for name, value in grading._asdict().items():
+            for name, value in grading_dict.items():
                 if not value:
                     logging.warning(F'grading value for {name} is None')
                     continue
@@ -662,7 +674,8 @@ def output_gradings(target_grading):
                 else:
                     grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
-
+        with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
+            grading_json.write(json.dumps(grading_dict))
         with open(profiling_conf_output_path, 'w') as profiling_conf_file:
             profiling_conf_file.write(F'{profiling_conf}')
 
