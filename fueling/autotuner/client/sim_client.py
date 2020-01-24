@@ -30,7 +30,7 @@ class SimClient(object):
 
     @classmethod
     def run_scenario(
-        cls, training_id, commit, scenario, config, output_path, output_file
+        cls, training_id, commit, scenario, config, record_output_path, output_file
     ):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
@@ -40,7 +40,7 @@ class SimClient(object):
                 git_info=git_info,
                 scenario=scenario,
                 model_config=config,
-                output_path=output_path,
+                record_output_path=record_output_path,
                 output_file=output_file,
                 training_id=training_id,
             )

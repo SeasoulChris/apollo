@@ -102,7 +102,7 @@ class BaseCostComputation(BasePipeline):
         (config, scenario) = input
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid1().hex
-        output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
+        record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
         output_file = f"{job_id}.record"
 
         # TODO: handle error status
@@ -111,11 +111,11 @@ class BaseCostComputation(BasePipeline):
             self.FLAGS.get("commit"),
             scenario,
             config,
-            output_path,
+            record_output_path,
             output_file,
         )
 
-        return f"{output_path}/{output_file}"
+        return f"{record_output_path}/{output_file}"
 
     def calculate_individual_score(self, input):
         """Return score(s) from the given Cyber record"""

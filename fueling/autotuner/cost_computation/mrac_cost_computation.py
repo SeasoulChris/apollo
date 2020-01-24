@@ -10,7 +10,6 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
-
 class MracCostComputation(BaseCostComputation):
     def __init__(self):
         BaseCostComputation.__init__(self)
@@ -55,6 +54,7 @@ class MracCostComputation(BaseCostComputation):
         total = sum([sum(scores) for (config, scores) in config_2_score])
         avg = total / len(config_2_score)
         return avg
+
 
 if __name__ == "__main__":
     MracCostComputation().main()
