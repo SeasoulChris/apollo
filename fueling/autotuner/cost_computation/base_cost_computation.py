@@ -103,7 +103,7 @@ class BaseCostComputation(BasePipeline):
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid1().hex
         record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
-        output_file = f"{job_id}.record"
+        output_record_filename = f"{job_id}.record"
 
         # TODO: handle error status
         status = SimClient.run_scenario(
@@ -112,10 +112,10 @@ class BaseCostComputation(BasePipeline):
             scenario,
             config,
             record_output_path,
-            output_file,
+            output_record_filename,
         )
 
-        return f"{record_output_path}/{output_file}"
+        return f"{record_output_path}/{output_record_filename}"
 
     def calculate_individual_score(self, input):
         """Return score(s) from the given Cyber record"""
@@ -129,5 +129,5 @@ class BaseCostComputation(BasePipeline):
         return f"{TMP_ROOT_DIR}/{self.FLAGS.get('training_id')}"
 
     def save_weighted_score(self, score):
-        with open(f"{self.get_temp_dir()}/score.out", "w") as output_file:
-            output_file.write(str(score))
+        with open(f"{self.get_temp_dir()}/score.out", "w") as output_score_file:
+            output_score_file.write(str(score))
