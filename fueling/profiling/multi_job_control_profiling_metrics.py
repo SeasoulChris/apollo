@@ -37,7 +37,9 @@ flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
 flags.DEFINE_string('ctl_metrics_simulation_vehicle', 'Mkz7',
                     'if simulation-only, then manually define the vehicle type in simulation')
 flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
-                     'if filter_by_MRAC True, then filter out all the data without MRAC message')
+                     'decide whether filtering out all the data without enabling MRAC control')
+flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
+                    'select the score weighting method from control_channel_conf.py')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -345,7 +347,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
          .reduceByKey(grading_utils.combine_gradings)
          # PairRDD(target, combined_grading_result), output grading results for
          # each target
-         .foreach(grading_utils.output_gradings))
+         .foreach(lambda grading_results:
+                  grading_utils.output_gradings(grading_results, self.FLAGS)))
 
         reorganized_target_keys = reorganized_target.keys().collect()
         logging.info(F'reorganized_target: {reorganized_target_keys}')
