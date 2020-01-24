@@ -1,3 +1,6 @@
+import argparse
+
+from absl import flags
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction, Colours
 
@@ -5,11 +8,11 @@ from fueling.autotuner.client.cost_computation_client import CostComputationClie
 import fueling.common.logging as logging
 
 
-def black_box_function(x, y):
+def black_box_function(args, x, y):
     weighted_score = CostComputationClient.compute_mrac_cost(
-        # TODO: load commit id from parser
+        # TODO: load commit id from configs
         # commit id
-        "c693dd9e2e7910b041416021fcdb648cc4d8934d",
+        "5fd62641dffa1dcf1020ee4e19ab2df56e73a762",
         [  # list of {path, config} pairs
             {"apollo/modules/control/proto/control_conf.proto": "apollo/modules/control/conf/control.conf"},
         ],
@@ -53,11 +56,12 @@ class BayesianOptimizationTuner():
             logging.debug(i, target, next_point)
 
     def get_result(self):
-        logging.info(f"Result after: %s steps are %s", self.n_iter, self.optimizer.max)
+        logging.info(f"Result after: {self.n_iter} steps are  {self.optimizer.max}")
         return self.optimizer.max
 
 
 if __name__ == "__main__":
+
     tuner = BayesianOptimizationTuner()
     tuner.optimize()
     tuner.get_result()
