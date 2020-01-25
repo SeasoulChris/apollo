@@ -2,14 +2,11 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
+import "modules/data/fuel/fueling/autotuner/proto/git_info.proto";
+
 service SimService {
   rpc TriggerBuildJob (GitInfo) returns (Status) {}
   rpc RunScenario (JobInfo) returns (Status) {}
-}
-
-message GitInfo {
-  string commit = 1;
-  string repo = 2;
 }
 
 message JobInfo {

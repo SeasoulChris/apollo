@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+import "modules/data/fuel/fueling/autotuner/proto/git_info.proto";
+
+message Parameter {
+  string parameter_name = 1;
+  double min = 2;
+  double max = 3;
+}
+
+message TunerParameters {
+  string default_conf_proto = 1;
+  string default_conf_filename = 2;
+  repeated Parameter parameter = 3;
+}
+
+message TunerConfigs {
+  GitInfo git_info = 1;
+  TunerParameters tuner_parameters = 2;
+}

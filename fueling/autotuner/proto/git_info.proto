@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+message GitInfo {
+  string commit_id = 1;
+  string repo = 2;
+}
