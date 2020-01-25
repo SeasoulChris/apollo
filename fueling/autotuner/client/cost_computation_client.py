@@ -14,18 +14,18 @@ class CostComputationClient(object):
     CHANNEL_URL = "localhost:50052"
 
     @classmethod
-    def compute_mrac_cost(cls, commit, configs):
+    def compute_mrac_cost(cls, commit_id, configs):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
 
             # Construct request
             request = cost_service_pb2.Request()
-            request.git_info.commit = commit
+            request.git_info.commit_id = commit_id
             for single_config in configs:
                 proto_config = cost_service_pb2.ModelConfig(model_config=single_config)
                 request.config.append(proto_config)
 
-            logging.info(f"Triggering compute with commit {commit} ...")
+            logging.info(f"Triggering compute with commit_id {commit_id} ...")
             response = stub.ComputeMracCost(request)
 
         status = response.status
@@ -35,4 +35,3 @@ class CostComputationClient(object):
         else:
             logging.error(f"Failed to compute cost: {status.message}")
             return None
-

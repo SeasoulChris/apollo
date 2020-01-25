@@ -13,12 +13,12 @@ class SimClient(object):
     CHANNEL_URL = "localhost:50051"
 
     @classmethod
-    def trigger_build(cls, commit):
+    def trigger_build(cls, commit_id):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
-            git_info = sim_service_pb2.GitInfo(commit=commit)
+            git_info = sim_service_pb2.GitInfo(commit_id=commit_id)
 
-            logging.info(f"Triggering build with commit {commit} ...")
+            logging.info(f"Triggering build with commit_id {commit_id} ...")
             status = stub.TriggerBuildJob(git_info)
 
         if status.code == 0:
@@ -30,12 +30,12 @@ class SimClient(object):
 
     @classmethod
     def run_scenario(
-        cls, training_id, commit, scenario, config, record_output_path, output_record_filename
+        cls, training_id, commit_id, scenario, config, record_output_path, output_record_filename
     ):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
 
-            git_info = sim_service_pb2.GitInfo(commit=commit)
+            git_info = sim_service_pb2.GitInfo(commit_id=commit_id)
             job_info = sim_service_pb2.JobInfo(
                 git_info=git_info,
                 scenario=scenario,

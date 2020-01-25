@@ -46,7 +46,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         return response
 
     def ComputeMracCost(self, request, context):
-        if not request.git_info.commit:
+        if not request.git_info.commit_id:
             return self.CreateResponse(exit_code=1, message="Commit ID not specified.")
 
         training_id = uuid.uuid1().hex
@@ -59,7 +59,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         # submit job
         cmd = (
             f"{self.submit_job_cmd} fueling/autotuner/cost_computation/mrac_cost_computation.py"
-            f" --training_id={training_id} --commit={request.git_info.commit}"
+            f" --training_id={training_id} --commit_id={request.git_info.commit_id}"
         )
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)

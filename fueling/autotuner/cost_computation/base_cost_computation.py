@@ -16,7 +16,7 @@ import fueling.common.logging as logging
 
 # Flags
 flags.DEFINE_string("training_id", None, "A unique id")
-flags.DEFINE_string("commit", None, "Apollo Commit id.")
+flags.DEFINE_string("commit_id", None, "Apollo commit id.")
 flags.DEFINE_string(
     "scenario_path",
     "./fueling/autotuner/config/sim_scenarios.csv",
@@ -33,7 +33,7 @@ TMP_ROOT_DIR = "/tmp/autotuner"
 
 class BaseCostComputation(BasePipeline):
     def init(self):
-        if not flags.FLAGS.commit:
+        if not flags.FLAGS.commit_id:
             logging.error("Apollo commit id not specified.")
             return False
 
@@ -76,7 +76,7 @@ class BaseCostComputation(BasePipeline):
         self.save_weighted_score(score)
 
     def build(self):
-        return SimClient.trigger_build(self.FLAGS.get("commit"))
+        return SimClient.trigger_build(self.FLAGS.get("commit_id"))
 
     def get_scenarios(self):
         """Return RDD(scenario_id)"""
@@ -108,7 +108,7 @@ class BaseCostComputation(BasePipeline):
         # TODO: handle error status
         status = SimClient.run_scenario(
             training_id,
-            self.FLAGS.get("commit"),
+            self.FLAGS.get("commit_id"),
             scenario,
             config,
             record_output_path,
