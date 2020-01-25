@@ -1,0 +1,13 @@
+git_info {
+  commit_id: "aa9d805d04cd8c9ef2ac9c51b0641b41f39a8cfc"
+  repo: "https://github.com/ApolloAuto/apollo.git"
+}
+tuner_parameters {
+  default_conf_proto: "/apollo/modules/control/proto/control_conf.proto"
+  default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
+  parameter {
+    parameter_name: "adaption_matrix_p"
+    min: 0.0
+    max: 10.0
+  }
+}
