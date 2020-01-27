@@ -39,8 +39,7 @@ class BayesianOptimizationTuner():
         logging.info(f"Init BayesianOptimization Tuner.")
         # Bounded region of parameter space
         self.pbounds = {}
-        self.utility = UtilityFunction(kind="ucb", kappa=3, xi=1)
-        self.n_iter = 5
+
         self.tuner_param_config_pb = tuner_param_config_pb2.TunerConfigs()
         # Read and parse config from a pb file
         try:
@@ -49,11 +48,19 @@ class BayesianOptimizationTuner():
             )
             logging.info(f"Parsed config files {self.tuner_param_config_pb}")
 
-            for parameter in self.tuner_param_config_pb.tuner_parameters.parameter:
-                self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
-
         except Exception as error:
             logging.error(f"Failed to parse config: {error}")
+
+        for parameter in self.tuner_param_config_pb.tuner_parameters.parameter:
+            self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
+
+        tuner_parameters = self.tuner_param_config_pb.tuner_parameters
+
+        self.n_iter = tuner_parameters.n_iter
+
+        self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
+                                       kappa=tuner_parameters.utility.kappa,
+                                       xi=tuner_parameters.utility.xi)
 
         self.optimizer = BayesianOptimization(
             f=black_box_function,

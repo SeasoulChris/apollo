@@ -5,6 +5,12 @@ git_info {
 tuner_parameters {
   default_conf_proto: "/apollo/modules/control/proto/control_conf.proto"
   default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
+  utility {
+    utility_name: "ucb"
+    kappa: 3.0
+    xi: 1.0
+  }
+  n_iter: 5
   parameter {
     parameter_name: "adaption_state_gain"
     min: 0.00001
