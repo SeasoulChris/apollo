@@ -23,7 +23,7 @@ def black_box_function(tuner_param_config_pb, adaption_state_gain, adaption_matr
     weighted_score = CostComputationClient.compute_mrac_cost(
 
         tuner_param_config_pb.git_info.commit_id,
-        # TODO: implement logics to generate updated parameters
+        # TODO: implement logics to generate updated parameters, it is better to parse only the updated params or the whole file?
         [  # list of {path, config} pairs
             {"apollo/modules/control/proto/control_conf.proto": "apollo/modules/control/conf/control.conf"},
         ],
@@ -38,8 +38,7 @@ class BayesianOptimizationTuner():
     def __init__(self):
         logging.info(f"Init BayesianOptimization Tuner.")
         # Bounded region of parameter space
-        # TODO: load bouns from configs
-
+        self.pbounds = {}
         self.utility = UtilityFunction(kind="ucb", kappa=3, xi=1)
         self.n_iter = 5
         self.tuner_param_config_pb = tuner_param_config_pb2.TunerConfigs()
@@ -50,15 +49,12 @@ class BayesianOptimizationTuner():
             )
             logging.info(f"Parsed config files {self.tuner_param_config_pb}")
 
-        #    self.pbounds = [
-        #        proto_utils.pb_to_dict(parameter)["parameter"]
-        #        for parameter in tuner_param_config_pb2.parameter
-        #    ]
+            for parameter in self.tuner_param_config_pb.tuner_parameters.parameter:
+                self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
 
         except Exception as error:
             logging.error(f"Failed to parse config: {error}")
 
-        self.pbounds = {'adaption_state_gain': (0, 2), 'adaption_matrix_p': (0, 3)}
         self.optimizer = BayesianOptimization(
             f=black_box_function,
             pbounds=self.pbounds,
