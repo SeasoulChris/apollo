@@ -15,8 +15,10 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils as feature_utils
-import fueling.profiling.grading_evaluation.vehicle_dynamics_grading_utils as grading_utils
+import fueling.profiling.vehicle_dynamics.feature_extraction.vehicle_dynamics_feature_extraction_utils \
+    as feature_utils
+import fueling.profiling.vehicle_dynamics.grading_evaluation.vehicle_dynamics_grading_utils \
+    as grading_utils
 
 
 class VehicleDynamicsProfilingMetrics(BasePipeline):

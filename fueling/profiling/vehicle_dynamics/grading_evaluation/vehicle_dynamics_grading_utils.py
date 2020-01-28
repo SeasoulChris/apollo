@@ -9,7 +9,8 @@ import os
 from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
-import fueling.profiling.feature_extraction.vehicle_dynamics_feature_extraction_utils as feature_utils
+import fueling.profiling.vehicle_dynamics.feature_extraction.vehicle_dynamics_feature_extraction_utils \
+    as feature_utils
 
 
 def generating_matrix_and_h5(target_groups):
