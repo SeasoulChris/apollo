@@ -19,11 +19,12 @@ flags.DEFINE_string(
 )
 
 
-def black_box_function(tuner_param_config_pb, adaption_state_gain, adaption_matrix_p):
+def black_box_function(tuner_param_config_pb.git_info.commit_id, adaption_state_gain, adaption_matrix_p):
     weighted_score = CostComputationClient.compute_mrac_cost(
 
         tuner_param_config_pb.git_info.commit_id,
         # TODO: implement logics to generate updated parameters, it is better to parse only the updated params or the whole file?
+        # How about list of protos only or list of {file_path, topic_pb}? This should be enough for `write_pb_to_text_file(topic_pb, file_path)` API
         [  # list of {path, config} pairs
             {"apollo/modules/control/proto/control_conf.proto": "apollo/modules/control/conf/control.conf"},
         ],
@@ -46,7 +47,7 @@ class BayesianOptimizationTuner():
             proto_utils.get_pb_from_text_file(
                 flags.FLAGS.tuner_param_config_filename, self.tuner_param_config_pb,
             )
-            logging.info(f"Parsed config files {self.tuner_param_config_pb}")
+            logging.debug(f"Parsed config files {self.tuner_param_config_pb}")
 
         except Exception as error:
             logging.error(f"Failed to parse config: {error}")
@@ -82,7 +83,7 @@ class BayesianOptimizationTuner():
         self.n_iter = n_iter
         for i in range(n_iter):
             next_point = self.optimizer.suggest(self.utility)
-            target = black_box_function(self.tuner_param_config_pb, **next_point)
+            target = black_box_function(self.tuner_param_config_pb.git_info.commit_id, **next_point)
             self.optimizer.register(params=next_point, target=target)
             logging.debug(i, target, next_point)
 
