@@ -12,10 +12,10 @@ data_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/Sim_Te
 results_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
 
 # Run the control profiling metrics command (generating performance_grading.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control_profiling_metrics.py -ctl_metrics_input_path_local $data_path -ctl_metrics_output_path_local $results_path
+./tools/submit-job-to-local.sh fueling/profiling/control/control_profiling_metrics.py -ctl_metrics_input_path_local $data_path -ctl_metrics_output_path_local $results_path
 
 # Run the control profiling visualization command (generating feature_data.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control_profiling_visualization.py -ctl_visual_input_path_local $results_path -ctl_visual_output_path_local $results_path --ctl_visual_simulation_only_test
+./tools/submit-job-to-local.sh fueling/profiling/control/control_profiling_visualization.py -ctl_visual_input_path_local $results_path -ctl_visual_output_path_local $results_path --ctl_visual_simulation_only_test
 ```
 
 ### Output Data Format

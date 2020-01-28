@@ -11,7 +11,8 @@ from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, WEIGHTED_SC
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
-import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
+import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
+    as feature_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 

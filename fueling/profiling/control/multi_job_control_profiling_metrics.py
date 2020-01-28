@@ -21,8 +21,10 @@ import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
 from fueling.profiling.common.sanity_check import sanity_check
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
-import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
-import fueling.profiling.grading_evaluation.multi_job_control_performance_grading_utils as grading_utils
+import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
+    as feature_utils
+import fueling.profiling.control.grading_evaluation.multi_job_control_performance_grading_utils \
+    as grading_utils
 
 
 flags.DEFINE_string('ctl_metrics_input_path_local',

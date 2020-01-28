@@ -10,6 +10,6 @@ else
   INPUT_DATA_PATH="modules/control/profiling/multi_job"
 fi
 
-JOB="fueling/profiling/control_profiling.py"
+JOB="fueling/profiling/control/control_profiling.py"
 FLAGS="--input_data_path=${INPUT_DATA_PATH}"
 ${SUBMITTER} --main=${JOB} --flags="${FLAGS}"

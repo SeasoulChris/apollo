@@ -13,7 +13,8 @@ import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
-import fueling.profiling.feature_extraction.multi_job_control_feature_extraction_utils as feature_utils
+import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
+    as feature_utils
 
 VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
 REORG_TAG = 'REORG_COMPLETE'

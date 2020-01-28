@@ -20,7 +20,8 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
-import fueling.profiling.feature_visualization.control_feature_visualization_utils as visual_utils
+import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
+    as visual_utils
 
 
 flags.DEFINE_string('ctl_visual_input_path_local',

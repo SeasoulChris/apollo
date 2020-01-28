@@ -17,8 +17,10 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
-import fueling.profiling.grading_evaluation.control_performance_grading_utils as grading_utils
+import fueling.profiling.control.feature_extraction.control_feature_extraction_utils \
+    as feature_utils
+import fueling.profiling.control.grading_evaluation.control_performance_grading_utils \
+    as grading_utils
 
 
 flags.DEFINE_string('ctl_metrics_input_path_local',

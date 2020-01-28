@@ -14,7 +14,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.feature_visualization.control_feature_scenario_oriented_visualization_utils \
+import fueling.profiling.control.feature_visualization.control_feature_scenario_oriented_visualization_utils \
     as visual_utils
 
 

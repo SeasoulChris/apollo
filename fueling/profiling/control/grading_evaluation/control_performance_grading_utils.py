@@ -11,7 +11,7 @@ from fueling.profiling.conf.control_channel_conf import FEATURE_IDX
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
-import fueling.profiling.feature_extraction.control_feature_extraction_utils as feature_utils
+import fueling.profiling.control.feature_extraction.control_feature_extraction_utils as feature_utils
 
 
 def compute_h5_and_gradings(target_groups):

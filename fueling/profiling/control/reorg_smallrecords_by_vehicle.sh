@@ -6,6 +6,6 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
 SUBMITTER="./tools/submit-job-to-k8s.py --workers=1 --cpu=4 --memory=60"
 INPUT_DATA_PATH="modules/control/profiling/multi_job"
 
-JOB="fueling/profiling/reorg_smallrecords_by_vehicle.py"
+JOB="fueling/profiling/control/reorg_smallrecords_by_vehicle.py"
 FLAGS="--input_data_path=${INPUT_DATA_PATH}"
 ${SUBMITTER} --main=${JOB} --flags="${FLAGS}"
