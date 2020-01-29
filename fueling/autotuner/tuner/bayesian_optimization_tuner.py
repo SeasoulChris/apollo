@@ -4,12 +4,15 @@ import sys
 from absl import flags
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction, Colours
+import google.protobuf.text_format as text_format
 
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
 
 from fueling.autotuner.client.cost_computation_client import CostComputationClient
-import modules.data.fuel.fueling.autotuner.proto.tuner_param_config_pb2 as tuner_param_config_pb2
+from modules.data.fuel.fueling.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+from modules.control.proto.control_conf_pb2 import ControlConf
+from modules.control.proto.mrac_conf_pb2 import MracConf
 
 
 flags.DEFINE_string(
@@ -19,18 +22,17 @@ flags.DEFINE_string(
 )
 
 
-def black_box_function(tuner_param_config_pb.git_info.commit_id, adaption_state_gain, adaption_matrix_p):
+def black_box_function(tuner_param_config_pb, control_conf_pb):
     weighted_score = CostComputationClient.compute_mrac_cost(
-
         tuner_param_config_pb.git_info.commit_id,
-        # TODO: implement logics to generate updated parameters, it is better to parse only the updated params or the whole file?
-        # How about list of protos only or list of {file_path, topic_pb}? This should be enough for `write_pb_to_text_file(topic_pb, file_path)` API
         [  # list of {path, config} pairs
-            {"apollo/modules/control/proto/control_conf.proto": "apollo/modules/control/conf/control.conf"},
+            {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
+                control_conf_pb)},
         ],
     )
 
-    return 2*adaption_state_gain + 3*adaption_matrix_p
+    # TODO(QiL): return weighted_score when whole pipeline works
+    return 0
 
 
 class BayesianOptimizationTuner():
@@ -41,16 +43,26 @@ class BayesianOptimizationTuner():
         # Bounded region of parameter space
         self.pbounds = {}
 
-        self.tuner_param_config_pb = tuner_param_config_pb2.TunerConfigs()
+        self.tuner_param_config_pb = TunerConfigs()
+        self.control_conf_pb = ControlConf()
         # Read and parse config from a pb file
         try:
             proto_utils.get_pb_from_text_file(
                 flags.FLAGS.tuner_param_config_filename, self.tuner_param_config_pb,
             )
-            logging.debug(f"Parsed config files {self.tuner_param_config_pb}")
+            logging.debug(f"Parsed autotune config files {self.tuner_param_config_pb}")
 
         except Exception as error:
-            logging.error(f"Failed to parse config: {error}")
+            logging.error(f"Failed to parse autotune config: {error}")
+
+        try:
+            proto_utils.get_pb_from_text_file(
+                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.control_conf_pb,
+            )
+            logging.debug(f"Parsed control config files {self.control_conf_pb}")
+
+        except Exception as error:
+            logging.error(f"Failed to parse control config: {error}")
 
         for parameter in self.tuner_param_config_pb.tuner_parameters.parameter:
             self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
@@ -83,7 +95,11 @@ class BayesianOptimizationTuner():
         self.n_iter = n_iter
         for i in range(n_iter):
             next_point = self.optimizer.suggest(self.utility)
-            target = black_box_function(self.tuner_param_config_pb.git_info.commit_id, **next_point)
+            # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
+            self.control_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
+                proto_utils.dict_to_pb(next_point, MracConf()))
+            logging.debug(f"New Control Conf files {self.control_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            target = black_box_function(self.tuner_param_config_pb, self.control_conf_pb)
             self.optimizer.register(params=next_point, target=target)
             logging.debug(i, target, next_point)
 

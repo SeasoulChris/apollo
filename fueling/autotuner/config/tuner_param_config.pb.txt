@@ -12,12 +12,12 @@ tuner_parameters {
   }
   n_iter: 5
   parameter {
-    parameter_name: "adaption_state_gain"
+    parameter_name: "reference_time_constant"
     min: 0.00001
     max: 10.0
   }
   parameter {
-    parameter_name: "adaption_matrix_p"
+    parameter_name: "adaption_desired_gain"
     min: 0.00001
     max: 10.0
   }
