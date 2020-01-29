@@ -22,12 +22,12 @@ flags.DEFINE_string(
 )
 
 
-def black_box_function(tuner_param_config_pb, control_conf_pb):
+def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
     weighted_score = CostComputationClient.compute_mrac_cost(
         tuner_param_config_pb.git_info.commit_id,
         [  # list of {path, config} pairs
             {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
-                control_conf_pb)},
+                algorithm_conf_pb)},
         ],
     )
 
@@ -44,7 +44,7 @@ class BayesianOptimizationTuner():
         self.pbounds = {}
 
         self.tuner_param_config_pb = TunerConfigs()
-        self.control_conf_pb = ControlConf()
+        self.algorithm_conf_pb = ControlConf()
         # Read and parse config from a pb file
         try:
             proto_utils.get_pb_from_text_file(
@@ -57,9 +57,9 @@ class BayesianOptimizationTuner():
 
         try:
             proto_utils.get_pb_from_text_file(
-                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.control_conf_pb,
+                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
             )
-            logging.debug(f"Parsed control config files {self.control_conf_pb}")
+            logging.debug(f"Parsed control config files {self.algorithm_conf_pb}")
 
         except Exception as error:
             logging.error(f"Failed to parse control config: {error}")
@@ -96,10 +96,10 @@ class BayesianOptimizationTuner():
         for i in range(n_iter):
             next_point = self.optimizer.suggest(self.utility)
             # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
-            self.control_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
+            self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point, MracConf()))
-            logging.debug(f"New Control Conf files {self.control_conf_pb.lat_controller_conf.steer_mrac_conf}")
-            target = black_box_function(self.tuner_param_config_pb, self.control_conf_pb)
+            logging.debug(f"New Control Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            target = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             self.optimizer.register(params=next_point, target=target)
             logging.debug(i, target, next_point)
 
