@@ -30,7 +30,7 @@ class SimClient(object):
 
     @classmethod
     def run_scenario(
-        cls, training_id, commit_id, scenario, config, record_output_path, output_record_filename
+        cls, training_id, commit_id, scenario, config, record_output_path, record_output_filename
     ):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
@@ -41,16 +41,16 @@ class SimClient(object):
                 scenario=scenario,
                 model_config=config,
                 record_output_path=record_output_path,
-                output_record_filename=output_record_filename,
+                record_output_filename=record_output_filename,
                 training_id=training_id,
             )
 
-            logging.info(f"Running scenario {scenario} for {output_record_filename} ...")
+            logging.info(f"Running scenario {scenario} for {record_output_filename} ...")
             status = stub.RunScenario(job_info)
 
         if status.code == 0:
-            logging.info(f"Done running scenario {scenario} for {output_record_filename}.")
+            logging.info(f"Done running scenario {scenario} for {record_output_filename}.")
             return True
         else:
-            logging.error(f"Failed to run scenario {scenario} for {output_record_filename}: {status.message}")
+            logging.error(f"Failed to run scenario {scenario} for {record_output_filename}: {status.message}")
             return False
