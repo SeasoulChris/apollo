@@ -17,7 +17,7 @@ from modules.control.proto.mrac_conf_pb2 import MracConf
 
 flags.DEFINE_string(
     "tuner_param_config_filename",
-    "/apollo/modules/data/fuel/fueling/autotuner/config/tuner_param_config.pb.txt",
+    "/apollo/modules/data/fuel/fueling/autotuner/config/mrac_tuner_param_config.pb.txt",
     "File path to tuner parameter config."
 )
 

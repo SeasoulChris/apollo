@@ -2,7 +2,7 @@
 
 ## Setup Environment:
 ### Generate the gRPC interface from .proto service
--This is needed only if there're changes in the \*.proto files:
+This is needed only if there're changes in the \*.proto files:
 ```bash
     bash /apollo/apollo.sh build_py
 ```
@@ -24,7 +24,20 @@
 ```
 
 ### Start bayesian optimization tuner (CostComputationClient side)
+
+1. Setup parameter you want to tune in (Use MRAC as an example):
+```bash
+/apollo/modules/fule/fueling/autotuner/config/mrac_tuner_param_config.pb.txt
+```
+
+2. Run python scripts (For MRAC).
 ```bash
    cd /apollo/modules/data/fuel
-   python fueling/autotuner/cost_computation/cost_computation_server.py
+   python fueling/autotuner/tuner/bayesian_optimization_tuner.py
+```
+
+3. Or run other autotuner applications with
+```bash
+   cd /apollo/modules/data/fuel
+   python fueling/autotuner/tuner/bayesian_optimization_tuner.py --tuner_param_config_filename=<user defined tuner_param_config>
 ```
