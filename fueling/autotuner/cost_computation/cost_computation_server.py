@@ -63,9 +63,9 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         )
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
-        if exit_code != 0:
+        if os.WEXITSTATUS(exit_code) != 0:
             return self.CreateResponse(
-                exit_code=exit_code, message="Error running mrac_cost_computation."
+                exit_code=os.WEXITSTATUS(exit_code), message="Error running mrac_cost_computation."
             )
 
         # read and return score
