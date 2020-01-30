@@ -11,8 +11,10 @@ import fueling.common.logging as logging
 from fueling.common.coord_utils import CoordUtils
 from modules.planning.proto.instance_pb2 import *
 import fueling.common.file_utils as file_utils
+from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 LABEL_TRAJECTORY_POINT_NUM = 20
+MAP_IMG_DIR = "/apollo/modules/data/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
 
 def LoadInstances(filepath):
     instances = Instances()
@@ -136,8 +138,8 @@ class SemanticMapDataset(Dataset):
 
         # TODO(Hongyi): add the drawing class here.
         self.base_map = {
-            "sunnyvale": cv.imread("sunnyvale_with_two_offices.png"),
-            "san_mateo": cv.imread("san_mateo.png")}
+            "sunnyvale": cv.imread(MAP_IMG_DIR + "sunnyvale_with_two_offices.png"),
+            "san_mateo": cv.imread(MAP_IMG_DIR + "san_mateo.png")}
 
         all_file_paths = file_utils.list_files(data_dir)
         for file_path in all_file_paths:
@@ -145,7 +147,6 @@ class SemanticMapDataset(Dataset):
                 continue
             file_content = np.load(file_path, allow_pickle=True).tolist()
             self.instances += file_content
-
 
         self.total_num_data_pt = len(instances)
         logging.info('Total number of data points = {}'.format(self.total_num_data_pt))
@@ -155,7 +156,13 @@ class SemanticMapDataset(Dataset):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
-        return ((torch.from_numpy(self.instances[idx][0]).float()),
+        region = 'sunnyvale'
+        world_coord = self.instances[idx][0][0:2]
+        adc_mapping = ObstacleMapping(region, self.base_map[region], world_coord, None)
+        adc_history = [self.instances[idx][0][0:2]]
+        img = adc_mapping.crop_by_history(adc_history)
+
+        return ((img, torch.from_numpy(self.instances[idx][0]).float()),
                  torch.from_numpy(self.instances[idx][1]).float())
 
 if __name__ == '__main__':
