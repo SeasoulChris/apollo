@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-
+import os
 import torch
 
-from fueling.common.learning.train_utils import *
-from fueling.common.learning.loss_utils import *
-from fueling.planning.datasets.semantic_map_dataset import *
-from fueling.planning.models.semantic_map_model import *
+from fueling.common.learning.train_utils import train_valid_dataloader
+from fueling.planning.datasets.semantic_map_dataset import SemanticMapDataset
+from fueling.planning.models.semantic_map_model import SemanticMapModel, SemanticMapLoss
 
 
 if __name__ == "__main__":
