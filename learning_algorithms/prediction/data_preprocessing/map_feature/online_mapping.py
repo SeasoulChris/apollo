@@ -52,8 +52,10 @@ class ObstacleMapping(object):
     def _draw_rectangle(self, feature_map, pos_point, color=(0, 255, 255)):
         w, l = 2.11, 4.93
         theta = self.world_coord[2]
-        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]),
-                        np.array([[l/2, l/2, -l/2, -l/2], [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
+        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
+                        [np.sin(theta), np.cos(theta)]]),
+                        np.array([[l/2, l/2, -l/2, -l/2],
+                        [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
@@ -83,4 +85,9 @@ class ObstacleMapping(object):
     def crop_by_history(self, history, color=(0, 0, 255)):
         feature_map = self.feature_map.copy()
         self.draw_history(feature_map, history, color)
+        return self.crop_area(feature_map, self.world_coord)
+
+    def crop_by_rectangle(self, pos_point, color=(0, 0, 255)):
+        feature_map = self.feature_map.copy()
+        self._draw_rectangle(feature_map, pos_point, color)
         return self.crop_area(feature_map, self.world_coord)

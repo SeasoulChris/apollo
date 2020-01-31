@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 
-# import cv2 as cv
+import cv2 as cv
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-# from torchvision import transforms
+from torchvision import transforms
 
 import fueling.common.logging as logging
 
 from fueling.common.coord_utils import CoordUtils
-from modules.planning.proto.instance_pb2 import *
+from modules.planning.proto.instance_pb2 import Instances
 import fueling.common.file_utils as file_utils
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 LABEL_TRAJECTORY_POINT_NUM = 20
 MAP_IMG_DIR = "/apollo/modules/data/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
+ENABLE_IMG_DUMP = True
 
 def LoadInstances(filepath):
     instances = Instances()
@@ -103,7 +104,7 @@ class DataPreprocessor(object):
                     continue
                 current_data_point = [current_features, current_label]
                 # Update into the output_np_array.
-                output_np_array.append([current_data_point])
+                output_np_array.append(current_data_point)
 
             num_usable_data_points = len(output_np_array)
 
@@ -145,10 +146,11 @@ class SemanticMapDataset(Dataset):
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue
+            logging.info("loading {} ...".format(file_path))
             file_content = np.load(file_path, allow_pickle=True).tolist()
             self.instances += file_content
 
-        self.total_num_data_pt = len(instances)
+        self.total_num_data_pt = len(self.instances)
         logging.info('Total number of data points = {}'.format(self.total_num_data_pt))
 
 
@@ -158,9 +160,15 @@ class SemanticMapDataset(Dataset):
     def __getitem__(self, idx):
         region = 'sunnyvale'
         world_coord = self.instances[idx][0][0:2]
+        world_coord += [self.instances[idx][0][3]]  # heading
+        logging.info('world coord:{}'.format(world_coord))
         adc_mapping = ObstacleMapping(region, self.base_map[region], world_coord, None)
-        adc_history = [self.instances[idx][0][0:2]]
-        img = adc_mapping.crop_by_history(adc_history)
+
+        adc_pose = [world_coord[0], world_coord[1]]
+        img = adc_mapping.crop_by_rectangle(adc_pose)
+
+        if ENABLE_IMG_DUMP:
+            cv.imwrite("/apollo/data/tmp/img{}.png".format(idx), img)
 
         return ((img, torch.from_numpy(self.instances[idx][0]).float()),
                  torch.from_numpy(self.instances[idx][1]).float())
@@ -168,6 +176,12 @@ class SemanticMapDataset(Dataset):
 if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate
     # training-data ready for torch Dataset.
-    data_preprocessor = DataPreprocessor()
-    data_preprocessor.preprocess_data(
-        '/apollo/modules/planning/data/instances/')
+
+    # bin file => numpy file
+    # data_preprocessor = DataPreprocessor()
+    # data_preprocessor.preprocess_data(
+    #     '/apollo/modules/planning/data/instances/')
+
+    # dump one instance image for debug
+    dataset = SemanticMapDataset('/apollo/modules/planning/data/instances')
+    dataset[0]
