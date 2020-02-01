@@ -71,13 +71,16 @@ class MracCostComputation(BaseCostComputation):
         return (key, profiling_score)
 
     def calculate_weighted_score(self, config_2_score):
-        # TODO: implement me
         if not len(config_2_score):
             return float('nan')
-
-        total = sum([sum(scores) for (config, scores) in config_2_score])
-        avg = total / len(config_2_score)
-        return avg
+        # Calculate weighted score through multiple scenarios
+        total_score = 0.0
+        total_sample = 0
+        for (config, scores) in config_2_score:
+            total_score += scores[0] * scores[1]
+            total_sample += scores[1]
+        avg_score = total_score / total_sample if total_sample > 0 else avg = float('nan')
+        return avg_score
 
 
 if __name__ == "__main__":
