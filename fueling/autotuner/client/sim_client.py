@@ -6,6 +6,7 @@ import grpc
 import fueling.common.logging as logging
 
 import modules.data.fuel.fueling.autotuner.proto.sim_service_pb2 as sim_service_pb2
+import modules.data.fuel.fueling.autotuner.proto.git_info_pb2 as git_info_pb2
 import modules.data.fuel.fueling.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 
 
@@ -16,7 +17,7 @@ class SimClient(object):
     def trigger_build(cls, commit_id):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
-            git_info = sim_service_pb2.GitInfo(commit_id=commit_id)
+            git_info = git_info_pb2.GitInfo(commit_id=commit_id)
 
             logging.info(f"Triggering build with commit_id {commit_id} ...")
             status = stub.TriggerBuildJob(git_info)
