@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@default_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "simplest_demo_main.py",
+    main = "simplest_demo.py",
+    srcs = ["simplest_demo.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ]
+)

@@ -1,0 +1,8 @@
+absl-py
+boto3
+h5py
+matplotlib
+numpy
+pymongo
+pyspark-utils
+scikit-learn

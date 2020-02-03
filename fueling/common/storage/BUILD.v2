@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@default_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "base_storage",
+    srcs = ["base_storage.py"],
+)
+
+py_library(
+    name = "bos_client",
+    srcs = ["bos_client.py"],
+    deps = [
+        ":base_storage",
+        "//fueling/common:logging",
+        requirement("absl-py"),
+        requirement("boto3"),
+    ]
+)
+
+py_library(
+    name = "filesystem",
+    srcs = ["filesystem.py"],
+    deps = [
+        ":base_storage",
+    ]
+)

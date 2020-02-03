@@ -1,0 +1,4 @@
+name: fuel
+dependencies:
+  - python = 3.6     # Align with Ubuntu 18.04 default.
+  - pyspark = 2.4.4  # Align with pre-built server image.

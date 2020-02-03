@@ -1,4 +1,5 @@
 bazel-*
+BUILD
 
 testdata/perception/sensor_calibration/camera_to_lidar1/camera_to_lidar_calibration_config.yaml
 testdata/perception/sensor_calibration/camera_to_lidar1/results/

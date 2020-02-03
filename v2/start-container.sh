@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IMAGE="apolloauto/apollo:dev-18.04-x86_64-20200130_1429"
+IMAGE="local:fuel"
 CONTAINER="fuel"
 
 # Goto fuel root
@@ -26,14 +26,13 @@ else
   GRP_ID=$(id -g)
   ${DOCKER_RUN} -it -d --privileged \
       --net host \
-      --name ${CONTAINER} --hostname ${CONTAINER} \
+      --name ${CONTAINER} \
+      --hostname ${CONTAINER} --add-host ${CONTAINER}:127.0.0.1 \
       -v "$(pwd):/fuel" \
       -v "${APOLLO_ROOT}:/apollo" \
       -w /fuel \
-      -e DOCKER_USER=$USER \
-      -e DOCKER_USER_ID=$USER_ID \
-      -e DOCKER_GRP="$GRP" \
-      -e DOCKER_GRP_ID=$GRP_ID \
+      -e DOCKER_USER=$USER -e DOCKER_USER_ID=$USER_ID \
+      -e DOCKER_GRP=$GRP -e DOCKER_GRP_ID=$GRP_ID \
       ${IMAGE} bash
   if [ "${USER}" != "root" ]; then
     docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_adduser.sh'

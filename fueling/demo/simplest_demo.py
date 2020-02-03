@@ -6,6 +6,10 @@ Run with:
     ./tools/submit-job-to-k8s.py --main=fueling/demo/simplest_demo.py
 """
 
+import sys
+print (sys.argv)
+print(sys.version)
+
 from fueling.common.base_pipeline import BasePipeline
 
 
