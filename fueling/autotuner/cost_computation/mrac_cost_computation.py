@@ -64,7 +64,7 @@ class MracCostComputation(BaseCostComputation):
         logging.info(f"Score file storage path: {profiling_grading_dir}")
         with open(profiling_grading_dir[0], 'r') as grading_json:
             grading = json.load(grading_json)
-        #TODO(Yu): implement weighting under the AutoTuner instead of directly reading
+        # TODO(Yu): implement weighting under the AutoTuner instead of directly reading
         profiling_score = grading['weighted_score']
         logging.info(f"Profiling score for individual scenario: "
                      f"score={profiling_score[0]}, sample={profiling_score[1]}")
@@ -79,7 +79,7 @@ class MracCostComputation(BaseCostComputation):
         for (config, scores) in config_2_score:
             total_score += scores[0] * scores[1]
             total_sample += scores[1]
-        avg_score = total_score / total_sample if total_sample > 0 else avg = float('nan')
+        avg_score = total_score / total_sample if total_sample > 0 else float('nan')
         return avg_score
 
 
