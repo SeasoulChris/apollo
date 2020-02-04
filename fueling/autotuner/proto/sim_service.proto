@@ -5,17 +5,22 @@ package apollo.fuelation;
 import "modules/data/fuel/fueling/autotuner/proto/git_info.proto";
 
 service SimService {
-  rpc TriggerBuildJob (GitInfo) returns (Status) {}
-  rpc RunScenario (JobInfo) returns (Status) {}
+  rpc TriggerBuildJob(GitInfo) returns (Status) {
+  }
+  rpc RunScenario(JobInfo) returns (Status) {
+  }
 }
 
 message JobInfo {
-    GitInfo git_info = 1;
-    int32 scenario = 2;  // number indicating which worldsim scenario should be run
-    map<string, string> model_config = 3;  // map from local config file path to serialized config
-    string record_output_path = 4;  // storage path for output record file
-    string record_output_filename = 5;  // storage file name for output record file
-    string training_id = 6;  // used to identify which training task it belongs to
+  GitInfo git_info = 1;
+  int32 scenario =
+      2;  // number indicating which worldsim scenario should be run
+  map<string, string> model_config =
+      3;  // map from local config file path to serialized config
+  string record_output_path = 4;  // storage path for output record file
+  string record_output_filename =
+      5;                   // storage file name for output record file
+  string training_id = 6;  // used to identify which training task it belongs to
 }
 
 message Status {

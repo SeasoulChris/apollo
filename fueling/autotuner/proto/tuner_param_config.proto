@@ -14,9 +14,8 @@ message TunerParameters {
   string default_conf_proto = 1;
   string default_conf_filename = 2;
   Utility utility = 3;
-  int32 n_iter = 4; // Number of iterations
+  int32 n_iter = 4;  // Number of iterations
   repeated Parameter parameter = 5;
-
 }
 
 message TunerConfigs {
@@ -25,7 +24,8 @@ message TunerConfigs {
 }
 
 message Utility {
-  string utility_name = 1; // Utility function can be set as "ucb", "ei" or "poi"
+  string utility_name =
+      1;  // Utility function can be set as "ucb", "ei" or "poi"
   double kappa = 2;
   double xi = 3;
 }
