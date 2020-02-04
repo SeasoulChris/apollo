@@ -4,6 +4,9 @@ from datetime import datetime
 import glob
 import json
 import os
+import sys
+
+from absl import flags
 
 import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 
@@ -11,13 +14,20 @@ from fueling.autotuner.cost_computation.base_cost_computation import BaseCostCom
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
+# Flags
+flags.DEFINE_enum(
+    "profiling_running_mode", "TEST", ["TEST", "PROD"], "server running mode: TEST, PROD ."
+)
 
 class MracCostComputation(BaseCostComputation):
     def __init__(self):
         BaseCostComputation.__init__(self)
+        flags.FLAGS(sys.argv)
         self.model_configs = None
-        # TODO(Yu): add judgement to decide which submit-job tool is needed
-        self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
+        if flags.FLAGS.profiling_running_mode == "PROD":
+            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py"
+        else:
+            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
     def init(self):
         BaseCostComputation.init(self)

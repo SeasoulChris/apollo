@@ -60,6 +60,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         cmd = (
             f"{self.submit_job_cmd} fueling/autotuner/cost_computation/mrac_cost_computation.py"
             f" --training_id={training_id} --commit_id={request.git_info.commit_id}"
+            f" --profiling_running_mode={flags.FLAGS.running_mode}"
         )
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
