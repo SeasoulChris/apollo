@@ -35,7 +35,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if flags.FLAGS.running_mode == "PROD":
             self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py"
         else:
-            self.submit_job_cmd = "./tools/submit-job-to-local.sh"
+            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
     def CreateResponse(self, exit_code, message="", score=None):
         response = cost_service_pb2.Response()
@@ -57,10 +57,15 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/request.pb.txt")
 
         # submit job
+        flag = (
+            f"--training_id={training_id} "
+            f"--commit_id={request.git_info.commit_id} "
+            f"--profiling_running_mode={flags.FLAGS.running_mode} "
+        )
         cmd = (
-            f"{self.submit_job_cmd} fueling/autotuner/cost_computation/mrac_cost_computation.py"
-            f" --training_id={training_id} --commit_id={request.git_info.commit_id}"
-            f" --profiling_running_mode={flags.FLAGS.running_mode}"
+            f"{self.submit_job_cmd}"
+            f" --main=fueling/autotuner/cost_computation/mrac_cost_computation.py"
+            f" --flags=\"{flag}\""
         )
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
