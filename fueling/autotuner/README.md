@@ -41,3 +41,16 @@ This is needed only if there're changes in the \*.proto files:
    cd /apollo/modules/data/fuel
    python fueling/autotuner/tuner/bayesian_optimization_tuner.py --tuner_param_config_filename=<user defined tuner_param_config>
 ```
+
+### Start replay-engine grpc server:
+
+1. mount bos with sudo
+```bash
+https://github.com/ApolloAuto/replay-engine/blob/master/scripts/auto_tuner/start_sim_service.sh#L5      line 5 and 6 here
+```
+
+2. Run js scripts (**Outside docker**)
+```bash
+   cd ./replay-engine/scripts/auto_tuner
+   sudo node auto_tuner_server.js
+```
