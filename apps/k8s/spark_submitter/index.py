@@ -82,7 +82,12 @@ class SparkSubmitJob(flask_restful.Resource):
         # Prepare fueling package.
         fueling_zip_path = arg.job.fueling_zip_path
         if arg.job.fueling_zip_base64:
-            fueling_zip_key = os.path.join('modules/data/jobs', job_id, 'fueling.zip')
+            if arg.job.entrypoint.endswith('.zip'):
+                # Bazel-built zip app.
+                zip_app = os.path.basename(arg.job.entrypoint)[:-4] + '.py'
+                fueling_zip_key = os.path.join('modules/data/jobs', job_id, zip_app)
+            else:
+                fueling_zip_key = os.path.join('modules/data/jobs', job_id, 'fueling.zip')
             boto3.client(
                 's3',
                 endpoint_url='http://s3.{}.bcebos.com'.format(os.environ.get('BOS_REGION')),
@@ -156,10 +161,13 @@ class SparkSubmitJob(flask_restful.Resource):
             confs += (f'--conf spark.kubernetes.driver.secretKeyRef.{key}={value} '
                       f'--conf spark.kubernetes.executor.secretKeyRef.{key}={value} ')
 
-        job_filename = os.path.basename(arg.job.entrypoint)[:-3].replace('_', '-')
+        job_filename = os.path.splitext(os.path.basename(arg.job.entrypoint))[0].replace('_', '-')
         job_name = f'job-{job_id}-{submitter}-{job_filename}'
         site_package = site.getsitepackages()[0]
-        entrypoint = os.path.join(EXTRACTED_PATH, arg.job.entrypoint)
+        if arg.job.entrypoint.endswith('.zip'):
+            entrypoint = fueling_zip_path
+        else:
+            entrypoint = os.path.join(EXTRACTED_PATH, arg.job.entrypoint)
         cmd = (f'{site_package}/pyspark/bin/spark-submit --deploy-mode cluster '
                f'--master {K8S_MASTER} --name {job_name} {confs} '
                f'"{entrypoint}" --running_mode=PROD {arg.job.flags} '

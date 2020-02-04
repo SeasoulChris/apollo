@@ -8,17 +8,24 @@ import pprint
 import sys
 import time
 
-from absl import app
-from absl import flags
-from absl import logging
-import requests
+try:
+    from absl import app
+    from absl import flags
+    from absl import logging
+except:
+    print('Cannot import absl, you may need to run "sudo python3 -m pip install absl-py".')
+
+try:
+    import requests
+except:
+    print('Cannot import requests, you may need to run "sudo python3 -m pip install requests".')
 
 
 # User.
 flags.DEFINE_string('role', 'apollo', 'Running as another role instead of the job submitter.')
 
 # Env.
-flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.',
+flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:bazel2', 'Docker image.',
                     short_name='i')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
@@ -67,7 +74,8 @@ def get_job():
         encoded_zip = base64.b64encode(fin.read()).decode('ascii')
     logging.info('Job has %.2fMB.' % (len(encoded_zip) / (2**20)))
     return {
-        'entrypoint': encoded_zip,
+        'entrypoint': flags.FLAGS.main,
+        'fueling_zip_base64': encoded_zip,
         'flags': flags.FLAGS.flags,
     }
 
@@ -89,12 +97,6 @@ def get_partner():
             'access_key': flags.FLAGS.partner_bos_access,
             'secret_key': flags.FLAGS.partner_bos_secret,
             'region': flags.FLAGS.partner_bos_region,
-        }
-    elif flags.FLAGS.partner_azure_storage_account:
-        partner['blob'] = {
-            'storage_account': flags.FLAGS.partner_azure_storage_account,
-            'storage_access_key': flags.FLAGS.partner_azure_storage_access_key,
-            'blob_container': flags.FLAGS.partner_azure_blob_container,
         }
     return partner
 
@@ -126,7 +128,7 @@ def main(argv):
     res = requests.post(SUBMITTER, json=json.dumps(arg))
     payload = json.loads(res.json() or '{}')
 
-    arg['job']['entrypoint'] = flags.FLAGS.main
+    arg['job']['fueling_zip_base64'] = ''
     logging.info('SparkSubmitArg is')
     pprint.PrettyPrinter(indent=2).pprint(arg)
 

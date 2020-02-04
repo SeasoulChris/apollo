@@ -2,4 +2,3 @@
 
 source /usr/local/miniconda/bin/activate fuel
 source /usr/local/lib/bazel/bin/bazel-complete.bash
-alias cloud-run='bazel run -- //v2:cloud_run'
