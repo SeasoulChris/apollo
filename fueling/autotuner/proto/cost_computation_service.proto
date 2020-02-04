@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 
 package apollo.fuelation;
@@ -15,10 +16,10 @@ message ModelConfig {
 
 message Request {
   GitInfo git_info = 1;
-  repeated ModelConfig config = 2;
+  map<string, ModelConfig> config = 2; // config_id -> model_config
 }
 
 message Response {
   Status status = 1;
-  float score = 2; // weighted score
+  map<string, float> score = 2; // config_id -> weighted score
 }
