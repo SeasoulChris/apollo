@@ -12,7 +12,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 set -e
 
 # If some BUILD file breaks fuel 1.0, use BUILD.v2 instead.
-find fueling/ deps/ -name BUILD.v2 | \
+find fueling/ deps/ v2/ -name BUILD.v2 | \
 while read filename; do
   cp "${filename}" "${filename%.*}"
 done

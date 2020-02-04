@@ -5,9 +5,6 @@ load("@default_deps//:requirements.bzl", "requirement")
 py_library(
     name = "logging",
     srcs = ["logging.py"],
-    deps = [
-        requirement("absl-py"),
-    ]
 )
 
 py_library(

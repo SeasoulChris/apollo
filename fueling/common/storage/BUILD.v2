@@ -13,8 +13,6 @@ py_library(
     deps = [
         ":base_storage",
         "//fueling/common:logging",
-        requirement("absl-py"),
-        requirement("boto3"),
     ]
 )
 

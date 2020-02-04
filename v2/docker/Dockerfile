@@ -6,4 +6,7 @@ RUN apt update -y && \
 
 COPY fuel.yaml /tmp/fuel.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
+    /usr/local/miniconda/bin/conda clean -a -y && \
     chmod -R 777 /usr/local/miniconda/envs/fuel
+
+COPY bash.rc /home/libs/bash.rc

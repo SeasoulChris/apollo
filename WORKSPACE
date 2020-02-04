@@ -42,8 +42,6 @@ pip3_import(
 load("@default_deps//:requirements.bzl", "pip_install")
 pip_install()
 
-register_toolchains("//deps:default_toolchain")
-
 # Proto rules: https://github.com/bazelbuild/rules_proto
 http_archive(
     name = "rules_proto",

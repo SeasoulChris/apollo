@@ -2,4 +2,6 @@
 # https://docs.bazel.build/versions/master/user-manual.html
 
 startup --output_user_root=/tmp/fuel_cache
+
 build --build_python_zip
+build --spawn_strategy=standalone

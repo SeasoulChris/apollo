@@ -37,12 +37,11 @@ else
       ${IMAGE} bash
   if [ "${USER}" != "root" ]; then
     docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_adduser.sh'
-    docker exec ${CONTAINER} bash -c "echo 'source /usr/local/miniconda/bin/activate fuel' >> /home/${USER}/.bashrc"
-    docker exec ${CONTAINER} bash -c "echo 'source /usr/local/lib/bazel/bin/bazel-complete.bash' >> /home/${USER}/.bashrc"
+    HOME="/home/${USER}"
   else
-    docker exec ${CONTAINER} bash -c "echo 'source /usr/local/miniconda/bin/activate fuel' >> /${USER}/.bashrc"
-    docker exec ${CONTAINER} bash -c "echo 'source /usr/local/lib/bazel/bin/bazel-complete.bash' >> /${USER}/.bashrc"
+    HOME="/root"
   fi
+  docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
 fi
 
 docker exec -it -u ${USER} ${CONTAINER} bash

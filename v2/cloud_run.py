@@ -2,26 +2,16 @@
 
 import base64
 import getpass
-import glob
-import io
 import json
 import os
 import pprint
 import sys
 import time
-import zipfile
 
-try:
-    from absl import app
-    from absl import flags
-    from absl import logging
-except:
-    print('Cannot import absl, you may need to run "sudo python3 -m pip install absl-py".')
-
-try:
-    import requests
-except:
-    print('Cannot import requests, you may need to run "sudo python3 -m pip install requests".')
+from absl import app
+from absl import flags
+from absl import logging
+import requests
 
 
 # User.
@@ -30,14 +20,12 @@ flags.DEFINE_string('role', 'apollo', 'Running as another role instead of the jo
 # Env.
 flags.DEFINE_string('image', 'hub.baidubce.com/apollo/spark:latest', 'Docker image.',
                     short_name='i')
-flags.DEFINE_string('env', 'fuel-py36', 'Conda env name.', short_name='e')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
 
 # Job.
-flags.DEFINE_string('main', None, 'Job entrypoint.')
-flags.DEFINE_string('fueling_zip_path', None, 'Fueling zip path.')
+flags.DEFINE_string('main', None, 'Pre-built py_binary zip file.')
 flags.DEFINE_string('flags', None, 'Job flags.')
 flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 
@@ -55,10 +43,6 @@ flags.DEFINE_string('partner_bos_region', None, 'Partner bos region.')
 flags.DEFINE_string('partner_bos_access', None, 'Partner bos access.')
 flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
-flags.DEFINE_string('partner_azure_storage_account', None, 'Partner Azure storage account.')
-flags.DEFINE_string('partner_azure_storage_access_key', None, 'Partner Azure storage access key.')
-flags.DEFINE_string('partner_azure_blob_container', None, 'Partner Azure blob container.')
-
 
 def get_user():
     return {
@@ -69,44 +53,23 @@ def get_user():
 
 def get_env():
     return {
-        'conda_env': flags.FLAGS.env,
         'docker_image': flags.FLAGS.image,
         'node_selector': flags.FLAGS.node_selector,
         'log_verbosity': flags.FLAGS.log_verbosity,
     }
 
 
-def _filter_file_to_zip(file_path):
-    if not os.path.isfile(file_path):
-        return False
-    _, ext = os.path.splitext(file_path)
-    return ext in {'.json', '.proto', '.py', '.sh', '.txt', '.yaml'}
-
-
 def get_job():
-    job = {
-        'entrypoint': flags.FLAGS.main,
+    if not flags.FLAGS.main.endswith('.zip'):
+        raise Exception('Please provide a built zip file to --main.')
+
+    with open(flags.FLAGS.main, "rb") as fin:
+        encoded_zip = base64.b64encode(fin.read()).decode('ascii')
+    logging.info('Job has %.2fMB.' % (len(encoded_zip) / (2**20)))
+    return {
+        'entrypoint': encoded_zip,
         'flags': flags.FLAGS.flags,
     }
-    if flags.FLAGS.fueling_zip_path:
-        # Use pre-packaged code in cloud.
-        job['fueling_zip_path'] = flags.FLAGS.fueling_zip_path
-    else:
-        # Use local code.
-        with io.BytesIO() as in_mem_zip:
-            # Write in_mem_zip.
-            with zipfile.ZipFile(in_mem_zip, 'w', zipfile.ZIP_DEFLATED) as fueling_zip:
-                for f in glob.glob('fueling/**', recursive=True):
-                    if _filter_file_to_zip(f):
-                        fueling_zip.write(f)
-                for f in glob.glob('learning_algorithms/**', recursive=True):
-                    if _filter_file_to_zip(f):
-                        fueling_zip.write(f)
-
-            fueling_zip = in_mem_zip.getvalue()
-            logging.info('fueling.zip has %.2fMB.' % (len(fueling_zip) / (2**20)))
-            job['fueling_zip_base64'] = base64.b64encode(fueling_zip).decode('ascii')
-    return job
 
 
 def get_worker():
@@ -138,10 +101,6 @@ def get_partner():
 
 def main(argv):
     """Tool entrypoint."""
-    if not os.path.exists('./fueling/'):
-        logging.fatal('Must run from the apollo fule root directory.')
-        sys.exit(1)
-
     # Construct argument according to apps/k8s/spark_submitter/spark_submit_arg.proto
     arg = {
         'user': get_user(),
@@ -152,7 +111,6 @@ def main(argv):
     }
 
     # Submit job.
-
     # For debug purpose, you may use the following config.
     # KUBE_PROXY_HOST = 'localhost'  # If you use local kube proxy.
     # SUBMITTER = 'http://localhost:8000/'  # If you use local submitter.
@@ -168,7 +126,7 @@ def main(argv):
     res = requests.post(SUBMITTER, json=json.dumps(arg))
     payload = json.loads(res.json() or '{}')
 
-    arg['job']['fueling_zip_base64'] = ''
+    arg['job']['entrypoint'] = flags.FLAGS.main
     logging.info('SparkSubmitArg is')
     pprint.PrettyPrinter(indent=2).pprint(arg)
 
