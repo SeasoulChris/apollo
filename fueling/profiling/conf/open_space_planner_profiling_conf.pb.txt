@@ -1,4 +1,4 @@
 open_space_planner_metrics{
-  time_latency: 1                       # unit: sec
+  time_latency_threshold: 100           # unit: ms
 }
 min_sample_size: 5                      # unit: 1
