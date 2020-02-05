@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+package apollo_fuel.fueling.profiling.proto.open_space_planner_profiling;
+
+message OpenSpacePlannerMetrics { optional double end_to_end_time_latency = 1; }
