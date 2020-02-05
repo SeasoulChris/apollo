@@ -5,5 +5,6 @@ package apollo_fuel.fueling.profiling.proto.open_space_planner_profiling;
 message OpenSpacePlannerMetrics { optional double end_to_end_time_latency = 1; }
 
 message OpenSpacePlannerProfiling {
-    optional OpenSpacePlannerMetrics open_space_planner_metrics = 1;
+  optional OpenSpacePlannerMetrics open_space_planner_metrics = 1;
+  optional double min_sample_size = 11;
 }
