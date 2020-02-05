@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # standard packages
 from concurrent import futures
@@ -34,7 +34,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
     def __init__(self):
         logging.info(f"Running server in {flags.FLAGS.running_mode} mode.")
         if flags.FLAGS.running_mode == "PROD":
-            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py"
+            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait"
         else:
             self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
