@@ -33,7 +33,7 @@ flags.DEFINE_string('ctl_metrics_input_path_local',
 flags.DEFINE_string('ctl_metrics_output_path_local',
                     '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
-flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_taks directory for local run_test')
+flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_tasks path for local run_test')
 
 flags.DEFINE_string('ctl_metrics_input_path_k8s',
                     'modules/control/profiling/control_profiling',
@@ -41,10 +41,10 @@ flags.DEFINE_string('ctl_metrics_input_path_k8s',
 flags.DEFINE_string('ctl_metrics_output_path_k8s',
                     'modules/control/tmp/results',
                     'output data directory for on-cloud run_prod')
-flags.DEFINE_string('ctl_metrics_todo_tasks_k8s', '', 'todo_taks directory for on-cloud run_prod')
+flags.DEFINE_string('ctl_metrics_todo_tasks_k8s', '', 'todo_tasks path for on-cloud run_prod')
 
 flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
-                     'if simulation-only, then skip the owner/id/vehicle/controller identification')
+                     'if simulation-only, then execute the "Auto-Tuner + simulation" mode')
 flags.DEFINE_string('ctl_metrics_simulation_vehicle', 'Mkz7',
                     'if simulation-only, then manually define the vehicle type in simulation')
 
@@ -336,9 +336,11 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
             logging.info(F'todo_tasks to run: {todo_task_dirs.values().collect()}')
 
+            if not todo_task_dirs.collect():
+                error_msg = 'No grading results: no new qualified data uploaded.'
+                summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+
         if not todo_task_dirs.collect():
-            error_msg = 'No grading results: no new qualified data uploaded.'
-            summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
             logging.info('Control Profiling Metrics: No Results, PROD')
             return
 
@@ -399,7 +401,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         reorganized_target_keys = reorganized_target.keys().collect()
         logging.info(F'reorganized_target: {reorganized_target_keys}')
         # Summarize by scanning the target directory
-        summarize_tasks(reorganized_target_keys, original_prefix, target_prefix, job_email)
+        if not flags.FLAGS.ctl_metrics_simulation_only_test:
+            summarize_tasks(reorganized_target_keys, original_prefix, target_prefix, job_email)
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""

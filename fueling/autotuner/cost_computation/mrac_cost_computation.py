@@ -77,13 +77,18 @@ class MracCostComputation(BaseCostComputation):
         # extract the profiling score of the individual scenario
         profiling_grading_dir = glob.glob(os.path.join(bag_path, '*/*/*/*grading.json'))
         logging.info(f"Score file storage path: {profiling_grading_dir}")
-        with open(profiling_grading_dir[0], 'r') as grading_json:
-            grading = json.load(grading_json)
-        # TODO(Yu): implement weighting under the AutoTuner instead of directly reading
-        profiling_score = grading['weighted_score']
-        logging.info(f"Profiling score for individual scenario: "
-                     f"score={profiling_score[0]}, sample={profiling_score[1]}")
-        return (key, profiling_score)
+        if not profiling_grading_dir:
+            logging.error(f"Fail to acquire the control profiling grading .json file "
+                          f"under the path: {bag_path}")
+            return (key, [float('nan'), 0])
+        else:
+            with open(profiling_grading_dir[0], 'r') as grading_json:
+                grading = json.load(grading_json)
+            # TODO(Yu): implement weighting under the AutoTuner instead of directly reading
+            profiling_score = grading['weighted_score']
+            logging.info(f"Profiling score for individual scenario: "
+                         f"score={profiling_score[0]}, sample={profiling_score[1]}")
+            return (key, profiling_score)
 
     def calculate_weighted_score(self, config_2_score):
         if not len(config_2_score):
