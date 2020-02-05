@@ -25,7 +25,7 @@ class MracCostComputation(BaseCostComputation):
         flags.FLAGS(sys.argv)
         self.model_configs = None
         if flags.FLAGS.profiling_running_mode == "PROD":
-            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py"
+            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait='True'"
         else:
             self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
@@ -58,9 +58,14 @@ class MracCostComputation(BaseCostComputation):
         logging.info(f"Calculating score for: {bag_path}")
         # submit the profiling job
         profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"
-        profiling_flags = (f"--ctl_metrics_input_path_local={bag_path} "
-                           f"--ctl_metrics_output_path_local={bag_path} "
-                           f"--ctl_metrics_simulation_only_test='True' ")
+        if flags.FLAGS.profiling_running_mode == "PROD":
+            profiling_flags = (f"--ctl_metrics_input_path_k8s={bag_path} "
+                               f"--ctl_metrics_output_path_k8s={bag_path} "
+                               f"--ctl_metrics_simulation_only_test='True' ")
+        else:
+            profiling_flags = (f"--ctl_metrics_input_path_local={bag_path} "
+                               f"--ctl_metrics_output_path_local={bag_path} "
+                               f"--ctl_metrics_simulation_only_test='True' ")
         profiling_cmd = (f"{self.submit_job_cmd} "
                          f"--main={profiling_func} --flags=\"{profiling_flags}\"")
         # verify exit status of the profiling job
