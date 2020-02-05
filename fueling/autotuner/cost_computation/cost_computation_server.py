@@ -2,6 +2,7 @@
 
 # standard packages
 from concurrent import futures
+import json
 import os
 import uuid
 
@@ -76,9 +77,14 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
         # read and return score
         try:
-            with open(f"{tmp_dir}/score.out") as score_file:
-                score = float(score_file.readline())
-                return self.CreateResponse(exit_code=0, message="Done.", score=score)
+            with open(f"{tmp_dir}/scores.out") as score_file:
+                scores = json.loads(score_file.readline())
+
+            response = self.CreateResponse(exit_code=0, message="Done.")
+            for (config_id, weighted_score) in scores.items():
+                response.score[config_id] = float(weighted_score)
+            return response
+
         except Exception as error:
             logging.error(f"Failed to get weighted score.\n\t{error}")
             return self.CreateResponse(

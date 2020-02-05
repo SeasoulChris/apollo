@@ -21,7 +21,7 @@ flags.DEFINE_integer('cpu', 1, 'Worker CPU cores.', short_name='c')
 def main(argv):
     """Tool entrypoint."""
     if not os.path.exists('./fueling/'):
-        logging.fatal('Must run from the apollo fule root directory.')
+        logging.fatal('Must run from the apollo fuel root directory.')
         sys.exit(1)
     os.system(F'./tools/submit-job-to-local.sh -e {flags.FLAGS.env} -c {flags.FLAGS.cpu} '
               F'-v {flags.FLAGS.log_verbosity} {flags.FLAGS.main} {flags.FLAGS.flags}')

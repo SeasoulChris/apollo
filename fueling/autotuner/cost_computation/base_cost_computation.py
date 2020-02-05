@@ -3,6 +3,7 @@
 
 # standard packages
 import csv
+import json
 import uuid
 
 # third party packages
@@ -42,6 +43,7 @@ class BaseCostComputation(BasePipeline):
             return False
 
         self.FLAGS = flags.FLAGS.flag_values_dict()
+
         return True
 
     def run_test(self):
@@ -58,22 +60,30 @@ class BaseCostComputation(BasePipeline):
         if not self.build():
             return
 
-        # RDD(scenarios)
-        scenarios_rdd = self.get_scenarios()
+        # RDD(scenario_id)
+        scenario_id_rdd = self.get_scenarios()
+
+        # RDD(config_id)
+        self.config_id_2_pb2 = self.get_config_map()
+        config_id_rdd = self.to_rdd(self.config_id_2_pb2)
 
         config_2_score = (
-            # RDD(configuration)
-            self.generate_config_rdd()
-            # RDD((configuration, scenario))
-            .cartesian(scenarios_rdd)
-            # PairRDD((configuration, scenario), bag_path)
+            # RDD(config_id)
+            config_id_rdd
+            # RDD((config_id, scenario_id))
+            .cartesian(scenario_id_rdd)
+            # PairRDD((config_id, scenario_id), bag_path)
             .map(spark_op.value_by(self.run_scenario))
-            # PairRDD((configuration, scenario), score)
-            .map(self.calculate_individual_score)
+            # PairRDD((config_id, scenario_id), score)
+            .mapValues(self.calculate_individual_score)
+            # PairRDD(config_id, [((config_id, scenario_id), score)])
+            .groupBy(self.group_by_config_id)
+            # PairRDD(config_id, weighted_score)
+            .mapValues(self.calculate_weighted_score)
         ).collect()
 
-        score = self.calculate_weighted_score(config_2_score)
-        self.save_weighted_score(score)
+        # config_id -> weight_score
+        self.save_weighted_score(config_2_score)
 
     def build(self):
         return SimClient.trigger_build(self.FLAGS.get("commit_id"))
@@ -93,13 +103,15 @@ class BaseCostComputation(BasePipeline):
 
         return self.to_rdd(scenarios)
 
-    def generate_config_rdd(self):
-        """Return RDD({local_config_file_path: serialized_config})"""
+    def get_config_map(self):
+        """Return a map of map: {config_id: {local_config_file_path: serialized_config}} """
         raise Exception("Not implemented!")
 
     def run_scenario(self, input):
         """Trigger Simulation with the given configuration and scenario"""
-        (config, scenario) = input
+        (config_id, scenario_id) = input
+        logging.info(f"running scenario {scenario_id} with config id {config_id}")
+
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid1().hex
         record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
@@ -109,17 +121,22 @@ class BaseCostComputation(BasePipeline):
         status = SimClient.run_scenario(
             training_id,
             self.FLAGS.get("commit_id"),
-            scenario,
-            config,
+            scenario_id,
+            self.config_id_2_pb2[config_id],
             record_output_path,
             output_record_filename,
         )
 
         return f"{record_output_path}/{output_record_filename}"
 
-    def calculate_individual_score(self, input):
+    def calculate_individual_score(self, bag_path):
         """Return score(s) from the given Cyber record"""
         raise Exception("Not implemented!")
+
+    def group_by_config_id(self, input):
+        (key, bag_path) = input
+        (config_id, _) = key
+        return config_id
 
     def calculate_weighted_score(self, config_2_score):
         """Return a weighted score from (config, scenario) -> score(s) map"""
@@ -129,5 +146,5 @@ class BaseCostComputation(BasePipeline):
         return f"{TMP_ROOT_DIR}/{self.FLAGS.get('training_id')}"
 
     def save_weighted_score(self, score):
-        with open(f"{self.get_temp_dir()}/score.out", "w") as output_score_file:
-            output_score_file.write(str(score))
+        with open(f"{self.get_temp_dir()}/scores.out", "w") as output_score_file:
+            output_score_file.write(json.dumps(dict(score)))

@@ -36,7 +36,7 @@ class SimClient(object):
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
 
-            git_info = sim_service_pb2.GitInfo(commit_id=commit_id)
+            git_info = git_info_pb2.GitInfo(commit_id=commit_id)
             job_info = sim_service_pb2.JobInfo(
                 git_info=git_info,
                 scenario=scenario,

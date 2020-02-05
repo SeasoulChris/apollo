@@ -15,16 +15,25 @@ class CostComputationClient(object):
 
     @classmethod
     def compute_mrac_cost(cls, commit_id, configs):
+        if not isinstance(configs, dict):
+            logging.error(f"Incorrect config type found. Should be dict, but found {type(configs)}")
+            return None
+
         with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
 
             # Construct request
             request = cost_service_pb2.Request()
             request.git_info.commit_id = commit_id
-            for single_config in configs:
-                proto_config = cost_service_pb2.ModelConfig(model_config=single_config)
-                request.config.append(proto_config)
+            for (config_id, path_2_pb2) in configs.items():
+                if not isinstance(path_2_pb2, dict):
+                    logging.error(f"Incorrect config-item type found: {path_2_pb2}.")
+                    return None
 
+                for (path, config_pb2) in path_2_pb2.items():
+                    request.config[config_id].model_config[path] = config_pb2
+
+            # Send request
             logging.info(f"Triggering compute with commit_id {commit_id} ...")
             response = stub.ComputeMracCost(request)
 
