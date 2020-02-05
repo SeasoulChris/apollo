@@ -7,8 +7,10 @@ from absl import flags
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+
 
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
@@ -20,16 +22,29 @@ flags.DEFINE_string('open_space_planner_profilling_output_path_local',
                     'output data directory for local run_test')
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
+MSG_PER_SEGMENT = 30000
 
 
 def has_scenario_info(parsed_planning_msg):
-    return hasattr(getattr(getattr(parsed_planning_msg, 'debug'), 'planning_data'), 'scenario')
+    return hasattr(parsed_planning_msg.debug.planning_data, 'scenario')
 
 
 def is_right_stage(parsed_planning_msg):
-    scenario = getattr(getattr(getattr(parsed_planning_msg, 'debug'), 'planning_data'), 'scenario')
+    scenario = parsed_planning_msg.debug.planning_data.scenario
     return (scenario.scenario_type == SCENARIO_TYPE and
             scenario.stage_type == STAGE_TYPE)
+
+
+def partition_data(target_msgs):
+    """Divide the messages to groups each of which has exact number of messages"""
+    target, msgs = target_msgs
+    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    msgs = sorted(msgs, key=lambda msg: msg.header.sequence_num)
+    msgs_groups = [msgs[idx: idx + MSG_PER_SEGMENT]
+                   for idx in range(0, len(msgs), MSG_PER_SEGMENT)]
+    # return msgs
+
+    return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
 
 
 class OpenSpacePlannerMetrics(BasePipeline):
@@ -68,17 +83,31 @@ class OpenSpacePlannerMetrics(BasePipeline):
                          # PairRDD(target_dir, message), planing message
                          .flatMapValues(record_utils.read_record([record_utils.PLANNING_CHANNEL]))
                          # PairRDD(target_dir, parsed_message), parsed planing message
-                         .mapValues(record_utils.message_to_proto)
-                         # PairRDD(target_dir, parsed_message), parsed message with scenario info
-                         .filter(spark_op.filter_value(has_scenario_info))
-                         # PairRDD(target_dir, parsed_message), parsed message in desired stage
-                         .filter(spark_op.filter_value(is_right_stage)))
+                         .mapValues(record_utils.message_to_proto))
         logging.info(F'planning_messeger_count: {planning_msgs.count()}')
-        # logging.info(F'planning_messeger_first: {planning_msgs.first()}')
 
         # 2. filter messages belonging to a certain stage (stage name)
+        open_space_msgs = (planning_msgs
+                           #    # PairRDD(target_dir, parsed_messages),
+                           #    .groupByKey()
+                           #    # RDD(target_dir, group_id, group of (message)s), divide messages into groups
+                           #    .flatMap(partition_data)
+                           # PairRDD(target_dir, parsed_message), parsed message with scenario info
+                           .filter(spark_op.filter_value(has_scenario_info))
+                           # PairRDD(target_dir, parsed_message), parsed message in desired stage
+                           .filter(spark_op.filter_value(is_right_stage)))
+        logging.info(F'open_space_messeger_count: {open_space_msgs.count()}')
+
         # 3. get features from message (feature list)
-        # 4. process feature (count, max, mean, standard deviation, 95 percentile)
+        feature_data = (open_space_msgs
+                        # PairRDD(target_dir, parsed_message), parsed message with scenario info
+                        .groupByKey()
+                        # RDD(target_dir, group_id, group of (message)s), divide messages into groups
+                        .flatMap(partition_data)
+                        .map(extract_mtx))
+        logging.info(F'feature_data_count: {feature_data.count()}')
+
+        # 4. process feature (count, max, mean, standard deviation, 95 percentile)q
         # 5. write result to target folder
 
 
