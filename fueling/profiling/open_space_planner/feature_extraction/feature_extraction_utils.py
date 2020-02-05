@@ -8,6 +8,16 @@ import numpy as np
 import fueling.common.logging as logging
 
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
+import fueling.common.proto_utils as proto_utils
+
+
+def get_config_open_space_profiling():
+    """Get configured value in open_space_profiling_conf.pb.txt"""
+    profiling_conf = \
+        '/apollo/modules/data/fuel/fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt'
+    open_space_planner_profiling = OpenSpacePlannerProfiling()
+    proto_utils.get_pb_from_text_file(profiling_conf, open_space_planner_profiling)
+    return open_space_planner_profiling
 
 
 def extract_planning_data_from_msg(msg):
