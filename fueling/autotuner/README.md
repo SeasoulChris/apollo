@@ -20,7 +20,8 @@ This is needed only if there're changes in the \*.proto files:
 ### Start cost computation server
 ```bash
    cd /apollo/modules/data/fuel
-   python fueling/autotuner/cost_computation/cost_computation_server.py
+   chmod a+x fueling/autotuner/cost_computation/cost_computation_server.py
+   ./fueling/autotuner/cost_computation/cost_computation_server.py
 ```
 
 ### Start bayesian optimization tuner (CostComputationClient side)
@@ -33,7 +34,8 @@ This is needed only if there're changes in the \*.proto files:
 2. Run python scripts (For MRAC).
 ```bash
    cd /apollo/modules/data/fuel
-   python fueling/autotuner/tuner/bayesian_optimization_tuner.py
+   chmod a+x fueling/autotuner/tuner/bayesian_optimization_tuner.py
+   ./fueling/autotuner/tuner/bayesian_optimization_tuner.py
 ```
 
 3. Or run other autotuner applications with
