@@ -8,6 +8,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx
+from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
@@ -22,7 +23,7 @@ flags.DEFINE_string('open_space_planner_profilling_output_path_local',
                     'output data directory for local run_test')
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
-MSG_PER_SEGMENT = 30000
+MSG_PER_SEGMENT = 30
 
 
 def has_scenario_info(parsed_planning_msg):
@@ -106,8 +107,14 @@ class OpenSpacePlannerMetrics(BasePipeline):
                         .flatMap(partition_data)
                         .map(extract_mtx))
         logging.info(F'feature_data_count: {feature_data.count()}')
+        logging.info(F'feature_data_first: {feature_data.first()}')
 
-        # 4. process feature (count, max, mean, standard deviation, 95 percentile)q
+        # 4. process feature (count, max, mean, standard deviation, 95 percentile)
+        result_data = (feature_data
+                       .map(grading))
+        logging.info(F'feature_data_count: {result_data.count()}')
+        logging.info(F'feature_data_first: {result_data.first()}')
+
         # 5. write result to target folder
 
 

@@ -2,16 +2,17 @@
 
 """ Open-space planner feature processing related utils. """
 
-
+from collections import namedtuple
 import numpy as np
 
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 
+from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX
 import fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils as feature_utils
 
 
-def data_processing(target_groups):
+def grading(target_groups):
     target, group_id, grading_mtx = target_groups
     if grading_mtx.shape[0] == 0:
         logging.warning('no valid element in {} items in group {} for task {}'
@@ -19,7 +20,7 @@ def data_processing(target_groups):
         return (target, None)
 
     # TODO(shu): added scenario type and stage type
-    h5_output_file = '{}_{}_{:05d}'.format(group_id)
+    h5_output_file = '_{:05d}'.format(group_id)
     logging.info('writing {} messages to h5 file {} for target {}'
                  .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
@@ -27,22 +28,25 @@ def data_processing(target_groups):
     grading_results = namedtuple('grading_results',
                                  ['time_latency', ])
     grading_arguments = namedtuple('grading_arguments',
-                                   ['mean_value', ])
+                                   ['mean_feature_name',
+                                    'mean_filter_name',
+                                    'mean_filter_mode',
+                                    'mean_weight'])
     grading_results.__new__.__defaults__ = (
         None,) * len(grading_results._fields)
     grading_arguments.__new__.__defaults__ = (
         None,) * len(grading_arguments._fields)
     grading_group_result = grading_results(
-        end_to_end_time_latency=compute_mean(grading_mtx, grading_arguments(
+        time_latency=compute_mean(grading_mtx, grading_arguments(
             mean_feature_name='time_latency',
+            mean_weight=1.0
         )),
     )
     return (target, grading_group_result)
 
 
-def compute_mean(grading_mtx, arg, module_name=CONTROL):
+def compute_mean(grading_mtx, arg):
     """Compute the mean value"""
-
     profiling_conf = feature_utils.get_config_open_space_profiling()
     if arg.mean_filter_name:
         for idx in range(len(arg.mean_filter_name)):
