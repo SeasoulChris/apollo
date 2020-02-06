@@ -71,6 +71,8 @@ class ObstacleMapping(object):
                 c*(1/history_size*i) for c in color))
 
     def draw_obstacles_history(self, color=(0, 255, 255)):
+        if self.obstacles_history is None:
+            return
         for history in self.obstacles_history:
             self.draw_history(self.feature_map, history, (0, 255, 255))
 
