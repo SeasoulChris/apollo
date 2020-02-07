@@ -46,17 +46,27 @@ message ControlProfiling {
       GEAR_INVALID = 5;
       GEAR_NONE = 6;
     }
+    enum ErrorCode {
+      // No error, returns on success.
+      OK = 0;
+      // Control module error codes start from here.
+      CONTROL_ERROR = 1000;
+      CONTROL_INIT_ERROR = 1001;
+      CONTROL_COMPUTE_ERROR = 1002;
+      CONTROL_ESTOP_ERROR = 1003;
+    }
     optional string vehicle_type = 1;
     optional string controller_type = 2;
     optional double vehicle_wheelbase = 3 [default = 2.8448];  // by default, Mkz
     optional DrivingMode driving_mode = 4;
     repeated GearPosition gear_position = 5;
+    optional ErrorCode control_error_code = 6;
 
-    optional ControlMetrics control_metrics = 6;
+    optional ControlMetrics control_metrics = 7;
 
-    optional double control_period = 7;
-    optional double control_frame_num = 8;
-    optional double control_command_pct = 9;
-    optional double total_time_factor = 10;
-    optional double min_sample_size = 11;
+    optional double control_period = 8;
+    optional double control_frame_num = 9;
+    optional double control_command_pct = 10;
+    optional double total_time_factor = 11;
+    optional double min_sample_size = 12;
 }
