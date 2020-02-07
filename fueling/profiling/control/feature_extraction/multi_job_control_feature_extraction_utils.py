@@ -20,6 +20,8 @@ MSG_PER_SEGMENT = 3000
 MAX_PHASE_DELTA = 0.01
 # Minimum epsilon value used in compare with zero
 MIN_EPSILON = 0.000001
+# Weighted score for the failed cases
+FAIL_SCORE = 1000
 
 
 CONF_FILE = 'vehicle_param.pb.txt'
@@ -89,7 +91,7 @@ def parse_vehicle_controller(task, flags):
     return (vehicle_controller_parsed_dir, task)
 
 
-def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position):
+def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, control_error_code):
     """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
@@ -196,6 +198,10 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position):
             pose_heading_offset[sigular_idx] = 0.0
         grading_mtx = np.column_stack(
             (grading_mtx, np.append(pose_heading_offset, [0.0], axis=0)))
+        # Fourth, reformat the control error code data from Enum to boolean
+        grading_mtx[:, FEATURE_IDX['control_error_code']] = (
+            [0 if code == control_error_code else 1
+             for code in grading_mtx[:, FEATURE_IDX['control_error_code']]])
     else:
         grading_mtx = control_mtx_rtn
     return grading_mtx
@@ -275,26 +281,29 @@ def extract_control_data_from_msg(msg):
             # Features: "Latency" category
             getattr(control_latency, 'total_time_ms', float('NaN')),               # 30
             getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 31
+            # Features: "Error Code" category
+            getattr(getattr(control_header, 'status', float('NaN')),
+                    'error_code', float('NaN')),                                   # 32
             # Features: "Header" category
-            getattr(control_header, 'timestamp_sec', float('NaN')),                # 32
-            getattr(control_header, 'sequence_num', float('NaN')),                 # 33
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 33
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 34
             # Features: "Input Info" category
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 34
+                    'timestamp_sec', float('NaN')),                                # 35
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 35
+                    'sequence_num', float('NaN')),                                 # 36
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 36
+                    'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 37
+                    'sequence_num', float('NaN')),                                 # 38
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 38
+                    'timestamp_sec', float('NaN')),                                # 39
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 39
+                    'sequence_num', float('NaN')),                                 # 40
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 40
+                    'timestamp_sec', float('NaN')),                                # 41
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 41
+                    'sequence_num', float('NaN'))                                  # 42
         ])
     elif hasattr(getattr(msg_proto, 'debug'), 'simple_mpc_debug'):
         control_mpc = msg_proto.debug.simple_mpc_debug
@@ -342,26 +351,29 @@ def extract_control_data_from_msg(msg):
             # Features: "Latency" category
             getattr(control_latency, 'total_time_ms', float('NaN')),               # 30
             getattr(control_latency, 'total_time_exceeded', float('NaN')),         # 31
+            # Features: "Error Code" category
+            getattr(getattr(control_header, 'status', float('NaN')),
+                    'error_code', float('NaN')),                                   # 32
             # Features: "Header" category
-            getattr(control_header, 'timestamp_sec', float('NaN')),                # 32
-            getattr(control_header, 'sequence_num', float('NaN')),                 # 33
+            getattr(control_header, 'timestamp_sec', float('NaN')),                # 33
+            getattr(control_header, 'sequence_num', float('NaN')),                 # 34
             # Features: "Input Info" category
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 34
+                    'timestamp_sec', float('NaN')),                                # 35
             getattr(getattr(input_debug, 'localization_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 35
+                    'sequence_num', float('NaN')),                                 # 36
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 36
+                    'timestamp_sec', float('NaN')),                                # 37
             getattr(getattr(input_debug, 'canbus_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 37
+                    'sequence_num', float('NaN')),                                 # 38
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 38
+                    'timestamp_sec', float('NaN')),                                # 39
             getattr(getattr(input_debug, 'trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN')),                                 # 39
+                    'sequence_num', float('NaN')),                                 # 40
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'timestamp_sec', float('NaN')),                                # 40
+                    'timestamp_sec', float('NaN')),                                # 41
             getattr(getattr(input_debug, 'latest_replan_trajectory_header', float('NaN')),
-                    'sequence_num', float('NaN'))                                  # 41
+                    'sequence_num', float('NaN'))                                  # 42
         ])
     else:
         # Return None for Non-recognized Controller Type
