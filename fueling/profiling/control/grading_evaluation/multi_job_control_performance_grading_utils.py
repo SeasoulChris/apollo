@@ -24,7 +24,8 @@ def compute_h5_and_gradings(target_groups, flags):
     vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(target)
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, flags,
                                                                profiling_conf.driving_mode,
-                                                               profiling_conf.gear_position)
+                                                               profiling_conf.gear_position,
+                                                               profiling_conf.control_error_code)
     if grading_mtx.shape[0] == 0:
         logging.warning(F'no valid element in {len(msgs)} items in group {group_id}'
                         F'for task {target}')
@@ -74,7 +75,8 @@ def compute_h5_and_gradings(target_groups, flags):
                                   'total_time_exceeded_count',
                                   'replan_trajectory_count',
                                   'pose_heading_offset_std',
-                                  'pose_heading_offset_peak'])
+                                  'pose_heading_offset_peak',
+                                  'control_error_code_count'])
     grading_arguments = namedtuple('grading_arguments',
                                    ['std_filter_name',
                                     'std_filter_value',
@@ -409,6 +411,9 @@ def compute_h5_and_gradings(target_groups, flags):
             peak_filter_value=[profiling_conf.control_metrics.speed_stop],
             peak_filter_mode=[0],
             peak_threshold=math.pi
+        )),
+        control_error_code_count=compute_count(grading_mtx, grading_arguments(
+            count_feature_name='control_error_code'
         )))
     return (target, grading_group_result)
 
@@ -646,6 +651,8 @@ def output_gradings(target_grading, flags):
             else:
                 score += grading_dict[key][0] * weighting
             sample = (grading_dict[key][1] if grading_dict[key][1] > sample else sample)
+        if grading_dict['control_error_code_count'][0] > 0.0:
+            score = feature_utils.FAIL_SCORE
         grading_dict.update({'weighted_score': (score, sample)})
         logging.info(F'writing grading output {grading_dict} to {grading_output_path}')
         with open(grading_output_path, 'w') as grading_file:
