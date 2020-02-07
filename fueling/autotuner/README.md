@@ -56,3 +56,22 @@ https://github.com/ApolloAuto/replay-engine/blob/master/scripts/auto_tuner/start
    cd ./replay-engine/scripts/auto_tuner
    sudo node auto_tuner_server.js
 ```
+## Example of Calling Cost Computation Client
+```python
+from fueling.autotuner.client.cost_computation_client import CostComputationClient
+
+result = CostComputationClient.compute_mrac_cost(
+    # commit id
+    "c693dd9e2e7910b041416021fcdb648cc4d8934d",
+    # map of config_id to path_to_config pairs
+    {
+        "config_id1": {
+           "/apollo/path/to/config1": "config1_pb2",
+           "/apollo/path/to/config2": "config2_pb2"
+         },
+        "config_id2": {
+           "/apollo/path/to/config2": "config2_pb2"
+         },
+    },
+)
+```
