@@ -23,29 +23,30 @@ flags.DEFINE_enum(
 class MracCostComputation(BaseCostComputation):
     def __init__(self):
         BaseCostComputation.__init__(self)
-        flags.FLAGS(sys.argv)
-        if flags.FLAGS.profiling_running_mode == "PROD":
-            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait='True'"
-        else:
-            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
-
-        self.request_pb2 = None
 
     def init(self):
         BaseCostComputation.init(self)
 
-        # Read and parse config from a pb file
-        try:
-            self.request_pb2 = cost_service_pb2.Request()
-            proto_utils.get_pb_from_text_file(
-                f"{self.get_temp_dir()}/request.pb.txt", self.request_pb2,
-            )
+        if self.FLAGS.get('profiling_running_mode') == "PROD":
+            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait='True'"
+        else:
+            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
+        try:
+            self.request_pb2 = self.read_request()
         except Exception as error:
             logging.error(f"Failed to parse config: {error}")
             return False
 
         return True
+
+    def read_request(self):
+        """Read and parse request from a pb file"""
+        request_pb2 = cost_service_pb2.Request()
+        proto_utils.get_pb_from_text_file(
+            f"{self.get_temp_dir()}/request.pb.txt", request_pb2,
+        )
+        return request_pb2
 
     def get_config_map(self):
         return {
@@ -58,7 +59,7 @@ class MracCostComputation(BaseCostComputation):
 
         # submit the profiling job
         profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"
-        if flags.FLAGS.profiling_running_mode == "PROD":
+        if self.FLAGS.get('profiling_running_mode') == "PROD":
             profiling_flags = (f"--ctl_metrics_input_path_k8s={bag_path} "
                                f"--ctl_metrics_output_path_k8s={bag_path} "
                                f"--ctl_metrics_simulation_only_test='True' ")
@@ -68,12 +69,14 @@ class MracCostComputation(BaseCostComputation):
                                f"--ctl_metrics_simulation_only_test='True' ")
         profiling_cmd = (f"{self.submit_job_cmd} "
                          f"--main={profiling_func} --flags=\"{profiling_flags}\"")
+
         # verify exit status of the profiling job
         exit_code = os.system(profiling_cmd)
         if os.WEXITSTATUS(exit_code) != 0:
             logging.error(f"Fail to submit the control profiling job with "
                           f"error code {os.WEXITSTATUS(exit_code)}")
             return [float('nan'), 0]
+
         # extract the profiling score of the individual scenario
         profiling_grading_dir = glob.glob(os.path.join(bag_path, '*/*/*/*grading.json'))
         logging.info(f"Score file storage path: {profiling_grading_dir}")

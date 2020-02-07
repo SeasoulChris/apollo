@@ -86,9 +86,9 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             return response
 
         except Exception as error:
-            logging.error(f"Failed to get weighted score.\n\t{error}")
+            logging.error(f"failed to get weighted score.\n\t{error}")
             return self.CreateResponse(
-                exit_code=1, message="Failed to get weighted score."
+                exit_code=1, message="failed to calculate weighted score."
             )
 
 

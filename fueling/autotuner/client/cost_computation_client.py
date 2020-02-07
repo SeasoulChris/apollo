@@ -13,34 +13,42 @@ class CostComputationClient(object):
 
     CHANNEL_URL = "localhost:50052"
 
+    @staticmethod
+    def construct_request(commit_id, configs):
+        if not isinstance(configs, dict):
+            raise TypeError(
+                f"incorrect config type found. Should be dict, but found {type(configs)}"
+            )
+
+        request = cost_service_pb2.Request()
+        request.git_info.commit_id = commit_id
+        for (config_id, path_2_pb2) in configs.items():
+            if not isinstance(path_2_pb2, dict):
+                raise TypeError(f"incorrect config-item type found: {path_2_pb2}.")
+
+            for (path, config_pb2) in path_2_pb2.items():
+                request.config[config_id].model_config[path] = config_pb2
+
+        return request
+
     @classmethod
     def compute_mrac_cost(cls, commit_id, configs):
-        if not isinstance(configs, dict):
-            logging.error(f"Incorrect config type found. Should be dict, but found {type(configs)}")
-            return None
+        try:
+            with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
+                stub = cost_service_pb2_grpc.CostComputationStub(channel)
 
-        with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
-            stub = cost_service_pb2_grpc.CostComputationStub(channel)
+                logging.info(f"Sending compute request with commit_id {commit_id} ...")
+                request = CostComputationClient.construct_request(commit_id, configs)
+                response = stub.ComputeMracCost(request)
 
-            # Construct request
-            request = cost_service_pb2.Request()
-            request.git_info.commit_id = commit_id
-            for (config_id, path_2_pb2) in configs.items():
-                if not isinstance(path_2_pb2, dict):
-                    logging.error(f"Incorrect config-item type found: {path_2_pb2}.")
-                    return None
+            status = response.status
+            if status.code == 0:
+                logging.info(f"Done computing cost {response.score}")
+                return response.score
+            else:
+                logging.error(f"Error: {status.message}")
+                return None
 
-                for (path, config_pb2) in path_2_pb2.items():
-                    request.config[config_id].model_config[path] = config_pb2
-
-            # Send request
-            logging.info(f"Triggering compute with commit_id {commit_id} ...")
-            response = stub.ComputeMracCost(request)
-
-        status = response.status
-        if status.code == 0:
-            logging.info(f"Done computing cost {response.score}")
-            return response.score
-        else:
-            logging.error(f"Failed to compute cost: {status.message}")
+        except Exception as error:
+            logging.error(f"Error: {error}")
             return None
