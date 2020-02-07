@@ -5,12 +5,9 @@
 
 import numpy as np
 
-
 from modules.data.fuel.fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-
-from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 
 def get_config_open_space_profiling():
@@ -21,9 +18,45 @@ def get_config_open_space_profiling():
     proto_utils.get_pb_from_text_file(profiling_conf, open_space_planner_profiling)
     return open_space_planner_profiling
 
+#  trajectory points
+#  path_point:
+#     x: 559787.066030095
+#     y: 4157751.813925536
+#     z: 0.000000000
+#     theta: 2.379002832
+#     kappa: -0.019549716
+#     s: -2.356402468
+#     dkappa: 0.000000000
+#     ddkappa: 0.000000000
+#   v: 4.474370468
+#   a: 0.995744297
+#   relative_time: -0.400000000
+
+
+def extract_data_from_trajectory_point(trajectory_point):
+    """Extract fields from a single trajectory point"""
+    # path_point = trajectory_point.path_point
+    if hasattr(trajectory_point, 'relative_time'):
+        data_array = np.array([
+            trajectory_point.relative_time,
+            trajectory_point.v,
+            trajectory_point.a,
+        ])
+    return data_array
+
+
+def extract_data_from_all_trajectory_point(msg):
+    """Extract data from all trajectory points"""
+    trajectory_points = msg.trajectory_point
+    # logging.info('computing {} trajectory_point from frame No {}'.format(
+    #     len(trajectory_points), msg.header.sequence_num))
+    trajectory_mtx = np.array([data for data in [extract_data_from_trajectory_point(trajectory_point)
+                                                 for trajectory_point in trajectory_points] if data is not None])
+    return trajectory_mtx
+
 
 def extract_planning_data_from_msg(msg):
-    """Extract fields from planning message"""
+    """Extract non-repeated field from planning message"""
     data_array = np.array([
         # Features: "Header" category
         msg.header.timestamp_sec,
@@ -35,8 +68,24 @@ def extract_planning_data_from_msg(msg):
 
 
 def extract_mtx(target_groups):
+    """Extract matrix data of non-repeated fields from a group of messages"""
     target, group_id, msgs = target_groups
     logging.info('computing {} messages for target {}'.format(len(msgs), target))
     planning_mtx = np.array([data for data in [extract_planning_data_from_msg(msg)
                                                for msg in msgs] if data is not None])
+    return target, group_id, planning_mtx
+
+
+def extract_mtx_repeated_field(target_groups):
+    """Extract matrix data of repeated fields from a group of messages"""
+    target, group_id, msgs = target_groups
+    logging.info('computing {} messages for target {}'.format(len(msgs), target))
+    planning_mtx = np.array([data for data in (extract_data_from_all_trajectory_point(msg)
+                                               for msg in msgs) if data is not None])
+    planning_mtx = extract_data_from_all_trajectory_point(msgs[0])
+    for msg in msgs[1:-1]:
+        data = extract_data_from_all_trajectory_point(msg)
+        # 10 trajectory point is stop trajectory
+        if(data.shape[0] > 10):
+            planning_mtx = np.concatenate((planning_mtx, data), axis=0)
     return target, group_id, planning_mtx

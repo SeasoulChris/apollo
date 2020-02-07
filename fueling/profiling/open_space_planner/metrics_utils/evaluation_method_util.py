@@ -26,7 +26,9 @@ def grading(target_groups):
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
 
     grading_results = namedtuple('grading_results',
-                                 ['time_latency', ])
+                                 ['time_latency',
+                                  'acceleration',
+                                  ])
     grading_arguments = namedtuple('grading_arguments',
                                    ['mean_feature_name',
                                     'mean_filter_name',
