@@ -113,7 +113,7 @@ class BaseCostComputation(BasePipeline):
         logging.info(f"running scenario {scenario_id} with config id {config_id}")
 
         training_id = self.FLAGS.get("training_id")
-        job_id = uuid.uuid1().hex
+        job_id = uuid.uuid4().hex
         record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
         output_record_filename = f"{job_id}.record"
 

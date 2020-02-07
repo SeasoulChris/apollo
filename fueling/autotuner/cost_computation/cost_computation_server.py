@@ -50,7 +50,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if not request.git_info.commit_id:
             return self.CreateResponse(exit_code=1, message="Commit ID not specified.")
 
-        training_id = uuid.uuid1().hex
+        training_id = uuid.uuid4().hex
         tmp_dir = f"{TMP_ROOT_DIR}/{training_id}"
         file_utils.makedirs(tmp_dir)
 
