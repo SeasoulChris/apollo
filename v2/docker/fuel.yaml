@@ -6,9 +6,13 @@ dependencies:
 
   - absl-py
   - boto3
+  - grpcio-tools
+  - h5py
   - matplotlib
   - numpy
   - pymongo
+  - pyproj
+  - redis-py
   - requests
 
   - pip:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """ utils for transferring the profiling output into the json format """
 
+import json
 import os
 
-import json
 import numpy as np
 
 import fueling.common.file_utils as file_utils
