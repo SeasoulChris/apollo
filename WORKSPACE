@@ -55,9 +55,19 @@ rules_proto_dependencies()
 rules_proto_toolchains()
 
 
-# Import apollo.
-git_repository(
-    name = "apollo",
-    remote = "https://github.com/ApolloAuto/apollo",
-    branch = "bazel-2.0",
+# Import apollo and its required dependencies.
+local_repository(name="apollo", path="/apollo")
+
+http_archive(
+    name = "com_github_gflags_gflags",
+    url = "file:///home/libs/gflags-2.2.2.tar.gz",
+    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+    strip_prefix = "gflags-2.2.2",
+)
+
+http_archive(
+    name = "com_google_glog",
+    url = "file:///home/libs/glog-0.4.0.tar.gz",
+    sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
+    strip_prefix = "glog-0.4.0",
 )

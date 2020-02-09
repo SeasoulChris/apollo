@@ -1,0 +1,9 @@
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "record_parser",
+    srcs = ["record_parser.py"],
+    deps = [
+        "//fueling/common:record_utils",
+    ],
+)

@@ -1,7 +1,7 @@
 # bazelrc file
 # https://docs.bazel.build/versions/master/user-manual.html
 
-startup --output_user_root=/tmp/fuel_cache
+startup --output_user_root=/home/.bazel_cache/fuel
 
 build --build_python_zip
 build --spawn_strategy=standalone

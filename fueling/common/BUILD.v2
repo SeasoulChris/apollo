@@ -79,6 +79,15 @@ py_library(
 )
 
 py_library(
+    name = "record_utils",
+    srcs = ["record_utils.py"],
+    deps = [
+        ":time_utils",
+        "@apollo//cyber/python/cyber_py3:record",
+    ],
+)
+
+py_library(
     name = "redis_utils",
     srcs = ["redis_utils.py"],
     deps = [
