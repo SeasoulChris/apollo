@@ -197,6 +197,7 @@ def plot_metrics(data):
     redis_type_2_plot_type = {
         'list': ['bar', 'dot'],
         'hash': ['line', 'pie'],
+        'set': ['dot'],
     }
 
     redis_type = redis_utils.redis_type(redis_key)
@@ -215,8 +216,13 @@ def plot_metrics(data):
     fig, axs = plt.subplots(1, 1)
     fig.set_size_inches(width, height)
 
-    values = (redis_utils.redis_range(redis_key)
-              if redis_type == 'list' else redis_utils.redis_get_dict(redis_key))
+    values = []
+    if redis_type == 'list':
+        values = redis_utils.redis_range(redis_key)
+    elif redis_type == 'hash':
+        values = redis_utils.redis_get_dict(redis_key)
+    elif redis_type == 'set':
+        values = redis_utils.redis_get_smembers(redis_key)
 
     if plot_type == 'bar':
         plot_bar(axs, values)
@@ -265,6 +271,12 @@ def plot_pie(plt, axs, values):
     explode = [0] * len(sizes)
     axs.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
     plt.axis('equal')
+
+
+def plot_dot(axs, values):
+    """Plot dots"""
+    # TODO(longtao), implement it when required by real scenarios
+    pass
 
 
 # To be registered into jinja2 templates.

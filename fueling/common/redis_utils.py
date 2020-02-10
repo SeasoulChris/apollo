@@ -137,6 +137,27 @@ def redis_get_dict_values(redis_key):
     return _retry(redis_instance.hvals, [redis_key])
 
 
+def redis_add_smembers(redis_key, members):
+    """Add key with set type of values"""
+    redis_instance = get_redis_instance()
+    if not redis_instance:
+        logging.error('unable to create redis instance')
+        return
+    if not isinstance(members, set):
+        logging.error('redis_set_dict function requires a set type of parameter as members')
+        return
+    _retry(redis_instance.sadd, [redis_key, members])
+
+
+def redis_get_smembers(redis_key):
+    """Get set members out by using the given key"""
+    redis_instance = get_redis_instance()
+    if not redis_instance:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.smembers, [redis_key])
+
+
 def _retry(func, params):
     """A wrapper for exponential retry in case redis connection is not stable"""
     cur_retries, max_retries = 0, 3

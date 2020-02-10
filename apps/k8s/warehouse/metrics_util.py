@@ -8,6 +8,7 @@ def get_metrics_by_prefix(prefix):
     max_count, range_left, range_right = 50, 0, 10
     # ignore some testing keys
     qa_test_prefix = 'BDRP'
+    qa_status_prefix = 'q:'
     if prefix is None:
         prefix = ''
     redis_instance = redis_utils.get_redis_instance()
@@ -19,16 +20,16 @@ def get_metrics_by_prefix(prefix):
 
     metrics = {}
     for key in redis_keys:
-        if key.startswith(qa_test_prefix):
+        if key.startswith(qa_test_prefix) or key.startswith(qa_status_prefix):
             continue
         if redis_instance.type(key) == 'list':
-            values = redis_instance.lrange(key, range_left, range_right)
+            values = [str(x) for x in redis_instance.lrange(key, range_left, range_right)]
             metrics[key] = '[' + ','.join(values) + ',...]'
         elif redis_instance.type(key) == 'hash':
-            values = redis_instance.hvals(key)[-range_right:]
+            values = [str(x) for x in redis_instance.hvals(key)[-range_right:]]
             metrics[key] = '[...,' + ','.join(values) + ']'
         elif redis_instance.type(key) == 'set':
-            values = redis_instance.srandmember(key, range_right - range_left)
+            values = [str(x) for x in redis_instance.srandmember(key, range_right - range_left)]
             metrics[key] = '[' + ','.join(values) + ',...]'
         else:
             metrics[key] = redis_instance.get(key)
