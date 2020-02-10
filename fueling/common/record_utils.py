@@ -8,6 +8,7 @@ import sys
 
 from cyber.proto.record_pb2 import Header
 if sys.version_info[0] >= 3:
+    # TODO(xiaoxq): V2: from cyber.python.cyber_py3.record import RecordReader
     from cyber_py3.record import RecordReader
 else:
     from cyber_py.record import RecordReader

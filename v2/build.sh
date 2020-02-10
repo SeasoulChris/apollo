@@ -6,17 +6,17 @@ else
   TARGET="$@"
 fi
 
-# Goto fuel root
-cd "$( dirname "${BASH_SOURCE[0]}" )/.."
-
 set -e
 
 # Build apollo
 pushd /apollo
   ./apollo.sh build_py
-  bazel build -c opt \
-      //cyber/py_wrapper:py3_record
+  bazel build \
+      //cyber/py_wrapper:_cyber_record_py3.so
 popd
+
+# Goto fuel root
+cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 # If some BUILD file breaks fuel 1.0, use BUILD.v2 instead.
 find fueling/ deps/ v2/ -name BUILD.v2 | \

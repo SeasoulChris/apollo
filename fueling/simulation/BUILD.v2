@@ -1,10 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
 py_library(
-    name = "record_parser",
-    srcs = ["record_parser.py"],
+    name = "scenario_extraction",
+    srcs = ["scenario_extraction.py"],
     deps = [
-        "//fueling/common:coord_utils",
+        "//fueling/common:base_pipeline",
         "//fueling/common:record_utils",
     ],
 )
