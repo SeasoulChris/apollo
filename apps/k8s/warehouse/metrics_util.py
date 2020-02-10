@@ -27,6 +27,9 @@ def get_metrics_by_prefix(prefix):
         elif redis_instance.type(key) == 'hash':
             values = redis_instance.hvals(key)[-range_right:]
             metrics[key] = '[...,' + ','.join(values) + ']'
+        elif redis_instance.type(key) == 'set':
+            values = redis_instance.srandmember(key, range_right - range_left)
+            metrics[key] = '[' + ','.join(values) + ',...]'
         else:
             metrics[key] = redis_instance.get(key)
         max_count -= 1
