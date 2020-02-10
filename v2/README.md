@@ -25,3 +25,20 @@
    ```bash
    docker rm -f fuel
    ```
+
+## Build and Run
+
+Everything is managed by pure [Bazel](https://docs.bazel.build/versions/master/be/python.html).
+Generally you need a BUILD target for each python file, which could be one of
+
+* `py_library(name="lib_target", ...)`
+* `py_binary(name="bin_target", ...)`
+* `py_test(name="test_target", ...)`
+
+1. You can run `bazel build //path/to:target` to build any target.
+1. You can run `bazel run //path/to:bin_target` to run a binary target.
+1. You can run `bazel test //path/to:test_target` to run a unit test target.
+
+Every `py_binary` target will be also be built into an executable zip file. You can run it in cloud
+with `./v2/cloud_run.py bazel-bin/path/to/bin_target.zip`. Feel free to run some live demos located
+at `fueling/demo`.

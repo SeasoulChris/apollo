@@ -1,0 +1,13 @@
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "multi_job_utils",
+    srcs = ["multi_job_utils.py"],
+    deps = [
+        "//fueling/common:file_utils",
+        "//fueling/common:h5_utils",
+        "//fueling/common:proto_utils",
+        "//fueling/control/features:calibration_table_utils",
+        "//fueling/control/proto:calibration_table_pb2",
+    ],
+)

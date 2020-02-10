@@ -1,0 +1,10 @@
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "feature_extraction",
+    srcs = ["feature_extraction.py"],
+    deps = [
+        "//fueling/common:logging",
+        "//fueling/control/dynamic_model/conf:model_config",
+    ],
+)

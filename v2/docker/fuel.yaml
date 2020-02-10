@@ -14,6 +14,8 @@ dependencies:
   - pyproj
   - redis-py
   - requests
+  - shapely
+  - tensorflow = 1.14  # TF2 changes API.
   - pytorch = 1.1  # Need to adapt code to newer version API.
 
   - pip:

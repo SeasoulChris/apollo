@@ -4,6 +4,12 @@ A simplest demo to calculate square sum of 1...n.
 
 Run with:
     ./tools/submit-job-to-k8s.py --main=fueling/demo/simplest_demo.py
+
+V2:
+Run at local:
+    bazel run //fueling/demo:simplest_demo
+Run in cloud:
+    ./v2/cloud_run.py --main=bazel-bin/fueling/demo/simplest_demo.zip
 """
 
 from fueling.common.base_pipeline import BasePipeline

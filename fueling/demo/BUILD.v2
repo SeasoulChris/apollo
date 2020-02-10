@@ -7,3 +7,37 @@ py_binary(
         "//fueling/common:base_pipeline",
     ]
 )
+
+py_binary(
+    name = "count_msg_by_channel",
+    srcs = ["count_msg_by_channel.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "@apollo//cyber/python/cyber_py3:record",
+    ]
+)
+
+py_binary(
+    name = "gpu_training_with_pytorch",
+    srcs = ["gpu_training_with_pytorch.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ]
+)
+
+py_binary(
+    name = "gpu_training_with_tensorflow",
+    srcs = ["gpu_training_with_tensorflow.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ]
+)
+
+py_binary(
+    name = "stat_auto_mileage",
+    srcs = ["stat_auto_mileage.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/data:record_parser",
+    ]
+)
