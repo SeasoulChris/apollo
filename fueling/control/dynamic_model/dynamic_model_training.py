@@ -16,6 +16,7 @@ import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.data_generator.training_data_generator as data_generator
+import fueling.control.dynamic_model.flag
 import fueling.control.dynamic_model.model_factory.lstm_keras as lstm_keras
 import fueling.control.dynamic_model.model_factory.mlp_keras as mlp_keras
 

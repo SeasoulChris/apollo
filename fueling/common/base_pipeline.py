@@ -19,7 +19,7 @@ flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
 flags.DEFINE_string('output_data_path', None, 'Output data path which is commonly used by pipelines.')
-flags.DEFINE_bool('is_backward', 0, 'backward or forward for dynamic model training')
+
 
 class BasePipeline(object):
     """Fueling base pipeline."""

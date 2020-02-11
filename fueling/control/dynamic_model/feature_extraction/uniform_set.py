@@ -10,6 +10,7 @@ from fueling.control.dynamic_model.conf.model_config import feature_extraction, 
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.conf.model_config as model_config
+import fueling.control.dynamic_model.flag
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 

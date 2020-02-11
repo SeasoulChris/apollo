@@ -18,6 +18,7 @@ import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+import fueling.control.dynamic_model.flag
 import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
