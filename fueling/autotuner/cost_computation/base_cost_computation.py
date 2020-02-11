@@ -25,7 +25,7 @@ flags.DEFINE_string(
 )
 flags.DEFINE_string(
     "record_output_dir",
-    "/apollo/autotuner/bags",
+    "/mnt/platform/replay-engine/mrac",
     "The BOS directory that stores output record files from simulation",
 )
 
@@ -114,8 +114,8 @@ class BaseCostComputation(BasePipeline):
 
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid4().hex
-        record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}"
-        output_record_filename = f"{job_id}.record"
+        record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}/{job_id}"
+        output_record_filename = f"{config_id}_{scenario_id}.record"
 
         # TODO: handle error status
         status = SimClient.run_scenario(
@@ -127,7 +127,7 @@ class BaseCostComputation(BasePipeline):
             output_record_filename,
         )
 
-        return f"{record_output_path}/{output_record_filename}"
+        return record_output_path
 
     def calculate_individual_score(self, bag_path):
         """Return score(s) from the given Cyber record"""
