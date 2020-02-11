@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+import sys
+from os import listdir
+from os.path import isfile, join
+
+import matplotlib.pyplot as plt
+
+from fueling.planning.stability.libs.record_reader import RecordItemReader
+
 
 class ChassisSpeed:
 
@@ -34,12 +42,6 @@ class ChassisSpeed:
 
 
 if __name__ == "__main__":
-    import sys
-    import matplotlib.pyplot as plt
-    from os import listdir
-    from os.path import isfile, join
-    from fueling.planning.stability.libs.record_reader import RecordItemReader
-
     folders = sys.argv[1:]
     fig, ax = plt.subplots()
     colors = ["g", "b", "r", "m", "y"]

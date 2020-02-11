@@ -1,0 +1,133 @@
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "chassis_speed",
+    srcs = ["chassis_speed.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_library(
+    name = "grade_table_utils",
+    srcs = ["grade_table_utils.py"],
+)
+
+py_binary(
+    name = "imu_acc",
+    srcs = ["imu_acc.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "imu_angular_velocity",
+    srcs = ["imu_angular_velocity.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "imu_av_curvature",
+    srcs = ["imu_av_curvature.py"],
+    deps = [
+        ":imu_angular_velocity",
+        ":imu_speed",
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "imu_speed_acc",
+    srcs = ["imu_speed_acc.py"],
+    deps = [
+        ":imu_speed",
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "imu_speed_jerk",
+    srcs = ["imu_speed_jerk.py"],
+    deps = [
+        ":imu_speed_acc",
+    ]
+)
+
+py_binary(
+    name = "imu_speed",
+    srcs = ["imu_speed.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "planning_acc",
+    srcs = ["planning_acc.py"],
+    deps = [
+        ":planning_speed",
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "planning_av",
+    srcs = ["planning_av.py"],
+    deps = [
+        ":planning_kappa",
+        ":planning_speed",
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "planning_dav",
+    srcs = ["planning_dav.py"],
+    deps = [
+        ":planning_av",
+    ]
+)
+
+py_binary(
+    name = "planning_jerk",
+    srcs = ["planning_jerk.py"],
+    deps = [
+        ":planning_acc",
+    ]
+)
+
+py_binary(
+    name = "planning_kappa",
+    srcs = ["planning_kappa.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "planning_lat_jerk",
+    srcs = ["planning_lat_jerk.py"],
+    deps = [
+        ":planning_acc",
+        ":planning_dav",
+    ]
+)
+
+py_binary(
+    name = "planning_speed",
+    srcs = ["planning_speed.py"],
+    deps = [
+        ":record_reader",
+    ]
+)
+
+py_binary(
+    name = "record_reader",
+    srcs = ["record_reader.py"],
+    deps = [
+        "//fueling/common:record_utils",
+    ]
+)
