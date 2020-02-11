@@ -1,0 +1,25 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//v2:py_proto.bzl", "py_proto")
+
+py_proto(
+    name = "cost_computation_service_pb2",
+    src = "cost_computation_service.proto",
+    with_grpc = True,
+)
+
+py_proto(
+    name = "git_info_pb2",
+    src = "git_info.proto",
+)
+
+py_proto(
+    name = "sim_service_pb2",
+    src = "sim_service.proto",
+    with_grpc = True,
+)
+
+py_proto(
+    name = "tuner_param_config_pb2",
+    src = "tuner_param_config.proto",
+)

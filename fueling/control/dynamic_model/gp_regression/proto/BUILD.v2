@@ -1,16 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
-proto_library(
-    name = "helloworld_lib",
-    srcs = [
-        "helloworld.proto",
-    ],
-)
+load("//v2:py_proto.bzl", "py_proto")
 
-
-cc_proto_library(
-    name = "helloworld_proto",
-    deps = [
-        ":helloworld_lib",
-    ],
+py_proto(
+    name = "helloworld_pb2",
+    src = "helloworld.proto",
 )

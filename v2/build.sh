@@ -9,6 +9,7 @@ fi
 set -e
 
 # Build apollo
+ln -s -f /fuel /apollo/modules/data/fuel  # TODO(xiaoxq): Retire after V2 launch.
 pushd /apollo
   ./apollo.sh build_py
   bazel build \

@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "bayesian_optimization_tuner",
+    srcs = ["bayesian_optimization_tuner.py"],
+    deps = [
+        "//fueling/autotuner/client:cost_computation_client",
+        "//fueling/autotuner/proto:tuner_param_config_pb2",
+        "//fueling/common:proto_utils",
+    ],
+)
+
+py_binary(
+    name = "optuna_tuner",
+    srcs = ["optuna_tuner.py"],
+)

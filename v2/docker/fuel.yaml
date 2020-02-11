@@ -5,18 +5,20 @@ dependencies:
   - pyspark = 2.4.4  # Align with pre-built server image.
 
   - absl-py
+  - bayesian-optimization
   - boto3
   - h5py
   - matplotlib
   - numpy
+  - optuna
   - protobuf
   - pymongo
   - pyproj
+  - pytorch = 1.1  # Need to adapt code to newer version API.
   - redis-py
   - requests
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
-  - pytorch = 1.1  # Need to adapt code to newer version API.
 
   - pip:
     - pyspark-utils
