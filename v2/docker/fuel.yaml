@@ -10,6 +10,7 @@ dependencies:
   - h5py
   - matplotlib
   - numpy
+  - opencv
   - optuna
   - protobuf
   - pymongo
@@ -17,6 +18,8 @@ dependencies:
   - pytorch = 1.1  # Need to adapt code to newer version API.
   - redis-py
   - requests
+  - pytorch = 1.1  # Need to adapt code to newer version API.
+  - scikit-learn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
 
