@@ -84,7 +84,6 @@ py_library(
     srcs = ["record_utils.py"],
     deps = [
         ":time_utils",
-        "@apollo//cyber/python/cyber_py3:record",
     ],
 )
 

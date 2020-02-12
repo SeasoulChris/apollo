@@ -12,11 +12,8 @@ DB-backed utils.
 """
 
 import os
-if os.path.exists('/fuel'):
-    from fueling.data.proto.record_meta_pb2 import RecordMeta
-else:
-    from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 
+from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.proto_utils as proto_utils
 
 

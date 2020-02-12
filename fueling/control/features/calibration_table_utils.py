@@ -10,11 +10,8 @@ import numpy as np
 
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 
+from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 from fueling.control.features.filters import Filters
-try:
-    from fueling.control.proto.calibration_table_pb2 import CalibrationTable
-except:  # TODO(xiaoxq): Retire after V2 launch.
-    from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging

@@ -13,7 +13,6 @@ py_binary(
     srcs = ["count_msg_by_channel.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "@apollo//cyber/python/cyber_py3:record",
     ]
 )
 
