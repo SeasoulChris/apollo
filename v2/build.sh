@@ -9,10 +9,6 @@ fi
 set -e
 
 # Build apollo
-# TODO(xiaoxq): Retire after V2 launch.
-if [ -f /apollo/modules/data/fuel ]; then
-  ln -s /fuel /apollo/modules/data/fuel
-fi
 pushd /apollo
   ./apollo.sh build_py
   bazel build \
@@ -21,6 +17,9 @@ popd
 
 # Goto fuel root
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+
+# TODO(xiaoxq): Retire after V2 launch.
+sed -i 's|modules/data/fuel/||' fueling/autotuner/proto/*.proto
 
 # If some BUILD file breaks fuel 1.0, use BUILD.v2 instead.
 find fueling deps learning_algorithms v2 -name BUILD.v2 | \

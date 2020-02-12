@@ -5,13 +5,11 @@ dependencies:
   - pyspark = 2.4.4  # Align with pre-built server image.
 
   - absl-py
-  - bayesian-optimization
   - boto3
   - h5py
   - matplotlib
   - numpy
   - opencv
-  - optuna
   - protobuf
   - pymongo
   - pyproj

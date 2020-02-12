@@ -1,4 +1,0 @@
-py_binary(
-    name = "cloud_run",
-    srcs = ["cloud_run.py"],
-)

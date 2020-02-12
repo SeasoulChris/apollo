@@ -4,6 +4,7 @@ py_library(
     name = "base_pipeline",
     srcs = ["base_pipeline.py"],
     deps = [
+        "//fueling/common/internal:cloud_submitter",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",
     ],

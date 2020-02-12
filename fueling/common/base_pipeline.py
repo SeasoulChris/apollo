@@ -4,21 +4,25 @@
 from datetime import datetime
 import os
 import sys
+import traceback
 
 from absl import app
 from absl import flags
 from pyspark import SparkConf, SparkContext
 
+from fueling.common.internal.cloud_submitter import CloudSubmitter
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
 
 
-flags.DEFINE_string('running_mode', 'TEST', 'Pipeline running mode: TEST, PROD or GRPC.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
 flags.DEFINE_string('output_data_path', None, 'Output data path which is commonly used by pipelines.')
+
+# TODO(xiaoxq): Retire in V2.
+flags.DEFINE_string('running_mode', 'TEST', 'Pipeline running mode: TEST, PROD or GRPC.')
 
 
 class BasePipeline(object):
@@ -69,11 +73,6 @@ class BasePipeline(object):
         BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
             SparkConf().setAppName(self.__class__.__name__))
         mode = flags.FLAGS.running_mode
-        if mode is None:
-            logging.fatal('No running mode is specified! Please run the pipeline with either\n'
-                          '    tools/submit-job-to-local.sh\n'
-                          '    tools/submit-job-to-k8s.py')
-            sys.exit(1)
         if not flags.FLAGS.job_id:
             flags.FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
@@ -82,7 +81,9 @@ class BasePipeline(object):
 
         try:
             self.init()
-            if mode == 'TEST':
+            if flags.FLAGS.cloud:
+                CloudSubmitter(self.entrypoint).submit()
+            elif mode == 'TEST':
                 self.run_test()
             else:
                 self.run_prod()
@@ -91,6 +92,7 @@ class BasePipeline(object):
 
     def main(self):
         """Kick off everything."""
+        self.entrypoint = traceback.extract_stack(limit=2)[0].filename
         app.run(self.__main__)
 
 
