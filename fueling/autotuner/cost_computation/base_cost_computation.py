@@ -13,21 +13,16 @@ import pyspark_utils.op as spark_op
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 from fueling.autotuner.client.sim_client import SimClient
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 # Flags
 flags.DEFINE_string("training_id", None, "A unique id")
 flags.DEFINE_string("commit_id", None, "Apollo commit id.")
-flags.DEFINE_string(
-    "scenario_path",
-    "./fueling/autotuner/config/sim_scenarios.csv",
-    "File path to list of scenarios in csv format.",
-)
-flags.DEFINE_string(
-    "record_output_dir",
-    "/mnt/platform/replay-engine/mrac",
-    "The BOS directory that stores output record files from simulation",
-)
+flags.DEFINE_string("scenario_path", "fueling/autotuner/config/sim_scenarios.csv",
+                    "File path to list of scenarios in csv format.")
+flags.DEFINE_string("record_output_dir", "/mnt/platform/replay-engine/mrac",
+                    "The BOS directory that stores output record files from simulation")
 
 TMP_ROOT_DIR = "/tmp/autotuner"
 
@@ -90,7 +85,8 @@ class BaseCostComputation(BasePipeline):
 
     def get_scenarios(self):
         """Return RDD(scenario_id)"""
-        with open(self.FLAGS.get("scenario_path")) as scenario_file:
+        scenario_path = file_utils.data_path(self.FLAGS.get("scenario_path"))
+        with open(scenario_path) as scenario_file:
             reader = csv.reader(scenario_file, delimiter=",")
             scenarios = []
             for line in reader:

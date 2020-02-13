@@ -7,8 +7,9 @@ from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
 
-import fueling.common.proto_utils as proto_utils
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 
 from fueling.autotuner.client.cost_computation_client import CostComputationClient
 from modules.data.fuel.fueling.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
@@ -16,11 +17,9 @@ from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.mrac_conf_pb2 import MracConf
 
 
-flags.DEFINE_string(
-    "tuner_param_config_filename",
-    "/apollo/modules/data/fuel/fueling/autotuner/config/mrac_tuner_param_config.pb.txt",
-    "File path to tuner parameter config."
-)
+flags.DEFINE_string("tuner_param_config_filename",
+                    "fueling/autotuner/config/mrac_tuner_param_config.pb.txt",
+                    "File path to tuner parameter config.")
 
 
 def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
@@ -48,9 +47,8 @@ class BayesianOptimizationTuner():
         self.algorithm_conf_pb = ControlConf()
         # Read and parse config from a pb file
         try:
-            proto_utils.get_pb_from_text_file(
-                flags.FLAGS.tuner_param_config_filename, self.tuner_param_config_pb,
-            )
+            tuner_param_config = file_utils.data_path(flags.FLAGS.tuner_param_config_filename)
+            proto_utils.get_pb_from_text_file(tuner_param_config, self.tuner_param_config_pb)
             logging.debug(f"Parsed autotune config files {self.tuner_param_config_pb}")
 
         except Exception as error:

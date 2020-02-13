@@ -36,3 +36,8 @@ def touch(file_path):
 def list_files(dir_path):
     """List all sub-files in given dir_path."""
     return [os.path.join(root, f) for root, _, files in os.walk(dir_path) for f in files]
+
+
+def data_path(path):
+    """Get real path to data which is relative to Apollo Fuel root."""
+    return os.path.join(os.path.dirname(__file__), '../..', path)
