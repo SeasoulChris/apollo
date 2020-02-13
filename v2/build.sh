@@ -19,8 +19,14 @@ set -e
 # Build apollo
 pushd /apollo
   ./apollo.sh build_py
-  bazel build \
-      //cyber/py_wrapper:_cyber_record_py3.so
+  bazel build -c opt \
+      //cyber/py_wrapper:_cyber_record_py3.so \
+      //modules/drivers/video/tools/decode_video/... \
+      //modules/localization/msf/local_tool/data_extraction/... \
+      //modules/localization/msf/local_tool/map_creation/... \
+      //modules/map/tools:sim_map_generator \
+      //modules/prediction/pipeline/... \
+      //modules/routing/topo_creator
 popd
 
 # If some BUILD file breaks fuel 1.0, use BUILD.v2 instead.
