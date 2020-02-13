@@ -7,15 +7,17 @@ REPO="${DOCKER_REGISTRY}/${DOCKER_USER}/spark_submitter"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
 
 echo "Building image: ${IMAGE}"
-# Go to fuel root.
-cd $( dirname "${BASH_SOURCE[0]}" )/../../../..
 
-set -e
-set -x
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+set -ex
 
 # Prepare resource.
-protoc --python_out=./ apps/k8s/spark_submitter/*.proto
 cp ~/.kube/config ./kube.config
 
 # Build.
-docker build -t ${IMAGE} --network host -f apps/k8s/spark_submitter/deploy/Dockerfile .
+docker build -t ${IMAGE} --network host .
+
+# Deploy.
+sed -i "s|image: ${REPO}.*|image: ${IMAGE}|g" deploy.yaml
+docker push ${IMAGE}
+kubectl apply -f deploy.yaml

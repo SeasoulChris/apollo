@@ -23,7 +23,7 @@ pushd /apollo
 popd
 
 # If some BUILD file breaks fuel 1.0, use BUILD.v2 instead.
-find fueling learning_algorithms -name BUILD.v2 | \
+find apps fueling learning_algorithms -name BUILD.v2 | \
 while read filename; do
   cp "${filename}" "${filename%.*}"
 done

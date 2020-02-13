@@ -28,14 +28,9 @@ RUN pip3 install --no-cache-dir \
 
 # Resource.
 # Get dest path with `python -c "import site; print(site.getsitepackages()[0])"`
-COPY apps/k8s/spark_submitter/deploy/spark-kubernetes_2.11-2.4.4.jar \
-    /usr/local/lib/python3.6/dist-packages/pyspark/jars/
+COPY spark-kubernetes_2.11-2.4.4.jar /usr/local/lib/python3.6/dist-packages/pyspark/jars/
 COPY kube.config /root/.kube/config
-
-# Source.
-COPY apps/k8s/spark_submitter/index.py /home/spark_submitter/
-COPY apps/k8s/spark_submitter/spark_submit_arg_pb2.py /home/spark_submitter/
-COPY fueling /home/spark_submitter/fueling
+COPY index.zip /home/spark_submitter/index.zip
 
 WORKDIR /home/spark_submitter
-ENTRYPOINT ["python3", "index.py"]
+ENTRYPOINT ["python3", "index.zip"]
