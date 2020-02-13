@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "chassis_speed",
     srcs = ["chassis_speed.py"],
     deps = [
@@ -13,7 +13,7 @@ py_library(
     srcs = ["grade_table_utils.py"],
 )
 
-py_binary(
+py_library(
     name = "imu_acc",
     srcs = ["imu_acc.py"],
     deps = [
@@ -21,7 +21,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "imu_angular_velocity",
     srcs = ["imu_angular_velocity.py"],
     deps = [
@@ -29,7 +29,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "imu_av_curvature",
     srcs = ["imu_av_curvature.py"],
     deps = [
@@ -39,7 +39,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "imu_speed_acc",
     srcs = ["imu_speed_acc.py"],
     deps = [
@@ -48,7 +48,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "imu_speed_jerk",
     srcs = ["imu_speed_jerk.py"],
     deps = [
@@ -56,7 +56,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "imu_speed",
     srcs = ["imu_speed.py"],
     deps = [
@@ -64,7 +64,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_acc",
     srcs = ["planning_acc.py"],
     deps = [
@@ -73,7 +73,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_av",
     srcs = ["planning_av.py"],
     deps = [
@@ -83,7 +83,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_dav",
     srcs = ["planning_dav.py"],
     deps = [
@@ -91,7 +91,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_jerk",
     srcs = ["planning_jerk.py"],
     deps = [
@@ -99,7 +99,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_kappa",
     srcs = ["planning_kappa.py"],
     deps = [
@@ -107,7 +107,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_lat_jerk",
     srcs = ["planning_lat_jerk.py"],
     deps = [
@@ -116,7 +116,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "planning_speed",
     srcs = ["planning_speed.py"],
     deps = [
@@ -124,7 +124,7 @@ py_binary(
     ]
 )
 
-py_binary(
+py_library(
     name = "record_reader",
     srcs = ["record_reader.py"],
     deps = [

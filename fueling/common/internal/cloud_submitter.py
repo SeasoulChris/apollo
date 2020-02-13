@@ -81,7 +81,7 @@ class CloudSubmitter(object):
         res = requests.post(SUBMITTER, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')
 
-        arg['job']['fueling_zip_base64'] = ''
+        arg['job'].pop('fueling_zip_base64')
         logging.info('SparkSubmitArg is')
         pprint.PrettyPrinter(indent=2).pprint(arg)
 
