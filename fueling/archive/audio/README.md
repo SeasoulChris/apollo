@@ -2,6 +2,14 @@
 This repository contains implementation of papers on sound-based Emergency Vehicle Detection in Python.  
 
 ## Requirements and setup
+
+Additional dependencies you need to run this job:
+
+```bash
+conda install seaborn pywavelets
+pip install eyed3 librosa moviepy pydub youtube-dl
+```
+
 `Paper-1` and `Paper-2` have been implemented in Python-3 while `Paper-3` has been implemented in Python-2 in the [Anaconda](https://anaconda.org/anaconda/python) environment. The directories `Paper-2` and `Paper-3` contain the list of modules that need to be installed in the `requirements.txt` files. Please note that 2 separate environments need to be created for running the files in Paper-2 and Paper-3.  
 
 Once Anaconda is installed, to create an environment with the required modules simply run `conda create --name <env> --file requirements.txt` in the command window.  

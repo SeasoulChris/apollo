@@ -14,7 +14,6 @@ dependencies:
   - grpcio-tools
   - protobuf = 3.6  # Compatible with locked tensorflow.
 
-
   # Data science
   - boto3
   - h5py
@@ -43,10 +42,6 @@ dependencies:
   - requests
   - shapely
 
-  # Audio
-  - seaborn
-  - pywavelets
-
   - pip:
     - azure.storage.blob
     - gpytorch
@@ -56,10 +51,3 @@ dependencies:
     - scaleapi
     - websocket
     - grpcio #Conda install grpcio can not be found.
-
-    # Audio
-    - eyed3
-    - librosa
-    - moviepy
-    - pydub
-    - youtube-dl
