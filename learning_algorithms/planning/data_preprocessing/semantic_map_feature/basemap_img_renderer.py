@@ -5,12 +5,12 @@ import cv2 as cv
 
 from modules.map.proto import map_pb2
 
-
-class Mapping(object):
-    """class of Mapping to get a feature map"""
+# TODO(Jinyun): use config file
+class BaseMapImgRenderer(object):
+    """class of BaseMapImgRenderer to get a feature map"""
 
     def __init__(self, region):
-        """contruct function to init Mapping object"""
+        """contruct function to init BaseMapImgRenderer object"""
         self.region = region
         if (self.region == "san_mateo"):
             self.GRID = [11000, 14000]
@@ -181,6 +181,6 @@ class Mapping(object):
 
 
 if __name__ == '__main__':
-    mapping = Mapping("san_mateo")
+    mapping = BaseMapImgRenderer("san_mateo")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(mapping.region + ".png", mapping.base_map)
