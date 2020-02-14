@@ -5,6 +5,7 @@ Run with:
 #!/usr/bin/env python
 
 # Standard packages
+import datetime
 import glob
 import math
 import os
@@ -22,6 +23,7 @@ from modules.map.proto import map_road_pb2
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.redis_utils as redis_utils
 from fueling.common.base_pipeline import BasePipeline
 
 
@@ -48,6 +50,7 @@ class MapGenSingleLine(BasePipeline):
     def run_prod(self):
         src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
         dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
+
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
@@ -72,6 +75,15 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
+        # TODO(Xuechao): get job type from FLAGS, and get job size from 'source_dir'
+        job_type, job_size = 'HDMap', 0
+        redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
+        redis_value = {'begin_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                       'job_size': job_size,
+                       'job_status': 'running'}
+        redis_utils.redis_extend_dict(redis_key, redis_value)
+
+
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
         # todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))
@@ -80,6 +92,13 @@ class MapGenSingleLine(BasePipeline):
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
+
+
+        redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                       'job_status': 'success'}
+        redis_utils.redis_extend_dict(redis_key, redis_value)
+
+
         logging.info('base_map.txt generated: Done, PROD')
 
     def run(self, todo_records, src_prefix, dst_prefix):
