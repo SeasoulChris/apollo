@@ -41,6 +41,7 @@ class Mapping(object):
         self._draw_crosswalk()
         self._draw_lane_boundary()
         self._draw_lane_central()
+        self._draw_stop_line()
 
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
@@ -172,6 +173,17 @@ class Mapping(object):
                                        segment.line_segment.point[i+1].x-segment.line_segment.point[i].x)/(2*np.pi) % 1
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self._hsv_to_rgb(theta), thickness=4)
+
+    def _draw_stop_line(self, color = (0, 0, 255)):
+        for stop_sign in self.hd_map.stop_sign:
+            for stop_line in stop_sign.stop_line:
+                for segment in stop_line.segment:
+                    for i in range(len(segment.line_segment.point)-1):
+                        p0 = self.get_trans_point(
+                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                        p1 = self.get_trans_point(
+                            [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        cv.line(self.base_map, tuple(p0), tuple(p1), color=color, thickness=4)
 
 
 if __name__ == '__main__':
