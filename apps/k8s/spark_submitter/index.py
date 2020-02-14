@@ -116,12 +116,6 @@ class SparkSubmitJob(flask_restful.Resource):
                 'PARTNER_BOS_ACCESS': arg.partner.bos.access_key,
                 'PARTNER_BOS_SECRET': arg.partner.bos.secret_key,
             })
-        if arg.partner.blob.storage_account:
-            ENVS.update({
-                'AZURE_STORAGE_ACCOUNT': arg.partner.blob.storage_account,
-                'AZURE_STORAGE_ACCESS_KEY': arg.partner.blob.storage_access_key,
-                'AZURE_BLOB_CONTAINER': arg.partner.blob.blob_container,
-            })
 
         # Construct arguments.
         confs = (

@@ -19,5 +19,4 @@ dependencies:
   - redis-py
 
   - pip:
-    - azure.storage.blob
     - pyspark-utils

@@ -55,10 +55,6 @@ flags.DEFINE_string('partner_bos_region', None, 'Partner bos region.')
 flags.DEFINE_string('partner_bos_access', None, 'Partner bos access.')
 flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
-flags.DEFINE_string('partner_azure_storage_account', None, 'Partner Azure storage account.')
-flags.DEFINE_string('partner_azure_storage_access_key', None, 'Partner Azure storage access key.')
-flags.DEFINE_string('partner_azure_blob_container', None, 'Partner Azure blob container.')
-
 
 def get_user():
     return {
@@ -126,12 +122,6 @@ def get_partner():
             'access_key': flags.FLAGS.partner_bos_access,
             'secret_key': flags.FLAGS.partner_bos_secret,
             'region': flags.FLAGS.partner_bos_region,
-        }
-    elif flags.FLAGS.partner_azure_storage_account:
-        partner['blob'] = {
-            'storage_account': flags.FLAGS.partner_azure_storage_account,
-            'storage_access_key': flags.FLAGS.partner_azure_storage_access_key,
-            'blob_container': flags.FLAGS.partner_azure_blob_container,
         }
     return partner
 

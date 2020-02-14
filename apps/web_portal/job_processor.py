@@ -22,9 +22,6 @@ from virtual_lane_generation import VirtualLaneGeneration
 class JobProcessor(object):
     # BOS charsets.
     BOS_KEY_CHARSET = set(string.hexdigits.lower())
-    # Blob charsets.
-    BLOB_ACCOUNT_CHARSET = set(string.ascii_lowercase + string.digits)
-    BLOB_ACCESS_CHARSET = set(string.ascii_letters + string.digits + '+=/')  # Base64 encoding.
     # Flag value charsets.
     DISALLOWED_FLAG_VALUE_CHARSET = set('&|;\n\r')
 
@@ -80,13 +77,4 @@ class JobProcessor(object):
             spark_submit_arg.partner.bos.region = self.partner_account.bos_region
             spark_submit_arg.partner.bos.access_key = bos.access_key
             spark_submit_arg.partner.bos.secret_key = bos.secret_key
-        elif self.job_arg.partner.blob.storage_account:
-            # Blob config sanity check.
-            blob = self.job_arg.partner.blob
-            if (set(blob.storage_account) > self.BLOB_ACCOUNT_CHARSET or
-                set(blob.storage_access_key) > self.BLOB_ACCESS_CHARSET):
-                return False
-            spark_submit_arg.partner.blob.storage_account = blob.storage_account
-            spark_submit_arg.partner.blob.storage_access_key = blob.storage_access_key
-            spark_submit_arg.partner.blob.blob_container = self.partner_account.blob_container
         return True

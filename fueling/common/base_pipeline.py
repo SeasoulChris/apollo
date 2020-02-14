@@ -63,9 +63,6 @@ class BasePipeline(object):
         if os.environ.get('PARTNER_BOS_REGION'):
             is_partner = True
             return BosClient(is_partner)
-        elif os.environ.get('AZURE_STORAGE_ACCOUNT'):
-            import fueling.common.storage.blob_client as blob_client
-            return blob_client.BlobClient()
         return None
 
     def __main__(self, argv):

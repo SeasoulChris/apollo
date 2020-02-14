@@ -43,7 +43,6 @@ dependencies:
   - shapely
 
   - pip:
-    - azure.storage.blob
     - gpytorch
     - liegroups
     - pyro-ppl == 0.3.3  # 0.4.1+ requires pytorch 1.2.0+

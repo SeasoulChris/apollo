@@ -33,7 +33,6 @@ dependencies:
   - requests
 
   - pip:
-    - azure.storage.blob
     - pyro-ppl == 1.0.0 # 1.0 requires pytorch and torch to be higher version
     - pyspark-utils
     - scaleapi

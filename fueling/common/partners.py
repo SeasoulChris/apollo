@@ -3,7 +3,7 @@
 
 import collections
 
-_fields = ['name', 'email', 'bos_bucket', 'bos_region', 'blob_container']
+_fields = ['name', 'email', 'bos_bucket', 'bos_region']
 Partner = collections.namedtuple('Partner', _fields)
 Partner.__new__.__defaults__ = (None,) * len(_fields)
 

@@ -86,17 +86,8 @@ message BosConfig {
   optional string region = 4 [default = "bj"];
 }
 
-// Azure Blob is an S3-like object storage.
-// For more information, please visit https://azure.microsoft.com/en-us/services/storage/blobs
-message AzureBlobConfig {
-  optional string storage_account = 1;
-  optional string storage_access_key = 2;
-  optional string blob_container = 3;
-}
-
 message Partner {
   // Be cautious! This could be risky.
   optional bool storage_writable = 1;
   optional BosConfig bos = 2;
-  optional AzureBlobConfig blob = 3;
 }

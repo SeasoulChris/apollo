@@ -53,10 +53,6 @@
           <input type="radio" id="bos" name="storage" class="custom-control-input" checked required>
           <label class="custom-control-label" for="bos">Baidu BOS</label>
         </div>
-        <div class="custom-control custom-radio custom-control-inline">
-          <input type="radio" id="blob" name="storage" class="custom-control-input" disabled>
-          <label class="custom-control-label" for="blob">Azure Blob</label>
-        </div>
       </div>
 
       <div class="row">
@@ -159,11 +155,6 @@
           "access_key": $("#access_key").val(),
           "secret_key": $("#secret_key").val(),
          };
-      } else if ($("#blob").is(':checked')) {
-        job_arg["partner"]["blob"] = {
-          "storage_account": $("#storage_account").val(),
-          "storage_access_key": $("#storage_access_key").val(),
-        };
       }
   
       $.ajax({
