@@ -4,8 +4,7 @@
 
 from collections import defaultdict
 
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import PlanningStat
+from fueling.data.proto.record_meta_pb2 import PlanningStat, RecordMeta
 
 
 def CombineRecords(records):

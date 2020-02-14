@@ -8,20 +8,18 @@ import os
 from absl import app as absl_app
 from absl import flags
 import flask
-import flask_restful
 import flask_socketio
 import gunicorn.app.base
 import pymongo
 
 from fueling.common.mongo_utils import Mongo
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+from fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
-from res_map_lookup import MapLookup
-import display_util
-import records_util
-import metrics_util
+import apps.k8s.warehouse.display_util as display_util
+import apps.k8s.warehouse.metrics_util as metrics_util
+import apps.k8s.warehouse.records_util as records_util
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
@@ -187,12 +185,6 @@ class FlaskApp(gunicorn.app.base.BaseApplication):
     def load(self):
         """Load app."""
         return self.application
-
-
-api = flask_restful.Api(app)
-# As there might be negative values which are not supported by float type, we
-# accept them as string and convert in code.
-api.add_resource(MapLookup, '/map-lookup/<string:lat>/<string:lon>')
 
 
 def main(argv):

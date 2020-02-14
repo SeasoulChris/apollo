@@ -9,7 +9,12 @@
    git clone git@github.com:<YourAccount>/apollo-fuel.git
    ```
 
-1. Then go to the fuel repo, start the container, build everything.
+   So that you have a workspace which looks like:
+
+   - apollo-bazel2.x
+   - apollo-fuel
+
+1. Then go to the apollo-fuel repo, start a container, build everything.
 
    ```bash
    cd apollo-fuel

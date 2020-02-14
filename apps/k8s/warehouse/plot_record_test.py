@@ -4,7 +4,7 @@
 import sys
 import webbrowser
 
-from display_util import plot_record
+from apps.k8s.warehouse.display_util import plot_record
 from fueling.data.record_parser import RecordParser
 
 

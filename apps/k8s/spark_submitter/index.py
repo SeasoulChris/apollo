@@ -19,10 +19,9 @@ import flask
 import flask_restful
 import google.protobuf.json_format as json_format
 
+from apps.k8s.spark_submitter.spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
 from fueling.common.mongo_utils import Mongo
 import fueling.common.proto_utils as proto_utils
-
-from apps.k8s.spark_submitter.spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
 
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
