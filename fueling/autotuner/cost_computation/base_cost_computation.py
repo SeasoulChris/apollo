@@ -5,6 +5,7 @@
 import csv
 import json
 import uuid
+import os
 
 # third party packages
 from absl import flags
@@ -19,12 +20,23 @@ import fueling.common.logging as logging
 # Flags
 flags.DEFINE_string("training_id", None, "A unique id")
 flags.DEFINE_string("commit_id", None, "Apollo commit id.")
-flags.DEFINE_string("scenario_path", "fueling/autotuner/config/sim_scenarios.csv",
-                    "File path to list of scenarios in csv format.")
-flags.DEFINE_string("record_output_dir", "/mnt/platform/replay-engine/mrac",
-                    "The BOS directory that stores output record files from simulation")
+
+flags.DEFINE_string(
+    "scenario_path",
+    "./fueling/autotuner/config/sim_scenarios.csv",
+    "File path to list of scenarios in csv format.",
+)
+flags.DEFINE_string(
+    "record_output_dir",
+    "replay-engine/mrac",
+    "The relative path to the BOS directory that stores output record files from simulation",
+)
+flags.DEFINE_string(
+    "sim_service_url", "localhost:50051", "channel url to sim service"
+)
 
 TMP_ROOT_DIR = "/tmp/autotuner"
+MNT_ROOT_DIR = "/mnt/bos"
 
 
 class BaseCostComputation(BasePipeline):
@@ -80,7 +92,13 @@ class BaseCostComputation(BasePipeline):
         # config_id -> weight_score
         self.save_weighted_score(config_2_score)
 
+    def set_sim_channel(self):
+        url = self.FLAGS.get('sim_service_url')
+        logging.info(f'Setting sim service url to {url}')
+        SimClient.set_channel(url)
+
     def build(self):
+        self.set_sim_channel()
         return SimClient.trigger_build(self.FLAGS.get("commit_id"))
 
     def get_scenarios(self):
@@ -111,19 +129,23 @@ class BaseCostComputation(BasePipeline):
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid4().hex
         record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}/{job_id}"
-        output_record_filename = f"{config_id}_{scenario_id}.record"
+        record_filename = f"{config_id}_{scenario_id}.record"
 
-        # TODO: handle error status
-        status = SimClient.run_scenario(
+        self.set_sim_channel()
+        success = SimClient.run_scenario(
             training_id,
             self.FLAGS.get("commit_id"),
             scenario_id,
             self.config_id_2_pb2[config_id],
             record_output_path,
-            output_record_filename,
+            record_filename,
         )
 
-        return record_output_path
+        output = f"${MNT_ROOT_DIR}/{record_output_path}"
+        if not success or not os.path.exists(output):
+            raise Exception(f"No bag found after running scenario: {output}")
+
+        return output
 
     def calculate_individual_score(self, bag_path):
         """Return score(s) from the given Cyber record"""

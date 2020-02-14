@@ -23,6 +23,9 @@ import fueling.common.logging as logging
 flags.DEFINE_enum(
     "running_mode", "TEST", ["TEST", "PROD"], "server running mode: TEST, PROD ."
 )
+flags.DEFINE_string(
+    "sim_service_url", "localhost:50051", "channel url to sim service"
+)
 
 SERVER_PORT = "[::]:50052"
 TMP_ROOT_DIR = "/tmp/autotuner"
@@ -62,6 +65,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             f"--training_id={training_id} "
             f"--commit_id={request.git_info.commit_id} "
             f"--profiling_running_mode={flags.FLAGS.running_mode} "
+            f"--sim_service_url=\"{flags.FLAGS.sim_service_url}\" "
         )
         cmd = (
             f"{self.submit_job_cmd}"

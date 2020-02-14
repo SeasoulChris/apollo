@@ -13,6 +13,10 @@ class CostComputationClient(object):
 
     CHANNEL_URL = "localhost:50052"
 
+    @classmethod
+    def set_channel(cls, channel):
+        cls.CHANNEL_URL = channel
+
     @staticmethod
     def construct_request(commit_id, configs):
         if not isinstance(configs, dict):
