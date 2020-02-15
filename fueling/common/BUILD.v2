@@ -4,7 +4,7 @@ py_library(
     name = "base_pipeline",
     srcs = ["base_pipeline.py"],
     deps = [
-        "//fueling/common/internal:cloud_submitter",
+        "//apps/k8s/spark_submitter:client",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",
     ],

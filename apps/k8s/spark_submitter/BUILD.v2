@@ -16,3 +16,11 @@ py_binary(
         "//fueling/common:proto_utils",
     ],
 )
+
+py_library(
+    name = "client",
+    srcs = ["client.py"],
+    deps = [
+        "//fueling/common:file_utils"
+    ],
+)

@@ -12,6 +12,8 @@ from absl import flags
 from absl import logging
 import requests
 
+import fueling.common.file_utils as file_utils
+
 
 # User.
 flags.DEFINE_string('role', 'apollo', 'Running as another role instead of the job submitter.')
@@ -40,21 +42,14 @@ flags.DEFINE_string('partner_bos_access', None, 'Partner bos access.')
 flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
 
-class CloudSubmitter(object):
-    def __init__(self, entrypoint):
-        if not entrypoint.endswith('.py'):
-            logging.fatal(F'Cannot run entrypoint file {entrypoint}')
+class SparkSubmitterClient(object):
+    def __init__(self, entrypoint, client_flags={}, job_flags=None):
+        self.zip_app = self.entrypoint_to_zip_app(entrypoint)
+        self.client_flags = client_flags
+        self.job_flags = job_flags if job_flags is not None else self.collect_job_flags()
+        logging.info(F'Submitting zip_app {self.zip_app} for entrypoint {entrypoint}')
 
-        FUEL_DIR = '/fuel/'
-        fuel_pos = entrypoint.find(FUEL_DIR)
-        if fuel_pos < 0:
-            logging.fatal('Pipeline should be under fuel/ dir.')
-        zip_app = os.path.splitext(entrypoint[fuel_pos + len(FUEL_DIR):])[0] + '.zip'
-        self.zip_app = os.path.join('/fuel/bazel-bin', zip_app)
-        if not os.path.exists(self.zip_app):
-            logging.fatal(F'Cannot find built target {self.zip_app}')
-
-    def submit(self):
+    def submit(self, kube_proxy_host='usa-data.baidu.com'):
         """Tool entrypoint."""
         # Construct argument according to apps/k8s/spark_submitter/spark_submit_arg.proto
         arg = {
@@ -66,19 +61,14 @@ class CloudSubmitter(object):
         }
 
         # Submit job.
-        # For debug purpose, you may use the following config.
-        # KUBE_PROXY_HOST = 'localhost'  # If you use local kube proxy.
-        # SUBMITTER = 'http://localhost:8000/'  # If you use local submitter.
+        kube_proxy = F'http://{kube_proxy_host}:8001'
+        service_name = 'http:spark-submitter-service:8000'
+        service_url = F'{kube_proxy}/api/v1/namespaces/default/services/{service_name}/proxy/'
 
-        KUBE_PROXY_HOST = 'usa-data.baidu.com'
-        KUBE_PROXY = 'http://{}:8001'.format(KUBE_PROXY_HOST)
-        SERVICE = 'http:spark-submitter-service:8000'
-        SUBMITTER = '{}/api/v1/namespaces/default/services/{}/proxy/'.format(KUBE_PROXY, SERVICE)
-
-        if os.system('ping -c 1 {} > /dev/null 2>&1'.format(KUBE_PROXY_HOST)) != 0:
-            logging.fatal('Cannot reach k8s proxy {}. Are you running in intranet?'.format(KUBE_PROXY_HOST))
+        if kube_proxy_host != 'localhost' and os.system(F'ping -c 1 {kube_proxy_host}') != 0:
+            logging.fatal(F'Cannot reach {kube_proxy_host}. Are you running in intranet?')
             sys.exit(1)
-        res = requests.post(SUBMITTER, json=json.dumps(arg))
+        res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')
 
         arg['job'].pop('fueling_zip_base64')
@@ -103,7 +93,7 @@ class CloudSubmitter(object):
         job_status = None
         while job_status not in END_STATUS:
             time.sleep(WAIT_INTERVAL_SECONDS)
-            res = requests.get(SUBMITTER, params={'job_id': job_id})
+            res = requests.get(service_url, params={'job_id': job_id})
             if res.ok:
                 job_status = json.loads(res.json() or '{}').get('status')
                 logging.info('Job is {}...'.format(job_status))
@@ -115,14 +105,14 @@ class CloudSubmitter(object):
     def get_user(self):
         return {
             'submitter': getpass.getuser(),
-            'running_role': flags.FLAGS.role,
+            'running_role': self.client_flags.get('role') or flags.FLAGS.role,
         }
 
     def get_env(self):
         return {
-            'docker_image': flags.FLAGS.image,
-            'node_selector': flags.FLAGS.node_selector,
-            'log_verbosity': flags.FLAGS.log_verbosity,
+            'docker_image': self.client_flags.get('image') or flags.FLAGS.image,
+            'node_selector': self.client_flags.get('node_selector') or flags.FLAGS.node_selector,
+            'log_verbosity': self.client_flags.get('log_verbosity') or flags.FLAGS.log_verbosity,
         }
 
     def get_job(self):
@@ -130,39 +120,57 @@ class CloudSubmitter(object):
             encoded_zip = base64.b64encode(fin.read()).decode('ascii')
         logging.info('Job has %.2fMB.' % (len(encoded_zip) / (2**20)))
 
-        app_flags = []
-        for module, module_flags in flags.FLAGS.flags_by_module_dict().items():
-            # Ignore third-party flags.
-            if not module.startswith('fueling'):
-                continue
-            # Ignore common internal flags.
-            if module.startswith('fueling.common.internal'):
-                continue
-            # Ignore default-value flags.
-            app_flags.extend([flag for flag in module_flags if not flag.using_default_value])
-
-        app_flags_str = ' '.join([F'--{flag.name}={flag.value}' for flag in app_flags])
         return {
             'entrypoint': self.zip_app,
             'fueling_zip_base64': encoded_zip,
-            'flags': app_flags_str,
+            'flags': ' '.join([F'--{name}={value}' for name, value in self.job_flags.items()]),
         }
 
     def get_worker(self):
         return {
-            'count': flags.FLAGS.workers,
-            'cpu': flags.FLAGS.cpu,
-            'memory': flags.FLAGS.memory,
-            'disk': flags.FLAGS.disk,
+            'count':  self.client_flags.get('workers') or flags.FLAGS.workers,
+            'cpu':    self.client_flags.get('cpu') or flags.FLAGS.cpu,
+            'memory': self.client_flags.get('memory') or flags.FLAGS.memory,
+            'disk':   self.client_flags.get('disk') or flags.FLAGS.disk,
         }
 
     def get_partner(self):
         partner = {'storage_writable': flags.FLAGS.partner_storage_writable}
         if flags.FLAGS.partner_bos_bucket:
             partner['bos'] = {
-                'bucket': flags.FLAGS.partner_bos_bucket,
-                'access_key': flags.FLAGS.partner_bos_access,
-                'secret_key': flags.FLAGS.partner_bos_secret,
-                'region': flags.FLAGS.partner_bos_region,
+                'bucket': self.client_flags.get('partner_bos_bucket') or flags.FLAGS.partner_bos_bucket,
+                'access_key': self.client_flags.get('partner_bos_access') or flags.FLAGS.partner_bos_access,
+                'secret_key': self.client_flags.get('partner_bos_secret') or flags.FLAGS.partner_bos_secret,
+                'region': self.client_flags.get('partner_bos_region') or flags.FLAGS.partner_bos_region,
             }
         return partner
+
+    @staticmethod
+    def entrypoint_to_zip_app(entrypoint):
+        if not entrypoint.endswith('.py'):
+            logging.fatal(F'Cannot process entrypoint {entrypoint}')
+
+        entrypoint = file_utils.data_path(entrypoint)
+        zip_app = entrypoint[:-3] + '.zip'
+        if not os.path.exists(zip_app):
+            FUEL_DIR = '/fuel/'
+            fuel_pos = zip_app.find(FUEL_DIR)
+            if fuel_pos < 0:
+                logging.fatal('Pipeline should be under fuel/ dir.')
+            zip_app = os.path.join('/fuel/bazel-bin', zip_app[fuel_pos + len(FUEL_DIR):])
+        return zip_app
+
+    @staticmethod
+    def collect_job_flags():
+        IGNORE_MODULES = {
+            'absl.logging',
+            'apps.k8s.spark_submitter.client',
+        }
+        job_flags = {}
+        for module, module_flags in flags.FLAGS.flags_by_module_dict().items():
+            if module in IGNORE_MODULES:
+                continue
+            for flag in module_flags:
+                if not flag.using_default_value:
+                    job_flags[flag.name] = flag.value
+        return job_flags
