@@ -13,7 +13,6 @@ from modules.data.fuel.apps.k8s.spark_submitter.spark_submit_arg_pb2 import Spar
 from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 
 from control_profiling import ControlProfilingMetrics
-from perception_model_training import PerceptionModelTraining
 from sensor_calibration import SensorCalibration
 from vehicle_calibration import VehicleCalibration
 from virtual_lane_generation import VirtualLaneGeneration

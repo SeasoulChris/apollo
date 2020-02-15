@@ -75,7 +75,7 @@
           <div class="invalid-feedback">Input Data Path is required for this job.</div>
         </div>
 
-        {% if job_type == "VIRTUAL_LANE_GENERATION" or job_type == "PERCEPTION_MODEL_TRAINING" %}
+        {% if job_type == "VIRTUAL_LANE_GENERATION" %}
         <div class="col-md-6 mb-3">
           <label for="output_data_path">Output Data Path</label>
           <input type="text" class="form-control" id="output_data_path" placeholder="" required>
@@ -146,9 +146,6 @@
         job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
         job_arg["flags"]["zone_id"] = $("#zone_id").val();
         job_arg["flags"]["lidar_type"] = $("#lidar_type").val();
-      }
-      if (job_type === 'PERCEPTION_MODEL_TRAINING') {
-        job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
       }
       if ($("#bos").is(':checked')) {
         job_arg["partner"]["bos"] = {
