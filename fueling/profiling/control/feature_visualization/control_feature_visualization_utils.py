@@ -106,12 +106,54 @@ def clean_data(data, seq):
     return [0.05 * i, 1 - 0.05 * i]
 
 
+def plot_hist(data_rdd):
+    dir_data, group_id, data = data_rdd
+    pdffile = os.path.join(dir_data, 'visualization.pdf')
+    with PdfPages(pdffile) as pdf:
+        for i in (1, 2):  # range(len(FEATURE_NAMES)):
+            data_plot = data[:, i]
+            seq = np.argsort(data_plot)
+            bounds = clean_data(data_plot, seq)
+            logging.info('Processing the plots at Column: {}, Feature: {}'
+                         .format(i, FEATURE_NAMES[i]))
+            length = data_plot.shape[0]
+            plt.figure(figsize=(4, 3))
+            plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
+                     bins=100)
+            plt.xlabel(FEATURE_NAMES[i])
+            plt.ylabel('Sample length')
+            plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
+                      + str(int(round((bounds[1] - bounds[0]) * 100))) + "% data)")
+            xmin, xmax, ymin, ymax = plt.axis()
+            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                     .format(data_plot[seq[int(length * bounds[1] - 1)]],
+                             data_plot[seq[int(length * bounds[0])]]),
+                     color='red', fontsize=8)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
+            plt.figure(figsize=(4, 3))
+            plt.plot(data_plot)
+            plt.ylabel(FEATURE_NAMES[i])
+            plt.xlabel('Sample Number')
+            plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
+            xmin, xmax, ymin, ymax = plt.axis()
+            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
+                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
+                     .format(data_plot[seq[length - 1]], data_plot[seq[0]]),
+                     color='red', fontsize=8)
+            plt.tight_layout()
+            pdf.savefig()
+            plt.close()
+
+
 def plot_h5_features_hist(data_rdd):
     """plot the histogram of all the variables in the data array"""
     # PairRDD(target_dir, data_array)
     dir_data, data = data_rdd
     if len(data) == 0:
-        logging.warning('No data from hdf5 files can be visualized under the targetd path {}'
+        logging.warning('No data from hdf5 files can be visualized under the targeted path {}'
                         .format(dir_data))
         return
     grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))

@@ -13,7 +13,8 @@ from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_
 from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-
+import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
+    as visual_utils
 
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
@@ -129,6 +130,9 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
         # 5. write result to target folder
 
+        # plot
+        feature_data.foreach(visual_utils.plot_hist)
+
 
 if __name__ == '__main__':
-    OpenSpacePlannerMetric().main()
+    OpenSpacePlannerMetrics().main()
