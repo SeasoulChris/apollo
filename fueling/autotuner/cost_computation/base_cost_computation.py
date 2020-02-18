@@ -128,7 +128,7 @@ class BaseCostComputation(BasePipeline):
 
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid4().hex
-        record_output_path = f"{self.FLAGS.get('record_output_dir')}/{training_id}/{job_id}"
+        record_relative_dir = f"{self.FLAGS.get('record_output_dir')}/{training_id}/{job_id}"
         record_filename = f"{config_id}_{scenario_id}.record"
 
         self.set_sim_channel()
@@ -137,15 +137,15 @@ class BaseCostComputation(BasePipeline):
             self.FLAGS.get("commit_id"),
             scenario_id,
             self.config_id_2_pb2[config_id],
-            record_output_path,
+            record_relative_dir,
             record_filename,
         )
 
-        output = f"${MNT_ROOT_DIR}/{record_output_path}"
-        if not success or not os.path.exists(output):
-            raise Exception(f"No bag found after running scenario: {output}")
+        record_absolute_dir = f"{MNT_ROOT_DIR}/{record_relative_dir}"
+        if not success or not os.path.exists(f"{record_absolute_dir}/{record_filename}"):
+            raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
 
-        return output
+        return record_absolute_dir
 
     def calculate_individual_score(self, bag_path):
         """Return score(s) from the given Cyber record"""
