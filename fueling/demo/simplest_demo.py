@@ -13,28 +13,20 @@ Run in cloud:
 
 from absl import flags
 
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 
 
 flags.DEFINE_integer('square_sum_of_n', 100, 'Square sum of n: (1^2 + ... + n^2)')
 
 
-class SquareSum(BasePipeline):
+class SquareSum(BasePipelineV2):
     """Demo pipeline."""
-
-    def run_test(self):
-        """For this demo, prod and test are the same."""
-        return self.run()
-
-    def run_prod(self):
-        """For this demo, prod and test are the same."""
-        return self.run()
-
     def run(self):
         """Calculate (1^2 + ... + n^2)."""
         n = flags.FLAGS.square_sum_of_n
-        square_sum = self.to_rdd(range(n)).map(lambda i: i * i).sum()
+        square_sum = self.to_rdd(range(1, n + 1)).map(lambda i: i * i).sum()
         print ('Square sum of [1, ..., {}] is {}'.format(n, square_sum))
+        return square_sum
 
 
 if __name__ == '__main__':

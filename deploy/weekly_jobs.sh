@@ -6,12 +6,12 @@
 set -e
 
 # Preapre: Goto fuel root.
-cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 # Job: Prediction data labeling.
-# JOB="fueling/prediction/prediction_app_data_labeling.py"
-# ./tools/submit-job-to-k8s.py --main=${JOB} --workers=10 --memory=30 --disk=50
+# bazel run //fueling/prediction:prediction_app_data_labeling -- --cloud \
+#    --workers=10 --memory=30 --disk=50
 
 # Job: Prediction performance evaluation.
-# JOB="fueling/prediction/prediction_app_performance_evaluation.py"
-# ./tools/submit-job-to-k8s.py --main=${JOB} --workers=10 --memory=30 --disk=200
+# bazel run //fueling/prediction:prediction_app_performance_evaluation -- --cloud \
+#    --workers=10 --memory=30 --disk=200

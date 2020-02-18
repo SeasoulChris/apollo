@@ -41,6 +41,9 @@ flags.DEFINE_string('partner_bos_region', None, 'Partner bos region.')
 flags.DEFINE_string('partner_bos_access', None, 'Partner bos access.')
 flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
+# Internal use.
+flags.DEFINE_string('kube_proxy', 'usa-data.baidu.com', 'Kube proxy.')
+
 
 class SparkSubmitterClient(object):
     def __init__(self, entrypoint, client_flags={}, job_flags=None):
@@ -49,7 +52,7 @@ class SparkSubmitterClient(object):
         self.job_flags = job_flags if job_flags is not None else self.collect_job_flags()
         logging.info(F'Submitting zip_app {self.zip_app} for entrypoint {entrypoint}')
 
-    def submit(self, kube_proxy_host='usa-data.baidu.com'):
+    def submit(self):
         """Tool entrypoint."""
         # Construct argument according to apps/k8s/spark_submitter/spark_submit_arg.proto
         arg = {
@@ -61,12 +64,13 @@ class SparkSubmitterClient(object):
         }
 
         # Submit job.
-        kube_proxy = F'http://{kube_proxy_host}:8001'
+        kube_proxy = flags.FLAGS.kube_proxy
+        kube_proxy_url = F'http://{kube_proxy}:8001'
         service_name = 'http:spark-submitter-service:8000'
-        service_url = F'{kube_proxy}/api/v1/namespaces/default/services/{service_name}/proxy/'
+        service_url = F'{kube_proxy_url}/api/v1/namespaces/default/services/{service_name}/proxy/'
 
-        if kube_proxy_host != 'localhost' and os.system(F'ping -c 1 {kube_proxy_host}') != 0:
-            logging.fatal(F'Cannot reach {kube_proxy_host}. Are you running in intranet?')
+        if kube_proxy != 'localhost' and os.system(F'ping -c 1 {kube_proxy}') != 0:
+            logging.fatal(F'Cannot reach {kube_proxy}. Are you running in intranet?')
             sys.exit(1)
         res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')

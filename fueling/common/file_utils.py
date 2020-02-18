@@ -7,6 +7,9 @@ import os
 import fueling.common.logging as logging
 
 
+FUEL_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+
+
 def makedirs(dir_path):
     """Make directories recursively."""
     if os.path.exists(dir_path):
@@ -40,7 +43,8 @@ def list_files(dir_path):
 
 def data_path(path):
     """Get real path to data which is relative to Apollo Fuel root."""
-    return os.path.join(os.path.dirname(__file__), '../..', path)
+    return os.path.join(FUEL_ROOT, path)
+
 
 def formatSize(bytes):
     try:
@@ -59,6 +63,7 @@ def formatSize(bytes):
             return "%fM" % (M)
     else:
         return "%fkb" % (kb)
+
 
 def getDirSize(path):
     sumsize = 0
