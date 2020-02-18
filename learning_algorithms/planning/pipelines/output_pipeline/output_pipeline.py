@@ -9,6 +9,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+import learning_algorithms.planning.data_preprocessing.label_generation.label_generator as LabelGenerator
 
 
 flags.DEFINE_string('learning_based_planning_input_path_local',
@@ -19,7 +20,7 @@ flags.DEFINE_string('learning_based_planning_output_path_local',
                     'output data directory for local run_test')
 
 
-class EgoVehicleTrajectory(BasePipeline):
+class OutputPipeline(BasePipeline):
 
     def run_test(self):
         """ Run test. """
@@ -57,7 +58,13 @@ class EgoVehicleTrajectory(BasePipeline):
                              # PairRDD(target_dir, parsed_message), parsed localization message
                              .mapValues(record_utils.message_to_proto))
         logging.info(F'localization_messeger_count: {localization_msgs.count()}')
+        logging.info(F'localization_messeger_first: {localization_msgs.first()}')
+
+        ego_vehicle_localization = (localization_msgs.mapValues(
+            LabelGenerator.LoadEgoCarLocalization))
+        logging.info(F'ego_vehicle_localization_count: {ego_vehicle_localization.count()}')
+        logging.info(F'ego_vehicle_localization_first: {ego_vehicle_localization.first()}')
 
 
 if __name__ == '__main__':
-    EgoVehicleTrajectory().main()
+    OutputPipeline().main()
