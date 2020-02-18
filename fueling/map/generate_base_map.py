@@ -20,12 +20,12 @@ from modules.map.proto import map_lane_pb2
 from modules.map.proto import map_road_pb2
 
 # Apollo-fuel packages
+from fueling.common.base_pipeline import BasePipeline
+from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
-from fueling.common.base_pipeline import BasePipeline
-
 
 LANE_WIDTH = 3.3
 
@@ -75,8 +75,7 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
-        # TODO(Xuechao): get job type from FLAGS, and get job size from 'source_dir'
-        job_type, job_size = 'HDMap', 0
+        job_type, job_size = SaasJobArg.VIRTUAL_LANE_GENERATION, file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
@@ -92,13 +91,7 @@ class MapGenSingleLine(BasePipeline):
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
-
-
-        redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                       'job_status': 'success'}
-        redis_utils.redis_extend_dict(redis_key, redis_value)
-
-
+        
         logging.info('base_map.txt generated: Done, PROD')
 
     def run(self, todo_records, src_prefix, dst_prefix):

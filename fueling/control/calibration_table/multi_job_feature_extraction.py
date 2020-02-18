@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """ extract features for multiple vehicles """
+import datetime
 import glob
 import shutil
 import os
@@ -14,18 +15,19 @@ from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
+from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.redis_utils as redis_utils
 import fueling.common.time_utils as time_utils
 import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
 # import fueling.control.features.dir_utils as dir_utils
 import fueling.control.features.feature_extraction_rdd_utils as feature_extraction_rdd_utils
-
 
 channels = {record_utils.CHASSIS_CHANNEL, record_utils.LOCALIZATION_CHANNEL}
 MIN_MSG_PER_SEGMENT = 1
@@ -152,6 +154,13 @@ class MultiJobFeatureExtraction(BasePipeline):
 
         logging.info("origin_dir: %s" % origin_dir)
         logging.info("target_prefix: %s" % target_prefix)
+
+        job_type, job_size = SaasJobArg.VEHICLE_CALIBRATION, file_utils.getDirSize(source_dir)
+        redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
+        redis_value = {'begin_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                       'job_size': job_size,
+                       'job_status': 'running'}
+        redis_utils.redis_extend_dict(redis_key, redis_value)
 
         # Add sanity check
         partner = partners.get(job_owner)

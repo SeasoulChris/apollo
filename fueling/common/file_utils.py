@@ -41,3 +41,30 @@ def list_files(dir_path):
 def data_path(path):
     """Get real path to data which is relative to Apollo Fuel root."""
     return os.path.join(os.path.dirname(__file__), '../..', path)
+
+def formatSize(bytes):
+    try:
+        bytes = float(bytes)
+        kb = bytes / 1024
+    except:
+        logging.error('Failed to get file format!')
+        raise
+
+    if kb >= 1024:
+        M = kb / 1024
+        if M >= 1024:
+            G = M / 1024
+            return "%fG" % (G)
+        else:
+            return "%fM" % (M)
+    else:
+        return "%fkb" % (kb)
+
+def getDirSize(path):
+    sumsize = 0
+    filename = os.walk(path)
+    for root, dirs, files in filename:
+        for fle in files:
+            size = os.path.getsize(path + fle)
+            sumsize += size
+    return formatSize(sumsize)

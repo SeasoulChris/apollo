@@ -6,9 +6,8 @@ This is a module to gen sim map
 import os
 import glob
 
-import fueling.common.logging as logging
 from fueling.common.base_pipeline import BasePipeline
-
+import fueling.common.logging as logging
 
 def execute_task(source_dir):
     """Execute task by task"""

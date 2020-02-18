@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import datetime
 import glob
 import os
 import tarfile
@@ -14,15 +15,17 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.common.base_pipeline import BasePipeline
-from fueling.common.partners import partners
-from fueling.control.common.training_conf import inter_result_folder
-from fueling.control.common.training_conf import output_folder
-import fueling.common.email_utils as email_utils
-import fueling.common.logging as logging
-import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
-import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 
+from fueling.common.partners import partners
+from fueling.common.base_pipeline import BasePipeline
+from fueling.control.common.training_conf import output_folder
+from fueling.control.common.training_conf import inter_result_folder
+from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
+import fueling.common.logging as logging
+import fueling.common.email_utils as email_utils
+import fueling.common.redis_utils as redis_utils
+import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
+import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 
 def read_hdf5(hdf5_file_list):
     """
@@ -146,6 +149,12 @@ class MultiJobDataDistribution(BasePipeline):
             attachments = [output_filename]
             logging.info('attachments: %s' % attachments)
         email_utils.send_email_info(title, content, receivers, attachments)
+
+        job_type = SaasJobArg.VEHICLE_CALIBRATION
+        redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
+        redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                       'job_status': 'success'}
+        redis_utils.redis_extend_dict(redis_key, redis_value)
 
     def run(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)
