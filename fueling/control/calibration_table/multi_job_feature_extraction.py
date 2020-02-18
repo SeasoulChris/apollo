@@ -15,7 +15,6 @@ from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
 from fueling.control.common.training_conf import inter_result_folder  # intermediate result folder
-from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -155,9 +154,9 @@ class MultiJobFeatureExtraction(BasePipeline):
         logging.info("origin_dir: %s" % origin_dir)
         logging.info("target_prefix: %s" % target_prefix)
 
-        job_type, job_size = SaasJobArg.VEHICLE_CALIBRATION, file_utils.getDirSize(source_dir)
+        job_type, job_size = 'VEHICLE_CALIBRATION', file_utils.getDirSize(origin_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
-        redis_value = {'begin_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+        redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)

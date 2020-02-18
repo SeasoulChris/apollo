@@ -12,7 +12,6 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
-from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
@@ -77,14 +76,14 @@ class LocalMapPipeline(BasePipeline):
         velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))
         logging.info('velodyne16_ext_list: {}'.format(velodyne16_ext_list))
 
-        job_type= SaasJobArg.VIRTUAL_LANE_GENERATION
+        job_type= 'VIRTUAL_LANE_GENERATION'
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
 
         if not velodyne16_ext_list:
             logging.error('velodyne16_novatel_extrinsics_example.yaml not exists')
             title = 'Your localmap is not generated!'
             email_utils.send_email_info(title, content, receivers)
-            redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'Local map failed'}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             return
@@ -96,7 +95,7 @@ class LocalMapPipeline(BasePipeline):
 
         email_utils.send_email_info(title, content, receivers)
 
-        redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+        redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_status': 'success'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
 

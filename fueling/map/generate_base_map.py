@@ -21,7 +21,6 @@ from modules.map.proto import map_road_pb2
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
-from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -75,9 +74,9 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
-        job_type, job_size = SaasJobArg.VIRTUAL_LANE_GENERATION, file_utils.getDirSize(source_dir)
+        job_type, job_size = 'VIRTUAL_LANE_GENERATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
-        redis_value = {'begin_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+        redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_size': job_size,
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)

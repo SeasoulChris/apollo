@@ -20,7 +20,6 @@ from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import output_folder
 from fueling.control.common.training_conf import inter_result_folder
-from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 import fueling.common.logging as logging
 import fueling.common.email_utils as email_utils
 import fueling.common.redis_utils as redis_utils
@@ -150,9 +149,9 @@ class MultiJobDataDistribution(BasePipeline):
             logging.info('attachments: %s' % attachments)
         email_utils.send_email_info(title, content, receivers, attachments)
 
-        job_type = SaasJobArg.VEHICLE_CALIBRATION
+        job_type = 'VEHICLE_CALIBRATION'
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
-        redis_value = {'end_time': datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+        redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_status': 'success'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
 
