@@ -53,8 +53,8 @@ class UniformSet(BasePipeline):
     def run_test(self):
         """Run test."""
         # folder
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated/'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_uniform'
+        origin_prefix = '/fuel/testdata/control/generated/'
+        target_prefix = '/fuel/testdata/control/generated_uniform'
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')

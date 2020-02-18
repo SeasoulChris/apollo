@@ -11,13 +11,12 @@ from absl import app
 from absl import flags
 import grpc
 
-# Apollo-fuel packages
-import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
-
+import fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.file_utils as file_utils
-import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
+
 
 # Flags
 flags.DEFINE_enum(

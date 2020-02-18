@@ -29,7 +29,7 @@ class IMUEvaluation(BasePipeline):
 
     def run_test(self):
         """run test"""
-        platform_path = "/apollo/modules/data/fuel/testdata/control/"
+        platform_path = "/fuel/testdata/control/"
         if IS_BACKWARD:
             evaluation_set = "golden_test_backward"
 

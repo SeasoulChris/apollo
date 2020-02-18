@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
-import "modules/data/fuel/fueling/autotuner/proto/git_info.proto";
-import "modules/data/fuel/fueling/autotuner/proto/sim_service.proto";
+import "fueling/autotuner/proto/git_info.proto";
+import "fueling/autotuner/proto/sim_service.proto";
 
 service CostComputation {
   rpc ComputeMracCost(Request) returns (Response) {

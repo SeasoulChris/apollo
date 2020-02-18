@@ -3,14 +3,14 @@
 1. Setup Conda environment for label generation:
 
    ```bash
-   conda env update --prune -f /apollo/modules/data/fuel/conda/py27-cyber.yaml
+   conda env update --prune -f /fuel/conda/py27-cyber.yaml
    source activate fuel-py27-cyber
    ```
 
 1. Run label generation script:
 
    ```bash
-   python /apollo/modules/data/fuel/fueling/control/dynamic_model/gp_regression/label_generation.py
+   python /fuel/fueling/control/dynamic_model/gp_regression/label_generation.py
    ```
 
 1. Deactivate Conda environment
@@ -22,6 +22,6 @@
 1. Run training script:
 
    ```bash
-   conda env update --prune -f /apollo/modules/data/fuel/conda/py36-pyro.yaml
+   conda env update --prune -f /fuel/conda/py36-pyro.yaml
    ./fueling/control/dynamic_model/gp_regression/gp_main.sh
    ```

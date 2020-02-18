@@ -14,7 +14,7 @@ import fueling.common.file_utils as file_utils
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 LABEL_TRAJECTORY_POINT_NUM = 20
-MAP_IMG_DIR = "/apollo/modules/data/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
+MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
 ENABLE_IMG_DUMP = True
 
 def LoadInstances(filepath):

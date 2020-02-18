@@ -78,9 +78,9 @@ class FeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         # test data dir (folder/record_files)
-        test_data_dirs = '/apollo/modules/data/fuel/apps/local/DM2'
+        test_data_dirs = '/fuel/apps/local/DM2'
         all_dirs = glob.glob(os.path.join(test_data_dirs, '*'))
-        target_dir = '/apollo/modules/data/fuel/testdata/control/DM2_OUT/0816'
+        target_dir = '/fuel/testdata/control/DM2_OUT/0816'
         # RDD(tasks)
         task = self.to_rdd(all_dirs)
         self.run(task, test_data_dirs, target_dir)

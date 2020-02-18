@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, MODE_IDX, POSE_IDX
-from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
+from fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -219,8 +219,7 @@ def collect_message_by_topic(messages, topic):
 
 def get_config_control_profiling():
     """Get configured value in control_profiling_conf.pb.txt"""
-    profiling_conf = \
-        '/apollo/modules/data/fuel/fueling/profiling/conf/control_profiling_conf.pb.txt'
+    profiling_conf = '/fuel/fueling/profiling/conf/control_profiling_conf.pb.txt'
     control_profiling = ControlProfiling()
     proto_utils.get_pb_from_text_file(profiling_conf, control_profiling)
     return control_profiling

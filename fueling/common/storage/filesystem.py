@@ -11,7 +11,7 @@ class Filesystem(BaseStorage):
     """A local filesystem."""
 
     def __init__(self):
-        BaseStorage.__init__(self, '/apollo/modules/data/fuel')
+        BaseStorage.__init__(self, '/fuel')
 
     # Override
     def list_keys(self, prefix):

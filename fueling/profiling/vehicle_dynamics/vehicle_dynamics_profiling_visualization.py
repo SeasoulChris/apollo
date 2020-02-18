@@ -25,7 +25,7 @@ class VehicleDynamicsProfilingVisualization(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/vehicle_dynamics/generated'
+        origin_prefix = '/fuel/testdata/profiling/vehicle_dynamics/generated'
         target_prefix = origin_prefix
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([

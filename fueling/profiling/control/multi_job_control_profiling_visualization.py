@@ -25,10 +25,10 @@ import fueling.profiling.control.feature_visualization.control_feature_visualiza
 
 
 flags.DEFINE_string('ctl_visual_input_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated',
+                    '/fuel/testdata/profiling/multi_job_genanrated',
                     'input data directory for local run_test')
 flags.DEFINE_string('ctl_visual_output_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated',
+                    '/fuel/testdata/profiling/multi_job_genanrated',
                     'output data directory for local run_test')
 flags.DEFINE_string('ctl_visual_todo_tasks_local', '',
                     'todo_taks directory for local run_test')

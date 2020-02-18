@@ -29,7 +29,7 @@ class IndexRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        records = ['/apollo/modules/data/fuel/testdata/data/small.record']
+        records = ['/fuel/testdata/data/small.record']
         indexed_records = (self.to_rdd(records)
                            # RDD(RecordMeta)
                            .map(RecordParser.Parse)

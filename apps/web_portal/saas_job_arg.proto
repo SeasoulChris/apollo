@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package apollo.data.fuel;
 
-import "modules/data/fuel/apps/k8s/spark_submitter/spark_submit_arg.proto";
+import "apps/k8s/spark_submitter/spark_submit_arg.proto";
 
 // Will be translated to SparkSubmitArg with pre-defined workflow.
 message SaasJobArg {

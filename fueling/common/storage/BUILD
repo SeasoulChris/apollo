@@ -1,0 +1,23 @@
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "base_storage",
+    srcs = ["base_storage.py"],
+)
+
+py_library(
+    name = "bos_client",
+    srcs = ["bos_client.py"],
+    deps = [
+        ":base_storage",
+        "//fueling/common:logging",
+    ]
+)
+
+py_library(
+    name = "filesystem",
+    srcs = ["filesystem.py"],
+    deps = [
+        ":base_storage",
+    ]
+)

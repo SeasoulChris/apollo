@@ -7,13 +7,14 @@ from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
 
-import fueling.common.proto_utils as proto_utils
-import fueling.common.logging as logging
-
-from fueling.autotuner.client.cost_computation_client import CostComputationClient
-from modules.data.fuel.fueling.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.mrac_conf_pb2 import MracConf
+
+from fueling.autotuner.client.cost_computation_client import CostComputationClient
+from fueling.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 
 
 flags.DEFINE_string(

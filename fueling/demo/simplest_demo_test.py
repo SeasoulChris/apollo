@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+"""
+A unit test demo.
+
+Run with:
+    bazel test //fueling/demo:simplest_demo)test
+"""
+
 from absl import flags
 from absl.testing import absltest
 

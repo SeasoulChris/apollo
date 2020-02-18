@@ -40,8 +40,8 @@ def hdf52txt(hdf5_file, txt_file):
 def echo_lincoln(input_file, output_file):
     """Call echo_lincoln C++ code."""
     command = (
-        'bash /apollo/modules/data/fuel/fueling/control/scripts/echo_lincoln_offline.sh '
-        '"{}" "{}"'.format(input_file, output_file))
+        'bash /fuel/fueling/control/scripts/echo_lincoln_offline.sh '
+        F'"{input_file}" "{output_file}"')
     if os.system(command) == 0:
         logging.info('Generated results')
         return 1

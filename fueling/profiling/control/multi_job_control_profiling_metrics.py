@@ -28,10 +28,10 @@ import fueling.profiling.control.grading_evaluation.multi_job_control_performanc
 
 
 flags.DEFINE_string('ctl_metrics_input_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling',
+                    '/fuel/testdata/profiling/control_profiling',
                     'input data directory for local run_test')
 flags.DEFINE_string('ctl_metrics_output_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    '/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
 flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_tasks path for local run_test')
 

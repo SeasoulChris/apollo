@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fueling.control.dynamic_model.conf.model_config import feature_config
-from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
+from fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.holistic_data_generator as data_generator
 

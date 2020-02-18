@@ -2,24 +2,69 @@
 
 ## Setup Env
 
-1. Clone the repo along with other apollo repos:
-
-   ```text
-   - workspace
-              | - apollo
-              | - apollo-fuel      # Mounted as /apollo/modules/data/fuel
-              | - apollo-internal
-   ```
-
-   `bstart`, `binto` and build Apollo as usual. Then you'll see the repo mounted
-   at /apollo/modules/data/fuel, as a part of the whole apollo workspace.
-
-1. Install env and activate.
+1. Find a proper folder to clone the following two repos:
 
    ```bash
-   conda config --add channels conda-forge
-   conda env update --prune -f conda/py36.yaml
-   source activate fuel-py36
+   git clone --single-branch --branch bazel2.x git@github.com:ApolloAuto/apollo.git apollo-bazel2.x
+   git clone git@github.com:<YourAccount>/apollo-fuel.git
+   ```
+
+   So that you have a workspace which looks like:
+
+   - apollo-bazel2.x
+   - apollo-fuel
+
+1. Then go to the apollo-fuel repo, start a container, build everything.
+
+   ```bash
+   cd apollo-fuel
+   ./tools/login_container.sh
+   ```
+
+   Now you should be in `/fuel` which maps to apollo-fuel, and there is also `/apollo` which maps to
+   apollo-bazel2.x.
+
+1. Please note that if you run `login_container.sh` again you are entering the same container. In
+   case a fresh container is needed, please run the following command first.
+
+   ```bash
+   docker rm -f fuel
+   ```
+
+## Build and Run
+
+Everything is managed by pure [Bazel](https://docs.bazel.build/versions/master/be/python.html).
+Generally you need a BUILD target for each python file, which could be one of
+
+* `py_library(name="lib_target", ...)`
+* `py_binary(name="bin_target", ...)`
+* `py_test(name="test_target", ...)`
+
+1. To build any target:
+
+   ```bash
+   bazel build //path/to:target
+   ```
+
+1. To run a binary target:
+
+   ```bash
+   # Run at local.
+   bazel run //path/to:target
+   # Run with some flags.
+   bazel run //path/to:target -- <flags>
+   # Get help information.
+   bazel run //path/to:target -- --help
+   # Get help information and all available flags.
+   bazel run //path/to:target -- --helpfull
+   # Run a pipeline in cloud.
+   bazel run //path/to:target -- --cloud <flags>
+   ```
+
+1. To run a unit test target:
+
+   ```bash
+   bazel test //path/to:test_target
    ```
 
 ## Develop pipeline jobs
@@ -87,39 +132,7 @@ practices are:
 1. To learn more about PySpark APIs, please go to
    [Spark Docs](https://spark.apache.org/docs/latest/api/python/pyspark.html).
 
-### Test your pipeline at local
-
-```bash
-# Get to know the options.
-./tools/submit-job-to-local.sh -h
-
-# Start a local job.
-./tools/submit-job-to-local.sh [options] /path/to/spark/job.py [job-gflags]
-# Go to http://localhost:4040 when the server is launched successfully.
-```
-
-As the environment changes and libraries upgrade frequently, you'd better mount
-your job to the [regression test train](deploy/regression_test.sh), which we
-keep a close eye on, and make sure it passes before pushing a new docker image,
-so as to minimize the chance to surprise you.
-
-### Run pipeline in cluster
-
-If you are pretty familliar with the infra, please:
-1. Loop the data team in to have your job well reviewed.
-
-1. Then run:
-
-   ```bash
-   # Get to know the options.
-   ./tools/submit-job-to-k8s.py --help
-
-   # Start a cloud job.
-   ./tools/submit-job-to-k8s.py --main=/path/to/spark/job.py [other options]
-
-   # Find your job and access its Spark UI.
-   ./tools/access-service-on-k8s.sh 4040
-   ```
+### Debug
 
 1. Monitor jobs with general `kubectl` commands.
 

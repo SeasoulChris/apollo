@@ -26,7 +26,7 @@ import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 class MultiJobResultVisualization(BasePipeline):
 
     def run_test(self):
-        origin_dir = '/apollo/modules/data/fuel/testdata/control/generated_conf'
+        origin_dir = '/fuel/testdata/control/generated_conf'
         self.run(origin_dir, origin_dir)
 
     def run_prod(self):

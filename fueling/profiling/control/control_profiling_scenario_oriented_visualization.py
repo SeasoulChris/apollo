@@ -23,7 +23,7 @@ class ControlProfilingScenarioOrientedVisualization(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
+        origin_prefix = '/fuel/testdata/profiling/control_profiling/generated'
         target_prefix = origin_prefix
         # RDD(tasks), the task dirs
         todo_tasks = self.to_rdd([

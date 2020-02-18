@@ -3,13 +3,13 @@
 ## 1. Control Profiling Application on Dreamland (for Simulation-Test)
 
 ### Command Line Format
-(The following codes are executed under the path **/apollo/modules/data/fuel**)
+(The following codes are executed under the path **/fuel**)
 
 ```bash
 # Setup the record/bag input directory and profiling results output directory.
 # For example,
-data_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/Sim_Test'
-results_path='/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated'
+data_path='/fuel/testdata/profiling/control_profiling/Sim_Test'
+results_path='/fuel/testdata/profiling/control_profiling/generated'
 
 # Run the control profiling metrics command (generating performance_grading.json file)
 ./tools/submit-job-to-local.sh fueling/profiling/control/control_profiling_metrics.py -ctl_metrics_input_path_local $data_path -ctl_metrics_output_path_local $results_path

@@ -25,7 +25,7 @@ def get_vehicle_param(folder_dir):
 
 def get_controller_dir_by_target(target_dir):
     # target dir like
-    # /apollo/modules/data/fuel/testdata/profiling/multi_job_genanrated/apollo/
+    # /fuel/testdata/profiling/multi_job_genanrated/apollo/
     # 2019-11-22-15-36-49/Mkz7/Lon_Lat_Controller/Sim_Test-2019-05-01/20190501110414/
     controller_pos = target_dir.find('Controller')
     return target_dir[:controller_pos]
@@ -51,7 +51,7 @@ def get_vehicle_param_by_target(target_dir):
 
 def get_vehicle_by_task(task_dir):
     # task dir like
-    # /apollo/modules/data/fuel/testdata/profiling/multi_job/Mkz7/Sim_Test-2019-05-01/20190501110414
+    # /fuel/testdata/profiling/multi_job/Mkz7/Sim_Test-2019-05-01/20190501110414
     return task_dir.split('/')[-3]
 
 

@@ -27,8 +27,8 @@ class GeneralFeatureExtraction(BasePipeline):
     def run_test(self):
         """Run test."""
         logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData'
-        target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+        origin_prefix = '/fuel/testdata/control/sourceData'
+        target_prefix = os.path.join('/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'GeneralSet')
         # RDD(record_dirs)
         todo_tasks = self.to_rdd([origin_prefix])

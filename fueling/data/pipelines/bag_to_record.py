@@ -29,7 +29,7 @@ class BagToRecord(BasePipeline):
         # PairRDD(src_bag, dst_record)
         bag_to_record = self.to_rdd([
             ('/apollo/docs/demo_guide/demo_2.0.bag',
-             '/apollo/modules/data/fuel/testdata/data/generated/demo_2.0.record'),
+             '/fuel/testdata/data/generated/demo_2.0.record'),
         ])
         self.run(bag_to_record)
 

@@ -23,10 +23,10 @@ import fueling.profiling.control.feature_visualization.control_feature_visualiza
 
 
 flags.DEFINE_string('ctl_visual_input_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    '/fuel/testdata/profiling/control_profiling/generated',
                     'input data directory for local run_test')
 flags.DEFINE_string('ctl_visual_output_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    '/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
 flags.DEFINE_string('ctl_visual_todo_tasks_local', '',
                     'todo_taks directory for local run_test')

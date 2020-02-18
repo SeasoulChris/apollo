@@ -27,8 +27,8 @@ class BackwardSampleSet(BasePipeline):
     def run_test(self):
         """Run test."""
         logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/backward_records'
-        target_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+        origin_prefix = '/fuel/testdata/control/backward_records'
+        target_prefix = os.path.join('/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'BackwardSampleSet')
         # RDD(record_dirs)
         todo_tasks = (self.to_rdd([origin_prefix])

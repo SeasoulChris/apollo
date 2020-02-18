@@ -10,12 +10,7 @@ from absl import app
 from absl import flags
 from pyspark import SparkConf, SparkContext
 
-# TODO: V2 migration.
-try:
-    from apps.k8s.spark_submitter.client import SparkSubmitterClient
-except:
-    pass
-
+from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
@@ -70,14 +65,9 @@ class BasePipeline(object):
 
     def __main__(self, argv):
         """Run the pipeline."""
-        # TODO: V2 migration.
-        try:
-            if flags.FLAGS.cloud:
-                SparkSubmitterClient(self.entrypoint).submit()
-                return
-        except:
-            pass
-
+        if flags.FLAGS.cloud:
+            SparkSubmitterClient(self.entrypoint).submit()
+            return
         BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
             SparkConf().setAppName(self.__class__.__name__))
         mode = flags.FLAGS.running_mode

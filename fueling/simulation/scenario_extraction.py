@@ -83,7 +83,7 @@ class ScenarioExtractionPipeline(BasePipeline):
         """Local mini test."""
         root_dir = '/apollo'
         original_prefix = 'data'
-        target_prefix = 'modules/data/fuel/testdata/modules/simulation/logsim_scenarios'
+        target_prefix = 'testdata/modules/simulation/logsim_scenarios'
 
         # RDD(tasks), the tasks without root_dir as prefix
         todo_tasks = get_todo_tasks(

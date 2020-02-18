@@ -10,7 +10,7 @@ import numpy as np
 
 from modules.common.configs.proto.vehicle_config_pb2 import VehicleParam
 
-from modules.data.fuel.fueling.control.proto.calibration_table_pb2 import CalibrationTable
+from fueling.control.proto.calibration_table_pb2 import CalibrationTable
 from fueling.control.features.filters import Filters
 import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
@@ -20,14 +20,12 @@ import fueling.common.proto_utils as proto_utils
 
 # # parameters
 # WANTED_VEHICLE = 'Zhongyun'
-# CONF_FOLDER = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
+# CONF_FOLDER = '/fuel/testdata/control/sourceData/OUT'
 # vehicle_para_conf_filename = 'vehicle_param.pb.txt'
 # conf_file = os.path.join(CONF_FOLDER, WANTED_VEHICLE, vehicle_para_conf_filename)
 # VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
 
-conf_file_dir = '/apollo/modules/data/fuel/fueling/control/conf'
-conf_filename = 'calibration_table_conf.pb.txt'
-calibration_conf_file = os.path.join(conf_file_dir, conf_filename)
+calibration_conf_file = file_utils.data_path('fueling/control/conf/calibration_table_conf.pb.txt')
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
 logging.info('Load calibration table conf: %s' % conf_filename)

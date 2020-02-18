@@ -18,7 +18,7 @@ import fueling.control.common.multi_job_utils as multi_job_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.features.calibration_table_train_utils as train_utils
 import fueling.control.features.calibration_table_utils as calibration_table_utils
-import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
+import fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
 def get_data_from_hdf5(hdf5_rdd):
@@ -52,8 +52,8 @@ class MultiJobTrain(BasePipeline):
     def run_test(self):
         """Run test."""
         # target folder is the same as origin folder for test case
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_conf'
+        origin_prefix = '/fuel/testdata/control/generated'
+        target_prefix = '/fuel/testdata/control/generated_conf'
 
         def get_feature_hdf5_files(feature_dir, throttle_or_brake, train_or_test):
             return (

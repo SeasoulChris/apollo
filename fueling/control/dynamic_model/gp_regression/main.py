@@ -29,23 +29,23 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training_data_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/training")
+        default="/fuel/testdata/control/gaussian_process/dataset/training")
     parser.add_argument(
         '--testing_data_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/dataset/testing")
+        default="/fuel/testdata/control/gaussian_process/dataset/testing")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model")
+        default="/fuel/testdata/control/gaussian_process/gp_model")
     parser.add_argument(
         '--eval_result_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/results")
+        default="/fuel/testdata/control/gaussian_process/results")
     parser.add_argument(
         '--online_gp_model_path',
         type=str,
-        default="/apollo/modules/data/fuel/testdata/control/gaussian_process/gp_model/20191004-130454")
+        default="/fuel/testdata/control/gaussian_process/gp_model/20191004-130454")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)

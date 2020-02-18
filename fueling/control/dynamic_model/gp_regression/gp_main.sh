@@ -10,11 +10,11 @@ set -x
 # Feature extraction.
 unset PYTHONPATH
 source activate fuel-py36-pyro
-export PYTHONPATH=/apollo/modules/data/fuel:${PYTHONPATH}
+export PYTHONPATH=/fuel:${PYTHONPATH}
 
 # These is another version of torch installed in /usr/local/apollo/libtorch_gpu.
 # We have to remove it from the LD_LIBRARY_PATH so we can use the one in our
 # conda env.
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
-python /apollo/modules/data/fuel/fueling/control/dynamic_model/gp_regression/main.py
+python /fuel/fueling/control/dynamic_model/gp_regression/main.py

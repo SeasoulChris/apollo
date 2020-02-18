@@ -5,15 +5,14 @@
 
 import numpy as np
 
-from modules.data.fuel.fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
+from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
 def get_config_open_space_profiling():
     """Get configured value in open_space_profiling_conf.pb.txt"""
-    profiling_conf = \
-        '/apollo/modules/data/fuel/fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt'
+    profiling_conf = '/fuel/fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt'
     open_space_planner_profiling = OpenSpacePlannerProfiling()
     proto_utils.get_pb_from_text_file(profiling_conf, open_space_planner_profiling)
     return open_space_planner_profiling

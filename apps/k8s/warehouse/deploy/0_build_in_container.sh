@@ -7,6 +7,5 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 cp -r /apollo/py_proto ./
 
 # Build the app.
-cp ../BUILD.v2 ../BUILD
 bazel build //apps/k8s/warehouse:index
 cp /fuel/bazel-bin/apps/k8s/warehouse/index.zip ./

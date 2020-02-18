@@ -1,12 +1,8 @@
 """
 A simple demo PySpark job to stat messages by channel.
 
-Prerequisite:
-    cd /apollo/docs/demo_guide
-    python rosbag_helper.py demo_3.5.record
-
 Run with:
-    ./tools/submit-job-to-k8s.py --main=fueling/demo/count_msg_by_channel.py
+    bazel run //fueling/demo:count_msg_by_channel
 """
 #!/usr/bin/env python
 
@@ -17,18 +13,20 @@ import pprint
 from cyber_py3.record import RecordReader
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
+from fueling.common.base_pipeline_v2 import BasePipelineV2
+import fueling.common.file_utils as file_utils
 
 
-class CountMsgByChannel(BasePipeline):
+class CountMsgByChannel(BasePipelineV2):
     """Demo pipeline."""
 
-    def run_test(self):
+    def run(self):
         # Spark cascade style programming.
         pprint.PrettyPrinter().pprint(
             # RDD(record_path)
-            self.to_rdd(['/apollo/docs/demo_guide/demo_3.5.record'])
+            self.to_rdd(['fueling/demo/testdata/small.record'])
+            # RDD(record_abs_path)
+            .map(file_utils.data_path)
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
             # PairRDD(topic, 1)
@@ -37,11 +35,6 @@ class CountMsgByChannel(BasePipeline):
             .reduceByKey(lambda a, b: a + b)
             # [(topic, N)]
             .collect())
-        logging.info('Pipeline finished!')
-
-    def run_prod(self):
-        """For this demo, prod and test are the same."""
-        return self.run_test()
 
 
 if __name__ == '__main__':

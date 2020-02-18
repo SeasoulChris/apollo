@@ -28,9 +28,7 @@ RUN pip3 install --no-cache-dir \
     requests
 
 # Resource.
-COPY apps/web_portal/deploy/entrypoint.sh /home/bae/entrypoint.sh
-COPY fueling /apollo/modules/data/fuel/fueling
+COPY entrypoint.sh /home/bae/entrypoint.sh
 COPY kube.config /root/.kube/config
-COPY py_proto /apollo/py_proto
 
 ENTRYPOINT [ "/home/bae/entrypoint.sh" ]

@@ -8,9 +8,8 @@ import sys
 
 from absl import flags
 
-import modules.data.fuel.fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-
 from fueling.autotuner.cost_computation.base_cost_computation import BaseCostComputation
+import fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 

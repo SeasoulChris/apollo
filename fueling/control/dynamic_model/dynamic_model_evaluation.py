@@ -27,7 +27,7 @@ def extract_scenario_name(dataset_path):
 class DynamicModelEvaluation(BasePipeline):
 
     def run_test(self):
-        platform_path = '/apollo/modules/data/fuel/testdata/control/learning_based_model/'
+        platform_path = '/fuel/testdata/control/learning_based_model/'
         if IS_BACKWARD:
             evaluation_set = 'golden_test_backward'
             mlp_model_path = os.path.join(platform_path,

@@ -22,7 +22,7 @@ import numpy as np
 import tensorflow as tf
 
 from fueling.control.dynamic_model.conf.model_config import feature_config, mlp_model_config
-from modules.data.fuel.fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
+from fueling.control.proto.fnn_model_pb2 import FnnModel, Layer
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 

@@ -24,10 +24,10 @@ import fueling.profiling.control.grading_evaluation.control_performance_grading_
 
 
 flags.DEFINE_string('ctl_metrics_input_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling',
+                    '/fuel/testdata/profiling/control_profiling',
                     'input data directory for local run_test')
 flags.DEFINE_string('ctl_metrics_output_path_local',
-                    '/apollo/modules/data/fuel/testdata/profiling/control_profiling/generated',
+                    '/fuel/testdata/profiling/control_profiling/generated',
                     'output data directory for local run_test')
 flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_taks directory for local run_test')
 flags.DEFINE_string('ctl_metrics_input_path_k8s', 'small-records/2020',

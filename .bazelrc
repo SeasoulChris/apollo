@@ -5,3 +5,6 @@ startup --output_user_root=/home/.bazel_cache/fuel
 
 build --build_python_zip
 build --spawn_strategy=standalone
+
+test --test_env CYBER_PATH=/apollo/cyber
+test --test_env PYTHONPATH=/apollo/py_proto:/apollo/cyber/python:/apollo/bazel-bin/cyber/py_wrapper

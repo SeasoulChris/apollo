@@ -118,8 +118,8 @@ class SampleSet(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/sourceData/OUT'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
+        origin_prefix = '/fuel/testdata/control/sourceData/OUT'
+        target_prefix = '/fuel/testdata/control/generated'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         IS_BACKWARD = self.FLAGS.get('is_backward')

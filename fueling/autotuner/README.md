@@ -19,9 +19,7 @@ This is needed only if there're changes in the \*.proto files:
 
 ### Start cost computation server
 ```bash
-   cd /apollo/modules/data/fuel
-   chmod a+x fueling/autotuner/cost_computation/cost_computation_server.py
-   ./fueling/autotuner/cost_computation/cost_computation_server.py
+bazel run //fueling/autotuner/cost_computation:cost_computation_server
 ```
 
 ### Start bayesian optimization tuner (CostComputationClient side)
@@ -33,15 +31,12 @@ This is needed only if there're changes in the \*.proto files:
 
 2. Run python scripts (For MRAC).
 ```bash
-   cd /apollo/modules/data/fuel
-   chmod a+x fueling/autotuner/tuner/bayesian_optimization_tuner.py
-   ./fueling/autotuner/tuner/bayesian_optimization_tuner.py
+bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner
 ```
 
 3. Or run other autotuner applications with
 ```bash
-   cd /apollo/modules/data/fuel
-   python fueling/autotuner/tuner/bayesian_optimization_tuner.py --tuner_param_config_filename=<user defined tuner_param_config>
+bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner -- --tuner_param_config_filename=<user defined tuner_param_config>
 ```
 
 ### Start replay-engine grpc server:

@@ -31,7 +31,7 @@ class ReorgSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(src_record)
-        src_records = self.to_rdd(['/apollo/modules/data/fuel/testdata/data/small.record'])
+        src_records = self.to_rdd(['/fuel/testdata/data/small.record'])
         src_prefix = '/apollo/modules/data'
         dst_prefix = '/tmp/reorg_small_records'
         self.run(src_records, src_prefix, dst_prefix)

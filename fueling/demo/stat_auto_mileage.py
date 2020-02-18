@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-A simple demo to parse records and stat auto mileage.
+A simple demo to parse records and stat auto mileage. Note that it only works in cloud.
 
 Run with:
-    ./tools/submit-job-to-k8s.py --main=fueling/demo/stat_auto_mileage.py
+    bazel run //fueling/demo:stat_auto_mileage -- --cloud
 """
 
 import glob
@@ -13,24 +13,17 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.data.record_parser as record_parser
 
 
-class StatAutoMileage(BasePipeline):
+class StatAutoMileage(BasePipelineV2):
     """pipeline to stat auto mileage"""
 
-    def run_test(self):
-        """Run test."""
-        self.run('testdata/control')
-
-    def run_prod(self):
-        """Run prod."""
-        self.run('small-records/2018/2018-04-03/2018-04-03-09-33-50')
-
-    def run(self, prefix):
+    def run(self):
+        prefix = 'small-records/2018/2018-04-03/2018-04-03-09-33-50'
         mileage = (
             # RDD(file_path)
             self.to_rdd(self.our_storage().list_files(prefix))

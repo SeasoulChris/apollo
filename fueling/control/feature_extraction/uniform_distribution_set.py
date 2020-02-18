@@ -62,9 +62,9 @@ class UniformDistributionSet(BasePipeline):
         """Run test."""
         sample_size = 200
         logging.info('WANTED_VEHICLE: %s' % WANTED_VEHICLE)
-        origin_prefix = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+        origin_prefix = os.path.join('/fuel/testdata/control/generated',
                                      WANTED_VEHICLE, 'SampleSet')
-        target_dir = os.path.join('/apollo/modules/data/fuel/testdata/control/generated',
+        target_dir = os.path.join('/fuel/testdata/control/generated',
                                   WANTED_VEHICLE, 'UniformDistributed')
 
         # RDD(hdf5 files)

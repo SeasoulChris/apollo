@@ -7,13 +7,14 @@ import numpy as np
 
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-import modules.data.fuel.fueling.control.proto.calibration_table_pb2 as CalibrationTable
+import fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
-FILENAME_CALIBRATION_TABLE_CONF = \
-    '/apollo/modules/data/fuel/fueling/control/conf/calibration_table_conf.pb.txt'
+FILENAME_CALIBRATION_TABLE_CONF = file_utils.data_path(
+    'fueling/control/conf/calibration_table_conf.pb.txt')
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            CalibrationTable.CalibrationTable())
 

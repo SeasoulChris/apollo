@@ -18,11 +18,11 @@ from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
 
 from fueling.common.coord_utils import CoordUtils
+from fueling.data.proto.record_meta_pb2 import RecordMeta
 from fueling.planning.metrics.latency import LatencyMetrics
 from fueling.planning.stability.grading.imu_stability_grader import ImuStabilityGrader
 from fueling.planning.stability.grading.planning_stability_grader import PlanningStabilityGrader
 from fueling.planning.stability.speed_jerk_stability import SpeedJerkStability
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 

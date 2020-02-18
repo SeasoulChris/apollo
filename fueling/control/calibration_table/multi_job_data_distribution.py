@@ -44,8 +44,8 @@ def read_hdf5(hdf5_file_list):
 class MultiJobDataDistribution(BasePipeline):
 
     def run_test(self):
-        origin_prefix = '/apollo/modules/data/fuel/testdata/control/generated'
-        target_prefix = '/apollo/modules/data/fuel/testdata/control/generated_conf'
+        origin_prefix = '/fuel/testdata/control/generated'
+        target_prefix = '/fuel/testdata/control/generated_conf'
 
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(

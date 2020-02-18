@@ -1,8 +1,0 @@
-package(default_visibility = ["//visibility:public"])
-
-load("//v2:py_proto.bzl", "py_proto")
-
-py_proto(
-    name = "helloworld_pb2",
-    src = "helloworld.proto",
-)

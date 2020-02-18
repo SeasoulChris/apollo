@@ -19,10 +19,10 @@ import numpy as np
 from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
+from fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
+import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.non_holistic_data_generator as data_generator
 
-from modules.data.fuel.fueling.control.proto.dynamic_model_evaluation_pb2 import EvaluationResults
-import fueling.common.logging as logging
 
 # System setup
 USE_TENSORFLOW = True  # Slightly faster than Theano.

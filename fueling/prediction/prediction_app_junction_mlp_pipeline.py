@@ -15,8 +15,8 @@ class JunctionMlpPipeline(BasePipeline):
         """Run test."""
         logging.info('Running Test for mlp pipeline')
 
-        source_path = '/apollo/modules/data/fuel/testdata/prediction/junciton_small.h5'
-        save_dir_path = '/apollo/modules/data/fuel/testdata/prediction'
+        source_path = '/fuel/testdata/prediction/junciton_small.h5'
+        save_dir_path = '/fuel/testdata/prediction'
 
         # PairRDD(source_file, save_dir)
         self.to_rdd([(source_path, save_dir_path)]).foreach(junction_mlp.do_training)

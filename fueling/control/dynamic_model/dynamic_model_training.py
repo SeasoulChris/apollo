@@ -9,9 +9,8 @@ import numpy as np
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.file_utils as file_utils
-
 from fueling.control.dynamic_model.conf.model_config import feature_config
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
@@ -30,14 +29,14 @@ class DynamicModelTraining(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         IS_BACKWARD = self.FLAGS.get('is_backward')
-        data_dir = '/apollo/modules/data/fuel/testdata/control/generated_uniform'
+        data_dir = '/fuel/testdata/control/generated_uniform'
         if IS_BACKWARD:
             training_data_path = os.path.join(data_dir, job_owner, 'backward', job_id)
         else:
             training_data_path = os.path.join(data_dir, job_owner, 'forward', job_id)
-        model_dir = '/apollo/modules/data/fuel/testdata/control/learning_based_model'
+        model_dir = '/fuel/testdata/control/learning_based_model'
         output_dir = os.path.join(model_dir, 'dynamic_model_output')
-        model_conf_prefix = '/apollo/modules/data/fuel/fueling/control/dynamic_model/conf'
+        model_conf_prefix = '/fuel/fueling/control/dynamic_model/conf'
 
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info('vehicles = {}'.format(vehicles))
@@ -62,7 +61,8 @@ class DynamicModelTraining(BasePipeline):
         training_data_path = our_storage.abs_path(data_prefix)
         output_dir = bos_client.abs_path(
             'modules/control/learning_based_model/dynamic_model_output/')
-        model_conf_prefix = '/apollo/modules/data/fuel/fueling/control/dynamic_model/conf'
+        # TODO: V2.
+        model_conf_prefix = '/fuel/fueling/control/dynamic_model/conf'
         # get vehicles
         vehicles = multi_vehicle_utils.get_vehicle(training_data_path)
         logging.info('vehicles = {}'.format(vehicles))

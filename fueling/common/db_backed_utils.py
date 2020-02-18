@@ -13,7 +13,7 @@ DB-backed utils.
 
 import os
 
-from modules.data.fuel.fueling.data.proto.record_meta_pb2 import RecordMeta
+from fueling.data.proto.record_meta_pb2 import RecordMeta
 import fueling.common.proto_utils as proto_utils
 
 

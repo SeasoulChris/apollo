@@ -141,4 +141,4 @@ def sanity_check(input_folder, job_owner, job_id, email_receivers=None):
     return False
 
 # if __name__ == '__main__':
-#    sanity_check('/apollo/modules/data/fuel/testdata/control/sourceData/SanityCheck', "test-owner", "000", email_utils.CONTROL_TEAM + email_utils.DATA_TEAM)
+#    sanity_check('/fuel/testdata/control/sourceData/SanityCheck', "test-owner", "000", email_utils.CONTROL_TEAM + email_utils.DATA_TEAM)

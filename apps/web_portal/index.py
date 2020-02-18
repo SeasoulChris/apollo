@@ -11,8 +11,8 @@ import google.protobuf.json_format as json_format
 import gunicorn.app.base
 
 from fueling.common.mongo_utils import Mongo
-from modules.data.fuel.apps.web_portal.saas_job_arg_pb2 import SaasJobArg
-from job_processor import JobProcessor
+from apps.web_portal.job_processor import JobProcessor
+from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 
 
 flags.DEFINE_boolean('debug', True, 'Start local debug instance.')
