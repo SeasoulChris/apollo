@@ -4,7 +4,12 @@
 import numpy as np
 
 import fueling.common.proto_utils as proto_utils
+import fueling.common.logging as logging
 from modules.localization.proto import localization_pb2
+
+
+SEGMENT_LEN = 2  # eight sec
+SEGMENT_INTERVAL = 1  # shift one frame
 
 
 def gen_data_point(pose):
@@ -29,5 +34,15 @@ def gen_data_point(pose):
 
 
 def LoadEgoCarLocalization(localization_msg):
-    """ extract trajectory from a record file """
+    """ extract localization from msg """
     return (localization_msg.header, gen_data_point(localization_msg.pose))
+
+
+def partition_data(target_msgs, segment_len=SEGMENT_LEN, segment_int=SEGMENT_INTERVAL):
+    """Divide the messages to groups each of which has exact number of messages"""
+    target, msgs = target_msgs
+    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
+    msgs = sorted(msgs, key=lambda msgs: msgs.timestamp)
+    msgs_groups = [msgs[idx: idx + segment_len]
+                   for idx in range(0, len(msgs), segment_int)]
+    return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
