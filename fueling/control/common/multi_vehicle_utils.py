@@ -13,7 +13,7 @@ import fueling.common.proto_utils as proto_utils
 import fueling.control.proto.calibration_table_pb2 as CalibrationTable
 
 
-FILENAME_CALIBRATION_TABLE_CONF = file_utils.data_path(
+FILENAME_CALIBRATION_TABLE_CONF = file_utils.fuel_path(
     'fueling/control/conf/calibration_table_conf.pb.txt')
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(FILENAME_CALIBRATION_TABLE_CONF,
                                                            CalibrationTable.CalibrationTable())

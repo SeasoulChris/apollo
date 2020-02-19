@@ -41,10 +41,13 @@ def list_files(dir_path):
     return [os.path.join(root, f) for root, _, files in os.walk(dir_path) for f in files]
 
 
-def data_path(path):
+def fuel_path(path):
     """Get real path to data which is relative to Apollo Fuel root."""
     return os.path.join(FUEL_ROOT, path)
 
+def apollo_path(path):
+    """Get real path to data which is relative to Apollo root."""
+    return os.path.join('/apollo', path)
 
 def formatSize(bytes):
     try:

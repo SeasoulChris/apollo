@@ -17,7 +17,7 @@ class StatAutoMileageTest(BasePipelineTest):
         super().setUp(StatAutoMileage())
 
     def test_calculate(self):
-        record = file_utils.data_path('fueling/demo/testdata/small.record')
+        record = file_utils.fuel_path('fueling/demo/testdata/small.record')
         print(record)
         self.assertAlmostEqual(0.1798771794671, self.pipeline.calculate(record))
 

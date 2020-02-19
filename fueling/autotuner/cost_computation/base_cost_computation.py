@@ -103,7 +103,7 @@ class BaseCostComputation(BasePipeline):
 
     def get_scenarios(self):
         """Return RDD(scenario_id)"""
-        scenario_path = file_utils.data_path(self.FLAGS.get("scenario_path"))
+        scenario_path = file_utils.fuel_path(self.FLAGS.get("scenario_path"))
         with open(scenario_path) as scenario_file:
             reader = csv.reader(scenario_file, delimiter=",")
             scenarios = []

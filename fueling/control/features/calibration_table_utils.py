@@ -25,7 +25,7 @@ import fueling.common.proto_utils as proto_utils
 # conf_file = os.path.join(CONF_FOLDER, WANTED_VEHICLE, vehicle_para_conf_filename)
 # VEHICLE_PARAM_CONF = proto_utils.get_pb_from_text_file(conf_file, VehicleParam())
 
-calibration_conf_file = file_utils.data_path('fueling/control/conf/calibration_table_conf.pb.txt')
+calibration_conf_file = file_utils.fuel_path('fueling/control/conf/calibration_table_conf.pb.txt')
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
 logging.info('Load calibration table conf: %s' % conf_filename)

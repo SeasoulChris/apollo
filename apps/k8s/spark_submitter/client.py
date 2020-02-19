@@ -154,7 +154,7 @@ class SparkSubmitterClient(object):
         if not entrypoint.endswith('.py'):
             logging.fatal(F'Cannot process entrypoint {entrypoint}')
 
-        entrypoint = file_utils.data_path(entrypoint)
+        entrypoint = file_utils.fuel_path(entrypoint)
         zip_app = entrypoint[:-3] + '.zip'
         if not os.path.exists(zip_app):
             FUEL_DIR = '/fuel/'

@@ -26,7 +26,7 @@ import fueling.control.dynamic_model.conf.model_config as model_config
 
 VEHICLE_MODEL = point_mass_config["vehicle_model"]
 
-FILENAME_FEATURE_KEY_CONF = file_utils.data_path("fueling/control/conf/feature_key_conf.pb.txt")
+FILENAME_FEATURE_KEY_CONF = file_utils.fuel_path("fueling/control/conf/feature_key_conf.pb.txt")
 FEATURE_KEY = proto_utils.get_pb_from_text_file(FILENAME_FEATURE_KEY_CONF, FeatureKey())
 
 # vehicle param constant
