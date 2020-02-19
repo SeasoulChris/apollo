@@ -19,6 +19,7 @@
    ```bash
    cd apollo-fuel
    ./tools/login_container.sh
+   ./tools/build.sh
    ```
 
    Now you should be in `/fuel` which maps to apollo-fuel, and there is also `/apollo` which maps to
