@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """ extract features for multiple vehicles """
-import datetime
+from datetime import datetime
 import glob
 import shutil
 import os

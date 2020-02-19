@@ -3,7 +3,7 @@
 This is a module to gen local map
 """
 
-import datetime
+from datetime import datetime
 import os
 import glob
 

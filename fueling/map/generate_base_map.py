@@ -5,7 +5,7 @@ Run with:
 #!/usr/bin/env python
 
 # Standard packages
-import datetime
+from datetime import datetime
 import glob
 import math
 import os

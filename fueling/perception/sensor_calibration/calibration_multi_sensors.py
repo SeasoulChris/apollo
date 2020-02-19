@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """This is a module to run perception benchmark on lidar data"""
 
-import datetime
+from datetime import datetime
 import glob
 import os
 import shutil
