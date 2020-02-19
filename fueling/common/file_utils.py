@@ -58,18 +58,16 @@ def formatSize(bytes):
         M = kb / 1024
         if M >= 1024:
             G = M / 1024
-            return "%fGB" % (G)
+            return "%.2fGB" % (G)
         else:
-            return "%fMB" % (M)
+            return "%.2fMB" % (M)
     else:
-        return "%fKB" % (kb)
-
+        return "%.2fKB" % (kb)
 
 def getDirSize(path):
     sumsize = 0
-    filename = os.walk(path)
-    for root, dirs, files in filename:
-        for file in files:
-            size = os.path.getsize(os.path.join(path, file))
-            sumsize += size
+    filelist = list_files(path)
+    for file in filelist:
+        size = os.path.getsize(file)
+        sumsize += size
     return formatSize(sumsize)
