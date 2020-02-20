@@ -31,7 +31,7 @@ class PytorchTraining(BasePipelineV2):
             sys.exit(-1)
 
         time_start = time.time()
-        self.to_rdd(range(10)).foreach(self.train)
+        self.to_rdd(range(1)).foreach(self.train)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
     @staticmethod
