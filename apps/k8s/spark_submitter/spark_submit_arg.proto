@@ -71,6 +71,7 @@ message Worker {
   optional uint32 cpu = 2 [default = 1];
   optional uint32 memory = 3 [default = 16];  // In GB.
   optional uint32 disk = 4 [default = 50];  // In GB.
+  optional uint32 gpu = 5 [default = 0];
 }
 
 // Baidu BOS is an S3-compatible object storage.

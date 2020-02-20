@@ -133,11 +133,13 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.default.parallelism=%(workers)s '
             '--conf spark.executor.memory=%(worker_memory)sg '
             '--conf spark.kubernetes.executor.request.cores=%(worker_cpu)s '
+            '--conf spark.kubernetes.executor.gpus=%(worker_gpu)s '
             '--conf spark.kubernetes.executor.ephemeralStorageGB=%(worker_disk)s ' % {
                 'docker_image': arg.env.docker_image,
                 'workers': arg.worker.count,
                 'worker_memory': arg.worker.memory,
                 'worker_cpu': arg.worker.cpu,
+                'worker_gpu': arg.worker.gpu,
                 'worker_disk': arg.worker.disk,
             })
 

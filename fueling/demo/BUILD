@@ -30,7 +30,7 @@ py_binary(
     name = "gpu_training_with_pytorch",
     srcs = ["gpu_training_with_pytorch.py"],
     deps = [
-        "//fueling/common:base_pipeline",
+        "//fueling/common:base_pipeline_v2",
     ]
 )
 

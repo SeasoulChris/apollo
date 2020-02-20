@@ -16,14 +16,14 @@ import time
 import torch
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.logging as logging
 
 
-class PytorchTraining(BasePipeline):
+class PytorchTraining(BasePipelineV2):
     """Demo pipeline."""
 
-    def run_test(self):
+    def run(self):
         """Run test."""
         logging.info('nvidia-smi on Driver:')
         if os.system('nvidia-smi') != 0:
@@ -31,12 +31,8 @@ class PytorchTraining(BasePipeline):
             sys.exit(-1)
 
         time_start = time.time()
-        self.to_rdd(range(1)).foreach(self.train)
+        self.to_rdd(range(10)).foreach(self.train)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
-
-    def run_prod(self):
-        """Same with run_test()."""
-        self.run_test()
 
     @staticmethod
     def train(instance_id):

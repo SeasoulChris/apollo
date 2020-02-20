@@ -31,6 +31,7 @@ flags.DEFINE_boolean('wait', False, 'Whether to wait to finish.')
 # Worker.
 flags.DEFINE_integer('workers', 1, 'Worker count.', short_name='w')
 flags.DEFINE_integer('cpu', 1, 'Worker CPU cores.', short_name='c')
+flags.DEFINE_integer('gpu', 0, 'Worker GPU cores.', short_name='g')
 flags.DEFINE_integer('memory', 12, 'Worker memory in GB.', short_name='m')
 flags.DEFINE_integer('disk', 20, 'Worker disk in GB.', short_name='d')
 
@@ -134,6 +135,7 @@ class SparkSubmitterClient(object):
         return {
             'count':  self.client_flags.get('workers') or flags.FLAGS.workers,
             'cpu':    self.client_flags.get('cpu') or flags.FLAGS.cpu,
+            'gpu':    self.client_flags.get('gpu') or flags.FLAGS.gpu,
             'memory': self.client_flags.get('memory') or flags.FLAGS.memory,
             'disk':   self.client_flags.get('disk') or flags.FLAGS.disk,
         }
