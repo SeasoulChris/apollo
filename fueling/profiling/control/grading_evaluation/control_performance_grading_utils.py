@@ -20,7 +20,8 @@ def compute_h5_and_gradings(target_groups):
     logging.info('computing {} messages for target {}'.format(len(msgs), target))
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, profiling_conf.driving_mode,
-                                                               profiling_conf.gear_position)
+                                                               profiling_conf.gear_position,
+                                                               profiling_conf.control_error_code)
     if grading_mtx.shape[0] == 0:
         logging.warning('no valid element in {} items in group {} for task {}'
                         .format(len(msgs), group_id, target))
@@ -74,7 +75,8 @@ def compute_h5_and_gradings(target_groups):
                                   'total_time_exceeded_count',
                                   'replan_trajectory_count',
                                   'pose_heading_offset_std',
-                                  'pose_heading_offset_peak'])
+                                  'pose_heading_offset_peak',
+                                  'control_error_code_count'])
     grading_arguments = namedtuple('grading_arguments',
                                    ['std_filter_name',
                                     'std_filter_value',
@@ -409,6 +411,9 @@ def compute_h5_and_gradings(target_groups):
             peak_filter_value=[profiling_conf.control_metrics.speed_stop],
             peak_filter_mode=[0],
             peak_threshold=math.pi
+        )),
+        control_error_code_count=compute_count(grading_mtx, grading_arguments(
+            count_feature_name='control_error_code'
         )))
     return (target, grading_group_result)
 
