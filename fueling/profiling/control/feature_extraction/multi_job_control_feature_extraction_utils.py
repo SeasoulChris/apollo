@@ -61,7 +61,8 @@ def parse_vehicle_controller(task, flags):
         logging.info(F'no vehicle messages found in task {task} record {record_file}; '
                      F'use "Arbitrary" as the current vehicle type')
         vehicle_type = "Arbitrary"
-    # Compare the vehicle_type from HMI_status channel and the vehicle_type from the input file system.
+    # Compare the vehicle_type from HMI_status channel and the vehicle_type
+    # from the input file system.
     vehicle_type_parsed_from_dir = multi_vehicle_utils.get_vehicle_by_task(task)
     if vehicle_type == "Arbitrary":
         vehicle_type = vehicle_type_parsed_from_dir

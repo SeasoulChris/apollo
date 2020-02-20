@@ -45,15 +45,17 @@ def fuel_path(path):
     """Get real path to data which is relative to Apollo Fuel root."""
     return os.path.join(FUEL_ROOT, path)
 
+
 def apollo_path(path):
     """Get real path to data which is relative to Apollo root."""
     return os.path.join('/apollo', path)
+
 
 def formatSize(bytes):
     try:
         bytes = float(bytes)
         kb = bytes / 1024
-    except:
+    except BaseException:
         logging.error('Failed to get file format!')
         raise
 
@@ -66,6 +68,7 @@ def formatSize(bytes):
             return "%.2fMB" % (M)
     else:
         return "%.2fKB" % (kb)
+
 
 def getDirSize(path):
     sumsize = 0

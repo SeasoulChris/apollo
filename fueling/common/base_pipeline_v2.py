@@ -31,6 +31,7 @@ import fueling.common.logging as logging
 #                        BasePipeline.stop()
 class BasePipelineV2(object):
     """Fueling base pipeline."""
+
     def run(self):
         """Run the pipeline."""
         raise Exception('Not implemented!')

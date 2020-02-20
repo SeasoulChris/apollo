@@ -138,7 +138,7 @@ FEATURE_NAMES = [
 WEIGHTED_SCORE = {
     # Dimensions with responding weighting factors for MRAC control profiling
     "MRAC_SCORE": {"lateral_err_std_harsh": 0.5,
-                   "lateral_err_peak": 0.5,}
+                   "lateral_err_peak": 0.5, }
 }
 
 

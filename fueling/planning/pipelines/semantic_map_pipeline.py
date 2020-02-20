@@ -44,10 +44,10 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if (torch.cuda.is_available()):
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,

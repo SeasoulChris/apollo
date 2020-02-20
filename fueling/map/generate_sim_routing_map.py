@@ -9,6 +9,7 @@ import glob
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 
+
 def execute_task(source_dir):
     """Execute task by task"""
     logging.info('executing task with src_dir: {}'.format(source_dir))

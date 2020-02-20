@@ -101,7 +101,8 @@ class BayesianOptimizationTuner():
             # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point, MracConf()))
-            logging.debug(f"New Control Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            logging.debug(
+                f"New Control Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
             target = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             self.optimizer.register(params=next_point, target=target)
             logging.debug(i, target, next_point)

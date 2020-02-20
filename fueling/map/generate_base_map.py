@@ -81,7 +81,6 @@ class MapGenSingleLine(BasePipeline):
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
 
-
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
         # todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))
@@ -90,7 +89,7 @@ class MapGenSingleLine(BasePipeline):
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
-        
+
         logging.info('base_map.txt generated: Done, PROD')
 
     def run(self, todo_records, src_prefix, dst_prefix):
@@ -152,7 +151,8 @@ class MapGenSingleLine(BasePipeline):
                     line_id += 1
                     # if lane is not None:
                     #     lane.successor_id.add().id = str(line_id)
-                    lane, central, left_boundary, right_boundary = self.create_lane(base_map, line_id)
+                    lane, central, left_boundary, right_boundary = self.create_lane(
+                        base_map, line_id)
                     section.lane_id.add().id = str(line_id)
 
                     left_edge = section.boundary.outer_polygon.edge.add()
@@ -168,7 +168,7 @@ class MapGenSingleLine(BasePipeline):
                         lane.self_reverse_lane_id.add().id = "1"
 
                     if i > 0:
-                        # lane.predecessor_id.add().id = str(line_id - 1)                         
+                        # lane.predecessor_id.add().id = str(line_id - 1)
 
                         left_bound_point = left_boundary.line_segment.point.add()
                         right_bound_point = right_boundary.line_segment.point.add()
@@ -227,9 +227,9 @@ class MapGenSingleLine(BasePipeline):
                     central_start_pos = central.start_position
                     left_bound_start_pos = left_boundary.start_position
                     right_bound_start_pos = right_boundary.start_position
-                    
+
                     central_start_pos.x = central_point.x
-                    central_start_pos.y = central_point.y                    
+                    central_start_pos.y = central_point.y
                     left_bound_start_pos.x = left_bound_point.x
                     left_bound_start_pos.y = left_bound_point.y
                     right_bound_start_pos.x = right_bound_point.x
@@ -238,7 +238,7 @@ class MapGenSingleLine(BasePipeline):
                 left_edge_point.y = left_point[1]
                 left_edge_point.x = left_point[0]
                 right_edge_point.y = right_point[1]
-                right_edge_point.x = right_point[0]               
+                right_edge_point.x = right_point[0]
 
                 left_sample = lane.left_sample.add()
                 left_sample.s = i % self.lane_length + 1

@@ -3,9 +3,9 @@
 
 from fueling.common.base_pipeline import SequentialPipeline
 from fueling.profiling.control.multi_job_control_profiling_metrics \
-import MultiJobControlProfilingMetrics
+    import MultiJobControlProfilingMetrics
 from fueling.profiling.control.multi_job_control_profiling_visualization \
-import MultiJobControlProfilingVisualization
+    import MultiJobControlProfilingVisualization
 
 
 if __name__ == '__main__':

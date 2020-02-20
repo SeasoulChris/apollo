@@ -61,7 +61,8 @@ class SimClient(object):
                 logging.info(f"Done running scenario {scenario} for {record_output_filename}.")
                 return True
             else:
-                logging.error(f"Failed to run scenario {scenario} for {record_output_filename}: {status.message}")
+                logging.error(
+                    f"Failed to run scenario {scenario} for {record_output_filename}: {status.message}")
                 return False
         except Exception as error:
             logging.error(f"SimClient {cls.CHANNEL_URL} exception: {error}")

@@ -18,6 +18,8 @@ train_x = torch.linspace(0, 1, 100)
 train_y = torch.sin(train_x * (2 * math.pi)) + torch.randn(train_x.size()) * 0.2
 
 # We will use the simplest form of GP model, exact inference
+
+
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
@@ -28,6 +30,7 @@ class ExactGPModel(gpytorch.models.ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
 
 # initialize likelihood and model
 likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -59,7 +62,6 @@ for i in range(training_iter):
     ))
     optimizer.step()
 
-                      
 
 # Get into evaluation (predictive posterior) mode
 model.eval()
@@ -87,14 +89,16 @@ with torch.no_grad():
     ax.legend(['Observed Data', 'Mean', 'Confidence'])
     plt.show()
 
+
 class MeanVarModelWrapper(torch.nn.Module):
     def __init__(self, gp):
         super().__init__()
         self.gp = gp
-    
+
     def forward(self, x):
         output_dist = self.gp(x)
         return output_dist.mean, output_dist.variance
+
 
 with torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.settings.trace_mode():
     model.eval()

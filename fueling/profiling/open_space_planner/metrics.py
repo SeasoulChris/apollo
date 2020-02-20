@@ -104,7 +104,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         feature_data = (open_space_msgs
                         # PairRDD(target_dir, parsed_message), parsed message with scenario info
                         .groupByKey()
-                        # RDD(target_dir, group_id, group of (message)s), divide messages into groups
+                        # RDD(target_dir, group_id, group of (message)s), divide messages into
+                        # groups
                         .flatMap(partition_data)
                         .map(extract_mtx))
         logging.info(F'feature_data_count: {feature_data.count()}')
@@ -120,7 +121,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
         feature_data = (open_space_msgs
                         # PairRDD(target_dir, parsed_message), parsed message with scenario info
                         .groupByKey()
-                        # RDD(target_dir, group_id, group of (message)s), divide messages into groups
+                        # RDD(target_dir, group_id, group of (message)s), divide messages into
+                        # groups
                         .flatMap(partition_data)
                         .map(extract_mtx_repeated_field))
         logging.info(F'feature_data_count: {feature_data.count()}')

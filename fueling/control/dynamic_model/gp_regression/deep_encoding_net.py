@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 
+
 class DeepEncodingNet(nn.Module):
     """Convolutional neural network to encode high-dimentional features"""
 

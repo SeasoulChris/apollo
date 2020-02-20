@@ -67,7 +67,6 @@ class Yolov3Inference(BasePipeline):
                 cur_iter += 1
                 engine.run(data, infer_output_path)
 
-
         logging.info(f'input inference data path: {input_dir}')
         logging.info(f'output inference data path: {output_dir}')
 

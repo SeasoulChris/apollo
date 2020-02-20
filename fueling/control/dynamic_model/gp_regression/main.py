@@ -13,6 +13,7 @@ from fueling.control.dynamic_model.gp_regression.evaluation import test_gp
 from fueling.control.dynamic_model.gp_regression.gaussian_process import GaussianProcess
 from fueling.control.dynamic_model.gp_regression.train import train_gp
 
+
 def launch(args):
 
     dataset = GPDataSet(args)
@@ -22,6 +23,7 @@ def launch(args):
     if args.test_gp:
         # test Gaussian process model
         test_gp(args, dataset, GaussianProcess)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
@@ -63,7 +65,6 @@ if __name__ == '__main__':
     # argment to train or test gp
     parser.add_argument('--train_gp', type=bool, default=True)
     parser.add_argument('--test_gp', type=bool, default=True)
-
 
     args = parser.parse_args()
     launch(args)

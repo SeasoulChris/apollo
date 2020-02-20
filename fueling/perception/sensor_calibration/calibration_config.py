@@ -111,7 +111,7 @@ class CalibrationConfig(object):
         try:
             with open(source_config_file, 'r') as f:
                 data = yaml.safe_load(f)
-        except:
+        except BaseException:
             logging.error(
                 f'cannot open the input simple configure yaml file at {source_config_file}')
             return None
@@ -138,7 +138,7 @@ class CalibrationConfig(object):
         try:
             with open(dest_config_file, 'w') as f:
                 yaml.safe_dump(out_data, f)
-        except:
+        except BaseException:
             logging.error(f'cannot generate the task config yaml file at {dest_config_file}')
             return None
         return dest_config_file

@@ -347,7 +347,6 @@ class MultiJobControlProfilingMetrics(BasePipeline):
         self.run(todo_task_dirs.values(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Metrics: All Done, PROD')
 
-
     def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
 
@@ -449,7 +448,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
             email_content.append(SummaryTuple(
                 Task=task,
                 Records=len(glob.glob(os.path.join(task, '*record*')))
-                        + len(glob.glob(os.path.join(task, '*bag*'))),
+                + len(glob.glob(os.path.join(task, '*bag*'))),
                 HDF5s=len(glob.glob(os.path.join(target_dir, '*.hdf5'))),
                 Profling=len(glob.glob(os.path.join(
                     target_dir, '*performance_grading*'))),

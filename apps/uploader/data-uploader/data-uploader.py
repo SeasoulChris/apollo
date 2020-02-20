@@ -92,7 +92,7 @@ def main():
                 time.sleep(1)
                 task = listener.get_available_task()
         if heart_beat == 0:
-            print ('sleeping 10 times, each for 30 secs...')
+            print('sleeping 10 times, each for 30 secs...')
         heart_beat = (heart_beat + 1) % 10
         time.sleep(30)
 

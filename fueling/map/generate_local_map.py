@@ -76,7 +76,7 @@ class LocalMapPipeline(BasePipeline):
         velodyne16_ext_list = glob.glob(os.path.join(source_dir, '*.yaml'))
         logging.info('velodyne16_ext_list: {}'.format(velodyne16_ext_list))
 
-        job_type= 'VIRTUAL_LANE_GENERATION'
+        job_type = 'VIRTUAL_LANE_GENERATION'
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
 
         if not velodyne16_ext_list:

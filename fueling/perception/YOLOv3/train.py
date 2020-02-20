@@ -333,7 +333,8 @@ class training:
                             temp = [v for v in tf.compat.v1.global_variables() if (n in v.name)]
                             variables_to_train = variables_to_train.union(set(temp))
                         variables_to_train = list(variables_to_train)
-                        logging.info(f'=======Number of variables to train : {len(variables_to_train)}========')
+                        logging.info(
+                            f'=======Number of variables to train : {len(variables_to_train)}========')
 
                     grads, optimizer = self._init_optimizer(loss + regularization_loss,
                                                             start_learning_rate=LEARNING_RATE,
@@ -435,4 +436,3 @@ class training:
                             global_step=self.cur_step)
             logging.info(f'Model saved in file: {self.model_restore_path}')
         self.cur_step += 1
-

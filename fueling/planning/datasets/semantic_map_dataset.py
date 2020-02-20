@@ -17,13 +17,14 @@ LABEL_TRAJECTORY_POINT_NUM = 20
 MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
 ENABLE_IMG_DUMP = True
 
+
 def LoadInstances(filepath):
     instances = Instances()
     try:
         with open(filepath, 'rb') as file_in:
             instances.ParseFromString(file_in.read())
         return instances
-    except:
+    except BaseException:
         return None
 
 
@@ -32,9 +33,8 @@ class DataPreprocessor(object):
         self.pred_len = pred_len
 
     def load_numpy_dict(self, feature_file_path,
-        label_dir='labels',
-        label_file='instances_labels.npy'):
-
+                        label_dir='labels',
+                        label_file='instances_labels.npy'):
         '''Load the numpy dictionary file for the corresponding feature-file.
         '''
         dir_path = os.path.dirname(feature_file_path)
@@ -57,13 +57,13 @@ class DataPreprocessor(object):
         file_count = 0
         for path in all_file_paths:
             file_count += 1
-            print ('============================================')
-            print ('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
+            print('============================================')
+            print('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
 
             # Load the feature for learning file.
             instances = LoadInstances(path)
             if instances is None:
-                print ('Failed to read instances file: {}.'.format(path))
+                print('Failed to read instances file: {}.'.format(path))
                 continue
 
             # Go through the entries in this feature file.
@@ -113,11 +113,11 @@ class DataPreprocessor(object):
                 logging.info('Total usable data points: {} out of {}.'.format(
                     num_usable_data_points, len(instances.instances)))
                 output_np_array = np.array(output_np_array)
-                np.save(path+'.training_data.npy', output_np_array)
+                np.save(path + '.training_data.npy', output_np_array)
                 total_usable_data_points += num_usable_data_points
-            except:
+            except BaseException:
                 logging.error('Failed to save output file:{}'.format(
-                    path+'.training_data.npy'))
+                    path + '.training_data.npy'))
 
         logging.info('There are {} usable data points out of {}.'.format(
             total_usable_data_points, total_num_data_points))
@@ -153,7 +153,6 @@ class SemanticMapDataset(Dataset):
         self.total_num_data_pt = len(self.instances)
         logging.info('Total number of data points = {}'.format(self.total_num_data_pt))
 
-
     def __len__(self):
         return self.total_num_data_pt
 
@@ -171,7 +170,8 @@ class SemanticMapDataset(Dataset):
             cv.imwrite("/apollo/data/tmp/img{}.png".format(idx), img)
 
         return ((img, torch.from_numpy(self.instances[idx][0]).float()),
-                 torch.from_numpy(self.instances[idx][1]).float())
+                torch.from_numpy(self.instances[idx][1]).float())
+
 
 if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate

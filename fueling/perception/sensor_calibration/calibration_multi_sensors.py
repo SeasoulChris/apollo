@@ -14,6 +14,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 
+
 def execute_task(message_meta):
     """example task executing, return results dir."""
     source_dir, output_dir = message_meta
@@ -40,7 +41,7 @@ def execute_task(message_meta):
     elif task_name == 'camera_to_lidar':
         executable_bin = os.path.join(executable_dir, 'multi_grid_lidar_camera_calibrator')
         #logging.info('executable not ready, stay for tune')
-        #return None
+        # return None
     else:
         logging.error('not support {} yet'.format(task_name))
         return None
@@ -86,7 +87,7 @@ class SensorCalibrationPipeline(BasePipeline):
         redis_utils.redis_extend_dict(redis_key, redis_value)
         try:
             result_files = self.run(self.FLAGS.get('input_data_path'))
-        except:
+        except BaseException:
             pass
 
         # Send result to job owner.

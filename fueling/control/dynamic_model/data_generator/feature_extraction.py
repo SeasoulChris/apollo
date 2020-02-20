@@ -191,7 +191,7 @@ def feature_preprocessing(segment):
         segment[:, segment_index["w_z"]] = vect_differential(
             tmp_head_angle, feature_config["delta_t"])
     else:
-         # correct the localization outliers
+        # correct the localization outliers
         outlier_data_correction(segment)
         # smooth IMU acceleration data
         segment[:, segment_index["a_x"]] = savgol_filter(

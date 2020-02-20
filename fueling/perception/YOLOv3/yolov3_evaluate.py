@@ -191,7 +191,7 @@ def notify_results(result_dir, stats, job_owner, job_id):
         title = 'Your model training job is done!'
         content = {'Job Owner': job_owner, 'Job ID': job_id}
         result_file_path = os.path.join(result_dir,
-            f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
+                                        f'{datetime.today().strftime("%Y-%m-%d-%H-%M-%S")}-metrics.txt')
         with open(result_file_path, 'w') as result_file:
             result_file.write('\n'.join(stats))
         tar_file_path = f'{result_file_path}.tar.gz'

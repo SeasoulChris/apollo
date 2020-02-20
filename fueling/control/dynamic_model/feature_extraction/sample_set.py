@@ -125,10 +125,10 @@ class SampleSet(BasePipeline):
         IS_BACKWARD = self.FLAGS.get('is_backward')
         global GEAR
         if IS_BACKWARD:
-            target_prefix =  os.path.join(target_prefix, job_owner, 'backward', job_id)
+            target_prefix = os.path.join(target_prefix, job_owner, 'backward', job_id)
             GEAR = 2
         else:
-            target_prefix =  os.path.join(target_prefix, job_owner, 'forward', job_id)
+            target_prefix = os.path.join(target_prefix, job_owner, 'forward', job_id)
             GEAR = 1
 
         # RDD(origin_dir)

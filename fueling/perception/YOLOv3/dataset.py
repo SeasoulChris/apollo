@@ -69,7 +69,7 @@ class Dataset:
             shuffle(self._txt_files)
         for _ in range(cfg.max_txt_queue_size):
             if self._idx >= len(self._txt_files):
-                break;
+                break
             self._txt_files_queue.append(self._txt_files[self._idx])
             self._idx += 1
 
@@ -131,7 +131,7 @@ class Dataset:
         """
 
         if len(self._example_queue) < self.batch_size:
-           return None
+            return None
 
         logging.info(f'current round: {self._round}, current index: {self._idx}')
 

@@ -60,6 +60,6 @@ def get_target_removed_controller(task_dir):
     # [('Mkz7', '/mnt/bos/modules/control/profiling/apollo/2019
     # /Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414'),...]
     dir_list = task_dir.split('/')
-    controller_pos = [i for i,x in enumerate(dir_list) if x.find('Controller') != -1]
+    controller_pos = [i for i, x in enumerate(dir_list) if x.find('Controller') != -1]
     del dir_list[controller_pos[0]]
     return ('/').join(dir_list)

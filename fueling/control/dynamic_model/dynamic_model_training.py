@@ -138,5 +138,6 @@ class DynamicModelTraining(BasePipeline):
 
         data.foreach(_train)
 
+
 if __name__ == '__main__':
     DynamicModelTraining().main()
