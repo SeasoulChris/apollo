@@ -1,25 +1,32 @@
 # Learning Based Auto Tuning
 
 ## Setup Environment:
-### Generate the gRPC interface from .proto service
-This is needed only if there're changes in the \*.proto files:
+
+### start the fuel contain and build py_proto inside the fuel container
 ```bash
-    bash /apollo/apollo.sh build_py
+cd apollo-fuel
+./tools/login_container.sh
+./tools/build_apollo.sh
 ```
 
-```text
-   conda config --add channels conda-forge
-   conda env update --prune -f conda/py36.yaml
-   source activate fuel-py36
+## Run one iteration of the cost function at local
+
+### Start cost computation server (**Inside the fuel container**)
+```bash
+bazel run //fueling/learning/autotuner/cost_computation:cost_computation_server
 ```
 
+### Start simulation server (**Outside docker**)
 
-
-## Run one iteration of the cost function at local:
-
-### Start cost computation server
+1. mount bos with sudo
 ```bash
-bazel run //fueling/autotuner/cost_computation:cost_computation_server
+https://github.com/ApolloAuto/replay-engine/blob/master/scripts/auto_tuner/start_sim_service.sh#L5      line 5 and 6 here
+```
+
+2. Run js scripts
+```bash
+   cd ./replay-engine/scripts/auto_tuner
+   sudo node auto_tuner_server.js
 ```
 
 ### Start bayesian optimization tuner (CostComputationClient side)
@@ -39,21 +46,10 @@ bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner
 bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner -- --tuner_param_config_filename=<user defined tuner_param_config>
 ```
 
-### Start replay-engine grpc server:
 
-1. mount bos with sudo
-```bash
-https://github.com/ApolloAuto/replay-engine/blob/master/scripts/auto_tuner/start_sim_service.sh#L5      line 5 and 6 here
-```
-
-2. Run js scripts (**Outside docker**)
-```bash
-   cd ./replay-engine/scripts/auto_tuner
-   sudo node auto_tuner_server.js
-```
 ## Example of Calling Cost Computation Client
 ```python
-from fueling.autotuner.client.cost_computation_client import CostComputationClient
+from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 
 result = CostComputationClient.compute_mrac_cost(
     # commit id

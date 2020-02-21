@@ -2,8 +2,8 @@
 
 import grpc
 
-import fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-import fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.logging as logging
 
 

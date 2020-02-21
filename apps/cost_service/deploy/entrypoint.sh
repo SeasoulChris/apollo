@@ -18,15 +18,12 @@ function mount_bos() {
 }
 
 function start_service() {
-  export PYTHONPATH="/apollo/py_proto:/apollo/modules/data/fuel:/apollo/cyber/python/cyber_py3${PYTHONPATH}"
+  source /home/libs/bash.rc
 
-  LOG_DIR=/apollo/modules/data/fuel/fueling/autotuner/log
+  LOG_DIR=/fuel/fueling/learning/autotuner/log
   mkdir -p $LOG_DIR
 
-  cd /apollo/modules/data/fuel
-  source activate fuel-py36
-
-  python fueling/autotuner/cost_computation/cost_computation_server.py \
+  bazel run //fueling/learning/autotuner/cost_computation:cost_computation_server -- \
       --running_mode=$MODE --sim_service_url="${SIM_SERVICE_URL}" 2>&1 \
       | tee $LOG_DIR/cost_service.log; test ${PIPESTATUS[0]} -eq 0
 }

@@ -6,6 +6,10 @@ py_proto(
     name = "cost_computation_service_pb2",
     src = "cost_computation_service.proto",
     with_grpc = True,
+    deps = [
+        ":sim_service_pb2",
+        ":git_info_pb2",
+    ],
 )
 
 py_proto(

@@ -4,11 +4,11 @@ py_library(
     name = "base_cost_computation",
     srcs = ["base_cost_computation.py"],
     data = [
-        "//fueling/autotuner/config",
+        "//fueling/learning/autotuner/config",
     ],
     deps = [
-        "//fueling/autotuner/client:sim_client",
-        "//fueling/common:base_pipeline",
+        "//fueling/learning/autotuner/client:sim_client",
+        "//fueling/common:base_pipeline_v2",
         "//fueling/common:file_utils",
     ],
 )
@@ -17,7 +17,7 @@ py_binary(
     name = "cost_computation_server",
     srcs = ["cost_computation_server.py"],
     deps = [
-        "//fueling/autotuner/proto:cost_computation_service_pb2",
+        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
     ],
@@ -28,7 +28,7 @@ py_binary(
     srcs = ["mrac_cost_computation.py"],
     deps = [
         ":base_cost_computation",
-        "//fueling/autotuner/proto:cost_computation_service_pb2",
+        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
         "//fueling/common:proto_utils",
     ],
 )

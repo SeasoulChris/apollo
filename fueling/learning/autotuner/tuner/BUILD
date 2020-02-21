@@ -6,11 +6,11 @@ py_binary(
     name = "bayesian_optimization_tuner",
     srcs = ["bayesian_optimization_tuner.py"],
     data = [
-        "//fueling/autotuner/config",
+        "//fueling/learning/autotuner/config",
     ],
     deps = [
-        "//fueling/autotuner/client:cost_computation_client",
-        "//fueling/autotuner/proto:tuner_param_config_pb2",
+        "//fueling/learning/autotuner/client:cost_computation_client",
+        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         requirement("bayesian-optimization"),

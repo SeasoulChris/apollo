@@ -1,7 +1,10 @@
-from fueling.autotuner.client.cost_computation_client import CostComputationClient
+from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 
-# Comment me for local test
-CostComputationClient.set_channel("costservice:50052")
+# unomment me if testing inside a cluster
+# CostComputationClient.set_channel("costservice:50052")
+
+# uncomment me if testing for az-staging
+# CostComputationClient.set_channel("40.77.110.196:50052")
 
 result = CostComputationClient.compute_mrac_cost(
     # commit id

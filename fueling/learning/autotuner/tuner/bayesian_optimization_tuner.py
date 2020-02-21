@@ -10,8 +10,8 @@ import google.protobuf.text_format as text_format
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.mrac_conf_pb2 import MracConf
 
-from fueling.autotuner.client.cost_computation_client import CostComputationClient
-from fueling.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
+from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -19,7 +19,7 @@ import fueling.common.proto_utils as proto_utils
 
 flags.DEFINE_string(
     "tuner_param_config_filename",
-    "/apollo/modules/data/fuel/fueling/autotuner/config/mrac_tuner_param_config.pb.txt",
+    "/apollo/modules/data/fuel/fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt",
     "File path to tuner parameter config."
 )
 

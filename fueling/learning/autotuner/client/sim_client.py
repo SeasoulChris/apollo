@@ -3,9 +3,9 @@
 
 import grpc
 
-import fueling.autotuner.proto.sim_service_pb2 as sim_service_pb2
-import fueling.autotuner.proto.git_info_pb2 as git_info_pb2
-import fueling.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
+import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
+import fueling.learning.autotuner.proto.git_info_pb2 as git_info_pb2
+import fueling.learning.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 import fueling.common.logging as logging
 
 

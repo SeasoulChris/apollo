@@ -12,8 +12,8 @@ from absl import flags
 import pyspark_utils.op as spark_op
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline import BasePipeline
-from fueling.autotuner.client.sim_client import SimClient
+from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.learning.autotuner.client.sim_client import SimClient
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -23,7 +23,7 @@ flags.DEFINE_string("commit_id", None, "Apollo commit id.")
 
 flags.DEFINE_string(
     "scenario_path",
-    "./fueling/autotuner/config/sim_scenarios.csv",
+    "./fueling/learning/autotuner/config/sim_scenarios.csv",
     "File path to list of scenarios in csv format.",
 )
 flags.DEFINE_string(
@@ -39,8 +39,10 @@ TMP_ROOT_DIR = "/tmp/autotuner"
 MNT_ROOT_DIR = "/mnt/bos"
 
 
-class BaseCostComputation(BasePipeline):
+class BaseCostComputation(BasePipelineV2):
     def init(self):
+        BasePipelineV2.init(self)
+
         if not flags.FLAGS.commit_id:
             logging.error("Apollo commit id not specified.")
             return False
@@ -49,14 +51,9 @@ class BaseCostComputation(BasePipeline):
             logging.error("Training id not specified.")
             return False
 
-        self.FLAGS = flags.FLAGS.flag_values_dict()
-
         return True
 
-    def run_test(self):
-        self.run_once()
-
-    def run_prod(self):
+    def run(self):
         self.run_once()
 
     def run_once(self):

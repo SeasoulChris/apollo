@@ -3,13 +3,14 @@
 from datetime import datetime
 import glob
 import json
+import random
 import os
 import sys
 
 from absl import flags
 
-from fueling.autotuner.cost_computation.base_cost_computation import BaseCostComputation
-import fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
+import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -55,6 +56,10 @@ class MracCostComputation(BaseCostComputation):
 
     def calculate_individual_score(self, bag_path):
         logging.info(f"Calculating score for: {bag_path}")
+
+        # TODO: upgrade to V2
+        random.seed(datetime.now())
+        return [random.random(), random.random()]
 
         # submit the profiling job
         profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"

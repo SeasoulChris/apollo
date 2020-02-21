@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./push.sh [ build | deploy ] [ bce-platform | bce-staging | az-staging ]
+    ./main.sh [ build | deploy ] [ bce-platform | bce-staging | az-staging ]
     '
 }
 

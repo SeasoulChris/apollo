@@ -4,6 +4,7 @@
 from concurrent import futures
 import json
 import os
+import time
 import uuid
 
 # third party packages
@@ -11,12 +12,13 @@ from absl import app
 from absl import flags
 import grpc
 
-import fueling.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-import fueling.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
+ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 # Flags
 flags.DEFINE_enum(
@@ -35,10 +37,11 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     def __init__(self):
         logging.info(f"Running server in {flags.FLAGS.running_mode} mode.")
-        if flags.FLAGS.running_mode == "PROD":
-            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait"
+
+        if flags.FLAGS.running_mode != "PROD":
+            self.submit_job = self.SubmitJobAtLocal
         else:
-            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
+            self.submit_job = self.SubmitJobToK8s
 
     def CreateResponse(self, exit_code, message="", score=None):
         response = cost_service_pb2.Response()
@@ -47,6 +50,19 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if score is not None:
             response.score = score
         return response
+
+    def SubmitJobAtLocal(self, options):
+        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:mrac_cost_computation"
+        cmd = f"cd /fuel; {job_cmd} -- {options}"
+
+        # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
+        exit_code = os.system(cmd)
+        return os.WEXITSTATUS(exit_code) == 0
+
+    def SubmitJobToK8s(self, options):
+        # TODO(vivian): implement me
+        logging.error("Implement me!!")
+        return False
 
     def ComputeMracCost(self, request, context):
         if not request.git_info.commit_id:
@@ -60,22 +76,16 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/request.pb.txt")
 
         # submit job
-        flag = (
+        options = (
             f"--training_id={training_id} "
             f"--commit_id={request.git_info.commit_id} "
             f"--profiling_running_mode={flags.FLAGS.running_mode} "
             f"--sim_service_url=\"{flags.FLAGS.sim_service_url}\" "
         )
-        cmd = (
-            f"{self.submit_job_cmd}"
-            f" --main=fueling/autotuner/cost_computation/mrac_cost_computation.py"
-            f" --flags=\"{flag}\""
-        )
-        # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
-        exit_code = os.system(cmd)
-        if os.WEXITSTATUS(exit_code) != 0:
+
+        if not self.submit_job(options):
             return self.CreateResponse(
-                exit_code=os.WEXITSTATUS(exit_code), message="Error running mrac_cost_computation."
+                exit_code=1, message="failed to run mrac_cost_computation."
             )
 
         # read and return score
@@ -102,7 +112,12 @@ def __main__(argv):
     )
     server.add_insecure_port(SERVER_PORT)
     server.start()
-    server.wait_for_termination()
+
+    try:
+        while True:
+            time.sleep(ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
 
 
 if __name__ == "__main__":

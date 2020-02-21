@@ -19,7 +19,7 @@ spec:
         image: __IMG__
         imagePullPolicy: Always
         command:
-            - "/apollo/modules/data/fuel/apps/cost_service/deploy/entrypoint.sh"
+            - "/fuel/apps/cost_service/deploy/entrypoint.sh"
             - "__CLUSTER__"
         securityContext:
           privileged: true
