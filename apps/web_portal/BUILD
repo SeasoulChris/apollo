@@ -27,6 +27,10 @@ py_library(
         ":jobs",
         ":saas_job_arg_pb2",
         "//fueling/common:partners",
+        "//fueling/control/calibration_table:vehicle_calibration",
+        "//fueling/map:generate_maps",
+        "//fueling/perception/sensor_calibration:calibration_multi_sensors",
+        "//fueling/profiling/control:control_profiling",
     ],
 )
 
