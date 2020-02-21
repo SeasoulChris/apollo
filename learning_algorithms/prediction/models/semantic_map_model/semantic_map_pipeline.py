@@ -4,7 +4,7 @@ import argparse
 
 import torch
 
-from fueling.common.learning.train_utils import *
+from fueling.learning.train_utils import *
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
 
 

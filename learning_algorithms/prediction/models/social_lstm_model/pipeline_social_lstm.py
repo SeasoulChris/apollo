@@ -4,7 +4,7 @@ import argparse
 
 import torch
 
-from fueling.common.learning.train_utils import *
+from fueling.learning.train_utils import *
 from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
 import fueling.common.file_utils as file_utils
 

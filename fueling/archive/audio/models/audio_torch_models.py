@@ -13,7 +13,7 @@ from torchvision import models
 from torchvision import transforms
 
 from fueling.common import file_utils
-from fueling.common.learning.train_utils import *
+from fueling.learning.train_utils import *
 from fueling.audio.models.audio_features_extraction import AudioFeatureExtraction
 
 

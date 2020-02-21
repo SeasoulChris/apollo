@@ -11,8 +11,8 @@ from torchvision import models
 from torchvision import transforms
 
 from fueling.common.coord_utils import CoordUtils
-from fueling.common.learning.network_utils import *
-from fueling.common.learning.train_utils import *
+from fueling.learning.network_utils import *
+from fueling.learning.train_utils import *
 
 '''
 ========================================================================

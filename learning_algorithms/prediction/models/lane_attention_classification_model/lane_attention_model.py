@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
-from fueling.common.learning.network_utils import *
-from fueling.common.learning.train_utils import *
+from fueling.learning.network_utils import *
+from fueling.learning.train_utils import *
 
 
 class CruiseMLP(nn.Module):

@@ -3,8 +3,8 @@
 import torch
 import torch.nn as nn
 
-from fueling.common.learning.network_utils import *
-from fueling.common.learning.train_utils import *
+from fueling.learning.network_utils import *
+from fueling.learning.train_utils import *
 
 
 class PointToLineProjection(nn.Module):

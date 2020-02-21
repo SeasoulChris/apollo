@@ -12,7 +12,7 @@ from sklearn.utils import shuffle
 
 from fueling.audio.pyAudioAnalysis import audioFeatureExtraction
 from fueling.common import file_utils
-from fueling.common.learning.train_utils import *
+from fueling.learning.train_utils import *
 
 
 class AudioFeatureExtraction(object):

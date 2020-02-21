@@ -5,7 +5,7 @@ import os
 
 import torch
 
-from fueling.common.learning.train_utils import train_valid_dataloader
+from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.semantic_map_dataset import SemanticMapDataset
 from fueling.planning.models.semantic_map_model import SemanticMapModel, SemanticMapLoss
 
