@@ -133,11 +133,11 @@ class SparkSubmitterClient(object):
 
     def get_worker(self):
         return {
-            'count':  self.client_flags.get('workers') or flags.FLAGS.workers,
-            'cpu':    self.client_flags.get('cpu') or flags.FLAGS.cpu,
-            'gpu':    self.client_flags.get('gpu') or flags.FLAGS.gpu,
+            'count': self.client_flags.get('workers') or flags.FLAGS.workers,
+            'cpu': self.client_flags.get('cpu') or flags.FLAGS.cpu,
+            'gpu': self.client_flags.get('gpu') or flags.FLAGS.gpu,
             'memory': self.client_flags.get('memory') or flags.FLAGS.memory,
-            'disk':   self.client_flags.get('disk') or flags.FLAGS.disk,
+            'disk': self.client_flags.get('disk') or flags.FLAGS.disk,
         }
 
     def get_partner(self):

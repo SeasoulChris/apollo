@@ -21,10 +21,10 @@ class JobProcessor(object):
     DISALLOWED_FLAG_VALUE_CHARSET = set('&|;\n\r')
 
     JOB_PROCESSORS = {
-        SaasJobArg.CONTROL_PROFILING:         jobs.ControlProfiling,
-        SaasJobArg.SENSOR_CALIBRATION:        jobs.SensorCalibration,
-        SaasJobArg.VEHICLE_CALIBRATION:       jobs.VehicleCalibration,
-        SaasJobArg.VIRTUAL_LANE_GENERATION:   jobs.VirtualLaneGeneration,
+        SaasJobArg.CONTROL_PROFILING: jobs.ControlProfiling,
+        SaasJobArg.SENSOR_CALIBRATION: jobs.SensorCalibration,
+        SaasJobArg.VEHICLE_CALIBRATION: jobs.VehicleCalibration,
+        SaasJobArg.VIRTUAL_LANE_GENERATION: jobs.VirtualLaneGeneration,
     }
 
     def __init__(self, job_arg):
@@ -60,7 +60,6 @@ class JobProcessor(object):
                'notification in your corresponding email when it is finished.')
         logging.info(msg)
         return HTTPStatus.ACCEPTED, msg
-
 
     def populate_storage_config(self, client_flags):
         """Check flags from saas_job_arg and stored partner_account."""

@@ -45,11 +45,13 @@ def get_metrics_by_prefix(prefix):
         if key.startswith(qa_test_prefix) or key.startswith(qa_status_prefix):
             continue
         if redis_instance.type(key) == 'list':
-            metrics[key] = get_display_value(redis_instance.lrange(key, range_left, range_right)) 
+            metrics[key] = get_display_value(redis_instance.lrange(key, range_left, range_right))
         elif redis_instance.type(key) == 'hash':
             metrics[key] = get_display_value(redis_instance.hvals(key)[-range_right:])
         elif redis_instance.type(key) == 'set':
-            metrics[key] = get_display_value(redis_instance.srandmember(key, range_right - range_left))
+            metrics[key] = get_display_value(
+                redis_instance.srandmember(
+                    key, range_right - range_left))
         else:
             metrics[key] = redis_instance.get(key)
         max_count -= 1

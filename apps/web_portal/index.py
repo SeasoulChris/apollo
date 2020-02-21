@@ -38,7 +38,7 @@ def submit_job():
         request = flask.request.get_json()
         job_arg = json_format.ParseDict(request, SaasJobArg())
         http_code, msg = JobProcessor(job_arg).process()
-    except:
+    except BaseException:
         http_code = HTTPStatus.BAD_REQUEST
         msg = 'Wrong job argument'
     return msg, http_code
