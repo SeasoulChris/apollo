@@ -4,6 +4,7 @@
 
 
 import numpy as np
+import math
 
 from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
 import fueling.common.logging as logging
@@ -34,12 +35,35 @@ def get_config_open_space_profiling():
 
 def extract_data_from_trajectory_point(trajectory_point):
     """Extract fields from a single trajectory point"""
-    # path_point = trajectory_point.path_point
+    path_point = trajectory_point.path_point
+    speed = trajectory_point.v
+    a = trajectory_point.a
+    # get lateral acc and dec
+    if speed * speed * path_point.kappa > 0.0:
+        lat_acc = speed * speed * path_point.kappa
+        lat_dec = 0.0
+    else:
+        lat_acc = 0.0
+        lat_dec = speed * speed * path_point.kappa
+    # get longitudinal acc and dec
+    if a > 0.0:
+        lon_acc = math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
+        lon_dec = 0.0
+    else:
+        lon_acc = 0.0
+        lon_dec = -1.0 * math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
+    # calculate lateral acceleration bound
+    lat_acc_bound = calc_lat_acc_bound(lon_acc, lon_dec)
     if hasattr(trajectory_point, 'relative_time'):
         data_array = np.array([
             trajectory_point.relative_time,
-            trajectory_point.v,
+            speed,
             trajectory_point.a,
+            lat_acc,
+            lat_dec,
+            lon_acc,
+            lon_dec,
+            lat_acc >= lat_acc_bound,
         ])
     return data_array
 
@@ -88,3 +112,10 @@ def extract_mtx_repeated_field(target_groups):
         if(data.shape[0] > 10):
             planning_mtx = np.concatenate((planning_mtx, data), axis=0)
     return target, group_id, planning_mtx
+
+
+def calc_lat_acc_bound(acc_lon, dec_lon):
+    if acc_lon == 0.0:
+        return 3.0 / 2.0 * dec_lon + 3.0
+    else:
+        return -2.0 * acc_lon + 3.0

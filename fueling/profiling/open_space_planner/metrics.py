@@ -10,7 +10,7 @@ from fueling.common.base_pipeline import BasePipeline
 # TODO(SHU): will refract it later
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx_repeated_field
-from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading
+from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading, output_result
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
@@ -26,7 +26,7 @@ flags.DEFINE_string('open_space_planner_profilling_output_path_local',
                     'output data directory for local run_test')
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
-MSG_PER_SEGMENT = 3000
+MSG_PER_SEGMENT = 100000
 
 
 def has_scenario_info(parsed_planning_msg):
@@ -100,22 +100,21 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.info(F'open_space_messeger_count: {open_space_msgs.count()}')
         # logging.info(F'feature_data_first: {open_space_msgs.first()}')
 
-        # 3. get features from message (feature list)
-        feature_data = (open_space_msgs
-                        # PairRDD(target_dir, parsed_message), parsed message with scenario info
-                        .groupByKey()
-                        # RDD(target_dir, group_id, group of (message)s), divide messages into
-                        # groups
-                        .flatMap(partition_data)
-                        .map(extract_mtx))
-        logging.info(F'feature_data_count: {feature_data.count()}')
-        logging.info(F'feature_data_first: {feature_data.first()}')
+        # # 3. get features from message (feature list)
+        # feature_data = (open_space_msgs
+        #                 # PairRDD(target_dir, parsed_message), parsed message with scenario info
+        #                 .groupByKey()
+        #                 # RDD(target_dir, group_id, group of (message)s), divide messages into groups
+        #                 .flatMap(partition_data)
+        #                 .map(extract_mtx))
+        # logging.info(F'feature_data_count: {feature_data.count()}')
+        # logging.info(F'feature_data_first: {feature_data.first()}')
 
-        # 4. process feature (count, max, mean, standard deviation, 95 percentile)
-        result_data = (feature_data
-                       .map(grading))
-        logging.info(F'result_data_count: {result_data.count()}')
-        logging.info(F'result_data_first: {result_data.first()}')
+        # # 4. process feature (count, max, mean, standard deviation, 95 percentile)
+        # result_data = (feature_data
+        #                .map(grading))
+        # logging.info(F'result_data_count: {result_data.count()}')
+        # logging.info(F'result_data_first: {result_data.first()}')
 
         # get feature from all frames in designated stage
         feature_data = (open_space_msgs
@@ -128,12 +127,20 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.info(F'feature_data_count: {feature_data.count()}')
         logging.info(F'feature_data_first: {feature_data.first()}')
 
+        result_data = (feature_data
+                       .map(grading))
+        logging.info(F'result_data_count: {result_data.count()}')
+        logging.info(F'result_data_first: {result_data.first()}')
+
         # TODO(SHU): evaluation for all frames in a stage
 
         # 5. write result to target folder
 
         # plot
         feature_data.foreach(visual_utils.plot_hist)
+        (result_data
+         # PairRDD(target_dir, combined_grading_result), output grading results for each target
+         .foreach(output_result))
 
 
 if __name__ == '__main__':

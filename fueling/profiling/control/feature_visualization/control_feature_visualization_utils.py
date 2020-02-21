@@ -12,6 +12,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+import fueling.profiling.conf.open_space_planner_conf as OpenSpaceConf
+from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
+from modules.data.fuel.fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
 import fueling.common.h5_utils as h5_utils
 import fueling.common.json_utils as json_utils
 import fueling.common.logging as logging
@@ -110,20 +114,21 @@ def clean_data(data, seq):
 def plot_hist(data_rdd):
     dir_data, group_id, data = data_rdd
     pdffile = os.path.join(dir_data, 'visualization.pdf')
+    feature_names = OpenSpaceConf.FEATURE_NAMES
     with PdfPages(pdffile) as pdf:
-        for i in (1, 2):  # range(len(FEATURE_NAMES)):
+        for i in range(len(feature_names)):
             data_plot = data[:, i]
             seq = np.argsort(data_plot)
             bounds = clean_data(data_plot, seq)
             logging.info('Processing the plots at Column: {}, Feature: {}'
-                         .format(i, FEATURE_NAMES[i]))
+                         .format(i, feature_names[i]))
             length = data_plot.shape[0]
             plt.figure(figsize=(4, 3))
             plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
                      bins=100)
-            plt.xlabel(FEATURE_NAMES[i])
+            plt.xlabel(feature_names[i])
             plt.ylabel('Sample length')
-            plt.title("Histogram of " + FEATURE_NAMES[i] + " ("
+            plt.title("Histogram of " + feature_names[i] + " ("
                       + str(int(round((bounds[1] - bounds[0]) * 100))) + "% data)")
             xmin, xmax, ymin, ymax = plt.axis()
             plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
@@ -136,9 +141,9 @@ def plot_hist(data_rdd):
             plt.close()
             plt.figure(figsize=(4, 3))
             plt.plot(data_plot)
-            plt.ylabel(FEATURE_NAMES[i])
+            plt.ylabel(feature_names[i])
             plt.xlabel('Sample Number')
-            plt.title("Plot of " + FEATURE_NAMES[i] + " (100% Data)")
+            plt.title("Plot of " + feature_names[i] + " (100% Data)")
             xmin, xmax, ymin, ymax = plt.axis()
             plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
                      'Maximum = {0:.3f}, Minimum = {1:.3f}'

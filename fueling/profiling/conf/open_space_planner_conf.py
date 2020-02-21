@@ -15,10 +15,20 @@ FEATURE_IDX = {
     'relative_time': 0,
     'speed': 1,
     'acceleration': 2,
+    'lateral_acceleration': 3,
+    'lateral_deceleration': 4,
+    'longitudinal_acceleration': 5,
+    'longitudinal_deceleration': 6,
+    'lateral_acceleration_hit_bound': 7
 }
 
 FEATURE_NAMES = [
     'relative_time',
     'speed',
     'acceleration',
+    'lateral_acceleration',
+    'lateral_deceleration',
+    'longitudinal_acceleration',
+    'longitudinal_deceleration',
+    'lateral_acceleration_hit_bound',
 ]
