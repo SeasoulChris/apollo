@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message CyberHeader {  
+    optional uint64 meta_stamp = 1; // The stamp when the most upstream message generated;
+    optional uint64 stamp = 2; // The stamp when message is publishing
+    optional uint64 index = 3; // The sequence number of the message
+    optional string frame_id = 4; // The frame id of message
+}

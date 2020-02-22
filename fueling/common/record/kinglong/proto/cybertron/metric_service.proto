@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message MetricRequest {
+    required string channel_name = 1;    
+}
+
+message MetricResponse {
+    required double frequency = 1;
+}
+
+message MetricItem {
+    required string channel_name = 1;
+    optional double frequency = 2;
+}
+
+message MetricBatch {
+    repeated MetricItem metric_items = 1;
+}

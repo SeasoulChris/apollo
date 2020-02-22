@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message ModuleDefine {
+    message Channel {
+        required string channelname = 1;
+        required string msgtype = 2;
+    }
+    message DataFusionOption {
+        optional uint32 queue_size = 1;
+        optional uint64 time_delay_ms = 2;
+        optional uint64 update_time_ms = 3;
+        optional uint64 window_time_ms = 4;
+    }
+    message Receiver {
+        repeated string inchannelnames = 1;
+        optional string inqosfilter = 2;
+        optional DataFusionOption datafusionoption = 3;
+    }
+    message Sender {
+        repeated string outchannelnames = 1;
+    }
+    message Component {
+        required string comname = 1;
+        required string comclass = 2;
+        optional string confpath = 3;
+        optional Receiver receiver = 4;
+        optional Sender sender = 5;
+        optional uint32 period = 6;
+        optional bool self_constraint = 7 [default = false];
+        optional string constraint_comname = 8;
+    };
+
+    message ModuleConfig {
+        required string module_library = 1;
+        optional string gflag_file = 2;
+        repeated Component components = 3;
+        repeated Channel channels = 4;
+    };
+    
+    repeated ModuleConfig module_config = 1;
+}

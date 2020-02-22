@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message SimTime {
+    optional uint64 simtime = 1;
+}

@@ -1,0 +1,21 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+enum ResultValue {
+    OK = 0;
+    ERR = 1;
+    TIMEOUT = 2;
+    UNKNOWN = 3;
+}
+
+message ModuleRequest {
+    required string command = 1;
+    required string dag_conf = 2;
+    required string process_name = 3;
+}
+
+message ModuleResponse {
+    required ResultValue result = 1[default = TIMEOUT];
+}
+

@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message MetaStat {
+    optional string module_name = 1;
+    optional string receive_node_name = 2;
+    optional string receive_channel_name = 3;
+    optional string publish_node_name = 4;
+    optional string publish_channel_name = 5;
+    optional string meta_type = 6;
+    optional uint64 meta_time = 7;
+    optional uint64 proc_time = 8;
+    optional uint64 chain_time = 9;
+    optional uint64 start_time = 10;
+    optional uint64 end_time = 11;
+}
+
+message MetaStatConfig {
+    repeated MetaStat modules = 1;
+}
+

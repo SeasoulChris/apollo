@@ -1,0 +1,90 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+enum ParamType {
+    NOT_SET = 0;
+    BOOL = 1;
+    INT = 2;
+    DOUBLE = 3;
+    STRING = 4;
+    BYTES = 5;
+    PROTOBUF = 6;
+}
+
+message ParamValue {
+    optional ParamType type = 1[default = NOT_SET];
+    oneof oneof_value {
+      bool bool_value = 2;
+      int64 int_value = 3;
+      double double_value = 4;
+      string string_value = 5;
+      bytes bytes_value = 6;
+    }
+    optional string type_name = 7;
+    optional string proto_desc = 8;
+}
+
+message Param {
+    optional string name = 1;
+    optional ParamValue value = 2;
+}
+// support set multi params one time
+// when call set_params(...) function
+message ParamEvent {
+    optional uint64 stamp = 1;
+    optional string node_name = 2; // name of the node who send this event
+    repeated Param set_params = 3;
+    repeated Param remove_params = 4;
+    optional bool ignore_if_exists = 5;
+}
+
+message ParamEventHistory {
+    repeated ParamEvent events = 1;
+}
+
+message ParamSnapshot {
+    message NodeParams {
+        optional string node_name = 1;
+        repeated Param params = 2;
+    }
+    repeated NodeParams node_params = 1;
+}
+
+// services
+message StringRequest {
+    required string content = 1;
+}
+
+message CreateNotifyClientRequest {
+    required string node_name =1;
+    required string param_name = 2;
+    enum Operation {
+        SET = 0;
+        REMOVE = 1;
+    };
+    required Operation operation = 3;
+    enum Scope {
+        GLOBAL = 0;
+        ALL = 1;
+    }
+    required Scope scope = 4;
+}
+
+message BoolResponse {
+    required bool status = 1;
+}
+
+message Params {
+    repeated Param params = 1;
+}
+
+message WatchedMessage {
+    optional string param_name = 1;
+    repeated string node_names = 2;
+}
+
+message WatchList {
+    repeated WatchedMessage watched_set_messages = 1;
+    repeated WatchedMessage watched_remove_messages = 2;
+}

@@ -1,0 +1,49 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.modules;
+
+enum FRAME_TYPE {
+    FRAME_UNKNOWN = 0;
+    FRAME_RFU = 1;  //Right-Front-Up
+    FRAME_FLU = 2;  //Front-Left-Up
+    FRAME_LFD = 3;  //Left-Front-Down
+    FRAME_FRD = 4;  //Front-Right-Down
+};
+
+enum SINS_STATUS {
+    STATUS_UNKNOWN = 0;
+    STATUS_INIT = 1;
+    STATUS_LEVEL_ALIGNMENT = 2;
+    STATUS_YAW_COARSE_ALIGNMENT = 3;
+    STATUS_YAW_PRECISE_ALIGNMENT = 4;
+    STATUS_ATTITUDE_ALIGNMENT = 5;
+};
+
+message RawImuData {
+    optional uint32 gnss_week = 1;
+    optional double gnss_second_s = 2;
+    optional FRAME_TYPE sensor_frame = 3 [default = FRAME_RFU];
+    optional double gyro_x = 4;
+    optional double gyro_y = 5;
+    optional double gyro_z = 6;
+    optional double accel_x = 7;
+    optional double accel_y = 8;
+    optional double accel_z = 9;
+    //aid information, generally not supported by raw IMU
+}
+
+// Contains the RAWIMU data corrected for gravity, 
+// the earth's rotation and estimated sensor errors.
+message CorrectImuData {
+    optional uint32 gnss_week = 1;
+    optional double gnss_second_s = 2;
+    optional FRAME_TYPE sensor_frame = 3 [default = FRAME_RFU];
+    optional double pitch_rate = 4;
+    optional double roll_rate = 5;
+    optional double yaw_rate = 6;
+    
+    optional double x_accel = 7;
+    optional double y_accel = 8;
+    optional double z_accel = 9;
+    //aid information, generally not supported by raw IMU
+}

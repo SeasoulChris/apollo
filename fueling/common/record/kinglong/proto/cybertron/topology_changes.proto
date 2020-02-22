@@ -1,0 +1,50 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+enum NodeRelation {
+    NORELATION = 1;
+    DIFFERENT_HOST = 2;
+    DIFFERENT_PROCESS = 3;
+    SAME_PROCESS = 4;
+};
+
+enum ChangeType {
+    CHANGE_NODE = 1;
+    CHANGE_CHANNEL = 2;
+    CHANGE_SERVICE = 3;
+    CHANGE_PARAMETER = 4;
+};
+
+enum OptType {
+    OPT_REGISTER = 1;
+    OPT_UNREGISTER = 2;
+};
+
+enum RoleType {
+    ROLE_WRITER = 1;
+    ROLE_READER = 2;
+    ROLE_SERVICE= 3;
+    ROLE_CLIENT = 4;
+};
+
+message ChangeInfo {
+    optional string channelname = 1;
+    optional string servicename = 2;
+    optional bytes gid = 3;
+    optional string msgtype = 4;
+    optional RoleType roletype = 5;
+    optional bytes proto_desc = 6;
+    optional string ip = 7;
+    optional uint32 port = 8;
+};
+
+message ChangeMsg {
+    required ChangeType changetype = 1;
+    required OptType opttype= 2;
+    required string hostname = 3;
+    required string processid = 4;
+    required string nodename = 5;
+    optional ChangeInfo changeinfo = 6;
+    optional uint64 nsecond = 7;
+};

@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message CommonConfig {
+   required bool async_log = 1[default = true];
+   optional bool send_errcode = 2[default = false];
+}

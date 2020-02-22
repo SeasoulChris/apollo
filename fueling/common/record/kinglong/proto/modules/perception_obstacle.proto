@@ -1,0 +1,157 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.modules;
+import "fueling/common/record/kinglong/proto/modules/header.proto";
+
+enum PerceptionErrorCode {
+    ERROR_NONE = 0;
+    ERROR_TF = 1;
+    ERROR_PROCESS = 2;
+    ERROR_UNKNOWN = 3;
+}
+
+message Point {
+    optional double x = 1;  // in meters.
+    optional double y = 2;  // in meters.
+    optional double z = 3;  // height in meters.
+}
+
+message BBox2D {
+    optional double xmin = 1;  // in pixels.
+    optional double ymin = 2;  // in pixels.
+    optional double xmax = 3;  // in pixels.
+    optional double ymax = 4;  // in pixels.
+}
+
+message LightStatus {
+    optional double brake_visible = 1;
+    optional double brake_switch_on = 2;
+    optional double left_turn_visible = 3;
+    optional double left_turn_switch_on = 4;
+    optional double right_turn_visible = 5;
+    optional double right_turn_switch_on = 6;
+}
+enum BrakeLight {
+    BRAKE_DARK = 0;
+    BRAKE_BRIGHT = 1;
+    BRAKE_UNKNOWN = 2;
+}
+enum SubType {
+    UNKNOWN = 0;
+    UNKNOWN_MOVABLE = 1;
+    UNKNOWN_UNMOVABLE = 2;
+    CAR = 3;
+    VAN = 4;
+    TRUCK = 5;
+    BUS = 6;
+    CYCLIST = 7;
+    MOTORCYCLIST = 8;
+    TRICYCLIST = 9;
+    PEDESTRIAN = 10;
+    TRAFFICCONE = 11;
+}
+
+message SensorMeasurement {
+    optional string sensor_id = 1;
+    optional int32 id = 2;
+
+    optional Point position = 3;
+    optional double theta = 4; 
+    optional double length = 5;
+    optional double width = 6;
+    optional double height = 7;
+
+    optional Point velocity = 8;
+    
+    enum Type {
+        UNKNOWN = 0;
+        UNKNOWN_MOVABLE = 1;
+        UNKNOWN_UNMOVABLE = 2;
+        PEDESTRIAN = 3;  // Pedestrian, usually determined by moving behaviour.
+        BICYCLE = 4;  // bike, motor bike
+        VEHICLE = 5;  // Passenger car or truck.
+    };
+    optional Type type = 9;
+    optional SubType sub_type = 10;
+    optional double timestamp = 11;
+    optional BBox2D box = 12; // only for camera measurements
+}
+
+message WatchArea {
+    optional bool front = 1 [default = false];
+    optional bool left_front = 2 [default = false];
+    optional bool left = 3 [default = false];
+    optional bool left_back = 4 [default = false];
+    optional bool back = 5 [default = false];
+    optional bool right_back = 6 [default = false];
+    optional bool right = 7 [default = false];
+    optional bool right_front = 8 [default = false];
+}
+
+message AbnormalStatus {
+    optional bool rush_out = 1 [default =  false];          // is new obstacle
+    optional int64 uncertain_fusion = 2 [default =  0];     // uncertain fusion
+}
+
+message PerceptionObstacle {
+    optional int32 id = 1;  // obstacle ID.
+    optional Point position = 2;  // obstacle position in the world coordinate system.
+    optional double theta = 3;  // heading in the world coordinate system.
+    optional Point velocity = 4;  // obstacle velocity.
+
+    // Size of obstacle bounding box.
+    optional double length = 5;  // obstacle length.
+    optional double width = 6;  // obstacle width.
+    optional double height = 7;  // obstacle height.
+
+    repeated Point polygon_point = 8;  // obstacle corner points.
+    optional double tracking_time = 9;  // duration of an obstacle since detection in s.
+
+    enum Type {
+        UNKNOWN = 0;
+        UNKNOWN_MOVABLE = 1;
+        UNKNOWN_UNMOVABLE = 2;
+        PEDESTRIAN = 3;  // Pedestrian, usually determined by moving behaviour.
+        BICYCLE = 4;  // bike, motor bike
+        VEHICLE = 5;  // Passenger car or truck.
+    };
+    optional Type type = 10;  // obstacle type
+    optional double timestamp = 11;  // GPS time in seconds.
+
+    // Just for offline debuging, onboard will not fill this field.
+    // Format like : [x0, y0, z0, x1, y1, z1...]
+    repeated double point_cloud = 12 [packed = true];
+
+    // a stable obstacle point in the world coordinate system
+    // position defined above is the obstacle boundingbox ground center
+    optional Point anchor_point = 13;
+
+    // position covariance which is a row-majored 3x3 matrix
+    repeated double position_covariance = 14 [packed = true];
+    // velocity covariance which is a row-majored 3x3 matrix
+    repeated double velocity_covariance = 15 [packed = true];
+
+    // orthogonal distance between obstacle lowest point and ground plane
+    optional double height_above_ground = 16 [default = nan];
+    optional BrakeLight brake_light = 17 [default = BRAKE_UNKNOWN];
+
+    // isotropic standard deviation of the boundary locations, in meters
+    optional double boundary_std_deviation = 18 [default = 0];
+
+    optional AbnormalStatus abnormal_status = 19;
+
+    optional BBox2D bbox2d = 20;
+    optional LightStatus light_status = 21;
+    optional SubType sub_type = 22;
+    repeated SensorMeasurement measurements = 23; // sensor measurements
+     optional Point acceleration = 24;  // obstacle acceleration.
+     repeated double acceleration_covariance = 25 [packed = true];
+}
+
+message PerceptionObstacles {
+    repeated PerceptionObstacle perception_obstacle = 1;  // An array of obstacles
+    optional Header header = 2;  // Header
+    optional PerceptionErrorCode error_code = 3 [default = ERROR_NONE];
+    optional WatchArea watch_area = 4;
+    optional bool low_illumination = 5 [ default = false];
+}

@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+import "fueling/common/record/kinglong/proto/cybertron/cyber_header.proto";
+
+message Whisper {
+    optional CyberHeader cyber_header=1; 
+    optional uint64 seq = 2;
+    optional int32  length = 3;
+    optional int32  position = 4;
+    optional bytes content = 5;
+    optional bytes telling_name = 6;
+    optional bytes channel_name = 7;
+}

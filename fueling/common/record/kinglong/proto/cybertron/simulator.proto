@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+enum ChatStatus {
+    SYNC_READY = 0;
+    SYNC_OK = 1;
+    SYNC_NULL = 2;
+    SYNC_FINISH = 3;
+    SYNC_END = 4;
+}
+
+message SyncChat {
+    optional uint64 seq = 1;
+    optional ChatStatus chatstatus = 2;
+    optional uint64 sim_time = 3;
+    optional string sender = 4;
+}
+
+message RuntimeSignal {
+    optional uint64 seq = 1;
+    optional string module_name = 2;
+    optional bool is_ready = 3;
+}
+
+message StartupModules {
+    repeated string modules = 1;
+}

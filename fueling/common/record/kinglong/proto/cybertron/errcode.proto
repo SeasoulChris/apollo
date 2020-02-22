@@ -1,0 +1,13 @@
+syntax = "proto2";
+// option optimize_for = LITE_RUNTIME;
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+import "fueling/common/record/kinglong/proto/cybertron/cyber_header.proto";
+
+message ErrCode {
+    optional CyberHeader cyber_header=1;
+    required uint64 errcode = 2;
+    required string module_name = 3;
+    optional string errmsg = 4;
+}

@@ -1,0 +1,26 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message ChannelResponse {
+    repeated ChannelDetail channels = 1;
+}
+
+message ChannelRequest {
+    required string request_type = 1;
+}
+
+message ChannelDetail {
+    required string name = 1;
+    repeated Role roles = 2;
+}
+
+message Role {
+  required uint32 role_id = 1;
+  required string host_name = 2;
+  required string process_id = 3;
+  required string node_name = 4;
+  required string role_type = 5;
+  required string message_type = 6;
+}
+

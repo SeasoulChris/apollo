@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package fueling.common.record.kinglong.proto.cybertron;
+
+message MetaMessage {
+    required uint64 message_id = 1;
+    required string data = 2;
+};
