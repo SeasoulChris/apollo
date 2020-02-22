@@ -1,4 +1,5 @@
 bayesian-optimization
 liegroups
 optuna
+psutil
 pyro-ppl

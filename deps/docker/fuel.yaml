@@ -10,13 +10,14 @@ dependencies:
   - matplotlib
   - numpy
   - opencv
+  - pillow = 6.1   # To be compatible with torchvision
   - protobuf
   - pymongo
   - pyproj
   - pytorch = 1.1  # Need to adapt code to newer version API.
   - redis-py
   - requests
-  - pytorch = 1.1  # Need to adapt code to newer version API.
+  - torchvision
   - scikit-learn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.

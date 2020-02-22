@@ -35,6 +35,17 @@ py_binary(
 )
 
 py_binary(
+    name = "gpu_training_with_pytorch_distributed",
+    srcs = ["gpu_training_with_pytorch_distributed.py"],
+    deps = [
+        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:distributed_data_parallel",
+        "//fueling/common:socket_utils",
+        "//fueling/common/storage:bos_client",
+    ]
+)
+
+py_binary(
     name = "gpu_training_with_tensorflow",
     srcs = ["gpu_training_with_tensorflow.py"],
     deps = [

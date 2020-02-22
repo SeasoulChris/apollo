@@ -110,3 +110,21 @@ py_library(
         ":logging",
     ],
 )
+
+py_library(
+    name = "socket_utils",
+    srcs = ["socket_utils.py"],
+    deps = [
+        ":logging",
+    ],
+)
+
+py_library(
+    name = "distributed_data_parallel",
+    srcs = ["distributed_data_parallel.py"],
+    deps = [
+        ":logging",
+        ":redis_utils",
+        ":socket_utils",
+    ],
+)

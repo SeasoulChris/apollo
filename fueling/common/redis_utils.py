@@ -158,6 +158,21 @@ def redis_get_smembers(redis_key):
     return _retry(redis_instance.smembers, [redis_key])
 
 
+def redis_sync_incr_dict_value(redis_key, dict_key, lock_key):
+    """Synchronously increment dict value and return the updated value"""
+    redis_instance = get_redis_instance()
+    if not redis_instance:
+        logging.error('unable to create redis instance')
+        return
+    val = None
+    with redis_instance.lock(lock_key):
+        if not redis_instance.hexists(redis_key, dict_key): 
+            return val
+        redis_instance.hincrby(redis_key, dict_key)
+        val = int(redis_instance.hget(redis_key, dict_key))
+    return val
+        
+
 def _retry(func, params):
     """A wrapper for exponential retry in case redis connection is not stable"""
     cur_retries, max_retries = 0, 3

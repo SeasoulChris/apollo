@@ -3,8 +3,8 @@
 A simple demo PySpark job with GPU training.
 
 Run with:
-    ./tools/submit-job-to-k8s.py --main=fueling/demo/gpu_training_with_pytorch.py \
-        --node_selector=GPU
+    bazel run //fueling/demo/:gpu_training_with_pytorch -- --cloud --gpu=1 --workers=1
+
 """
 
 # Standard packages
@@ -24,12 +24,7 @@ class PytorchTraining(BasePipelineV2):
     """Demo pipeline."""
 
     def run(self):
-        """Run test."""
-        logging.info('nvidia-smi on Driver:')
-        if os.system('nvidia-smi') != 0:
-            logging.fatal('Failed to run nvidia-smi.')
-            sys.exit(-1)
-
+        """Run."""
         time_start = time.time()
         self.to_rdd(range(1)).foreach(self.train)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
