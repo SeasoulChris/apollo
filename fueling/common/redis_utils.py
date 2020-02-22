@@ -160,11 +160,11 @@ def redis_get_smembers(redis_key):
 
 def redis_sync_incr_dict_value(redis_key, dict_key, lock_key):
     """Synchronously increment dict value and return the updated value"""
+    val = None
     redis_instance = get_redis_instance()
     if not redis_instance:
         logging.error('unable to create redis instance')
-        return
-    val = None
+        return val
     with redis_instance.lock(lock_key):
         if not redis_instance.hexists(redis_key, dict_key): 
             return val
