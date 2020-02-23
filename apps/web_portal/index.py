@@ -3,6 +3,7 @@
 
 from http import HTTPStatus
 import json
+import os
 
 from absl import app as absl_app
 from absl import flags
@@ -15,7 +16,7 @@ from apps.web_portal.job_processor import JobProcessor
 from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 
 
-flags.DEFINE_boolean('debug', True, 'Start local debug instance.')
+flags.DEFINE_boolean('debug', False, 'Start local debug instance.')
 
 
 ################################# Web Handlers #################################
@@ -57,8 +58,10 @@ class ProductionApp(gunicorn.app.base.BaseApplication):
         self.cfg.set('bind', '0.0.0.0:443')
         self.cfg.set('workers', 5)
         self.cfg.set('proc_name', 'BaeProxy')
-        self.cfg.set('certfile', 'ssl_keys/cert.pem')
-        self.cfg.set('keyfile', 'ssl_keys/key.pem')
+
+        cwd = os.path.dirname(__file__)
+        self.cfg.set('certfile', os.path.join(cwd, 'ssl_keys/cert.pem'))
+        self.cfg.set('keyfile', os.path.join(cwd, 'ssl_keys/key.pem'))
 
     def load(self):
         """Load app."""
