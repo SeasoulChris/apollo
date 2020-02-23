@@ -14,11 +14,11 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef PYTHON_WRAPPER_PY_BAG_H_
-#define PYTHON_WRAPPER_PY_BAG_H_
+#pragma once
 
 #include <unistd.h>
 
+#include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <iostream>
@@ -26,10 +26,13 @@
 #include <vector>
 #include <thread>
 
-#include "cybertron/recorder/py_message_shifter.h"
-#include "cybertron/recorder/datafile.h"
-#include "cybertron/recorder/data_iterator.h"
-#include "cybertron/common/protobuf_factory.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/py_message_shifter.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/datafile.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/data_iterator.h"
+#include "fueling/common/record/kinglong/cybertron/common/protobuf_factory.h"
+
+#include "fueling/common/record/kinglong/proto/cybertron/cyber_header.pb.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
 
 namespace cybertron {
 
@@ -184,10 +187,10 @@ class PyBag {
   int get_compress_type() const {
     int type = 0;
     switch (_data_file->get_compress_type()) {
-      case cybertron::proto::COMPRESS_NONE:
+      case fueling::common::record::kinglong::proto::cybertron::COMPRESS_NONE:
         type = 0;
         break;
-      case cybertron::proto::COMPRESS_BZ2:
+      case fueling::common::record::kinglong::proto::cybertron::COMPRESS_BZ2:
         type = 1;
         break;
       default:
@@ -216,5 +219,3 @@ class PyBag {
 };
 
 }  // namespace cybertron
-
-#endif  // PYTHON_WRAPPER_PY_BAG_H_

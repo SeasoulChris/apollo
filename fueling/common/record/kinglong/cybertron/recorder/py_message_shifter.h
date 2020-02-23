@@ -77,12 +77,12 @@ class PyMessageShifter {
 
   void set_data(const std::string& msg) { _data = msg; }
 
-  cybertron::proto::CyberHeader* mutable_cyber_header() { return &_hdr; }
-  const cybertron::proto::CyberHeader& cyber_header() const { return _hdr; }
+  fueling::common::record::kinglong::proto::cybertron::CyberHeader* mutable_cyber_header() { return &_hdr; }
+  const fueling::common::record::kinglong::proto::cybertron::CyberHeader& cyber_header() const { return _hdr; }
 
   std::string _type_name;
   std::string _data;
-  cybertron::proto::CyberHeader _hdr;
+  fueling::common::record::kinglong::proto::cybertron::CyberHeader _hdr;
 };
 
 }  // namespace cybertron
