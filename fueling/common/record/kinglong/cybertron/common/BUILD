@@ -73,6 +73,7 @@ cc_library (
     ":macros",
     ":protobuf_factory",
     "//fueling/common/record/kinglong/proto/cybertron:cyber_header_proto",
+    "@com_google_protobuf//:protobuf",
   ],
 )
 

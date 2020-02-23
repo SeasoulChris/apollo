@@ -6,6 +6,7 @@ cc_library (
   deps = [
     "//fueling/common/record/kinglong/cybertron/common:macros",
     "//fueling/common/record/kinglong/cybertron/common:message_base",
+    "@com_google_protobuf//:protobuf",
   ],
 )
 

@@ -15,13 +15,26 @@ cc_library (
 )
 
 cc_binary (
-  name = "_cyber_bag_wrap_py3.so",
+  name = "_cyber_bag.so",
   linkshared = True,
   linkstatic = False,
-  defines = ["PY_MAJOR_VERSION=3"],
   srcs = ["cyber_bag_wrap.cxx"],
   deps = [
     ":py_bag",
     "//deps:python3",
   ],
 )
+
+filegroup (
+  name = "cyber_bag_fg",
+  srcs = [
+    ":_cyber_bag.so",
+  ],
+)
+
+py_binary (
+  name = "cyber_bag",
+  srcs = ["cyber_bag.py"],
+  data = [":cyber_bag_fg"],
+)
+
