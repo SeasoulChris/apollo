@@ -13,3 +13,15 @@ cc_library (
     "//fueling/common/record/kinglong/proto/cybertron:record_proto",
   ],
 )
+
+cc_binary (
+  name = "_cyber_bag_wrap_py3.so",
+  linkshared = True,
+  linkstatic = False,
+  defines = ["PY_MAJOR_VERSION=3"],
+  srcs = ["cyber_bag_wrap.cxx"],
+  deps = [
+    ":py_bag",
+    "//deps:python3",
+  ],
+)
