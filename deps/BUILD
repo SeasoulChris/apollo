@@ -10,3 +10,8 @@ cc_library(
         "-lboost_signals",
     ],
 )
+
+cc_library(
+    name = "python3",
+    linkopts = ["-lpython3.6m"],
+)
