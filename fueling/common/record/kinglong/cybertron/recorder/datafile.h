@@ -14,14 +14,20 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_DATAFILE_H_
-#define INCLUDE_CYBERTRON_RECORDER_DATAFILE_H_
+#pragma once
 
 #include <unordered_map>
 #include <atomic>
-#include "cybertron/recorder/chunk.h"
-#include "cybertron/recorder/param.h"
-#include "cybertron/recorder/fileopt.h"
+#include <thread>
+
+#include "fueling/common/record/kinglong/cybertron/common/raw_message.h"
+#include "fueling/common/record/kinglong/cybertron/common/protobuf_factory.h"
+#include "fueling/common/record/kinglong/cybertron/common/conf_manager.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/chunk.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/param.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/fileopt.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
+#include "fueling/common/record/kinglong/proto/cybertron/parameter.pb.h"
 
 namespace cybertron {
 
@@ -63,7 +69,7 @@ class DataFile {
             const std::string& type, const uint64_t time = 0);
 
   void set_chunk_limit(const uint64_t& limit);
-  void set_compress_type(const cybertron::proto::CompressType& type);
+  void set_compress_type(const fueling::common::record::kinglong::proto::cybertron::CompressType& type);
   void set_chunk_interval(const uint64_t& interval);
   void set_segment_interval(const uint64_t& interval);
 
@@ -79,7 +85,7 @@ class DataFile {
   bool IsActive() const;
   std::string get_file_name() const;
   std::string get_version() const { return version_; }
-  cybertron::proto::CompressType get_compress_type() const {
+  fueling::common::record::kinglong::proto::cybertron::CompressType get_compress_type() const {
     return compress_type_;
   }
 
@@ -98,18 +104,18 @@ class DataFile {
   int WriteSnapshot(bool if_dump_parameter_snapshot = false);
   int get_chunk_num() const;
   int get_msg_num(const int& chunk_index) const;
-  int Write(const cybertron::proto::SingleMsg& singlemsg);
-  cybertron::proto::SingleMsg ReadMessage(const int& chunk_index,
+  int Write(const fueling::common::record::kinglong::proto::cybertron::SingleMsg& singlemsg);
+  fueling::common::record::kinglong::proto::cybertron::SingleMsg ReadMessage(const int& chunk_index,
                                           const int& msg_index);
 
   void ClearAll();
   void StopWrite();
   void SplitOutfile(bool if_dump_parameter_snapshot = false);
-  int ReadChunk(cybertron::proto::ChunkSection* chunk,
-                cybertron::proto::ChunkHeader* header);
-  void ReadChunk(const int& index, cybertron::proto::ChunkSection* chunk,
-                 cybertron::proto::ChunkHeader* header, bool reset = true);
-  void set_header(const cybertron::proto::HeaderSection& header);
+  int ReadChunk(fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunk,
+                fueling::common::record::kinglong::proto::cybertron::ChunkHeader* header);
+  void ReadChunk(const int& index, fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunk,
+                 fueling::common::record::kinglong::proto::cybertron::ChunkHeader* header, bool reset = true);
+  void set_header(const fueling::common::record::kinglong::proto::cybertron::HeaderSection& header);
   void ShowProgress();
   void FlushChunk();
 
@@ -119,8 +125,8 @@ class DataFile {
   uint64_t chunk_limit_ = 50 * 1024 * 1024;
   uint64_t chunk_interval_ = 20e9L;
   uint64_t segment_interval_ = 0;
-  cybertron::proto::CompressType compress_type_ =
-      cybertron::proto::COMPRESS_NONE;
+  fueling::common::record::kinglong::proto::cybertron::CompressType compress_type_ =
+      fueling::common::record::kinglong::proto::cybertron::COMPRESS_NONE;
 
   int file_index_ = 0;
   bool is_writing_ = false;
@@ -131,14 +137,14 @@ class DataFile {
 
   // status info
   uint64_t channel_size_ = 0;
-  cybertron::proto::HeaderSection header_;
+  fueling::common::record::kinglong::proto::cybertron::HeaderSection header_;
   std::unordered_map<std::string, int> msg_count_;
   std::unordered_map<std::string, std::string> types_;
 
   // TODO: use auto pointer instead
-  proto::ParamSnapshot* snapshot_ = nullptr;
-  ParameterRecorderHelper::SharedPtr param_helper_ = nullptr;
-  std::vector<proto::ParamEvent> param_events_;
+  fueling::common::record::kinglong::proto::cybertron::ParamSnapshot* snapshot_ = nullptr;
+  // ParameterRecorderHelper::SharedPtr param_helper_ = nullptr;
+  std::vector<fueling::common::record::kinglong::proto::cybertron::ParamEvent> param_events_;
 
   std::recursive_mutex chunk_mutex_;
   Chunk::UniquePtr chunk_ = nullptr;
@@ -163,8 +169,8 @@ int DataFile::Write(const std::string& channel,
   auto it = types_.find(channel);
   if (it != types_.end()) {
     if (it->second != msgtype) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR
-        << " Message type [" << msgtype << "] is invalid: expect [" << it->second << "]";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR
+      //   << " Message type [" << msgtype << "] is invalid: expect [" << it->second << "]";
       return FAIL;
     }
   } else {
@@ -179,18 +185,18 @@ int DataFile::Write(const std::string& channel,
 
   std::string msgstr("");
   if (!message->SerializeToString(&msgstr)) {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR <<
-      " Failed to serialize message for channel [" << channel << "]";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR <<
+    //   " Failed to serialize message for channel [" << channel << "]";
     return FAIL;
   }
 
-  cybertron::proto::SingleMsg singlemsg;
+  fueling::common::record::kinglong::proto::cybertron::SingleMsg singlemsg;
   singlemsg.set_channelname(channel);
   singlemsg.set_msg(msgstr);
   if (time > 0) {
     singlemsg.set_time(time);
   } else {
-    singlemsg.set_time(Time::Now().ToNanosecond());
+    // singlemsg.set_time(Time::Now().ToNanosecond());
   }
 
   return Write(singlemsg);
@@ -204,8 +210,8 @@ int DataFile::Write(const std::string& channel, const MessageT& message,
   auto it = types_.find(channel);
   if (it != types_.end()) {
     if (it->second != msgtype) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
-                << it->second << "]";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
+      //           << it->second << "]";
       return FAIL;
     }
   } else {
@@ -220,17 +226,17 @@ int DataFile::Write(const std::string& channel, const MessageT& message,
 
   std::string msgstr("");
   if (!message.SerializeToString(&msgstr)) {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " Failed to serialize message for channel [" << channel << "]";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " Failed to serialize message for channel [" << channel << "]";
     return FAIL;
   }
 
-  cybertron::proto::SingleMsg singlemsg;
+  fueling::common::record::kinglong::proto::cybertron::SingleMsg singlemsg;
   singlemsg.set_channelname(channel);
   singlemsg.set_msg(msgstr);
   if (time > 0) {
     singlemsg.set_time(time);
   } else {
-    singlemsg.set_time(Time::Now().ToNanosecond());
+    // singlemsg.set_time(Time::Now().ToNanosecond());
   }
   return Write(singlemsg);
 }
@@ -243,8 +249,8 @@ inline int DataFile::Write<MessageBase>(
   auto it = types_.find(channel);
   if (it != types_.end()) {
     if (it->second != msgtype) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
-                << it->second << "]";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
+                // << it->second << "]";
       return FAIL;
     }
   } else {
@@ -258,18 +264,18 @@ inline int DataFile::Write<MessageBase>(
   }
 
   std::string msgstr("");
-  ERROR_AND_RETURN_VAL_IF_NULL(message->_msg, FAIL, CYBERTRON_ERROR, RECORD_MSG_NULL_ERROR);
+  // ERROR_AND_RETURN_VAL_IF_NULL(message->_msg, FAIL, CYBERTRON_ERROR, RECORD_MSG_NULL_ERROR);
   if (!message->_msg->SerializeToString(&msgstr)) {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " Failed to serialize message for channel [" << channel << "]";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " Failed to serialize message for channel [" << channel << "]";
     return FAIL;
   }
-  cybertron::proto::SingleMsg singlemsg;
+  fueling::common::record::kinglong::proto::cybertron::SingleMsg singlemsg;
   singlemsg.set_channelname(channel);
   singlemsg.set_msg(msgstr);
   if (time > 0) {
     singlemsg.set_time(time);
   } else {
-    singlemsg.set_time(Time::Now().ToNanosecond());
+    // singlemsg.set_time(Time::Now().ToNanosecond());
   }
   return Write(std::move(singlemsg));
 }
@@ -282,8 +288,8 @@ inline int DataFile::Write<RawMessage>(
   auto it = types_.find(channel);
   if (it != types_.end()) {
     if (it->second != msgtype) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
-                << it->second << "]";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << msgtype << "] is invalid: expect ["
+      //           << it->second << "]";
       return FAIL;
     }
   } else {
@@ -297,22 +303,21 @@ inline int DataFile::Write<RawMessage>(
   }
 
   // std::string msgstr("");
-  ERROR_AND_RETURN_VAL_IF_NULL(message, FAIL, CYBERTRON_ERROR, RECORD_MSG_NULL_ERROR);
+  // ERROR_AND_RETURN_VAL_IF_NULL(message, FAIL, CYBERTRON_ERROR, RECORD_MSG_NULL_ERROR);
   // if (!message->_msg->SerializeToString(&msgstr)) {
   //  LOG_ERROR << CYBERTRON_ERROR <<  << " Failed to serialize message for channel [" << channel <<
   // "]";
   //  return FAIL;
   //}
-  cybertron::proto::SingleMsg singlemsg;
+  fueling::common::record::kinglong::proto::cybertron::SingleMsg singlemsg;
   singlemsg.set_channelname(channel);
   singlemsg.set_msg(message->get_msg());
   if (time > 0) {
     singlemsg.set_time(time);
   } else {
-    singlemsg.set_time(Time::Now().ToNanosecond());
+    // singlemsg.set_time(Time::Now().ToNanosecond());
   }
   return Write(std::move(singlemsg));
 }
 
 }  // namespace cybertron
-#endif

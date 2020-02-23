@@ -25,16 +25,17 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 
-#include "cybertron/common/macros.h"
-#include "cybertron/common/logger.h"
-#include "cybertron/common/cybertron_proto.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/proto/cybertron/cyber_header.pb.h"
+// #include "cybertron/common/logger.h"
+// #include "cybertron/common/cybertron_proto.h"
 // #include "cybertron/time/time.h"
 
 #define INTER_PROCESS_CACHED_SIZE -123456789
 
 namespace cybertron {
 
-using namespace cybertron::proto;
+using namespace fueling::common::record::kinglong::proto::cybertron;
 
 class MessageBase : public google::protobuf::Message {
  public:
@@ -78,12 +79,12 @@ class MessageBase : public google::protobuf::Message {
   static void ParseMessage(const std::string& serialized_string,
                            google::protobuf::Message* message);
 
-  cybertron::proto::CyberHeader* mutable_cyber_header() { return &_hdr; }
-  const cybertron::proto::CyberHeader& cyber_header() const { return _hdr; }
+  CyberHeader* mutable_cyber_header() { return &_hdr; }
+  const CyberHeader& cyber_header() const { return _hdr; }
 
   std::shared_ptr<const google::protobuf::Message> _msg = nullptr;
   std::string _type_name;
-  cybertron::proto::CyberHeader _hdr;
+  CyberHeader _hdr;
 };
 
 }  // namespace cybertron

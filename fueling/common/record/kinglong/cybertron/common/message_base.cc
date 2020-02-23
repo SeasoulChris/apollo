@@ -14,9 +14,25 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/common/message_base.h"
-#include "cybertron/common/protobuf_factory.h"
+#include "fueling/common/record/kinglong/cybertron/common/message_base.h"
+#include "fueling/common/record/kinglong/cybertron/common/protobuf_factory.h"
 // #include "cybertron/time/time.h"
+
+#if !defined(_RETURN_VAL_IF2__)
+#define _RETURN_VAL_IF2__
+#define RETURN_VAL_IF2(condition, val) \
+  if (condition) {                     \
+    return (val);                      \
+  }
+#endif
+
+#if !defined(_RETURN_IF2__)
+#define _RETURN_IF2__
+#define RETURN_IF2(condition) \
+  if (condition) {            \
+    return;                   \
+  }
+#endif
 
 namespace cybertron {
 
@@ -231,7 +247,7 @@ void MessageBase::ParseMessage(const std::string& serialized_string,
     std::map<std::string, const google::protobuf::FieldDescriptor*>::iterator
         iter = field_map.find(name);
     if (iter == field_map.end()) {
-      LOG_DEBUG << "no field found. stderr: " << stderr;
+      // LOG_DEBUG << "no field found. stderr: " << stderr;
       continue;
     } else {
       field = iter->second;

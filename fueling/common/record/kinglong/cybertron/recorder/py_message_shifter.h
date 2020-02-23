@@ -14,8 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_PY_MESSAGE_SHIFTER_H_
-#define INCLUDE_CYBERTRON_RECORDER_PY_MESSAGE_SHIFTER_H_
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -25,9 +24,9 @@
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
 
-#include "cybertron/common/macros.h"
-#include "cybertron/common/logger.h"
-#include "cybertron/common/message_base.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+// #include "fueling/common/record/kinglong/cybertron/common/logger.h"
+#include "fueling/common/record/kinglong/cybertron/common/message_base.h"
 
 namespace {
 std::shared_ptr<const std::string> PY_MESSAGE_FULLNAME(
@@ -87,5 +86,3 @@ class PyMessageShifter {
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_RECORDER_PY_MESSAGE_SHIFTER_H_

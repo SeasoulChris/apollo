@@ -15,8 +15,8 @@
  *****************************************************************************/
 
 #include "boost/regex.hpp"
-#include "cybertron/common/conf_manager.h"
-#include "cybertron/common/gflags_manager.h"
+#include "fueling/common/record/kinglong/cybertron/common/conf_manager.h"
+#include "fueling/common/record/kinglong/cybertron/common/gflags_manager.h"
 
 using namespace std;
 
@@ -26,8 +26,8 @@ Config::Config(string filename, string delimiter, string comment)
     : m_Delimiter(delimiter), m_Comment(comment) {
   std::ifstream in(filename.c_str());
   if (!in) {
-    LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_OPEN_ERROR 
-      << "file[" << filename << "] open error.";
+    // LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_OPEN_ERROR 
+    //   << "file[" << filename << "] open error.";
   }
   LoadFile(in, *this);
   in.close();
@@ -84,13 +84,13 @@ int Config::LoadFile(std::istream& is, Config& cf) {
       }
       auto it = cf.m_Contents.find(newkey);
       if (it != cf.m_Contents.end()) {
-        LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_LOAD_ERROR << " \tconf section[" 
-          << secname << "] key[" << key << "] exist conflict error.";
+        // LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_LOAD_ERROR << " \tconf section[" 
+        //   << secname << "] key[" << key << "] exist conflict error.";
         return FAIL;
       }
       cf.m_Contents[newkey] = line;  // overwrites if key is repeated
-      LOG_INFO << "\tconf section[" << secname << "] key[" << key << "] value["
-               << line << "]";
+      // LOG_INFO << "\tconf section[" << secname << "] key[" << key << "] value["
+      //          << line << "]";
     } else {
       boost::cmatch mat;
       try {
@@ -102,7 +102,7 @@ int Config::LoadFile(std::istream& is, Config& cf) {
           }
         }
       } catch (boost::exception& e) {
-        LOG_WARN << "Invalid regular expression";
+        // LOG_WARN << "Invalid regular expression";
       }
     }
   }
@@ -121,7 +121,7 @@ int Config::ReadFile(string filename, string delimiter, string comment) {
   m_Comment = comment;
   std::ifstream in(filename.c_str());
   if (!in) {
-    LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_OPEN_ERROR << " file[" << filename << "] open error.";
+    // LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_OPEN_ERROR << " file[" << filename << "] open error.";
     return FAIL;
   }
   int ret = LoadFile(in, *this);
@@ -136,7 +136,7 @@ int ConfManager::Init() {
   std::lock_guard<std::mutex> lck(_mutex);
   conf_ = Config::make_shared();
   if (conf_ == nullptr) {
-    LOG_ERROR << CYBERTRON_ERROR << NEW_MEMORY_ERROR << " Config::make_shared() error.";
+    // LOG_ERROR << CYBERTRON_ERROR << NEW_MEMORY_ERROR << " Config::make_shared() error.";
     return FAIL;
   }
   return InitInternal();
@@ -152,8 +152,8 @@ int ConfManager::InitInternal() {
   std::string work_root = WorkRoot();
   std::string conf_root_path = FileUtil::get_absolute_path(work_root, "conf");
   if (FileUtil::get_file_list(conf_root_path, ".cy.config", &files) != SUCC) {
-    LOG_DEBUG << "conf_manager_path: " << conf_root_path
-              << " get_file_list error.";
+    // LOG_DEBUG << "conf_manager_path: " << conf_root_path
+    //           << " get_file_list error.";
     return FAIL;
   }
 
@@ -163,8 +163,8 @@ int ConfManager::InitInternal() {
         FileUtil::get_absolute_path(module_root, "conf");
     if (FileUtil::get_file_list(conf_module_path, ".cy.config", &files) !=
         SUCC) {
-      LOG_ERROR << CYBERTRON_ERROR << CONF_GET_FILE_LIST_ERROR << " conf_manager_path: "
-        << conf_module_path << " get_file_list error.";
+      // LOG_ERROR << CYBERTRON_ERROR << CONF_GET_FILE_LIST_ERROR << " conf_manager_path: "
+      //   << conf_module_path << " get_file_list error.";
       return FAIL;
     }
   }
@@ -176,7 +176,7 @@ int ConfManager::InitInternal() {
       return FAIL;
     }
   }
-  LOG_INFO << "finish to load Conf.";
+  // LOG_INFO << "finish to load Conf.";
   _inited = true;
   return SUCC;
 }

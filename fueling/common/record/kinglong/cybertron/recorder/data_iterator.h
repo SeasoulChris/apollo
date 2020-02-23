@@ -14,16 +14,17 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_DATA_ITERATOR_H_
-#define INCLUDE_CYBERTRON_RECORDER_DATA_ITERATOR_H_
+#pragma once
 
-#include "cybertron/recorder/filter.h"
-#include "cybertron/recorder/datafile.h"
+#include <vector>
+
+#include "fueling/common/record/kinglong/cybertron/recorder/filter.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/datafile.h"
 
 namespace cybertron {
 class DataIterator {
  public:
-  using MessageInstance = cybertron::proto::SingleMsg;
+  using MessageInstance = fueling::common::record::kinglong::proto::cybertron::SingleMsg;
   class iterator : public boost::iterator_facade<iterator, MessageInstance,
                                                  boost::forward_traversal_tag> {
    public:
@@ -65,4 +66,3 @@ class DataIterator {
   std::vector<MessageInstance> msgs_;
 };
 }  // namespace cybertron
-#endif

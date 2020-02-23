@@ -14,8 +14,8 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/common/registerer.h"
-#include "cybertron/common/error_code.h"
+#include "fueling/common/record/kinglong/cybertron/common/registerer.h"
+#include "fueling/common/record/kinglong/cybertron/common/error_code.h"
 
 namespace cybertron {
 
@@ -27,11 +27,12 @@ BaseClassMap& global_factory_map() {
 bool get_registered_classes(
     const std::string& base_class_name,
     std::vector<std::string>* registered_derived_classes_names) {
-  CHECK_NOTNULL(registered_derived_classes_names);
+  // CHECK_NOTNULL(registered_derived_classes_names);
   BaseClassMap& map = global_factory_map();
   auto iter = map.find(base_class_name);
   if (iter == map.end()) {
-    LOG_ERROR << CYBERTRON_ERROR << CLASS_REGISTER_ERROR << " class not registered:" << base_class_name;
+    // LOG_ERROR << CYBERTRON_ERROR << CLASS_REGISTER_ERROR
+    //           << " class not registered:" << base_class_name;
     return false;
   }
   for (auto pair : iter->second) {

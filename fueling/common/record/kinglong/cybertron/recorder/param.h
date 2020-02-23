@@ -14,13 +14,15 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_PARAM_H_
-#define INCLUDE_CYBERTRON_RECORDER_PARAM_H_
+#pragma once
 
-#include "cybertron/common/common.h"
-#include "cybertron/common/macros.h"
-#include "cybertron/proto/record.pb.h"
-#include "parameter_recorder_helper.h"
+#include <vector>
+#include <string>
+
+// #include "fueling/common/record/kinglong/cybertron/common/common.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
+// #include "parameter_recorder_helper.h"
 
 namespace cybertron {
 
@@ -31,7 +33,7 @@ struct RecorderParam {
   RecorderParam()
       : path(""),
         version("1.0.0"),
-        compress_type(cybertron::proto::COMPRESS_NONE),
+        compress_type(fueling::common::record::kinglong::proto::cybertron::COMPRESS_NONE),
         chunk_interval(20 * 1000000000L),  // 20s
         chunk_limit(10000000),             // 10M
         segment_interval(0),               // in nanosecond
@@ -47,7 +49,7 @@ struct RecorderParam {
   std::string version;
   // COMPRESS_NONE = 1;
   // COMPRESS_BZ2 = 2;
-  cybertron::proto::CompressType compress_type;
+  fueling::common::record::kinglong::proto::cybertron::CompressType compress_type;
   uint64_t chunk_interval;
   uint64_t chunk_limit;
   // 0:means will not segment
@@ -70,5 +72,3 @@ struct RecorderParam {
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_RECORDER_PARAM_H_

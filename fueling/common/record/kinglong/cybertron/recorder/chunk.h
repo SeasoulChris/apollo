@@ -14,12 +14,13 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_CHUNK_H_
-#define INCLUDE_CYBERTRON_RECORDER_CHUNK_H_
+#pragma once
 
 #include <mutex>
 #include <unordered_map>
-#include "cybertron/recorder/param.h"
+
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/param.h"
 
 namespace cybertron {
 
@@ -30,7 +31,7 @@ class Chunk {
   virtual ~Chunk();
 
   void reset();
-  int write(const cybertron::proto::SingleMsg& msg);
+  int write(const fueling::common::record::kinglong::proto::cybertron::SingleMsg& msg);
 
   uint64_t BeginTime() const;
   uint64_t RawSize() const;
@@ -38,10 +39,8 @@ class Chunk {
  private:
   friend class DataFile;
   std::mutex mutex_;
-  cybertron::proto::ChunkSection chunk_section_;
-  cybertron::proto::ChunkHeader chunk_header_;
+  fueling::common::record::kinglong::proto::cybertron::ChunkSection chunk_section_;
+  fueling::common::record::kinglong::proto::cybertron::ChunkHeader chunk_header_;
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_RECORDER_CHUNK_H_

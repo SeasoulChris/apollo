@@ -14,9 +14,13 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/recorder/datafile.h"
+#include <condition_variable>
 #include <boost/exception/diagnostic_information.hpp>
-#include "cybertron/simulator/simulator.h"
+
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/datafile.h"
+
+// #include "cybertron/simulator/simulator.h"
 
 namespace cybertron {
 #undef DO_IF
@@ -25,13 +29,21 @@ namespace cybertron {
     code                       \
   }
 
+#if !defined(_RETURN_VAL_IF2__)
+#define _RETURN_VAL_IF2__
+#define RETURN_VAL_IF2(condition, val) \
+  if (condition) {                     \
+    return (val);                      \
+  }
+#endif
+
 DataFile::DataFile() {}
 
 DataFile::~DataFile() {
   try {
     close();
   } catch (const boost::exception& e) {
-    LOG_INFO << "close exception:" << boost::diagnostic_information(e).c_str();
+    // LOG_INFO << "close exception:" << boost::diagnostic_information(e).c_str();
   }
 }
 
@@ -56,9 +68,9 @@ DataFile::DataFile(const RecorderParam& param) {
 
 int DataFile::open(const std::string& filename, const uint32_t& mode, bool if_dump_parameter_snapshot) {
   is_flushing_ = false;
-  if (simulator::Simulation::Instance()->RunModel() == "SIM") {
-    run_in_sim_ = true;
-  }
+  // if (simulator::Simulation::Instance()->RunModel() == "SIM") {
+  //   run_in_sim_ = true;
+  // }
 
   if (segment_interval_ != 0 && chunk_interval_ > segment_interval_) {
     chunk_interval_ = segment_interval_;
@@ -81,7 +93,7 @@ int DataFile::open(const std::string& filename, const uint32_t& mode, bool if_du
     }
 
     if (outfileopt_->open(path_) != SUCC) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_OPEN_ERROR << " open outfile failed. filename: " << path_;
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_OPEN_ERROR << " open outfile failed. filename: " << path_;
       return FAIL;
     }
     outfileopt_->WriteHeader(header_);
@@ -93,12 +105,12 @@ int DataFile::open(const std::string& filename, const uint32_t& mode, bool if_du
     flush_thread_ = std::make_shared<std::thread>([this]() {
         this->FlushChunk();
         });
-    ERROR_AND_RETURN_VAL_IF_NULL(flush_thread_, FAIL, CYBERTRON_ERROR, FLUSH_THREAD_INIT_ERROR);
+    // ERROR_AND_RETURN_VAL_IF_NULL(flush_thread_, FAIL, CYBERTRON_ERROR, FLUSH_THREAD_INIT_ERROR);
   }
 
   if (mode == FileMode::Read) {
     if (infileopt_->open(filename)) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_OPEN_ERROR << " open infile failed. filename: " << filename;
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_OPEN_ERROR << " open infile failed. filename: " << filename;
       return FAIL;
     }
     header_ = infileopt_->get_header();
@@ -134,7 +146,7 @@ void DataFile::ClearAll() {
 }
 
 bool DataFile::IsActive() const {
-  return (header_.finish() == cybertron::proto::RecordStatus::ACTIVE);
+  return (header_.finish() == fueling::common::record::kinglong::proto::cybertron::RecordStatus::ACTIVE);
 }
 
 void DataFile::SplitOutfile(bool if_dump_parameter_snapshot) {
@@ -148,7 +160,7 @@ void DataFile::SplitOutfile(bool if_dump_parameter_snapshot) {
   if (if_dump_parameter_snapshot) {
     WriteSnapshot(if_dump_parameter_snapshot);
   }
-  LOG_INFO << "split to new file: " << path_;
+  // LOG_INFO << "split to new file: " << path_;
 }
 
 void DataFile::AddChannel(const std::string& channel_name,
@@ -164,7 +176,7 @@ std::string DataFile::get_channel_type(const std::string& channel) const {
   return it->second;
 }
 
-int DataFile::Write(const cybertron::proto::SingleMsg& singlemsg) {
+int DataFile::Write(const fueling::common::record::kinglong::proto::cybertron::SingleMsg& singlemsg) {
   std::lock_guard<std::recursive_mutex> lock(chunk_mutex_);
   DO_IF (chunk_->write(singlemsg) != SUCC, {
     return FAIL;
@@ -186,7 +198,7 @@ int DataFile::Write(const cybertron::proto::SingleMsg& singlemsg) {
   return SUCC;
 }
 
-void DataFile::set_header(const cybertron::proto::HeaderSection& header) {
+void DataFile::set_header(const fueling::common::record::kinglong::proto::cybertron::HeaderSection& header) {
   header_ = header;
   outfileopt_->set_header(header);
 }
@@ -198,7 +210,7 @@ void DataFile::close() {
     flush_cond_.notify_all();
   }
   if (flush_thread_ && flush_thread_->joinable()) {
-    LOG_DEBUG << "join flush thread.";
+    // LOG_DEBUG << "join flush thread.";
     flush_thread_->join();
     flush_thread_ = nullptr;
   }
@@ -222,7 +234,7 @@ void DataFile::StopWrite() {
 int DataFile::flush() {
   std::lock_guard<std::recursive_mutex> lock(chunk_mutex_);
   if (chunk_->chunk_section_.msgs_size() == 0) {
-    LOG_INFO << "chunkbody is empty";
+    // LOG_INFO << "chunkbody is empty";
     return SUCC;
   }
   {
@@ -253,7 +265,7 @@ int DataFile::flush() {
 }
 
 void DataFile::FlushChunk() {
-  LOG_INFO << "start flush chunk thread.";
+  // LOG_INFO << "start flush chunk thread.";
   while (is_writing_) {
     DO_IF(run_in_sim_, {
       while (!is_flushing_ && is_writing_) {
@@ -271,8 +283,8 @@ void DataFile::FlushChunk() {
     });
 
     DO_IF (chunk_backup_->RawSize() > 0, {
-      LOG_DEBUG << "flush chunk size: " << chunk_backup_->RawSize()
-        << ", begin time: " << chunk_backup_->BeginTime();
+      // LOG_DEBUG << "flush chunk size: " << chunk_backup_->RawSize()
+      //   << ", begin time: " << chunk_backup_->BeginTime();
       if (segment_interval_ > 0 && outfileopt_backup_ != nullptr) {
         outfileopt_backup_->WriteChunk(chunk_backup_->chunk_header_, chunk_backup_->chunk_section_);
         outfileopt_backup_.reset(nullptr);
@@ -286,7 +298,7 @@ void DataFile::FlushChunk() {
       is_flushing_ = false;
     });
   }
-  LOG_INFO << "finish flush chunk thread.";
+  // LOG_INFO << "finish flush chunk thread.";
 }
 
 void DataFile::set_chunk_interval(const uint64_t& interval) {
@@ -310,15 +322,15 @@ int DataFile::get_msg_num(const std::string& channel) const {
 }
 
 int DataFile::get_chunk_num() const {
-  cybertron::proto::ChunkHeader chunkheader;
-  cybertron::proto::ChunkSection chunk;
+  fueling::common::record::kinglong::proto::cybertron::ChunkHeader chunkheader;
+  fueling::common::record::kinglong::proto::cybertron::ChunkSection chunk;
   auto header = infileopt_->get_header();
   return header.chunknum();
 }
 
 int DataFile::get_msg_num(const int& chunk_index) const {
-  cybertron::proto::ChunkHeader chunkheader;
-  cybertron::proto::ChunkSection chunk;
+  fueling::common::record::kinglong::proto::cybertron::ChunkHeader chunkheader;
+  fueling::common::record::kinglong::proto::cybertron::ChunkSection chunk;
   infileopt_->ReadChunk(chunk_index, &chunkheader, &chunk);
   return chunk.msgs_size();
 }
@@ -331,22 +343,22 @@ int DataFile::get_msg_num() const {
   return msg_num;
 }
 
-cybertron::proto::SingleMsg DataFile::ReadMessage(const int& chunk_index,
+fueling::common::record::kinglong::proto::cybertron::SingleMsg DataFile::ReadMessage(const int& chunk_index,
                                                   const int& msg_index) {
-  cybertron::proto::ChunkHeader chunkheader;
-  cybertron::proto::ChunkSection chunk;
+  fueling::common::record::kinglong::proto::cybertron::ChunkHeader chunkheader;
+  fueling::common::record::kinglong::proto::cybertron::ChunkSection chunk;
   infileopt_->ReadChunk(chunk_index, &chunkheader, &chunk);
   return chunk.msgs(msg_index);
 }
 
-int DataFile::ReadChunk(cybertron::proto::ChunkSection* chunk,
-                        cybertron::proto::ChunkHeader* header) {
+int DataFile::ReadChunk(fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunk,
+                        fueling::common::record::kinglong::proto::cybertron::ChunkHeader* header) {
   return infileopt_->ReadChunk(header, chunk);
 }
 
 void DataFile::ReadChunk(const int& index,
-                         cybertron::proto::ChunkSection* chunk,
-                         cybertron::proto::ChunkHeader* header, bool reset) {
+                         fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunk,
+                         fueling::common::record::kinglong::proto::cybertron::ChunkHeader* header, bool reset) {
   infileopt_->ReadChunk(index, header, chunk, reset);
 }
 
@@ -356,7 +368,7 @@ void DataFile::set_segment_interval(const uint64_t& interval) {
   segment_interval_ = interval;
 }
 
-void DataFile::set_compress_type(const cybertron::proto::CompressType& type) {
+void DataFile::set_compress_type(const fueling::common::record::kinglong::proto::cybertron::CompressType& type) {
   compress_type_ = type;
 }
 
@@ -391,7 +403,7 @@ std::string DataFile::GetSnapshot() {
   //ParameterRecorderHelper::GetSnapshot(param_events_, snapshot_);
   std::string param_str = "";
   DO_IF (!snapshot_->SerializeToString(&param_str), {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " snapshot_->SerializeToString error.";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " snapshot_->SerializeToString error.";
     return "";
   });
   return param_str;
@@ -402,16 +414,16 @@ int DataFile::SetSnapshot(const std::string& snapshot) {
     return SUCC;
   }
   if (!snapshot.empty()) {
-    cybertron::proto::ParamSection param;
+    fueling::common::record::kinglong::proto::cybertron::ParamSection param;
     param.set_paramdump(snapshot);
     outfileopt_->WriteParam(param);
   }
   if (snapshot_ == nullptr) {
-    snapshot_ = new proto::ParamSnapshot;
+    snapshot_ = new fueling::common::record::kinglong::proto::cybertron::ParamSnapshot;
   }
-  RETURN_VAL_IF_NULL2(snapshot_, FAIL);
+  // RETURN_VAL_IF_NULL2(snapshot_, FAIL);
   if (!snapshot_->ParseFromString(snapshot)) {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " snapshot_->ParseFromString error.";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " snapshot_->ParseFromString error.";
     return FAIL;
   }
   return SUCC;
@@ -422,16 +434,16 @@ int DataFile::ReadSnapshot() {
     return SUCC;
   }
   if (snapshot_ == nullptr) {
-    snapshot_ = new proto::ParamSnapshot;
+    snapshot_ = new fueling::common::record::kinglong::proto::cybertron::ParamSnapshot;
   }
-  RETURN_VAL_IF_NULL2(snapshot_, FAIL);
-  proto::ParamSection param_section;
+  // RETURN_VAL_IF_NULL2(snapshot_, FAIL);
+  fueling::common::record::kinglong::proto::cybertron::ParamSection param_section;
   if (infileopt_->ReadParam(&param_section) != SUCC) {
     //LOG_INFO << "infileopt_ ReadParam  error.";
     return FAIL;
   }
   DO_IF (!snapshot_->ParseFromString(param_section.paramdump()), {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " snapshot_->ParseFromString error.";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " snapshot_->ParseFromString error.";
     return FAIL;
   });
   return SUCC;
@@ -445,30 +457,30 @@ int DataFile::WriteSnapshot(bool if_dump_parameter_snapshot) {
     delete snapshot_;
     snapshot_ = nullptr;
   }
-  snapshot_ = new proto::ParamSnapshot;
-  if (if_dump_parameter_snapshot) {
-    if (param_helper_ == nullptr) {
-      try {
-        param_helper_ = ParameterRecorderHelper::make_shared();
-      } catch (const boost::exception& e) {
-        LOG_INFO << "param helperexception:" << boost::diagnostic_information(e).c_str();
-        return FAIL;
-      }
-    }
-    if (param_helper_->GetSnapshotFromParameterServer(snapshot_) != SUCC) {
-      LOG_WARN << "get snapshot failed.";
-      return FAIL;
-    }
-  }
+  snapshot_ = new fueling::common::record::kinglong::proto::cybertron::ParamSnapshot;
+  // if (if_dump_parameter_snapshot) {
+  //   if (param_helper_ == nullptr) {
+  //     try {
+  //       param_helper_ = ParameterRecorderHelper::make_shared();
+  //     } catch (const boost::exception& e) {
+  //       // LOG_INFO << "param helperexception:" << boost::diagnostic_information(e).c_str();
+  //       return FAIL;
+  //     }
+  //   }
+  //   if (param_helper_->GetSnapshotFromParameterServer(snapshot_) != SUCC) {
+  //     // LOG_WARN << "get snapshot failed.";
+  //     return FAIL;
+  //   }
+  // }
 
-  ParameterRecorderHelper::GetSnapshot(param_events_, snapshot_);
+  // ParameterRecorderHelper::GetSnapshot(param_events_, snapshot_);
   std::string param_str = "";
   DO_IF (!snapshot_->SerializeToString(&param_str), {
-    LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " snapshot_->SerializeToString error.";
+    // LOG_ERROR << CYBERTRON_ERROR << RECORD_SERIALIZE_STR_ERROR << " snapshot_->SerializeToString error.";
     return FAIL;
   });
   DO_IF (!param_str.empty(), {
-    cybertron::proto::ParamSection param;
+    fueling::common::record::kinglong::proto::cybertron::ParamSection param;
     param.set_paramdump(param_str);
     outfileopt_->WriteParam(param);
   });
@@ -493,34 +505,35 @@ std::string DataFile::get_file_name() const {
 
 int DataFile::Write(const std::string& channel, const std::string& message,
                     const std::string& type, const uint64_t time) {
-  LOG_DEBUG << "Received message from channel [" << channel << "]";
-  auto it = types_.find(channel);
-  if (it != types_.end()) {
-    DO_IF (it->second != type, {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << type << "] is invalid: expect ["
-                << it->second << "]";
-      return FAIL;
-    });
-  } else {
-    std::string proto_desc = "";
-    ProtobufFactory::Instance()->GetDescriptorString(type, &proto_desc);
-    if (proto_desc == "") {
-      //LOG_ERROR << CYBERTRON_ERROR <<  << " channel[" << channel << "] proto_desc empty.";
-      //return FAIL;
-    }
-    AddChannel(channel, type, proto_desc);
-  }
+  // LOG_DEBUG << "Received message from channel [" << channel << "]";
+  // auto it = types_.find(channel);
+  // if (it != types_.end()) {
+  //   DO_IF (it->second != type, {
+  //     // LOG_ERROR << CYBERTRON_ERROR << RECORD_INVALID_MSG_TYPE_ERROR << " Message type [" << type << "] is invalid: expect ["
+  //     //           << it->second << "]";
+  //     return FAIL;
+  //   });
+  // } else {
+  //   std::string proto_desc = "";
+  //   ProtobufFactory::Instance()->GetDescriptorString(type, &proto_desc);
+  //   if (proto_desc == "") {
+  //     //LOG_ERROR << CYBERTRON_ERROR <<  << " channel[" << channel << "] proto_desc empty.";
+  //     //return FAIL;
+  //   }
+  //   AddChannel(channel, type, proto_desc);
+  // }
 
-  cybertron::proto::SingleMsg singlemsg;
-  singlemsg.set_channelname(channel);
-  singlemsg.set_msg(message);
-  if (time > 0) {
-    singlemsg.set_time(time);
-  } else {
-    singlemsg.set_time(Time::Now().ToNanosecond());
-  }
+  // fueling::common::record::kinglong::proto::cybertron::SingleMsg singlemsg;
+  // singlemsg.set_channelname(channel);
+  // singlemsg.set_msg(message);
+  // if (time > 0) {
+  //   singlemsg.set_time(time);
+  // } else {
+  //   singlemsg.set_time(Time::Now().ToNanosecond());
+  // }
 
-  return Write(singlemsg);
+  // return Write(singlemsg);
+  return 0;
 }
 
 std::string DataFile::GetDescByName(const std::string& name) const {

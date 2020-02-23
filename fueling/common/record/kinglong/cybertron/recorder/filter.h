@@ -14,18 +14,19 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_FILTER_H_
-#define INCLUDE_CYBERTRON_RECORDER_FILTER_H_
+#pragma once
 
 #include <climits>
 #include <string>
-#include "cybertron/common/common.h"
+// #include "cybertron/common/common.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
 
 namespace cybertron {
 class BaseFilter {
  public:
   SMART_PTR_DEFINITIONS_NOT_COPYABLE(BaseFilter);
-  using MessageInstance = cybertron::proto::SingleMsg;
+  using MessageInstance = fueling::common::record::kinglong::proto::cybertron::SingleMsg;
   virtual bool IsValid(const MessageInstance& msg) const = 0;
 };
 
@@ -80,4 +81,3 @@ class ChannelFilter : public BaseFilter {
 };
 
 }  // namespace cybertron
-#endif

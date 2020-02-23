@@ -14,7 +14,9 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/recorder/data_iterator.h"
+#include <condition_variable>
+
+#include "fueling/common/record/kinglong/cybertron/recorder/data_iterator.h"
 
 namespace cybertron {
 DataIterator::DataIterator(const DataFile::SharedPtr& data_file) {
@@ -23,8 +25,8 @@ DataIterator::DataIterator(const DataFile::SharedPtr& data_file) {
 }
 
 bool DataIterator::Update(iterator* it) {
-  cybertron::proto::ChunkSection chunk;
-  cybertron::proto::ChunkHeader header;
+  fueling::common::record::kinglong::proto::cybertron::ChunkSection chunk;
+  fueling::common::record::kinglong::proto::cybertron::ChunkHeader header;
   while (it->index_ == msgs_.size()) {
     if (chunk_index_ == chunk_num_) {
       return false;

@@ -15,10 +15,10 @@
  *****************************************************************************/
 
 #include <fstream>
-#include <gflags/gflags.h>
+// #include <gflags/gflags.h>
 
-#include "cybertron/common/gflags_manager.h"
-#include "cybertron/simulator/simulator.h"
+#include "fueling/common/record/kinglong/cybertron/common/gflags_manager.h"
+// #include "cybertron/simulator/simulator.h"
 
 namespace cybertron {
 
@@ -34,14 +34,14 @@ int GflagsManager::Init() {
 
 int GflagsManager::LoadAll() {
   std::vector<std::string> files;
-  const std::string run_model = simulator::Simulation::Instance()->RunModel();
+  const std::string run_model = ""; // simulator::Simulation::Instance()->RunModel();
 
   std::string work_root = WorkRoot();
   std::string gflags_root_path = FileUtil::get_absolute_path(work_root, "conf");
 
   if (FileUtil::get_file_list(gflags_root_path, ".flag", &files) != SUCC) {
-    LOG_ERROR << CYBERTRON_ERROR << GFLAG_GET_FILE_LIST_ERROR << " gflags_manager_path: "
-      << gflags_root_path << " get_file_list error.";
+    // LOG_ERROR << CYBERTRON_ERROR << GFLAG_GET_FILE_LIST_ERROR << " gflags_manager_path: "
+    //   << gflags_root_path << " get_file_list error.";
     return FAIL;
   }
 
@@ -50,8 +50,8 @@ int GflagsManager::LoadAll() {
     std::string gflags_module_path =
         FileUtil::get_absolute_path(module_root, "conf");
     if (FileUtil::get_file_list(gflags_module_path, ".flag", &files) != SUCC) {
-      LOG_ERROR << CYBERTRON_ERROR << GFLAG_GET_FILE_LIST_ERROR << " gflags_manager_path : "
-        << gflags_module_path << " get_file_list error.";
+      // LOG_ERROR << CYBERTRON_ERROR << GFLAG_GET_FILE_LIST_ERROR << " gflags_manager_path : "
+      //   << gflags_module_path << " get_file_list error.";
       return FAIL;
     }
   }
@@ -66,41 +66,41 @@ int GflagsManager::LoadAll() {
   }
 
   if (FileUtil::Exists(FLAGS_flagfile)) {
-    LOG_WARN << "FLAGS_flagfile: " << FLAGS_flagfile
-             << " exists. will overwrite it";
+    // LOG_WARN << "FLAGS_flagfile: " << FLAGS_flagfile
+    //          << " exists. will overwrite it";
   }
   std::ofstream outstream;
   outstream.open(FLAGS_flagfile, std::ios::out);
   if (!outstream || !outstream.is_open()) {
-    LOG_ERROR << CYBERTRON_ERROR << GFLAG_FILE_OPEN_ERROR << " FLAGS_flagfile open error.";
+    // LOG_ERROR << CYBERTRON_ERROR << GFLAG_FILE_OPEN_ERROR << " FLAGS_flagfile open error.";
     return FAIL;
   }
   for (auto& file : files) {
-    LOG_INFO << "GFLAGS FILE : " << file;
+    // LOG_INFO << "GFLAGS FILE : " << file;
     std::string content = "# " + file + "\n";
     if (!FileUtil::get_file_content(file, &content)) {
-      LOG_ERROR << CYBERTRON_ERROR << GFLAG_FILE_READ_ERROR << " flagfile read error." << file;
+      // LOG_ERROR << CYBERTRON_ERROR << GFLAG_FILE_READ_ERROR << " flagfile read error." << file;
       return FAIL;
     }
     content += "\n\n";
     outstream.write(content.c_str(), content.length());
   }
   outstream.close();
-  LOG_INFO << "GFLAGS FILE MERGED : " << FLAGS_flagfile;
+  // LOG_INFO << "GFLAGS FILE MERGED : " << FLAGS_flagfile;
   int fake_argc = 1;
   char** fake_argv = new char* [1]{(char *)"--frame_name=cybertron"};
   google::ParseCommandLineFlags(&fake_argc, &fake_argv, true);
 
-  LOG_INFO << "finish to load Gflags.";
+  // LOG_INFO << "finish to load Gflags.";
   delete[] fake_argv;
   _inited = true;
 
-  if (FLAGS_gflags_load_check == "error") {
-    LOG_ERROR << "gflags load error";
-    if (run_model == "SIM") {
-      simulator::Simulation::Instance()->SetStatus(13);
-    }
-  }
+  // if (FLAGS_gflags_load_check == "error") {
+  //   LOG_ERROR << "gflags load error";
+  //   if (run_model == "SIM") {
+  //     simulator::Simulation::Instance()->SetStatus(13);
+  //   }
+  // }
 
   return SUCC;
 }
@@ -120,7 +120,7 @@ int GflagsManager::LoadFile(const std::string& fname) {
     }
     FLAGS_flagfile = file_path;
   }
-  LOG_INFO << "GFLAG FILE : " << FLAGS_flagfile;
+  // LOG_INFO << "GFLAG FILE : " << FLAGS_flagfile;
   int fake_argc = 1;
   char** fake_argv = new char* [1]{(char *)"--frame_name=cybertron"};
   google::ParseCommandLineFlags(&fake_argc, &fake_argv, true);

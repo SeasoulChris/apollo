@@ -14,25 +14,27 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/recorder/chunk.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/chunk.h"
 
 namespace cybertron {
+
+using fueling::common::record::kinglong::proto::cybertron::SingleMsg;
 
 Chunk::Chunk() { reset(); }
 
 Chunk::~Chunk() {}
 
-int Chunk::write(const cybertron::proto::SingleMsg& msg) {
+int Chunk::write(const SingleMsg& msg) {
   std::lock_guard<std::mutex> lck(mutex_);
   if (chunk_section_.msgs_size() == 0) {
-    cybertron::proto::SingleMsg* singlemsg = chunk_section_.add_msgs();
+    SingleMsg* singlemsg = chunk_section_.add_msgs();
     *singlemsg = msg;
     chunk_header_.set_begintime(msg.time());
     chunk_header_.set_endtime(msg.time());
     chunk_header_.set_msgnum(1);
     chunk_header_.set_rawsize(msg.msg().size());
   } else {
-    cybertron::proto::SingleMsg* singlemsg = chunk_section_.add_msgs();
+    SingleMsg* singlemsg = chunk_section_.add_msgs();
     *singlemsg = msg;
     if (msg.time() < chunk_header_.begintime()) {
       chunk_header_.set_begintime(msg.time());

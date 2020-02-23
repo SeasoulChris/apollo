@@ -14,32 +14,8 @@
  * limitations under the License.
  *****************************************************************************/
 
-#pragma once
-
-#include "fueling/common/record/kinglong/cybertron/common/message_base.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/filter.h"
 
 namespace cybertron {
 
-class RawMessage : public MessageBase {
- public:
-  SMART_PTR_DEFINITIONS(RawMessage);
-  class Descriptor {
-   public:
-    std::string full_name() const { return "RawMessage"; }
-  };
-  static const Descriptor* descriptor() {
-    static Descriptor desc;
-    return &desc;
-  }
-
-  void set_msg(const std::string& msg) { _msg = msg; }
-  std::string get_msg() const { return _msg; }
-  void set_type_name(const std::string& type_name) { _type_name = type_name; }
-  std::string get_type_name() const { return _type_name; }
-
- private:
-  std::string _msg = "";
-  std::string _type_name = "";
-};
-
-}  // namespace cybertron
+}

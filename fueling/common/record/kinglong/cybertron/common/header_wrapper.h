@@ -14,10 +14,9 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_HEADER_WRAPPER_H_
-#define INCLUDE_CYBERTRON_COMMON_HEADER_WRAPPER_H_
+#pragma once
 
-#include "cybertron/common/common.h"
+// #include "cybertron/common/common.h"
 //#include "cybertron/dag_streaming/receiver.h"
 //#include "cybertron/dag_streaming/sender.h"
 //#include "cybertron/proto/dag_config.pb.h"
@@ -119,5 +118,3 @@ class CommonHeaderWrapper<
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_HEADER_WRAPPER_H_

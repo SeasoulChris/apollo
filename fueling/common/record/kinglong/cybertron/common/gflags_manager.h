@@ -14,18 +14,17 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_GFLAGS_MANAGER_H_
-#define INCLUDE_CYBERTRON_COMMON_GFLAGS_MANAGER_H_
+#pragma once
 
 #include <mutex>
 #include <gflags/gflags.h>
 
-#include "cybertron/common/define.h"
-#include "cybertron/common/macros.h"
-#include "cybertron/common/logger.h"
-#include "cybertron/common/file_util.h"
-#include "cybertron/common/environment.h"
-#include "cybertron/common/error_code.h"
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+// #include "cybertron/common/logger.h"
+#include "fueling/common/record/kinglong/cybertron/common/file_util.h"
+#include "fueling/common/record/kinglong/cybertron/common/environment.h"
+#include "fueling/common/record/kinglong/cybertron/common/error_code.h"
 
 DECLARE_string(flagfile);
 
@@ -46,5 +45,3 @@ class GflagsManager {
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_GFLAGS_MANAGER_H_

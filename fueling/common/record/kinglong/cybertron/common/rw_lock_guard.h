@@ -14,8 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_RW_LOCK_GUARD_H_
-#define INCLUDE_CYBERTRON_COMMON_RW_LOCK_GUARD_H_
+#pragma once
 
 namespace cybertron {
 
@@ -48,5 +47,3 @@ class WriteLockGuard {
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_RW_LOCK_GUARD_H_

@@ -14,19 +14,20 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_FILEOPT_H_
-#define INCLUDE_CYBERTRON_RECORDER_FILEOPT_H_
+#pragma once
 
 #include <iostream>
 #include <fstream>
 #include <mutex>
+#include <string>
 #include <vector>
 #include <unordered_map>
 
-#include "cybertron/common/macros.h"
-#include "cybertron/common/md5.h"
-#include "cybertron/proto/record.pb.h"
-#include "cybertron/recorder/compress.h"
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/cybertron/common/md5.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
+#include "fueling/common/record/kinglong/cybertron/recorder/compress.h"
 
 namespace cybertron {
 
@@ -46,9 +47,9 @@ class FileOpt {
 
 struct Section {
   Section();
-  Section(const cybertron::proto::SectionType& stype);
+  Section(const fueling::common::record::kinglong::proto::cybertron::SectionType& stype);
   int64_t size;
-  cybertron::proto::SectionType type;
+  fueling::common::record::kinglong::proto::cybertron::SectionType type;
 };
 
 class InFileOpt : public FileOpt {
@@ -61,43 +62,43 @@ class InFileOpt : public FileOpt {
   void close() override;
 
   int OpenWithoutHeaderAndIndex(const std::string& path);
-  const cybertron::proto::HeaderSection& get_header();
-  cybertron::proto::IndexSection get_index();
-  int ReadChunk(cybertron::proto::ChunkHeader* chunkheader,
-                cybertron::proto::ChunkSection* chunkbody);
-  int ReadIndex(cybertron::proto::IndexSection* index);
-  // int ReadChunk(int chunk_idx, cybertron::proto::ChunkSection* chunkbody);
+  const fueling::common::record::kinglong::proto::cybertron::HeaderSection& get_header();
+  fueling::common::record::kinglong::proto::cybertron::IndexSection get_index();
+  int ReadChunk(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
+  int ReadIndex(fueling::common::record::kinglong::proto::cybertron::IndexSection* index);
+  // int ReadChunk(int chunk_idx, fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
   int ResetToChunk();
-  int ReadChunk(int chunk_idx, cybertron::proto::ChunkHeader* chunkheader,
-                cybertron::proto::ChunkSection* chunkbody, bool reset = true);
-  int ReadReserve(cybertron::proto::ReserveSection* reserve);
-  int ReadParam(cybertron::proto::ParamSection* param);
+  int ReadChunk(int chunk_idx, fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody, bool reset = true);
+  int ReadReserve(fueling::common::record::kinglong::proto::cybertron::ReserveSection* reserve);
+  int ReadParam(fueling::common::record::kinglong::proto::cybertron::ParamSection* param);
   int ReadIndex();
   int ReadHeader();
   bool IsEnd();
 
  private:
   int FormatCheck(const std::string& path);
-  int ReadHeaderImpl(cybertron::proto::HeaderSection* header);
-  int ReadChunkImplByIndex(cybertron::proto::ChunkHeader* chunkheader,
-                    cybertron::proto::ChunkSection* chunkbody);
-  int ReadChunkImplBySearch(cybertron::proto::ChunkHeader* chunkheader,
-                    cybertron::proto::ChunkSection* chunkbody);
-  int ReadChunkHeaderImplByIndex(cybertron::proto::ChunkHeader* chunkheader);
-  int ReadChunkHeaderImplBySearch(cybertron::proto::ChunkHeader* chunkheader);
-  int ReadChunkBodyImpl(cybertron::proto::ChunkHeader* chunkheader,
-                        cybertron::proto::ChunkSection* chunkbody);
+  int ReadHeaderImpl(fueling::common::record::kinglong::proto::cybertron::HeaderSection* header);
+  int ReadChunkImplByIndex(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                    fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
+  int ReadChunkImplBySearch(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                    fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
+  int ReadChunkHeaderImplByIndex(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader);
+  int ReadChunkHeaderImplBySearch(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader);
+  int ReadChunkBodyImpl(fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                        fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
   int ReadChunkIndexImpl(uint32_t chunk_idx,
-                         cybertron::proto::ChunkSection* chunkbody);
+                         fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
   int ReadChunkIndexImpl(uint32_t chunk_idx,
-                         cybertron::proto::ChunkHeader* chunkheader,
-                         cybertron::proto::ChunkSection* chunkbody);
-  int ReadIndexImpl(cybertron::proto::IndexSection* index, bool flag = false);
+                         fueling::common::record::kinglong::proto::cybertron::ChunkHeader* chunkheader,
+                         fueling::common::record::kinglong::proto::cybertron::ChunkSection* chunkbody);
+  int ReadIndexImpl(fueling::common::record::kinglong::proto::cybertron::IndexSection* index, bool flag = false);
   template <typename T>
   int _read_section(T* section,
-                    const cybertron::proto::SectionType& sectiontype) {
+                    const fueling::common::record::kinglong::proto::cybertron::SectionType& sectiontype) {
     if (!_instream || !_instream.is_open()) {
-      LOG_ERROR << CYBERTRON_ERROR << FILE_NOT_OPEN_ERROR << " file [" << _path << "] not open error.";
+      // LOG_ERROR << CYBERTRON_ERROR << FILE_NOT_OPEN_ERROR << " file [" << _path << "] not open error.";
       return FAIL;
     }
     std::lock_guard<std::mutex> lck(_mutex);
@@ -110,9 +111,9 @@ class InFileOpt : public FileOpt {
       }
     }
     if (pos_new == 0) {
-      LOG_INFO << "NOTE: there is no ["
-                << cybertron::proto::SectionType_Name(sectiontype)
-                << "] .";
+      // LOG_INFO << "NOTE: there is no ["
+      //           << fueling::common::record::kinglong::proto::cybertron::SectionType_Name(sectiontype)
+      //           << "] .";
       return FAIL;
     }
     _instream.seekg(pos_new, std::ios::beg);
@@ -124,18 +125,18 @@ class InFileOpt : public FileOpt {
       return TAIL;
     }
     if (_instream.gcount() != sizeof(sec)) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_READ_ERROR << " file [" << _path << "] read error.";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_READ_ERROR << " file [" << _path << "] read error.";
       return FAIL;
     }
     std::string section_msg;
     section_msg.resize(sec.size);
     _instream.read((char*)section_msg.c_str(), sec.size);
     if (_instream.gcount() != sec.size) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_READ_ERROR << " file [" << _path << "] read error.";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_FILE_READ_ERROR << " file [" << _path << "] read error.";
       return FAIL;
     }
     if (!section->ParseFromString(section_msg)) {
-      LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " file [" << _path << "] section ParseFromString error.";
+      // LOG_ERROR << CYBERTRON_ERROR << RECORD_PARSE_STR_ERROR << " file [" << _path << "] section ParseFromString error.";
       return FAIL;
     }
 
@@ -145,8 +146,8 @@ class InFileOpt : public FileOpt {
 
   int64_t _file_size;
   std::ifstream _instream;
-  cybertron::proto::HeaderSection _header_section;
-  cybertron::proto::IndexSection _index_section;
+  fueling::common::record::kinglong::proto::cybertron::HeaderSection _header_section;
+  fueling::common::record::kinglong::proto::cybertron::IndexSection _index_section;
 };
 
 class OutFileOpt : public FileOpt {
@@ -157,34 +158,32 @@ class OutFileOpt : public FileOpt {
   int open(const std::string& path) override;
   void close() override;
 
-  const cybertron::proto::HeaderSection& get_header();
+  const fueling::common::record::kinglong::proto::cybertron::HeaderSection& get_header();
   void UpdateMessageNum(std::unordered_map<std::string, int> msg_count);
   void AddChannel(const std::string& channel_name, const std::string& type,
                   const std::string& desc);
-  int WriteHeader(const cybertron::proto::HeaderSection& header);
+  int WriteHeader(const fueling::common::record::kinglong::proto::cybertron::HeaderSection& header);
   int WriteHeader();
   void write_header_md5();
-  void set_header(const cybertron::proto::HeaderSection& header);
-  int WriteChunk(cybertron::proto::ChunkHeader& chunkheader,
-                 const cybertron::proto::ChunkSection& chunkbody);
-  int WriteReserve(const cybertron::proto::ReserveSection& reserve);
-  int WriteParam(const cybertron::proto::ParamSection& param);
-  int WriteIndex(const cybertron::proto::IndexSection& index);
+  void set_header(const fueling::common::record::kinglong::proto::cybertron::HeaderSection& header);
+  int WriteChunk(fueling::common::record::kinglong::proto::cybertron::ChunkHeader& chunkheader,
+                 const fueling::common::record::kinglong::proto::cybertron::ChunkSection& chunkbody);
+  int WriteReserve(const fueling::common::record::kinglong::proto::cybertron::ReserveSection& reserve);
+  int WriteParam(const fueling::common::record::kinglong::proto::cybertron::ParamSection& param);
+  int WriteIndex(const fueling::common::record::kinglong::proto::cybertron::IndexSection& index);
 
   uint64_t get_file_size();
   int get_channel_size();
 
  private:
-  int WriteChunkImpl(cybertron::proto::ChunkHeader& chunkheader,
-                     const cybertron::proto::ChunkSection& chunk);
+  int WriteChunkImpl(fueling::common::record::kinglong::proto::cybertron::ChunkHeader& chunkheader,
+                     const fueling::common::record::kinglong::proto::cybertron::ChunkSection& chunk);
   void _write_header_md5();
 
   bool _need_write_header = true;
   std::ofstream _outstream;
-  cybertron::proto::HeaderSection _header_section;
-  cybertron::proto::IndexSection _index_section;
+  fueling::common::record::kinglong::proto::cybertron::HeaderSection _header_section;
+  fueling::common::record::kinglong::proto::cybertron::IndexSection _index_section;
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_RECORDER_FILEOPT_H_

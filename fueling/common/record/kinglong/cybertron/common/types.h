@@ -14,11 +14,10 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_TYPES_H_
-#define INCLUDE_CYBERTRON_COMMON_TYPES_H_
+#pragma once
 
 #include <google/protobuf/descriptor.h>
-#include "cybertron/common/message_base.h"
+#include "fueling/common/record/kinglong/cybertron/common/message_base.h"
 
 namespace cybertron {
 
@@ -36,5 +35,3 @@ template <class M>
 struct NullFilter {};
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_TYPES_H_

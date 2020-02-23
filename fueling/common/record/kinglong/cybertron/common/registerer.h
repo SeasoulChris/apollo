@@ -14,14 +14,14 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_REGISTERER_H_
-#define INCLUDE_CYBERTRON_COMMON_REGISTERER_H_
+#pragma once
 
 #include <map>
 #include <string>
+#include <vector>
 
-#include "cybertron/common/macros.h"
-#include "cybertron/common/logger.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+// #include "cybertron/common/logger.h"
 
 namespace cybertron {
 
@@ -150,5 +150,3 @@ bool get_registered_classes(
     if (map.find(#name) == map.end()) map[#name] = new ObjectFactory##name(); \
   }                                                                           \
   }
-
-#endif  // INCLUDE_CYBERTRON_COMMON_REGISTERER_H_

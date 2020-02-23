@@ -14,8 +14,24 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cybertron/common/define.h"
-#include "cybertron/common/protobuf_factory.h"
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+#include "fueling/common/record/kinglong/cybertron/common/protobuf_factory.h"
+
+#if !defined(_RETURN_VAL_IF2__)
+#define _RETURN_VAL_IF2__
+#define RETURN_VAL_IF2(condition, val) \
+  if (condition) {                     \
+    return (val);                      \
+  }
+#endif
+
+#if !defined(_RETURN_IF2__)
+#define _RETURN_IF2__
+#define RETURN_IF2(condition) \
+  if (condition) {            \
+    return;                   \
+  }
+#endif
 
 namespace cybertron {
 
@@ -102,16 +118,16 @@ int ProtobufFactory::GetProtoDesc(
 
 void ProtobufFactory::GetDescriptorString(
     const google::protobuf::Descriptor* desc, std::string* desc_str) {
-  cybertron::proto::ProtoDesc proto_desc;
+  ProtoDesc proto_desc;
   if (GetProtoDesc(desc->file(), &proto_desc) != SUCC) {
-    LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
-      << "Failed to get descriptor from message";
+    // LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
+    //   << "Failed to get descriptor from message";
     return;
   }
 
   if (!proto_desc.SerializeToString(desc_str)) {
-    LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
-      << "Failed to get descriptor from message";
+    // LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
+    //   << "Failed to get descriptor from message";
   }
 }
 
@@ -127,8 +143,8 @@ void ProtobufFactory::GetPythonDesc(const std::string& type, std::string* desc_s
   google::protobuf::DescriptorProto dp;
   desc->CopyTo(&dp);
   if (!dp.SerializeToString(desc_str)) {
-    LOG_WARN << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
-      << "Failed to get descriptor from message";
+    // LOG_WARN << CYBERTRON_ERROR << PROTOBUF_GET_DESC_ERROR 
+    //   << "Failed to get descriptor from message";
   }
 }
 
@@ -159,16 +175,16 @@ google::protobuf::Message* ProtobufFactory::GenerateMessageByType(
   const google::protobuf::Descriptor* descriptor =
       _pool->FindMessageTypeByName(type);
   if (descriptor == NULL) {
-    LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GENERATE_MSG_ERROR << " cannot find [" 
-      << type << "] descriptor";
+    // LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GENERATE_MSG_ERROR << " cannot find [" 
+    //   << type << "] descriptor";
     return nullptr;
   }
 
   const google::protobuf::Message* prototype =
       _factory->GetPrototype(descriptor);
   if (prototype == NULL) {
-    LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GENERATE_MSG_ERROR << " cannot find ["
-      << type << "] prototype";
+    // LOG_ERROR << CYBERTRON_ERROR << PROTOBUF_GENERATE_MSG_ERROR << " cannot find ["
+    //   << type << "] prototype";
     return nullptr;
   }
 
@@ -209,7 +225,7 @@ void ErrorCollector::AddError(const std::string& filename,
                               const google::protobuf::Message* descriptor,
                               ErrorLocation location,
                               const std::string& message) {
-  LOG_INFO << "[" << filename << "]. Info: " << message;
+  // LOG_INFO << "[" << filename << "]. Info: " << message;
 }
 
 void ErrorCollector::AddWarning(const std::string& filename,
@@ -217,7 +233,7 @@ void ErrorCollector::AddWarning(const std::string& filename,
                                 const google::protobuf::Message* descriptor,
                                 ErrorLocation location,
                                 const std::string& message) {
-  LOG_INFO << "[" << filename << "]." << "Info: " << message;
+  // LOG_INFO << "[" << filename << "]." << "Info: " << message;
 }
 
 }  // namespace cybertron

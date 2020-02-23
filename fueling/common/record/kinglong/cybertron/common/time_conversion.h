@@ -14,12 +14,11 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_TIME_CONVERSION_H_
-#define INCLUDE_CYBERTRON_COMMON_TIME_CONVERSION_H_
+#pragma once
 
 #include <stdint.h>
 
-#include <cybertron/common/macros.h>
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
 
 namespace cybertron {
 
@@ -107,5 +106,3 @@ inline uint64_t GpsToUnixNanoseconds(uint64_t gps_nanoseconds) {
          gps_nanoseconds % ONE_BILLION;
 }
 }
-
-#endif  // INCLUDE_CYBERTRON_COMMON_TIME_CONVERSION_H_

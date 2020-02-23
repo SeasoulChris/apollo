@@ -14,8 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_PROTOBUF_FACTORY_H_
-#define INCLUDE_CYBERTRON_COMMON_PROTOBUF_FACTORY_H_
+#pragma once
 
 #include <string>
 #include <mutex>
@@ -25,8 +24,9 @@
 #include <google/protobuf/io/tokenizer.h>
 #include <google/protobuf/compiler/parser.h>
 // #include "cybertron/common/logger.h"
-#include "cybertron/common/error_code.h"
-#include "cybertron/proto/proto_desc.pb.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/cybertron/common/error_code.h"
+#include "fueling/common/record/kinglong/proto/cybertron/proto_desc.pb.h"
 
 namespace cybertron {
 
@@ -45,7 +45,7 @@ class ErrorCollector : public google::protobuf::DescriptorPool::ErrorCollector {
 class ProtobufFactory {
  public:
   SMART_PTR_DEFINITIONS(ProtobufFactory)
-  using ProtoDesc = cybertron::proto::ProtoDesc;
+  using ProtoDesc = fueling::common::record::kinglong::proto::cybertron::ProtoDesc;
 
   ~ProtobufFactory();
 
@@ -105,5 +105,3 @@ class ProtobufFactory {
 };
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_PROTOBUF_FACTORY_H_

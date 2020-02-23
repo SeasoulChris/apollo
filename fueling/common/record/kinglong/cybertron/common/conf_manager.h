@@ -14,17 +14,17 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_COMMON_CONF_MANAGER_H_
-#define INCLUDE_CYBERTRON_COMMON_CONF_MANAGER_H_
+#pragma once
 
 #include <mutex>
 #include <iostream>
 #include <fstream>
 
-#include "cybertron/common/logger.h"
-#include "cybertron/common/file_util.h"
-#include "cybertron/common/environment.h"
-#include "cybertron/common/error_code.h"
+// #include "fueling/common/record/kinglong/cybertron/common/logger.h"
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+#include "fueling/common/record/kinglong/cybertron/common/file_util.h"
+#include "fueling/common/record/kinglong/cybertron/common/environment.h"
+#include "fueling/common/record/kinglong/cybertron/common/error_code.h"
 
 namespace cybertron {
 
@@ -34,12 +34,9 @@ namespace cybertron {
     cybertron::ConfManager::SharedPtr confmgr =                    \
         cybertron::ConfManager::Instance();                        \
     if (confmgr == nullptr) {                                      \
-      LOG_ERROR << CYBERTRON_ERROR << CONF_MGR_INSTANCE_ERROR << "confmgr be nullptr error.";        \
       return cybertron::FAIL;                                      \
     }                                                              \
     if (confmgr->Read(secname, key, &value) != cybertron::SUCC) {  \
-      LOG_ERROR << CYBERTRON_ERROR << CONF_FILE_LOAD_ERROR << "Read section["     \
-          << secname << "] key[" << key << "] error.";             \
       return cybertron::FAIL;                                      \
     }                                                              \
   } while (0)
@@ -215,12 +212,10 @@ template <class T>
 int ConfManager::Read(const std::string& secname, const std::string& key,
                       T* value) const {
   if (conf_ == nullptr) {
-    LOG_ERROR << CYBERTRON_ERROR << CONF_MGR_INSTANCE_ERROR << "conf_ be null error.";
+    // LOG_ERROR << CYBERTRON_ERROR << CONF_MGR_INSTANCE_ERROR << "conf_ be null error.";
     return FAIL;
   }
   return conf_->Read(secname, key, value);
 }
 
 }  // namespace cybertron
-
-#endif  // INCLUDE_CYBERTRON_COMMON_CONF_MANAGER_H_

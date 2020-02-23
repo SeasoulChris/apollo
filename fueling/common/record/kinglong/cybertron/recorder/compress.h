@@ -14,13 +14,14 @@
  * limitations under the License.
  *****************************************************************************/
 
-#ifndef INCLUDE_CYBERTRON_RECORDER_COMPRESS_H_
-#define INCLUDE_CYBERTRON_RECORDER_COMPRESS_H_
+#pragma once
 
-#include <bzlib.h>
-#include <lz4.h>
+// #include <bzlib.h>
+// #include <lz4.h>
 
-#include "cybertron/common/common.h"
+// #include "cybertron/common/common.h"
+#include "fueling/common/record/kinglong/cybertron/common/macros.h"
+#include "fueling/common/record/kinglong/proto/cybertron/record.pb.h"
 
 namespace cybertron {
 
@@ -48,60 +49,59 @@ class CompressBase {
   virtual int Decompress(const std::string& compressed, std::string& raw) = 0;
 };
 
-class BZ2Compress : public CompressBase {
- public:
-  SMART_PTR_DEFINITIONS(BZ2Compress)
-  BZ2Compress();
-  virtual ~BZ2Compress() {}
+// class BZ2Compress : public CompressBase {
+//  public:
+//   SMART_PTR_DEFINITIONS(BZ2Compress)
+//   BZ2Compress();
+//   virtual ~BZ2Compress() {}
 
-  BZ2Compress(int verbosity, int block_size_100k, int work_factor);
+//   BZ2Compress(int verbosity, int block_size_100k, int work_factor);
 
-  /**
-   * \returns : if success to decompress, return 0, else lower than 0.
-   *            error code defined in bzlib.h.
-   */
-  int compress(const std::string& raw, std::string& compressed) override;
+//   /**
+//    * \returns : if success to decompress, return 0, else lower than 0.
+//    *            error code defined in bzlib.h.
+//    */
+//   int compress(const std::string& raw, std::string& compressed) override;
 
-  /**
-   * \param raw: the raw data buffer, should reserve enough capacity bigger than
-   * raw data length.
-   * \returns : if success to decompress, return 0, else lower than 0.
-   *            error code defined in bzlib.h.
-   */
-  int Decompress(const std::string& compressed, std::string& raw) override;
+//   /**
+//    * \param raw: the raw data buffer, should reserve enough capacity bigger than
+//    * raw data length.
+//    * \returns : if success to decompress, return 0, else lower than 0.
+//    *            error code defined in bzlib.h.
+//    */
+//   int Decompress(const std::string& compressed, std::string& raw) override;
 
- private:
-  // level of debugging output (0-4; 0 default). 0 is silent, 4 is max verbose
-  // debugging output
-  int _verbosity;
-  // compression block size (1-9; 9 default). 9 is best compression, most memory
-  int _block_size_100k;
-  // compression behavior for worst case, highly repetitive data (0-250; 30
-  // default)
-  int _work_factor;
-};
+//  private:
+//   // level of debugging output (0-4; 0 default). 0 is silent, 4 is max verbose
+//   // debugging output
+//   int _verbosity;
+//   // compression block size (1-9; 9 default). 9 is best compression, most memory
+//   int _block_size_100k;
+//   // compression behavior for worst case, highly repetitive data (0-250; 30
+//   // default)
+//   int _work_factor;
+// };
 
-class LZ4Compress : public CompressBase {
- public:
-  SMART_PTR_DEFINITIONS(LZ4Compress)
-  LZ4Compress();
-  virtual ~LZ4Compress() {}
-  LZ4Compress(int verbosity, int block_size_100k, int work_factor);
-  int compress(const std::string& raw, std::string& compressed) override;
-  int Decompress(const std::string& compressed, std::string& raw) override;
+// class LZ4Compress : public CompressBase {
+//  public:
+//   SMART_PTR_DEFINITIONS(LZ4Compress)
+//   LZ4Compress();
+//   virtual ~LZ4Compress() {}
+//   LZ4Compress(int verbosity, int block_size_100k, int work_factor);
+//   int compress(const std::string& raw, std::string& compressed) override;
+//   int Decompress(const std::string& compressed, std::string& raw) override;
 
- private:
-  int _verbosity;
-  int _block_size_100k;
-  int _work_factor;
-};
+//  private:
+//   int _verbosity;
+//   int _block_size_100k;
+//   int _work_factor;
+// };
 
 class CompressFactory {
  public:
   static CompressBase::SharedPtr Create(
-      const cybertron::proto::CompressType& compress);
+      const fueling::common::record::kinglong::proto::cybertron::CompressType& compress);
 };
 
-}  // namespace cybertron
 
-#endif  // INCLUDE_CYBERTRON_RECORDER_COMPRESS_H_
+}  // namespace cybertron
