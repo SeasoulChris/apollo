@@ -108,8 +108,8 @@ class SparkSubmitterClient(object):
         service_name = 'http:spark-submitter-service:8000'
         service_url = F'{kube_proxy_url}/api/v1/namespaces/default/services/{service_name}/proxy/'
 
-        if service_url != 'localhost' and os.system(F'ping -c 1 {service_name}') != 0:
-            logging.fatal(F'Cannot reach {service_url}. Are you running in intranet?')
+        if kube_proxy != 'localhost' and os.system(F'ping -c 1 {kube_proxy}') != 0:
+            logging.fatal(F'Cannot reach {kube_proxy}. Are you running in intranet?')
             sys.exit(1)
 
         return service_url
