@@ -13,6 +13,7 @@ if _swig_python_version_info >= (2, 7, 0):
         try:
             return importlib.import_module(mname)
         except ImportError:
+            print("import error")
             return importlib.import_module('_cyber_bag')
     _cyber_bag = swig_import_helper()
     del swig_import_helper
@@ -751,5 +752,5 @@ PyBag_swigregister = _cyber_bag.PyBag_swigregister
 PyBag_swigregister(PyBag)
 
 # This file is compatible with both classic and new-style classes.
-
+print("hello from cyber_bag.py")
 

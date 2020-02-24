@@ -19,22 +19,27 @@ cc_binary (
   linkshared = True,
   linkstatic = False,
   srcs = ["cyber_bag_wrap.cxx"],
+  defines = ["PY_MAJOR_VERSION=3"],
   deps = [
     ":py_bag",
     "//deps:python3",
   ],
 )
 
-filegroup (
-  name = "cyber_bag_fg",
-  srcs = [
-    ":_cyber_bag.so",
-  ],
-)
-
 py_binary (
   name = "cyber_bag",
   srcs = ["cyber_bag.py"],
-  data = [":cyber_bag_fg"],
+  data = [":_cyber_bag.so"],
 )
 
+py_binary (
+  name = "bag",
+  srcs = ["bag.py"],
+  deps = [":cyber_bag"],
+)
+
+py_binary (
+  name = "convert",
+  srcs = ["convert.py"],
+  deps = [":bag"],
+)
