@@ -22,8 +22,10 @@ cc_library (
 cc_library (
   name = "chunk",
   hdrs = ["chunk.h"],
+  srcs = ["chunk.cc"],
   deps = [
     ":param",
+    "//fueling/common/record/kinglong/cybertron/common:define",
     "//fueling/common/record/kinglong/proto/cybertron:record_proto",
   ],
 )

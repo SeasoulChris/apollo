@@ -16,6 +16,8 @@
 
 #include "fueling/common/record/kinglong/cybertron/recorder/chunk.h"
 
+#include "fueling/common/record/kinglong/cybertron/common/define.h"
+
 namespace cybertron {
 
 using fueling::common::record::kinglong::proto::cybertron::SingleMsg;

@@ -19,7 +19,6 @@ cc_binary (
   linkshared = True,
   linkstatic = False,
   srcs = ["cyber_bag_wrap.cxx"],
-  defines = ["PY_MAJOR_VERSION=3"],
   deps = [
     ":py_bag",
     "//deps:python3",

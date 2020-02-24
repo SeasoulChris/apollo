@@ -3,20 +3,13 @@
 #
 # Do not make changes to this file unless you know what you are doing--modify
 # the SWIG interface file instead.
-
+import os
+import sys
 from sys import version_info as _swig_python_version_info
 if _swig_python_version_info >= (2, 7, 0):
-    def swig_import_helper():
-        import importlib
-        pkg = __name__.rpartition('.')[0]
-        mname = '.'.join((pkg, '_cyber_bag')).lstrip('.')
-        try:
-            return importlib.import_module(mname)
-        except ImportError:
-            print("import error")
-            return importlib.import_module('_cyber_bag')
-    _cyber_bag = swig_import_helper()
-    del swig_import_helper
+    import importlib
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+    _cyber_bag = importlib.import_module('_cyber_bag')
 elif _swig_python_version_info >= (2, 6, 0):
     def swig_import_helper():
         from os.path import dirname
