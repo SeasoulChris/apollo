@@ -22,11 +22,6 @@ import fueling.common.proto_utils as proto_utils
 ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 # Flags
-flags.DEFINE_enum(
-    "running_mode", "TEST", ["TEST", "PROD"],
-    "server running mode: TEST, PROD."
-    "PROD mode submits spark job to specified spark_service_url"
-)
 flags.DEFINE_string(
     "sim_service_url", "localhost:50051", "channel url to sim service"
 )
@@ -40,12 +35,13 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
     """The Python implementation of the GRPC cost computation server."""
 
     def __init__(self):
-        logging.info(f"Running server in {flags.FLAGS.running_mode} mode.")
+        mode = "CLOUD" if flags.FLAGS.cloud else "LOCAL"
+        logging.info(f"Running server in {mode} mode.")
 
-        if flags.FLAGS.running_mode != "PROD":
-            self.submit_job = self.SubmitJobAtLocal
-        else:
+        if flags.FLAGS.cloud:
             self.submit_job = self.SubmitJobToK8s
+        else:
+            self.submit_job = self.SubmitJobAtLocal
 
     def CreateResponse(self, exit_code, message="", score=None):
         response = cost_service_pb2.Response()
@@ -84,7 +80,6 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
         # submit job
         options = {
-            "running_mode": flags.FLAGS.running_mode,
             "sim_service_url": flags.FLAGS.sim_service_url,
             "commit_id": request.git_info.commit_id,
             "training_id": training_id,

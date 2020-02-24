@@ -53,7 +53,7 @@ class MracCostComputation(BaseCostComputation):
 
         # submit the profiling job
         profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"
-        if self.FLAGS.get('running_mode') == "PROD":
+        if self.FLAGS.get('cloud'):
             profiling_flags = (f"--ctl_metrics_input_path_k8s={bag_path} "
                                f"--ctl_metrics_output_path_k8s={bag_path} "
                                f"--ctl_metrics_simulation_only_test='True' ")

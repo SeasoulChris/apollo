@@ -62,7 +62,7 @@ function init() {
     bce-platform)
       docker login hub.baidubce.com -u apollo -p apollo@2017
       DEST_REPO="hub.baidubce.com/apollo/autotuner/${IMAGE}"
-      REPLICA=2
+      REPLICA=1
       ;;
     *)
       print_usage

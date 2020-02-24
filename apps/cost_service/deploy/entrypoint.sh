@@ -24,8 +24,8 @@ function start_service() {
   mkdir -p $LOG_DIR
 
   bazel run //fueling/learning/autotuner/cost_computation:cost_computation_server -- \
-      --running_mode=$MODE \
-      --sim_service_url="${SIM_SERVICE_URL}" \
+      --cloud=${SUBMIT_SPARK_JOB_TO_K8S} \
+      --sim_service_url=${SIM_SERVICE_URL} \
       ${ADDITIONAL_FLAGS} \
       2>&1 | tee $LOG_DIR/cost_service.log; test ${PIPESTATUS[0]} -eq 0
 }
@@ -39,19 +39,19 @@ function main() {
   local cluster=$1
   case "$cluster" in
     local)
-      MODE=TEST
+      SUBMIT_SPARK_JOB_TO_K8S="false"
       SIM_SERVICE_URL="localhost:50051"
       ;;
     az-staging)
-      MODE=TEST
+      SUBMIT_SPARK_JOB_TO_K8S="false"
       SIM_SERVICE_URL="simservice:50051"
       ;;
     bce-staging)
-      MODE=TEST
+      SUBMIT_SPARK_JOB_TO_K8S="false"
       SIM_SERVICE_URL="simservice:50051"
       ;;
     bce-platform)
-      MODE=PROD
+      SUBMIT_SPARK_JOB_TO_K8S="true"
       SIM_SERVICE_URL="simservice:50051"
       ADDITIONAL_FLAGS="--wait --workers=5 \
           --spark_submitter_service_url=http://spark-submitter-service:8000"
