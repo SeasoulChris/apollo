@@ -54,7 +54,7 @@ function main() {
       MODE=PROD
       SIM_SERVICE_URL="simservice:50051"
       ADDITIONAL_FLAGS="--wait --workers=5 \
-          --spark_submitter_sevice_url=http://spark-submitter-service:8000"
+          --spark_submitter_service_url=http://spark-submitter-service:8000"
       ;;
     *)
       print_usage

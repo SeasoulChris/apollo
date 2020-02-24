@@ -44,7 +44,7 @@ flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
 # Internal use.
 flags.DEFINE_string('kube_proxy', 'usa-data.baidu.com', 'Kube proxy.')
-flags.DEFINE_string('spark_submitter_sevice_url', None, 'URL of the Spark Submitter service')
+flags.DEFINE_string('spark_submitter_service_url', None, 'URL of the Spark Submitter service')
 
 
 class SparkSubmitterClient(object):
@@ -66,7 +66,7 @@ class SparkSubmitterClient(object):
         }
 
         # Submit job.
-        service_url = flags.FLAGS.spark_submitter_sevice_url or self.get_service_url()
+        service_url = flags.FLAGS.spark_submitter_service_url or self.get_service_url()
 
         res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')
