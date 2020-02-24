@@ -25,13 +25,13 @@ cc_binary (
   ],
 )
 
-py_binary (
+py_library (
   name = "cyber_bag",
   srcs = ["cyber_bag.py"],
   data = [":_cyber_bag.so"],
 )
 
-py_binary (
+py_library (
   name = "bag",
   srcs = ["bag.py"],
   deps = [":cyber_bag"],
@@ -40,5 +40,9 @@ py_binary (
 py_binary (
   name = "convert",
   srcs = ["convert.py"],
-  deps = [":bag"],
+  deps = [
+    ":bag",
+    "//fueling/common/record/kinglong/proto/modules:perception_obstacle_pb2",
+    "//fueling/common/record/kinglong/proto/modules:localization_pose_pb2",
+  ],
 )
