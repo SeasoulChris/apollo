@@ -2,7 +2,7 @@
 
 ## Setup Environment:
 
-### start the fuel contain and build py_proto inside the fuel container
+### start the fuel container and build py_proto inside the fuel container
 ```bash
 cd apollo-fuel
 ./tools/login_container.sh

@@ -17,6 +17,7 @@ py_binary(
     name = "cost_computation_server",
     srcs = ["cost_computation_server.py"],
     deps = [
+        "//apps/k8s/spark_submitter:client",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",

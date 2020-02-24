@@ -24,8 +24,10 @@ function start_service() {
   mkdir -p $LOG_DIR
 
   bazel run //fueling/learning/autotuner/cost_computation:cost_computation_server -- \
-      --running_mode=$MODE --sim_service_url="${SIM_SERVICE_URL}" 2>&1 \
-      | tee $LOG_DIR/cost_service.log; test ${PIPESTATUS[0]} -eq 0
+      --running_mode=$MODE \
+      --sim_service_url="${SIM_SERVICE_URL}" \
+      ${ADDITIONAL_FLAGS} \
+      2>&1 | tee $LOG_DIR/cost_service.log; test ${PIPESTATUS[0]} -eq 0
 }
 
 function main() {
@@ -51,6 +53,8 @@ function main() {
     bce-platform)
       MODE=PROD
       SIM_SERVICE_URL="simservice:50051"
+      ADDITIONAL_FLAGS="--wait --workers=5 \
+          --spark_submitter_sevice_url=http://spark-submitter-service:8000"
       ;;
     *)
       print_usage

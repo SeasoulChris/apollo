@@ -27,16 +27,16 @@ flags.DEFINE_string(
     "File path to list of scenarios in csv format.",
 )
 flags.DEFINE_string(
+    "mnt_root_dir", "/mnt/bos", "BOS directory"
+)
+flags.DEFINE_string(
     "record_output_dir",
-    "replay-engine/mrac",
+    "autotuner",
     "The relative path to the BOS directory that stores output record files from simulation",
 )
 flags.DEFINE_string(
     "sim_service_url", "localhost:50051", "channel url to sim service"
 )
-
-TMP_ROOT_DIR = "/tmp/autotuner"
-MNT_ROOT_DIR = "/mnt/bos"
 
 
 class BaseCostComputation(BasePipelineV2):
@@ -138,7 +138,7 @@ class BaseCostComputation(BasePipelineV2):
             record_filename,
         )
 
-        record_absolute_dir = f"{MNT_ROOT_DIR}/{record_relative_dir}"
+        record_absolute_dir = f"{self.FLAGS.get('mnt_root_dir')}/{record_relative_dir}"
         if not success or not os.path.exists(f"{record_absolute_dir}/{record_filename}"):
             raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
 
@@ -158,7 +158,7 @@ class BaseCostComputation(BasePipelineV2):
         raise Exception("Not implemented!")
 
     def get_temp_dir(self):
-        return f"{TMP_ROOT_DIR}/{self.FLAGS.get('training_id')}"
+        return f"{self.FLAGS.get('mnt_root_dir')}/autotuner/{self.FLAGS.get('training_id')}"
 
     def save_weighted_score(self, score):
         with open(f"{self.get_temp_dir()}/scores.out", "w") as output_score_file:

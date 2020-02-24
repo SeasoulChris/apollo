@@ -15,4 +15,4 @@ WORKDIR /fuel
 
 RUN cat /home/libs/bash.rc >> ~/.bashrc && \
     ./tools/build_apollo.sh && \
-    bazel build //fueling/learning/autotuner/cost_computation:cost_computation_server
+    bazel build //fueling/learning/autotuner/...

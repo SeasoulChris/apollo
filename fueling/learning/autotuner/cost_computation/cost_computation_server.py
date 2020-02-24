@@ -12,6 +12,7 @@ from absl import app
 from absl import flags
 import grpc
 
+from apps.k8s.spark_submitter.client import SparkSubmitterClient
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.file_utils as file_utils
@@ -22,14 +23,17 @@ ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 # Flags
 flags.DEFINE_enum(
-    "running_mode", "TEST", ["TEST", "PROD"], "server running mode: TEST, PROD ."
+    "running_mode", "TEST", ["TEST", "PROD"],
+    "server running mode: TEST, PROD."
+    "PROD mode submits spark job to specified spark_service_url"
 )
 flags.DEFINE_string(
     "sim_service_url", "localhost:50051", "channel url to sim service"
 )
 
 SERVER_PORT = "[::]:50052"
-TMP_ROOT_DIR = "/tmp/autotuner"
+
+TMP_ROOT_DIR = "/mnt/bos/autotuner"
 
 
 class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
@@ -53,16 +57,19 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     def SubmitJobAtLocal(self, options):
         job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:mrac_cost_computation"
-        cmd = f"cd /fuel; {job_cmd} -- {options}"
+        option_strings = [F"--{name}={value}" for (name, value) in options.items()]
+        cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
 
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
         return os.WEXITSTATUS(exit_code) == 0
 
     def SubmitJobToK8s(self, options):
-        # TODO(vivian): implement me
-        logging.error("Implement me!!")
-        return False
+        entrypoint = "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py"
+        options['mnt_root_dir'] = "/mnt/bos-rw"
+        client = SparkSubmitterClient(entrypoint, {}, options)
+        client.submit()
+        return True
 
     def ComputeMracCost(self, request, context):
         if not request.git_info.commit_id:
@@ -76,12 +83,12 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/request.pb.txt")
 
         # submit job
-        options = (
-            f"--training_id={training_id} "
-            f"--commit_id={request.git_info.commit_id} "
-            f"--profiling_running_mode={flags.FLAGS.running_mode} "
-            f"--sim_service_url=\"{flags.FLAGS.sim_service_url}\" "
-        )
+        options = {
+            "running_mode": flags.FLAGS.running_mode,
+            "sim_service_url": flags.FLAGS.sim_service_url,
+            "commit_id": request.git_info.commit_id,
+            "training_id": training_id,
+        }
 
         if not self.submit_job(options):
             return self.CreateResponse(

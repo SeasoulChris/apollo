@@ -14,11 +14,6 @@ import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_ser
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
-# Flags
-flags.DEFINE_enum(
-    "profiling_running_mode", "TEST", ["TEST", "PROD"], "server running mode: TEST, PROD ."
-)
-
 
 class MracCostComputation(BaseCostComputation):
     def __init__(self):
@@ -26,11 +21,6 @@ class MracCostComputation(BaseCostComputation):
 
     def init(self):
         BaseCostComputation.init(self)
-
-        if self.FLAGS.get('profiling_running_mode') == "PROD":
-            self.submit_job_cmd = "python ./tools/submit-job-to-k8s.py --wait='True'"
-        else:
-            self.submit_job_cmd = "python ./tools/submit-job-to-local.py"
 
         try:
             self.request_pb2 = self.read_request()
@@ -63,7 +53,7 @@ class MracCostComputation(BaseCostComputation):
 
         # submit the profiling job
         profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"
-        if self.FLAGS.get('profiling_running_mode') == "PROD":
+        if self.FLAGS.get('running_mode') == "PROD":
             profiling_flags = (f"--ctl_metrics_input_path_k8s={bag_path} "
                                f"--ctl_metrics_output_path_k8s={bag_path} "
                                f"--ctl_metrics_simulation_only_test='True' ")
