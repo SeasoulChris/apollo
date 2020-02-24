@@ -44,6 +44,7 @@ flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
 # Internal use.
 flags.DEFINE_string('kube_proxy', 'usa-data.baidu.com', 'Kube proxy.')
+flags.DEFINE_string('spark_submitter_sevice_url', None, 'URL of the Spark Submitter service')
 
 
 class SparkSubmitterClient(object):
@@ -65,14 +66,8 @@ class SparkSubmitterClient(object):
         }
 
         # Submit job.
-        kube_proxy = flags.FLAGS.kube_proxy
-        kube_proxy_url = F'http://{kube_proxy}:8001'
-        service_name = 'http:spark-submitter-service:8000'
-        service_url = F'{kube_proxy_url}/api/v1/namespaces/default/services/{service_name}/proxy/'
+        service_url = flags.FLAGS.spark_submitter_sevice_url or self.get_service_url()
 
-        if kube_proxy != 'localhost' and os.system(F'ping -c 1 {kube_proxy}') != 0:
-            logging.fatal(F'Cannot reach {kube_proxy}. Are you running in intranet?')
-            sys.exit(1)
         res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')
 
@@ -106,6 +101,18 @@ class SparkSubmitterClient(object):
                 logging.error('Failed to get job status.')
         if job_status != 'Completed':
             sys.exit(1)
+
+    def get_service_url(self):
+        kube_proxy = flags.FLAGS.kube_proxy
+        kube_proxy_url = F'http://{kube_proxy}:8001'
+        service_name = 'http:spark-submitter-service:8000'
+        service_url = F'{kube_proxy_url}/api/v1/namespaces/default/services/{service_name}/proxy/'
+
+        if service_url != 'localhost' and os.system(F'ping -c 1 {service_name}') != 0:
+            logging.fatal(F'Cannot reach {service_url}. Are you running in intranet?')
+            sys.exit(1)
+
+        return service_url
 
     def get_user(self):
         return {
