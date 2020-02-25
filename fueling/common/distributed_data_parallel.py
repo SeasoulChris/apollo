@@ -38,9 +38,7 @@ class DistributedGroup(object):
         ip = socket_utils.get_ip_addr()
         interface = socket_utils.get_socket_interface(ip)
         if not interface:
-            fatal_msg = 'unable to get socket info, fail early here to avoid uncertain status'
-            logging.fatal(fatal_msg)
-            raise Exception(fatal_msg)
+            logging.fatal('unable to get socket info, fail early here to avoid uncertain status')
         os.environ['MASTER_ADDR'] = ip
         os.environ['MASTER_PORT'] = port 
         os.environ['GLOO_SOCKET_IFNAME'] = interface
