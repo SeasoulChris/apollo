@@ -32,15 +32,20 @@ class DistributedGroup(object):
             return
 
         # Set backend, port and seed as consts for now
+        DistributedGroup.is_dist_group_initialized = True
         backend, port, seed = 'gloo', '12355', 42
         logging.info(F'setting up group, w: {world_size}, r: {rank}')
         ip = socket_utils.get_ip_addr()
+        interface = socket_utils.get_socket_interface(ip)
+        if not interface:
+            fatal_msg = 'unable to get socket info, fail early here to avoid uncertain status'
+            logging.fatal(fatal_msg)
+            raise Exception(fatal_msg)
         os.environ['MASTER_ADDR'] = ip
         os.environ['MASTER_PORT'] = port 
-        os.environ['GLOO_SOCKET_IFNAME'] = socket_utils.get_socket_interface(ip)
+        os.environ['GLOO_SOCKET_IFNAME'] = interface
         dist.init_process_group(backend, rank=rank, world_size=world_size)
         torch.manual_seed(seed)
-        DistributedGroup.is_dist_group_initialized = True
         logging.info('done setting up group')
 
 

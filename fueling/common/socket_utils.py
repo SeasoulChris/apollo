@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 """Socket related utils."""
 
-#import psutil
+import fueling.common.logging as logging
+import sys
+import os
+
+dirs_under_runfiles = os.listdir('/home/zip_app/runfiles')
+dirs_under_fuel = os.listdir('/home/zip_app/runfiles/fuel')
+
+logging.info(F'dirs under runfiles: {dirs_under_runfiles}')
+logging.info(F'dirs under fuel: {dirs_under_fuel}')
+
+logging.info(F'sys path: {sys.path}')
+
+import psutil
 import socket
 
-import fueling.common.logging as logging
 
 
 def get_ip_addr(subnet_prefix=None):
@@ -32,9 +43,10 @@ def get_socket_interface(ip):
         return None
     addrs = psutil.net_if_addrs()
     for interface in addrs:
-        network_props = addrs[key]
+        network_props = addrs[interface]
         for prop in network_props:
             if str(prop).find(ip) != -1:
+                logging.info(F'got system socket interface: {interface}')
                 return interface
     return None
 
