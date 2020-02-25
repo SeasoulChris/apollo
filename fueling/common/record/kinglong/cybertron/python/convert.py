@@ -14,21 +14,21 @@ import modules.perception.proto.perception_obstacle_pb2 as apollo_perception_obs
 SOURCE_KINGLONG_RECORD = "/fuel/kl.record"
 DESTINATION_APOLLO_RECORD = "/fuel/apollo.record"
 
-def transfer_localization_estimate(loc_pose):
+def transfer_localization_estimate(loc):
     apollo_loc = apollo_localization_pb2.LocalizationEstimate()
 
-    apollo_loc.pose.position.x = loc_pose.position.x
-    apollo_loc.pose.position.y = loc_pose.position.y
-    apollo_loc.pose.position.z = loc_pose.position.z
+    apollo_loc.pose.position.x = loc.pose.position.x
+    apollo_loc.pose.position.y = loc.pose.position.y
+    apollo_loc.pose.position.z = loc.pose.position.z
 
-    apollo_loc.pose.orientation.qw = loc_pose.orientation.qw
-    apollo_loc.pose.orientation.qx = loc_pose.orientation.qx
-    apollo_loc.pose.orientation.qy = loc_pose.orientation.qy
-    apollo_loc.pose.orientation.qz = loc_pose.orientation.qz
+    apollo_loc.pose.orientation.qw = loc.pose.orientation.qw
+    apollo_loc.pose.orientation.qx = loc.pose.orientation.qx
+    apollo_loc.pose.orientation.qy = loc.pose.orientation.qy
+    apollo_loc.pose.orientation.qz = loc.pose.orientation.qz
 
-    apollo_loc.pose.linear_velocity.x = loc_pose.linear_velocity.x
-    apollo_loc.pose.linear_velocity.y = loc_pose.linear_velocity.y
-    apollo_loc.pose.linear_velocity.z = loc_pose.linear_velocity.z
+    apollo_loc.pose.linear_velocity.x = loc.pose.linear_velocity.x
+    apollo_loc.pose.linear_velocity.y = loc.pose.linear_velocity.y
+    apollo_loc.pose.linear_velocity.z = loc.pose.linear_velocity.z
 
     return apollo_loc
 
@@ -107,9 +107,9 @@ if __name__ == "__main__":
     for topic, msg, msgtype, timestamp in freader.read_messages(topics):
         print(topic)
         if topic == "/localization/100hz/localization_pose":
-            loc_pose = localization_pose_pb2.Pose()
-            loc_pose.ParseFromString(msg.encode('utf-8', 'surrogateescape'))
-            apollo_loc = transfer_localization_estimate(loc_pose)
+            loc = localization_pose_pb2.LocalizationEstimate()
+            loc.ParseFromString(msg.encode('utf-8', 'surrogateescape'))
+            apollo_loc = transfer_localization_estimate(loc)
             fwriter.write_message(apollo_pose_topic, apollo_loc.SerializeToString(), timestamp)
         elif topic == "/perception/obstacles":
             perception_obstacles = perception_obstacle_pb2.PerceptionObstacles()
