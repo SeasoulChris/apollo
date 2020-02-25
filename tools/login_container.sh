@@ -48,6 +48,7 @@ else
       ${required_volumes} \
       ${optional_volumes} \
       -w /fuel \
+      -e DISPLAY=$DISPLAY \
       -e DOCKER_USER=$USER -e DOCKER_USER_ID=$USER_ID \
       -e DOCKER_GRP=$GRP -e DOCKER_GRP_ID=$GRP_ID \
       ${IMAGE} bash
