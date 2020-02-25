@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """Socket related utils."""
 
-import os
-
 import psutil
 import socket
 
