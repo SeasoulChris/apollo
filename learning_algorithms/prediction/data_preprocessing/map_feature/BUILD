@@ -21,6 +21,9 @@ py_binary(
 py_library(
     name = "online_mapping",
     srcs = ["online_mapping.py"],
+    deps = [
+        ":mapping",
+    ],
 )
 
 py_library(

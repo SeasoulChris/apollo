@@ -3,6 +3,7 @@
 import numpy as np
 import cv2 as cv
 
+from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
 
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
