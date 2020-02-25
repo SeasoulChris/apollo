@@ -12,7 +12,7 @@ from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineTest
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -25,6 +25,7 @@ import fueling.profiling.control.feature_extraction.multi_job_control_feature_ex
     as feature_utils
 import fueling.profiling.control.grading_evaluation.multi_job_control_performance_grading_utils \
     as grading_utils
+from fueling.profiling.control.multi_job_control_profiling_metrics import MultiJobControlProfilingMetrics
 
 
 flags.DEFINE_string('ctl_metrics_input_path_local',
@@ -54,8 +55,11 @@ flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
                     'select the score weighting method from control_channel_conf.py')
 
 
-class MultiJobControlProfilingMetrics(BasePipeline):
+class MultiJobControlProfilingMetricsTest(BasePipelineTest):
     """ Control Profiling: Feature Extraction and Performance Grading """
+
+    def setUp(self):
+        super().setUp(MultiJobControlProfilingMetrics())
 
     def run_test(self):
         """Run test."""

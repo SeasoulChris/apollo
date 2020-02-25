@@ -13,7 +13,7 @@ from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -40,10 +40,62 @@ flags.DEFINE_string('ctl_visual_output_path_k8s', 'modules/control/tmp/results',
                     'output data directory for run_pod')
 
 
-class MultiJobControlProfilingVisualization(BasePipelineV2):
+class MultiJobControlProfilingVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features"""
 
-    def run(self):
+    def run_test(self):
+        """Run test."""
+
+        origin_prefix = flags.FLAGS.ctl_visual_input_path_local
+        target_prefix = flags.FLAGS.ctl_visual_output_path_local
+
+        if flags.FLAGS.ctl_visual_simulation_only_test:
+            todo_tasks_postfix = flags.FLAGS.ctl_visual_todo_tasks_local.split(',')
+            # RDD(tasks), the task dirs
+            todo_tasks = self.to_rdd([
+                os.path.join(origin_prefix, task) for task in todo_tasks_postfix
+            ]).cache()
+        else:
+            job_owner = self.FLAGS.get('job_owner')
+            # Use year as the job_id, just for local test
+            job_id = self.FLAGS.get('job_id')[:4]
+            origin_prefix = os.path.join(
+                flags.FLAGS.ctl_visual_input_path_local, job_owner, job_id)
+            target_prefix = os.path.join(
+                flags.FLAGS.ctl_visual_output_path_local, job_owner, job_id)
+            """origin vehicle directory"""
+            # RDD(origin_dir)
+            origin_vehicle_dir = spark_helper.cache_and_log(
+                'origin_vehicle_dir',
+                self.to_rdd([origin_prefix])
+                # RDD([vehicle_type])
+                .flatMap(multi_vehicle_utils.get_vehicle)
+                # PairRDD(vehicle_type, vehicle_type)
+                .keyBy(lambda vehicle: vehicle)
+                # PairRDD(vehicle_type, path_to_vehicle_type)
+                .mapValues(lambda vehicle: os.path.join(origin_prefix, vehicle))
+            )
+
+        # RDD(origin_vehicle_dir)
+            todo_tasks = spark_helper.cache_and_log(
+                'todo_tasks',
+                origin_vehicle_dir
+                # PairRDD(vehicle_type, list_of_records)
+                .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*/*')))
+                # RDD list_of_records to parse vehicle type and controller to
+                # organize new key
+                .filter(spark_op.filter_value(lambda task: os.path.isdir(task)))
+                .values()
+                .distinct()
+            )
+
+        logging.info(F'todo_tasks: {todo_tasks.collect()}')
+
+        self.run(todo_tasks, origin_prefix, target_prefix)
+        summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
+        logging.info('Control Profiling Visualization: All Done, TEST')
+
+    def run_prod(self):
         """Work on actual road test data. Expect a single input directory"""
         job_owner = self.FLAGS.get('job_owner')
         # Use year as the job_id if data from apollo-platform, to avoid
@@ -131,11 +183,11 @@ class MultiJobControlProfilingVisualization(BasePipelineV2):
             logging.info('Control Profiling Visualization: No Results, PROD')
             return
 
-        self.run_in(todo_tasks.values(), origin_dir, target_dir)
+        self.run(todo_tasks.values(), origin_dir, target_dir)
         summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Visualization: All Done, PROD')
 
-    def run_in(self, todo_tasks, original_prefix, target_prefix):
+    def run(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         data_rdd = (todo_tasks

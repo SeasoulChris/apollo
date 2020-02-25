@@ -12,11 +12,22 @@ py_library(
     ],
 )
 
+py_library(
+    name = "control_profiling_visualization",
+    srcs = ["multi_job_control_profiling_visualization.py"],
+    deps = [
+        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:file_utils//fueling/common:email_utils",
+        "//fueling/common:logging//fueling/common:partners",
+    ],
+)
+
 py_binary(
     name = "control_profiling",
     srcs = ["control_profiling.py"],
     deps = [
         ":control_profiling_metrics",
         ":control_profiling_visualization",
+        "//fueling/common:base_pipeline_v2"
     ],
 )
