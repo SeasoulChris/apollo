@@ -1,21 +1,12 @@
 #!/usr/bin/env python
 """Socket related utils."""
 
-import fueling.common.logging as logging
-import sys
 import os
-
-dirs_under_runfiles = os.listdir('/home/zip_app/runfiles')
-dirs_under_fuel = os.listdir('/home/zip_app/runfiles/fuel')
-
-logging.info(F'dirs under runfiles: {dirs_under_runfiles}')
-logging.info(F'dirs under fuel: {dirs_under_fuel}')
-
-logging.info(F'sys path: {sys.path}')
 
 import psutil
 import socket
 
+import fueling.common.logging as logging
 
 
 def get_ip_addr(subnet_prefix=None):
