@@ -8,6 +8,12 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 # only for internal records control profiing and visualization
 INPUT_DATA_PATH="modules/control/small-records"
 
-bazel run //deploy:daily_jobs -- --cloud \
-    --workers=10 --memory=24 --disk=800 \
-    --input_data_path=${INPUT_DATA_PATH}
+COMMAND="bazel run //deploy:daily_jobs -- --cloud \
+        --workers=10 --memory=24 --disk=800 \
+        --input_data_path=${INPUT_DATA_PATH}"
+
+if [ -z "$(which docker)" ]; then
+  ${COMMAND}
+else
+  docker exec -u ${USER} fuel ${COMMAND}
+fi
