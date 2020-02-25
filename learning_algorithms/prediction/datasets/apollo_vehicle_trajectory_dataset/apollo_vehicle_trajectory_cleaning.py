@@ -8,10 +8,6 @@ import cv2 as cv
 import scipy
 from scipy.signal import filtfilt
 
-from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 \
-    import *
-import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
-
 
 #######################################################################
 # Helper Functions

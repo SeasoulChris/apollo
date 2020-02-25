@@ -7,11 +7,10 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from fueling.common.coord_utils import CoordUtils
-from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
-from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 import fueling.common.file_utils as file_utils
-import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
+from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
+from modules.prediction.proto.offline_features_pb2 import ListDataForLearning
 
 obs_hist_size = 20
 obs_unit_feature_size = 40 + 9
@@ -24,8 +23,7 @@ MAX_NUM_NEARBY_OBS = 16
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = \
-        learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
+    list_of_data_for_learning = ListDataForLearning()
     try:
         with open(filepath, 'rb') as file_in:
             list_of_data_for_learning.ParseFromString(file_in.read())

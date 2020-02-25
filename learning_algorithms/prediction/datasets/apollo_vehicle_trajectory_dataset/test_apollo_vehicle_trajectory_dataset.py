@@ -7,8 +7,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 import learning_algorithms.prediction.models.semantic_map_model.semantic_map_model as semantic_map_model
-from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset as ApolloVehicleTrajectoryDataset
-from apollo_vehicle_trajectory_dataset import collate_fn as collate_fn
+from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset
+from apollo_vehicle_trajectory_dataset import collate_fn
 
 
 def point_to_idx(point_x, point_y):
