@@ -4,7 +4,7 @@
 
 import os
 
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 from fueling.common.storage.bos_client import BosClient
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
@@ -30,6 +30,6 @@ def list_completed_dirs(prefix, marker):
     # RDD(files in prefix folders)
     return (
         # RDD(files_end_with_marker)
-        BasePipeline.SPARK_CONTEXT.parallelize(BosClient().list_files(prefix, marker))
+        BasePipelineV2.SPARK_CONTEXT.parallelize(BosClient().list_files(prefix, marker))
         # RDD(dirs_of_file_end_with_marker)
         .map(os.path.dirname))

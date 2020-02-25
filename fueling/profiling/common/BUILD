@@ -1,10 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@default_deps//:requirements.bzl", "requirement")
+
 py_library(
     name = "dir_utils",
     srcs = ["dir_utils.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline_v2",
+        "//fueling/common/storage:bos_client",
+        ":multi_vehicle_utils"
     ]
 )
 
