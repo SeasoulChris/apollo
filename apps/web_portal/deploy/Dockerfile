@@ -29,6 +29,7 @@ RUN pip3 install --no-cache-dir \
 
 # Resource.
 COPY entrypoint.sh /home/bae/entrypoint.sh
+COPY http_to_https.py /home/bae/http_to_https.py
 COPY kube.config /root/.kube/config
 
 ENTRYPOINT [ "/home/bae/entrypoint.sh" ]

@@ -3,7 +3,6 @@
 
 from http import HTTPStatus
 import json
-import multiprocessing
 import os
 
 from absl import app as absl_app
@@ -46,18 +45,6 @@ def submit_job():
     return msg, http_code
 
 
-################################### Auto redirect to HTTPS in another process.
-
-def http_to_https():
-    http_app = flask.Flask(F'{__name__}_http')
-
-    @http_app.route('/')
-    @http_app.route('/<path:request_path>')
-    def redirect_to_https(request_path=''):
-        return flask.redirect(F'https://{flask.request.host}/{request_path}')
-
-    http_app.run(host='0.0.0.0', port=8080)
-
 ################################### App Main ###################################
 class ProductionApp(gunicorn.app.base.BaseApplication):
     """A wrapper to run flask app."""
@@ -85,7 +72,6 @@ def main(argv):
     if flags.FLAGS.debug:
         app.run(host='0.0.0.0', port=8080, debug=True)
     else:
-        multiprocessing.Process(target=http_to_https, daemon=True).start()
         ProductionApp(app).run()
 
 
