@@ -26,7 +26,7 @@ class CountMsgByChannel(BasePipelineV2):
             # RDD(record_path)
             self.to_rdd(['fueling/demo/testdata/small.record'])
             # RDD(record_abs_path)
-            .map(file_utils.data_path)
+            .map(file_utils.fuel_path)
             # RDD(PyBagMessage)
             .flatMap(lambda record: RecordReader(record).read_messages())
             # PairRDD(topic, 1)
