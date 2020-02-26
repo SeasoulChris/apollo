@@ -78,7 +78,7 @@ Model definition
 
 class SemanticMapModel(nn.Module):
     def __init__(self, num_pred_points, num_history_points,
-                 cnn_net=models.mobilenet_v2, pretrained=True):
+                 cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapModel, self).__init__()
 
         self.cnn = cnn_net(pretrained=pretrained)
@@ -97,7 +97,8 @@ class SemanticMapModel(nn.Module):
         )
 
     def forward(self, X):
-        img, obs_pos, _, _ = X
+        img = X[0]
+        obs_pos = X[3]
         out = self.cnn(img)
         out = out.view(out.size(0), -1)
         obs_pos = obs_pos.view(obs_pos.size(0), -1)
