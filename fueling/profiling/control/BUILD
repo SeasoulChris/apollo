@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "control_profiling_metrics",
     srcs = ["multi_job_control_profiling_metrics.py"],
