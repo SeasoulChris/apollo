@@ -37,7 +37,7 @@ py_library(
     deps = [":cyber_bag"],
 )
 
-py_binary(
+py_library(
     name = "convert",
     srcs = ["convert.py"],
     deps = [

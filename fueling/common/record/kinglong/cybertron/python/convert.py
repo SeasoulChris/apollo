@@ -11,9 +11,6 @@ import modules.localization.proto.pose_pb2 as apollo_pose_pb2
 import modules.localization.proto.localization_pb2 as apollo_localization_pb2
 import modules.perception.proto.perception_obstacle_pb2 as apollo_perception_obstacle_pb2
 
-SOURCE_KINGLONG_RECORD = "/fuel/kl.record"
-DESTINATION_APOLLO_RECORD = "/fuel/apollo.record"
-
 def transfer_localization_estimate(loc):
     apollo_loc = apollo_localization_pb2.LocalizationEstimate()
 
@@ -77,22 +74,15 @@ def transfer_perception_obstacles(obstacles):
     return apollo_perception_obstacles
 
 
-if __name__ == "__main__":
-
-    freader = bag.Bag(SOURCE_KINGLONG_RECORD, False, False)
+def convert_kinglong_to_apollo(kinglong_input_path, apollo_output_path):
+    freader = bag.Bag(kinglong_input_path, False, False)
     topics = ['/perception/obstacles', \
               '/perception/traffic_lights', \
               '/localization/100hz/localization_pose', \
               '/pnc/planning']
 
-    print("file name: %s" %(freader.get_file_name()))
-    print("total count: %d" %(freader.get_message_count()))
-
-    print("message start time: %ld" %(freader.get_start_time()))
-    print("message end time: %ld" %(freader.get_end_time()))
-
     fwriter = record.RecordWriter(0, 0)
-    fwriter.open(DESTINATION_APOLLO_RECORD)
+    fwriter.open(apollo_output_path)
 
     apollo_pose_topic = "/apollo/localization/pose"
     apollo_percption_obstacle_topic = "/apollo/perception/obstacles"
@@ -103,9 +93,7 @@ if __name__ == "__main__":
     fwriter.write_channel(apollo_percption_obstacle_topic,
                           "apollo.perception.PerceptionObstacles",
                           "some descriptions")
-
     for topic, msg, msgtype, timestamp in freader.read_messages(topics):
-        print(topic)
         if topic == "/localization/100hz/localization_pose":
             loc = localization_pose_pb2.LocalizationEstimate()
             loc.ParseFromString(msg.encode('utf-8', 'surrogateescape'))
@@ -117,6 +105,8 @@ if __name__ == "__main__":
             apollo_obstacles = transfer_perception_obstacles(perception_obstacles.perception_obstacle)
             fwriter.write_message(apollo_percption_obstacle_topic,
                                   apollo_obstacles.SerializeToString(), timestamp)
-
     freader.close()
     fwriter.close()
+
+if __name__ == "__main__":
+    convert_kinglong_to_apollo("/fuel/kl.record", "/fuel/apollo.record")

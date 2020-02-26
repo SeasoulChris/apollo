@@ -745,5 +745,4 @@ PyBag_swigregister = _cyber_bag.PyBag_swigregister
 PyBag_swigregister(PyBag)
 
 # This file is compatible with both classic and new-style classes.
-print("hello from cyber_bag.py")
 
