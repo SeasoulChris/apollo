@@ -15,11 +15,12 @@
 # ****************************************************************************
 # -*- coding: utf-8 -*-
 
-import sys
-# import yaml
 import collections
-import cyber_bag
+import sys
+
 from google.protobuf.descriptor_pb2 import FileDescriptorProto
+
+import fueling.common.record.kinglong.cybertron.python.cyber_bag as cyber_bag
 
 PyBagMessage = collections.namedtuple('PyBagMessage', 'topic message data_type timestamp')
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import operator
 
 from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.logging as logging
@@ -9,7 +10,7 @@ from fueling.common.record.kinglong.cybertron.python.convert import convert_king
 SKIP_EXISTING_DST_FILE = False
 
 
-class ConvertKinglongToApollo(BasePipeline):
+class ConvertKinglongToApollo(BasePipelineV2):
     """Convert Kinglong record to Apollo pipeline."""
 
     def run(self):
@@ -46,7 +47,7 @@ class ConvertKinglongToApollo(BasePipeline):
             # RDD(0/1), 1 for success
             .map(lambda records_file: self.process_file(
                 records_file,
-                records_file.replace(origin_prefix, target_prefix), 1)))
+                records_file.replace(origin_prefix, target_prefix, 1)))
             .cache())
 
         if result.isEmpty():
@@ -61,7 +62,7 @@ class ConvertKinglongToApollo(BasePipeline):
             convert_kinglong_to_apollo(record_filepath, target_filepath)
             logging.info('Successfully labeled {}'.format(record_filepath))
             return 1
-        except BaseException:
+        except BaseException as e:
             logging.error('Failed to process {}'.format(record_filepath))
         return 0
 

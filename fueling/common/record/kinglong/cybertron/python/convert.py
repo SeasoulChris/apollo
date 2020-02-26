@@ -1,8 +1,7 @@
-import bag
-
 from cyber.proto import record_pb2
 from cyber_py3 import record
 
+import fueling.common.record.kinglong.cybertron.python.bag as bag
 import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as localization_pose_pb2
 import fueling.common.record.kinglong.proto.modules.perception_obstacle_pb2 as perception_obstacle_pb2
 
@@ -10,6 +9,7 @@ import modules.common.proto.geometry_pb2 as apollo_geometry_pb2
 import modules.localization.proto.pose_pb2 as apollo_pose_pb2
 import modules.localization.proto.localization_pb2 as apollo_localization_pb2
 import modules.perception.proto.perception_obstacle_pb2 as apollo_perception_obstacle_pb2
+
 
 def transfer_localization_estimate(loc):
     apollo_loc = apollo_localization_pb2.LocalizationEstimate()
