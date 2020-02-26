@@ -8,7 +8,7 @@ py_library(
     deps = [
         ":model_conf",
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_library(
@@ -21,7 +21,7 @@ py_library(
     srcs = ["dreamview_server.py"],
     deps = [
         ":train",
-    ]
+    ],
 )
 
 py_library(
@@ -31,7 +31,7 @@ py_library(
         ":dataset",
         ":train",
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_library(

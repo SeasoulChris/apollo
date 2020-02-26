@@ -9,7 +9,16 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/profiling/conf:control_channel_conf",
-        "//fueling/profiling/proto:control_profiling",
-        "//fueling/profiling/proto:control_profiling_data",
+        "//fueling/profiling/proto:control_profiling_pb2",
+        "//fueling/profiling/proto:control_profiling_data_pb2",
+    ],
+)
+
+py_library(
+    name = "control_feature_scenario_oriented_visualization_utils",
+    srcs = ["control_feature_scenario_oriented_visualization_utils.py"],
+    deps = [
+        "//fueling/common:logging",
+        "//fueling/profiling/conf:control_channel_conf",
     ],
 )
