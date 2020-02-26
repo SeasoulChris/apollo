@@ -6,7 +6,7 @@ py_library(
     name = "control_feature_visualization_utils",
     srcs = ["control_feature_visualization_utils.py"],
     deps = [
-        "//fueling/common/logging",
+        "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:h5_utils",
         "//fueling/common:json_utils",
