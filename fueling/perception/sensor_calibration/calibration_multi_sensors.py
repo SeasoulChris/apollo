@@ -87,8 +87,8 @@ class SensorCalibrationPipeline(BasePipeline):
         redis_utils.redis_extend_dict(redis_key, redis_value)
         try:
             result_files = self.run(self.FLAGS.get('input_data_path'))
-        except BaseException:
-            pass
+        except BaseException as e:
+            logging.error(e)
 
         # Send result to job owner.
         receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM
@@ -111,6 +111,7 @@ class SensorCalibrationPipeline(BasePipeline):
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'failed'}
             redis_utils.redis_extend_dict(redis_key, redis_value)
+            logging.fatal('Failed to process sensor calibration job')
 
     def run(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
@@ -139,10 +140,10 @@ class SensorCalibrationPipeline(BasePipeline):
                 result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
                 # camera to lidar calibration visualization results
                 output_dir = glob.glob(os.path.join(result_dir, '*', 'out'))
-                if os.path.isdir(output_dir[0]):
+                if output_dir and os.path.isdir(output_dir[0]):
                     result_files.extend(glob.glob(os.path.join(output_dir[0], '*.jpg')))
                 # lidar to gnss calibration visualization results.
-                output_dir = os.path.join(result_dir, 'tmp', 'lidar')
+                output_dir = os.path.join(result_dir, 'tmp/lidar')
                 if os.path.isdir(output_dir):
                     result_files.extend(glob.glob(os.path.join(output_dir, '*_rgb.pcd')))
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
