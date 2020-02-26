@@ -24,7 +24,9 @@ rules_cc_setup()
 git_repository(
     name = "rules_python",
     remote = "https://github.com/michael4338/rules_python",
-    branch = "master"
+    #branch = "master",  # To update the repo, enable this and disable the commit ID.
+    commit = "8e9004ee8360d541abfcbecb60ba8a6902a53047",
+    shallow_since = "1582668835 -0800",
 )
 load("@rules_python//python:repositories.bzl", "py_repositories")
 py_repositories()
