@@ -9,17 +9,17 @@ from torchvision import transforms
 import fueling.common.logging as logging
 
 from fueling.common.coord_utils import CoordUtils
-from modules.planning.proto.instance_pb2 import Instances
+from modules.planning.proto.learning_data_pb2 import LearningData
 import fueling.common.file_utils as file_utils
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 LABEL_TRAJECTORY_POINT_NUM = 20
 MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
-ENABLE_IMG_DUMP = True
+ENABLE_IMG_DUMP = False
 
 
 def LoadInstances(filepath):
-    instances = Instances()
+    instances = LearningData()
     try:
         with open(filepath, 'rb') as file_in:
             instances.ParseFromString(file_in.read())
@@ -67,13 +67,13 @@ class DataPreprocessor(object):
                 continue
 
             # Go through the entries in this feature file.
-            total_num_data_points += len(instances.instances)
+            total_num_data_points += len(instances.learning_data)
             output_np_array = []
-            for instance in instances.instances:
+            for instance in instances.learning_data:
                 current_features = []
                 current_label = []
 
-                localization_feature = instance.localization_feature
+                localization_feature = instance.localization
                 current_features += [localization_feature.position.x]
                 current_features += [localization_feature.position.y]
                 current_features += [localization_feature.position.z]
@@ -87,21 +87,21 @@ class DataPreprocessor(object):
                 current_features += [localization_feature.linear_acceleration.y]
                 current_features += [localization_feature.linear_acceleration.z]
 
-                chassis_feature = instance.chassis_feature
+                chassis_feature = instance.chassis
                 current_features += [chassis_feature.speed_mps]
                 current_features += [chassis_feature.throttle_percentage]
                 current_features += [chassis_feature.brake_percentage]
                 current_features += [chassis_feature.steering_percentage]
 
-                label_points = instance.label_trajectory_points
+                label_points = instance.trajectory_point
                 # TODO(all): how to make sure all label points have the same number
                 for trajectory_point in label_points:
                     current_label += [trajectory_point.path_point.x]
                     current_label += [trajectory_point.path_point.y]
 
-                if (LABEL_TRAJECTORY_POINT_NUM != len(current_label)):
-                    logging.warn("label point number:{}".format(len(current_label)))
-                    continue
+                # if (LABEL_TRAJECTORY_POINT_NUM != len(current_label)):
+                #     logging.warn("label point number:{}".format(len(current_label)))
+                #     continue
                 current_data_point = [current_features, current_label]
                 # Update into the output_np_array.
                 output_np_array.append(current_data_point)
@@ -111,7 +111,7 @@ class DataPreprocessor(object):
             # Save into a local file for training.
             try:
                 logging.info('Total usable data points: {} out of {}.'.format(
-                    num_usable_data_points, len(instances.instances)))
+                    num_usable_data_points, len(instances.learning_data)))
                 output_np_array = np.array(output_np_array)
                 np.save(path + '.training_data.npy', output_np_array)
                 total_usable_data_points += num_usable_data_points
@@ -142,6 +142,7 @@ class SemanticMapDataset(Dataset):
             "sunnyvale": cv.imread(MAP_IMG_DIR + "sunnyvale_with_two_offices.png"),
             "san_mateo": cv.imread(MAP_IMG_DIR + "san_mateo.png")}
 
+        logging.info('Processing directory: {}'.format(data_dir))
         all_file_paths = file_utils.list_files(data_dir)
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
@@ -160,17 +161,29 @@ class SemanticMapDataset(Dataset):
         region = 'sunnyvale'
         world_coord = self.instances[idx][0][0:2]
         world_coord += [self.instances[idx][0][3]]  # heading
-        logging.info('world coord:{}'.format(world_coord))
+        # logging.info('world coord:{}'.format(world_coord))
         adc_mapping = ObstacleMapping(region, self.base_map[region], world_coord, None)
 
         adc_pose = [world_coord[0], world_coord[1]]
         img = adc_mapping.crop_by_rectangle(adc_pose)
 
-        if ENABLE_IMG_DUMP:
-            cv.imwrite("/apollo/data/tmp/img{}.png".format(idx), img)
+        if self.img_transform:
+            img = self.img_transform(img)
 
-        return ((img, torch.from_numpy(self.instances[idx][0]).float()),
-                torch.from_numpy(self.instances[idx][1]).float())
+        if ENABLE_IMG_DUMP:
+            cv.imwrite("/fuel/data/tmp/img{}.png".format(idx), img)
+
+        # print("features:")
+        # print(self.instances[idx][0])
+
+        # print("label:")
+
+        # print(self.instances[idx][1])
+        # return ((img, self.instances[idx][0]),
+        #          self.instances[idx][1])
+        return ((img,
+                torch.from_numpy(np.asarray(self.instances[idx][0])).float()),
+                torch.from_numpy(np.asarray(self.instances[idx][1])).float())
 
 
 if __name__ == '__main__':
@@ -183,5 +196,6 @@ if __name__ == '__main__':
     #     '/apollo/modules/planning/data/instances/')
 
     # dump one instance image for debug
-    dataset = SemanticMapDataset('/apollo/modules/planning/data/instances')
-    dataset[0]
+    dataset = SemanticMapDataset('/fuel/fueling/planning/datasets/training')
+    # dataset[0]
+    dataset[100]

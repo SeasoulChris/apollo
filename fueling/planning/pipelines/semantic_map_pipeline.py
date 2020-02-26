@@ -5,6 +5,8 @@ import os
 
 import torch
 
+import fueling.common.logging as logging
+
 from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.semantic_map_dataset import SemanticMapDataset
 from fueling.planning.models.semantic_map_model import SemanticMapModel, SemanticMapLoss
@@ -24,17 +26,19 @@ if __name__ == "__main__":
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
 
-    # Set-up data-loader
-    train_dataset = SemanticMapDataset(args.train_file, IMG_MODE)
-    valid_dataset = SemanticMapDataset(args.valid_file, IMG_MODE)
+    logging.info('training directory:{} validation directory:{}'.format(args.train_file, args.valid_file))
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
-                                               num_workers=16, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=32, shuffle=True,
-                                               num_workers=16, drop_last=True)
+    # Set-up data-loader
+    train_dataset = SemanticMapDataset(args.train_file)
+    valid_dataset = SemanticMapDataset(args.valid_file)
+
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True,
+                                               num_workers=4, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=2, shuffle=True,
+                                               num_workers=4, drop_last=True)
 
     # Model and training setup
-    model = SemanticMapModel(30, 20, num_modes=2)
+    model = SemanticMapModel(80, 20)
     loss = SemanticMapLoss()
 
     learning_rate = 3e-4
@@ -51,4 +55,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name='./', print_period=50)
+                           scheduler, epochs=10, save_name='./', print_period=50)
