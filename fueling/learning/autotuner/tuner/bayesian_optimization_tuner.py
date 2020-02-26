@@ -19,13 +19,19 @@ import fueling.common.proto_utils as proto_utils
 
 flags.DEFINE_string(
     "tuner_param_config_filename",
-    "/apollo/modules/data/fuel/fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt",
+    "fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt",
     "File path to tuner parameter config."
+)
+flags.DEFINE_string(
+    "cost_computation_service_url",
+    "localhost:50052",
+    "URL to access the cost computation service"
 )
 
 
 def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
     config_id = uuid.uuid1().hex
+    CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
     weighted_score = CostComputationClient.compute_mrac_cost(
         tuner_param_config_pb.git_info.commit_id,
         {  # list of config_id : {path, config} pairs

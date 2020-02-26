@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bayesian
+  labels:
+    app: bayesian
+    jobtype: RUN
+spec:
+  containers:
+  - name: bayesian
+    image: hub.baidubce.com/apollo/autotuner/cost_service:debug
+    imagePullPolicy: Always
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "pwd; bash ./apps/cost_service/test/run_tuner.sh "
+  imagePullSecrets:
+  - name: regsecret
+  restartPolicy: Never

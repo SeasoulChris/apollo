@@ -38,12 +38,12 @@ https://github.com/ApolloAuto/replay-engine/blob/master/scripts/auto_tuner/start
 
 2. Run python scripts (For MRAC).
 ```bash
-bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner
+bazel run //fueling/learning/autotuner/tuner:bayesian_optimization_tuner
 ```
 
 3. Or run other autotuner applications with
 ```bash
-bazel run //fueling/autotuner/tuner:bayesian_optimization_tuner -- --tuner_param_config_filename=<user defined tuner_param_config>
+bazel run //fueling/learning/autotuner/tuner:bayesian_optimization_tuner -- --tuner_param_config_filename=<user defined tuner_param_config>
 ```
 
 
