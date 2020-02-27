@@ -1,3 +1,5 @@
+import math
+
 from cyber.proto import record_pb2
 from cyber_py3 import record
 
@@ -22,6 +24,13 @@ def transfer_localization_estimate(loc):
     apollo_loc.pose.orientation.qx = loc.pose.orientation.qx
     apollo_loc.pose.orientation.qy = loc.pose.orientation.qy
     apollo_loc.pose.orientation.qz = loc.pose.orientation.qz
+
+    heading = math.atan2(2 * (loc.pose.orientation.qw * loc.pose.orientation.qz +
+                              loc.pose.orientation.qx * loc.pose.orientation.qy),
+                         1 - 2 * (loc.pose.orientation.qy ** 2 + loc.pose.orientation.qz ** 2)) \
+            + math.pi / 2
+    apollo_loc.pose.heading = heading - 2 * math.pi if heading > math.pi else heading
+
 
     apollo_loc.pose.linear_velocity.x = loc.pose.linear_velocity.x
     apollo_loc.pose.linear_velocity.y = loc.pose.linear_velocity.y
