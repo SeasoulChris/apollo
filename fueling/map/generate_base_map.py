@@ -34,12 +34,20 @@ class MapGenSingleLine(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        dir_prefix = '/apollo/data/bag'
-        src_prefix = os.path.join(dir_prefix, 'data')
-        dst_prefix = os.path.join(dir_prefix, 'result')
+        dir_prefix = 'testdata/virtual_lane'        
+        src_dir = self.our_storage().abs_path(dir_prefix)
+        dst_prefix = os.path.join(src_dir, 'result')
+
+        if not os.path.exists(dst_prefix):
+            logging.warning('target_path: {} not exists'.format(dst_prefix))
+            file_utils.makedirs(dst_prefix)
+        else:
+            logging.info("target_path: {}".format(dst_prefix))
+        
+        logging.info("source_prefix: {}".format(src_dir))
         # RDD(record_path)
-        todo_records = self.to_rdd([src_prefix])
-        self.run(todo_records, src_prefix, dst_prefix)
+        todo_records = self.to_rdd([src_dir])
+        self.run(todo_records, src_dir, dst_prefix)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):

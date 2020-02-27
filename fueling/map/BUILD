@@ -7,6 +7,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:redis_utils",
     ]
 )
 
@@ -17,6 +18,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:email_utils",
+        "//fueling/common:redis_utils",
         "//fueling/common:partners",
     ]
 )

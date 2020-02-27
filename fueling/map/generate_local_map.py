@@ -26,19 +26,14 @@ class LocalMapPipeline(BasePipeline):
 
     def run_test(self):
         """Local mini test."""
-        dir_prefix = '/apollo/data/bag'
-        src_prefix = os.path.join(dir_prefix, 'data')
-        dst_prefix = os.path.join(dir_prefix, 'result')
+        dir_prefix = 'testdata/virtual_lane'
+        src_dir = self.our_storage().abs_path(dir_prefix)
+        dst_prefix = os.path.join(src_dir, 'result')
         zone_id = self.FLAGS.get('zone_id')
         lidar_type = self.FLAGS.get('lidar_type')
-        if not os.path.exists(dst_prefix):
-            logging.warning('src_prefix path: {} not exists'.format(dst_prefix))
-            file_utils.makedirs(dst_prefix)
-        else:
-            logging.info("target_prefix: {}".format(dst_prefix))
         # RDD(record_path)
-        todo_records = self.to_rdd([src_prefix])
-        self.run(todo_records, src_prefix, dst_prefix, zone_id, lidar_type)
+        todo_records = self.to_rdd([src_dir])
+        self.run(todo_records, src_dir, dst_prefix, zone_id, lidar_type)
         logging.info('local map gen: Done, TEST')
 
     def run_prod(self):
