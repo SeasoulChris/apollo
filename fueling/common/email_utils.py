@@ -44,7 +44,14 @@ PERCEPTION_TEAM = [
 QA_TEAM = [
     'fuyiqun@baidu.com',
 ]
-
+D_KIT_TEAM = [
+    'hukuang@baidu.com',
+    'machao20@baidu.com',
+    'wufugang@baidu.com',
+    'v_lishuanghua@baidu.com',
+    'v_panxuechao@baidu.com',
+    'v_wangxitong02@baidu.com',
+]
 
 def send_email_info(title, content, receivers, attachments=[]):
     """Send email with normal information"""

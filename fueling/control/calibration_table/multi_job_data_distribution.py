@@ -116,7 +116,7 @@ class MultiJobDataDistribution(BasePipeline):
         target_dir = bos_client.abs_path(target_prefix)
         self.run(hdf5_files, target_dir)
 
-        receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM
+        receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)

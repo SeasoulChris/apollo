@@ -163,7 +163,7 @@ class MultiJobFeatureExtraction(BasePipeline):
 
         # Add sanity check
         partner = partners.get(job_owner)
-        email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM
+        email_receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         if partner:
             email_receivers.append(partner.email)
         if not sanity_check(origin_dir, job_owner, job_id, email_receivers):

@@ -66,7 +66,7 @@ class LocalMapPipeline(BasePipeline):
         if not os.path.exists(path):
             logging.warning('compare_poses: {} not exists'.format(path))
 
-        receivers = email_utils.SIMPlEHDMAP_TEAM
+        receivers = email_utils.SIMPlEHDMAP_TEAM + email_utils.D_KIT_TEAM
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)
