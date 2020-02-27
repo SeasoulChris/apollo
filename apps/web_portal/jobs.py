@@ -41,7 +41,10 @@ class VehicleCalibration(BaseJob):
 class SensorCalibration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/perception/sensor_calibration/calibration_multi_sensors.py'
-        client_flags = {'workers': 2, 'cpu': 1, 'memory': 24}
+        client_flags = {
+            'workers': 2, 'cpu': 1, 'memory': 24,
+            'partner_storage_writable': True,
+        }
         job_flags = {'input_data_path': job_arg.flags.get("input_data_path")}
         return (entrypoint, client_flags, job_flags)
 

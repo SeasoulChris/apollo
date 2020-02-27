@@ -138,14 +138,11 @@ class SensorCalibrationPipeline(BasePipeline):
         for result_dir in result_dirs:
             if result_dir:
                 result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
-                # camera to lidar calibration visualization results
-                output_dir = glob.glob(os.path.join(result_dir, '*', 'out'))
-                if output_dir and os.path.isdir(output_dir[0]):
-                    result_files.extend(glob.glob(os.path.join(output_dir[0], '*.jpg')))
-                # lidar to gnss calibration visualization results.
-                output_dir = os.path.join(result_dir, 'tmp/lidar')
-                if os.path.isdir(output_dir):
-                    result_files.extend(glob.glob(os.path.join(output_dir, '*_rgb.pcd')))
+                target_dir = os.path.join(self.FLAGS.get('output_data_path'),
+                                          os.path.basename(result_dir))
+                shutil.rmtree(target_dir, ignore_errors=True)
+                shutil.copytree(result_dir, target_dir)
+
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
         logging.info(f"Generated {len(result_files)} results: {result_files}")
         return result_files
