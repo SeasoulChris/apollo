@@ -13,14 +13,19 @@ class Mapping(object):
         """contruct function to init Mapping object"""
         self.region = region
         if (self.region == "san_mateo"):
-            self.GRID = [11000, 14000]
             self.base_point = np.array([558980, 4156780])
             self.resolution = 0.1
-        if (self.region == "sunnyvale_with_two_offices"):
-            self.GRID = [28000, 20000]
+            self.GRID = [11000, 14000]
+        elif (self.region == "sunnyvale_with_two_offices"):
             self.base_point = np.array([585870, 4139900])
             self.resolution = 0.1
-
+            self.GRID = [28000, 20000]
+        else:
+            (p_min, p_max) = self._read_hdmap()
+            self.base_point = p_min - 100.0
+            self.resolution = 0.1
+            self.GRID = [int((p_max[0] - p_min[0] + 200.0) / self.resolution),
+                         int((p_max[1] - p_min[1] + 200.0) / self.resolution)]
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
         self._read_hdmap()
         self._draw_base_map()
@@ -34,6 +39,7 @@ class Mapping(object):
             self.hd_map.ParseFromString(file_in.read())
         p_min, p_max = self._get_map_base_point()
         print(p_min, p_max)
+        return (p_min, p_max)
 
     def _draw_base_map(self):
         self._draw_road()
@@ -189,4 +195,4 @@ class Mapping(object):
 if __name__ == '__main__':
     mapping = Mapping("san_mateo")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(mapping.region + ".png", mapping.base_map)
+    cv.imwrite("/fuel/" + mapping.region + ".png", mapping.base_map)
