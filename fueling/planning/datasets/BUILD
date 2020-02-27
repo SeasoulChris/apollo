@@ -9,3 +9,14 @@ py_library(
         "//learning_algorithms/prediction/data_preprocessing/map_feature:online_mapping",
     ],
 )
+
+py_binary(
+    name = "dump_feature_proto",
+    srcs = ["dump_feature_proto.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+        "//fueling/common:record_utils",
+    ],
+)

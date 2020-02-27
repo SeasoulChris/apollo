@@ -8,5 +8,6 @@ bazel build -c opt \
     //modules/localization/msf/local_tool/data_extraction/... \
     //modules/localization/msf/local_tool/map_creation/... \
     //modules/map/tools:sim_map_generator \
+    //modules/planning/pipeline/... \
     //modules/prediction/pipeline/... \
     //modules/routing/topo_creator
