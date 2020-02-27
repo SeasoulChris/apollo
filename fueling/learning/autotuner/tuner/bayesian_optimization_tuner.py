@@ -41,7 +41,7 @@ def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
         },
     )
 
-    return weighted_score
+    return weighted_score[config_id]
 
 
 class BayesianOptimizationTuner():
