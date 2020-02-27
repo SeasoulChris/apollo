@@ -5,6 +5,7 @@ py_binary(
     srcs = ["convert_kinglong_to_apollo.py"],
     deps = [
         "//fueling/common:base_pipeline_v2",
+        "//fueling/common:file_utils",
         "//fueling/common:record_utils",
         "//fueling/common/record/kinglong/cybertron/python:convert",
     ],

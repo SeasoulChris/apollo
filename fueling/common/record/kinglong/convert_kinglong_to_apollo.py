@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import operator
+import os
 
 from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.logging as logging
+import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 from fueling.common.record.kinglong.cybertron.python.convert import convert_kinglong_to_apollo
 
@@ -15,7 +17,7 @@ class ConvertKinglongToApollo(BasePipelineV2):
 
     def run(self):
         origin_prefix = 'kinglong/'
-        target_prefix = 'small-records/kinglong/'
+        target_prefix = 'modules/prediction/kinglong/'
 
         record_files = (
             # RDD(file), start with origin_prefix
@@ -59,6 +61,7 @@ class ConvertKinglongToApollo(BasePipelineV2):
     def process_file(record_filepath, target_filepath):
         """Call convert python code to convert records"""
         try:
+            file_utils.makedirs(os.path.dirname(target_filepath))
             convert_kinglong_to_apollo(record_filepath, target_filepath)
             logging.info('Successfully labeled {}'.format(record_filepath))
             return 1
