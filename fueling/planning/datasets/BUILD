@@ -11,8 +11,8 @@ py_library(
 )
 
 py_binary(
-    name = "dump_feature_proto",
-    srcs = ["dump_feature_proto.py"],
+    name = "dump_learning_data",
+    srcs = ["dump_learning_data.py"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
