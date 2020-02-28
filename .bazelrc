@@ -1,5 +1,6 @@
 # bazelrc file
 # https://docs.bazel.build/versions/master/user-manual.html
+# https://docs.bazel.build/versions/master/command-line-reference.html
 
 startup --output_user_root=/home/.bazel_cache/fuel
 
