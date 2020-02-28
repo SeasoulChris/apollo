@@ -60,3 +60,17 @@ http_archive(
     sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
     strip_prefix = "gflags-2.2.2",
 )
+
+http_archive(
+    name = "com_google_glog",
+    url = "file:///home/libs/glog-0.4.0.tar.gz",
+    sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
+    strip_prefix = "glog-0.4.0",
+)
+
+# TODO(xiaoxq): We'll refer apollo as dependency soon.
+# Import apollo.
+#local_repository(
+#    name = "apollo",
+#    path = "/apollo",
+#)
