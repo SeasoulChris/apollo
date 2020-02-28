@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import datetime
 import os
+import time
 
 from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.file_utils as file_utils
@@ -12,33 +13,43 @@ class DumpLearningData(BasePipelineV2):
 
     def __init__(self):
         self.src_prefixs = [
-            'modules/planning/cleaned_data/ver_20200219_213417/task_1',
+            'modules/planning/cleaned_data',
         ]
         self.dest_prefix = 'modules/planning/learning_data'
 
     def run_test(self):
         """Run"""
         self.src_prefixs = [
-            '/apollo/data/cleaned_data/ver_20200219_213417/task_1',
+            '/apollo/data/cleaned_data',
         ]
         self.dest_prefix = '/apollo/data/learning_data'
 
-        processed_records = (self.to_rdd(self.src_prefixs)
-                             # RDD(RecordMeta)
-                             .map(self.process_record)
-                             .count())
-        logging.info('Processed {}/{} records'.format(processed_records,
-                                                      len(self.src_prefixs)))
+        src_dirs_set = set([])
+        for prefix in self.src_prefixs:
+            for root, dirs, files in os.walk(prefix):
+                for file in files:
+                    src_dirs_set.add(root)
+
+        processed_records = self.to_rdd(src_dirs_set).map(self.process_record)
+
+        logging.info('Processed {}/{} records'.format(processed_records.count(),
+                                                      len(src_dirs_set)))
         return 0
 
     def run(self):
         """Run"""
+        # for prefix in self.src_prefixs:
+        #    logging.info(self.our_storage().list_files(prefix))
+
         records_rdd = BasePipelineV2.SPARK_CONTEXT.union([
             self.to_rdd(self.our_storage().list_files(prefix))
                 .filter(record_utils.is_record_file)
+                .map(os.path.dirname)
+                .distinct()
             for prefix in self.src_prefixs])
 
         processed_records = records_rdd.map(self.process_record)
+
         logging.info('Processed {} records'.format(processed_records.count()))
 
     def process_record(self, src_record_fn):
@@ -49,7 +60,7 @@ class DumpLearningData(BasePipelineV2):
         if (not timestamp.startswith("ver_")):
             # casual format folder layout
             timestamp = "ver_" + datetime.date.today().strftime("%Y%m%d_%H%M%S") + "/"
-            dest_record_dir_elements = self.dest_prefix
+            dest_record_dir_elements.append(self.dest_prefix)
             dest_record_dir_elements.append(timestamp)
         else:
             # pipeline format folder layout
