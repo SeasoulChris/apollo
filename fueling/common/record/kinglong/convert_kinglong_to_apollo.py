@@ -9,7 +9,7 @@ import fueling.common.record_utils as record_utils
 from fueling.common.record.kinglong.cybertron.python.convert import convert_kinglong_to_apollo
 
 
-SKIP_EXISTING_DST_FILE = False
+SKIP_EXISTING_DST_FILE = True
 
 
 class ConvertKinglongToApollo(BasePipelineV2):
@@ -28,12 +28,11 @@ class ConvertKinglongToApollo(BasePipelineV2):
             .distinct())
         completed_record_files = (
             # RDD(output_file). start with target_prefix
-            self.to_rdd(self.our_storage().list_end_dirs(target_prefix))
+            self.to_rdd(self.our_storage().list_files(target_prefix))
+            # RDD(output_file)
+            .filter(record_utils.is_record_file)
             # RDD(output_file), has been completed
-            .map(lambda output_file: output_file.replace(os.path.join(
-                target_prefix, output_file[(output_file.find(target_prefix) +
-                                          len(target_prefix)):].split('/')[0] + '/'),
-                origin_prefix))
+            .map(lambda output_file: output_file.replace(target_prefix, origin_prefix))
             # RDD(output_file), which is unique
             .distinct())
         # RDD(todo_record_files)
