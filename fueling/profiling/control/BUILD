@@ -2,9 +2,9 @@ package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "control_profiling_metrics",
-    srcs = ["multi_job_control_profiling_metrics.py"],
+    srcs = ["control_profiling_metrics.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -14,9 +14,9 @@ py_library(
 
 py_library(
     name = "control_profiling_visualization",
-    srcs = ["multi_job_control_profiling_visualization.py"],
+    srcs = ["control_profiling_visualization.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -28,8 +28,8 @@ py_binary(
     name = "control_profiling",
     srcs = ["control_profiling.py"],
     deps = [
-        ":control_profiling_metrics",
-        ":control_profiling_visualization",
+        ":multi_job_control_profiling_metrics",
+        ":multi_job_control_profiling_visualization",
         "//fueling/common:base_pipeline_v2",
     ],
 )

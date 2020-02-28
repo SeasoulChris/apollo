@@ -6,7 +6,7 @@ import shutil
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 from fueling.common.mongo_utils import Mongo
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
@@ -20,33 +20,10 @@ VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
 REORG_TAG = 'REORG_COMPLETE'
 
 
-class ReorgSmallRecordsByVehicle(BasePipeline):
+class ReorgSmallRecordsByVehicle(BasePipelineV2):
     """Reorg small Records by vehicle as the input data path to control profiling pipeline."""
 
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        origin_prefix = 'testdata/profiling'
-        target_prefix = 'modules/control/small-records'
-
-        # RDD(small-records dir)
-        records_dir = spark_helper.cache_and_log(
-            'records_dir',
-            # RDD(file), start with origin_prefix
-            self.to_rdd(self.our_storage().list_files(origin_prefix))
-            # RDD(record_file)
-            .filter(record_utils.is_record_file)
-            # RDD(record_dir), with record_file inside
-            .map(os.path.dirname)
-            # RDD(record_dir), which is unique
-            .distinct()
-        )
-        # print(self.our_storage().list_files('testdata/control'))
-        logging.info(F'records_dir: {records_dir.collect()}')
-
-        self.run(records_dir, origin_prefix, target_prefix)
-
-    def run_prod(self):
+    def run(self):
         # for testing need check a sub directory to save time
         # input_prefix = 'small-records/2019/2019-06-13'
         input_prefix = 'small-records/2020'
@@ -70,9 +47,9 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
 
         logging.info(F'records_dir {records_dir.collect()}')
 
-        self.run(records_dir, origin_dir, target_dir)
+        self.run_in(records_dir, origin_dir, target_dir)
 
-    def run(self, record_dir_rdd, origin_prefix, target_prefix):
+    def run_in(self, record_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
 
         dir_vehicle_list = self.get_vehicles(record_dir_rdd.collect())
