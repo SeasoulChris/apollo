@@ -9,7 +9,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-import learning_algorithms.planning.data_preprocessing.label_generation.label_generator as LabelGenerator
+import learning_algorithms.planning.data_preprocessing.label_generation.label_generator_utils as LabelGenerator
 
 
 flags.DEFINE_string('learning_based_planning_input_path_local',
