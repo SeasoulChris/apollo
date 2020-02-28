@@ -14,9 +14,17 @@ py_binary(
     name = "dump_learning_data",
     srcs = ["dump_learning_data.py"],
     deps = [
-        "//fueling/common:base_pipeline",
+        "//fueling/common:base_pipeline_v2",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
+    ],
+)
+
+py_test(
+    name = "dump_learning_data_test",
+    srcs = ["dump_learning_data_test.py"],
+    deps = [
+        ":dump_learning_data",
     ],
 )

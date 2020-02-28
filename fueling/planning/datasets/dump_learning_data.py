@@ -2,22 +2,22 @@
 import datetime
 import os
 
-from fueling.common.base_pipeline import BasePipeline
+from fueling.common.base_pipeline_v2 import BasePipelineV2
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
-class DumpLearningData(BasePipeline):
+class DumpLearningData(BasePipelineV2):
     """Records to feature proto pipeline."""
 
     def __init__(self):
         self.src_prefixs = [
-            'modules/planning/cleaned_data/ver_20200219_213417',
+            'modules/planning/cleaned_data/ver_20200219_213417/task_1',
         ]
         self.dest_prefix = 'modules/planning/learning_data'
 
     def run_test(self):
-        """Run test."""
+        """Run"""
         self.src_prefixs = [
             '/apollo/data/cleaned_data/ver_20200219_213417/task_1',
         ]
@@ -29,13 +29,14 @@ class DumpLearningData(BasePipeline):
                              .count())
         logging.info('Processed {}/{} records'.format(processed_records,
                                                       len(self.src_prefixs)))
+        return 0
 
-    def run_prod(self):
-        """Run prod."""
-        records_rdd = BasePipeline.SPARK_CONTEXT.union([
+    def run(self):
+        """Run"""
+        records_rdd = BasePipelineV2.SPARK_CONTEXT.union([
             self.to_rdd(self.our_storage().list_files(prefix))
                 .filter(record_utils.is_record_file)
-            for prefix in self.src_prefix])
+            for prefix in self.src_prefixs])
 
         processed_records = records_rdd.map(self.process_record)
         logging.info('Processed {} records'.format(processed_records.count()))
