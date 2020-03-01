@@ -7,7 +7,7 @@ Run with:
 """
 from absl.testing import absltest
 
-from fueling.common.base_pipeline_v2 import BasePipelineTest
+from fueling.common.base_pipeline import BasePipelineTest
 from fueling.demo.stat_auto_mileage import StatAutoMileage
 import fueling.common.file_utils as file_utils
 

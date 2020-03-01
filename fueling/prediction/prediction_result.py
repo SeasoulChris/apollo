@@ -18,9 +18,9 @@ class PredictionResult(BasePipeline):
         records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide/'
         target_prefix = '/apollo/data/prediction/results/'
-        self.run(records_dir, origin_prefix, target_prefix)
+        self.run_internal(records_dir, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'small-records/'
         target_prefix = 'modules/prediction/results/'
@@ -33,9 +33,9 @@ class PredictionResult(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct())
-        self.run(records_dir, origin_prefix, target_prefix)
+        self.run_internal(records_dir, origin_prefix, target_prefix)
 
-    def run(self, record_dir_rdd, origin_prefix, target_prefix):
+    def run_internal(self, record_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
         result = (
             # RDD(record_dir)

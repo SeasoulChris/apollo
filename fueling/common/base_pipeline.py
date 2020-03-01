@@ -8,6 +8,7 @@ import traceback
 
 from absl import app
 from absl import flags
+from absl.testing import absltest
 from pyspark import SparkConf, SparkContext
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
@@ -16,7 +17,7 @@ from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
 
 
-flags.DEFINE_string('running_mode', 'TEST', 'Pipeline running mode: TEST, PROD.')
+flags.DEFINE_string('running_mode', 'TEST', '[Deprecated] Pipeline running mode: TEST, PROD.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
@@ -26,37 +27,42 @@ flags.DEFINE_string(
     'Output data path which is commonly used by pipelines.')
 
 
+# Pipeline lifecycle:
+# BasePipeline.main() -> BasePipeline.__main__() -> SparkSubmitterClient().submit()
+#                                |                              |
+#                                v (at local)                   |(in cloud)
+#                        BasePipeline.init() <-------------------
+#                                |
+#                                v
+#                        YourPipeline.run()  # The only thing you should override
+#                                |
+#                                v
+#                        BasePipeline.stop()
 class BasePipeline(object):
     """Fueling base pipeline."""
-    # Class variables are only available on drivers.
-    SPARK_CONTEXT = None
 
-    def init(self):
-        """Should be called explicitly after app inited."""
-        # Member variables are available on both driver and executors.
-        self.FLAGS = flags.FLAGS.flag_values_dict()
-
-    def run_test(self):
-        """Run the pipeline in test mode."""
-        raise Exception('Not implemented!')
-
-    def run_prod(self):
-        """Run the pipeline in production mode."""
+    def run(self):
+        """Run the pipeline."""
         raise Exception('Not implemented!')
 
     # Helper functions.
     def to_rdd(self, data):
         """Get an RDD of data."""
+        if BasePipeline.SPARK_CONTEXT is None:
+            logging.fatal('Pipeline not inited. Please run init() first.')
         return BasePipeline.SPARK_CONTEXT.parallelize(data)
+
+    def is_test(self):
+        return bool(self.FLAGS.get('test_tmpdir'))
 
     def our_storage(self):
         """Get a BOS client if in PROD mode, or local filesystem if in TEST mode."""
-        return Filesystem() if self.FLAGS.get('running_mode') == 'TEST' else BosClient()
+        return Filesystem() if self.is_test() else BosClient()
 
     @staticmethod
     def is_partner_job():
         """Test if it's partner's job."""
-        return os.environ.get('PARTNER_BOS_REGION') or os.environ.get('AZURE_STORAGE_ACCOUNT')
+        return os.environ.get('PARTNER_BOS_REGION')
 
     @staticmethod
     def partner_storage():
@@ -66,28 +72,40 @@ class BasePipeline(object):
             return BosClient(is_partner)
         return None
 
+    # Internal members.
+    SPARK_CONTEXT = None
+
+    def init(self):
+        """Init necessary infra."""
+        if BasePipeline.SPARK_CONTEXT is None:
+            spark_conf = SparkConf().setAppName(self.__class__.__name__)
+            if flags.FLAGS.cpu > 1:
+                spark_conf.setMaster(F'local[{flags.FLAGS.cpu}]')
+            BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(spark_conf)
+        FLAGS = flags.FLAGS
+        if not FLAGS.job_id:
+            FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        # Member variables are available on both driver and executors.
+        self.FLAGS = FLAGS.flag_values_dict()
+        logging.info('Running job with owner={}, id={}'.format(FLAGS.job_owner, FLAGS.job_id))
+
+    @classmethod
+    def stop(cls):
+        """Stop the pipeline."""
+        if cls.SPARK_CONTEXT is not None:
+            cls.SPARK_CONTEXT.stop()
+            cls.SPARK_CONTEXT = None
+
     def __main__(self, argv):
         """Run the pipeline."""
         if flags.FLAGS.cloud:
             SparkSubmitterClient(self.entrypoint).submit()
             return
-        BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(
-            SparkConf().setAppName(self.__class__.__name__))
-        mode = flags.FLAGS.running_mode
-        if not flags.FLAGS.job_id:
-            flags.FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-
-        logging.info('Running job in {} mode, owner={}, id={}'.format(
-            mode, flags.FLAGS.job_owner, flags.FLAGS.job_id))
-
         try:
             self.init()
-            if mode == 'TEST':
-                self.run_test()
-            else:
-                self.run_prod()
+            self.run()
         finally:
-            BasePipeline.SPARK_CONTEXT.stop()
+            self.stop()
 
     def main(self):
         """Kick off everything."""
@@ -95,12 +113,28 @@ class BasePipeline(object):
         app.run(self.__main__)
 
 
+# SequentialPipeline lifecycle:
+# BasePipeline.main() -> BasePipeline.__main__() -> SparkSubmitterClient().submit()
+#                                |                              |
+#                                V (at local)                   |(in cloud)
+#                        SequentialPipeline.init() <-------------
+#                                |
+#                                V
+#                        SequentialPipeline.run()
+#                        --------|-----------
+#                        |       |          |
+#                        V       V          V
+#          pipeline1.run() pipeline2.run() ...
+#                        ---------------------
+#                                |
+#                                V
+#                        BasePipeline.stop()
 class SequentialPipeline(BasePipeline):
     """
     A sequential of sub-pipelines. Run it like
         SequentialPipeline([
             Pipeline1(),
-            Pipeline2(arg1),
+            Pipeline2(arg),
             Pipeline3(),
         ]).main()
     """
@@ -110,16 +144,35 @@ class SequentialPipeline(BasePipeline):
 
     def init(self):
         """Init all sub-pipelines."""
-        BasePipeline.init(self)
+        super().init()
         for phase in self.phases:
             phase.init()
 
-    def run_test(self):
+    def run(self):
         """Run the pipeline in test mode."""
         for phase in self.phases:
-            phase.run_test()
+            phase.run()
 
-    def run_prod(self):
-        """Run the pipeline in production mode."""
-        for phase in self.phases:
-            phase.run_prod()
+
+# PipelineTest lifecycle:
+# BasePipelineTest.main() -> BasePipelineTest.setUp() -> BasePipeline.init()
+#                                                                 |
+#                                    ------------------------------
+#                                    |           |                |
+#                                    V           V                V
+#             YourPipelineTest.test_A() YourPipelineTest.test_B() ...
+#                                    ------------------------------
+#                                                |
+#                                                V
+#                             BasePipelineTest.tearDown() -> BasePipeline.stop()
+# Be careful about the side effect of test functions.
+class BasePipelineTest(absltest.TestCase):
+
+    def setUp(self, pipeline):
+        super().setUp()
+        self.pipeline = pipeline
+        self.pipeline.init()
+
+    def tearDown(self):
+        self.pipeline.stop()
+        super().tearDown()

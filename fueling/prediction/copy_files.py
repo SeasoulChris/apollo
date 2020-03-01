@@ -20,7 +20,7 @@ class CopyFiles(BasePipeline):
         origin_prefix = '/apollo/docs/demo_guide/'
         target_prefix = '/apollo/data/prediction/test/'
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/prediction/results/'
         target_prefix = 'modules/prediction/test/'

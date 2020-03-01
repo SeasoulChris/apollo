@@ -53,7 +53,7 @@ def partition_data(target_msgs):
 
 class OpenSpacePlannerMetrics(BasePipeline):
 
-    def run_test(self):
+    def run(self):
         """ Run test. """
         # 1. get local record
         origin_prefix = flags.FLAGS.open_space_planner_profilling_input_path_local
@@ -68,9 +68,9 @@ class OpenSpacePlannerMetrics(BasePipeline):
         ]).cache()
         logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
         # 2. run test
-        self.run(todo_task_dirs, origin_prefix, target_prefix)
+        self.run_internal(todo_task_dirs, origin_prefix, target_prefix)
 
-    def run(self, todo_task_dirs, origin_prefix, target_prefix):
+    def run_internal(self, todo_task_dirs, origin_prefix, target_prefix):
         """ process records """
         # TODO(SHU):
         # 1. records to planning messages

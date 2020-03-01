@@ -13,14 +13,6 @@ py_library(
 )
 
 py_library(
-    name = "base_pipeline_v2",
-    srcs = ["base_pipeline_v2.py"],
-    deps = [
-        ":base_pipeline",
-    ],
-)
-
-py_library(
     name = "coord_utils",
     srcs = ["coord_utils.py"],
 )

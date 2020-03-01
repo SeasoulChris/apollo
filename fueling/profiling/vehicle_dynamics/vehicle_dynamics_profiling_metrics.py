@@ -32,23 +32,23 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
         todo_tasks = self.to_rdd([
             os.path.join(original_prefix, 'Road_Test'),
         ]).cache()
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         logging.info('tasks {}'.format(todo_tasks.collect()))
         logging.info('Vehicle Dynamics Profiling: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = 'small-records/2020'
         target_prefix = 'modules/profiling/vehicle_dynamics_profiling_hf5'
         # RDD(tasks), the task dirs
         dir_todo_tasks = dir_utils.get_todo_tasks(original_prefix, target_prefix)
         todo_tasks = spark_helper.cache_and_log('todo_tasks', dir_todo_tasks)
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         # summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         logging.info('Control Profiling: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters, core procedure"""
 
         # RDD(tasks), with absolute paths

@@ -91,10 +91,10 @@ class ScenarioExtractionPipeline(BasePipeline):
             lambda path: self.to_rdd(list_end_files(os.path.join(root_dir, path))))
         logging.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         logging.info('Simulation: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = 'small-records/2020'
         target_prefix = 'modules/simulation/logsim_scenarios/2020'
@@ -104,10 +104,10 @@ class ScenarioExtractionPipeline(BasePipeline):
                                     lambda path: self.to_rdd(self.our_storage().list_files(path)))
         logging.info('todo tasks: {}'.format(todo_tasks.collect()))
 
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         logging.info('Simulation: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks)
         (todo_tasks

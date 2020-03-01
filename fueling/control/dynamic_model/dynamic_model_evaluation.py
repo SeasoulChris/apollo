@@ -58,7 +58,7 @@ class DynamicModelEvaluation(BasePipeline):
         self.model_evaluation(mlp_model_rdd, evaluation_dataset_rdd, platform_path)
         self.model_evaluation(lstm_model_rdd, evaluation_dataset_rdd, platform_path)
 
-    def run_prod(self):
+    def run(self):
         platform_path = 'modules/control/learning_based_model/'
         if IS_BACKWARD:
             evaluation_set = 'golden_test_backward'

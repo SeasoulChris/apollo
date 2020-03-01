@@ -30,7 +30,7 @@ py_binary(
     deps = [
         ":multi_job_control_profiling_metrics",
         ":multi_job_control_profiling_visualization",
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
     ],
 )
 
@@ -79,7 +79,7 @@ py_library(
     name = "multi_job_control_profiling_metrics_test",
     srcs = ["multi_job_control_profiling_metrics_test.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -98,7 +98,7 @@ py_library(
     name = "multi_job_control_profiling_visualization",
     srcs = ["multi_job_control_profiling_visualization.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -113,7 +113,7 @@ py_library(
     name = "multi_job_control_profiling_metrics",
     srcs = ["multi_job_control_profiling_metrics.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",

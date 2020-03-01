@@ -22,9 +22,9 @@ class DataForTuningLabelsCombine(BasePipeline):
         """Run test."""
         datatuning_files = self.to_rdd(glob.glob(
             '/apollo/data/prediction/tuning/*/datatuning.*.bin'))
-        self.run(datatuning_files)
+        self.run_internal(datatuning_files)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/prediction/tuning'
 
@@ -32,9 +32,9 @@ class DataForTuningLabelsCombine(BasePipeline):
         datatuning_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*datatuning.*.bin']))
 
-        self.run(datatuning_file_rdd)
+        self.run_internal(datatuning_file_rdd)
 
-    def run(self, datatuning_file_rdd):
+    def run_internal(self, datatuning_file_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = datatuning_file_rdd.map(self.process_dir).count()

@@ -26,19 +26,7 @@ class IndexRecords(BasePipeline):
     def __init__(self):
         self.metrics_prefix = 'data.pipelines.index_records.'
 
-    def run_test(self):
-        """Run test."""
-        # RDD(record_path)
-        records = ['/fuel/testdata/data/small.record']
-        indexed_records = (self.to_rdd(records)
-                           # RDD(RecordMeta)
-                           .map(RecordParser.Parse)
-                           # RDD(RecordMeta), which is not None.
-                           .filter(lambda meta: meta is not None)
-                           .count())
-        logging.info('Indexed {}/{} records'.format(indexed_records, len(records)))
-
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         prefixes = [
             'public-test/2020/',

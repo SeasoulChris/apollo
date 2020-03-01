@@ -210,7 +210,7 @@ class PopulateFramesPipeline(BasePipeline):
         message = [notification(task, root_dir, target_dir) for task in todo_tasks]
         email_utils.send_email_info('Frame Population Job Running', message, email_utils.DATA_TEAM)
 
-        self.run(todo_tasks, root_dir, target_dir)
+        self.run_internal(todo_tasks, root_dir, target_dir)
 
         logging.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
@@ -221,7 +221,7 @@ class PopulateFramesPipeline(BasePipeline):
         email_utils.send_email_info('Frame Population Job Completed', {'Success': 100, 'Fail': 200},
                                     email_utils.DATA_TEAM)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         bos_client = self.our_storage()
         root_dir = bos_client.mnt_path
@@ -232,14 +232,14 @@ class PopulateFramesPipeline(BasePipeline):
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
         logging.info('ToDo tasks: {}'.format(todo_tasks))
 
-        self.run(todo_tasks, root_dir, target_dir)
+        self.run_internal(todo_tasks, root_dir, target_dir)
 
         logging.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
 
         logging.info('Labeling: All Done, PROD.')
 
-    def run(self, todo_tasks, root_dir, target_dir):
+    def run_internal(self, todo_tasks, root_dir, target_dir):
         """Run the pipeline with given arguments."""
         # Creating SQL query will fail and throw if input is empty, so check it here first
         if todo_tasks is None or not todo_tasks:

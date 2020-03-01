@@ -13,7 +13,7 @@ from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -40,7 +40,7 @@ flags.DEFINE_string('ctl_visual_output_path_k8s', 'modules/control/tmp/results',
                     'output data directory for run_pod')
 
 
-class MultiJobControlProfilingVisualization(BasePipelineV2):
+class MultiJobControlProfilingVisualization(BasePipeline):
     """ Control Profiling: Visualize Control Features"""
 
     def run(self):

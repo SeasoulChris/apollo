@@ -176,9 +176,9 @@ class SampleSet(BasePipeline):
         logging.info('origin_prefix: %s' % origin_prefix)
         logging.info('target_prefix: %s' % target_prefix)
 
-        self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
+        self.run_internal(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = self.FLAGS.get('input_data_path', 'modules/control/data/records')
         job_owner = self.FLAGS.get('job_owner')
@@ -283,9 +283,9 @@ class SampleSet(BasePipeline):
         # PairRDD(vehicle_type, dir_of_todos_with_origin_prefix)
         todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
 
-        self.run(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
+        self.run_internal(todo_task_dirs, vehicle_param_conf, origin_prefix, target_prefix)
 
-    def run(self, todo_task_dirs, vehicle_conf_folder, origin_prefix, target_prefix):
+    def run_internal(self, todo_task_dirs, vehicle_conf_folder, origin_prefix, target_prefix):
         """ processing RDD """
         # PairRDD(vehicle, vehicle_param)
         vehicle_param_conf = vehicle_conf_folder.mapValues(multi_vehicle_utils.get_vehicle_param)

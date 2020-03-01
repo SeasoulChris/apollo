@@ -69,9 +69,9 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run_test(self):
         """local mini test"""
-        self.run('testdata/perception/sensor_calibration')
+        self.run_internal('testdata/perception/sensor_calibration')
 
-    def run_prod(self):
+    def run(self):
         """Run Prod. production version"""
         result_files = []
         job_owner = self.FLAGS.get('job_owner')
@@ -86,7 +86,7 @@ class SensorCalibrationPipeline(BasePipeline):
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
         try:
-            result_files = self.run(self.FLAGS.get('input_data_path'))
+            result_files = self.run_internal(self.FLAGS.get('input_data_path'))
         except BaseException as e:
             logging.error(e)
 
@@ -113,7 +113,7 @@ class SensorCalibrationPipeline(BasePipeline):
             redis_utils.redis_extend_dict(redis_key, redis_value)
             logging.fatal('Failed to process sensor calibration job')
 
-    def run(self, job_dir):
+    def run_internal(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
         if self.is_partner_job():
             job_dir = self.partner_storage().abs_path(job_dir)

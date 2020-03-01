@@ -88,9 +88,9 @@ class UniformSet(BasePipeline):
             # PairRDD(vehicle, hdf5 file)
             .flatMapValues(lambda path: glob.glob(os.path.join(path, '*/*.hdf5'))))
 
-        self.run(feature_dir, origin_vehicle_dir, target_prefix)
+        self.run_internal(feature_dir, origin_vehicle_dir, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
 
         job_owner = self.FLAGS.get('job_owner')
@@ -131,9 +131,9 @@ class UniformSet(BasePipeline):
             origin_vehicle_dir
             .flatMapValues(lambda path: self.our_storage().list_files(path, '.hdf5')))
 
-        self.run(hdf5_files, origin_vehicle_dir, target_dir)
+        self.run_internal(hdf5_files, origin_vehicle_dir, target_dir)
 
-    def run(self, feature_dir, origin_vehicle_conf_dir, target_dir):
+    def run_internal(self, feature_dir, origin_vehicle_conf_dir, target_dir):
         def _generate_key(elements):
             vehicle, hdf5 = elements
             file_name = os.path.basename(hdf5)

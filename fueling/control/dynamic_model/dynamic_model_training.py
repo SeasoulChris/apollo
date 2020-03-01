@@ -45,7 +45,7 @@ class DynamicModelTraining(BasePipeline):
             self.load_model_conf(vehicle, model_conf_prefix, IS_BACKWARD)
             self.execute_task(vehicle, model_conf_prefix, training_data_path, output_dir)
 
-    def run_prod(self):
+    def run(self):
         # intermediate result folder
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -95,9 +95,9 @@ class DynamicModelTraining(BasePipeline):
         # logging.info('hd5_files_path = {}'.format(hd5_files_path))
         # for file in files_path:
         training_dataset_rdd = self.to_rdd(hd5_files_path)
-        self.run(training_dataset_rdd, model_output_dir)
+        self.run_internal(training_dataset_rdd, model_output_dir)
 
-    def run(self, training_dataset_rdd, output_dir):
+    def run_internal(self, training_dataset_rdd, output_dir):
         data = (
             # RDD(absolute_file_path)
             training_dataset_rdd

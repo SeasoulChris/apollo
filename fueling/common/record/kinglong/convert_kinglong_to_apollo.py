@@ -2,7 +2,7 @@
 import operator
 import os
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
@@ -12,7 +12,7 @@ from fueling.common.record.kinglong.cybertron.python.convert import convert_king
 SKIP_EXISTING_DST_FILE = True
 
 
-class ConvertKinglongToApollo(BasePipelineV2):
+class ConvertKinglongToApollo(BasePipeline):
     """Convert Kinglong record to Apollo pipeline."""
 
     def run(self):

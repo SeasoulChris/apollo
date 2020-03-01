@@ -16,16 +16,16 @@ class MatchImgLabel(BasePipeline):
         """Run test."""
         # RDD(png_img)
         png_img_rdd = self.to_rdd(glob.glob('/apollo/data/prediction/junction_img/*/*.png'))
-        self.run(png_img_rdd)
+        self.run_internal(png_img_rdd)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         source_prefix = 'modules/prediction/junction_img/'
         # RDD(png_img)
         png_img_rdd = self.to_rdd(self.our_storage().list_files(source_prefix, '.png'))
-        self.run(png_img_rdd)
+        self.run_internal(png_img_rdd)
 
-    def run(self, png_img_rdd):
+    def run_internal(self, png_img_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = png_img_rdd.map(self.process_file).cache()

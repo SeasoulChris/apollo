@@ -71,12 +71,12 @@ class GenerateSmallRecords(BasePipeline):
     def run_test(self):
         """Run test."""
         # RDD(record_path)
-        todo_records = self.to_rdd(['/fuel/testdata/data/small.record'])
-        src_prefix = '/apollo/modules/data'
-        dst_prefix = '/tmp/generate_small_records'
-        self.run(todo_records, src_prefix, dst_prefix)
+        todo_records = self.to_rdd([file_utils.fuel_path('fueling/demo/testdata/small.record')])
+        src_prefix = file_utils.fuel_path('fueling/demo/testdata')
+        dst_prefix = self.FLAGS.get('test_tmpdir')
+        self.run_internal(todo_records, src_prefix, dst_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         src_prefix = 'public-test/2020/'
         dst_prefix = 'modules/data/public-test-small/2020/'
@@ -134,9 +134,9 @@ class GenerateSmallRecords(BasePipeline):
                                        .map(file_utils.touch))
 
         spark_helper.cache_and_log('TodoRecords', todo_records)
-        self.run(todo_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
+        self.run_internal(todo_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
 
-    def run(self, todo_records, src_prefix, dst_prefix, summary_receivers=None):
+    def run_internal(self, todo_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         output_records = spark_helper.cache_and_log('OutputRecords',
                                                     # RDD(todo_src_record)

@@ -19,7 +19,7 @@ class DeleteDirs(BasePipeline):
         origin_prefix = '/apollo/docs/demo_guide'
         target_prefix = '/apollo/data/prediction/labels/'
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         target_prefix = 'modules/prediction/ground_truth/'
         files = (

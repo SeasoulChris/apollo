@@ -47,10 +47,10 @@ class SimMapPipeline(BasePipeline):
         dir_prefix = 'testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
-        self.run(dst_prefix)
+        self.to_rdd([dst_prefix]).foreach(execute_task)
         logging.info('sim map gen: Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Production."""
         dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
         job_owner = self.FLAGS.get('job_owner')
@@ -74,13 +74,8 @@ class SimMapPipeline(BasePipeline):
         if not os.path.exists(routing_creator_path):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
-
-        self.run(source_path)
-
-    def run(self, original_path):
-        """Run the pipeline with given parameters"""
-        # RDD(task_path)
-        self.to_rdd([original_path]).foreach(execute_task)
+        self.to_rdd([source_path]).foreach(execute_task)
+        
 
 
 if __name__ == '__main__':

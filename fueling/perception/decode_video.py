@@ -74,7 +74,7 @@ class DecodeVideoPipeline(BasePipeline):
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         logging.info('ToDo tasks: {}'.format(todo_tasks))
 
-        self.run(todo_tasks, root_dir, video_dir, decoded_records_dir)
+        self.run_internal(todo_tasks, root_dir, video_dir, decoded_records_dir)
 
         logging.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
@@ -82,7 +82,7 @@ class DecodeVideoPipeline(BasePipeline):
 
         logging.info('Video Decoding: All Done, TEST.')
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         root_dir = bos_client.BOS_MOUNT_PATH
         video_dir = 'modules/perception/videos/decoded'
@@ -91,7 +91,7 @@ class DecodeVideoPipeline(BasePipeline):
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, decoded_records_dir)
         logging.info('ToDo tasks: {}'.format(todo_tasks))
 
-        self.run(todo_tasks, root_dir, video_dir, decoded_records_dir)
+        self.run_internal(todo_tasks, root_dir, video_dir, decoded_records_dir)
 
         logging.info('Task done, marking COMPLETE')
         mark_video_complete(todo_tasks, video_dir, root_dir)
@@ -99,7 +99,7 @@ class DecodeVideoPipeline(BasePipeline):
 
         logging.info('Video Decoding: All Done, PROD.')
 
-    def run(self, todo_tasks, root_dir, target_dir, decoded_records_dir):
+    def run_internal(self, todo_tasks, root_dir, target_dir, decoded_records_dir):
         """Run the pipeline with given arguments."""
         target_records = spark_helper.cache_and_log(
             'Task-Records',

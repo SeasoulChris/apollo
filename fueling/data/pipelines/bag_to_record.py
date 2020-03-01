@@ -31,9 +31,9 @@ class BagToRecord(BasePipeline):
             ('/apollo/docs/demo_guide/demo_2.0.bag',
              '/fuel/testdata/data/generated/demo_2.0.record'),
         ])
-        self.run(bag_to_record)
+        self.run_internal(bag_to_record)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         src_prefix = 'stale-rosbags/2020/'
         dst_prefix = 'small-records/2020/'
@@ -62,9 +62,9 @@ class BagToRecord(BasePipeline):
             record_to_bag, self.to_rdd(storage.list_files(dst_prefix, '.record'))
         ).filter(spark_op.filter_key(record_utils.filter_last_n_days_records(PROCESS_LAST_N_DAYS)))
 
-        self.run(record_to_bag.map(spark_op.swap_kv))
+        self.run_internal(record_to_bag.map(spark_op.swap_kv))
 
-    def run(self, bag_to_record):
+    def run_internal(self, bag_to_record):
         """Run the pipeline with given arguments."""
         spark_helper.cache_and_log('FinishedJobs',
                                    # PairRDD(src_bag, dst_record)

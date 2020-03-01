@@ -30,10 +30,10 @@ class ControlProfilingScenarioOrientedVisualization(BasePipeline):
             os.path.join(origin_prefix, 'ScenarioOriented_Test/Case1'),
             os.path.join(origin_prefix, 'ScenarioOriented_Test/Case2'),
         ]).cache()
-        self.run(todo_tasks, origin_prefix, target_prefix)
+        self.run_internal(todo_tasks, origin_prefix, target_prefix)
         logging.info('Control Profiling Visualization: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = 'modules/control/control_profiling_hf5'
         target_prefix = original_prefix
@@ -41,10 +41,10 @@ class ControlProfilingScenarioOrientedVisualization(BasePipeline):
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
                                                 dir_utils.get_todo_tasks(original_prefix, target_prefix,
                                                                          'COMPLETE', 'COMPLETE_PLOT'))
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         logging.info('Control Profiling Visualization: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         datalist = (todo_tasks

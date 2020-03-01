@@ -3,12 +3,12 @@ import datetime
 import os
 import time
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
-class DumpLearningData(BasePipelineV2):
+class DumpLearningData(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
@@ -41,7 +41,7 @@ class DumpLearningData(BasePipelineV2):
         # for prefix in self.src_prefixs:
         #    logging.info(self.our_storage().list_files(prefix))
 
-        records_rdd = BasePipelineV2.SPARK_CONTEXT.union([
+        records_rdd = BasePipeline.SPARK_CONTEXT.union([
             self.to_rdd(self.our_storage().list_files(prefix))
                 .filter(record_utils.is_record_file)
                 .map(os.path.dirname)

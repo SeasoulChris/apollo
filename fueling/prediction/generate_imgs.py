@@ -23,18 +23,18 @@ class GenerateImgs(BasePipeline):
         records_dir = self.to_rdd(glob.glob('/apollo/data/prediction/features/*/frame_env.*.bin'))
         origin_prefix = '/apollo/data/prediction/frame_env'
         target_prefix = '/apollo/data/prediction/img_features'
-        self.run(records_dir, origin_prefix, target_prefix)
+        self.run_internal(records_dir, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/prediction/frame_env'
         target_prefix = 'modules/prediction/img_features'
         # RDD(bin_file)
         bin_file = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*frame_env.*.bin']))
-        self.run(bin_file, origin_prefix, target_prefix)
+        self.run_internal(bin_file, origin_prefix, target_prefix)
 
-    def run(self, bin_file_rdd, origin_prefix, target_prefix):
+    def run_internal(self, bin_file_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
         file_list_rdd = (
             # RDD(bin_file)

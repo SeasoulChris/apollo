@@ -14,6 +14,7 @@ py_library(
     srcs = ["serialize_utils.py"],
     deps = [
         ":streaming_utils",
+        # TODO: yaml
     ],
 )
 
@@ -25,3 +26,11 @@ py_binary(
         "//fueling/common:base_pipeline",
     ],
 )
+
+#py_test(
+#    name = "serialize_records_test",
+#    srcs = ["serialize_records_test.py"],
+#    deps = [
+#        ":serialize_records",
+#    ]
+#)

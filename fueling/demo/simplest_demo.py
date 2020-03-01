@@ -13,13 +13,13 @@ Run in cloud:
 
 from absl import flags
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 
 
 flags.DEFINE_integer('square_sum_of_n', 100, 'Square sum of n: (1^2 + ... + n^2)')
 
 
-class SquareSum(BasePipelineV2):
+class SquareSum(BasePipeline):
     """Demo pipeline."""
 
     def run(self):

@@ -65,19 +65,19 @@ class LidarBenchmarkPipeline(BasePipeline):
     def run_test(self):
         """Local mini test."""
         original_path = '/apollo/benchmark-data'
-        self.run(original_path)
+        self.run_internal(original_path)
         logging.info('Perception Lidar Benchmark: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Production."""
         root_dir = bos_client.BOS_MOUNT_PATH
         original_path = '{}/modules/perception/benchmark/testdata'.format(root_dir)
         logging.info('origin path is {}'.format(original_path))
         # RDD(tasks), the tasks without root_dir as prefix
-        self.run(original_path)
+        self.run_internal(original_path)
         logging.info('Perception Lidar Benchmark: All Done, PROD')
 
-    def run(self, original_path):
+    def run_internal(self, original_path):
         """Run the pipeline with given parameters"""
         self.to_rdd([original_path]).foreach(execute_task)
 

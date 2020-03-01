@@ -27,9 +27,9 @@ class MultiJobResultVisualization(BasePipeline):
 
     def run_test(self):
         origin_dir = '/fuel/testdata/control/generated_conf'
-        self.run(origin_dir, origin_dir)
+        self.run_internal(origin_dir, origin_dir)
 
-    def run_prod(self):
+    def run(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
 
@@ -44,10 +44,10 @@ class MultiJobResultVisualization(BasePipeline):
         conf_dir = our_storage.abs_path(conf_prefix)
 
         # RDD(plot_file)
-        plot_files = self.run(origin_dir, conf_dir)
+        plot_files = self.run_internal(origin_dir, conf_dir)
 
 
-    def run(self, origin_prefix, conf_prefix):
+    def run_internal(self, origin_prefix, conf_prefix):
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(
             'origin_vehicle_dir',

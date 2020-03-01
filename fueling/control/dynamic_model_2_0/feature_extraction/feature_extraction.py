@@ -83,9 +83,9 @@ class FeatureExtraction(BasePipeline):
         target_dir = '/fuel/testdata/control/DM2_OUT/0816'
         # RDD(tasks)
         task = self.to_rdd(all_dirs)
-        self.run(task, test_data_dirs, target_dir)
+        self.run_internal(task, test_data_dirs, target_dir)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         # get subfolder of all records
         task = self.to_rdd([PROD_INPUT_DIR])
@@ -99,9 +99,9 @@ class FeatureExtraction(BasePipeline):
             .map(os.path.dirname)
             # RDD(distinct folders)
             .distinct(), 1)
-        self.run(task, PROD_INPUT_DIR, PROD_TARGET_DIR)
+        self.run_internal(task, PROD_INPUT_DIR, PROD_TARGET_DIR)
 
-    def run(self, task, original_prefix, target_prefix):
+    def run_internal(self, task, original_prefix, target_prefix):
         # configurable segments
         dir_msgs_rdd = spark_helper.cache_and_log(
             'record_to_msgs',

@@ -33,10 +33,10 @@ class LocalMapPipeline(BasePipeline):
         lidar_type = self.FLAGS.get('lidar_type')
         # RDD(record_path)
         todo_records = self.to_rdd([src_dir])
-        self.run(todo_records, src_dir, dst_prefix, zone_id, lidar_type)
+        self.run_internal(todo_records, src_dir, dst_prefix, zone_id, lidar_type)
         logging.info('local map gen: Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Production."""
         src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
         dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
@@ -86,7 +86,7 @@ class LocalMapPipeline(BasePipeline):
         # RDD(tasks), the tasks without source_dir as prefix
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
-        self.run(todo_records, source_dir, target_dir, zone_id, lidar_type)
+        self.run_internal(todo_records, source_dir, target_dir, zone_id, lidar_type)
 
         email_utils.send_email_info(title, content, receivers)
 
@@ -94,7 +94,7 @@ class LocalMapPipeline(BasePipeline):
                        'job_status': 'success'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
 
-    def run(self, todo_records, src_prefix, dst_prefix, zone_id, lidar_type):
+    def run_internal(self, todo_records, src_prefix, dst_prefix, zone_id, lidar_type):
         """Run the pipeline with given arguments."""
         # Spark cascade style programming.
         self.dst_prefix = dst_prefix

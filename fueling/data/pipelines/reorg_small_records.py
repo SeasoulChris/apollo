@@ -34,9 +34,9 @@ class ReorgSmallRecords(BasePipeline):
         src_records = self.to_rdd(['/fuel/testdata/data/small.record'])
         src_prefix = '/apollo/modules/data'
         dst_prefix = '/tmp/reorg_small_records'
-        self.run(src_records, src_prefix, dst_prefix)
+        self.run_internal(src_records, src_prefix, dst_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         src_prefix = 'modules/data/public-test-small/2020/'
         dst_prefix = 'small-records/2020/'
@@ -69,9 +69,9 @@ class ReorgSmallRecords(BasePipeline):
             todo_src_dirs
         ).values()
 
-        self.run(src_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
+        self.run_internal(src_records, src_prefix, dst_prefix, email_utils.DATA_TEAM)
 
-    def run(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
+    def run_internal(self, src_records, src_prefix, dst_prefix, summary_receivers=None):
         """Run the pipeline with given arguments."""
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 4))
         logging.info('Repartition to: {}'.format(partitions))

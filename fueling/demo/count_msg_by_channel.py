@@ -13,11 +13,11 @@ import pprint
 from cyber_py3.record import RecordReader
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 
 
-class CountMsgByChannel(BasePipelineV2):
+class CountMsgByChannel(BasePipeline):
     """Demo pipeline."""
 
     def run(self):

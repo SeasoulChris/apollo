@@ -16,11 +16,11 @@ import time
 import torch
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 
 
-class PytorchTraining(BasePipelineV2):
+class PytorchTraining(BasePipeline):
     """Demo pipeline."""
 
     def run(self):

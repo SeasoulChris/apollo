@@ -43,7 +43,7 @@ class VisualPlanningRecords(BasePipeline):
         for record in records:
             self.process_record(record)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
 
         # RDD(record_path)

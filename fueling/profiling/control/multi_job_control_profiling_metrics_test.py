@@ -12,7 +12,7 @@ from absl import flags
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline_v2 import BasePipelineTest
+from fueling.common.base_pipeline import BasePipelineTest
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -135,10 +135,10 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
                     os.path.join(src_dst[0], feature_utils.CONF_FILE),
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
-        self.run(todo_task_dirs.values(), origin_prefix, target_prefix)
+        self.run_internal(todo_task_dirs.values(), origin_prefix, target_prefix)
         logging.info('Control Profiling Metrics: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
 
         if flags.FLAGS.ctl_metrics_simulation_only_test:
@@ -348,10 +348,10 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
             logging.info('Control Profiling Metrics: No Results, PROD')
             return
 
-        self.run(todo_task_dirs.values(), origin_dir, target_dir, job_email)
+        self.run_internal(todo_task_dirs.values(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Metrics: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix, job_email=''):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
 
         def _reorg_target_dir(target_task):

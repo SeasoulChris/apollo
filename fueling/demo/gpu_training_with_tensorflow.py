@@ -35,7 +35,7 @@ class TensorflowTraining(BasePipeline):
         self.to_rdd(range(1)).foreach(self.train)
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
-    def run_prod(self):
+    def run(self):
         """Same with run_test()."""
         self.run_test()
 

@@ -8,7 +8,7 @@ py_library(
     ],
     deps = [
         "//fueling/learning/autotuner/client:sim_client",
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
     ],
 )

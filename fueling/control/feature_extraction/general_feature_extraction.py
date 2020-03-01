@@ -35,9 +35,9 @@ class GeneralFeatureExtraction(BasePipeline):
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
                                                   dir_utils.get_todo_records(todo_tasks))
-        self.run(todo_records, origin_prefix, target_prefix)
+        self.run_internal(todo_records, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'small-records/2020/'
         target_prefix = os.path.join('modules/control/feature_extraction_hf5/hdf5_training/',
@@ -47,9 +47,9 @@ class GeneralFeatureExtraction(BasePipeline):
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
                                                   dir_utils.get_todo_records(todo_tasks))
-        self.run(todo_records, origin_prefix, target_prefix)
+        self.run_internal(todo_records, origin_prefix, target_prefix)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
+    def run_internal(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         def _gen_hdf5(elem):
             """ write data segment to hdf5 file """

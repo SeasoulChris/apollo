@@ -27,7 +27,7 @@ def extract_scenario_name(dataset_path):
 
 class IMUEvaluation(BasePipeline):
 
-    def run_test(self):
+    def run(self):
         """run test"""
         platform_path = "/fuel/testdata/control/"
         if IS_BACKWARD:
@@ -44,9 +44,9 @@ class IMUEvaluation(BasePipeline):
             .keyBy(extract_scenario_name))
         logging.info(evaluation_dataset_rdd.collect())
 
-        self.run(evaluation_dataset_rdd, platform_path)
+        self.run_internal(evaluation_dataset_rdd, platform_path)
 
-    def run(self, evaluation_dataset_rdd, platform_path):
+    def run_internal(self, evaluation_dataset_rdd, platform_path):
         """run"""
         results_rdd = spark_helper.cache_and_log(
             "results",

@@ -19,9 +19,9 @@ class GenerateLabels(BasePipeline):
         """Run test."""
         # RDD(bin_files)
         bin_files = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/feature.*.bin'))
-        self.run(bin_files)
+        self.run_internal(bin_files)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         source_prefix = 'modules/prediction/labels/'
 
@@ -41,9 +41,9 @@ class GenerateLabels(BasePipeline):
             # RDD(todo_bin_files)
             todo_bin_files = todo_bin_files.subtract(labeled_bin_files).distinct()
 
-        self.run(todo_bin_files)
+        self.run_internal(todo_bin_files)
 
-    def run(self, bin_files_rdd):
+    def run_internal(self, bin_files_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = bin_files_rdd.map(self.process_file).cache()

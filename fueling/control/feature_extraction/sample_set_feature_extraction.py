@@ -39,9 +39,9 @@ class SampleSetFeatureExtraction(BasePipeline):
         todo_records = spark_helper.cache_and_log('todo_records',
                                                   dir_utils.get_todo_records(todo_tasks))
 
-        self.run(todo_records, origin_prefix, target_prefix)
+        self.run_internal(todo_records, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/control/data/records/Mkz7'
         target_prefix = os.path.join('modules/control/data/results', 'SampleSet', WANTED_VEHICLE)
@@ -60,9 +60,9 @@ class SampleSetFeatureExtraction(BasePipeline):
         # PairRDD(record_dirs, record_files)
         todo_records = spark_helper.cache_and_log('todo_records',
                                                   dir_utils.get_todo_records(todo_tasks))
-        self.run(todo_records, origin_prefix, target_prefix)
+        self.run_internal(todo_records, origin_prefix, target_prefix)
 
-    def run(self, dir_to_records_rdd, origin_prefix, target_prefix):
+    def run_internal(self, dir_to_records_rdd, origin_prefix, target_prefix):
         """ processing RDD """
         # RDD(aboslute_dir) which include records of the wanted vehicle
         selected_vehicles = spark_helper.cache_and_log(

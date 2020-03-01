@@ -9,7 +9,7 @@ Run with:
 from absl import flags
 from absl.testing import absltest
 
-from fueling.common.base_pipeline_v2 import BasePipelineTest
+from fueling.common.base_pipeline import BasePipelineTest
 from fueling.demo.simplest_demo import SquareSum
 
 

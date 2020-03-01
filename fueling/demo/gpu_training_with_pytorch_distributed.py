@@ -28,7 +28,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.distributed_data_parallel as ddp
 import fueling.common.logging as logging
 import fueling.common.socket_utils as socket_utils 
@@ -55,7 +55,7 @@ class Net(nn.Module):
         return x
 
 
-class PytorchTraining(BasePipelineV2):
+class PytorchTraining(BasePipeline):
     """Demo pipeline."""
 
     def run(self):

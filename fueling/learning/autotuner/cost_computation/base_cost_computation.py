@@ -12,7 +12,7 @@ from absl import flags
 import pyspark_utils.op as spark_op
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -39,9 +39,9 @@ flags.DEFINE_string(
 )
 
 
-class BaseCostComputation(BasePipelineV2):
+class BaseCostComputation(BasePipeline):
     def init(self):
-        BasePipelineV2.init(self)
+        BasePipeline.init(self)
 
         if not flags.FLAGS.commit_id:
             logging.error("Apollo commit id not specified.")

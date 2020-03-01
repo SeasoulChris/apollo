@@ -21,9 +21,9 @@ class DumpFeatureProto(BasePipeline):
         records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
         origin_prefix = '/apollo/docs/demo_guide'
         target_prefix = '/apollo/data/prediction/labels/'
-        self.run(records_dir, origin_prefix, target_prefix)
+        self.run_internal(records_dir, origin_prefix, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'small-records/'
         target_prefix = 'modules/prediction/labels/'
@@ -54,9 +54,9 @@ class DumpFeatureProto(BasePipeline):
             # RDD(todo_records_dir)
             todo_records_dir = todo_records_dir.subtract(completed_records_dir).distinct()
 
-        self.run(todo_records_dir, origin_prefix, target_prefix)
+        self.run_internal(todo_records_dir, origin_prefix, target_prefix)
 
-    def run(self, records_dir_rdd, origin_prefix, target_prefix):
+    def run_internal(self, records_dir_rdd, origin_prefix, target_prefix):
         """Run the pipeline with given arguments."""
         result = (
             # RDD(record_dir)

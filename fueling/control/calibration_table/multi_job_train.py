@@ -99,9 +99,9 @@ class MultiJobTrain(BasePipeline):
         feature_dir = (throttle_train_files, throttle_test_files,
                        brake_train_files, brake_test_files)
 
-        self.run(feature_dir, origin_vehicle_dir, target_prefix)
+        self.run_internal(feature_dir, origin_vehicle_dir, target_prefix)
 
-    def run_prod(self):
+    def run(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         bos_client = self.our_storage()
@@ -160,9 +160,9 @@ class MultiJobTrain(BasePipeline):
         feature_dir = (throttle_train_files, throttle_test_files,
                        brake_train_files, brake_test_files)
 
-        self.run(feature_dir, origin_vehicle_conf_dir, target_dir)
+        self.run_internal(feature_dir, origin_vehicle_conf_dir, target_dir)
 
-    def run(self, feature_dir, origin_vehicle_conf_dir, target_dir):
+    def run_internal(self, feature_dir, origin_vehicle_conf_dir, target_dir):
 
         # conf files
         logging.info('origin_vehicle_dir %s' % origin_vehicle_conf_dir.collect())

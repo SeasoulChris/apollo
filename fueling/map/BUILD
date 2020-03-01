@@ -11,6 +11,14 @@ py_binary(
     ]
 )
 
+py_test(
+    name = "generate_base_map_test",
+    srcs = ["generate_base_map_test.py"],
+    deps = [
+        ":generate_base_map",
+    ]
+)
+
 py_binary(
     name = "generate_local_map",
     srcs = ["generate_local_map.py"],
@@ -23,11 +31,27 @@ py_binary(
     ]
 )
 
+py_test(
+    name = "generate_local_map_test",
+    srcs = ["generate_local_map_test.py"],
+    deps = [
+        ":generate_local_map",
+    ]
+)
+
 py_binary(
     name = "generate_sim_routing_map",
     srcs = ["generate_sim_routing_map.py"],
     deps = [
         "//fueling/common:base_pipeline",
+    ]
+)
+
+py_test(
+    name = "generate_sim_routing_map_test",
+    srcs = ["generate_sim_routing_map_test.py"],
+    deps = [
+        ":generate_sim_routing_map",
     ]
 )
 

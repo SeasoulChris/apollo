@@ -23,16 +23,16 @@ class DeserializeRecordsPipeline(BasePipeline):
     def run_test(self):
         """Run test."""
         self._root_dir = '/apollo'
-        self.run()
+        self.run_internal()
         logging.info('Serialization: All Done. TEST')
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         self._root_dir = bos_client.BOS_MOUNT_PATH
-        self.run()
+        self.run_internal()
         logging.info('Serialization: All Done. PROD')
 
-    def run(self):
+    def run_internal(self):
         """Run streaming process"""
         stream_context = StreamingContext(BasePipeline.SPARK_CONTEXT, 30)
 

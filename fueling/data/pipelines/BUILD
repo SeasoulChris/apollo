@@ -11,6 +11,15 @@ py_binary(
     ],
 )
 
+py_test(
+    name = "generate_small_records_test",
+    srcs = ["generate_small_records_test.py"],
+    data = ["//fueling/demo/testdata:small_record"],
+    deps = [
+        ":generate_small_records",
+    ]
+)
+
 py_binary(
     name = "index_records",
     srcs = ["index_records.py"],
@@ -37,4 +46,12 @@ py_binary(
         "//fueling/common:record_utils",
         "//fueling/common:time_utils",
     ],
+)
+
+py_test(
+    name = "reorg_small_records_test",
+    srcs = ["reorg_small_records_test.py"],
+    deps = [
+        ":reorg_small_records",
+    ]
 )

@@ -73,9 +73,9 @@ class UniformDistributionSet(BasePipeline):
             self.to_rdd([origin_prefix])
             .flatMap(lambda path: glob.glob(os.path.join(path, '*/*hdf5'))))
 
-        self.run(hdf5_files, target_dir, sample_size)
+        self.run_internal(hdf5_files, target_dir, sample_size)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         sample_size = 6000
         # same of target prefix of sample-set-feature-extraction
@@ -91,9 +91,9 @@ class UniformDistributionSet(BasePipeline):
             'todo_tasks',
             self.to_rdd(self.our_storage().list_files(origin_prefix, '.hdf5')))
         target_dir = self.our_storage().abs_path(target_dir)
-        self.run(todo_tasks, target_dir, sample_size)
+        self.run_internal(todo_tasks, target_dir, sample_size)
 
-    def run(self, todo_tasks, target_prefix, sample_size):
+    def run_internal(self, todo_tasks, target_prefix, sample_size):
         categorized_segments = spark_helper.cache_and_log(
             'categorized_segments',
             # RDD(.hdf5 files with absolute path)

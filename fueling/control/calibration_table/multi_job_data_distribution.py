@@ -67,7 +67,7 @@ class MultiJobDataDistribution(BasePipeline):
                 lambda path: glob.glob(os.path.join(path, '*/*/*/*.hdf5'))))
 
         # origin_prefix: absolute path
-        self.run(hdf5_files, origin_prefix)
+        self.run_internal(hdf5_files, origin_prefix)
 
         conf_files = glob.glob(os.path.join(target_prefix, '*/calibration_table.pb.txt'))
         # print('conf_files', conf_files)
@@ -85,7 +85,7 @@ class MultiJobDataDistribution(BasePipeline):
                 file_name = os.path.basename(attachment)
                 tar.add(attachment, arcname='%s_%s' % (vehicle, file_name))
 
-    def run_prod(self):
+    def run(self):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         bos_client = self.our_storage()
@@ -114,7 +114,7 @@ class MultiJobDataDistribution(BasePipeline):
             'hdf5_files', origin_vehicle_dir.mapValues(self.list_end_files_prod))
 
         target_dir = bos_client.abs_path(target_prefix)
-        self.run(hdf5_files, target_dir)
+        self.run_internal(hdf5_files, target_dir)
 
         receivers = email_utils.CONTROL_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         partner = partners.get(job_owner)
@@ -155,7 +155,7 @@ class MultiJobDataDistribution(BasePipeline):
                        'job_status': 'success'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
 
-    def run(self, hdf5_file, target_dir):
+    def run_internal(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)
         features = spark_helper.cache_and_log('features', hdf5_file.mapValues(read_hdf5))
         # PairRDD(vehicle, result_file)

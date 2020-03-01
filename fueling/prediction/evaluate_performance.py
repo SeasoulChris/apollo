@@ -32,12 +32,12 @@ class PerformanceEvaluator(BasePipeline):
         result_files = self.to_rdd(
             glob.glob('/apollo/data/prediction/results/*/*/prediction_result.*.bin'))
         for time_range in TIME_RANGES:
-            metrics = self.run(result_files, time_range)
+            metrics = self.run_internal(result_files, time_range)
             saved_filename = 'metrics_{}.npy'.format(time_range)
             save_path = os.path.join('/apollo/data/prediction/results', saved_filename)
             np.save(save_path, metrics)
 
-    def run_prod(self):
+    def run(self):
         bos_client = self.our_storage()
         for time_range in TIME_RANGES:
             for region in REGIONS:
@@ -46,12 +46,12 @@ class PerformanceEvaluator(BasePipeline):
                 # RDD(file) result files with the pattern prediction_result.*.bin
                 result_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
                     spark_op.filter_path(['*prediction_result.*.bin']))
-                metrics = self.run(result_file_rdd, time_range)
+                metrics = self.run_internal(result_file_rdd, time_range)
                 saved_filename = 'metrics_{}_{}.npy'.format(time_range, region)
                 np.save(os.path.join(bos_client.abs_path('modules/prediction/results'),
                                      saved_filename), metrics)
 
-    def run(self, result_file_rdd, time_range):
+    def run_internal(self, result_file_rdd, time_range):
         """Run the pipeline with given arguments."""
         # list [(unique_metric_key, metric_sum)]
         metrics = (

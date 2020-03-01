@@ -14,7 +14,7 @@ py_library(
     srcs = ["dir_utils.py"],
     deps = [
         ":multi_vehicle_utils",
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common/storage:bos_client",
     ],
 )

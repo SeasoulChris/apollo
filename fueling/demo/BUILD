@@ -4,7 +4,7 @@ py_binary(
     name = "simplest_demo",
     srcs = ["simplest_demo.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
     ]
 )
 
@@ -21,7 +21,7 @@ py_binary(
     srcs = ["count_msg_by_channel.py"],
     data = ["//fueling/demo/testdata:small_record"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
     ]
 )
@@ -30,7 +30,7 @@ py_binary(
     name = "gpu_training_with_pytorch",
     srcs = ["gpu_training_with_pytorch.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
     ]
 )
 
@@ -38,7 +38,7 @@ py_binary(
     name = "gpu_training_with_pytorch_distributed",
     srcs = ["gpu_training_with_pytorch_distributed.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/common:distributed_data_parallel",
         "//fueling/common:socket_utils",
         "//fueling/common/storage:bos_client",
@@ -57,7 +57,7 @@ py_binary(
     name = "stat_auto_mileage",
     srcs = ["stat_auto_mileage.py"],
     deps = [
-        "//fueling/common:base_pipeline_v2",
+        "//fueling/common:base_pipeline",
         "//fueling/data:record_parser",
     ]
 )

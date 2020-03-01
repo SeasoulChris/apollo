@@ -47,14 +47,14 @@ class MapGenSingleLine(BasePipeline):
         logging.info("source_prefix: {}".format(src_dir))
         # RDD(record_path)
         todo_records = self.to_rdd([src_dir])
-        self.run(todo_records, src_dir, dst_prefix)
+        self.run_internal(todo_records, src_dir, dst_prefix)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
         logging.info('base_map.txt generated: Done, Test')
 
-    def run_prod(self):
+    def run(self):
         src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
         dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
 
@@ -92,7 +92,7 @@ class MapGenSingleLine(BasePipeline):
         # RDD(record_path)
         todo_records = self.to_rdd([source_dir])
         # todo_records = self.to_rdd(glob.glob(os.path.join(source_dir, '*.record*')))
-        self.run(todo_records, source_dir, target_dir)
+        self.run_internal(todo_records, source_dir, target_dir)
 
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
@@ -100,7 +100,7 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info('base_map.txt generated: Done, PROD')
 
-    def run(self, todo_records, src_prefix, dst_prefix):
+    def run_internal(self, todo_records, src_prefix, dst_prefix):
         """Run the pipeline with given arguments."""
         # Spark cascade style programming.
         self.dst_prefix = dst_prefix

@@ -6,7 +6,7 @@ import shutil
 import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
@@ -20,7 +20,7 @@ VECHILE_PARAM_CON_DIR = 'modules/control/control_conf'
 REORG_TAG = 'REORG_COMPLETE'
 
 
-class ReorgSmallRecordsByVehicle(BasePipelineV2):
+class ReorgSmallRecordsByVehicle(BasePipeline):
     """Reorg small Records by vehicle as the input data path to control profiling pipeline."""
 
     def run(self):

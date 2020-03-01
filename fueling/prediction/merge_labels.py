@@ -19,9 +19,9 @@ class MergeLabels(BasePipeline):
         """Run test."""
         # RDD(npy_file)
         npy_file_rdd = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/*.npy'))
-        self.run(npy_file_rdd.map(os.path.dirname))
+        self.run_internal(npy_file_rdd.map(os.path.dirname))
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         source_prefix = 'modules/prediction/labels/'
 
@@ -48,9 +48,9 @@ class MergeLabels(BasePipeline):
             # RDD(todo_npy_dirs)
             todo_npy_dirs = todo_npy_dirs.subtract(merged_dirs).distinct()
 
-        self.run(todo_npy_dirs)
+        self.run_internal(todo_npy_dirs)
 
-    def run(self, npy_dir_rdd):
+    def run_internal(self, npy_dir_rdd):
         """Run the pipeline with given arguments."""
         result = (
             # RDD(npy_file)

@@ -91,11 +91,11 @@ class MultiJobControlProfilingVisualization(BasePipeline):
 
         logging.info(F'todo_tasks: {todo_tasks.collect()}')
 
-        self.run(todo_tasks, origin_prefix, target_prefix)
+        self.run_internal(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
         logging.info('Control Profiling Visualization: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
         job_owner = self.FLAGS.get('job_owner')
         # Use year as the job_id if data from apollo-platform, to avoid
@@ -183,11 +183,11 @@ class MultiJobControlProfilingVisualization(BasePipeline):
             logging.info('Control Profiling Visualization: No Results, PROD')
             return
 
-        self.run(todo_tasks.values(), origin_dir, target_dir)
+        self.run_internal(todo_tasks.values(), origin_dir, target_dir)
         summarize_tasks(todo_tasks.values().collect(), origin_dir, target_dir, job_email)
         logging.info('Control Profiling Visualization: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         data_rdd = (todo_tasks

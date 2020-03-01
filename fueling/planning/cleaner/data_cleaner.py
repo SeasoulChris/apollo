@@ -36,7 +36,7 @@ class CleanPlanningRecords(BasePipeline):
                              .count())
         logging.info('Processed {}/{} records'.format(processed_records, len(records)))
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         prefixes = [
             'small-records/2018/2018-09-11/2018-09-11-11-10-30/',

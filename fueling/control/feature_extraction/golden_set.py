@@ -100,9 +100,9 @@ class GoldenSet(BasePipeline):
             .keyBy(os.path.dirname))
 
         logging.info('todo_records: %s' % todo_records.collect())
-        self.run(todo_records, origin_dir, target_dir)
+        self.run_internal(todo_records, origin_dir, target_dir)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/control/data/records/Mkz7/2019-04-30'
         target_prefix = os.path.join(
@@ -119,9 +119,9 @@ class GoldenSet(BasePipeline):
         target_dir = our_storage.abs_path(target_prefix)
         origin_dir = our_storage.abs_path(origin_prefix)
 
-        self.run(todo_records, origin_dir, target_dir)
+        self.run_internal(todo_records, origin_dir, target_dir)
 
-    def run(self, todo_records, origin_dir, target_dir):
+    def run_internal(self, todo_records, origin_dir, target_dir):
         # wanted vehicle is know and the folder only include wanted vehicle
         # RDD(aboslute_dir) which include records of the wanted vehicle
         dir_to_msgs = spark_helper.cache_and_log(

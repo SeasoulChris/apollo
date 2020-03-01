@@ -13,13 +13,13 @@ from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 
 # Apollo-fuel packages
-from fueling.common.base_pipeline_v2 import BasePipelineV2
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.data.record_parser as record_parser
 
 
-class StatAutoMileage(BasePipelineV2):
+class StatAutoMileage(BasePipeline):
     """pipeline to stat auto mileage"""
 
     def run(self):

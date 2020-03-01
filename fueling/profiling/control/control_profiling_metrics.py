@@ -48,11 +48,11 @@ class ControlProfilingMetrics(BasePipeline):
         todo_tasks = self.to_rdd([
             os.path.join(origin_prefix, task) for task in todo_tasks_postfix
         ]).cache()
-        self.run(todo_tasks, origin_prefix, target_prefix)
+        self.run_internal(todo_tasks, origin_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), origin_prefix, target_prefix)
         logging.info('Control Profiling: All Done, TEST')
 
-    def run_prod(self):
+    def run(self):
         """Work on actual road test data. Expect a single input directory"""
         original_prefix = flags.FLAGS.ctl_metrics_input_path_k8s
         target_prefix = flags.FLAGS.ctl_metrics_output_path_k8s
@@ -60,11 +60,11 @@ class ControlProfilingMetrics(BasePipeline):
         todo_tasks = spark_helper.cache_and_log('todo_tasks',
                                                 dir_utils.get_todo_tasks(original_prefix,
                                                                          target_prefix))
-        self.run(todo_tasks, original_prefix, target_prefix)
+        self.run_internal(todo_tasks, original_prefix, target_prefix)
         summarize_tasks(todo_tasks.collect(), original_prefix, target_prefix)
         logging.info('Control Profiling: All Done, PROD')
 
-    def run(self, todo_tasks, original_prefix, target_prefix):
+    def run_internal(self, todo_tasks, original_prefix, target_prefix):
         """Run the pipeline with given parameters"""
         # RDD(tasks), with absolute paths
         (todo_tasks

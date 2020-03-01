@@ -41,9 +41,9 @@ class DynamicModelDatasetDistribution(BasePipeline):
 
         hdf5_file_list = self.to_rdd(glob.glob(file_dir))
         print(hdf5_file_list.collect())
-        self.run(hdf5_file_list, result_file)
+        self.run_internal(hdf5_file_list, result_file)
 
-    def run_prod(self):
+    def run(self):
         # hdf5 data directory
         # prefix = 'modules/control/data/results/UniformDistributed/Mkz7'
         prefix = 'modules/control/data/results/SampleSet/Mkz7'
@@ -55,9 +55,9 @@ class DynamicModelDatasetDistribution(BasePipeline):
         logging.info('Result File: %s', result_file)
 
         hdf5_file_list = self.to_rdd(self.our_storage().list_files(prefix, '.hdf5'))
-        self.run(hdf5_file_list, result_file)
+        self.run_internal(hdf5_file_list, result_file)
 
-    def run(self, hdf5_file_list, result_file):
+    def run_internal(self, hdf5_file_list, result_file):
 
         data = spark_helper.cache_and_log(
             'plots',

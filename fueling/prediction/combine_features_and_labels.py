@@ -17,9 +17,9 @@ class FeaturesAndLabelsCombine(BasePipeline):
     def run_test(self):
         """Run test."""
         datalearn_files = self.to_rdd(glob.glob('/apollo/docs/demo_guide/*/datalearn.*.bin'))
-        self.run(datalearn_files)
+        self.run_internal(datalearn_files)
 
-    def run_prod(self):
+    def run(self):
         """Run prod."""
         origin_prefix = 'modules/prediction/features-san-mateo'
 
@@ -27,9 +27,9 @@ class FeaturesAndLabelsCombine(BasePipeline):
         datalearn_file_rdd = self.to_rdd(self.our_storage().list_files(origin_prefix)).filter(
             spark_op.filter_path(['*datalearn.*.bin']))
 
-        self.run(datalearn_file_rdd)
+        self.run_internal(datalearn_file_rdd)
 
-    def run(self, datalearn_file_rdd):
+    def run_internal(self, datalearn_file_rdd):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         result = datalearn_file_rdd.map(self.process_dir).count()

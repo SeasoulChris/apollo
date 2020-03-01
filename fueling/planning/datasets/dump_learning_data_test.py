@@ -3,7 +3,7 @@
 from absl import logging
 from absl.testing import absltest
 
-from fueling.common.base_pipeline_v2 import BasePipelineTest
+from fueling.common.base_pipeline import BasePipelineTest
 from fueling.planning.datasets.dump_learning_data import DumpLearningData
 
 class DumpLearningDataTest(BasePipelineTest):
