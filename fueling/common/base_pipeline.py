@@ -17,7 +17,7 @@ from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
 
 
-flags.DEFINE_string('running_mode', 'TEST', '[Deprecated] Pipeline running mode: TEST, PROD.')
+flags.DEFINE_string('running_mode', 'TEST', 'Pipeline running mode: TEST, PROD.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
@@ -53,7 +53,7 @@ class BasePipeline(object):
         return BasePipeline.SPARK_CONTEXT.parallelize(data)
 
     def is_test(self):
-        return bool(self.FLAGS.get('test_tmpdir'))
+        return self.FLAGS.get('running_mode') == 'TEST'
 
     def our_storage(self):
         """Get a BOS client if in PROD mode, or local filesystem if in TEST mode."""
