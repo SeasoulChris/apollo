@@ -8,7 +8,7 @@ metadata:
 spec:
   containers:
   - name: bayesian
-    image: hub.baidubce.com/apollo/autotuner/cost_service:debug
+    image: hub.baidubce.com/apollo/autotuner/cost_service:latest
     imagePullPolicy: Always
     command:
       - "/bin/bash"

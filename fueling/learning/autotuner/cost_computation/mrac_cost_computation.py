@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-from datetime import datetime
 import glob
 import json
-import random
 import os
 import sys
 
 from absl import flags
 
+from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -21,6 +21,11 @@ class MracCostComputation(BaseCostComputation):
 
     def init(self):
         BaseCostComputation.init(self)
+
+        if self.FLAGS.get('cloud'):
+            self.submit_job = self.SubmitJobToK8s
+        else:
+            self.submit_job = self.SubmitJobAtLocal
 
         try:
             self.request_pb2 = self.read_request()
@@ -44,31 +49,36 @@ class MracCostComputation(BaseCostComputation):
             for (id, config_pb) in self.request_pb2.config.items()
         }
 
+    def SubmitJobAtLocal(self, bag_path):
+        job_cmd = "bazel run //fueling/profiling/control:multi_job_control_profiling_metrics"
+        profiling_flags = (
+            f"--ctl_metrics_input_path_local={bag_path} "
+            f"--ctl_metrics_output_path_local={bag_path} "
+            f"--ctl_metrics_simulation_only_test='True' "
+        )
+        cmd = f"cd /fuel; {job_cmd} -- {profiling_flags}"
+
+        exit_code = os.system(cmd)
+        return os.WEXITSTATUS(exit_code) == 0
+
+    def SubmitJobToK8s(self, bag_path):
+        entrypoint = file_utils.fuel_path(
+            "fueling/profiling/control/multi_job_control_profiling_metrics.py")
+        options = {
+            'ctl_metrics_input_path_k8s': bag_path,
+            'ctl_metrics_output_path_k8s': bag_path,
+            'ctl_metrics_simulation_only_test': True,
+        }
+        client = SparkSubmitterClient(entrypoint, {}, options)
+        client.submit()
+        return True
+
     def calculate_individual_score(self, bag_path):
         logging.info(f"Calculating score for: {bag_path}")
 
-        # TODO: upgrade to V2
-        random.seed(datetime.now())
-        return [random.random(), random.random()]
-
         # submit the profiling job
-        profiling_func = f"fueling/profiling/control/multi_job_control_profiling_metrics.py"
-        if self.FLAGS.get('cloud'):
-            profiling_flags = (f"--ctl_metrics_input_path_k8s={bag_path} "
-                               f"--ctl_metrics_output_path_k8s={bag_path} "
-                               f"--ctl_metrics_simulation_only_test='True' ")
-        else:
-            profiling_flags = (f"--ctl_metrics_input_path_local={bag_path} "
-                               f"--ctl_metrics_output_path_local={bag_path} "
-                               f"--ctl_metrics_simulation_only_test='True' ")
-        profiling_cmd = (f"{self.submit_job_cmd} "
-                         f"--main={profiling_func} --flags=\"{profiling_flags}\"")
-
-        # verify exit status of the profiling job
-        exit_code = os.system(profiling_cmd)
-        if os.WEXITSTATUS(exit_code) != 0:
-            logging.error(f"Fail to submit the control profiling job with "
-                          f"error code {os.WEXITSTATUS(exit_code)}")
+        if not self.submit_job(bag_path):
+            logging.error(f"Fail to submit the control profiling job.")
             return [float('nan'), 0]
 
         # extract the profiling score of the individual scenario

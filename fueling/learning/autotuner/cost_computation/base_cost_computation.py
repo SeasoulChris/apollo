@@ -23,7 +23,7 @@ flags.DEFINE_string("commit_id", None, "Apollo commit id.")
 
 flags.DEFINE_string(
     "scenario_path",
-    "./fueling/learning/autotuner/config/sim_scenarios.csv",
+    "fueling/learning/autotuner/config/sim_scenarios.csv",
     "File path to list of scenarios in csv format.",
 )
 flags.DEFINE_string(
@@ -138,7 +138,7 @@ class BaseCostComputation(BasePipeline):
             record_filename,
         )
 
-        record_absolute_dir = f"{self.FLAGS.get('mnt_root_dir')}/{record_relative_dir}"
+        record_absolute_dir = f"{self.get_temp_dir()}/{job_id}"
         if not success or not os.path.exists(f"{record_absolute_dir}/{record_filename}"):
             raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
 
@@ -158,7 +158,7 @@ class BaseCostComputation(BasePipeline):
         raise Exception("Not implemented!")
 
     def get_temp_dir(self):
-        return f"{self.FLAGS.get('mnt_root_dir')}/autotuner/{self.FLAGS.get('training_id')}"
+        return f"{self.FLAGS.get('mnt_root_dir')}/{self.FLAGS.get('record_output_dir')}/{self.FLAGS.get('training_id')}"
 
     def save_weighted_score(self, score):
         with open(f"{self.get_temp_dir()}/scores.out", "w") as output_score_file:

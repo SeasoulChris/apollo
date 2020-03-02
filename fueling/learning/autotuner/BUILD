@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_library(
+py_binary(
     name = "test_cost_client",
     srcs = ["test_cost_client.py"],
     deps = [

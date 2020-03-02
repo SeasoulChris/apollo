@@ -61,8 +61,8 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         return os.WEXITSTATUS(exit_code) == 0
 
     def SubmitJobToK8s(self, options):
-        entrypoint = "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py"
-        options['mnt_root_dir'] = "/mnt/bos-rw"
+        entrypoint = file_utils.fuel_path(
+            "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py")
         client = SparkSubmitterClient(entrypoint, {}, options)
         client.submit()
         return True
