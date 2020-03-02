@@ -2,39 +2,54 @@
 
 import numpy as np
 import cv2 as cv
+import pyproj
 
 from modules.map.proto import map_pb2
 
-# TODO(Jinyun): use config file
+
 class BaseMapImgRenderer(object):
-    """class of BaseMapImgRenderer to get a feature map"""
+    """class of BaseMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
     def __init__(self, region):
         """contruct function to init BaseMapImgRenderer object"""
         self.region = region
-        if (self.region == "san_mateo"):
-            self.GRID = [11000, 14000]
-            self.base_point = np.array([558980, 4156780])
-            self.resolution = 0.1
-        if (self.region == "sunnyvale_with_two_offices"):
-            self.GRID = [28000, 20000]
-            self.base_point = np.array([585870, 4139900])
-            self.resolution = 0.1
+        # TODO(Jinyun): use config file
+        self.resolution = 0.1   # in meter/pixel
+        self.base_map_padding = 100    # in meter
 
-        self.base_map = np.zeros(
-            [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
+        self.base_point = None
+        self.GRID = None
+        self.base_map = None
+
         self._read_hdmap()
+        self._build_canvas()
         self._draw_base_map()
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
         self.hd_map = map_pb2.Map()
         map_path = "/apollo/modules/map/data/" + self.region + "/base_map.bin"
-        print("Loading map from file: " + map_path)
-        with open(map_path, 'rb') as file_in:
-            self.hd_map.ParseFromString(file_in.read())
-        p_min, p_max = self._get_map_base_point()
-        print(p_min, p_max)
+        try:
+            with open(map_path, 'rb') as file_in:
+                self.hd_map.ParseFromString(file_in.read())
+        except IOError:
+            print("File at [" + map_path + "] is not accessible")
+            exit()
+
+    def _build_canvas(self):
+        """build canvas in np.array with padded left bottom point as base_point"""
+        projection_rule = self.hd_map.header.projection.proj
+        projector = pyproj.Proj(projection_rule, preserve_units=True)
+        left_bottom_x, left_bottom_y = projector(self.hd_map.header.left,
+                                                 self.hd_map.header.bottom)
+        right_top_x, right_top_y = projector(self.hd_map.header.right,
+                                             self.hd_map.header.top)
+        self.base_point = np.array([left_bottom_x - self.base_map_padding,
+                                    left_bottom_y - self.base_map_padding])
+        self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
+                     int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.base_map = np.zeros(
+            [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
 
     def _draw_base_map(self):
         self._draw_road()
@@ -46,46 +61,6 @@ class BaseMapImgRenderer(object):
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
         return [int(point[0]), self.GRID[1] - int(point[1])]
-
-    def _update_base_point(self, line_segment, p_min, p_max):
-        for point in line_segment.point:
-            p_min = np.minimum(p_min, [point.x, point.y])
-            p_max = np.maximum(p_max, [point.x, point.y])
-        return p_min, p_max
-
-    def _get_map_base_point(self):
-        """get hd_map base points"""
-        p_min = np.array([0, 0])
-        p_max = np.array([0, 0])
-        p_min[0] = self.hd_map.lane[0].left_boundary.curve.segment[0].line_segment.point[0].x
-        p_min[1] = self.hd_map.lane[0].left_boundary.curve.segment[0].line_segment.point[0].y
-        p_max[0] = self.hd_map.lane[0].left_boundary.curve.segment[0].line_segment.point[0].x
-        p_max[1] = self.hd_map.lane[0].left_boundary.curve.segment[0].line_segment.point[0].y
-
-        for lane in self.hd_map.lane:
-            for segment in lane.left_boundary.curve.segment:
-                if segment.HasField('line_segment'):
-                    (p_min, p_max) = self._update_base_point(
-                        segment.line_segment, p_min, p_max)
-
-            for segment in lane.right_boundary.curve.segment:
-                if segment.HasField('line_segment'):
-                    (p_min, p_max) = self._update_base_point(
-                        segment.line_segment, p_min, p_max)
-
-        for crosswalk in self.hd_map.crosswalk:
-            if crosswalk.HasField('polygon'):
-                (p_min, p_max) = self._update_base_point(
-                    crosswalk.polygon, p_min, p_max)
-
-        for road in self.hd_map.road:
-            for section in road.section:
-                for edge in section.boundary.outer_polygon.edge:
-                    for segment in edge.curve.segment:
-                        if segment.HasField('line_segment'):
-                            (p_min, p_max) = self._update_base_point(
-                                segment.line_segment, p_min, p_max)
-        return p_min, p_max
 
     def _hsv_to_rgb(self, H=1.0, S=1.0, V=1.0):
         """
