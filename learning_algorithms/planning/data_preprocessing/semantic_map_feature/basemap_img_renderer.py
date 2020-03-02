@@ -5,7 +5,7 @@ import cv2 as cv
 import pyproj
 
 from modules.map.proto import map_pb2
-
+from modules.map.proto import map_lane_pb2
 
 class BaseMapImgRenderer(object):
     """class of BaseMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -122,7 +122,7 @@ class BaseMapImgRenderer(object):
                     points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
-    # TODO(Jinyun): move to speed limit renderer
+    # TODO(Jinyun): move it to speed limit renderer
     def _draw_speed_bump(self, color=(0, 255, 255)):
         for speed_bump in self.hd_map.speed_bump:
             for position in speed_bump.position:
@@ -147,10 +147,14 @@ class BaseMapImgRenderer(object):
                         cv.line(self.base_map, tuple(p0), tuple(
                             p1), color=color, thickness=4)
 
-    def _draw_lane_boundary(self, color=(255, 255, 255)):
+    def _draw_lane_boundary(self, white_color=(255, 255, 255), yellow_color=(0, 255, 255)):
         for lane in self.hd_map.lane:
-            if lane.type == 2 and lane.left_boundary.virtual and lane.right_boundary.virtual:
+            if lane.left_boundary.virtual and lane.right_boundary.virtual:
                 continue
+            color = white_color
+            # TODO(Jinyun): no CURB and DOUBLE_YELLOW boundary from map file! and develop dotted line
+            if lane.left_boundary.boundary_type[0].types[0] == map_lane_pb2.LaneBoundaryType.Type.SOLID_YELLOW:
+                color = yellow_color
             for segment in lane.left_boundary.curve.segment:
                 for i in range(len(segment.line_segment.point)-1):
                     p0 = self.get_trans_point(
@@ -159,6 +163,10 @@ class BaseMapImgRenderer(object):
                         [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
                     cv.line(self.base_map, tuple(p0), tuple(
                         p1), color=color, thickness=2)
+
+            color = white_color
+            if lane.right_boundary.boundary_type[0].types[0] == map_lane_pb2.LaneBoundaryType.Type.SOLID_YELLOW:
+                color = yellow_color
             for segment in lane.right_boundary.curve.segment:
                 for i in range(len(segment.line_segment.point)-1):
                     p0 = self.get_trans_point(
