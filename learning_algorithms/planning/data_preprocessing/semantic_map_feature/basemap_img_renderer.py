@@ -56,6 +56,8 @@ class BaseMapImgRenderer(object):
         self._draw_junction()
         self._draw_crosswalk()
         self._draw_lane_boundary()
+        self._draw_speed_bump()
+        self._draw_stop_line()
         self._draw_lane_central()
 
     def get_trans_point(self, p):
@@ -119,6 +121,31 @@ class BaseMapImgRenderer(object):
                         [crosswalk.polygon.point[i].x, crosswalk.polygon.point[i].y])
                     points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
+
+    # TODO(Jinyun): move to speed limit renderer
+    def _draw_speed_bump(self, color=(0, 255, 255)):
+        for speed_bump in self.hd_map.speed_bump:
+            for position in speed_bump.position:
+                for segment in position.segment:
+                    for i in range(len(segment.line_segment.point)-1):
+                        p0 = self.get_trans_point(
+                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                        p1 = self.get_trans_point(
+                            [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        cv.line(self.base_map, tuple(p0), tuple(
+                            p1), color=color, thickness=8)
+
+    def _draw_stop_line(self, color=(0, 0, 255)):
+        for stop_sign in self.hd_map.stop_sign:
+            for stop_line in stop_sign.stop_line:
+                for segment in stop_line.segment:
+                    for i in range(len(segment.line_segment.point)-1):
+                        p0 = self.get_trans_point(
+                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                        p1 = self.get_trans_point(
+                            [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        cv.line(self.base_map, tuple(p0), tuple(
+                            p1), color=color, thickness=4)
 
     def _draw_lane_boundary(self, color=(255, 255, 255)):
         for lane in self.hd_map.lane:
