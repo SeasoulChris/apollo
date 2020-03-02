@@ -58,7 +58,7 @@ class BaseMapImgRenderer(object):
         self._draw_lane_boundary()
         self._draw_speed_bump()
         self._draw_stop_line()
-        self._draw_lane_central()
+        # self._draw_lane_central()
 
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
@@ -123,7 +123,7 @@ class BaseMapImgRenderer(object):
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
     # TODO(Jinyun): move it to speed limit renderer
-    def _draw_speed_bump(self, color=(0, 255, 255)):
+    def _draw_speed_bump(self, color=(255, 0, 0)):
         for speed_bump in self.hd_map.speed_bump:
             for position in speed_bump.position:
                 for segment in position.segment:
@@ -149,10 +149,11 @@ class BaseMapImgRenderer(object):
 
     def _draw_lane_boundary(self, white_color=(255, 255, 255), yellow_color=(0, 255, 255)):
         for lane in self.hd_map.lane:
+            # TODO(Jinyun): try to use dot line to present virtual lane boundary in intersection
             if lane.left_boundary.virtual and lane.right_boundary.virtual:
                 continue
             color = white_color
-            # TODO(Jinyun): no CURB and DOUBLE_YELLOW boundary from map file! and develop dotted line
+            # TODO(Jinyun): no DOUBLE_YELLOW boundary from map file!
             if lane.left_boundary.boundary_type[0].types[0] == map_lane_pb2.LaneBoundaryType.Type.SOLID_YELLOW:
                 color = yellow_color
             for segment in lane.left_boundary.curve.segment:
