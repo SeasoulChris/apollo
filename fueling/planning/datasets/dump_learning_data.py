@@ -38,9 +38,6 @@ class DumpLearningData(BasePipeline):
 
     def run(self):
         """Run"""
-        # for prefix in self.src_prefixs:
-        #    logging.info(self.our_storage().list_files(prefix))
-
         records_rdd = BasePipeline.SPARK_CONTEXT.union([
             self.to_rdd(self.our_storage().list_files(prefix))
                 .filter(record_utils.is_record_file)

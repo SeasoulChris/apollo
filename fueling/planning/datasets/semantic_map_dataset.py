@@ -2,6 +2,7 @@
 
 import cv2 as cv
 import numpy as np
+import re
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -51,6 +52,9 @@ class DataPreprocessor(object):
         # Go through all the data_for_learning file, for each data-point, find
         # the corresponding label file, merge them.
         all_file_paths = file_utils.list_files(instance_dir)
+        # sort by filenames numerically: learning_data.<int>.bin.training_data.npy
+        all_file_paths.sort(
+            key=lambda var:[int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
         total_num_data_points = 0
         total_usable_data_points = 0
 
@@ -145,6 +149,9 @@ class SemanticMapDataset(Dataset):
 
         logging.info('Processing directory: {}'.format(data_dir))
         all_file_paths = file_utils.list_files(data_dir)
+        # sort by filenames numerically: learning_data.<int>.bin.training_data.npy
+        all_file_paths.sort(
+            key=lambda var:[int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue
@@ -185,7 +192,6 @@ class SemanticMapDataset(Dataset):
         return ((img,
                 torch.from_numpy(np.asarray(self.instances[idx][0])).float()),
                 torch.from_numpy(np.asarray(self.instances[idx][1])).float())
-
 
 if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate
