@@ -4,20 +4,11 @@ import os
 import shutil
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
 
 
 class DeleteDirs(BasePipeline):
-    """Records to feature proto pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/labels/'
+    """Delete dirs distributed on several workers pipeline."""
 
     def run(self):
         """Run prod."""

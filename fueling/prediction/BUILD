@@ -44,7 +44,8 @@ py_binary(
     name = "delete_dirs",
     srcs = ["delete_dirs.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
     ]
 )
 
