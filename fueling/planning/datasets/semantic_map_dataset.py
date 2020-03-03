@@ -93,11 +93,12 @@ class DataPreprocessor(object):
                 current_features += [chassis_feature.brake_percentage]
                 current_features += [chassis_feature.steering_percentage]
 
-                label_points = instance.trajectory_point
+                adc_trajectory_point = instance.adc_trajectory_point
                 # TODO(all): how to make sure all label points have the same number
-                for trajectory_point in label_points:
-                    current_label += [trajectory_point.path_point.x]
-                    current_label += [trajectory_point.path_point.y]
+                for adc_trajectory_point in adc_trajectory_point:
+                    current_label += [adc_trajectory_point.timestamp_sec]
+                    current_label += [adc_trajectory_point.trajectory_point.path_point.x]
+                    current_label += [adc_trajectory_point.trajectory_point.path_point.y]
 
                 # if (LABEL_TRAJECTORY_POINT_NUM != len(current_label)):
                 #     logging.warn("label point number:{}".format(len(current_label)))

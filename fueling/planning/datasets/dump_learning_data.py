@@ -73,7 +73,7 @@ class DumpLearningData(BasePipeline):
 
         file_utils.makedirs(os.path.dirname(dest_record_dir))
 
-        """Call planning C+pro+ code."""
+        """Call planning C++ code."""
         map_name = "sunnyvale"
         command = (
             'cd /apollo && sudo bash '
