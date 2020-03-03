@@ -33,6 +33,9 @@ class ConvertKinglongToApollo(BasePipeline):
             .filter(record_utils.is_record_file)
             # RDD(output_file), has been completed
             .map(lambda output_file: output_file.replace(target_prefix, origin_prefix))
+            .map(lambda output_file: os.path.join(os.path.dirname(output_file), "../../..",
+                                                  os.path.basename(output_file)))
+            .map(os.path.abspath)
             # RDD(output_file), which is unique
             .distinct())
         # RDD(todo_record_files)
@@ -46,9 +49,9 @@ class ConvertKinglongToApollo(BasePipeline):
             # RDD(record_files)
             todo_record_files
             # RDD(0/1), 1 for success
-            .map(lambda records_file: self.process_file(
-                records_file,
-                records_file.replace(origin_prefix, target_prefix, 1)))
+            .map(lambda records_filepath: self.process_file(
+                records_filepath,
+                self.get_target_filepath(records_filepath, origin_prefix, target_prefix)))
             .cache())
 
         if result.isEmpty():
@@ -67,6 +70,17 @@ class ConvertKinglongToApollo(BasePipeline):
         except BaseException as e:
             logging.error('Failed to process {}'.format(record_filepath))
         return 0
+
+    def get_target_filepath(self, record_filepath, origin_prefix, target_prefix):
+        """Return the target_filepath"""
+        dirname = os.path.dirname(record_filepath) + "/"
+        basename = os.path.basename(record_filepath)
+        map_name = basename.split("-")[-1].split(".")[0]
+        date = basename.split("_")[1][:8]
+        vehicle_name = basename.split("_")[0]
+        target_filepath = os.path.join(dirname.replace(origin_prefix, target_prefix, 1),
+                                       map_name, date, vehicle_name, basename)
+        return target_filepath
 
 
 if __name__ == '__main__':
