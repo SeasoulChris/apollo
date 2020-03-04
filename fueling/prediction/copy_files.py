@@ -4,25 +4,15 @@ import os
 import shutil
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
 
 
 class CopyFiles(BasePipeline):
     """Records to feature proto pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide/'
-        target_prefix = '/apollo/data/prediction/test/'
-
     def run(self):
         """Run prod."""
-        origin_prefix = 'modules/prediction/results/'
+        origin_prefix = 'modules/prediction/kinglong/'
         target_prefix = 'modules/prediction/test/'
 
         files_rdd = (
@@ -35,10 +25,10 @@ class CopyFiles(BasePipeline):
         dirs_rdd = (
             # RDD(file)
             files_rdd
-            # RDD(file_dir), with file inside
-            .map(os.path.dirname)
-            # RDD(target_dir)
+            # RDD(target_file)
             .map(lambda path: path.replace(origin_prefix, target_prefix))
+            # RDD(target_dir), with target file inside
+            .map(os.path.dirname)
             # RDD(target_dir), which is unique
             .distinct()
             .foreach(file_utils.makedirs))

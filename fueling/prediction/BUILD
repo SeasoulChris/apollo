@@ -20,7 +20,8 @@ py_binary(
     name = "copy_files",
     srcs = ["copy_files.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
     ]
 )
 
