@@ -28,3 +28,13 @@ py_test(
         ":dump_learning_data",
     ],
 )
+
+py_binary(
+    name = "generate_training_data",
+    srcs = ["generate_training_data.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+    ],
+)
