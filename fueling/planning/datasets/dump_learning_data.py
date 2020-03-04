@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import datetime
 import os
 import time
 
@@ -12,20 +11,20 @@ class DumpLearningData(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
-        self.src_prefixs = [
+        self.src_dir_prefixs = [
             'modules/planning/cleaned_data',
         ]
-        self.dest_prefix = 'modules/planning/learning_data'
+        self.dest_dir_prefix = 'modules/planning/learning_data'
 
     def run_test(self):
-        """Run"""
-        self.src_prefixs = [
+        """Run Test"""
+        self.src_dir_prefixs = [
             '/apollo/data/cleaned_data',
         ]
-        self.dest_prefix = '/apollo/data/learning_data'
+        self.dest_dir_prefix = '/apollo/data/learning_data'
 
         src_dirs_set = set([])
-        for prefix in self.src_prefixs:
+        for prefix in self.src_dir_prefixs:
             for root, dirs, files in os.walk(prefix):
                 for file in files:
                     src_dirs_set.add(root)
@@ -43,32 +42,29 @@ class DumpLearningData(BasePipeline):
                 .filter(record_utils.is_record_file)
                 .map(os.path.dirname)
                 .distinct()
-            for prefix in self.src_prefixs])
+            for prefix in self.src_dir_prefixs])
 
         processed_records = records_rdd.map(self.process_record)
 
         logging.info('Processed {} records'.format(processed_records.count()))
 
-    def process_record(self, src_record_fn):
+    def process_record(self, src_dir):
         """ Process Records """
-        src_record_fn_elements = src_record_fn.split("/")
-        timestamp = src_record_fn_elements[-2]
-        dest_record_dir_elements = []
-        if (not timestamp.startswith("ver_")):
-            # casual format folder layout
-            timestamp = "ver_" + datetime.date.today().strftime("%Y%m%d_%H%M%S") + "/"
-            dest_record_dir_elements.append(self.dest_prefix)
-            dest_record_dir_elements.append(timestamp)
+        src_dir_elements = src_dir.split("/")
+        # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
+        dest_dir_elements = [ 'learning_data' if x == 'cleaned_data' else x for x in src_dir_elements]
+        if ('learning_data' in dest_dir_elements):
+            dest_dir = "/".join(dest_dir_elements)
         else:
-            # pipeline format folder layout
-            for dir_name in src_record_fn_elements:
-                if dir_name == "cleaned_data":
-                    dest_record_dir_elements.append("learning_data");
-                else:
-                    dest_record_dir_elements.append(dir_name);
-        dest_record_dir = "/".join(dest_record_dir_elements)
+            dest_dir = "/".join(src_dir_elements)
 
-        file_utils.makedirs(os.path.dirname(dest_record_dir))
+        file_utils.makedirs(os.path.dirname(dest_dir))
+        delete_file = dest_dir + "/learning_data.*.bin"
+        if (os.path.exists(delete_file)):
+            os.remove(delete_file)
+        delete_file = dest_dir + "/learning_data.*.bin.txt"
+        if (os.path.exists(delete_file)):
+            os.remove(delete_file)
 
         """Call planning C++ code."""
         map_name = "sunnyvale"
@@ -76,14 +72,14 @@ class DumpLearningData(BasePipeline):
             'cd /apollo && sudo bash '
             'modules/tools/planning/data_pipelines/scripts/'
             'records_to_data_for_learning.sh '
-            '"{}" "{}" "{}"'.format(src_record_fn, dest_record_dir, map_name))
+            '"{}" "{}" "{}"'.format(src_dir, dest_dir, map_name))
         if os.system(command) == 0:
-            logging.info('Successfully processed {} to {}'.format(src_record_fn,
-                                                                  dest_record_dir))
+            logging.info('Successfully processed {} to {}'.format(src_dir,
+                                                                  dest_dir))
             return 1
         else:
-            logging.error('Failed to process {} to {}'.format(src_record_fn,
-                                                              dest_record_dir))
+            logging.error('Failed to process {} to {}'.format(src_dir,
+                                                              dest_dir))
         return 0
 
 if __name__ == '__main__':
