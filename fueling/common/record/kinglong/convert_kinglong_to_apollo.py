@@ -75,7 +75,7 @@ class ConvertKinglongToApollo(BasePipeline):
         """Return the target_filepath"""
         dirname = os.path.dirname(record_filepath) + "/"
         basename = os.path.basename(record_filepath)
-        map_name = basename.split("-")[-1].split(".")[0]
+        map_name = basename.split("_")[2].split(".")[0]
         date = basename.split("_")[1][:8]
         vehicle_name = basename.split("_")[0]
         target_filepath = os.path.join(dirname.replace(origin_prefix, target_prefix, 1),
