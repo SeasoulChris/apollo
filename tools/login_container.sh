@@ -50,6 +50,11 @@ else
     optional_volumes="-v ${CALIBRATION_DATA}:/apollo/modules/calibration/data ${optional_volumes}"
   fi
 
+  DATA_VOLUME="/data"
+  if [ -d "${DATA_VOLUME}" ]; then
+    optional_volumes="-v ${DATA_VOLUME}:${DATA_VOLUME} ${optional_volumes}"
+  fi
+
   ${DOCKER_RUN} -it -d --privileged \
       --net host \
       --name ${CONTAINER} \
