@@ -69,8 +69,6 @@ class BaseSpeedLimitImgRenderer(object):
 
     def _draw_speed_limit(self):
         for lane in self.hd_map.lane:
-            if lane.left_boundary.virtual and lane.right_boundary.virtual:
-                continue
             speedlimit = lane.speed_limit
             for segment in lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point)-1):
