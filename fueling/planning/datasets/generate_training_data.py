@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import glob
 import numpy as np
 import os
 import re
@@ -76,11 +77,14 @@ class GenerateTrainingData(BasePipeline):
         total_usable_data_points = 0
 
         file_count = 0
-        for path in all_file_paths:
-            if (not path.endswith('.bin')):
+        for file_path in all_file_paths:
+            if (not file_path.endswith('.bin')):
                 continue
 
-            src_dir_elements = os.path.abspath(path).split("/")
+            file_dir = os.path.dirname(file_path)
+            file_name = os.path.basename(file_path)
+
+            src_dir_elements =file_dir.split("/")
             dest_dir_elements = [ 'training_data' if x == 'learning_data' else x for x in src_dir_elements]
             if ('training_data' in dest_dir_elements):
                 dest_dir = "/".join(dest_dir_elements)
@@ -89,17 +93,18 @@ class GenerateTrainingData(BasePipeline):
 
             file_utils.makedirs(os.path.dirname(dest_dir))
 
-            delete_file = dest_dir + "/learning_data.*.bin"
-            if (os.path.exists(delete_file)):
-                os.remove(delete_file)
+            delete_filelist = glob.glob(dest_dir + '/' + file_name + '.training_data.npy')
+            for delete_file in delete_filelist:
+                if (os.path.exists(delete_file)):
+                    os.remove(delete_file)
 
             file_count += 1
-            logging.info('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
+            logging.info('Reading file: {}. ({}/{})'.format(file_path, file_count, len(all_file_paths)))
 
             # Load the feature for learning file.
-            instances = LoadInstances(path)
+            instances = LoadInstances(file_path)
             if instances is None:
-                print('Failed to read instances file: {}.'.format(path))
+                print('Failed to read instances file: {}.'.format(file_path))
                 continue
 
             # Go through the entries in this feature file.
@@ -150,7 +155,7 @@ class GenerateTrainingData(BasePipeline):
                 logging.info('Total usable data points: {} out of {}.'.format(
                     num_usable_data_points, len(instances.learning_data)))
                 output_np_array = np.array(output_np_array)
-                new_file_path = dest_dir + '.training_data.npy'
+                new_file_path = dest_dir + '/' + file_name + '.training_data.npy'
                 np.save(new_file_path, output_np_array)
                 total_usable_data_points += num_usable_data_points
             except BaseException:

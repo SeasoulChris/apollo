@@ -59,12 +59,6 @@ class DumpLearningData(BasePipeline):
             dest_dir = "/".join(src_dir_elements)
 
         file_utils.makedirs(os.path.dirname(dest_dir))
-        delete_file = dest_dir + "/learning_data.*.bin"
-        if (os.path.exists(delete_file)):
-            os.remove(delete_file)
-        delete_file = dest_dir + "/learning_data.*.bin.txt"
-        if (os.path.exists(delete_file)):
-            os.remove(delete_file)
 
         """Call planning C++ code."""
         map_name = "sunnyvale"
