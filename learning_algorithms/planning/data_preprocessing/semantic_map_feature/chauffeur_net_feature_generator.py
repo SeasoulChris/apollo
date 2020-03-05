@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from learning_algorithms.planning.data_preprocessing.semantic_map_feature.basemap_img_renderer import BaseMapImgRenderer
+from learning_algorithms.planning.data_preprocessing.semantic_map_feature.basemap_img_renderer import BaseRoadMapImgRenderer
 from learning_algorithms.planning.data_preprocessing.semantic_map_feature.basemap_img_renderer import AgentBoxImgRenderer
 from learning_algorithms.planning.data_preprocessing.semantic_map_feature.basemap_img_renderer import AgentPosesHistoryImgRenderer
 from learning_algorithms.planning.data_preprocessing.semantic_map_feature.basemap_img_renderer import ObstaclesImgRenderer

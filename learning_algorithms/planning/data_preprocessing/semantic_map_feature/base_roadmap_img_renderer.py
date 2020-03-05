@@ -7,11 +7,11 @@ import pyproj
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
 
-class BaseMapImgRenderer(object):
-    """class of BaseMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
+class BaseRoadMapImgRenderer(object):
+    """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
     def __init__(self, region):
-        """contruct function to init BaseMapImgRenderer object"""
+        """contruct function to init BaseRoadMapImgRenderer object"""
         self.region = region
         # TODO(Jinyun): use config file
         self.resolution = 0.1   # in meter/pixel
@@ -56,7 +56,6 @@ class BaseMapImgRenderer(object):
         self._draw_junction()
         self._draw_crosswalk()
         self._draw_lane_boundary()
-        self._draw_speed_bump()
         self._draw_stop_line()
         # self._draw_lane_central()
 
@@ -122,19 +121,6 @@ class BaseMapImgRenderer(object):
                     points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
-    # TODO(Jinyun): move it to speed limit renderer
-    def _draw_speed_bump(self, color=(255, 0, 0)):
-        for speed_bump in self.hd_map.speed_bump:
-            for position in speed_bump.position:
-                for segment in position.segment:
-                    for i in range(len(segment.line_segment.point)-1):
-                        p0 = self.get_trans_point(
-                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                        p1 = self.get_trans_point(
-                            [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
-                        cv.line(self.base_map, tuple(p0), tuple(
-                            p1), color=color, thickness=8)
-
     def _draw_stop_line(self, color=(0, 0, 255)):
         for stop_sign in self.hd_map.stop_sign:
             for stop_line in stop_sign.stop_line:
@@ -153,7 +139,7 @@ class BaseMapImgRenderer(object):
             if lane.left_boundary.virtual and lane.right_boundary.virtual:
                 continue
             color = white_color
-            # TODO(Jinyun): no DOUBLE_YELLOW boundary from map file!
+            # TODO(Jinyun): no DOUBLE_YELLOW and CURB boundary from map file! To Implement DOTTED WHITE and DOTTED YELLOW
             if lane.left_boundary.boundary_type[0].types[0] == map_lane_pb2.LaneBoundaryType.Type.SOLID_YELLOW:
                 color = yellow_color
             for segment in lane.left_boundary.curve.segment:
@@ -192,6 +178,6 @@ class BaseMapImgRenderer(object):
 
 
 if __name__ == '__main__':
-    mapping = BaseMapImgRenderer("san_mateo")
+    mapping = BaseRoadMapImgRenderer("san_mateo")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(mapping.region + ".png", mapping.base_map)

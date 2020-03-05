@@ -11,8 +11,8 @@ py_library(
 )
 
 py_library(
-    name = "basemap_img_renderer",
-    srcs = ["basemap_img_renderer.py"],
+    name = "base_roadmap_img_renderer",
+    srcs = ["base_roadmap_img_renderer.py"],
 )
 
 py_library(
