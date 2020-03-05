@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_library(
+py_binary(
     name = "label_generator",
     srcs = ["label_generator.py"],
     deps = [
