@@ -132,11 +132,11 @@ class LabelGenerator(object):
         return
 
 
-# # demo
-if __name__ == '__main__':
-    FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.2.bin'
-    label_gen = LabelGenerator()
-    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE)
-    result2 = label_gen.LabelTrajectory()
-    print(result)
-    print(result2)
+# # # demo
+# if __name__ == '__main__':
+#     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.2.bin'
+#     label_gen = LabelGenerator()
+#     result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE)
+#     result2 = label_gen.LabelTrajectory()
+#     print(result)
+#     print(result2)

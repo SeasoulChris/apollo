@@ -131,6 +131,8 @@ class LabelGenerator(object):
         np.save(self.filepath + '.future_status.npy', self.future_status_dict)
         return
 
+    def Label(self):
+        self.LabelTrajectory()
 
 # # demo
 # if __name__ == '__main__':

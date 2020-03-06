@@ -47,3 +47,14 @@ py_binary(
         "//fueling/common:proto_utils",
     ],
 )
+
+py_binary(
+    name = "output_data_generator",
+    srcs = ["output_data_generator.py"],
+    deps = [
+        ":label_generator",
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+    ],
+)
