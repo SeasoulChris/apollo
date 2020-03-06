@@ -22,50 +22,65 @@ from scipy.signal import lfilter, hamming
 #from scikits.talkbox import lpc
 import pywt
 
-# reload(sys)  
+# reload(sys)
 # sys.setdefaultencoding('utf8')
 
 eps = 0.00000001
 
 """ Time-domain audio features """
+
+
 def stats_features(frame, fs, feature):
-    Win, Step = int(0.02*fs), int(0.01*fs)
+    Win, Step = int(0.02 * fs), int(0.01 * fs)
     N = len(frame)
     curPos = 0
     frameStats = []
     sub_frames = []
     while (curPos + Win - 1 < N):                        # for each short-term window until the end of signal
-        sub_frame = frame[curPos:curPos+Win] 
+        sub_frame = frame[curPos:curPos + Win]
         count = len(sub_frame)
         if feature == 'ZCR':
             countZ = np.sum(np.abs(np.diff(np.sign(sub_frame)))) / 2
-            sub_frames.append(np.float64(countZ) / np.float64(count-1.0))
+            sub_frames.append(np.float64(countZ) / np.float64(count - 1.0))
         elif feature == 'Energy':
             sub_frames.append(np.sum(sub_frame ** 2) / np.float64(len(sub_frame)))
         curPos = curPos + Step
 
     sub_frames.sort()
-    statsFeatures = [0]*18   
-    statsFeatures[0] = sub_frames[-1] #1 Maxm
-    statsFeatures[1] = sub_frames[0] #2 Minm
-    statsFeatures[2] = np.mean(sub_frames) #3 Mean
-    statsFeatures[3] = np.median(sub_frames) #4 Median
-    statsFeatures[4] = np.std(sub_frames) #5 Std
-    statsFeatures[5] = statsFeatures[0]/statsFeatures[2] #6
-    statsFeatures[6] = statsFeatures[0]/statsFeatures[3] #7
-    statsFeatures[7] = (statsFeatures[4]**2)/(statsFeatures[2]**2) #8
-    statsFeatures[8] = sub_frames[1] #9 Minm2
-    statsFeatures[9] = sub_frames[2] #10 Minm3
-    statsFeatures[10] = sub_frames[3] #11 Minm4
-    statsFeatures[11] = sub_frames[4] #12 Minm5
-    statsFeatures[12] = (statsFeatures[0] + statsFeatures[8] + statsFeatures[9] + statsFeatures[10])/4.0 #13
+    statsFeatures = [0] * 18
+    statsFeatures[0] = sub_frames[-1]  # 1 Maxm
+    statsFeatures[1] = sub_frames[0]  # 2 Minm
+    statsFeatures[2] = np.mean(sub_frames)  # 3 Mean
+    statsFeatures[3] = np.median(sub_frames)  # 4 Median
+    statsFeatures[4] = np.std(sub_frames)  # 5 Std
+    statsFeatures[5] = statsFeatures[0] / statsFeatures[2]  # 6
+    statsFeatures[6] = statsFeatures[0] / statsFeatures[3]  # 7
+    statsFeatures[7] = (statsFeatures[4]**2) / (statsFeatures[2]**2)  # 8
+    statsFeatures[8] = sub_frames[1]  # 9 Minm2
+    statsFeatures[9] = sub_frames[2]  # 10 Minm3
+    statsFeatures[10] = sub_frames[3]  # 11 Minm4
+    statsFeatures[11] = sub_frames[4]  # 12 Minm5
+    statsFeatures[12] = (statsFeatures[0] + statsFeatures[8] +
+                         statsFeatures[9] + statsFeatures[10]) / 4.0  # 13
     num_values = len(sub_frames)
-    statsFeatures[13] = np.mean(filter(lambda x: x > 10**(-6), sub_frames)) #14
-    statsFeatures[14] = len(filter(lambda x: x > statsFeatures[2], sub_frames))/float(num_values) #15
-    statsFeatures[15] = len(filter(lambda x: x > 0.1*statsFeatures[2], sub_frames))/float(num_values) #16
-    statsFeatures[16] = len(filter(lambda x: x > 5*statsFeatures[2], sub_frames))/float(num_values) #17
-    statsFeatures[17] = len(filter(lambda x: x > 0.4*statsFeatures[2], sub_frames))/float(num_values) #18
-    
+    statsFeatures[13] = np.mean(filter(lambda x: x > 10**(-6), sub_frames))  # 14
+    statsFeatures[14] = len(
+        filter(
+            lambda x: x > statsFeatures[2],
+            sub_frames)) / float(num_values)  # 15
+    statsFeatures[15] = len(
+        filter(
+            lambda x: x > 0.1 * statsFeatures[2],
+            sub_frames)) / float(num_values)  # 16
+    statsFeatures[16] = len(
+        filter(
+            lambda x: x > 5 * statsFeatures[2],
+            sub_frames)) / float(num_values)  # 17
+    statsFeatures[17] = len(
+        filter(
+            lambda x: x > 0.4 * statsFeatures[2],
+            sub_frames)) / float(num_values)  # 18
+
     return np.asarray(statsFeatures)
 
 
@@ -81,7 +96,7 @@ def stZCR(frame):
     """Computes zero crossing rate of frame"""
     count = len(frame)
     countZ = np.sum(np.abs(np.diff(np.sign(frame)))) / 2
-    return (np.float64(countZ) / np.float64(count-1.0))
+    return (np.float64(countZ) / np.float64(count - 1.0))
     # return stats_features(frame, fs)
 
 
@@ -97,7 +112,7 @@ def stEnergyEntropy(frame, numOfShortBlocks=10):
     L = len(frame)
     subWinLength = int(np.floor(L / numOfShortBlocks))
     if L != subWinLength * numOfShortBlocks:
-            frame = frame[0:subWinLength * numOfShortBlocks]
+        frame = frame[0:subWinLength * numOfShortBlocks]
     # subWindows is of size [numOfShortBlocks x L]
     subWindows = frame.reshape(subWinLength, numOfShortBlocks, order='F').copy()
 
@@ -110,13 +125,15 @@ def stEnergyEntropy(frame, numOfShortBlocks=10):
 
 
 """ Frequency-domain audio features """
+
+
 def subframesSpectralCentroidAndSpread(X, fs):
     pass
 
 
 def stSpectralCentroidAndSpread(X, fs):
     """Computes spectral centroid of frame (given abs(FFT))"""
-    ind = (np.arange(1, len(X) + 1)) * (fs/(2.0 * len(X)))
+    ind = (np.arange(1, len(X) + 1)) * (fs / (2.0 * len(X)))
 
     Xt = X.copy()
     Xt = Xt / Xt.max()
@@ -145,9 +162,11 @@ def stSpectralEntropy(X, numOfShortBlocks=10):
     if L != subWinLength * numOfShortBlocks:
         X = X[0:subWinLength * numOfShortBlocks]
 
-    subWindows = X.reshape(subWinLength, numOfShortBlocks, order='F').copy()  # define sub-frames (using matrix reshape)
-    s = np.sum(subWindows ** 2, axis=0) / (Eol + eps)                      # compute spectral sub-energies
-    En = -np.sum(s*np.log2(s + eps))                                    # compute spectral entropy
+    # define sub-frames (using matrix reshape)
+    subWindows = X.reshape(subWinLength, numOfShortBlocks, order='F').copy()
+    # compute spectral sub-energies
+    s = np.sum(subWindows ** 2, axis=0) / (Eol + eps)
+    En = -np.sum(s * np.log2(s + eps))                                    # compute spectral entropy
 
     return En
 
@@ -166,7 +185,7 @@ def stSpectralFlux(X, Xprev):
     # compute the spectral flux as the sum of square distances:
     sumX = np.sum(X + eps)
     sumPrevX = np.sum(Xprev + eps)
-    F = np.sum((X / sumX - Xprev/sumPrevX) ** 2)
+    F = np.sum((X / sumX - Xprev / sumPrevX) ** 2)
 
     return F
 
@@ -179,8 +198,9 @@ def stSpectralRollOff(X, c, fs):
     """Computes spectral roll-off"""
     totalEnergy = np.sum(X ** 2)
     fftLength = len(X)
-    Thres = c*totalEnergy
-    # Ffind the spectral rolloff as the frequency position where the respective spectral energy is equal to c*totalEnergy
+    Thres = c * totalEnergy
+    # Ffind the spectral rolloff as the frequency position where the
+    # respective spectral energy is equal to c*totalEnergy
     CumSum = np.cumsum(X ** 2) + eps
     [a, ] = np.nonzero(CumSum > Thres)
     if len(a) > 0:
@@ -197,14 +217,14 @@ def stHarmonic(frame, fs):
     M = np.round(0.016 * fs) - 1
     R = np.correlate(frame, frame, mode='full')
 
-    g = R[len(frame)-1]
+    g = R[len(frame) - 1]
     R = R[len(frame):-1]
 
     # estimate m0 (as the first zero crossing of R)
     [a, ] = np.nonzero(np.diff(np.sign(R)))
 
     if len(a) == 0:
-        m0 = len(R)-1
+        m0 = len(R) - 1
     else:
         m0 = a[0]
     if M > len(R):
@@ -247,7 +267,7 @@ def mfccInitFilterBanks(fs, nfft):
 
     # filter bank params:
     lowfreq = 133.33
-    linsc = 200/3.
+    linsc = 200 / 3.
     logsc = 1.0711703
     numLinFiltTotal = 13
     numLogFilt = 27
@@ -259,10 +279,10 @@ def mfccInitFilterBanks(fs, nfft):
     nFiltTotal = numLinFiltTotal + numLogFilt
 
     # Compute frequency points of the triangle:
-    freqs = np.zeros(nFiltTotal+2)
+    freqs = np.zeros(nFiltTotal + 2)
     freqs[:numLinFiltTotal] = lowfreq + np.arange(numLinFiltTotal) * linsc
-    freqs[numLinFiltTotal:] = freqs[numLinFiltTotal-1] * logsc ** np.arange(1, numLogFilt + 3)
-    heights = 2./(freqs[2:] - freqs[0:-2])
+    freqs[numLinFiltTotal:] = freqs[numLinFiltTotal - 1] * logsc ** np.arange(1, numLogFilt + 3)
+    heights = 2. / (freqs[2:] - freqs[0:-2])
 
     # Compute filterbank coeff (in fft domain, in bins)
     fbank = np.zeros((nFiltTotal, int(nfft)))
@@ -270,12 +290,34 @@ def mfccInitFilterBanks(fs, nfft):
 
     for i in range(nFiltTotal):
         lowTrFreq = freqs[i]
-        cenTrFreq = freqs[i+1]
-        highTrFreq = freqs[i+2]
+        cenTrFreq = freqs[i + 1]
+        highTrFreq = freqs[i + 2]
 
-        lid = np.arange(np.floor(lowTrFreq * nfft / fs) + 1, np.floor(cenTrFreq * nfft / fs) + 1, dtype=np.int)
+        lid = np.arange(
+            np.floor(
+                lowTrFreq *
+                nfft /
+                fs) +
+            1,
+            np.floor(
+                cenTrFreq *
+                nfft /
+                fs) +
+            1,
+            dtype=np.int)
         lslope = heights[i] / (cenTrFreq - lowTrFreq)
-        rid = np.arange(np.floor(cenTrFreq * nfft / fs) + 1, np.floor(highTrFreq * nfft / fs) + 1, dtype=np.int)
+        rid = np.arange(
+            np.floor(
+                cenTrFreq *
+                nfft /
+                fs) +
+            1,
+            np.floor(
+                highTrFreq *
+                nfft /
+                fs) +
+            1,
+            dtype=np.int)
         rslope = heights[i] / (highTrFreq - cenTrFreq)
         fbank[i][lid] = lslope * (nfreqs[lid] - lowTrFreq)
         fbank[i][rid] = rslope * (highTrFreq - nfreqs[rid])
@@ -297,7 +339,7 @@ def stMFCC(X, fbank, nceps):
     #    with a small number of modifications to make it more compact and suitable for the pyAudioAnalysis Lib
     """
 
-    mspec = np.log10(np.dot(X, fbank.T)+eps)
+    mspec = np.log10(np.dot(X, fbank.T) + eps)
     ceps = dct(mspec, type=2, norm='ortho', axis=-1)[:nceps]
     return ceps
 
@@ -306,8 +348,8 @@ def stChromaFeaturesInit(nfft, fs):
     """
     This function initializes the chroma matrices used in the calculation of the chroma features
     """
-    freqs = np.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])    
-    Cp = 27.50    
+    freqs = np.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])
+    Cp = 27.50
     nChroma = np.round(12.0 * np.log2(freqs / Cp)).astype(int)
 
     nFreqsPerChroma = np.zeros((nChroma.shape[0], ))
@@ -316,31 +358,31 @@ def stChromaFeaturesInit(nfft, fs):
     for u in uChroma:
         idx = np.nonzero(nChroma == u)
         nFreqsPerChroma[idx] = idx[0].shape
-    
+
     return nChroma, nFreqsPerChroma
 
 
 def stChromaFeatures(X, fs, nChroma, nFreqsPerChroma):
-    #TODO: 1 complexity
-    #TODO: 2 bug with large windows
+    # TODO: 1 complexity
+    # TODO: 2 bug with large windows
 
     chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
-    spec = X**2    
-    if nChroma.max()<nChroma.shape[0]:        
+    spec = X**2
+    if nChroma.max() < nChroma.shape[0]:
         C = np.zeros((nChroma.shape[0],))
         C[nChroma] = spec
         C /= nFreqsPerChroma[nChroma]
-    else:        
-        I = np.nonzero(nChroma>nChroma.shape[0])[0][0]        
+    else:
+        I = np.nonzero(nChroma > nChroma.shape[0])[0][0]
         C = np.zeros((nChroma.shape[0],))
-        C[nChroma[0:I-1]] = spec            
+        C[nChroma[0:I - 1]] = spec
         C /= nFreqsPerChroma
     finalC = np.zeros((12, 1))
     newD = int(np.ceil(C.shape[0] / 12.0) * 12)
     C2 = np.zeros((newD, ))
     C2[0:C.shape[0]] = C
-    C2 = C2.reshape(C2.shape[0]//12, 12)
-    #for i in range(12):
+    C2 = C2.reshape(C2.shape[0] // 12, 12)
+    # for i in range(12):
     #    finalC[i] = np.sum(C[i:C.shape[0]:12])
     finalC = np.matrix(np.sum(C2, axis=0)).T
     finalC /= spec.sum()
@@ -406,7 +448,7 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
     if (PLOT):
         fig, ax = plt.subplots()
         chromaGramToPlot = chromaGram.transpose()[::-1, :]
-        Ratio = chromaGramToPlot.shape[1] / (3*chromaGramToPlot.shape[0])        
+        Ratio = chromaGramToPlot.shape[1] / (3 * chromaGramToPlot.shape[0])
         if Ratio < 1:
             Ratio = 1
         chromaGramToPlot = np.repeat(chromaGramToPlot, Ratio, axis=0)
@@ -434,12 +476,12 @@ def phormants(x, Fs):
     w = np.hamming(N)
 
     # Apply window and high pass filter.
-    x1 = x * w   
+    x1 = x * w
     x1 = lfilter([1], [1., 0.63], x1)
-    
-    # Get LPC.    
+
+    # Get LPC.
     ncoeff = 2 + Fs / 1000
-    A, e, k = lpc(x1, ncoeff)    
+    A, e, k = lpc(x1, ncoeff)
     #A, e, k = lpc(x1, 8)
 
     # Get roots.
@@ -449,7 +491,7 @@ def phormants(x, Fs):
     # Get angles.
     angz = np.arctan2(np.imag(rts), np.real(rts))
 
-    # Get frequencies.    
+    # Get frequencies.
     frqs = sorted(angz * (Fs / (2 * math.pi)))
 
     return frqs
@@ -472,13 +514,15 @@ def beatExtraction(stFeatures, winSize, PLOT=False):
     maxBeatTime = int(round(2.0 / winSize))
     HistAll = np.zeros((maxBeatTime,))
     for ii, i in enumerate(toWatch):                                        # for each feature
-        DifThres = 2.0 * (np.abs(stFeatures[i, 0:-1] - stFeatures[i, 1::])).mean()    # dif threshold (3 x Mean of Difs)
-        if DifThres<=0:
-            DifThres = 0.0000000000000001        
+        # dif threshold (3 x Mean of Difs)
+        DifThres = 2.0 * (np.abs(stFeatures[i, 0:-1] - stFeatures[i, 1::])).mean()
+        if DifThres <= 0:
+            DifThres = 0.0000000000000001
         [pos1, _] = utilities.peakdet(stFeatures[i, :], DifThres)           # detect local maxima
-        posDifs = []                                                        # compute histograms of local maxima changes
-        for j in range(len(pos1)-1):
-            posDifs.append(pos1[j+1]-pos1[j])
+        # compute histograms of local maxima changes
+        posDifs = []
+        for j in range(len(pos1) - 1):
+            posDifs.append(pos1[j + 1] - pos1[j])
         [HistTimes, HistEdges] = np.histogram(posDifs, np.arange(0.5, maxBeatTime + 1.5))
         HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
         HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
@@ -545,7 +589,7 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 
     while (curPos + Win - 1 < N):
         countFrames += 1
-        x = signal[curPos:curPos+Win]
+        x = signal[curPos:curPos + Win]
         curPos = curPos + Step
         X = abs(fft(x))
         X = X[0:nfft]
@@ -567,7 +611,7 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
         FreqTicksLabels = [str(Fs / 2 - int((f * Fs) / (2 * nfft))) for f in FreqTicks]
         ax.set_yticks(FreqTicks)
         ax.set_yticklabels(FreqTicksLabels)
-        TStep = countFrames/3
+        TStep = countFrames / 3
         TimeTicks = range(0, countFrames, TStep)
         TimeTicksLabels = ['%.2f' % (float(t * Step) / Fs) for t in TimeTicks]
         ax.set_xticks(TimeTicks)
@@ -582,6 +626,8 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 
 
 """ Wavelet-based features"""
+
+
 def stDWT(X, fs):
     """
     Discrete Wavelet Transform (10 decomposition levels)
@@ -594,7 +640,7 @@ def stDWT(X, fs):
         coeff_sqr_sum = np.sum(coeff_sqr)
 
         coeff_sqr_percent = coeff_sqr / (coeff_sqr_sum + 1e-6)
-        
+
         coeff_energy = np.mean(coeff_sqr_percent)
         coeff_var = np.var(coeff_sqr_percent)
         coeff_std = np.std(coeff_sqr_percent)
@@ -602,7 +648,7 @@ def stDWT(X, fs):
         if coeff.shape[0] > 1:
             diff = coeff_sqr_percent[1:] - coeff_sqr_percent[:-1]
             coeff_wave_form_length = np.sum(diff ** 2)
-        
+
         feature.append(coeff_energy)
         feature.append(coeff_var)
         feature.append(coeff_std)
@@ -661,7 +707,8 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     countFrames = 0
     nFFT = Win // 2
 
-    [fbank, freqs] = mfccInitFilterBanks(Fs, nFFT)                # compute the triangular filter banks used in the mfcc calculation
+    # compute the triangular filter banks used in the mfcc calculation
+    [fbank, freqs] = mfccInitFilterBanks(Fs, nFFT)
     nChroma, nFreqsPerChroma = stChromaFeaturesInit(nFFT, Fs)
 
     numOfTimeSpectralFeatures = 8
@@ -674,7 +721,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     stFeatures = []
     while (curPos + Win - 1 < N):                        # for each short-term window until the end of signal
         countFrames += 1
-        x = signal[curPos:curPos+Win]                    # get current window
+        x = signal[curPos:curPos + Win]                    # get current window
         curPos = curPos + Step                           # update window position
         X = abs(fft(x))                                  # get fft magnitude
         X = X[0:nFFT]                                    # normalize fft
@@ -689,10 +736,12 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         curFV[5] = stSpectralEntropy(X)                  # spectral entropy
         curFV[6] = stSpectralFlux(X, Xprev)              # spectral flux
         curFV[7] = stSpectralRollOff(X, 0.90, Fs)        # spectral rolloff
-        curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps, 0] = stMFCC(X, fbank, nceps).copy()    # MFCCs
+        curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures +
+              nceps, 0] = stMFCC(X, fbank, nceps).copy()    # MFCCs
 
         chromaNames, chromaF = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)
-        curFV[numOfTimeSpectralFeatures + nceps: numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF
+        curFV[numOfTimeSpectralFeatures + nceps: numOfTimeSpectralFeatures +
+              nceps + numOfChromaFeatures - 1] = chromaF
         curFV[numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF.std()
         # curFV = np.append(curFV, subframesZCR(x, Fs))
         # curFV = np.append(curFV, subframesEnergy(x, Fs))
@@ -706,16 +755,16 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         curFV = np.append(curFV, st_wpt_features)
 
         stFeatures.append(curFV)
-        
+
         # delta features
         '''
         if countFrames>1:
             delta = curFV - prevFV
-            curFVFinal = np.concatenate((curFV, delta))            
+            curFVFinal = np.concatenate((curFV, delta))
         else:
             curFVFinal = np.concatenate((curFV, curFV))
         prevFV = curFV
-        stFeatures.append(curFVFinal)        
+        stFeatures.append(curFVFinal)
         # '''
         # end of delta
 
@@ -740,7 +789,7 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
     numOfStatistics = 2
 
     mtFeatures = []
-    #for i in range(numOfStatistics * numOfFeatures + 1):
+    # for i in range(numOfStatistics * numOfFeatures + 1):
     for i in range(numOfStatistics * numOfFeatures):
         mtFeatures.append([])
 
@@ -755,7 +804,7 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
             curStFeatures = stFeatures[i][N1:N2]
 
             mtFeatures[i].append(np.mean(curStFeatures))
-            mtFeatures[i+numOfFeatures].append(np.std(curStFeatures))
+            mtFeatures[i + numOfFeatures].append(np.std(curStFeatures))
             #mtFeatures[i+2*numOfFeatures].append(np.std(curStFeatures) / (np.mean(curStFeatures)+0.00000010))
             curPos += mtStepRatio
 
@@ -777,7 +826,7 @@ def stFeatureSpeed(signal, Fs, Win, Step):
     countFrames = 0
 
     lowfreq = 133.33
-    linsc = 200/3.
+    linsc = 200 / 3.
     logsc = 1.0711703
     nlinfil = 13
     nlogfil = 27
@@ -812,9 +861,9 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 #        R = np.correlate(frame, frame, mode='full')
         stFeatures.append(stHarmonic(x, Fs))
 #        for i in range(len(X)):
-            #if (i < (len(X) / 8)) and (i > (len(X)/40)):
-            #    Ex += X[i]*X[i]
-            #El += X[i]*X[i]
+        # if (i < (len(X) / 8)) and (i > (len(X)/40)):
+        #    Ex += X[i]*X[i]
+        #El += X[i]*X[i]
 #        stFeatures.append(Ex / El)
 #        stFeatures.append(np.argmax(X))
 #        if curFV[numOfTimeSpectralFeatures+nceps+1]>0:
@@ -847,37 +896,41 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
     allMtFeatures = np.array([])
     processingTimes = []
 
-    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3','*.au')
+    types = ('*.wav', '*.aif', '*.aiff', '*.mp3', '*.au')
     wavFilesList = []
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
 
-    wavFilesList = sorted(wavFilesList)    
+    wavFilesList = sorted(wavFilesList)
     wavFilesList2 = []
-    for i, wavFile in enumerate(wavFilesList):        
-        print("Analyzing file {0:d} of {1:d}: {2:s}".format(i+1, len(wavFilesList), wavFile.encode('utf-8')))
+    for i, wavFile in enumerate(wavFilesList):
+        print("Analyzing file {0:d} of {1:d}: {2:s}".format(
+            i + 1, len(wavFilesList), wavFile.encode('utf-8')))
         if os.stat(wavFile).st_size == 0:
             print("   (EMPTY FILE -- SKIPPING)")
-            continue        
-        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file    
+            continue
+        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file
         if isinstance(x, int):
-            continue        
+            continue
 
-        t1 = time.clock()        
-        x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono                
-        if x.shape[0]<float(Fs)/10:
+        t1 = time.clock()
+        x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono
+        if x.shape[0] < float(Fs) / 10:
             print("  (AUDIO FILE TOO SMALL - SKIPPING)")
             continue
         wavFilesList2.append(wavFile)
         if computeBEAT:                                          # mid-term feature extraction for current file
-            [MidTermFeatures, stFeatures] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
+            [MidTermFeatures, stFeatures] = mtFeatureExtraction(x, Fs, round(
+                mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
             [beat, beatConf] = beatExtraction(stFeatures, stStep)
         else:
-            [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
+            [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(
+                mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
 
         MidTermFeatures = np.transpose(MidTermFeatures)
-        MidTermFeatures = MidTermFeatures.mean(axis=0)         # long term averaging of mid-term statistics
-        if (not np.isnan(MidTermFeatures).any()) and (not np.isinf(MidTermFeatures).any()):            
+        # long term averaging of mid-term statistics
+        MidTermFeatures = MidTermFeatures.mean(axis=0)
+        if (not np.isnan(MidTermFeatures).any()) and (not np.isinf(MidTermFeatures).any()):
             if computeBEAT:
                 MidTermFeatures = np.append(MidTermFeatures, beat)
                 MidTermFeatures = np.append(MidTermFeatures, beatConf)
@@ -889,7 +942,8 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
             duration = float(len(x)) / Fs
             processingTimes.append((t2 - t1) / duration)
     if len(processingTimes) > 0:
-        print("Feature extraction complexity ratio: {0:.1f} x realtime".format((1.0 / np.mean(np.array(processingTimes)))))
+        print("Feature extraction complexity ratio: {0:.1f} x realtime".format(
+            (1.0 / np.mean(np.array(processingTimes)))))
     return (allMtFeatures, wavFilesList2)
 
 
@@ -939,7 +993,7 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
     signalIndices = np.array([])
     processingTimes = []
 
-    types = ('*.wav', '*.aif',  '*.aiff')
+    types = ('*.wav', '*.aif', '*.aiff')
     wavFilesList = []
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
@@ -949,13 +1003,15 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
     for i, wavFile in enumerate(wavFilesList):
         [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file
         if isinstance(x, int):
-            continue        
-        
+            continue
+
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono
-        [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))  # mid-term feature
+        [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(
+            mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))  # mid-term feature
 
         MidTermFeatures = np.transpose(MidTermFeatures)
-#        MidTermFeatures = MidTermFeatures.mean(axis=0)        # long term averaging of mid-term statistics
+# MidTermFeatures = MidTermFeatures.mean(axis=0)        # long term
+# averaging of mid-term statistics
         if len(allMtFeatures) == 0:                # append feature vector
             allMtFeatures = MidTermFeatures
             signalIndices = np.zeros((MidTermFeatures.shape[0], ))
@@ -971,7 +1027,8 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
 # but a whole feature matrix.
 #
 # Also, another difference between the following two wrappers and the previous is that they NO LONG-TERM AVERAGING IS PERFORMED.
-# In other words, the WAV files in these functions are not used as uniform samples that need to be averaged but as sequences
+# In other words, the WAV files in these functions are not used as uniform
+# samples that need to be averaged but as sequences
 
 def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize, shortTermStep, outPutFile,
                               storeStFeatures=False, storeToCSV=False, PLOT=False):
@@ -984,33 +1041,56 @@ def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
     [Fs, x] = audioBasicIO.readAudioFile(fileName)            # read the wav file
     x = audioBasicIO.stereo2mono(x)                           # convert to MONO if required
     if storeStFeatures:
-        [mtF, stF] = mtFeatureExtraction(x, Fs, round(Fs * midTermSize), round(Fs * midTermStep), round(Fs * shortTermSize), round(Fs * shortTermStep))
+        [mtF,
+         stF] = mtFeatureExtraction(x,
+                                    Fs,
+                                    round(Fs * midTermSize),
+                                    round(Fs * midTermStep),
+                                    round(Fs * shortTermSize),
+                                    round(Fs * shortTermStep))
     else:
-        [mtF, _] = mtFeatureExtraction(x, Fs, round(Fs*midTermSize), round(Fs * midTermStep), round(Fs * shortTermSize), round(Fs * shortTermStep))
+        [mtF,
+         _] = mtFeatureExtraction(x,
+                                  Fs,
+                                  round(Fs * midTermSize),
+                                  round(Fs * midTermStep),
+                                  round(Fs * shortTermSize),
+                                  round(Fs * shortTermStep))
 
     np.save(outPutFile, mtF)                              # save mt features to numpy file
     if PLOT:
         print("Mid-term numpy file: " + outPutFile + ".npy saved")
     if storeToCSV:
-        np.savetxt(outPutFile+".csv", mtF.T, delimiter=",")
+        np.savetxt(outPutFile + ".csv", mtF.T, delimiter=",")
         if PLOT:
             print("Mid-term CSV file: " + outPutFile + ".csv saved")
 
     if storeStFeatures:
-        np.save(outPutFile+"_st", stF)                    # save st features to numpy file
+        np.save(outPutFile + "_st", stF)                    # save st features to numpy file
         if PLOT:
             print("Short-term numpy file: " + outPutFile + "_st.npy saved")
         if storeToCSV:
-            np.savetxt(outPutFile+"_st.csv", stF.T, delimiter=",")    # store st features to CSV file
+            # store st features to CSV file
+            np.savetxt(outPutFile + "_st.csv", stF.T, delimiter=",")
             if PLOT:
                 print("Short-term CSV file: " + outPutFile + "_st.csv saved")
 
 
-def mtFeatureExtractionToFileDir(dirName, midTermSize, midTermStep, shortTermSize, shortTermStep, storeStFeatures=False, storeToCSV=False, PLOT=False):
+def mtFeatureExtractionToFileDir(dirName, midTermSize, midTermStep, shortTermSize,
+                                 shortTermStep, storeStFeatures=False, storeToCSV=False, PLOT=False):
     types = (dirName + os.sep + '*.wav', )
     filesToProcess = []
     for files in types:
         filesToProcess.extend(glob.glob(files))
     for f in filesToProcess:
         outPath = f
-        mtFeatureExtractionToFile(f, midTermSize, midTermStep, shortTermSize, shortTermStep, outPath, storeStFeatures, storeToCSV, PLOT)
+        mtFeatureExtractionToFile(
+            f,
+            midTermSize,
+            midTermStep,
+            shortTermSize,
+            shortTermStep,
+            outPath,
+            storeStFeatures,
+            storeToCSV,
+            PLOT)

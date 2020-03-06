@@ -53,6 +53,7 @@ D_KIT_TEAM = [
     'v_wangxitong02@baidu.com',
 ]
 
+
 def send_email_info(title, content, receivers, attachments=[]):
     """Send email with normal information"""
     subject = '[Apollo Fuel] ' + title

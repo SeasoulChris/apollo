@@ -10,6 +10,7 @@ import fueling.common.logging as logging
 
 class CopyFiles(BasePipeline):
     """Records to feature proto pipeline."""
+
     def run(self):
         """Run prod."""
         origin_prefix = 'modules/prediction/kinglong/'

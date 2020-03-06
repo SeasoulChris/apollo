@@ -166,12 +166,12 @@ def redis_sync_incr_dict_value(redis_key, dict_key, lock_key):
         logging.error('unable to create redis instance')
         return val
     with redis_instance.lock(lock_key):
-        if not redis_instance.hexists(redis_key, dict_key): 
+        if not redis_instance.hexists(redis_key, dict_key):
             return val
         redis_instance.hincrby(redis_key, dict_key)
         val = int(redis_instance.hget(redis_key, dict_key))
     return val
-        
+
 
 def _retry(func, params):
     """A wrapper for exponential retry in case redis connection is not stable"""

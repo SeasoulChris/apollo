@@ -42,6 +42,7 @@ try:
 except ImportError:
     import __builtin__
 
+
 def _swig_setattr_nondynamic(self, class_type, name, value, static=1):
     if (name == "thisown"):
         return self.this.own(value)
@@ -81,6 +82,7 @@ def _swig_repr(self):
         strthis = ""
     return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
 
+
 try:
     _object = object
     _newclass = 1
@@ -90,17 +92,19 @@ except __builtin__.Exception:
     _newclass = 0
 
 SHARED_PTR_DISOWN = _cyber_bag.SHARED_PTR_DISOWN
+
+
 class SwigPyIterator(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, SwigPyIterator, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, SwigPyIterator, name)
+    def __getattr__(self, name): return _swig_getattr(self, SwigPyIterator, name)
 
     def __init__(self, *args, **kwargs):
         raise AttributeError("No constructor defined - class is abstract")
     __repr__ = _swig_repr
     __swig_destroy__ = _cyber_bag.delete_SwigPyIterator
-    __del__ = lambda self: None
+    def __del__(self): return None
 
     def value(self):
         return _cyber_bag.SwigPyIterator_value(self)
@@ -149,20 +153,25 @@ class SwigPyIterator(_object):
 
     def __sub__(self, *args):
         return _cyber_bag.SwigPyIterator___sub__(self, *args)
+
     def __iter__(self):
         return self
+
+
 SwigPyIterator_swigregister = _cyber_bag.SwigPyIterator_swigregister
 SwigPyIterator_swigregister(SwigPyIterator)
 
+
 class IntVector(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, IntVector, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, IntVector, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, IntVector, name)
+    def __getattr__(self, name): return _swig_getattr(self, IntVector, name)
     __repr__ = _swig_repr
 
     def iterator(self):
         return _cyber_bag.IntVector_iterator(self)
+
     def __iter__(self):
         return self.iterator()
 
@@ -263,19 +272,23 @@ class IntVector(_object):
     def capacity(self):
         return _cyber_bag.IntVector_capacity(self)
     __swig_destroy__ = _cyber_bag.delete_IntVector
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 IntVector_swigregister = _cyber_bag.IntVector_swigregister
 IntVector_swigregister(IntVector)
 
+
 class DoubleVector(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, DoubleVector, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, DoubleVector, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, DoubleVector, name)
+    def __getattr__(self, name): return _swig_getattr(self, DoubleVector, name)
     __repr__ = _swig_repr
 
     def iterator(self):
         return _cyber_bag.DoubleVector_iterator(self)
+
     def __iter__(self):
         return self.iterator()
 
@@ -376,19 +389,23 @@ class DoubleVector(_object):
     def capacity(self):
         return _cyber_bag.DoubleVector_capacity(self)
     __swig_destroy__ = _cyber_bag.delete_DoubleVector
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 DoubleVector_swigregister = _cyber_bag.DoubleVector_swigregister
 DoubleVector_swigregister(DoubleVector)
 
+
 class StringVector(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, StringVector, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, StringVector, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, StringVector, name)
+    def __getattr__(self, name): return _swig_getattr(self, StringVector, name)
     __repr__ = _swig_repr
 
     def iterator(self):
         return _cyber_bag.StringVector_iterator(self)
+
     def __iter__(self):
         return self.iterator()
 
@@ -489,19 +506,23 @@ class StringVector(_object):
     def capacity(self):
         return _cyber_bag.StringVector_capacity(self)
     __swig_destroy__ = _cyber_bag.delete_StringVector
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 StringVector_swigregister = _cyber_bag.StringVector_swigregister
 StringVector_swigregister(StringVector)
 
+
 class ConstCharVector(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ConstCharVector, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, ConstCharVector, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, ConstCharVector, name)
+    def __getattr__(self, name): return _swig_getattr(self, ConstCharVector, name)
     __repr__ = _swig_repr
 
     def iterator(self):
         return _cyber_bag.ConstCharVector_iterator(self)
+
     def __iter__(self):
         return self.iterator()
 
@@ -602,20 +623,25 @@ class ConstCharVector(_object):
     def capacity(self):
         return _cyber_bag.ConstCharVector_capacity(self)
     __swig_destroy__ = _cyber_bag.delete_ConstCharVector
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 ConstCharVector_swigregister = _cyber_bag.ConstCharVector_swigregister
 ConstCharVector_swigregister(ConstCharVector)
 
+
 class bag_message(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, bag_message, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, bag_message, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, bag_message, name)
+    def __getattr__(self, name): return _swig_getattr(self, bag_message, name)
     __repr__ = _swig_repr
     __swig_setmethods__["timestamp"] = _cyber_bag.bag_message_timestamp_set
     __swig_getmethods__["timestamp"] = _cyber_bag.bag_message_timestamp_get
     if _newclass:
-        timestamp = _swig_property(_cyber_bag.bag_message_timestamp_get, _cyber_bag.bag_message_timestamp_set)
+        timestamp = _swig_property(
+            _cyber_bag.bag_message_timestamp_get,
+            _cyber_bag.bag_message_timestamp_set)
     __swig_setmethods__["topic"] = _cyber_bag.bag_message_topic_set
     __swig_getmethods__["topic"] = _cyber_bag.bag_message_topic_get
     if _newclass:
@@ -627,7 +653,9 @@ class bag_message(_object):
     __swig_setmethods__["data_type"] = _cyber_bag.bag_message_data_type_set
     __swig_getmethods__["data_type"] = _cyber_bag.bag_message_data_type_get
     if _newclass:
-        data_type = _swig_property(_cyber_bag.bag_message_data_type_get, _cyber_bag.bag_message_data_type_set)
+        data_type = _swig_property(
+            _cyber_bag.bag_message_data_type_get,
+            _cyber_bag.bag_message_data_type_set)
     __swig_setmethods__["end"] = _cyber_bag.bag_message_end_set
     __swig_getmethods__["end"] = _cyber_bag.bag_message_end_get
     if _newclass:
@@ -640,15 +668,18 @@ class bag_message(_object):
         except __builtin__.Exception:
             self.this = this
     __swig_destroy__ = _cyber_bag.delete_bag_message
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 bag_message_swigregister = _cyber_bag.bag_message_swigregister
 bag_message_swigregister(bag_message)
 
+
 class BagMessage(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BagMessage, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, BagMessage, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, BagMessage, name)
+    def __getattr__(self, name): return _swig_getattr(self, BagMessage, name)
     __repr__ = _swig_repr
 
     def __init__(self, data):
@@ -662,15 +693,18 @@ class BagMessage(_object):
     if _newclass:
         _msg = _swig_property(_cyber_bag.BagMessage__msg_get, _cyber_bag.BagMessage__msg_set)
     __swig_destroy__ = _cyber_bag.delete_BagMessage
-    __del__ = lambda self: None
+    def __del__(self): return None
+
+
 BagMessage_swigregister = _cyber_bag.BagMessage_swigregister
 BagMessage_swigregister(BagMessage)
 
+
 class PyBag(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PyBag, name, value)
+    def __setattr__(self, name, value): return _swig_setattr(self, PyBag, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, PyBag, name)
+    def __getattr__(self, name): return _swig_getattr(self, PyBag, name)
     __repr__ = _swig_repr
 
     def __init__(self, file_name, write_mode=False, if_dump_parameter_snapshot=False):
@@ -680,7 +714,7 @@ class PyBag(_object):
         except __builtin__.Exception:
             self.this = this
     __swig_destroy__ = _cyber_bag.delete_PyBag
-    __del__ = lambda self: None
+    def __del__(self): return None
 
     def reset(self):
         return _cyber_bag.PyBag_reset(self)
@@ -741,8 +775,9 @@ class PyBag(_object):
 
     def close(self):
         return _cyber_bag.PyBag_close(self)
+
+
 PyBag_swigregister = _cyber_bag.PyBag_swigregister
 PyBag_swigregister(PyBag)
 
 # This file is compatible with both classic and new-style classes.
-

@@ -64,7 +64,7 @@ def file_correctly_predicted(model, file_path, model_type,
             start += step
     else:
         features = audioFeatureExtraction.stFeatureExtraction(
-            signal, sr, 0.10*sr, .05*sr)
+            signal, sr, 0.10 * sr, .05 * sr)
 
     X = np.array(features)
     X = torch.from_numpy(X).float()
@@ -78,7 +78,7 @@ def file_correctly_predicted(model, file_path, model_type,
     class_list = []
     label_list = []
     for i in range(y_pred.shape[0] - N):
-        avg = np.mean(y_pred[i: i+N])
+        avg = np.mean(y_pred[i: i + N])
         if avg > threshold:
             class_list.append(1)
         else:

@@ -90,35 +90,35 @@ def prepare_data(X_em, X_nonem, scale=True):
 def plot_model_history(model_history):
     fig, axs = plt.subplots(1, 2, figsize=(15, 5))
     # summarize history for accuracy
-    axs[0].plot(range(1, len(model_history.history['acc'])+1),
+    axs[0].plot(range(1, len(model_history.history['acc']) + 1),
                 model_history.history['acc'])
-    axs[0].plot(range(1, len(model_history.history['val_acc'])+1),
+    axs[0].plot(range(1, len(model_history.history['val_acc']) + 1),
                 model_history.history['val_acc'])
     axs[0].set_title('Model Accuracy')
     axs[0].set_title('Model Accuracy')
     axs[0].set_ylabel('Accuracy')
     axs[0].set_xlabel('Epoch')
     axs[0].set_xticks(np.arange(
-        1, len(model_history.history['acc'])+1), len(model_history.history['acc'])/10)
+        1, len(model_history.history['acc']) + 1), len(model_history.history['acc']) / 10)
     axs[0].legend(['train', 'val'], loc='best')
     # summarize history for loss
-    axs[1].plot(range(1, len(model_history.history['loss'])+1),
+    axs[1].plot(range(1, len(model_history.history['loss']) + 1),
                 model_history.history['loss'])
-    axs[1].plot(range(1, len(model_history.history['val_loss'])+1),
+    axs[1].plot(range(1, len(model_history.history['val_loss']) + 1),
                 model_history.history['val_loss'])
     axs[1].set_title('Model Loss')
     axs[1].set_ylabel('Loss')
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(
-        1, len(model_history.history['loss'])+1), len(model_history.history['loss'])/10)
+        1, len(model_history.history['loss']) + 1), len(model_history.history['loss']) / 10)
     axs[1].legend(['train', 'val'], loc='best')
     plt.savefig('model_history.png')
 
 
-def predict_op(y, sr,  scaler, model):
+def predict_op(y, sr, scaler, model):
     y = preprocess(y)
     features_list = audioFeatureExtraction.stFeatureExtraction(
-        y, sr, 0.10*sr, .05*sr)
+        y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(features_list)
     count = 0
     N = 10
@@ -163,7 +163,7 @@ def predict_op(y, sr,  scaler, model):
 def predict_prob(y, scaler):
     y = preprocess(y)
     mfccs_list = audioFeatureExtraction.stFeatureExtraction(
-        y, sr, 0.10*sr, .05*sr)
+        y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(mfccs_list)
     count = 0
     N = 20
@@ -228,12 +228,12 @@ if __name__ == '__main__':
         for fn in tqdm(train_em_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_em.extend(features)
 
         print('Number of em data is {}'.format(len(X_em)))
@@ -245,12 +245,12 @@ if __name__ == '__main__':
         for fn in tqdm(train_nonem_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_nonem.extend(features)
             count += 1
             if count == 450:
@@ -278,12 +278,12 @@ if __name__ == '__main__':
         for fn in tqdm(test_em_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_test_em.extend(features)
 
         print('Generating X_test_nonem')
@@ -291,12 +291,12 @@ if __name__ == '__main__':
         for fn in tqdm(test_nonem_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_test_nonem.extend(features)
 
         X_test, Y_test, _ = prepare_data(X_test_em, X_test_nonem, False)
@@ -367,7 +367,7 @@ if __name__ == '__main__':
         for test_file in tqdm(test_em_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             classes = predict_op(y, sr, scaler1, model)
@@ -385,7 +385,7 @@ if __name__ == '__main__':
         for test_file in tqdm(test_nonem_files):
             try:
                 y, sr = librosa.load(fn, sr=8000)
-            except:
+            except BaseException:
                 print('Failed to open file {}'.format(fn))
                 continue
             classes = predict_op(y, sr, scaler1, model)

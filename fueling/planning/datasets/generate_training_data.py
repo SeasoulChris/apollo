@@ -12,6 +12,7 @@ from modules.planning.proto.learning_data_pb2 import LearningData
 
 LABEL_TRAJECTORY_POINT_NUM = 20
 
+
 def LoadInstances(filepath):
     instances = LearningData()
     try:
@@ -20,6 +21,7 @@ def LoadInstances(filepath):
         return instances
     except BaseException:
         return None
+
 
 class GenerateTrainingData(BasePipeline):
     """Learning data to training data"""
@@ -58,8 +60,8 @@ class GenerateTrainingData(BasePipeline):
     def run(self):
         """Run"""
         records_rdd = (self.to_rdd(self.our_storage().list_files(self.src_dir_prefix))
-                        .map(os.path.dirname)
-                        .distinct())
+                       .map(os.path.dirname)
+                       .distinct())
 
         processed_records = records_rdd.map(self.process_learning_data)
 
@@ -72,7 +74,7 @@ class GenerateTrainingData(BasePipeline):
         all_file_paths = file_utils.list_files(src_dir)
         # sort by filenames numerically: learning_data.<int>.bin.training_data.npy
         all_file_paths.sort(
-            key=lambda var:[int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
+            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
         total_num_data_points = 0
         total_usable_data_points = 0
 
@@ -84,8 +86,9 @@ class GenerateTrainingData(BasePipeline):
             file_dir = os.path.dirname(file_path)
             file_name = os.path.basename(file_path)
 
-            src_dir_elements =file_dir.split("/")
-            dest_dir_elements = [ 'training_data' if x == 'learning_data' else x for x in src_dir_elements]
+            src_dir_elements = file_dir.split("/")
+            dest_dir_elements = ['training_data' if x ==
+                                 'learning_data' else x for x in src_dir_elements]
             if ('training_data' in dest_dir_elements):
                 dest_dir = "/".join(dest_dir_elements)
             else:
@@ -99,7 +102,8 @@ class GenerateTrainingData(BasePipeline):
                     os.remove(delete_file)
 
             file_count += 1
-            logging.info('Reading file: {}. ({}/{})'.format(file_path, file_count, len(all_file_paths)))
+            logging.info('Reading file: {}. ({}/{})'.format(file_path,
+                                                            file_count, len(all_file_paths)))
 
             # Load the feature for learning file.
             instances = LoadInstances(file_path)
@@ -164,6 +168,7 @@ class GenerateTrainingData(BasePipeline):
 
         logging.info('There are {} usable data points out of {}.'.format(
             total_usable_data_points, total_num_data_points))
+
 
 if __name__ == '__main__':
     GenerateTrainingData().main()

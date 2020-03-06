@@ -28,9 +28,8 @@ def transfer_localization_estimate(loc):
     heading = math.atan2(2 * (loc.pose.orientation.qw * loc.pose.orientation.qz +
                               loc.pose.orientation.qx * loc.pose.orientation.qy),
                          1 - 2 * (loc.pose.orientation.qy ** 2 + loc.pose.orientation.qz ** 2)) \
-            + math.pi / 2
+        + math.pi / 2
     apollo_loc.pose.heading = heading - 2 * math.pi if heading > math.pi else heading
-
 
     apollo_loc.pose.linear_velocity.x = loc.pose.linear_velocity.x
     apollo_loc.pose.linear_velocity.y = loc.pose.linear_velocity.y
@@ -85,9 +84,9 @@ def transfer_perception_obstacles(obstacles):
 
 def convert_kinglong_to_apollo(kinglong_input_path, apollo_output_path):
     freader = bag.Bag(kinglong_input_path, False, False)
-    topics = ['/perception/obstacles', \
-              '/perception/traffic_lights', \
-              '/localization/100hz/localization_pose', \
+    topics = ['/perception/obstacles',
+              '/perception/traffic_lights',
+              '/localization/100hz/localization_pose',
               '/pnc/planning']
 
     fwriter = record.RecordWriter(0, 0)
@@ -111,11 +110,13 @@ def convert_kinglong_to_apollo(kinglong_input_path, apollo_output_path):
         elif topic == "/perception/obstacles":
             perception_obstacles = perception_obstacle_pb2.PerceptionObstacles()
             perception_obstacles.ParseFromString(msg.encode('utf-8', 'surrogateescape'))
-            apollo_obstacles = transfer_perception_obstacles(perception_obstacles.perception_obstacle)
+            apollo_obstacles = transfer_perception_obstacles(
+                perception_obstacles.perception_obstacle)
             fwriter.write_message(apollo_percption_obstacle_topic,
                                   apollo_obstacles.SerializeToString(), timestamp)
     freader.close()
     fwriter.close()
+
 
 if __name__ == "__main__":
     convert_kinglong_to_apollo("/fuel/kl.record", "/fuel/apollo.record")

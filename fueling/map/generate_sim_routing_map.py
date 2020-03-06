@@ -75,7 +75,6 @@ class SimMapPipeline(BasePipeline):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
         self.to_rdd([source_path]).foreach(execute_task)
-        
 
 
 if __name__ == '__main__':

@@ -13,5 +13,6 @@ class PopulateFramesPipelineTest(BasePipelineTest):
     def test_end_to_end(self):
         self.pipeline.run_test()
 
+
 if __name__ == '__main__':
     absltest.main()

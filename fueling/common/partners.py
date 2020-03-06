@@ -23,7 +23,7 @@ partners = {
     'd-kit-jzy': Partner(name='JZY', email='1714348719@qq.com',
                          bos_bucket='jzy-apollo', bos_region='su'),
     'd-kit-jlqc-23': Partner(name='JLQC23', email='dyan1@jmc.com.cn',
-                         bos_bucket='jmcauto', bos_region='su'),
+                             bos_bucket='jmcauto', bos_region='su'),
     'd-kit-jlqc-44': Partner(name='JLQC44', email='dyan1@jmc.com.cn',
-                         bos_bucket='jmcauto', bos_region='su'),
+                             bos_bucket='jmcauto', bos_region='su'),
 }

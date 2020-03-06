@@ -125,8 +125,9 @@ class AudioCNN1dModel(nn.Module):
         X = F.relu(self.fc1(X))
         X = F.relu(self.fc2(X))
         X = torch.sigmoid(self.fc3(X))
-        
+
         return X
+
 
 class AudioCNN1dEEModel(nn.Module):
     def __init__(self):
@@ -155,8 +156,9 @@ class AudioCNN1dEEModel(nn.Module):
         X = F.relu(self.fc1(X))
         X = F.relu(self.fc2(X))
         X = torch.sigmoid(self.fc3(X))
-        
+
         return X
+
 
 class AudioCNN2dModel(nn.Module):
     def __init__(self):
@@ -165,7 +167,7 @@ class AudioCNN2dModel(nn.Module):
         self.conv2 = nn.Conv2d(8, 16, 3, padding=1)
         self.conv3 = nn.Conv2d(16, 32, 3, padding=1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(16*2*32, 100)
+        self.fc1 = nn.Linear(16 * 2 * 32, 100)
         self.fc2 = nn.Linear(100, 1)
         self.dropout = nn.Dropout(0.25)
 
@@ -175,7 +177,7 @@ class AudioCNN2dModel(nn.Module):
         X = self.pool(F.relu(self.conv2(X)))
         X = self.pool(F.relu(self.conv3(X)))
         # Flatten
-        X = X.view(-1, 16*2*32)
+        X = X.view(-1, 16 * 2 * 32)
         # FC layers
         X = F.relu(self.fc1(X))
         X = self.dropout(X)

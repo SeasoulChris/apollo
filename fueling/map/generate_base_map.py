@@ -34,7 +34,7 @@ class MapGenSingleLine(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        dir_prefix = 'testdata/virtual_lane'        
+        dir_prefix = 'testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
 
@@ -43,7 +43,7 @@ class MapGenSingleLine(BasePipeline):
             file_utils.makedirs(dst_prefix)
         else:
             logging.info("target_path: {}".format(dst_prefix))
-        
+
         logging.info("source_prefix: {}".format(src_dir))
         # RDD(record_path)
         todo_records = self.to_rdd([src_dir])

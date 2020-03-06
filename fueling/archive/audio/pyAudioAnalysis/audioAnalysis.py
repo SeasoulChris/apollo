@@ -120,7 +120,7 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
 
-    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3')
+    types = ('*.wav', '*.aif', '*.aiff', '*.mp3')
     wavFilesList = []
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
@@ -167,7 +167,7 @@ def regressionFolderWrapper(inputFolder, modelType, modelName):
 
     for i, r in enumerate(regressionNames):
         [Histogram, bins] = numpy.histogram(Results[:, i])
-        centers = (bins[0:-1] + bins[1::]) / 2.0        
+        centers = (bins[0:-1] + bins[1::]) / 2.0
         plt.subplot(len(regressionNames), 1, i + 1)
         plt.plot(centers, Histogram)
         plt.title(r)
@@ -195,12 +195,12 @@ def segmentclassifyFileWrapper(inputWavFile, modelName, modelType):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
     if not os.path.isfile(inputWavFile):
-        raise Exception("Input audio file not found!")    
+        raise Exception("Input audio file not found!")
     gtFile = ""
-    if inputWavFile[-4::]==".wav":
+    if inputWavFile[-4::] == ".wav":
         gtFile = inputWavFile.replace(".wav", ".segments")
-    if inputWavFile[-4::]==".mp3":
-        gtFile = inputWavFile.replace(".mp3", ".segments")    
+    if inputWavFile[-4::] == ".mp3":
+        gtFile = inputWavFile.replace(".mp3", ".segments")
     aS.mtFileClassification(inputWavFile, modelName, modelType, True, gtFile)
 
 
@@ -251,7 +251,7 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
         thumbnailWrapperFileName2 = inputFile.replace(".wav", "_thumb2.wav")
     if inputFile.endswith(".mp3"):
         thumbnailWrapperFileName1 = inputFile.replace(".mp3", "_thumb1.mp3")
-        thumbnailWrapperFileName2 = inputFile.replace(".mp3", "_thumb2.mp3")        
+        thumbnailWrapperFileName2 = inputFile.replace(".mp3", "_thumb2.mp3")
     wavfile.write(thumbnailWrapperFileName1, Fs, x[int(Fs * A1):int(Fs * A2)])
     wavfile.write(thumbnailWrapperFileName2, Fs, x[int(Fs * B1):int(Fs * B2)])
     print "1st thumbnailWrapper (stored in file {0:s}): {1:4.1f}sec" \
@@ -373,7 +373,7 @@ def parse_arguments():
                             required=True, help="Input directories")
     trainClass.add_argument("--method",
                             choices=["svm", "svm_rbf", "knn", "randomforest",
-                                     "gradientboosting","extratrees"],
+                                     "gradientboosting", "extratrees"],
                             required=True, help="Classifier type")
     trainClass.add_argument("--beat", action="store_true",
                             help="Compute beat features")
@@ -383,7 +383,7 @@ def parse_arguments():
     trainReg = tasks.add_parser("trainRegression")
     trainReg.add_argument("-i", "--input", required=True,
                           help="Input directory")
-    trainReg.add_argument("--method", choices=["svm", "randomforest","svm_rbf"],
+    trainReg.add_argument("--method", choices=["svm", "randomforest", "svm_rbf"],
                           required=True, help="Classifier type")
     trainReg.add_argument("--beat", action="store_true",
                           help="Compute beat features")
@@ -439,7 +439,7 @@ def parse_arguments():
                                      help="Input audio file")
     segmentClassifyFile.add_argument("--model",
                                      choices=["svm", "svm_rbf", "knn",
-                                              "randomforest","gradientboosting",
+                                              "randomforest", "gradientboosting",
                                               "extratrees"],
                                      required=True, help="Model type")
     segmentClassifyFile.add_argument("--modelName", required=True,
@@ -454,8 +454,7 @@ def parse_arguments():
     segmentClassifyFileHMM.add_argument("--hmm", required=True,
                                         help="HMM Model to use (path)")
 
-    segmentationEvaluation = tasks.add_parser("segmentationEvaluation", help=
-                                              "Segmentation - classification "
+    segmentationEvaluation = tasks.add_parser("segmentationEvaluation", help="Segmentation - classification "
                                               "evaluation for a list of WAV "
                                               "files and CSV ground-truth "
                                               "stored in a folder")
@@ -470,7 +469,7 @@ def parse_arguments():
     regFile = tasks.add_parser("regressionFile")
     regFile.add_argument("-i", "--input", required=True,
                          help="Input audio file")
-    regFile.add_argument("--model", choices=["svm", "svm_rbf","randomforest"],
+    regFile.add_argument("--model", choices=["svm", "svm_rbf", "randomforest"],
                          required=True, help="Regression type")
     regFile.add_argument("--regression", required=True,
                          help="Regression model to use")
@@ -525,7 +524,7 @@ def parse_arguments():
                              help="Generate a thumbnailWrapper "
                                   "for an audio file")
     thumb.add_argument("-i", "--input", required=True, help="input audio file")
-    thumb.add_argument("-s", "--size",  default=10.0,  type=float,
+    thumb.add_argument("-s", "--size", default=10.0, type=float,
                        help="thumbnailWrapper size in seconds.")
 
     return parser.parse_args()
@@ -544,7 +543,6 @@ def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
 
 if __name__ == "__main__":
     args = parse_arguments()
-
 
     if args.task == "dirMp3toWav":
         # Convert mp3 to wav (batch - folder)

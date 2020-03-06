@@ -6,8 +6,8 @@ A demo PySpark job with pytorch distributed data parallel training.
 
 I. In Spark driver, register the job by "ddp.register_job"
 II. In Spark executor, convert regular model to distributed by "ddp.model_to_dist"
-III. In Spark executor, convert regular data loader to distributed by 
-     "ddp.data_loader_to_dist" (optional) 
+III. In Spark executor, convert regular data loader to distributed by
+     "ddp.data_loader_to_dist" (optional)
 
 Run with:
     bazel run //fueling/demo/:gpu_training_with_pytorch_distributed -- --cloud --gpu=2 --workers=2
@@ -31,7 +31,7 @@ import torchvision.transforms as transforms
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.distributed_data_parallel as ddp
 import fueling.common.logging as logging
-import fueling.common.socket_utils as socket_utils 
+import fueling.common.socket_utils as socket_utils
 import fueling.common.storage.bos_client as bos_client
 
 
@@ -65,20 +65,19 @@ class PytorchTraining(BasePipeline):
         # For distributed gpu computing, we need to know how many workers cooperate,
         # and register them corespondingly.
         workers = int(os.environ.get('APOLLO_EXECUTORS', 1))
-        job_id = self.FLAGS.get('job_id') 
+        job_id = self.FLAGS.get('job_id')
         ddp.register_job(job_id, workers)
 
         # Spark distributing as normal
         self.to_rdd(range(workers)).foreach(lambda instance: self.train(instance, workers, job_id))
         logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
 
-
     @staticmethod
     def train(instance, world_size, job_id):
         """Run training task"""
         if os.system('nvidia-smi') != 0:
             logging.fatal('Failed to run nvidia-smi.')
-            time.sleep(60*3)
+            time.sleep(60 * 3)
             sys.exit(-1)
 
         logging.info(F'cuda available? {torch.cuda.is_available()}')
@@ -99,7 +98,7 @@ class PytorchTraining(BasePipeline):
 
         # Regular model to distributed
         model = Net()
-        model, rank = ddp.model_to_dist(model, world_size, job_id) 
+        model, rank = ddp.model_to_dist(model, world_size, job_id)
         logging.info(F'current worker rank: {rank}, world_size: {world_size}.')
 
         device_ids = ddp.get_device_ids()
@@ -116,9 +115,9 @@ class PytorchTraining(BasePipeline):
 
         begin_time = time.time()
         logging.info(F'training begin time: {begin_time}')
-        
+
         # loop over the dataset multiple times
-        for epoch in range(3):  
+        for epoch in range(3):
             running_loss = 0.0
             last_data_piece, last_label_piece = None, None
             for i, data in enumerate(trainloader, 0):

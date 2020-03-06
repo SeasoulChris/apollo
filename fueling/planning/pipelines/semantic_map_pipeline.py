@@ -26,7 +26,10 @@ if __name__ == "__main__":
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
 
-    logging.info('training directory:{} validation directory:{}'.format(args.train_file, args.valid_file))
+    logging.info(
+        'training directory:{} validation directory:{}'.format(
+            args.train_file,
+            args.valid_file))
 
     # Set-up data-loader
     train_dataset = SemanticMapDataset(args.train_file)

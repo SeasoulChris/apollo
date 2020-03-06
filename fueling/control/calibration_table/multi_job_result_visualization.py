@@ -46,7 +46,6 @@ class MultiJobResultVisualization(BasePipeline):
         # RDD(plot_file)
         plot_files = self.run_internal(origin_dir, conf_dir)
 
-
     def run_internal(self, origin_prefix, conf_prefix):
         # PairRDD(vehicle, path_to_vehicle)
         origin_vehicle_dir = spark_helper.cache_and_log(

@@ -38,4 +38,3 @@ def get_socket_interface(ip):
                 logging.info(F'got system socket interface: {interface}')
                 return interface
     return None
-

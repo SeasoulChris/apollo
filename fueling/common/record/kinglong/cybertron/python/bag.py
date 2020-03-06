@@ -24,6 +24,7 @@ import fueling.common.record.kinglong.cybertron.python.cyber_bag as cyber_bag
 
 PyBagMessage = collections.namedtuple('PyBagMessage', 'topic message data_type timestamp')
 
+
 class RecordException(Exception):
     def __init__(self, value):
         self.value = value
@@ -31,18 +32,22 @@ class RecordException(Exception):
     def __str__(self):
         return self.value
 
+
 class RecordUnindexException(RecordException):
     def __init__(self):
         RecordException.__init__(self, "Unindexed record")
+
 
 class RecordInvalidException(RecordException):
     def __init__(self):
         RecordException.__init__(self, "Invalid record")
 
+
 class Bag:
     """
     Class for cybertron Node wrapper.
     """
+
     def __init__(self, name, write_mode=False, if_dump_parameter_snapshot=False):
         """
         @param self
@@ -70,12 +75,12 @@ class Bag:
             self.version = self.bag.get_version()
             self.compress_type = self.bag.get_compress_type()
 
-    def read_messages(self, topics = [], start_time=0, end_time=0):
+    def read_messages(self, topics=[], start_time=0, end_time=0):
         """
         read message from bag file.
         @param self
         @param topics list: topic list
-        @param start_time: 
+        @param start_time:
         @param end_time:
         @return: generator of (topic, message, data_type, timestamp) namedtuples for each message in the bag file
         """
@@ -87,14 +92,14 @@ class Bag:
                 #print "No message more."
                 break
 
-    def write(self, topic, data, data_class, t = 0, raw = True):
+    def write(self, topic, data, data_class, t=0, raw=True):
         """
         create a topic reader for receive message from topic.
         @param self
         @param topic str: topic name
         @param data str or proto: message data
         @t : timestamp of the message
-        @raw bool:  
+        @raw bool:
         @data_class proto:
         """
         if not raw:
@@ -131,7 +136,7 @@ class Bag:
         """
         self.bag.reset()
 
-    def get_message_count(self, topic = None):
+    def get_message_count(self, topic=None):
         """
         get message count of the bag file or topic in the bag file.
         """
@@ -140,7 +145,7 @@ class Bag:
         else:
             return self.bag.get_message_count(topic)
 
-    def get_start_time(self, topic = None):
+    def get_start_time(self, topic=None):
         """
         get start time of the bag file or topic in the bag file if specify topic name.
         @param topic
@@ -150,7 +155,7 @@ class Bag:
         else:
             return self.bag.get_start_time(topic)
 
-    def get_end_time(self, topic = None):
+    def get_end_time(self, topic=None):
         """
         get end time of the bag file or topic in the bag file if specify topic name.
         @param self
@@ -182,7 +187,7 @@ class Bag:
             s += 'version: %s\n' % (self.version)
 
             start_stamp = self.start_timestamp
-            end_stamp   = self.end_timestamp
+            end_stamp = self.end_timestamp
 
             duration = end_stamp - start_stamp
             s += 'duration: %.6f\n' % duration
@@ -220,9 +225,12 @@ class Bag:
                 def __init__(self, d):
                     for a, b in d.items():
                         if isinstance(b, (list, tuple)):
-                           setattr(self, a, [DictObject(x) if isinstance(x, dict) else x for x in b])
+                            setattr(
+                                self, a, [
+                                    DictObject(x) if isinstance(
+                                        x, dict) else x for x in b])
                         else:
-                           setattr(self, a, DictObject(b) if isinstance(b, dict) else b)
+                            setattr(self, a, DictObject(b) if isinstance(b, dict) else b)
 
             obj = DictObject(yaml.load(s))
             try:
@@ -234,12 +242,12 @@ class Bag:
             def print_yaml(val, indent=0):
                 indent_str = '  ' * indent
 
-                if type(val) is list:
+                if isinstance(val, list):
                     s = ''
                     for item in val:
                         s += '%s- %s\n' % (indent_str, print_yaml(item, indent + 1))
                     return s
-                elif type(val) is DictObject:
+                elif isinstance(val, DictObject):
                     s = ''
                     for i, (k, v) in enumerate(val.__dict__.items()):
                         if i != 0:

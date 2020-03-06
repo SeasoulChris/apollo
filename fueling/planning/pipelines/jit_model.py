@@ -23,5 +23,3 @@ if __name__ == "__main__":
     y = model.forward(X)
     traced_cpu_model = torch.jit.trace(model, (X, ))
     traced_cpu_model.save("/fuel/model_epoch1_valloss87828.465469.traced.pt")
-
-

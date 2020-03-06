@@ -52,7 +52,7 @@ class AudioFeatureExtraction(object):
                 continue
             try:
                 signal, sr = librosa.load(file, sr=self.sample_rate)
-            except:
+            except BaseException:
                 print("Failed to open file {}".format(file))
                 continue
 
@@ -67,7 +67,7 @@ class AudioFeatureExtraction(object):
             signal_pos = 0
             signal_seg_len = int(self.sample_rate * time_segment)
             while signal_pos + signal_seg_len <= signal_len:
-                segment = signal[signal_pos : (signal_pos + signal_seg_len)]
+                segment = signal[signal_pos: (signal_pos + signal_seg_len)]
                 if label == 1:
                     self.pos_features.append(segment)
                     self.pos_labels.append(label)
@@ -105,12 +105,12 @@ class AudioFeatureExtraction(object):
                 continue
             try:
                 signal, sr = librosa.load(file, sr=8000)
-            except:
+            except BaseException:
                 print("Failed to open file {}".format(file))
                 continue
             signal = self.preprocess(signal)
             total_features = audioFeatureExtraction.stFeatureExtraction(
-                signal, sr, 0.10*sr, .05*sr)
+                signal, sr, 0.10 * sr, .05 * sr)
 
             label = 1
             if file.find("nonEmergency") != -1:
@@ -189,8 +189,8 @@ if __name__ == "__main__":
         train_dir = flags_dict['train_dir']
         valid_dir = flags_dict['valid_dir']
         sampling_rate = flags_dict['sampling_rate']
-        time_segment=flags_dict['time_segment_length']
-        time_step=flags_dict['time_step']
+        time_segment = flags_dict['time_segment_length']
+        time_step = flags_dict['time_step']
 
         # train set features extraction and save
         train_set_extractor = AudioFeatureExtraction(train_dir, sampling_rate)

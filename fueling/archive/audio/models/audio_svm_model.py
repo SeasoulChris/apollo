@@ -80,7 +80,7 @@ def prepare_data(X_em, X_nonem, scale=True):
 def predict_op(y, scaler, model, N=20):
     y = preprocess(y)
     feature_list = audioFeatureExtraction.stFeatureExtraction(
-        y, sr, 0.10*sr, .05*sr)
+        y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(feature_list)
     count = 0
     th = 0.5
@@ -123,7 +123,7 @@ def predict_op(y, scaler, model, N=20):
 def predict_prob(y, scaler, model, N=20):
     y = preprocess(y)
     feature_list = audioFeatureExtraction.stFeatureExtraction(
-        y, sr, 0.10*sr, .05*sr)
+        y, sr, 0.10 * sr, .05 * sr)
     scaler.transform(feature_list)
     count = 0
     th = 0.5
@@ -175,7 +175,7 @@ if __name__ == "__main__":
                         'The root dir containing data.')
 
     def main(argv):
-    
+
         flags_dict = flags.FLAGS.flag_values_dict()
         root_dir = flags_dict['root_dir']
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
             y, sr = librosa.load(fn, sr=8000)
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_em.extend(features)
 
         print("Number of em data is {}".format(len(X_em)))
@@ -249,7 +249,7 @@ if __name__ == "__main__":
             y, sr = librosa.load(fn, sr=8000)
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_nonem.extend(features)
             count += 1
             if count == 120:
@@ -278,7 +278,7 @@ if __name__ == "__main__":
             y, sr = librosa.load(fn, sr=8000)
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_test_em.extend(features)
 
         print("Generating X_test_nonem")
@@ -287,7 +287,7 @@ if __name__ == "__main__":
             y, sr = librosa.load(fn, sr=8000)
             y = preprocess(y)
             features = audioFeatureExtraction.stFeatureExtraction(
-                y, sr, 0.10*sr, .05*sr)
+                y, sr, 0.10 * sr, .05 * sr)
             X_test_nonem.extend(features)
 
         X_test, Y_test, _ = prepare_data(X_test_em, X_test_nonem, False)

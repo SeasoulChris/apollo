@@ -40,12 +40,11 @@ class DistributedGroup(object):
         if not interface:
             logging.fatal('unable to get socket info, fail early here to avoid uncertain state')
         os.environ['MASTER_ADDR'] = ip
-        os.environ['MASTER_PORT'] = port 
+        os.environ['MASTER_PORT'] = port
         os.environ['GLOO_SOCKET_IFNAME'] = interface
         dist.init_process_group(backend, rank=rank, world_size=world_size)
         torch.manual_seed(seed)
         logging.info('done setting up group')
-
 
     @staticmethod
     def cleanup_group():
@@ -94,4 +93,3 @@ def data_loader_to_dist(dataset, batch_size, num_workers, world_size, rank):
     datasampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank)
     return torch.utils.data.DataLoader(dataset, batch_size=batch_size, sampler=datasampler,
                                        num_workers=num_workers, drop_last=True)
-

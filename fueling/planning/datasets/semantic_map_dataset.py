@@ -16,6 +16,7 @@ from learning_algorithms.prediction.data_preprocessing.map_feature.online_mappin
 MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
 ENABLE_IMG_DUMP = False
 
+
 class SemanticMapDataset(Dataset):
     def __init__(self, data_dir):
         self.map_region = []
@@ -39,7 +40,7 @@ class SemanticMapDataset(Dataset):
         all_file_paths = file_utils.list_files(data_dir)
         # sort by filenames numerically: learning_data.<int>.bin.training_data.npy
         all_file_paths.sort(
-            key=lambda var:[int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
+            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue
@@ -78,8 +79,9 @@ class SemanticMapDataset(Dataset):
         # return ((img, self.instances[idx][0]),
         #          self.instances[idx][1])
         return ((img,
-                torch.from_numpy(np.asarray(self.instances[idx][0])).float()),
+                 torch.from_numpy(np.asarray(self.instances[idx][0])).float()),
                 torch.from_numpy(np.asarray(self.instances[idx][1])).float())
+
 
 if __name__ == '__main__':
     # Given cleaned labels, preprocess the data-for-learning and generate

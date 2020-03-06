@@ -7,6 +7,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
+
 class DumpLearningData(BasePipeline):
     """Records to feature proto pipeline."""
 
@@ -52,7 +53,8 @@ class DumpLearningData(BasePipeline):
         """ Process Records """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
-        dest_dir_elements = [ 'learning_data' if x == 'cleaned_data' else x for x in src_dir_elements]
+        dest_dir_elements = ['learning_data' if x ==
+                             'cleaned_data' else x for x in src_dir_elements]
         if ('learning_data' in dest_dir_elements):
             dest_dir = "/".join(dest_dir_elements)
         else:
@@ -75,6 +77,7 @@ class DumpLearningData(BasePipeline):
             logging.error('Failed to process {} to {}'.format(src_dir,
                                                               dest_dir))
         return 0
+
 
 if __name__ == '__main__':
     DumpLearningData().main()
