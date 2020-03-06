@@ -7,10 +7,11 @@ py_library(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
-        "//fueling/learning/autotuner/client:sim_client",
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-    ],
+        "//fueling/learning/autotuner/client:sim_client",
+        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
+   ],
 )
 
 py_binary(
@@ -18,9 +19,9 @@ py_binary(
     srcs = ["cost_computation_server.py"],
     deps = [
         "//apps/k8s/spark_submitter:client",
-        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
+        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
     ],
 )
 
@@ -29,7 +30,8 @@ py_binary(
     srcs = ["mrac_cost_computation.py"],
     deps = [
         ":base_cost_computation",
-        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
+        "//apps/k8s/spark_submitter:client",
         "//fueling/common:proto_utils",
+        "//fueling/profiling/control:multi_job_control_profiling_metrics",
     ],
 )

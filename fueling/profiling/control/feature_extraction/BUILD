@@ -3,7 +3,11 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "multi_job_control_feature_extraction_utils",
     srcs = ["multi_job_control_feature_extraction_utils.py"],
+    data = [
+        "//fueling/profiling/conf:profiling_conf",
+    ],
     deps = [
+        "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",

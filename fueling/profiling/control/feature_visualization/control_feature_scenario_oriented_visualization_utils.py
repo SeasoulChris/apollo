@@ -3,19 +3,19 @@
 """ Analyze and plot the scenario-oriented control features. """
 
 import glob
-import os
+import h5py
 
 import matplotlib
 matplotlib.use('Agg')
-
 from matplotlib.backends.backend_pdf import PdfPages
-import h5py
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-import numpy as np
 
-from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
+import numpy as np
+import os
+
 import fueling.common.logging as logging
+from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
 
 # Minimum epsilon value used in compare with zero
 MIN_EPSILON = 0.000001

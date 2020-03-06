@@ -12,12 +12,13 @@ from absl.testing import absltest
 from pyspark import SparkConf, SparkContext
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
+from fueling.common.storage.bazel_filesystem import BazelFilesystem
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
 import fueling.common.logging as logging
 
 
-flags.DEFINE_string('running_mode', 'TEST', 'Pipeline running mode: TEST, PROD.')
+flags.DEFINE_string('running_mode', 'LOCAL', 'Pipeline running mode: TEST, LOCAL, PROD.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
@@ -55,9 +56,15 @@ class BasePipeline(object):
     def is_test(self):
         return self.FLAGS.get('running_mode') == 'TEST'
 
+    def is_local(self):
+        return self.FLAGS.get('running_mode') == 'LOCAL'
+
     def our_storage(self):
-        """Get a BOS client if in PROD mode, or local filesystem if in TEST mode."""
-        return Filesystem() if self.is_test() else BosClient()
+        """Get a BOS client if in PROD mode, local filesystem if in LOCAL mode,
+        or local Bazel test filesystem if in TEST mode."""
+        if self.is_test():
+            return BazelFilesystem()
+        return Filesystem() if self.is_local() else BosClient()
 
     @staticmethod
     def is_partner_job():
@@ -167,6 +174,11 @@ class SequentialPipeline(BasePipeline):
 #                             BasePipelineTest.tearDown() -> BasePipeline.stop()
 # Be careful about the side effect of test functions.
 class BasePipelineTest(absltest.TestCase):
+
+    """
+    Note that setUp() and tearDown() are run once for each test method,
+    instead of once for the entire test suite
+    """
 
     def setUp(self, pipeline):
         super().setUp()

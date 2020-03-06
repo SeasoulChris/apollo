@@ -16,8 +16,21 @@ py_library(
 
 py_library(
     name = "filesystem",
-    srcs = ["filesystem.py"],
+    srcs = [
+        "filesystem.py",
+    ],
     deps = [
         ":base_storage",
+    ]
+)
+
+py_library(
+    name = "bazel_filesystem",
+    srcs = [
+        "bazel_filesystem.py",
+    ],
+    deps = [
+        ":base_storage",
+        ":filesystem",
     ]
 )

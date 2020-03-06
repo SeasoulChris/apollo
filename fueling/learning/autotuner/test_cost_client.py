@@ -1,6 +1,6 @@
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 
-# unomment me if testing inside a cluster
+# uncomment me if testing inside a cluster
 # CostComputationClient.set_channel("costservice:50052")
 
 # uncomment me if testing for az-staging

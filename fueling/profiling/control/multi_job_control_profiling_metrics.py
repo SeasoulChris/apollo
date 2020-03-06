@@ -5,8 +5,8 @@
 from collections import namedtuple
 import glob
 import os
-import tarfile
 import shutil
+import tarfile
 
 from absl import flags
 import pyspark_utils.helper as spark_helper
@@ -26,22 +26,12 @@ import fueling.profiling.control.feature_extraction.multi_job_control_feature_ex
 import fueling.profiling.control.grading_evaluation.multi_job_control_performance_grading_utils \
     as grading_utils
 
-
-flags.DEFINE_string('ctl_metrics_input_path_local',
-                    '/fuel/testdata/profiling/control_profiling',
-                    'input data directory for local run_test')
-flags.DEFINE_string('ctl_metrics_output_path_local',
-                    '/fuel/testdata/profiling/control_profiling/generated',
-                    'output data directory for local run_test')
-flags.DEFINE_string('ctl_metrics_todo_tasks_local', '', 'todo_tasks path for local run_test')
-
-flags.DEFINE_string('ctl_metrics_input_path_k8s',
-                    'modules/control/profiling/control_profiling',
-                    'input data directory for on-cloud run_prod')
-flags.DEFINE_string('ctl_metrics_output_path_k8s',
-                    'modules/control/tmp/results',
-                    'output data directory for on-cloud run_prod')
-flags.DEFINE_string('ctl_metrics_todo_tasks_k8s', '', 'todo_tasks path for on-cloud run_prod')
+flags.DEFINE_string('ctl_metrics_input_path', '', 'input data directory')
+flags.DEFINE_string('ctl_metrics_output_path', 'modules/control/tmp/results',
+                    'output data directory')
+flags.DEFINE_string('ctl_metrics_todo_tasks', '', 'todo_tasks path')
+flags.DEFINE_string('ctl_metrics_conf_path', '/mnt/bos/modules/control/control_conf',
+                    'control conf storage path')
 
 flags.DEFINE_boolean('ctl_metrics_simulation_only_test', False,
                      'if simulation-only, then execute the "Auto-Tuner + simulation" mode')
@@ -62,9 +52,9 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         if flags.FLAGS.ctl_metrics_simulation_only_test:
             """Control Profiling: works on the 'auto-tuner + simulation' mode"""
-            origin_dir = flags.FLAGS.ctl_metrics_input_path_k8s
-            target_dir = flags.FLAGS.ctl_metrics_output_path_k8s
-            todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks_k8s.split(',')
+            origin_dir = flags.FLAGS.ctl_metrics_input_path
+            target_dir = flags.FLAGS.ctl_metrics_output_path
+            todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks.split(',')
             vehicle_type = flags.FLAGS.ctl_metrics_simulation_vehicle
             job_email = ''
             # RDD(vehicle_type, tasks), the task dirs
@@ -73,16 +63,15 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             ]).keyBy(lambda dirs: vehicle_type).cache()
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
-            conf_target_prefix = target_dir
             # RDD(target_vehicle_path), the target_vehicle dirs for .conf file
             generated_vehicle_dir = self.to_rdd([
-                os.path.join(conf_target_prefix, vehicle_type)
+                os.path.join(target_dir, vehicle_type)
             ]).cache()
             logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
 
             # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
             src_dst_rdd = generated_vehicle_dir.keyBy(
-                lambda path: os.path.join('/mnt/bos/modules/control/control_conf',
+                lambda path: os.path.join(self.FLAGS.get('ctl_metrics_conf_path'),
                                           os.path.basename(path).lower().replace(' ', '_', 1)))
             # Create dst dirs and copy conf file to them.
             src_dst_rdd.values().foreach(file_utils.makedirs)
@@ -92,7 +81,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
         else:
             """Control Profiling: works on the 'external/internal-user road-test' mode"""
-            original_prefix = self.FLAGS.get(
+            original_prefix = self.FLAGS.get('ctl_metrics_input_path') or self.FLAGS.get(
                 'input_data_path', 'modules/control/profiling/multi_job')
 
             job_owner = self.FLAGS.get('job_owner')
@@ -103,7 +92,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             job_email = partners.get(job_owner).email if self.is_partner_job() else ''
             logging.info(F'email address of job owner: {job_email}')
 
-            target_prefix = os.path.join(dir_utils.inter_result_folder, job_owner, job_id)
+            target_prefix = os.path.join(flags.FLAGS.ctl_metrics_output_path, job_owner, job_id)
 
             our_storage = self.our_storage()
             target_dir = our_storage.abs_path(target_prefix)
@@ -115,7 +104,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             origin_dir = object_storage.abs_path(original_prefix)
 
             # origin_dir: our: /mnt/bos/modules/control/profiling/multi_job
-            # partner: /mnt/partner/profiling/multi_job
+            #             partner: /mnt/partner/profiling/multi_job
             logging.info(F'origin_dir: {origin_dir}')
 
             # Sanity Check
@@ -126,7 +115,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             else:
                 logging.error(sanity_status)
                 summarize_tasks([], origin_dir, target_dir, job_email, sanity_status)
-                logging.info('Control Profiling Metrics: No Results, PROD')
+                logging.info('Control Profiling Metrics: No Results')
                 return
 
             # RDD(origin_dir)
@@ -139,17 +128,16 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 .keyBy(lambda vehicle_type: vehicle_type)
                 # PairRDD(vehicle_type, path_to_vehicle_type)
                 .mapValues(lambda vehicle_type: os.path.join(original_prefix, vehicle_type)))
-            # [('Mkz7', 'modules/control/profiling/multi_job/Mkz7'), ...]
+            # Our [('Mkz7', 'modules/control/profiling/multi_job/Mkz7'), ...]
             # Partner [('Mkz7', 'profiling/multi_job/Mkz7'), ...]
             logging.info(F'origin_vehicle_dir: {origin_vehicle_dir.collect()}')
 
             # Copy vehicle parameter config file
-            conf_target_prefix = target_dir
             target_vehicle_abs_dir = spark_helper.cache_and_log(
                 'target_vehicle_abs_dir',
                 origin_vehicle_dir
                 .mapValues(object_storage.abs_path)
-                .mapValues(lambda path: path.replace(origin_dir, conf_target_prefix, 1))
+                .mapValues(lambda path: path.replace(origin_dir, target_dir, 1))
             )
             # target_vehicle_abs_dir: [('Mkz7',
             # '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
@@ -163,15 +151,15 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # src_dst_rdd: [('/mnt/bos/modules/control/profiling/multi_job/Mkz7',
             #  '/mnt/bos/modules/control/tmp/results/apollo/2019/Mkz7'),...]
             logging.info(F'src_dst_rdd: {src_dst_rdd.collect()}')
+
             # Create dst dirs and copy conf file to them.
             src_dst_rdd.values().foreach(file_utils.makedirs)
             src_dst_rdd.foreach(
                 lambda src_dst: shutil.copyfile(
-                    os.path.join(
-                        src_dst[0], feature_utils.CONF_FILE), os.path.join(
-                        src_dst[1], feature_utils.CONF_FILE)))
+                    os.path.join(src_dst[0], feature_utils.CONF_FILE),
+                    os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
-            """ get to do jobs """
+            """ get todo jobs """
             todo_task_dirs = spark_helper.cache_and_log(
                 'todo_jobs',
                 # PairRDD(vehicle_type, relative_path_to_vehicle_type)
@@ -185,7 +173,6 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 .mapValues(os.path.dirname)
                 .distinct()
             )
-
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
             if not self.is_partner_job():
@@ -209,7 +196,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 )
                 # if processed same key before, result just like
                 # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19
-                # /Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414'),...]
+                # /Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414'),...]
                 logging.info(F'processed_dirs: {processed_dirs.collect()}')
 
                 if not processed_dirs.isEmpty():
@@ -217,11 +204,10 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                         """Reorgnize RDD key from vehicle/controller/record_prefix """
                         """to vehicle=>abs target"""
                         # parameter vehicle_controller_parsed like
-                        # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
+                        # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
                         vehicle, (vehicle_controller_parsed, task) = target_task
                         # vehicle = vehicle_controller_parsed.split('/')[0]
-                        target_ = os.path.join(
-                            target_dir, vehicle_controller_parsed)
+                        target_ = os.path.join(target_dir, vehicle_controller_parsed)
                         return vehicle, target_
 
                     target_vehicle_dir = spark_helper.cache_and_log(
@@ -244,8 +230,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     logging.info(F'target_vehicle_dir: {target_vehicle_dir.collect()}')
 
                     todo_task_dirs = target_vehicle_dir.subtract(processed_dirs)
+                    logging.info(F'todo_task_dirs after subtracting: {todo_task_dirs.collect()}')
 
-                    logging.info(F'todo_tasks after subtracting: {todo_task_dirs.collect()}')
                     # REMOVE CONTROLLER AND REPLACE ORIGIN PREFIX
                     todo_task_dirs = spark_helper.cache_and_log(
                         'todo_task_dirs',
@@ -255,7 +241,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                         # PairRDD(vehicle_type, origin directory)
                         .mapValues(multi_vehicle_utils.get_target_removed_controller)
                     )
-                    logging.info(F'todo_tasks after postprocess: {todo_task_dirs.collect()}')
+                    logging.info(F'todo_task_dirs after postprocess: {todo_task_dirs.collect()}')
 
             logging.info(F'todo_tasks to run: {todo_task_dirs.values().collect()}')
 
@@ -264,19 +250,19 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
 
         if not todo_task_dirs.collect():
-            logging.info('Control Profiling Metrics: No Results, PROD')
+            logging.info('Control Profiling Metrics: No Results')
             return
 
-        self.run_in(todo_task_dirs.values(), origin_dir, target_dir, job_email)
-        logging.info('Control Profiling Metrics: All Done, PROD')
+        self.process(todo_task_dirs.values(), origin_dir, target_dir, job_email)
+        logging.info('Control Profiling Metrics: All Done')
 
-    def run_in(self, todo_tasks, original_prefix, target_prefix, job_email=''):
+    def process(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
 
         def _reorg_target_dir(target_task):
             """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
             # parameter vehicle_controller_parsed like
-            # Mkz7/Lon_Lat_Controller/Road_Test-2019-05-01/20190501110414
+            # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
             vehicle_controller_parsed, task = target_task
             target_dir = os.path.join(target_prefix, vehicle_controller_parsed)
             return target_dir, task
@@ -291,7 +277,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                               # PairRDD(target_dir, task)
                               .map(_reorg_target_dir))
 
-        logging.info(F'reorganized_target after reorg_target_dir:'
+        logging.info(F'reorganized_target after _reorg_target_dir:'
                      F'{reorganized_target.collect()}')
 
         (reorganized_target
@@ -328,7 +314,6 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
-        logging.info(F'target messages: {target_msgs}')
         target, msgs = target_msgs
 
         logging.info(

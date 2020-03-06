@@ -2,22 +2,23 @@
 """ Control feature visualization related utils """
 
 import glob
-import os
-
 import h5py
+
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
-import numpy as np
 
+import numpy as np
+import os
+
+import fueling.common.h5_utils as h5_utils
+import fueling.common.json_utils as json_utils
+import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
 from fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
 from fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
-import fueling.common.h5_utils as h5_utils
-import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
-import fueling.common.json_utils as json_utils
 
 
 def generate_segments(h5s):

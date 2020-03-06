@@ -6,6 +6,7 @@ import csv
 import json
 import uuid
 import os
+import time
 
 # third party packages
 from absl import flags
@@ -42,6 +43,9 @@ flags.DEFINE_string(
 class BaseCostComputation(BasePipeline):
     def init(self):
         BasePipeline.init(self)
+
+        mode = "CLOUD" if self.FLAGS.get('running_mode') == 'PROD' else "LOCAL"
+        logging.info(f"Running cost_computation in {mode} mode.")
 
         if not flags.FLAGS.commit_id:
             logging.error("Apollo commit id not specified.")
@@ -121,7 +125,7 @@ class BaseCostComputation(BasePipeline):
     def run_scenario(self, input):
         """Trigger Simulation with the given configuration and scenario"""
         (config_id, scenario_id) = input
-        logging.info(f"running scenario {scenario_id} with config id {config_id}")
+        logging.info(f"Setting up scenario {scenario_id} with config id {config_id}")
 
         training_id = self.FLAGS.get("training_id")
         job_id = uuid.uuid4().hex
@@ -137,10 +141,20 @@ class BaseCostComputation(BasePipeline):
             record_relative_dir,
             record_filename,
         )
+        if not success:
+            raise Exception(f"Failed to run scenario {scenario_id}")
 
         record_absolute_dir = f"{self.get_temp_dir()}/{job_id}"
-        if not success or not os.path.exists(f"{record_absolute_dir}/{record_filename}"):
-            raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
+        # Retry in case the BOS dir mounted has network delay
+        for t in range(1, 6):
+            if os.path.exists(f"{record_absolute_dir}/{record_filename}"):
+                logging.info(f"Found result bag {record_filename}")
+                break
+            elif t == 5:
+                raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
+            else:
+                logging.info(f"Retry fetching result bag in {t}min...")
+                time.sleep(60 * t)  # sleep time increases from 1min, to 4min
 
         return record_absolute_dir
 

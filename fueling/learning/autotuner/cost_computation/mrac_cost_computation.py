@@ -4,6 +4,7 @@ import glob
 import json
 import os
 import sys
+import time
 
 from absl import flags
 
@@ -22,7 +23,8 @@ class MracCostComputation(BaseCostComputation):
     def init(self):
         BaseCostComputation.init(self)
 
-        if self.FLAGS.get('cloud'):
+        # Cannot use 'cloud' for decision here as it is not passed along
+        if self.FLAGS.get('running_mode') == 'PROD':
             self.submit_job = self.SubmitJobToK8s
         else:
             self.submit_job = self.SubmitJobAtLocal
@@ -49,27 +51,36 @@ class MracCostComputation(BaseCostComputation):
             for (id, config_pb) in self.request_pb2.config.items()
         }
 
-    def SubmitJobAtLocal(self, bag_path):
+    def SubmitJobAtLocal(self, options):
         job_cmd = "bazel run //fueling/profiling/control:multi_job_control_profiling_metrics"
-        profiling_flags = (
-            f"--ctl_metrics_input_path_local={bag_path} "
-            f"--ctl_metrics_output_path_local={bag_path} "
-            f"--ctl_metrics_simulation_only_test='True' "
-        )
-        cmd = f"cd /fuel; {job_cmd} -- {profiling_flags}"
+        option_strings = [f"--{name}={value}" for (name, value) in options.items()]
+        cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
+        logging.info(f"Executing '{cmd}'")
 
         exit_code = os.system(cmd)
         return os.WEXITSTATUS(exit_code) == 0
 
-    def SubmitJobToK8s(self, bag_path):
-        entrypoint = file_utils.fuel_path(
-            "fueling/profiling/control/multi_job_control_profiling_metrics.py")
-        options = {
-            'ctl_metrics_input_path_k8s': bag_path,
-            'ctl_metrics_output_path_k8s': bag_path,
-            'ctl_metrics_simulation_only_test': True,
+    def SubmitJobToK8s(self, options):
+        entrypoint = "fueling/profiling/control/multi_job_control_profiling_metrics.py"
+        client_flags = {
+            'role': self.FLAGS.get('role'),
+            'image': self.FLAGS.get('image'),
+            'node_selector': 'CPU',
+            'log_verbosity': self.FLAGS.get('log_verbosity'),
+            'workers': 1,
+            'cpu': 1,
+            'gpu': 0,
+            'memory': 12,
+            'disk': 20,
+            'partner_storage_writable': self.FLAGS.get('partner_storage_writable'),
+            'partner_bos_bucket': self.FLAGS.get('partner_bos_bucket'),
+            'partner_bos_region': self.FLAGS.get('partner_bos_region'),
+            'partner_bos_access': self.FLAGS.get('partner_bos_access'),
+            'partner_bos_secret': self.FLAGS.get('partner_bos_secret'),
+            'spark_submitter_service_url': 'http://spark-submitter-service:8000',
+            'wait': True,
         }
-        client = SparkSubmitterClient(entrypoint, {}, options)
+        client = SparkSubmitterClient(entrypoint, client_flags, options)
         client.submit()
         return True
 
@@ -77,8 +88,15 @@ class MracCostComputation(BaseCostComputation):
         logging.info(f"Calculating score for: {bag_path}")
 
         # submit the profiling job
-        if not self.submit_job(bag_path):
+        options = {
+            'ctl_metrics_input_path': bag_path,
+            'ctl_metrics_output_path': bag_path,
+            'ctl_metrics_simulation_only_test': True,
+        }
+
+        if not self.submit_job(options):
             logging.error(f"Fail to submit the control profiling job.")
+            time.sleep(600) # keep the exec pod for some time if error
             return [float('nan'), 0]
 
         # extract the profiling score of the individual scenario
@@ -88,6 +106,7 @@ class MracCostComputation(BaseCostComputation):
         if not profiling_grading_dir:
             logging.error(f"Fail to acquire the control profiling grading .json file "
                           f"under the path: {bag_path}")
+            time.sleep(600) # keep the exec pod for some time if error
             return [float('nan'), 0]
         else:
             with open(profiling_grading_dir[0], 'r') as grading_json:
@@ -100,6 +119,7 @@ class MracCostComputation(BaseCostComputation):
 
     def calculate_weighted_score(self, config_and_scores):
         if not len(config_and_scores):
+            time.sleep(600) # keep the exec pod for some time if error
             return float('nan')
 
         # Calculate weighted score through multiple scenarios

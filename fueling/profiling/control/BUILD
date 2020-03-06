@@ -76,25 +76,6 @@ py_library(
 )
 
 py_library(
-    name = "multi_job_control_profiling_metrics_test",
-    srcs = ["multi_job_control_profiling_metrics_test.py"],
-    deps = [
-        "//fueling/common:base_pipeline",
-        "//fueling/common:email_utils",
-        "//fueling/common:file_utils",
-        "//fueling/common:logging",
-        "//fueling/common:partners",
-        "//fueling/common:record_utils",
-        "//fueling/profiling/common:dir_utils",
-        "//fueling/profiling/common:multi_vehicle_utils",
-        "//fueling/profiling/common:sanity_check",
-        "//fueling/profiling/control:multi_job_control_profiling_metrics",
-        "//fueling/profiling/control/feature_extraction:multi_job_control_feature_extraction_utils",
-        "//fueling/profiling/control/grading_evaluation:multi_job_control_performance_grading_utils",
-    ],
-)
-
-py_library(
     name = "multi_job_control_profiling_visualization",
     srcs = ["multi_job_control_profiling_visualization.py"],
     deps = [
@@ -124,5 +105,19 @@ py_binary(
         "//fueling/profiling/common:sanity_check",
         "//fueling/profiling/control/feature_extraction:multi_job_control_feature_extraction_utils",
         "//fueling/profiling/control/grading_evaluation:multi_job_control_performance_grading_utils",
+    ],
+)
+
+
+py_test(
+    name = "multi_job_control_profiling_metrics_test",
+    srcs = ["multi_job_control_profiling_metrics_test.py"],
+    data = [
+        "//fueling/profiling/control/testdata:control_conf",
+        "//fueling/profiling/control/testdata:road_test",
+        "//fueling/profiling/control/testdata:sim_test",
+    ],
+    deps = [
+        ":multi_job_control_profiling_metrics",
     ],
 )

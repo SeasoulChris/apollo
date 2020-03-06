@@ -2,6 +2,7 @@
 """The Python implementation of the Simulation's GRPC client."""
 
 import grpc
+import time
 
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.learning.autotuner.proto.git_info_pb2 as git_info_pb2
@@ -57,13 +58,15 @@ class SimClient(object):
                 logging.info(f"Running scenario {scenario} for {record_output_filename} ...")
                 status = stub.RunScenario(job_info)
 
-            if status.code == 0:
+            if status.message == 'finish_pass':
                 logging.info(f"Done running scenario {scenario} for {record_output_filename}.")
                 return True
             else:
                 logging.error(
                     f"Failed to run scenario {scenario} for {record_output_filename}: {status.message}")
+                time.sleep(600) # keep the exec pod for some time if error
                 return False
         except Exception as error:
             logging.error(f"SimClient {cls.CHANNEL_URL} exception: {error}")
+            time.sleep(600) # keep the exec pod for some time if error
             return False

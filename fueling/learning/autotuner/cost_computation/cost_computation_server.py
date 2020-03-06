@@ -53,16 +53,16 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     def SubmitJobAtLocal(self, options):
         job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:mrac_cost_computation"
-        option_strings = [F"--{name}={value}" for (name, value) in options.items()]
+        option_strings = [f"--{name}={value}" for (name, value) in options.items()]
         cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
+        logging.info(f"Executing '{cmd}'")
 
         # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
         exit_code = os.system(cmd)
         return os.WEXITSTATUS(exit_code) == 0
 
     def SubmitJobToK8s(self, options):
-        entrypoint = file_utils.fuel_path(
-            "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py")
+        entrypoint = "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py"
         client = SparkSubmitterClient(entrypoint, {}, options)
         client.submit()
         return True

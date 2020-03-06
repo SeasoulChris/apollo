@@ -52,6 +52,7 @@ class SparkSubmitterClient(object):
         self.zip_app = self.entrypoint_to_zip_app(entrypoint)
         self.client_flags = client_flags
         self.job_flags = job_flags if job_flags is not None else self.collect_job_flags()
+        logging.info(F'job_flags collected as: {self.job_flags}')
         logging.info(F'Submitting zip_app {self.zip_app} for entrypoint {entrypoint}')
 
     def submit(self):
@@ -66,7 +67,8 @@ class SparkSubmitterClient(object):
         }
 
         # Submit job.
-        service_url = flags.FLAGS.spark_submitter_service_url or self.get_service_url()
+        service_url = self.client_flags.get('spark_submitter_service_url') or \
+        flags.FLAGS.spark_submitter_service_url or self.get_service_url()
 
         res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')
@@ -86,7 +88,7 @@ class SparkSubmitterClient(object):
         # TODO: logging.info('View your task at ...')
 
         # Wait until job finishes.
-        if not flags.FLAGS.wait:
+        if not self.client_flags.get('wait', self.get_default('wait')):
             return
         WAIT_INTERVAL_SECONDS = 3
         END_STATUS = {'Completed', 'Error', 'UnexpectedAdmissionError'}
@@ -117,14 +119,14 @@ class SparkSubmitterClient(object):
     def get_user(self):
         return {
             'submitter': getpass.getuser(),
-            'running_role': self.client_flags.get('role') or flags.FLAGS.role,
+            'running_role': self.client_flags.get('role', self.get_default('role')),
         }
 
     def get_env(self):
         return {
-            'docker_image': self.client_flags.get('image') or flags.FLAGS.image,
-            'node_selector': self.client_flags.get('node_selector') or flags.FLAGS.node_selector,
-            'log_verbosity': self.client_flags.get('log_verbosity') or flags.FLAGS.log_verbosity,
+            'docker_image': self.client_flags.get('image', self.get_default('image')),
+            'node_selector': self.client_flags.get('node_selector', self.get_default('node_selector')),
+            'log_verbosity': self.client_flags.get('log_verbosity', self.get_default('log_verbosity')),
         }
 
     def get_job(self):
@@ -140,23 +142,35 @@ class SparkSubmitterClient(object):
 
     def get_worker(self):
         return {
-            'count': self.client_flags.get('workers') or flags.FLAGS.workers,
-            'cpu': self.client_flags.get('cpu') or flags.FLAGS.cpu,
-            'gpu': self.client_flags.get('gpu') or flags.FLAGS.gpu,
-            'memory': self.client_flags.get('memory') or flags.FLAGS.memory,
-            'disk': self.client_flags.get('disk') or flags.FLAGS.disk,
+            'count': self.client_flags.get('workers', self.get_default('workers')),
+            # cpu/gpu could be specifically set to 0
+            'cpu': self.client_flags.get('cpu', self.get_default('cpu')),
+            'gpu': self.client_flags.get('gpu', self.get_default('gpu')),
+            'memory': self.client_flags.get('memory', self.get_default('memory')),
+            'disk': self.client_flags.get('disk', self.get_default('disk')),
         }
 
     def get_partner(self):
-        partner = {'storage_writable': flags.FLAGS.partner_storage_writable}
-        if flags.FLAGS.partner_bos_bucket:
+        # partner_storage_writable could be specifically set to False
+        partner = {'storage_writable': self.client_flags.get('partner_storage_writable', \
+            self.get_default('partner_storage_writable'))}
+
+        # partner_bos_bucket could be specifically set to None
+        if self.client_flags.get('partner_bos_bucket', self.get_default('partner_bos_bucket')):
             partner['bos'] = {
-                'bucket': self.client_flags.get('partner_bos_bucket') or flags.FLAGS.partner_bos_bucket,
-                'access_key': self.client_flags.get('partner_bos_access') or flags.FLAGS.partner_bos_access,
-                'secret_key': self.client_flags.get('partner_bos_secret') or flags.FLAGS.partner_bos_secret,
-                'region': self.client_flags.get('partner_bos_region') or flags.FLAGS.partner_bos_region,
+                'bucket': self.client_flags.get('partner_bos_bucket', self.get_default('partner_bos_bucket')),
+                'access_key': self.client_flags.get('partner_bos_access', self.get_default('partner_bos_access')),
+                'secret_key': self.client_flags.get('partner_bos_secret', self.get_default('partner_bos_secret')),
+                'region': self.client_flags.get('partner_bos_region', self.get_default('partner_bos_region')),
             }
         return partner
+
+    """
+    Use this function instead of directly accessing flags to avoid instant parsing of flags and UnparsedFlagAccessError.
+    e.g dict.get(key[, default]) will parse flags even if not needed when using flags as default
+    """
+    def get_default(self, flag):
+        return flags.FLAGS[flag].value
 
     @staticmethod
     def entrypoint_to_zip_app(entrypoint):

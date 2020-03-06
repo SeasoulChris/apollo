@@ -3,20 +3,20 @@
 """ Analyze and plot the vehicle dynamics features. """
 
 import glob
-import os
+import h5py
 
 import matplotlib
 matplotlib.use('Agg')
-
 from matplotlib.backends.backend_pdf import PdfPages
-from scipy.fftpack import fft
-import h5py
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-import numpy as np
 
-from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, DYNAMICS_FEATURE_NAMES
+import numpy as np
+import os
+from scipy.fftpack import fft
+
 import fueling.common.logging as logging
+from fueling.profiling.conf.control_channel_conf import DYNAMICS_FEATURE_IDX, DYNAMICS_FEATURE_NAMES
 
 # Minimum epsilon value used in compare with zero
 MIN_EPSILON = 0.000001

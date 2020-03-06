@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Local flesystem storage."""
+"""Local filesystem storage."""
 
 import glob
 import os
