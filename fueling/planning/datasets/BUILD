@@ -38,3 +38,12 @@ py_binary(
         "//fueling/common:proto_utils",
     ],
 )
+
+py_binary(
+    name = "label_generator",
+    srcs = ["label_generator.py"],
+    deps = [
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
+    ],
+)
