@@ -19,7 +19,6 @@
    ```bash
    cd apollo-fuel
    ./tools/login_container.sh
-   ./tools/build_apollo.sh
    ./tools/build.sh
    ```
 

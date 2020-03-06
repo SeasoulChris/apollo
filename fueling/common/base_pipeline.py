@@ -89,12 +89,12 @@ class BasePipeline(object):
         self.FLAGS = FLAGS.flag_values_dict()
         logging.info('Running job with owner={}, id={}'.format(FLAGS.job_owner, FLAGS.job_id))
 
-    @classmethod
-    def stop(cls):
+    @staticmethod
+    def stop():
         """Stop the pipeline."""
-        if cls.SPARK_CONTEXT is not None:
-            cls.SPARK_CONTEXT.stop()
-            cls.SPARK_CONTEXT = None
+        if BasePipeline.SPARK_CONTEXT is not None:
+            BasePipeline.SPARK_CONTEXT.stop()
+            BasePipeline.SPARK_CONTEXT = None
 
     def __main__(self, argv):
         """Run the pipeline."""
