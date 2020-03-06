@@ -28,7 +28,9 @@ py_library(
 py_library(
     name = "chauffeur_net_feature_generator",
     srcs = ["chauffeur_net_feature_generator.py"],
-    deps = ["//learning_algorithms/planning/data_preprocessing/semantic_map_feature:basemap_img_renderer"],
+    deps = [
+        #":basemap_img_renderer",
+    ],
 )
 
 py_library(
