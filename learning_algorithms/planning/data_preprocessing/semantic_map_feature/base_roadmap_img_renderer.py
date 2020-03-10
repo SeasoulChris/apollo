@@ -180,6 +180,6 @@ class BaseRoadMapImgRenderer(object):
 
 
 if __name__ == '__main__':
-    mapping = BaseRoadMapImgRenderer("san_mateo")
+    mapping = BaseRoadMapImgRenderer("sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(mapping.region + ".png", mapping.base_map)
