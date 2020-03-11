@@ -6,6 +6,7 @@ import os
 import cv2 as cv
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
@@ -13,6 +14,7 @@ from torchvision import transforms
 from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
+from learning_algorithms.prediction.models.semantic_map_model.self_attention import Self_Attn
 
 '''
 ========================================================================
@@ -176,10 +178,11 @@ class SemanticMapSelfLSTMModel(nn.Module):
 class SemanticMapSelfAttentionLSTMModel(nn.Module):
     def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128,
-                 cnn_net=models.mobilenet_v2, pretrained=True):
+                 cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapSelfAttentionLSTMModel, self).__init__()
-        self.cnn = cnn_net(pretrained=pretrained)
-        self.cnn_out_size = 1000
+        self.att = Self_Attn(3)
+        self.cnn = nn.Sequential(*list(cnn_net(pretrained=pretrained).children())[:-1])
+        self.cnn_out_size = 2048
         self.pred_len = pred_len
         self.observation_len = observation_len
         for param in self.cnn.parameters():
@@ -205,11 +208,9 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
         N = obs_pos.size(0)
         ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
-        softmax = nn.Softmax(dim = -1)
-        img_embedding = self.cnn(img)
+        img_att = self.att(img)
+        img_embedding = self.cnn(img_att)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        # self attention on img_embedding
-        img_embedding = torch.mul(img_embedding, softmax(img_embedding))
         pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
