@@ -46,6 +46,14 @@ class BaseRoadMapImgRenderer(object):
                                                  self.hd_map.header.bottom)
         right_top_x, right_top_y = projector(self.hd_map.header.right,
                                              self.hd_map.header.top)
+
+        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue (Map "sunnyvle" is too large)
+        if self.region == "sunnyvale":
+            left_bottom_x = 585975.3316302994
+            left_bottom_y = 4140016.6342316796
+            right_top_x =  588538.5457265645
+            right_top_y = 4141747.6943244375
+
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
         self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
@@ -180,6 +188,6 @@ class BaseRoadMapImgRenderer(object):
 
 
 if __name__ == '__main__':
-    mapping = BaseRoadMapImgRenderer("sunnyvale_with_two_offices")
+    mapping = BaseRoadMapImgRenderer("sunnyvale")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(mapping.region + ".png", mapping.base_map)

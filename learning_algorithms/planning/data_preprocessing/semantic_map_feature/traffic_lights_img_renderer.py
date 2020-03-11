@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import os
+import shutil
 
 import numpy as np
 import cv2 as cv
@@ -8,6 +10,8 @@ from modules.map.proto import map_lane_pb2
 from modules.map.proto import map_signal_pb2
 from modules.map.proto import map_overlap_pb2
 from modules.perception.proto import traffic_light_detection_pb2
+from modules.planning.proto import learning_data_pb2
+
 class TrafficLightsImgRenderer(object):
     """class of TrafficLightsImgRenderer to create images of surrounding traffic conditions"""
 
@@ -18,7 +22,7 @@ class TrafficLightsImgRenderer(object):
         self.local_size_w = 501  # H * W image
 
         # lower center point in the image
-        self.local_base_point_w_idx = (self.local_size_w - 1) / 2
+        self.local_base_point_w_idx = (self.local_size_w - 1) // 2
         self.local_base_point_h_idx = 376  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.center = None
@@ -47,15 +51,15 @@ class TrafficLightsImgRenderer(object):
 
     def _load_traffic_light(self):
         for signal in self.hd_map.signal:
-            self.signal_dict[signal.id] = signal
+            self.signal_dict[signal.id.id] = signal
 
     def _load_lane(self):
         for lane in self.hd_map.lane:
-            self.lane_dict[lane.id] = lane
+            self.lane_dict[lane.id.id] = lane
 
     def _load_overlap(self):
         for overlap in self.hd_map.overlap:
-            self.overlap_dict[overlap.id] = overlap
+            self.overlap_dict[overlap.id.id] = overlap
 
     def _get_traffic_light_by_id(self, id):
         return self.signal_dict[id]
@@ -85,16 +89,16 @@ class TrafficLightsImgRenderer(object):
             traffic_light_color = (255)
             if traffic_light_status.color == traffic_light_detection_pb2.TrafficLight.RED:
                 traffic_light_color = (255)
-            elif traffic_light_status.color == traffic_light_detection_pb2.TrafficLight.Yellow:
+            elif traffic_light_status.color == traffic_light_detection_pb2.TrafficLight.YELLOW:
                 traffic_light_color = (192)
             else:
                 traffic_light_color = (128)
 
             for overlap_id in traffic_light.overlap_id:
-                overlap = self._get_overlap_by_id(overlap_id)
+                overlap = self._get_overlap_by_id(overlap_id.id)
                 for overlap_object in overlap.object:
                     if overlap_object.HasField("lane_overlap_info"):
-                        lane = self._get_lane_by_id(overlap_object.id)
+                        lane = self._get_lane_by_id(overlap_object.id.id)
                         for segment in lane.central_curve.segment:
                             for i in range(len(segment.line_segment.point)-1):
                                 p0 = self._get_affine_points(
@@ -105,5 +109,29 @@ class TrafficLightsImgRenderer(object):
                                         color=traffic_light_color, thickness=4)
         return local_map
                     
+if __name__ == "__main__":
+    offline_frames = learning_data_pb2.LearningData()
+    with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
+        offline_frames.ParseFromString(file_in.read())
+    print("Finish reading proto...")
+
+    output_dir = './data_traffic_light/'
+    if os.path.isdir(output_dir):
+        print(output_dir + " directory exists, delete it!")
+        shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
+    print("Making output directory: " + output_dir)
+
+    ego_pos_dict = dict()
+    traffic_lights_mapping = TrafficLightsImgRenderer("sunnyvale_with_two_offices")
+    for frame in offline_frames.learning_data:
+        img = traffic_lights_mapping.draw_traffic_lights(
+            frame.localization.position.x, frame.localization.position.y, frame.localization.heading, frame.traffic_light)
+        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
+        filename = key + ".png"
+        ego_pos_dict[key] = [frame.localization.position.x,
+                             frame.localization.position.y, frame.localization.heading]
+        cv.imwrite(os.path.join(output_dir, filename), img)
+    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
 
         

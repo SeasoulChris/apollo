@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 
+import os
+import shutil
+
 import numpy as np
 import cv2 as cv
 import math
+
+from modules.map.proto import map_pb2
+from modules.map.proto import map_lane_pb2
+from modules.planning.proto import learning_data_pb2
 
 
 class RoutingImgRenderer(object):
@@ -17,7 +24,7 @@ class RoutingImgRenderer(object):
         self.lane_sequence_piece_num = 5
 
         # lower center point in the image
-        self.local_base_point_w_idx = (self.local_size_w - 1) / 2
+        self.local_base_point_w_idx = (self.local_size_w - 1) // 2
         self.local_base_point_h_idx = 376  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.center = None
@@ -43,39 +50,44 @@ class RoutingImgRenderer(object):
 
     def _load_lane(self):
         for lane in self.hd_map.lane:
-            self.lane_dict[lane.id] = lane
-            self.lane_list.append(lane.id)
+            self.lane_dict[lane.id.id] = lane
+    
+    def _load_routing_response(self, routing_response):
+        for lane_id in routing_response:
+            self.lane_list.append(lane_id)
 
     def _calc_euclidean_dist(self, p0_x, p0_y, p1_x, p1_y):
         return math.sqrt((p0_x - p1_x)**2 + (p0_y - p1_y)**2)
 
     def _get_lane_sequence_by_startlane(self, start_lane_idx):
-        get_lane_sequence = []
+        lane_sequence = []
+        lane_sequence_id = []
         for i in range(start_lane_idx, start_lane_idx + self.lane_sequence_piece_num, 1):
             if i >= len(self.lane_list):
                 break
-            get_lane_sequence.append(self.lane_dict[self.lane_list[i]])
-        return
+            lane_sequence.append(self.lane_dict[self.lane_list[i]])
+            lane_sequence_id.append(self.lane_list[i])
+        return lane_sequence
 
     def _get_nearest_routing_lanes(self, center_x, center_y):
         # TODO (Jinyun): use kdtree and add memory to neglect traversed lanes
         rough_distance_filter = 250  # meters
-        min_distance = 250
+        min_distance = 50
         max_acceptable_dist = 1
         nearest_lane_id = self.lane_list[0]
         for lane_id in self.lane_list:
             lane = self.lane_dict[lane_id]
-            dist_to_start = self._calc_euclidean_dist(lane.central_curve.segment[0].point[0].x,
-                                                      lane.central_curve.segment[0].point[0].y,
+            dist_to_start = self._calc_euclidean_dist(lane.central_curve.segment[0].line_segment.point[0].x,
+                                                      lane.central_curve.segment[0].line_segment.point[0].y,
                                                       center_x, center_y) > rough_distance_filter
-            dist_to_end = self._calc_euclidean_dist(lane.central_curve.segment[-1].point[-1].x,
-                                                    lane.central_curve.segment[-1].point[-1].y,
+            dist_to_end = self._calc_euclidean_dist(lane.central_curve.segment[-1].line_segment.point[-1].x,
+                                                    lane.central_curve.segment[-1].line_segment.point[-1].y,
                                                     center_x, center_y) > rough_distance_filter
             if dist_to_start > rough_distance_filter and dist_to_end > rough_distance_filter:
                 continue
             else:
                 for segment in lane.central_curve.segment:
-                    for point in segment:
+                    for point in segment.line_segment.point:
                         dist_to_point = self._calc_euclidean_dist(
                             point.x, point.y, center_x, center_y)
                         if dist_to_point < max_acceptable_dist:
@@ -94,18 +106,19 @@ class RoutingImgRenderer(object):
         point = np.round(point / self.resolution)
         return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
-    def draw_routing(self, center_x, center_y, center_heading):
+    def draw_routing(self, center_x, center_y, center_heading, routing_response):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.center = np.array([center_x, center_y])
         self.center_heading = center_heading
+        self._load_routing_response(routing_response)
 
         nearest_routing_lanes = self._get_nearest_routing_lanes(center_x, center_y)
 
         routing_color_delta = int(255 / self.lane_sequence_piece_num)
 
         for i in range(0, self.lane_sequence_piece_num, 1):
-            color = (255 - i * routing_color_delta)
+            color = int(255 - i * routing_color_delta)
             routing_lane = nearest_routing_lanes[i]
             for segment in routing_lane.central_curve.segment:
                             for i in range(len(segment.line_segment.point)-1):
@@ -113,7 +126,30 @@ class RoutingImgRenderer(object):
                                     np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
                                 p1 = self._get_affine_points(
                                     np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
-                                cv.line(local_map, tuple(p0), tuple(p1),
-                                        color=color, thickness=4)
+                                cv.line(local_map, tuple(p0), tuple(p1), color=color, thickness=12)
         return local_map
         
+if __name__ == "__main__":
+    offline_frames = learning_data_pb2.LearningData()
+    with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
+        offline_frames.ParseFromString(file_in.read())
+    print("Finish reading proto...")
+
+    output_dir = './data_local_routing/'
+    if os.path.isdir(output_dir):
+        print(output_dir + " directory exists, delete it!")
+        shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
+    print("Making output directory: " + output_dir)
+
+    ego_pos_dict = dict()
+    routing_mapping = RoutingImgRenderer("sunnyvale_with_two_offices")
+    for frame in offline_frames.learning_data:
+        img = routing_mapping.draw_routing(
+            frame.localization.position.x, frame.localization.position.y, frame.localization.heading, frame.routing_response.lane_id)
+        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
+        filename = key + ".png"
+        ego_pos_dict[key] = [frame.localization.position.x,
+                             frame.localization.position.y, frame.localization.heading]
+        cv.imwrite(os.path.join(output_dir, filename), img)
+    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)

@@ -36,29 +36,26 @@ class RoadMapImgRenderer(object):
         elif region == "sunnyvale_with_two_offices":
             self.map_base_point_x = 585875.3316302994
             self.map_base_point_y = 4139916.6342316796
-            self.map_size_h = 27632
-            self.map_size_w = 19311
+            self.map_size_h = 19311 
+            self.map_size_w = 27632
+        elif region == "sunnyvale":
+            self.map_base_point_x = 585875.3316302994
+            self.map_base_point_y = 4139916.6342316796
+            self.map_size_h = 19311 
+            self.map_size_w = 27632
         else:
             print("Chosen base map not created")
             exit()
-
         self.rough_crop_radius = int(
             math.sqrt(self.local_size_h**2 + self.local_size_w**2))
-        self.rough_crop_radius = 2000
-
-    def get_trans_point(self, p, local_base_point, GRID):
-        point = np.round((p - local_base_point) / self.resolution)
-        return [int(point[0]), GRID[1] - int(point[1])]
 
     def draw_roadmap(self, center_x, center_y, center_heading):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = [int(np.round((center_point[0] - self.map_base_point_x) / self.resolution)),
                               int(self.map_size_h - np.round((center_point[1]-self.map_base_point_y) /
                                                              self.resolution))]
-        rough_local_map = self.base_map[(center_basemap_idx[1] - self.rough_crop_radius): (center_basemap_idx[1] + self.rough_crop_radius),
-                                        (center_basemap_idx[0] - self.rough_crop_radius): (center_basemap_idx[0] + self.rough_crop_radius)]
-        # return rough_local_map
-        print(rough_local_map.shape)
+        rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius: center_basemap_idx[1] + self.rough_crop_radius,
+                                        center_basemap_idx[0] - self.rough_crop_radius: center_basemap_idx[0] + self.rough_crop_radius]
         rough_local_map_grid = [
             2 * self.rough_crop_radius, 2 * self.rough_crop_radius]
         center_local_idx = [self.rough_crop_radius, self.rough_crop_radius]
@@ -75,11 +72,11 @@ class RoadMapImgRenderer(object):
 
 if __name__ == '__main__':
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/learning_data.66.bin", 'rb') as file_in:
+    with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
-    output_dir = './data/'
+    output_dir = './data_local_road_map/'
     if os.path.isdir(output_dir):
         print(output_dir + " directory exists, delete it!")
         shutil.rmtree(output_dir)
@@ -87,7 +84,7 @@ if __name__ == '__main__':
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    roadmap_mapping = RoadMapImgRenderer("sunnyvale_with_two_offices")
+    roadmap_mapping = RoadMapImgRenderer("sunnyvale")
     for frame in offline_frames.learning_data:
         img = roadmap_mapping.draw_roadmap(
             frame.localization.position.x, frame.localization.position.y, frame.localization.heading)
@@ -95,5 +92,5 @@ if __name__ == '__main__':
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
-        cv.imwrite(os.path.join(output_dir + "/" + filename), img)
+        cv.imwrite(os.path.join(output_dir, filename), img)
     np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
