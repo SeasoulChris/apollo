@@ -5,11 +5,13 @@ import numpy as np
 
 from modules.planning.proto import learning_data_pb2
 import fueling.common.proto_utils as proto_utils
+import fueling.common.logging as logging
 
 
 class LabelGenerator(object):
     def __init__(self):
-        self.filepath = None
+        self.src_filepath = None
+        self.dst_filepath = None
         self.feature_sequence = []
         '''
         observation_dict contains the important observations of the subsequent
@@ -28,10 +30,13 @@ class LabelGenerator(object):
         self.observation_dict = dict()
         self.future_status_dict = dict()
 
-    def LoadFeaturePBAndSaveLabelFiles(self, input_filepath):
-        self.filepath = input_filepath
+    def LoadFeaturePBAndSaveLabelFiles(self, input_filepath, output_filepath):
+        self.src_filepath = input_filepath
+        logging.info(input_filepath)
+        self.dst_filepath = output_filepath
+        logging.info(output_filepath)
         offline_features = learning_data_pb2.LearningData()
-        offline_features = proto_utils.get_pb_from_bin_file(self.filepath, offline_features)
+        offline_features = proto_utils.get_pb_from_bin_file(self.src_filepath, offline_features)
         learning_data_sequence = offline_features.learning_data
         # get all trajectory points from feature_sequence
         adc_trajectory = []
@@ -52,7 +57,7 @@ class LabelGenerator(object):
     def ObserveAllFeatureSequences(self):
         for idx, feature in enumerate(self.feature_sequence):
             self.ObserveFeatureSequence(self.feature_sequence, idx)
-        np.save(self.filepath + '.npy', self.observation_dict)
+        np.save(self.src_filepath + '.npy', self.observation_dict)
         return
 
     '''
@@ -128,17 +133,21 @@ class LabelGenerator(object):
             observed_val = self.observation_dict["adc@{:.3f}".format(feature.timestamp_sec)]
             key = "adc@{:.3f}".format(feature.timestamp_sec)
             self.future_status_dict[key] = observed_val['adc_traj']
-        np.save(self.filepath + '.future_status.npy', self.future_status_dict)
+        logging.info(self.dst_filepath)
+        logging.info("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
+        np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
         return
 
     def Label(self):
         self.LabelTrajectory()
 
+
 # # demo
 # if __name__ == '__main__':
-#     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.2.bin'
+#     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.0.bin'
+#     OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin'
 #     label_gen = LabelGenerator()
-#     result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE)
+#     result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
 #     result2 = label_gen.LabelTrajectory()
 #     print(result)
 #     print(result2)
