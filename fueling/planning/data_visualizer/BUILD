@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 py_binary(
     name = "data_visualizer",
     srcs = [

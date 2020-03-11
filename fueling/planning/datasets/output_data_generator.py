@@ -53,7 +53,7 @@ class OutputDataGenerator(BasePipeline):
     @staticmethod
     def process_file(src_file):
         """Call prediction python code to generate labels."""
-        time.sleep(30)
+        # time.sleep(30)
         print(src_file)
         label_gen = LabelGenerator()
         dst_file = src_file.replace(SRC_DIR_PREFIX, DST_DIR_PREFIX)

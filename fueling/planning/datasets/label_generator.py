@@ -2,10 +2,13 @@
 
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from modules.planning.proto import learning_data_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.common.logging as logging
+
+from fueling.planning.data_visualizer import mkz_plotter
 
 
 class LabelGenerator(object):
@@ -136,18 +139,48 @@ class LabelGenerator(object):
         logging.info(self.dst_filepath)
         logging.info("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
         np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
-        return
+        return self.future_status_dict
 
     def Label(self):
-        self.LabelTrajectory()
+        return self.LabelTrajectory()
+
+    def Visualize(self, data_points, img_fn):
+        fig = plt.figure(figsize=(20, 20))
+        ax = fig.add_subplot(1, 1, 1)
+        ncolor = len(data_points)
+        colorVals = plt.cm.jet(np.linspace(0, 1, ncolor))
+        for idx, feature in enumerate(data_points):
+            c = colorVals[idx]
+            self.PlotAgent(feature, ax, c)
+        plt.axis('equal')
+        fig.savefig(img_fn)
+        plt.close(fig)
+
+    def PlotAgent(self, feature, ax, c):
+        heading = feature[3]
+        position = []
+        position.append(feature[0])
+        position.append(feature[1])
+        position.append(feature[2])
+        mkz_plotter.plot(position, heading, ax, c)
 
 
-# # demo
-# if __name__ == '__main__':
-#     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.0.bin'
-#     OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin'
-#     label_gen = LabelGenerator()
-#     result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
-#     result2 = label_gen.LabelTrajectory()
-#     print(result)
-#     print(result2)
+        # # demo
+if __name__ == '__main__':
+    FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.0.bin'
+    OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin'
+    label_gen = LabelGenerator()
+    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
+    result2 = label_gen.LabelTrajectory()
+    # print(result)
+    # print(result2)
+    print(len(result2))
+    print(result2['adc@1536689551.848'])
+    print(len(result2['adc@1536689551.848']))
+    data_points = result2['adc@1536689551.848']
+    IMG_FN = '/apollo/data/learning_based_planning/learning_data.0.bin.pdf'
+    label_gen.Visualize(data_points, IMG_FN)
+    # how to load
+    # OUTPUT_NPY_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin.future_status.npy'
+    # future_data = np.load(OUTPUT_NPY_FILE)
+    # print(future_data)

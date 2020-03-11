@@ -45,6 +45,7 @@ py_binary(
     deps = [
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "//fueling/planning/data_visualizer:data_visualizer",
     ],
 )
 
