@@ -26,4 +26,6 @@ partners = {
                              bos_bucket='jmcauto', bos_region='su'),
     'd-kit-jlqc-44': Partner(name='JLQC44', email='dyan1@jmc.com.cn',
                              bos_bucket='jmcauto', bos_region='su'),
+    'd-kit-bqyjy-73': Partner(name='BQYJY73', email='wanglanying@baicgroup.com.cn',
+                         bos_bucket='baic-wly', bos_region='bj'),
 }
