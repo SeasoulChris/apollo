@@ -34,8 +34,8 @@ class Self_Attn(nn.Module):
         out = out.view(m_batchsize,C,width,height)
         
         out = self.gamma*out + x
-        # return out,attention
-        return out
+        return out, attention
+
 
 if __name__ == "__main__":
     input = torch.zeros([1,3,224,224])

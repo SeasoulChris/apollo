@@ -15,6 +15,7 @@ from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
 from learning_algorithms.prediction.models.semantic_map_model.self_attention import Self_Attn
+from learning_algorithms.prediction.models.semantic_map_model.spatial_attention import SpatialAttention2d
 
 '''
 ========================================================================
@@ -180,7 +181,8 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
                  embed_size=64, hidden_size=128,
                  cnn_net=models.resnet50, pretrained=True):
         super(SemanticMapSelfAttentionLSTMModel, self).__init__()
-        self.att = Self_Attn(3)
+        # self.att = Self_Attn(3)
+        self.attn = SpatialAttention2d(3)
         self.cnn = nn.Sequential(*list(cnn_net(pretrained=pretrained).children())[:-1])
         self.cnn_out_size = 2048
         self.pred_len = pred_len
@@ -208,7 +210,7 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
         N = obs_pos.size(0)
         ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
-        img_att = self.att(img)
+        img, img_attn = self.attn(img)
         img_embedding = self.cnn(img_att)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
         pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
