@@ -8,6 +8,7 @@ from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
 
 from modules.control.proto.control_conf_pb2 import ControlConf
+from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
 from modules.control.proto.mrac_conf_pb2 import MracConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
@@ -40,7 +41,6 @@ def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
                 algorithm_conf_pb)},
         },
     )
-
     return weighted_score[config_id]
 
 
@@ -103,15 +103,20 @@ class BayesianOptimizationTuner():
     def optimize(self, n_iter=5):
         self.n_iter = n_iter
         for i in range(n_iter):
+            for flag in self.tuner_param_config_pb.tuner_parameters.flag:
+                self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
+                    proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
             next_point = self.optimizer.suggest(self.utility)
             # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point, MracConf()))
-            logging.debug(
-                f"New Control Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            logging.info(
+                f"Enable MRAC control: {self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
+            logging.info(
+                f"New MRAC Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
             target = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             self.optimizer.register(params=next_point, target=target)
-            logging.debug(i, target, next_point)
+            logging.info(f"optimizer iteration: {i}, target value: {target}, config point: {next_point}")
 
     def get_result(self):
         logging.info(f"Result after: {self.n_iter} steps are  {self.optimizer.max}")
