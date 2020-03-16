@@ -11,6 +11,10 @@ tuner_parameters {
     xi: 1.0
   }
   n_iter: 5
+  flag {
+    flag_name: "enable_steer_mrac_control"
+    enable: true
+  }
   parameter {
     parameter_name: "reference_time_constant"
     min: 0.00001
