@@ -12,6 +12,7 @@ class RoutingUpdateAnalyzer:
         routing_available = False
         temp_msgs = []
         perception_msg_cnt = 0
+        last_hmi = None
 
         for msg in msgs:
             if msg.topic == '/apollo/perception/obstacles':
@@ -19,6 +20,9 @@ class RoutingUpdateAnalyzer:
 
             if msg.topic == "/apollo/routing_response_history":
                 routing_available = True
+
+            if msg.topic == "/apollo/hmi/status":
+                last_hmi = msg
 
             if msg.topic == "/apollo/routing_response":
                 if perception_msg_cnt > 80:
@@ -28,6 +32,8 @@ class RoutingUpdateAnalyzer:
                 temp_msgs = []
                 perception_msg_cnt = 0
                 routing_available = True
+                if last_hmi is not None:
+                    temp_msgs.append(last_hmi)
             temp_msgs.append(msg)
 
         if perception_msg_cnt > 80:
