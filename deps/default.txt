@@ -5,6 +5,5 @@ optuna
 opt-einsum
 progressbar
 psutil
-pyro-ppl
+pyro-ppl == 1.0.0
 tqdm
-

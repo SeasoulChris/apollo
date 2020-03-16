@@ -154,10 +154,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Label')
     # paths
     parser.add_argument('--unlabeled_dataset_path', type=str,
-                        default="testdata/control/gaussian_process/dataset/unlabeled_dataset/bigloop_1/")
+                        default="./testdata/train_data")
     parser.add_argument('--model_path', type=str,
-                        default="testdata/control/gaussian_process/mlp_model/forward/")
+                        default="./mlp_model/forward/")
     parser.add_argument('--labeled_dataset_path', type=str,
-                        default="testdata/control/gaussian_process/dataset/label_generation/")
+                        default="./labeled_data/")
     args = parser.parse_args()
     get_train_data(args)

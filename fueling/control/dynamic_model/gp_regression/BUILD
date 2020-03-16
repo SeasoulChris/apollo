@@ -20,6 +20,7 @@ py_library(
     name = "dreamview_server",
     srcs = ["dreamview_server.py"],
     deps = [
+        requirement("pyro-ppl"),
         ":train",
     ],
 )
@@ -83,6 +84,10 @@ py_library(
         ":deep_encoding_net",
         ":model_conf",
         ":predict",
+        requirement("graphviz"),
+        requirement("tqdm"),
+        requirement("opt-einsum"),
+        requirement("progressbar"),
         requirement("pyro-ppl"),
     ],
 )

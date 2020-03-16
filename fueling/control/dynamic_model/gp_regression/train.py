@@ -20,7 +20,7 @@ import fueling.common.logging as logging
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
 # Every 100 frames Input Vector correspond to 1 frame of output.
-assert pyro.__version__.startswith('1.0.0')
+# assert pyro.__version__.startswith('1.0.0')
 INPUT_LENGTH = feature_config["DELTA_T"] / feature_config["delta_t"]  # Default 100
 
 

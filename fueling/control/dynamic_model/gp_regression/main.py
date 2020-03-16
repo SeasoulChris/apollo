@@ -56,14 +56,14 @@ if __name__ == '__main__':
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters
-    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--epochs', type=int, default=60)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--lr_decay', type=float, default=0.999)
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
     parser.add_argument('--compare', type=str, default="model")
 
     # argment to train or test gp
-    parser.add_argument('--train_gp', type=bool, default=True)
+    parser.add_argument('--train_gp', type=bool, default=False)
     parser.add_argument('--test_gp', type=bool, default=True)
 
     args = parser.parse_args()
