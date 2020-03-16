@@ -38,9 +38,10 @@ if __name__ == "__main__":
     # Model and training setup
     # model = SelfLSTM()
     # model = SemanticMapSelfLSTMModel(30, 20)
-    # loss = SemanticMapLoss()
+    model = SemanticMapSelfAttentionLSTMModel(30, 20)
+    loss = SemanticMapLoss()
 
-    model = SemanticMapSelfLSTMMultiModal(30, 20, num_modes=2)
+    # model = SemanticMapSelfLSTMMultiModal(30, 20, num_modes=2)
     # loss = TrajectoryBivariateGaussianLoss()
 
     def base_loss_fn(y_pred, y_true):
@@ -55,7 +56,7 @@ if __name__ == "__main__":
         out = torch.mean(diff)
         return out
     
-    loss = MultiModalLoss(base_loss_fn, base_loss_info)
+    # loss = MultiModalLoss(base_loss_fn, base_loss_info)
 
     learning_rate = 3e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -71,4 +72,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name='./', print_period=50)
+                           scheduler, epochs=50, save_name='./', print_period=50, save_mode=2)

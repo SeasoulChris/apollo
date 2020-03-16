@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_library(
+py_binary(
     name = "vehicle_trajectory_prediction_pipeline",
     srcs = ["vehicle_trajectory_prediction_pipeline.py"],
     deps = [

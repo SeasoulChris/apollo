@@ -211,7 +211,7 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
         ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
         img, img_attn = self.attn(img)
-        img_embedding = self.cnn(img_att)
+        img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
         pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
 
