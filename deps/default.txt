@@ -1,5 +1,10 @@
 bayesian-optimization
+graphviz
 liegroups
 optuna
+opt-einsum
+progressbar
 psutil
 pyro-ppl
+tqdm
+
