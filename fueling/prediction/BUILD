@@ -4,7 +4,8 @@ py_binary(
     name = "combine_data_for_tuning_and_labels",
     srcs = ["combine_data_for_tuning_and_labels.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
     ]
 )
 
@@ -12,7 +13,8 @@ py_binary(
     name = "combine_features_and_labels",
     srcs = ["combine_features_and_labels.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+	"//fueling/common:logging",
     ]
 )
 
@@ -29,7 +31,11 @@ py_binary(
     name = "data_for_learning",
     srcs = ["data_for_learning.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:mongo_utils",
+	"//fueling/common:db_backed_utils",
+	"//fueling/common:logging",
+	"//fueling/common:record_utils",
     ]
 )
 
@@ -37,7 +43,11 @@ py_binary(
     name = "data_for_tuning",
     srcs = ["data_for_tuning.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:mongo_utils",
+        "//fueling/common:db_backed_utils",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
     ]
 )
 
@@ -65,7 +75,7 @@ py_binary(
     name = "evaluate_performance",
     srcs = ["evaluate_performance.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
     ]
 )
 
@@ -73,15 +83,11 @@ py_binary(
     name = "frame_env",
     srcs = ["frame_env.py"],
     deps = [
-        #TODO
-    ]
-)
-
-py_binary(
-    name = "generate_imgs",
-    srcs = ["generate_imgs.py"],
-    deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:mongo_utils",
+        "//fueling/common:db_backed_utils",
+	"//fueling/common:logging",
+        "//fueling/common:record_utils",
     ]
 )
 
@@ -89,15 +95,9 @@ py_binary(
     name = "generate_labels",
     srcs = ["generate_labels.py"],
     deps = [
-        #TODO
-    ]
-)
-
-py_binary(
-    name = "match_img_label",
-    srcs = ["match_img_label.py"],
-    deps = [
-        #TODO
+	"//fueling/common:base_pipeline",
+	"//fueling/common:logging",
+	"//fueling/prediction/common:online_to_offline",
     ]
 )
 
@@ -105,7 +105,8 @@ py_binary(
     name = "merge_labels",
     srcs = ["merge_labels.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
     ]
 )
 
@@ -113,7 +114,10 @@ py_binary(
     name = "prediction_app_data_labeling",
     srcs = ["prediction_app_data_labeling.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+	":dump_feature_proto",
+	":generate_labels",
+	":merge_labels",
     ]
 )
 
@@ -129,7 +133,9 @@ py_binary(
     name = "prediction_app_performance_evaluation",
     srcs = ["prediction_app_performance_evaluation.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+	":prediction_result",
+	":evaluate_performance",
     ]
 )
 
@@ -137,6 +143,10 @@ py_binary(
     name = "prediction_result",
     srcs = ["prediction_result.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:mongo_utils",
+        "//fueling/common:db_backed_utils",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
     ]
 )
