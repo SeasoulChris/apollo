@@ -43,12 +43,19 @@ class LabelGenerator(object):
         learning_data_sequence = offline_features.learning_data
         # get all trajectory points from feature_sequence
         adc_trajectory = []
+        timestamps = []
         for learning_data in offline_features.learning_data:
             for adc_trajectory_point in learning_data.adc_trajectory_point:
-                adc_trajectory.append(adc_trajectory_point)
+                # remove duplication
+                if adc_trajectory_point.timestamp_sec not in timestamps:
+                    timestamps.append(adc_trajectory_point.timestamp_sec)
+                    adc_trajectory.append(adc_trajectory_point)
         print(adc_trajectory[-1])
         # [Feature1, Feature2, Feature3, ...] (sequentially sorted)
         adc_trajectory.sort(key=lambda x: x.timestamp_sec)
+       
+        logging.info(len(adc_trajectory))
+        logging.info(adc_trajectory[-1].timestamp_sec)
         self.feature_sequence = adc_trajectory
         return self.ObserveAllFeatureSequences()
 
@@ -77,8 +84,8 @@ class LabelGenerator(object):
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
         dict_key = "adc@{:.3f}".format(feature_curr.timestamp_sec)
-        if dict_key in self.observation_dict.keys():
-            return
+        # if dict_key in self.observation_dict.keys():
+        #     return
         # Declare needed varables.
         is_jittering = False
         feature_seq_len = len(feature_sequence)
@@ -89,7 +96,10 @@ class LabelGenerator(object):
 
         # This goes through all the subsequent features in this sequence
         # of features up to the maximum_observation_time.
+        logging.info("curr_time: {}".format(feature_curr.timestamp_sec))
+        logging.info("idx_cur: {}".format(idx_curr))
         for j in range(idx_curr, feature_seq_len):
+            # logging.info(feature_sequence[j].timestamp_sec )
             # If timespan exceeds max. observation time, then end observing.
             time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
             if time_span > maximum_observation_time:
@@ -118,6 +128,7 @@ class LabelGenerator(object):
                              feature_sequence[j].trajectory_point.v,
                              feature_sequence[j].trajectory_point.a,
                              feature_sequence[j].timestamp_sec))
+        logging.info(len(adc_traj))
         # Update the observation_dict:
         dict_val = dict()
         dict_val['adc_traj'] = adc_traj
@@ -172,11 +183,8 @@ if __name__ == '__main__':
     label_gen = LabelGenerator()
     result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
     result2 = label_gen.LabelTrajectory()
-    # print(result)
-    # print(result2)
-    print(len(result2))
-    print(result2['adc@1536689551.848'])
-    print(len(result2['adc@1536689551.848']))
+    logging.info(len(result2))
+    logging.info(len(result2['adc@1536689551.848']))
     data_points = result2['adc@1536689551.848']
     IMG_FN = '/apollo/data/learning_based_planning/learning_data.0.bin.pdf'
     label_gen.Visualize(data_points, IMG_FN)
