@@ -22,6 +22,7 @@ py_library(
     name = "db_backed_utils",
     srcs = ["db_backed_utils.py"],
     deps = [
+	":proto_utils",
         "//fueling/data/proto:record_meta_pb2",
     ],
 )

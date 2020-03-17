@@ -54,7 +54,10 @@ py_binary(
     name = "dump_feature_proto",
     srcs = ["dump_feature_proto.py"],
     deps = [
-        #TODO
+        "//fueling/common:base_pipeline",
+        "//fueling/common:mongo_utils",
+        "//fueling/common:db_backed_utils",
+        "//fueling/common:record_utils",
     ]
 )
 

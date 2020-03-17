@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import operator
 import os
+import time
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
@@ -15,18 +16,18 @@ SKIP_EXISTING_DST_FILE = False
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
 
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/labels/'
-        self.run_internal(records_dir, origin_prefix, target_prefix)
+    # def run_test(self):
+    #     """Run test."""
+    #     # RDD(dir_path)
+    #     records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
+    #     origin_prefix = '/apollo/docs/demo_guide'
+    #     target_prefix = '/apollo/data/prediction/labels/'
+    #     self.run_internal(records_dir, origin_prefix, target_prefix)
 
     def run(self):
         """Run prod."""
-        origin_prefix = 'small-records/'
-        target_prefix = 'modules/prediction/labels/'
+        origin_prefix = 'modules/prediction/kinglong/jinlong-JinLongBaiduDaSha/20190716/'
+        target_prefix = 'modules/prediction/tmp/'
 
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -37,6 +38,7 @@ class DumpFeatureProto(BasePipeline):
             .map(os.path.dirname)
             # RDD(record_dir), which is unique
             .distinct())
+
         completed_records_dir = (
             # RDD(label_dir). start with target_prefix
             self.to_rdd(self.our_storage().list_end_dirs(target_prefix))
@@ -93,14 +95,19 @@ class DumpFeatureProto(BasePipeline):
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
         record_dirs = list(record_dirs)
-        collection = Mongo().record_collection()
-        dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
+        # collection = Mongo().record_collection()
+        # dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         dir_map_list = []
+        """
         for record_dir, map_name in dir_map_dict.items():
             if "Sunnyvale" in map_name:
                 dir_map_list.append((record_dir, "sunnyvale"))
             if "San Mateo" in map_name:
                 dir_map_list.append((record_dir, "san_mateo"))
+        """
+        # TODO(kechxu) fix the map specification
+        for record_dir in record_dirs:
+            dir_map_list.append((record_dir, "sunnyvale"))
         return dir_map_list
 
 
