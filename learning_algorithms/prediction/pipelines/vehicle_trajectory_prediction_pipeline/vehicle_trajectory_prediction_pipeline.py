@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='pipeline')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
-    parser.add_argument('-s', '--save-path', type=str, default='./',
+    parser.add_argument('-s', '--save_path', type=str, default='/fuel/',
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
 
@@ -72,4 +72,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name='./', print_period=50, save_mode=2)
+                           scheduler, epochs=50, save_name=args.save_path, print_period=50, save_mode=2)
