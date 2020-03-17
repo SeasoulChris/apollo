@@ -110,7 +110,7 @@ def clean_data(data, seq):
             return [0.05 * i, 1 - 0.05 * i]
     return [0.05 * i, 1 - 0.05 * i]
 
-
+    # TODO(Una/Vivian): This is only used in open space planner, and we may need to re-factor this out. 
 def plot_hist(data_rdd):
     dir_data, group_id, data = data_rdd
     pdffile = os.path.join(dir_data, 'visualization.pdf')
