@@ -13,7 +13,7 @@ if [ -z "$(which nvidia-smi)" ]; then
 elif [ -z "$(which nvidia-container-toolkit)" ]; then
   echo "No nvidia-container-toolkit found"
 else
-  DOCKER_RUN="docker run --gpus all"
+  DOCKER_RUN="docker run --gpus all --ipc=host"
 fi
 
 docker ps -a --format "{{.Names}}" | grep ${CONTAINER} > /dev/null
