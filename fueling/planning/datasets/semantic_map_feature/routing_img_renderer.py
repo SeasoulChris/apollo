@@ -51,7 +51,7 @@ class RoutingImgRenderer(object):
     def _load_lane(self):
         for lane in self.hd_map.lane:
             self.lane_dict[lane.id.id] = lane
-    
+
     def _load_routing_response(self, routing_response):
         for lane_id in routing_response:
             self.lane_list.append(lane_id)
@@ -106,6 +106,7 @@ class RoutingImgRenderer(object):
         point = np.round(point / self.resolution)
         return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
+    # TODO(Jinyun): to be deprecated
     def draw_routing(self, center_x, center_y, center_heading, routing_response):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -113,7 +114,8 @@ class RoutingImgRenderer(object):
         self.center_heading = center_heading
         self._load_routing_response(routing_response)
 
-        nearest_routing_lanes = self._get_nearest_routing_lanes(center_x, center_y)
+        nearest_routing_lanes = self._get_nearest_routing_lanes(
+            center_x, center_y)
 
         routing_color_delta = int(255 / self.lane_sequence_piece_num)
 
@@ -121,14 +123,33 @@ class RoutingImgRenderer(object):
             color = int(255 - i * routing_color_delta)
             routing_lane = nearest_routing_lanes[i]
             for segment in routing_lane.central_curve.segment:
-                            for i in range(len(segment.line_segment.point)-1):
-                                p0 = self._get_affine_points(
-                                    np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
-                                p1 = self._get_affine_points(
-                                    np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
-                                cv.line(local_map, tuple(p0), tuple(p1), color=color, thickness=12)
+                for i in range(len(segment.line_segment.point)-1):
+                    p0 = self._get_affine_points(
+                        np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
+                    p1 = self._get_affine_points(
+                        np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
+                    cv.line(local_map, tuple(p0), tuple(
+                        p1), color=color, thickness=12)
         return local_map
-        
+
+    def draw_local_routing(self, center_x, center_y, center_heading, local_routing):
+        local_map = np.zeros(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        routing_color_delta = int(255 / len(local_routing))
+        for i in range(len(local_routing)):
+            color = int(255 - i * routing_color_delta)
+            routing_lane = self.lane_dict[local_routing[i]]
+            for segment in routing_lane.central_curve.segment:
+                for i in range(len(segment.line_segment.point)-1):
+                    p0 = self._get_affine_points(
+                        np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
+                    p1 = self._get_affine_points(
+                        np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
+                    cv.line(local_map, tuple(p0), tuple(
+                        p1), color=color, thickness=12)
+        return local_map
+
+
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
@@ -145,8 +166,9 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     routing_mapping = RoutingImgRenderer("sunnyvale_with_two_offices")
     for frame in offline_frames.learning_data:
-        img = routing_mapping.draw_routing(
-            frame.localization.position.x, frame.localization.position.y, frame.localization.heading, frame.routing_response.lane_id)
+        img = routing_mapping.draw_local_routing(
+            frame.localization.position.x, frame.localization.position.y,
+            frame.localization.heading, frame.routing.local_routing_lane_id)
         key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,

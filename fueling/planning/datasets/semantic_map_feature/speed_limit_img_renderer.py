@@ -15,7 +15,7 @@ class SpeedLimitImgRenderer(object):
 
     def __init__(self, region):
         """contruct function to init RoadMapImgRenderer object"""
-        self.map_dir = "/fuel/learning_algorithms/planning/data_preprocessing/semantic_map_feature"
+        self.map_dir = "/fuel/testdata/planning/semantic_map_features"
         self.base_map = cv.imread(os.path.join(self.map_dir, region + "_speedlimit.png"))
         # TODO(Jinyun): use config file
         self.resolution = 0.1  # in meter/pixel

@@ -59,3 +59,12 @@ py_binary(
         "//fueling/common:logging",
     ],
 )
+
+py_library(
+    name = "img_in_traj_out_dataset",
+    srcs = ["img_in_traj_out_dataset.py"],
+    deps = [
+        "//fueling/common:coord_utils",
+        "//fueling/common:file_utils",
+    ],
+)

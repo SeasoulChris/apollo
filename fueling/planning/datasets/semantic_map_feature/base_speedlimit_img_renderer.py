@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import numpy as np
 import cv2 as cv
@@ -6,6 +7,7 @@ import pyproj
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
+
 
 class BaseSpeedLimitImgRenderer(object):
     """class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -16,7 +18,7 @@ class BaseSpeedLimitImgRenderer(object):
         # TODO(Jinyun): use config file
         self.resolution = 0.1   # in meter/pixel
         self.base_map_padding = 100    # in meter
-        self.city_driving_max_speed = 22.22 # 22.22 m/s /approx 80km/h
+        self.city_driving_max_speed = 22.22  # 22.22 m/s /approx 80km/h
 
         self.base_point = None
         self.GRID = None
@@ -25,8 +27,10 @@ class BaseSpeedLimitImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Map base point is " + str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Map W * H is " + str(self.GRID[0]) + " * " + str(self.GRID[1]))
+        print("Base Map base point is " +
+              str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        print("Base Map W * H is " +
+              str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
@@ -52,7 +56,7 @@ class BaseSpeedLimitImgRenderer(object):
         if self.region == "sunnyvale":
             left_bottom_x = 585975.3316302994
             left_bottom_y = 4140016.6342316796
-            right_top_x =  588538.5457265645
+            right_top_x = 588538.5457265645
             right_top_y = 4141747.6943244375
 
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
@@ -71,7 +75,8 @@ class BaseSpeedLimitImgRenderer(object):
         return [int(point[0]), self.GRID[1] - int(point[1])]
 
     def get_speedlimit_coloring(self, speed_limit):
-        green_level = (speed_limit / self.city_driving_max_speed) * (255 - 64) + 64
+        green_level = (
+            speed_limit / self.city_driving_max_speed) * (255 - 64) + 64
         color = (0, green_level, 0)
         return color
 
@@ -101,6 +106,8 @@ class BaseSpeedLimitImgRenderer(object):
 
 
 if __name__ == '__main__':
+    imgs_dir = "/fuel/testdata/planning/semantic_map_features"
     mapping = BaseSpeedLimitImgRenderer("sunnyvale")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(mapping.region + "_speedlimit.png", mapping.base_map)
+    cv.imwrite(os.path.join(imgs_dir, mapping.region +
+                            "_speedlimit.png"), mapping.base_map)

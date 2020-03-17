@@ -33,13 +33,13 @@ class ObstaclePredictionsImgRenderer(object):
         point = np.round(point / self.resolution)
         return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
-    def draw_obstacle_prediction(self, obstacles, localization):
+    def draw_obstacle_prediction(self, center_x, center_y, center_heading, obstacles):
         # TODO(Jinyun): make use of multi-modal and probability
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array(
-            [localization.position.x, localization.position.y])
-        self.local_base_heading = localization.heading
+            [center_x, center_y])
+        self.local_base_heading = center_heading
 
         for obstacle in obstacles:
             if obstacle.HasField("obstacle_prediction"):
@@ -77,7 +77,8 @@ if __name__ == "__main__":
     obstacle_predictions_mapping = ObstaclePredictionsImgRenderer()
     for frame in offline_frames.learning_data:
         img = obstacle_predictions_mapping.draw_obstacle_prediction(
-            frame.obstacle, frame.localization)
+            frame.localization.position.x,
+            frame.localization.position.y, frame.localization.heading, frame.obstacle)
         key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,

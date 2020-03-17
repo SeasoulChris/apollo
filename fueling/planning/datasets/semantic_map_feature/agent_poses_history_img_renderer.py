@@ -40,11 +40,12 @@ class AgentPosesHistoryImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array(
-            [ego_pose_history[0][0], ego_pose_history[0][1]])
-        self.local_base_heading = ego_pose_history[0][2]
+            [ego_pose_history[0].trajectory_point.path_point.x, ego_pose_history[0].trajectory_point.path_point.y])
+        self.local_base_heading = ego_pose_history[0].trajectory_point.path_point.theta
         for ego_pose in ego_pose_history:
             cv.circle(local_map, tuple(self._get_affine_points(
-                np.array(ego_pose[:2]))), radius=4, color=(255))
+                np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y]))),
+                radius=4, color=(255))
         return local_map
 
 
@@ -64,11 +65,8 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     agent_history_mapping = AgentPosesHistoryImgRenderer()
     for frame in offline_frames.learning_data:
-        ego_pose_history = []
-        for past_pose in frame.adc_trajectory_point:
-            ego_pose_history.append(
-                [past_pose.trajectory_point.path_point.x, past_pose.trajectory_point.path_point.y, past_pose.trajectory_point.path_point.theta])
-        img = agent_history_mapping.draw_agent_poses_history(ego_pose_history)
+        img = agent_history_mapping.draw_agent_poses_history(
+            frame.adc_trajectory_point)
         key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,

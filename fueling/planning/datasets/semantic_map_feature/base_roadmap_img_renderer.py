@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import numpy as np
 import cv2 as cv
@@ -6,6 +7,7 @@ import pyproj
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
+
 
 class BaseRoadMapImgRenderer(object):
     """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -24,8 +26,10 @@ class BaseRoadMapImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Map base point is " + str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Map W * H is " + str(self.GRID[0]) + " * " + str(self.GRID[1]))
+        print("Base Map base point is " +
+              str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        print("Base Map W * H is " +
+              str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
@@ -51,7 +55,7 @@ class BaseRoadMapImgRenderer(object):
         if self.region == "sunnyvale":
             left_bottom_x = 585975.3316302994
             left_bottom_y = 4140016.6342316796
-            right_top_x =  588538.5457265645
+            right_top_x = 588538.5457265645
             right_top_y = 4141747.6943244375
 
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
@@ -188,6 +192,8 @@ class BaseRoadMapImgRenderer(object):
 
 
 if __name__ == '__main__':
+    imgs_dir = "/fuel/testdata/planning/semantic_map_features"
     mapping = BaseRoadMapImgRenderer("sunnyvale")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(mapping.region + ".png", mapping.base_map)
+    cv.imwrite(os.path.join(imgs_dir, mapping.region + ".png"),
+               mapping.base_map)
