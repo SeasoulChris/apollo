@@ -1,0 +1,69 @@
+syntax = "proto2";
+package cybertron.proto;
+enum SectionType {
+    HEADER_SECTION = 1;
+    CHUNK_HEADER = 2;
+    CHUNK_SECTION = 3;
+    INDEX_SECTION = 4;
+    PARAM_SECTION = 5;
+    RESERVE_SECTION = 6;
+    HEADER_SECTION_TWOM = 7;
+};
+enum CompressType {
+    COMPRESS_NONE = 1;
+    COMPRESS_BZ2 = 2;
+    COMPRESS_LZ4 = 3;
+};
+enum RecordStatus {
+    ACTIVE = 1;
+    FINISH = 2;
+}
+message Channel {
+    required string name = 1;
+    required string type = 2;
+    required uint64 msg_num = 3;
+    optional bytes proto_desc = 4;
+}
+message Index {
+    required SectionType type = 1;
+    required uint64 pos = 2;
+}
+message SingleMsg {
+    required string channelname = 1;
+    required uint64 time = 2;
+    required bytes msg = 3;
+}
+message HeaderSection {
+    required string path = 1;
+    required string version = 2;
+    required CompressType compress = 3;
+    required uint64 chunk_interval = 4;
+    repeated Channel channels = 5;
+    required uint64 index_pos = 6;
+    required uint64 chunknum = 7;
+    required uint64 begintime = 8;
+    required uint64 endtime = 9;
+    required uint64 msgnum = 10;
+    required uint64 size = 11;
+    optional string md5 = 12 [default = "null"];
+    optional RecordStatus finish = 13 [default = ACTIVE];
+}
+message ChunkHeader {
+    required uint64 begintime = 1;
+    required uint64 endtime = 2;
+    required uint64 msgnum = 3;
+    required uint64 rawsize = 4;
+    repeated Channel channels = 5;
+}
+message ChunkSection {
+    repeated SingleMsg msgs = 1;
+}
+message ParamSection {
+    required string paramdump = 1;
+}
+message ReserveSection {
+    required string reserve = 1;
+}
+message IndexSection {
+    repeated Index indexs = 1;
+}
