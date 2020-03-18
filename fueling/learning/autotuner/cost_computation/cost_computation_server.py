@@ -43,10 +43,11 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         else:
             self.submit_job = self.SubmitJobAtLocal
 
-    def CreateResponse(self, exit_code, message="", score=None):
+    def CreateResponse(self, training_id, exit_code, message="", score=None):
         response = cost_service_pb2.Response()
         response.status.code = exit_code
         response.status.message = message
+        response.training_id = training_id
         if score is not None:
             response.score = score
         return response
@@ -69,7 +70,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     def ComputeMracCost(self, request, context):
         if not request.git_info.commit_id:
-            return self.CreateResponse(exit_code=1, message="Commit ID not specified.")
+            return self.CreateResponse("error", exit_code=1, message="Commit ID not specified.")
 
         training_id = uuid.uuid4().hex
         tmp_dir = f"{TMP_ROOT_DIR}/{training_id}"
@@ -87,7 +88,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
         if not self.submit_job(options):
             return self.CreateResponse(
-                exit_code=1, message="failed to run mrac_cost_computation."
+                training_id, exit_code=1, message="failed to run mrac_cost_computation."
             )
 
         # read and return score
@@ -95,7 +96,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             with open(f"{tmp_dir}/scores.out") as score_file:
                 scores = json.loads(score_file.readline())
 
-            response = self.CreateResponse(exit_code=0, message="Done.")
+            response = self.CreateResponse(training_id, exit_code=0, message="Done.")
             for (config_id, weighted_score) in scores.items():
                 response.score[config_id] = float(weighted_score)
             return response
@@ -103,7 +104,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         except Exception as error:
             logging.error(f"failed to get weighted score.\n\t{error}")
             return self.CreateResponse(
-                exit_code=1, message="failed to calculate weighted score."
+                training_id, exit_code=1, message="failed to calculate weighted score."
             )
 
 

@@ -23,4 +23,5 @@ message Request {
 message Response {
   Status status = 1;
   map<string, float> score = 2;  // config_id -> weighted score
+  string training_id = 3;
 }
