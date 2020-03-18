@@ -6,7 +6,7 @@ from fueling.learning.autotuner.client.cost_computation_client import CostComput
 # uncomment me if testing for az-staging
 # CostComputationClient.set_channel("40.77.110.196:50052")
 
-result = CostComputationClient.compute_mrac_cost(
+training_id, score = CostComputationClient.compute_mrac_cost(
     # commit id
     "c693dd9e2e7910b041416021fcdb648cc4d8934d",
     # map of config_id to path_to_config pairs
@@ -21,4 +21,4 @@ result = CostComputationClient.compute_mrac_cost(
     },
 )
 
-print(f"Cost={result}")
+print(f"Received score {score} for {training_id}")

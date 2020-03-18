@@ -33,7 +33,7 @@ flags.DEFINE_string(
 def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
     config_id = uuid.uuid1().hex
     CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
-    weighted_score = CostComputationClient.compute_mrac_cost(
+    training_id, weighted_score = CostComputationClient.compute_mrac_cost(
         tuner_param_config_pb.git_info.commit_id,
         {  # list of config_id : {path, config} pairs
             config_id:
@@ -41,6 +41,7 @@ def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
                 algorithm_conf_pb)},
         },
     )
+    logging.info(f"Received score for {training_id}")
     return weighted_score[config_id]
 
 

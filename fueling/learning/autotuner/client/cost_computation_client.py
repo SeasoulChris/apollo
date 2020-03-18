@@ -46,8 +46,9 @@ class CostComputationClient(object):
 
             status = response.status
             if status.code == 0:
-                logging.info(f"Done computing cost {response.score}")
-                return response.score
+                logging.info(
+                    f"Done computing cost {response.score} for training_id {response.training_id}")
+                return response.training_id, response.score
             else:
                 logging.error(f"Error: {status.message}")
                 return None
