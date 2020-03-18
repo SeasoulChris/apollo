@@ -26,8 +26,11 @@ class DumpFeatureProto(BasePipeline):
 
     def run(self):
         """Run prod."""
-        origin_prefix = 'modules/prediction/kinglong/jinlong-JinLongBaiduDaSha/20190716/'
-        target_prefix = 'modules/prediction/tmp/'
+        # origin_prefix = 'modules/prediction/kinglong/jinlong-JinLongBaiduDaSha/20190716/'
+        # target_prefix = 'modules/prediction/tmp/'
+
+        origin_prefix = "/fuel/kinglong_data/records/"
+        target_prefix = "/fuel/kinglong_data/features/"
 
         records_dir = (
             # RDD(file), start with origin_prefix
@@ -81,10 +84,11 @@ class DumpFeatureProto(BasePipeline):
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
         """Call prediction C++ code."""
+        additional_ld_path = "/usr/local/miniconda/envs/fuel/lib/"
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_dump_feature_proto.sh '
-            '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
+            '"{}" "{}" "{}" "{}"'.format(record_dir, target_dir, map_name, additional_ld_path))
         if os.system(command) == 0:
             logging.info('Successfully processed {} to {}'.format(record_dir, target_dir))
             return 1
@@ -107,7 +111,7 @@ class DumpFeatureProto(BasePipeline):
         """
         # TODO(kechxu) fix the map specification
         for record_dir in record_dirs:
-            dir_map_list.append((record_dir, "sunnyvale"))
+            dir_map_list.append((record_dir, "demo"))
         return dir_map_list
 
 
