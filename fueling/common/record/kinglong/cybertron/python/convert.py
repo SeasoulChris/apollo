@@ -16,6 +16,8 @@ import modules.perception.proto.perception_obstacle_pb2 as apollo_perception_obs
 def transfer_localization_estimate(loc):
     apollo_loc = apollo_localization_pb2.LocalizationEstimate()
 
+    apollo_loc.header.timestamp_sec = loc.header.timestamp_sec
+
     apollo_loc.pose.position.x = loc.pose.position.x
     apollo_loc.pose.position.y = loc.pose.position.y
     apollo_loc.pose.position.z = loc.pose.position.z
@@ -40,9 +42,11 @@ def transfer_localization_estimate(loc):
 
 def transfer_perception_obstacles(obstacles):
     apollo_perception_obstacles = apollo_perception_obstacle_pb2.PerceptionObstacles()
+
     for obstacle in obstacles:
         apollo_obstacle = apollo_perception_obstacle_pb2.PerceptionObstacle()
         apollo_obstacle.id = obstacle.id
+        apollo_obstacle.timestamp = obstacle.timestamp
         apollo_obstacle.position.x = obstacle.position.x
         apollo_obstacle.position.y = obstacle.position.y
         apollo_obstacle.position.z = obstacle.position.z
@@ -112,6 +116,7 @@ def convert_kinglong_to_apollo(kinglong_input_path, apollo_output_path):
             perception_obstacles.ParseFromString(msg.encode('utf-8', 'surrogateescape'))
             apollo_obstacles = transfer_perception_obstacles(
                 perception_obstacles.perception_obstacle)
+            apollo_obstacles.header.timestamp_sec = perception_obstacles.header.timestamp_sec
             fwriter.write_message(apollo_percption_obstacle_topic,
                                   apollo_obstacles.SerializeToString(), timestamp)
     freader.close()
