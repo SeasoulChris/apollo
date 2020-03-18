@@ -11,8 +11,7 @@ from keras.models import load_model
 import h5py
 import numpy as np
 
-from fueling.control.dynamic_model.gp_regression.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model.gp_regression.model_conf import input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -80,7 +79,6 @@ def generate_gp_data(args, segment):
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
         input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]] / PI
 
-        # TODO(Jiaxuan): Solve the keras error and get the MLP model's (x,y) prediction
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
                                                        1, MLP_DIM_INPUT), model, norms)
         # Calculate the model prediction on current speed and heading
@@ -126,7 +124,7 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
 
 def get_train_data(args):
     """
-    Generate labeled data from a list of h5 files (unlabled data)
+    Generate labeled data from a list of hdf5 files (unlabled data)
     """
     datasets = glob.glob(os.path.join(args.unlabeled_dataset_path, '*.hdf5'))
     logging.info(args.unlabeled_dataset_path)
@@ -154,17 +152,13 @@ def get_train_data(args):
 
 
 if __name__ == '__main__':
-    """
-    Temporarily run in py27 environment
-    """
     logging.info("running....")
     parser = argparse.ArgumentParser(description='Label')
-    # paths
     parser.add_argument('--unlabeled_dataset_path', type=str,
-                        default="./fueling/control/dynamic_model_2_0/testdata/train_data/")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/train_data/")
     parser.add_argument('--model_path', type=str,
-                        default="./fueling/control/dynamic_model_2_0/testdata/mlp_model/forward/")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward/")
     parser.add_argument('--labeled_dataset_path', type=str,
-                        default="./fueling/control/dynamic_model_2_0/testdata/labeled_data/")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data/")
     args = parser.parse_args()
     get_train_data(args)
