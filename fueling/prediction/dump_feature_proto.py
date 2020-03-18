@@ -96,22 +96,39 @@ class DumpFeatureProto(BasePipeline):
             logging.error('Failed to process {} to {}'.format(record_dir, target_dir))
         return 0
 
+    def get_map_dir_by_path(self, path):
+        path_lower = path.lower()
+        if "baidudasha" in path_lower:
+            return "baidudasha"
+        if "xionganshiminzhongxin" in path_lower:
+            return "XiongAn"
+        if "xiamen" in path_lower:
+            return "XiaMen"
+        if "feifengshan" in path_lower:
+            return "FuZhouFeiFengShan"
+        return "sunnyvale"
+
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
-        record_dirs = list(record_dirs)
-        # collection = Mongo().record_collection()
-        # dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         dir_map_list = []
-        """
+        record_dirs = list(record_dirs)
+
+        """ For US data
+        collection = Mongo().record_collection()
+        dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
         for record_dir, map_name in dir_map_dict.items():
             if "Sunnyvale" in map_name:
                 dir_map_list.append((record_dir, "sunnyvale"))
             if "San Mateo" in map_name:
                 dir_map_list.append((record_dir, "san_mateo"))
         """
-        # TODO(kechxu) fix the map specification
+
+        """ For Kinglong data """
         for record_dir in record_dirs:
-            dir_map_list.append((record_dir, "demo"))
+            map_dir = self.get_map_dir_by_path(record_dir)
+            dir_map_list.append((record_dir, map_dir))
+        """ End Kinglong data """
+
         return dir_map_list
 
 
