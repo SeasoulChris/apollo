@@ -179,12 +179,12 @@ class SemanticMapSelfLSTMModel(nn.Module):
 class SemanticMapSelfAttentionLSTMModel(nn.Module):
     def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128,
-                 cnn_net=models.resnet50, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapSelfAttentionLSTMModel, self).__init__()
         # self.att = Self_Attn(3)
         self.attn = SpatialAttention2d(3)
-        self.cnn = nn.Sequential(*list(cnn_net(pretrained=pretrained).children())[:-1])
-        self.cnn_out_size = 2048
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
         self.pred_len = pred_len
         self.observation_len = observation_len
         for param in self.cnn.parameters():
