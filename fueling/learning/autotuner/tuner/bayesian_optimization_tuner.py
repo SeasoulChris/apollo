@@ -81,6 +81,8 @@ class BayesianOptimizationTuner():
 
         self.n_iter = tuner_parameters.n_iter
 
+        self.opt_max = tuner_parameters.opt_max
+
         self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
                                        kappa=tuner_parameters.utility.kappa,
                                        xi=tuner_parameters.utility.xi)
@@ -115,7 +117,9 @@ class BayesianOptimizationTuner():
                 f"Enable MRAC control: {self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
             logging.info(
                 f"New MRAC Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
-            target = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
+
+            score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
+            target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
             logging.info(f"optimizer iteration: {i}, target value: {target}, config point: {next_point}")
 
