@@ -14,8 +14,8 @@ import os
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
 import fueling.profiling.conf.open_space_planner_conf as OpenSpaceConf
-from modules.data.fuel.fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
-from modules.data.fuel.fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
+from fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
+from fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
 import fueling.common.h5_utils as h5_utils
 import fueling.common.json_utils as json_utils
 import fueling.common.logging as logging
