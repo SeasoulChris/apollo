@@ -13,16 +13,16 @@ class DumpLearningData(BasePipeline):
 
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/cleaned_data',
+            'modules/planning/cleaned_data/',
         ]
-        self.dest_dir_prefix = 'modules/planning/learning_data'
+        self.dest_dir_prefix = 'modules/planning/learning_data/'
 
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
-            '/apollo/data/cleaned_data',
+            '/apollo/data/cleaned_data/',
         ]
-        self.dest_dir_prefix = '/apollo/data/learning_data'
+        self.dest_dir_prefix = '/apollo/data/learning_data/'
 
         src_dirs_set = set([])
         for prefix in self.src_dir_prefixs:
@@ -60,15 +60,16 @@ class DumpLearningData(BasePipeline):
         else:
             dest_dir = "/".join(src_dir_elements)
 
-        file_utils.makedirs(os.path.dirname(dest_dir))
+        file_utils.makedirs(dest_dir)
 
         """Call planning C++ code."""
-        map_name = "sunnyvale"
+        map_name = "sunnyvale_with_two_offices"
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/planning/data_pipelines/scripts/'
             'records_to_data_for_learning.sh '
             '"{}" "{}" "{}"'.format(src_dir, dest_dir, map_name))
+
         if os.system(command) == 0:
             logging.info('Successfully processed {} to {}'.format(src_dir,
                                                                   dest_dir))
@@ -76,6 +77,7 @@ class DumpLearningData(BasePipeline):
         else:
             logging.error('Failed to process {} to {}'.format(src_dir,
                                                               dest_dir))
+
         return 0
 
 
