@@ -69,7 +69,7 @@ class SpeedLimitImgRenderer(object):
             rough_local_map, M, tuple(rough_local_map_grid))
         fine_crop = rotated[center_local_idx[1] - self.local_base_point_h_idx: center_local_idx[1] +
                             (self.local_size_h - self.local_base_point_h_idx), center_local_idx[0] -
-                            self.local_base_point_w_idx: center_local_idx[0] + self.local_base_point_w_idx]
+                            self.local_base_point_w_idx: center_local_idx[0] + self.local_base_point_w_idx + 1]
         return fine_crop
 
 

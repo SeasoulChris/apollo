@@ -18,7 +18,7 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_size_h = 501  # H * W image
         self.local_size_w = 501  # H * W image
         # lower center point in the image
-        self.local_base_point_w_idx = (self.local_size_w - 1) / 2
+        self.local_base_point_w_idx = (self.local_size_w - 1) // 2
         self.local_base_point_h_idx = 376  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.max_prediction_time_horizon = 3  # second
@@ -42,7 +42,7 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_heading = center_heading
 
         for obstacle in obstacles:
-            if obstacle.HasField("obstacle_prediction"):
+            if obstacle.HasField("obstacle_prediction") and len(obstacle.obstacle_prediction.trajectory) > 0:
                 max_prob_idx = 0
                 max_prob = 0
                 for i in range(len(obstacle.obstacle_prediction.trajectory)):
@@ -50,7 +50,7 @@ class ObstaclePredictionsImgRenderer(object):
                     if trajectory.probability > max_prob:
                         max_prob_idx = i
                         max_prob = trajectory.probability
-                for trajectory_point in obstacle.obstacle_prediction.trajectory[max_prob_idx]:
+                for trajectory_point in obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point:
                     if trajectory_point.relative_time > self.max_prediction_time_horizon:
                         break
                     color = trajectory_point.relative_time / self.max_prediction_time_horizon * 255

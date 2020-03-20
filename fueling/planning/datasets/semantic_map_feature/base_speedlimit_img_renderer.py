@@ -27,9 +27,9 @@ class BaseSpeedLimitImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Map base point is " +
+        print("Base Speed Limit Map base point is " +
               str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Map W * H is " +
+        print("Base Speed Limit Map W * H is " +
               str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):

@@ -135,6 +135,8 @@ class RoutingImgRenderer(object):
     def draw_local_routing(self, center_x, center_y, center_heading, local_routing):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        self.center = np.array([center_x, center_y])
+        self.center_heading = center_heading
         routing_color_delta = int(255 / len(local_routing))
         for i in range(len(local_routing)):
             color = int(255 - i * routing_color_delta)
