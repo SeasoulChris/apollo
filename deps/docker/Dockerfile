@@ -1,7 +1,7 @@
 FROM apolloauto/apollo:dev-18.04-x86_64-20200316_1910
 
 RUN apt update -y && \
-    apt install -y iputils-ping openjdk-8-jre && \
+    apt install -y iputils-ping openjdk-8-jre vim && \
     apt clean -y
 
 COPY fuel.yaml /tmp/fuel.yaml
