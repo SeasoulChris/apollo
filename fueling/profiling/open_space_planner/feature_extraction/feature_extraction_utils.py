@@ -18,7 +18,7 @@ def get_config_open_space_profiling():
     proto_utils.get_pb_from_text_file(profiling_conf, open_space_planner_profiling)
     return open_space_planner_profiling
 
-#  trajectory points
+#  trajectory point example:
 #  path_point:
 #     x: 559787.066030095
 #     y: 4157751.813925536
@@ -73,8 +73,10 @@ def extract_data_from_all_trajectory_point(msg):
     trajectory_points = msg.trajectory_point
     # logging.info('computing {} trajectory_point from frame No {}'.format(
     #     len(trajectory_points), msg.header.sequence_num))
-    trajectory_mtx = np.array([data for data in [extract_data_from_trajectory_point(trajectory_point)
-                                                 for trajectory_point in trajectory_points] if data is not None])
+    extract_list = (extract_data_from_trajectory_point(trajectory_point)
+                    for trajectory_point in trajectory_points)
+    trajectory_mtx = np.array([data for data in extract_list if data is not None])
+
     return trajectory_mtx
 
 
@@ -102,15 +104,12 @@ def extract_mtx(target_groups):
 def extract_mtx_repeated_field(target_groups):
     """Extract matrix data of repeated fields from a group of messages"""
     target, group_id, msgs = target_groups
-    logging.info('computing {} messages for target {}'.format(len(msgs), target))
-    planning_mtx = np.array([data for data in (extract_data_from_all_trajectory_point(msg)
-                                               for msg in msgs) if data is not None])
-    planning_mtx = extract_data_from_all_trajectory_point(msgs[0])
-    for msg in msgs[1:-1]:
-        data = extract_data_from_all_trajectory_point(msg)
-        # 10 trajectory point is stop trajectory
-        if(data.shape[0] > 10):
-            planning_mtx = np.concatenate((planning_mtx, data), axis=0)
+    logging.info(F'computing {len(msgs)} messages for target {target}')
+
+    extracted_data = (extract_data_from_all_trajectory_point(msg) for msg in msgs)
+    planning_mtx = np.concatenate(
+        [data for data in extracted_data if data is not None and data.shape[0] > 10])
+
     return target, group_id, planning_mtx
 
 

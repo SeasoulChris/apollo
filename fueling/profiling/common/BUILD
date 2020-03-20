@@ -1,6 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "numpy_utils",
+    srcs = ["numpy_utils.py"]
+)
+
+py_library(
     name = "multi_vehicle_utils",
     srcs = ["multi_vehicle_utils.py"],
     deps = [

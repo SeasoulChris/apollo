@@ -8,7 +8,7 @@ import os
 
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
-
+from fueling.profiling.common.numpy_utils import filter_value
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX
 import fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils as feature_utils
 
@@ -26,34 +26,37 @@ def grading(target_groups):
                  .format(grading_mtx.shape[0], h5_output_file, target))
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
 
-    grading_results = namedtuple('grading_results',
-                                 ['relative_time',
-                                  'speed',
-                                  'acceleration_mean',
-                                  'lateral_acceleration',
-                                  'lateral_deceleration',
-                                  'longitudinal_acceleration',
-                                  'longitudinal_deceleration',
-                                  'lat_acc_hit_bound',
-                                  ])
-    grading_arguments = namedtuple('grading_arguments',
-                                   ['mean_feature_name',
-                                    'mean_filter_name',
-                                    'mean_filter_mode',
-                                    'mean_weight',
-                                    'count_feature_name'])
-    grading_results.__new__.__defaults__ = (
-        None,) * len(grading_results._fields)
-    grading_arguments.__new__.__defaults__ = (
-        None,) * len(grading_arguments._fields)
-    grading_group_result = grading_results(
-        acceleration_mean=compute_mean(grading_mtx, grading_arguments(
-            mean_feature_name='acceleration',
-            mean_weight=1.0
-        )),
-        lat_acc_hit_bound=compute_count(grading_mtx, grading_arguments(
-            count_feature_name='lateral_acceleration_hit_bound',
-        )),
+    GradingResults = namedtuple('grading_results',
+                                ['relative_time',
+                                 'speed',
+                                 'acceleration_mean',
+                                 'lateral_acceleration',
+                                 'lateral_deceleration',
+                                 'longitudinal_acceleration',
+                                 'longitudinal_deceleration',
+                                 'lat_acc_hit_bound',
+                                 ])
+    GradingArguments = namedtuple('grading_arguments',
+                                  ['mean_feature_name',
+                                   'mean_filter_name',
+                                   'mean_filter_mode',
+                                   'mean_filter_value',
+                                   'mean_weight',
+                                   'count_feature_name'])
+    GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
+    GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
+
+    grading_group_result = GradingResults(
+        acceleration_mean=compute_mean(
+            grading_mtx,
+            GradingArguments(
+                mean_feature_name='acceleration',
+                mean_weight=1.0
+            )),
+        lat_acc_hit_bound=compute_count(
+            grading_mtx, GradingArguments(
+                count_feature_name='lateral_acceleration_hit_bound',
+            )),
     )
     return (target, grading_group_result)
 
@@ -63,8 +66,12 @@ def compute_mean(grading_mtx, arg):
     profiling_conf = feature_utils.get_config_open_space_profiling()
     if arg.mean_filter_name:
         for idx in range(len(arg.mean_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.mean_filter_name[idx]],
-                                       arg.mean_filter_value[idx], arg.mean_filter_mode[idx])
+            column_name = arg.mean_filter_name[idx]
+            column_idx = FEATURE_IDX[column_name]
+            threshold = arg.mean_filter_value[idx]
+            mode = arg.mean_filter_mode[idx]
+            grading_mtx = filter_value(grading_mtx, column_idx, threshold, mode)
+
     elem_num, item_num = grading_mtx.shape
     if elem_num < profiling_conf.min_sample_size:
         logging.warning('no enough elements {} for mean computing requirement {}'
@@ -88,18 +95,19 @@ def compute_count(grading_mtx, arg):
 def output_result(target_grading):
     """Write the grading results to files in corresponding target dirs"""
     target_dir, grading = target_grading
-    grading_output_path = os.path.join(target_dir,
-                                       'open_space_performance_grading.txt')
+    grading_output_path = os.path.join(target_dir, 'open_space_performance_grading.txt')
     logging.info('writing grading output {} to {}'.format(grading, target_dir))
+
     grading_dict = grading._asdict()
     with open(grading_output_path, 'w') as grading_file:
         grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                            .format('Grading Items', 'Grading Values', 'Sampling Size',
                                    'Event Timestamp'))
-        for name, value in grading._asdict().items():
+        for name, value in grading_dict.items():
             if not value:
                 logging.warning('grading value for {} is None'.format(name))
                 continue
+
             grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                .format(name, value[0], value[1]))
             grading_dict[name] = {'score': float('%.6f' % value[0]),

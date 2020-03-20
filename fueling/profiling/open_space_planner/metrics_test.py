@@ -25,7 +25,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
 
     def test_run(self):
         flags.FLAGS.running_mode = 'TEST'
-        flags.FLAGS.open_space_planner_profiling_input_path = file_utils.fuel_path(self.TESTDATA_PATH)
+        flags.FLAGS.open_space_planner_profiling_input_path = file_utils.fuel_path(
+            self.TESTDATA_PATH)
         flags.FLAGS.open_space_planner_profiling_output_path = file_utils.fuel_path(F'{flags.FLAGS.test_tmpdir}/generated')
 
         self.pipeline.init()

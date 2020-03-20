@@ -34,8 +34,8 @@ def has_desired_stage(parsed_planning_msg):
     if hasattr(parsed_planning_msg.debug.planning_data, 'scenario'):
         scenario = parsed_planning_msg.debug.planning_data.scenario
         return (scenario.scenario_type == SCENARIO_TYPE and
-            scenario.stage_type == STAGE_TYPE)
-    return false
+                scenario.stage_type == STAGE_TYPE)
+    return False
 
 
 def partition_data(target_msgs):
@@ -76,7 +76,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
                               record_utils.is_bag_file(file)))
                           .cache())
         logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
-        
+
         # 2. run evaluation
         self.process(todo_task_dirs, origin_prefix, target_prefix)
 
