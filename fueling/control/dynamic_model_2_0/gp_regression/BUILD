@@ -39,10 +39,6 @@ py_library(
         ":encoder",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
         ":predict",
-        requirement("graphviz"),
-        requirement("tqdm"),
-        requirement("opt-einsum"),
-        requirement("progressbar"),
         requirement("pyro-ppl"),
     ],
 )
