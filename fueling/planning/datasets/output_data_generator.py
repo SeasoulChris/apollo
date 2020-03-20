@@ -10,8 +10,8 @@ from fueling.planning.datasets.label_generator import LabelGenerator
 import fueling.common.logging as logging
 
 SKIP_EXISTING_DST_FILE = False
-SRC_DIR_PREFIX = 'modules/planning/learning_data'
-DST_DIR_PREFIX = 'modules/planning/output_data'
+SRC_DIR_PREFIX = 'modules/planning/learning_data/2019-10-17-13-36-4'
+DST_DIR_PREFIX = 'modules/planning/output_data/2019-10-17-13-36-4'
 
 
 class OutputDataGenerator(BasePipeline):
