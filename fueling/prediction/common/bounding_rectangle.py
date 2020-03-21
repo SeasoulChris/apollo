@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from vector2d import Vector2
-from rotation2d import *
-from util import segment_overlap
+from fueling.prediction.common.vector2d import Vector2
+from fueling.prediction.common.rotation2d import *
+from fueling.prediction.common.util import segment_overlap
 
 
 class BoundingRectangle:

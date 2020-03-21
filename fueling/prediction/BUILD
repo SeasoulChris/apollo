@@ -97,6 +97,7 @@ py_binary(
     deps = [
 	"//fueling/common:base_pipeline",
 	"//fueling/common:logging",
+    "//fueling/prediction/common:bounding_rectangle",
 	"//fueling/prediction/common:online_to_offline",
     ]
 )

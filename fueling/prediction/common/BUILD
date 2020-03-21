@@ -5,6 +5,7 @@ py_library(
     srcs = ["bounding_rectangle.py"],
     deps = [
         ":rotation2d",
+        ":vector2d",
         ":util",
     ]
 )

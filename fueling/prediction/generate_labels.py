@@ -23,7 +23,7 @@ class GenerateLabels(BasePipeline):
 
     def run(self):
         """Run prod."""
-        source_prefix = 'modules/prediction/labels/'
+        source_prefix = 'modules/prediction/kinglong_labels/'
 
         # RDD(bin_files)
         bin_files = (
