@@ -13,6 +13,7 @@ from modules.control.proto.mrac_conf_pb2 import MracConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
+import fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils as visual_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -65,19 +66,19 @@ class BayesianOptimizationTuner():
         except Exception as error:
             logging.error(f"Failed to parse autotune config: {error}")
 
+        tuner_parameters = self.tuner_param_config_pb.tuner_parameters
+
         try:
             proto_utils.get_pb_from_text_file(
-                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
+                tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
             )
             logging.debug(f"Parsed control config files {self.algorithm_conf_pb}")
 
         except Exception as error:
             logging.error(f"Failed to parse control config: {error}")
 
-        for parameter in self.tuner_param_config_pb.tuner_parameters.parameter:
+        for parameter in tuner_parameters.parameter:
             self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
-
-        tuner_parameters = self.tuner_param_config_pb.tuner_parameters
 
         self.n_iter = tuner_parameters.n_iter
 
@@ -121,6 +122,9 @@ class BayesianOptimizationTuner():
             score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
+            for param_name in self.pbounds.keys():
+                visual_utils.plot_gp(self.optimizer, param_name, self.pbounds[param_name][0],
+                                     self.pbounds[param_name][1], self.utility)
             logging.info(f"optimizer iteration: {i}, target value: {target}, config point: {next_point}")
 
     def get_result(self):

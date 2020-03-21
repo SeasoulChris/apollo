@@ -11,6 +11,7 @@ py_binary(
     deps = [
         "//fueling/learning/autotuner/client:cost_computation_client",
         "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
+        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         requirement("bayesian-optimization"),
@@ -22,5 +23,13 @@ py_binary(
     srcs = ["optuna_tuner.py"],
     deps = [
         requirement("optuna"),
+    ],
+)
+
+py_binary(
+    name = "bayesian_optimization_visual_utils",
+    srcs = ["bayesian_optimization_visual_utils.py"],
+    deps = [
+        requirement("bayesian-optimization"),
     ],
 )
