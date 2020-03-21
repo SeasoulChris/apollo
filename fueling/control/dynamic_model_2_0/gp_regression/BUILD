@@ -37,8 +37,8 @@ py_library(
     srcs = ["train.py"],
     deps = [
         ":encoder",
-        "//fueling/control/dynamic_model_2_0/conf:model_conf",
         ":predict",
+        "//fueling/control/dynamic_model_2_0/conf:model_conf",
         requirement("pyro-ppl"),
     ],
 )
