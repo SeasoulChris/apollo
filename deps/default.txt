@@ -7,3 +7,4 @@ progressbar
 psutil
 pyro-ppl
 tqdm
+gpytorch

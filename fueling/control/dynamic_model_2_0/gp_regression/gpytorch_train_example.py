@@ -27,7 +27,7 @@ def encoding(dataset):
     logging.info("************Input Dim: {}".format(encoded_feature.shape))
 
 
-def get_dataset(dataset):
+def get_dataset():
     X, y = torch.randn(1000, 3), torch.randn(1000)
     train_n = int(floor(0.8 * len(X)))
     train_x = X[:train_n, :].contiguous()
@@ -87,4 +87,3 @@ if __name__ == '__main__':
     parser.add_argument('--kernel_dim', type=int, default=20)
     args = parser.parse_args()
     dataset = GPDataSet(args)
-    encoding(dataset)

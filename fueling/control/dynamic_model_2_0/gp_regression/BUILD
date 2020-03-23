@@ -33,6 +33,26 @@ py_library(
 )
 
 py_library(
+    name = "gp_model",
+    srcs = ["gp_model.py"],
+    deps = [
+        requirement("gpytorch"),
+        "//fueling/common:logging",
+        "//fueling/control/dynamic_model_2_0/conf:model_conf",
+    ],
+)
+
+py_binary(
+    name = "gpytorch_train_example",
+    srcs = ["gpytorch_train_example.py"],
+    deps = [
+        "//fueling/control/dynamic_model_2_0/gp_regression:dataset",
+        "//fueling/control/dynamic_model_2_0/gp_regression:gp_model",
+        "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
+    ],
+)
+
+py_library(
     name = "train",
     srcs = ["train.py"],
     deps = [
