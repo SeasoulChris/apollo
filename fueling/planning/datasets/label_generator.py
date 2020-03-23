@@ -15,6 +15,7 @@ class LabelGenerator(object):
     def __init__(self):
         self.src_filepath = None
         self.dst_filepath = None
+        self.secondary_filepath = None
         self.feature_sequence = []
         # super set of label
         self.observation_dict = dict()
@@ -27,7 +28,7 @@ class LabelGenerator(object):
         # label dict
         self. label_dict = dict()
 
-    def LoadFeaturePBAndSaveLabelFiles(self, input_filepath, output_filepath):
+    def LoadFeaturePBAndSaveLabelFiles(self, input_filepath, output_filepath, secondary_filepath=None):
         self.src_filepath = input_filepath
         logging.info(input_filepath)
         self.dst_filepath = output_filepath
@@ -35,6 +36,19 @@ class LabelGenerator(object):
         offline_features = learning_data_pb2.LearningData()
         offline_features = proto_utils.get_pb_from_bin_file(self.src_filepath, offline_features)
         learning_data_sequence = offline_features.learning_data
+        data_len = len(learning_data_sequence)  # origin data length
+        logging.info(len(learning_data_sequence))
+
+        if secondary_filepath:
+            self.secondary_filepath = secondary_filepath
+
+            # extra trajectory
+            extra_offline_features = proto_utils.get_pb_from_bin_file(
+                self.secondary_filepath, offline_features)
+            # learning_data from current bin + learning data from next bin
+            learning_data_sequence.extend(extra_offline_features.learning_data)
+            logging.info(len(learning_data_sequence))
+
         # get all trajectory points from feature_sequence
         adc_trajectory = []
         timestamps = []
@@ -49,8 +63,10 @@ class LabelGenerator(object):
                     timestamps.append(adc_trajectory_point.timestamp_sec)
                     adc_trajectory.append(adc_trajectory_point)
             # key: current localization point
-            self.feature_dict["adc@{:.3f}".format(timestamps[-1])] = learning_data
+            if idx < data_len:
+                self.feature_dict["adc@{:.3f}".format(timestamps[-1])] = learning_data
         # print(adc_trajectory[-1])
+
         # [Feature1, Feature2, Feature3, ...] (sequentially sorted)
         adc_trajectory.sort(key=lambda x: x.timestamp_sec)
         logging.info(len(adc_trajectory))
@@ -151,6 +167,9 @@ class LabelGenerator(object):
             key = "adc@{:.3f}".format(feature.timestamp_sec)
             self.label_dict[key] = observed_val[0]  # output_features
             self.future_status_dict[key] = observed_val[1]['adc_traj']
+            logging.debug(len(observed_val[1]['adc_traj']))
+            time_span = observed_val[1]['total_observed_time_span']
+            logging.debug(time_span)
         logging.info(self.dst_filepath)
         logging.info("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
         np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
@@ -200,13 +219,14 @@ class LabelGenerator(object):
 
 if __name__ == '__main__':
     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.0.bin'
+    FILE2 = '/apollo/data/learning_based_planning/bin_result/learning_data.1.bin'
     OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin'
     label_gen = LabelGenerator()
-    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
+    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE, FILE2)
     result2 = label_gen.LabelTrajectory()
     logging.info(len(result2))
     logging.debug(label_gen.MergeDict())
-    data_points = result2['adc@1571344606.693']
+    data_points = result2['adc@1571344611.893']
     logging.debug(data_points)
     IMG_FN = '/apollo/data/learning_based_planning/learning_data.0.bin.pdf'
     label_gen.Visualize(data_points, IMG_FN)
