@@ -15,7 +15,7 @@ class GPModel(ApproximateGP):
             self, inducing_points, variational_distribution, learn_inducing_locations=True)
         super(GPModel, self).__init__(variational_strategy)
         self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.MaternKernel(gpytorch.kernels.RBFKernel())
+        self.covar_module = gpytorch.kernels.MaternKernel()
 
     def forward(self, x):
         mean_x = self.mean_module(x)
