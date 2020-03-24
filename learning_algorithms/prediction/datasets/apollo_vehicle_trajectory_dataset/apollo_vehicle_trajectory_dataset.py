@@ -391,7 +391,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
             # TODO(Hongyi): modify the following part to include multiple obstacles.
             obs_mapping = ObstacleMapping(region, self.base_map[region], world_coord, obs_polygons)
             img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
-            # cv.imwrite("./test/img{}.png".format(idx), img)
+            origin_img = img.copy()
+            # cv.imwrite("/fuel/img{}.png".format(idx), img)
             if self.img_transform:
                 img = self.img_transform(img)
             all_obs_positions = np.concatenate(self.obs_pos[s_idx:e_idx])
@@ -445,7 +446,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                      torch.from_numpy(nearby_obs_hist_sizes_with_padding).float(),
                      torch.from_numpy(nearby_obs_pos_rel_with_padding).float(),
                      torch.from_numpy(nearby_obs_pos_step_with_padding).float(),
-                     torch.from_numpy(num_nearby_obs * np.ones((1)))),
+                     torch.from_numpy(num_nearby_obs * np.ones((1))),
+                     origin_img),
                     torch.from_numpy(target_obs_future_traj).float())
         else:
             s_idx = self.start_idx[idx]

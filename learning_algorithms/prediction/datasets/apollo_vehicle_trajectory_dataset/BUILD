@@ -23,3 +23,12 @@ py_binary(
         "//learning_algorithms/prediction/models/semantic_map_model:semantic_map_model",
     ],
 )
+
+py_binary(
+    name = "visualize_model",
+    srcs = ["visualize_model.py"],
+    deps = [
+        ":apollo_vehicle_trajectory_dataset",
+        "//learning_algorithms/prediction/models/semantic_map_model:semantic_map_model",
+    ],
+)

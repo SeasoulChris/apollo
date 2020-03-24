@@ -230,6 +230,7 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
         return pred_traj
+        # return pred_traj, img_attn
 
 
 class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
