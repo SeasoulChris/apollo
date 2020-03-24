@@ -7,4 +7,4 @@ progressbar
 psutil
 pyro-ppl
 tqdm
-gpytorch
+-e git+git://github.com/cornellius-gp/gpytorch.git@master#egg=gpytorch
