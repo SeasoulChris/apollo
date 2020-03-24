@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import glob
 import operator
 
@@ -24,6 +25,7 @@ class GenerateLabels(BasePipeline):
     def run(self):
         """Run prod."""
         source_prefix = 'modules/prediction/kinglong_labels/'
+        # source_prefix = '/fuel/kinglong_data/features/'
 
         # RDD(bin_files)
         bin_files = (
@@ -58,6 +60,9 @@ class GenerateLabels(BasePipeline):
         """Call prediction python code to generate labels."""
         label_gen = LabelGenerator()
         try:
+            dir_name = os.path.dirname(src_file)
+            command = "sudo chmod 777 {}".format(dir_name)
+            os.system(command)
             label_gen.LoadFeaturePBAndSaveLabelFiles(src_file)
             label_gen.Label()
             logging.info('Successfully labeled {}'.format(src_file))

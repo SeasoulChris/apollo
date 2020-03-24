@@ -15,6 +15,7 @@ from fueling.prediction.common.configure import parameters
 
 param_fea = parameters['feature']
 
+enable_lane_related_labeling = False
 
 class LabelGenerator(object):
 
@@ -64,7 +65,6 @@ class LabelGenerator(object):
         offline_features = proto_utils.get_pb_from_bin_file(self.filepath, offline_features)
         feature_sequences = offline_features.feature
         self.OrganizeFeatures(feature_sequences)
-        del feature_sequences  # Try to free up some memory
         self.ObserveAllFeatureSequences()
 
     '''
@@ -86,7 +86,6 @@ class LabelGenerator(object):
         # For the same obstacle, sort the Feature sequentially.
         for obs_id in self.feature_dict.keys():
             if len(self.feature_dict[obs_id]) < 2:
-                del self.feature_dict[obs_id]
                 continue
             self.feature_dict[obs_id].sort(key=lambda x: x.timestamp)
 
@@ -98,12 +97,12 @@ class LabelGenerator(object):
     def ObserveAllFeatureSequences(self):
         for obs_id, feature_sequence in self.feature_dict.items():
             for idx, feature in enumerate(feature_sequence):
-                if not feature.HasField('lane') or \
-                   not feature.lane.HasField('lane_feature'):
-                    # print('No lane feature, cancel labeling')
-                    continue
+                # if not feature.HasField('lane') or \
+                #    not feature.lane.HasField('lane_feature'):
+                #     # print('No lane feature, cancel labeling')
+                #     continue
                 self.ObserveFeatureSequence(feature_sequence, idx)
-        np.save(self.filepath + '.npy', self.observation_dict)
+        # np.save(self.filepath + '.npy', self.observation_dict)
 
     '''
     @brief: Observe the sequence of Features following the Feature at
@@ -171,6 +170,15 @@ class LabelGenerator(object):
                              feature_sequence[j].width,
                              feature_sequence[j].timestamp,
                              feature_sequence[j].acc))
+
+            if not enable_lane_related_labeling:
+                dict_val = dict()
+                dict_val['obs_traj'] = obs_traj
+                dict_val['obs_traj_len'] = len(obs_traj)
+                dict_val['total_observed_time_span'] = total_observed_time_span
+                self.observation_dict["{}@{:.3f}".format(
+                    feature_curr.id, feature_curr.timestamp)] = dict_val
+                return
 
             #####################################################################
             # Update the visited lane segment info:
@@ -464,8 +472,9 @@ class LabelGenerator(object):
 
     def Label(self):
         self.LabelTrajectory()
-        self.LabelVisitedLaneSegment()
-        self.LabelSingleLane()
-        self.LabelJunctionExit()
+        if enable_lane_related_labeling:
+            self.LabelVisitedLaneSegment()
+            self.LabelSingleLane()
+            self.LabelJunctionExit()
         # TODO(all):
         #   - implement label multiple lane
