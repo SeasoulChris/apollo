@@ -39,7 +39,7 @@ def get_dataset():
 
     test_dataset = TensorDataset(test_x, test_y)
     test_loader = DataLoader(test_dataset, batch_size=1024, shuffle=False)
-    return train_x, train_y, train_loader
+    return train_x, train_y, train_loader, test_x, test_y
 
 
 def train_gp(train_x, train_y, train_loader):
@@ -68,11 +68,36 @@ def train_gp(train_x, train_y, train_loader):
             logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(i, loss))
             loss.backward()
             optimizer.step()
+    # Get into evaluation (predictive posterior) mode
+    # model.eval()
+    # likelihood.eval()
+    return model
+
+
+class MeanVarModelWrapper(nn.Module):
+    def __init__(self, gp):
+        super().__init__()
+        self.gp = gp
+
+    def forward(self, x):
+        output_dist = self.gp(x)
+        return output_dist.mean, output_dist.variance
+
+
+def save_gp(model, test_x):
+    wrapped_model = MeanVarModelWrapper(model)
+    with torch.no_grad():
+        fake_input = test_x
+        pred = wrapped_model(fake_input)  # Compute caches
+        traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
+        logging.info("saving model")
+    traced_model.save('/tmp/traced_gp.pt')
 
 
 if __name__ == '__main__':
-    train_x, train_y, train_loader = get_dataset()
-    train_gp(train_x, train_y, train_loader)
+    train_x, train_y, train_loader, test_x, test_y = get_dataset()
+    gp_model = train_gp(train_x, train_y, train_loader)
+    save_gp(gp_model, test_x)
 
     parser = argparse.ArgumentParser(description='GP')
     # paths
@@ -84,6 +109,10 @@ if __name__ == '__main__':
         '--testing_data_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
+    parser.add_argument(
+        '--gp_model_path',
+        type=str,
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
     parser.add_argument('--kernel_dim', type=int, default=20)
     args = parser.parse_args()
     dataset = GPDataSet(args)
