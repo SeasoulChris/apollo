@@ -18,7 +18,6 @@ import fueling.common.logging as logging
 DATA_TEAM = [
     'longtaolin@baidu.com',
     'xiaoxiangquan@baidu.com',
-    'fengzongbao@baidu.com',
 ]
 CONTROL_TEAM = [
     'jiaxuanxu@baidu.com',
