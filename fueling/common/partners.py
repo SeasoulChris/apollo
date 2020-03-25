@@ -9,11 +9,11 @@ Partner.__new__.__defaults__ = (None,) * len(_fields)
 
 partners = {
     'apollo': Partner(name='Apollo', email='xiaoxiangquan@baidu.com',
-                      bos_bucket='apollo-platform', bos_region='bj'),
+                      bos_bucket='apollo-platform-fuel', bos_region='bj'),
     'apollo-evangelist': Partner(name='Evangelist', email='machao20@baidu.com',
-                                 bos_bucket='apollo-evangelist', bos_region='bj'),
+                                 bos_bucket='apollo-platform-evangelist', bos_region='bj'),
     'apollo-qa': Partner(name='QA', email='fuyiqun@baidu.com',
-                         bos_bucket='apollo-platform', bos_region='bj'),
+                         bos_bucket='apollo-platform-fuel', bos_region='bj'),
     'udelv2019': Partner(name='Udelv', email='xiaoxiangquan@baidu.com'),
     'coolhigh': Partner(name='Coolhigh', email='mhchenm@coolhigh.com.cn'),
     'd-kit-htrob': Partner(name='HTROB', email='hance_htrob@163.com',
@@ -27,5 +27,5 @@ partners = {
     'd-kit-jlqc-44': Partner(name='JLQC44', email='dyan1@jmc.com.cn',
                              bos_bucket='jmcauto', bos_region='su'),
     'd-kit-bqyjy-73': Partner(name='BQYJY73', email='wanglanying@baicgroup.com.cn',
-                         bos_bucket='baic-wly', bos_region='bj'),
+                              bos_bucket='baic-wly', bos_region='bj'),
 }

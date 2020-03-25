@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_REGISTRY="hub.baidubce.com"
-DOCKER_USER="apollo"
+DOCKER_USER="apollofuel"
 
 REPO="${DOCKER_REGISTRY}/${DOCKER_USER}/warehouse"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"

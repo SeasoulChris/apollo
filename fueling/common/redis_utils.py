@@ -14,7 +14,7 @@ import redis
 import fueling.common.logging as logging
 
 
-SERVER_HOST = '192.168.48.6'
+SERVER_HOST = '192.168.32.22'
 SERVER_PORT = 6379
 TIMEOUT = 5
 

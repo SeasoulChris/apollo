@@ -13,6 +13,7 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
+import fueling.common.storage.bos_client as bos_client
 
 
 def execute_task(message_meta):
@@ -91,10 +92,12 @@ class SensorCalibrationPipeline(BasePipeline):
             logging.error(e)
 
         # Send result to job owner.
-        receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
+        # receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
+        receivers = []
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)
+        receivers = ['longtaolin@baidu.com']
 
         if result_files:
             title = 'Your sensor calibration job is done!'
@@ -117,12 +120,13 @@ class SensorCalibrationPipeline(BasePipeline):
         # If it's a partner job, move origin data to our storage before processing.
         if self.is_partner_job():
             job_dir = self.partner_storage().abs_path(job_dir)
-            job_output_dir = self.our_storage().abs_path(
-                os.path.join('modules/perception/sensor_calibration',
-                             self.FLAGS['job_owner'], self.FLAGS['job_id']))
+
+            job_output_dir = self.partner_storage().abs_path(self.FLAGS.get('output_data_path'))
+            if not job_output_dir.startswith(bos_client.PARTNER_BOS_MOUNT_PATH):
+                logging.fatal(F'Wrong job_output_dir {job_output_dir}')
+
             file_utils.makedirs(job_output_dir)
             # TODO: Quick check on partner data.
-
         else:
             job_dir = self.our_storage().abs_path(job_dir)
             job_output_dir = job_dir
@@ -138,11 +142,6 @@ class SensorCalibrationPipeline(BasePipeline):
         for result_dir in result_dirs:
             if result_dir:
                 result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
-                target_dir = os.path.join(self.FLAGS.get('output_data_path'),
-                                          os.path.basename(result_dir))
-                shutil.rmtree(target_dir, ignore_errors=True)
-                shutil.copytree(result_dir, target_dir)
-
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
         logging.info(f"Generated {len(result_files)} results: {result_files}")
         return result_files

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DOCKER_REGISTRY="registry.bce.baidu.com"
-REPO="${DOCKER_REGISTRY}/a7e094e2914d424caa523a201e57995b/apollo-fuel-bae-proxy"
+REPO="${DOCKER_REGISTRY}/9ced775163e5481b8b8ac99c7c14fe27/apollo-fuel-bae-proxy"
 IMAGE="${REPO}:$(date +%Y%m%d_%H%M)"
 
 echo "Building image: ${IMAGE}"

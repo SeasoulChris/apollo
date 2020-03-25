@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DOMAIN="apollofuel.bceapp.com"
+DOMAIN="apollofuelv2.bceapp.com"
 CONTAINER_PORT="8080"
 
 CHAIN_FILE="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"

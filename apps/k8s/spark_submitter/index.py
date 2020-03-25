@@ -54,7 +54,7 @@ class SparkSubmitJob(flask_restful.Resource):
     def spark_submit(job_id, arg):
         """Submit job."""
         # Configs.
-        K8S_MASTER = 'k8s://https://180.76.150.16:6443'
+        K8S_MASTER = 'k8s://https://180.76.60.99:6443'
         STORAGE = '/mnt/bos'
         EXTRACTED_PATH = '/apollo/modules/data/fuel'
         SECRET_ENVS = {

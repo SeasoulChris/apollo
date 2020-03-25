@@ -45,7 +45,10 @@ class SensorCalibration(BaseJob):
             'workers': 2, 'cpu': 1, 'memory': 24,
             'partner_storage_writable': True,
         }
-        job_flags = {'input_data_path': job_arg.flags.get("input_data_path")}
+        job_flags = {
+            'input_data_path': job_arg.flags.get("input_data_path"),
+            'output_data_path': job_arg.flags.get("output_data_path"),
+        }
         return (entrypoint, client_flags, job_flags)
 
 

@@ -13,7 +13,7 @@ import pymongo
 import fueling.common.logging as logging
 
 
-MONGO_URL = 'mongodb://bJVmYB0.mongodb.bj.baidubce.com:27017,bJVmYB1.mongodb.bj.baidubce.com:27017'
+MONGO_URL = 'mongodb://auPpfadGy.mongodb.bj.baidubce.com:27017,auPpfaZwf.mongodb.bj.baidubce.com:27017'
 MONGO_DB_NAME = 'apollo'
 
 

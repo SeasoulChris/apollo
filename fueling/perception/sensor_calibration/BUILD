@@ -7,6 +7,7 @@ py_binary(
         ":calibration_config",
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
+        "//fueling/common:redis_utils",
         "//fueling/common:partners",
     ]
 )

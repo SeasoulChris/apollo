@@ -34,7 +34,7 @@ message User {
 }
 
 message Env {
-  optional string docker_image = 1 [default = "hub.baidubce.com/apollo/spark:latest"];
+  optional string docker_image = 1 [default = "hub.baidubce.com/apollofuel/spark:latest"];
   optional string conda_env = 2 [default = "fuel-py36"];
 
   enum NodeSelector {
