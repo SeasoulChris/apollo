@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+import "fueling/learning/autotuner/proto/tuner_param_config.proto";
+
+message ConfigPoint {
+  string param_name = 1;
+  double param_value = 2;
+}
+
+message IterationDetails {
+  double training_id = 1;
+  double target = 2;
+  ConfigPoint config_point = 3;
+}
+
+message IterationRecords {
+  repeated IterationDetails iteration_details = 1;
+}
+
+
+message TunerResults {
+  double target_max = 1;
+  ConfigPoint config_max = 2;
+  TunerParameters tuner_parameters = 3;
+  IterationRecords iteration_records = 4;
+}

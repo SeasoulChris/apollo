@@ -27,3 +27,8 @@ py_proto(
     name = "tuner_param_config_pb2",
     src = "tuner_param_config.proto",
 )
+
+py_proto(
+    name = "tuner_results_data_pb2",
+    src = "tuner_results_data.proto",
+)
