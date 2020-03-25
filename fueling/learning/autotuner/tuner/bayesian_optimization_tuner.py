@@ -128,6 +128,8 @@ class BayesianOptimizationTuner():
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
             next_point = self.optimizer.suggest(self.utility)
+            next_point = self.config_sanity_check(next_point)
+
             # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point, MracConf()))
@@ -150,6 +152,24 @@ class BayesianOptimizationTuner():
                                                          'config_point': next_point}})
 
             logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
+
+    def config_sanity_check(self, point):
+        param_name = list(point.keys())[0]
+        param_value = point[param_name]
+        param_delta = (self.pbounds[param_name][1] - self.pbounds[param_name][0]) / 1000
+        delta_sign = (param_value <= (self.pbounds[param_name][1] + self.pbounds[param_name][0]) / 2)
+
+        iter = 0
+        while (iter < len(self.iteration_records.keys())):
+            if self.iteration_records[f'iter-{iter}']['config_point'] == point:
+                param_value = point[param_name]
+                point[param_name] = param_value + param_delta * delta_sign
+                iter = 0
+                logging.info(f"The config prameter {param_name} is adjusted from {param_value} "
+                             f"to {point[param_name]} to fix the repeated config samples")
+            else:
+                iter = iter + 1
+        return point
 
     def get_result(self):
         logging.info(f"Result after: {self.n_iter} steps are  {self.optimizer.max}")
