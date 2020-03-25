@@ -1,4 +1,8 @@
 import argparse
+from datetime import datetime
+import json
+import os
+import shutil
 import sys
 import uuid
 
@@ -29,7 +33,11 @@ flags.DEFINE_string(
     "localhost:50052",
     "URL to access the cost computation service"
 )
-
+flags.DEFINE_string(
+    "tuner_storage_dir",
+    "/mnt/bos/autotuner",
+    "Tuner storage root directory"
+)
 
 def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
     config_id = uuid.uuid1().hex
@@ -95,6 +103,13 @@ class BayesianOptimizationTuner():
             random_state=1,
         )
 
+        self.tuner_storage_dir = (
+            flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
+                                          else 'testdata/autotuner'
+        )
+
+        self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
     def set_bounds(self, bounds):
         self.pbounds = bounds
 
@@ -106,6 +121,7 @@ class BayesianOptimizationTuner():
 
     def optimize(self, n_iter=5):
         self.n_iter = n_iter
+        self.iteration_records = {}
         visual = BayesianOptimizationVisual()
         for i in range(n_iter):
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
@@ -115,24 +131,46 @@ class BayesianOptimizationTuner():
             # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point, MracConf()))
-            logging.info(
-                f"Enable MRAC control: {self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
-            logging.info(
-                f"New MRAC Conf files {self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            logging.info(f"Enable MRAC control: "
+                         f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
+            logging.info(f"New MRAC Conf files: "
+                         f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
 
             training_id, score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
+            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
 
             if len(self.pbounds.keys()) == 1:
                 param_name = list(self.pbounds.keys())[0]
-                visual.plot_gp(self.optimizer, self.utility, self.pbounds, param_name, training_id)
+                visual.plot_gp(self.optimizer, self.utility, self.pbounds,
+                               self.visual_storage_dir, param_name)
 
-            logging.info(f"optimizer iteration: {i}, target value: {target}, config point: {next_point}")
+            self.iteration_records.update({f'iter-{i}': {'training_id': training_id, 'target': target,
+                                                         'config_point': next_point}})
+
+            logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
 
     def get_result(self):
         logging.info(f"Result after: {self.n_iter} steps are  {self.optimizer.max}")
         return self.optimizer.max
+
+    def save_result(self):
+        tuner_param_config_dict = proto_utils.pb_to_dict(self.tuner_param_config_pb)
+        self.tuner_results = {'target_max': self.optimizer.max['target'],
+                              'config_max': self.optimizer.max['params'],
+                              'tuner_parameters': tuner_param_config_dict['tuner_parameters'],
+                              'iteration_records': self.iteration_records}
+
+        saving_path = os.path.join(self.tuner_storage_dir, self.timestamp)
+        os.makedirs(saving_path)
+        with open(os.path.join(saving_path, "tuner_results.json"), 'w') as tuner_json:
+            tuner_json.write(json.dumps(self.tuner_results))
+
+        shutil.copyfile(
+            os.path.join(self.visual_storage_dir, 'gaussian_process.png'),
+            os.path.join(saving_path, 'gaussian_process.png'))
+        logging.info(f"Detailed results saved at {saving_path} ")
 
 
 if __name__ == "__main__":
@@ -140,4 +178,4 @@ if __name__ == "__main__":
     tuner = BayesianOptimizationTuner()
     tuner.optimize()
     tuner.get_result()
-    # TODO: dump back results to what path?
+    tuner.save_result()

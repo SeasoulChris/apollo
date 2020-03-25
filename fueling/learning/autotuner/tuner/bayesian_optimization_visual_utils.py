@@ -12,7 +12,6 @@ import numpy as np
 import os
 import time
 
-TMP_ROOT_DIR = "/mnt/bos/autotuner"
 
 class BayesianOptimizationVisual():
     """Basic functionality for Bayesian optimization visualization."""
@@ -34,7 +33,7 @@ class BayesianOptimizationVisual():
         mu, sigma = optimizer._gp.predict(grid, return_std=True)
         return mu, sigma
 
-    def plot_gp(self, optimizer, utility_function, pbounds, param_name, training_id):
+    def plot_gp(self, optimizer, utility_function, pbounds, visual_storage_dir, param_name):
         """Plot the single-param Gaussian Process and Utility function"""
         param_min = pbounds[param_name][0]
         param_max = pbounds[param_name][1]
@@ -82,9 +81,5 @@ class BayesianOptimizationVisual():
         plt.draw()
         plt.pause(1)
 
-        if os.path.isdir(f'{TMP_ROOT_DIR}/{training_id}'):
-            save_path = f'{TMP_ROOT_DIR}/{training_id}'
-        else:
-            save_path = f'testdata/autotuner/{training_id}'
-            os.makedirs(save_path)
-        plt.savefig(f'{save_path}/gaussian_process.png')
+        os.makedirs(visual_storage_dir)
+        plt.savefig(f'{visual_storage_dir}/gaussian_process.png')
