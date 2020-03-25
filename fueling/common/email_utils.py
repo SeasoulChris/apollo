@@ -20,7 +20,6 @@ DATA_TEAM = [
     'xiaoxiangquan@baidu.com',
 ]
 CONTROL_TEAM = [
-    'jiaxuanxu@baidu.com',
     'luoqi06@baidu.com',
     'shujiang@baidu.com',
     'yuwang01@baidu.com',
