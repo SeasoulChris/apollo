@@ -35,3 +35,11 @@ py_library(
         "//fueling/common:record_utils",
     ],
 )
+
+py_library(
+    name = "stats_utils",
+    srcs = ["stats_utils.py"],
+    deps = [
+        "//fueling/common:logging",
+    ],
+)

@@ -8,6 +8,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:redis_utils",
         "//fueling/profiling/common:multi_vehicle_utils",
+        "//fueling/profiling/common:stats_utils",
         "//fueling/profiling/conf:control_channel_conf",
         "//fueling/profiling/control/feature_extraction:multi_job_control_feature_extraction_utils",
         "//fueling/profiling/proto:control_profiling_data_pb2",

@@ -3,11 +3,11 @@
 """ Open-space planner feature processing related utils. """
 
 from collections import namedtuple
-import numpy as np
 import os
 
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
+from fueling.profiling.common.stats_utils import compute_count, compute_mean, compute_std
 from fueling.profiling.common.numpy_utils import filter_value
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX
 import fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils as feature_utils
@@ -37,59 +37,29 @@ def grading(target_groups):
                                  'lat_acc_hit_bound',
                                  ])
     GradingArguments = namedtuple('grading_arguments',
-                                  ['mean_feature_name',
-                                   'mean_filter_name',
-                                   'mean_filter_mode',
-                                   'mean_filter_value',
-                                   'mean_weight',
-                                   'count_feature_name'])
+                                  ['feature_name',
+                                   'filter_name',
+                                   'filter_mode',
+                                   'filter_value',
+                                   'weight'])
     GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
     GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
+
+    profiling_conf = feature_utils.get_config_open_space_profiling()
 
     grading_group_result = GradingResults(
         acceleration_mean=compute_mean(
             grading_mtx,
             GradingArguments(
-                mean_feature_name='acceleration',
-                mean_weight=1.0
-            )),
+                feature_name='acceleration',
+                weight=1.0
+            ), profiling_conf.min_sample_size, FEATURE_IDX),
         lat_acc_hit_bound=compute_count(
             grading_mtx, GradingArguments(
-                count_feature_name='lateral_acceleration_hit_bound',
-            )),
+                feature_name='lateral_acceleration_hit_bound',
+            ), FEATURE_IDX),
     )
     return (target, grading_group_result)
-
-
-def compute_mean(grading_mtx, arg):
-    """Compute the mean value"""
-    profiling_conf = feature_utils.get_config_open_space_profiling()
-    if arg.mean_filter_name:
-        for idx in range(len(arg.mean_filter_name)):
-            column_name = arg.mean_filter_name[idx]
-            column_idx = FEATURE_IDX[column_name]
-            threshold = arg.mean_filter_value[idx]
-            mode = arg.mean_filter_mode[idx]
-            grading_mtx = filter_value(grading_mtx, column_idx, threshold, mode)
-
-    elem_num, item_num = grading_mtx.shape
-    if elem_num < profiling_conf.min_sample_size:
-        logging.warning('no enough elements {} for mean computing requirement {}'
-                        .format(elem_num, profiling_conf.min_sample_size))
-        return (0.0, 0)
-    if item_num <= FEATURE_IDX[arg.mean_feature_name]:
-        logging.warning('no desired feature item {} for mean computing requirement {}'
-                        .format(item_num, FEATURE_IDX[arg.mean_feature_name]))
-        return (0.0, 0)
-    return (np.mean(grading_mtx[:, FEATURE_IDX[arg.mean_feature_name]], axis=0) / arg.mean_weight,
-            elem_num)
-
-
-def compute_count(grading_mtx, arg):
-    """Compute the event (boolean true) counting value"""
-    elem_num, _ = grading_mtx.shape
-    return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1.0)[0]),
-            elem_num)
 
 
 def output_result(target_grading):
@@ -110,8 +80,3 @@ def output_result(target_grading):
 
             grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                .format(name, value[0], value[1]))
-            grading_dict[name] = {'score': float('%.6f' % value[0]),
-                                  'sample_size': value[1]}
-        # grading_file.write(
-        #     '\n\n\nMetrics in file open_space_profiling_conf.pb.txt\n\n')
-        # grading_file.write('{}\n\n'.format(profiling_conf))

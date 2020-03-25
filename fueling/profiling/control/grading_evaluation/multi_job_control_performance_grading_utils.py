@@ -4,13 +4,14 @@
 from collections import namedtuple
 import json
 import math
-import numpy as np
 import os
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, WEIGHTED_SCORE
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
+from fueling.profiling.common.stats_utils import compute_beyond, compute_count, compute_ending, \
+    compute_mean, compute_peak, compute_std, compute_usage
 import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
     as feature_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
@@ -34,528 +35,368 @@ def compute_h5_and_gradings(target_groups, flags):
     logging.info(F'writing {grading_mtx.shape[0]} messages ({grading_mtx.shape[1]} dimensions) '
                  F'to h5 file {h5_output_file} for target {target}')
     h5_utils.write_h5(grading_mtx, target, h5_output_file)
-    grading_results = namedtuple('grading_results',
-                                 ['station_err_std',
-                                  'station_err_std_harsh',
-                                  'speed_err_std',
-                                  'speed_err_std_harsh',
-                                  'lateral_err_std',
-                                  'lateral_err_std_harsh',
-                                  'lateral_err_rate_std',
-                                  'lateral_err_rate_std_harsh',
-                                  'heading_err_std',
-                                  'heading_err_std_harsh',
-                                  'heading_err_rate_std',
-                                  'heading_err_rate_std_harsh',
-                                  'station_err_peak',
-                                  'speed_err_peak',
-                                  'lateral_err_peak',
-                                  'lateral_err_rate_peak',
-                                  'heading_err_peak',
-                                  'heading_err_rate_peak',
-                                  'ending_station_err',
-                                  'ending_lateral_err',
-                                  'ending_heading_err',
-                                  'acc_bad_sensation',
-                                  'jerk_bad_sensation',
-                                  'lateral_acc_bad_sensation',
-                                  'lateral_jerk_bad_sensation',
-                                  'heading_acc_bad_sensation',
-                                  'heading_jerk_bad_sensation',
-                                  'throttle_control_usage',
-                                  'throttle_control_usage_harsh',
-                                  'brake_control_usage',
-                                  'brake_control_usage_harsh',
-                                  'steering_control_usage',
-                                  'steering_control_usage_harsh',
-                                  'throttle_deadzone_mean',
-                                  'brake_deadzone_mean',
-                                  'total_time_usage',
-                                  'total_time_peak',
-                                  'total_time_exceeded_count',
-                                  'replan_trajectory_count',
-                                  'pose_heading_offset_std',
-                                  'pose_heading_offset_peak',
-                                  'control_error_code_count'])
-    grading_arguments = namedtuple('grading_arguments',
-                                   ['std_filter_name',
-                                    'std_filter_value',
-                                    'std_filter_mode',
-                                    'std_norm_name',
-                                    'std_denorm_name',
-                                    'std_max_compare',
-                                    'std_denorm_weight',
-                                    'peak_feature_name',
-                                    'peak_time_name',
-                                    'peak_threshold',
-                                    'peak_filter_name',
-                                    'peak_filter_value',
-                                    'peak_filter_mode',
-                                    'ending_feature_name',
-                                    'ending_time_name',
-                                    'ending_filter_name',
-                                    'ending_filter_value',
-                                    'ending_filter_mode',
-                                    'ending_threshold',
-                                    'usage_feature_name',
-                                    'usage_filter_name',
-                                    'usage_filter_value',
-                                    'usage_filter_mode',
-                                    'usage_weight',
-                                    'mean_feature_name',
-                                    'mean_filter_name',
-                                    'mean_filter_value',
-                                    'mean_filter_mode',
-                                    'mean_weight',
-                                    'beyond_feature_name',
-                                    'beyond_threshold',
-                                    'count_feature_name'])
-    grading_results.__new__.__defaults__ = (
-        None,) * len(grading_results._fields)
-    grading_arguments.__new__.__defaults__ = (
-        None,) * len(grading_arguments._fields)
-    grading_group_result = grading_results(
-        station_err_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+    GradingResults = namedtuple('grading_results',
+                                ['station_err_std',
+                                 'station_err_std_harsh',
+                                 'speed_err_std',
+                                 'speed_err_std_harsh',
+                                 'lateral_err_std',
+                                 'lateral_err_std_harsh',
+                                 'lateral_err_rate_std',
+                                 'lateral_err_rate_std_harsh',
+                                 'heading_err_std',
+                                 'heading_err_std_harsh',
+                                 'heading_err_rate_std',
+                                 'heading_err_rate_std_harsh',
+                                 'station_err_peak',
+                                 'speed_err_peak',
+                                 'lateral_err_peak',
+                                 'lateral_err_rate_peak',
+                                 'heading_err_peak',
+                                 'heading_err_rate_peak',
+                                 'ending_station_err',
+                                 'ending_lateral_err',
+                                 'ending_heading_err',
+                                 'acc_bad_sensation',
+                                 'jerk_bad_sensation',
+                                 'lateral_acc_bad_sensation',
+                                 'lateral_jerk_bad_sensation',
+                                 'heading_acc_bad_sensation',
+                                 'heading_jerk_bad_sensation',
+                                 'throttle_control_usage',
+                                 'throttle_control_usage_harsh',
+                                 'brake_control_usage',
+                                 'brake_control_usage_harsh',
+                                 'steering_control_usage',
+                                 'steering_control_usage_harsh',
+                                 'throttle_deadzone_mean',
+                                 'brake_deadzone_mean',
+                                 'total_time_usage',
+                                 'total_time_peak',
+                                 'total_time_exceeded_count',
+                                 'replan_trajectory_count',
+                                 'pose_heading_offset_std',
+                                 'pose_heading_offset_peak',
+                                 'control_error_code_count'])
+    GradingArguments = namedtuple('GradingArguments',
+                                  ['filter_name',
+                                   'filter_value',
+                                   'filter_mode',
+                                   'std_norm_name',
+                                   'std_denorm_name',
+                                   'std_max_compare',
+                                   'std_denorm_weight',
+                                   'feature_name',
+                                   'time_name',
+                                   'threshold',
+                                   'weight'])
+    GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
+    GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
+
+    profiling_conf = feature_utils.get_config_control_profiling()
+
+    grading_group_result = GradingResults(
+        station_err_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='station_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-        )),
-        station_err_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['acceleration_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        station_err_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['acceleration_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.acceleration_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='station_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-        )),
-        speed_err_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        speed_err_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='speed_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
             std_denorm_weight=1.0
-        )),
-        speed_err_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['acceleration_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        speed_err_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['acceleration_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.acceleration_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='speed_error',
             std_denorm_name=['speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.speed_still],
             std_denorm_weight=1.0
-        )),
-        lateral_err_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='lateral_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
             * vehicle_param.wheel_base
-        )),
-        lateral_err_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['curvature_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['curvature_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='lateral_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
             * vehicle_param.wheel_base
-        )),
-        lateral_err_rate_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_rate_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='lateral_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=vehicle_param.wheel_base
-        )),
-        lateral_err_rate_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['curvature_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_rate_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['curvature_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='lateral_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=vehicle_param.wheel_base
-        )),
-        heading_err_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-        )),
-        heading_err_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['curvature_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['curvature_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=profiling_conf.control_period * profiling_conf.control_frame_num
-        )),
-        heading_err_rate_std=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['speed_reference'],
-            std_filter_value=[profiling_conf.control_metrics.speed_stop],
-            std_filter_mode=[0],
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_rate_std=compute_std(grading_mtx, GradingArguments(
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
             std_norm_name='heading_error_rate',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=1.0
-        )),
-        heading_err_rate_std_harsh=compute_std(grading_mtx, grading_arguments(
-            std_filter_name=['curvature_reference'],
-            std_filter_value=[
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_rate_std_harsh=compute_std(grading_mtx, GradingArguments(
+            filter_name=['curvature_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
-            std_filter_mode=[0],
+            filter_mode=[0],
             std_norm_name='heading_error',
             std_denorm_name=['curvature_reference', 'speed_reference'],
             std_max_compare=[profiling_conf.control_metrics.curvature_still,
                              profiling_conf.control_metrics.speed_still],
             std_denorm_weight=1.0
-        )),
-        station_err_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='station_error',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.station_error_thold
-        )),
-        speed_err_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='speed_error',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.speed_error_thold
-        )),
-        lateral_err_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='lateral_error',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.lateral_error_thold
-        )),
-        lateral_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='lateral_error_rate',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.lateral_error_rate_thold
-        )),
-        heading_err_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='heading_error',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.heading_error_thold
-        )),
-        heading_err_rate_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='heading_error_rate',
-            peak_time_name='timestamp_sec',
-            peak_filter_name='',
-            peak_filter_value='',
-            peak_threshold=profiling_conf.control_metrics.heading_error_rate_thold
-        )),
-        ending_station_err=compute_ending(grading_mtx, grading_arguments(
-            ending_feature_name='station_error',
-            ending_time_name='timestamp_sec',
-            ending_filter_name=['speed', 'path_remain'],
-            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        station_err_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='station_error',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.station_error_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        speed_err_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='speed_error',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.speed_error_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='lateral_error',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.lateral_error_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        lateral_err_rate_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='lateral_error_rate',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.lateral_error_rate_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='heading_error',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.heading_error_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        heading_err_rate_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='heading_error_rate',
+            time_name='timestamp_sec',
+            filter_name='',
+            filter_value='',
+            threshold=profiling_conf.control_metrics.heading_error_rate_thold
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        ending_station_err=compute_ending(grading_mtx, GradingArguments(
+            feature_name='station_error',
+            time_name='timestamp_sec',
+            filter_name=['speed', 'path_remain'],
+            filter_value=[profiling_conf.control_metrics.speed_stop,
                                  profiling_conf.control_metrics.station_error_thold],
-            ending_filter_mode=[1, 1],
-            ending_threshold=profiling_conf.control_metrics.station_error_thold
-        )),
-        ending_lateral_err=compute_ending(grading_mtx, grading_arguments(
-            ending_feature_name='lateral_error',
-            ending_time_name='timestamp_sec',
-            ending_filter_name=['speed', 'path_remain'],
-            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+            filter_mode=[1, 1],
+            threshold=profiling_conf.control_metrics.station_error_thold
+        ), FEATURE_IDX),
+        ending_lateral_err=compute_ending(grading_mtx, GradingArguments(
+            feature_name='lateral_error',
+            time_name='timestamp_sec',
+            filter_name=['speed', 'path_remain'],
+            filter_value=[profiling_conf.control_metrics.speed_stop,
                                  profiling_conf.control_metrics.station_error_thold],
-            ending_filter_mode=[1, 1],
-            ending_threshold=profiling_conf.control_metrics.lateral_error_thold
-        )),
-        ending_heading_err=compute_ending(grading_mtx, grading_arguments(
-            ending_feature_name='heading_error',
-            ending_time_name='timestamp_sec',
-            ending_filter_name=['speed', 'path_remain'],
-            ending_filter_value=[profiling_conf.control_metrics.speed_stop,
+            filter_mode=[1, 1],
+            threshold=profiling_conf.control_metrics.lateral_error_thold
+        ), FEATURE_IDX),
+        ending_heading_err=compute_ending(grading_mtx, GradingArguments(
+            feature_name='heading_error',
+            time_name='timestamp_sec',
+            filter_name=['speed', 'path_remain'],
+            filter_value=[profiling_conf.control_metrics.speed_stop,
                                  profiling_conf.control_metrics.station_error_thold],
-            ending_filter_mode=[1, 1],
-            ending_threshold=profiling_conf.control_metrics.heading_error_thold
-        )),
-        acc_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='acceleration',
-            beyond_threshold=profiling_conf.control_metrics.acceleration_thold
-        )),
-        jerk_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='jerk',
-            beyond_threshold=profiling_conf.control_metrics.jerk_thold
-        )),
-        lateral_acc_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='lateral_acceleration',
-            beyond_threshold=profiling_conf.control_metrics.lat_acceleration_thold
-        )),
-        lateral_jerk_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='lateral_jerk',
-            beyond_threshold=profiling_conf.control_metrics.lat_jerk_thold
-        )),
-        heading_acc_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='heading_acceleration',
-            beyond_threshold=profiling_conf.control_metrics.heading_acceleration_thold
-        )),
-        heading_jerk_bad_sensation=compute_beyond(grading_mtx, grading_arguments(
-            beyond_feature_name='heading_jerk',
-            beyond_threshold=profiling_conf.control_metrics.heading_jerk_thold
-        )),
-        throttle_control_usage=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='throttle_cmd',
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        brake_control_usage=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='brake_cmd',
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        steering_control_usage=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='steering_cmd',
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        throttle_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='throttle_cmd',
-            usage_filter_name=['acceleration_reference'],
-            usage_filter_value=[
+            filter_mode=[1, 1],
+            threshold=profiling_conf.control_metrics.heading_error_thold
+        ), FEATURE_IDX),
+        acc_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='acceleration',
+            threshold=profiling_conf.control_metrics.acceleration_thold
+        ), FEATURE_IDX),
+        jerk_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='jerk',
+            threshold=profiling_conf.control_metrics.jerk_thold
+        ), FEATURE_IDX),
+        lateral_acc_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='lateral_acceleration',
+            threshold=profiling_conf.control_metrics.lat_acceleration_thold
+        ), FEATURE_IDX),
+        lateral_jerk_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='lateral_jerk',
+            threshold=profiling_conf.control_metrics.lat_jerk_thold
+        ), FEATURE_IDX),
+        heading_acc_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='heading_acceleration',
+            threshold=profiling_conf.control_metrics.heading_acceleration_thold
+        ), FEATURE_IDX),
+        heading_jerk_bad_sensation=compute_beyond(grading_mtx, GradingArguments(
+            feature_name='heading_jerk',
+            threshold=profiling_conf.control_metrics.heading_jerk_thold
+        ), FEATURE_IDX),
+        throttle_control_usage=compute_usage(grading_mtx, GradingArguments(
+            feature_name='throttle_cmd',
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        brake_control_usage=compute_usage(grading_mtx, GradingArguments(
+            feature_name='brake_cmd',
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        steering_control_usage=compute_usage(grading_mtx, GradingArguments(
+            feature_name='steering_cmd',
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        throttle_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
+            feature_name='throttle_cmd',
+            filter_name=['acceleration_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.acceleration_harsh_limit],
-            usage_filter_mode=[0],
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        brake_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='brake_cmd',
-            usage_filter_name=['acceleration_reference'],
-            usage_filter_value=[
+            filter_mode=[0],
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        brake_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
+            feature_name='brake_cmd',
+            filter_name=['acceleration_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.acceleration_harsh_limit],
-            usage_filter_mode=[0],
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        steering_control_usage_harsh=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='steering_cmd',
-            usage_filter_name=['curvature_reference'],
-            usage_filter_value=[
+            filter_mode=[0],
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        steering_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
+            feature_name='steering_cmd',
+            filter_name=['curvature_reference'],
+            filter_value=[
                 profiling_conf.control_metrics.curvature_harsh_limit],
-            usage_filter_mode=[0],
-            usage_weight=profiling_conf.control_command_pct
-        )),
-        throttle_deadzone_mean=compute_mean(grading_mtx, grading_arguments(
-            mean_feature_name='throttle_chassis',
-            mean_filter_name=['brake_cmd'],
-            mean_filter_value=[feature_utils.MIN_EPSILON],
-            mean_filter_mode=[0],
-            mean_weight=profiling_conf.control_command_pct
-        )),
-        brake_deadzone_mean=compute_mean(grading_mtx, grading_arguments(
-            mean_feature_name='brake_chassis',
-            mean_filter_name=['throttle_cmd'],
-            mean_filter_value=[feature_utils.MIN_EPSILON],
-            mean_filter_mode=[0],
-            mean_weight=profiling_conf.control_command_pct
-        )),
-        total_time_usage=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='total_time',
-            usage_weight=profiling_conf.control_period * profiling_conf.total_time_factor
-        )),
-        total_time_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='total_time',
-            peak_time_name='timestamp_sec',
-            peak_threshold=profiling_conf.control_period * profiling_conf.total_time_factor
-        )),
-        total_time_exceeded_count=compute_count(grading_mtx, grading_arguments(
-            count_feature_name='total_time_exceeded'
-        )),
-        replan_trajectory_count=compute_count(grading_mtx, grading_arguments(
-            count_feature_name='replan_flag'
-        )),
-        pose_heading_offset_std=compute_usage(grading_mtx, grading_arguments(
-            usage_feature_name='pose_heading_offset',
-            usage_filter_name=['speed_reference'],
-            usage_filter_value=[profiling_conf.control_metrics.speed_stop],
-            usage_filter_mode=[0],
-            usage_weight=math.pi
-        )),
-        pose_heading_offset_peak=compute_peak(grading_mtx, grading_arguments(
-            peak_feature_name='pose_heading_offset',
-            peak_time_name='timestamp_sec',
-            peak_filter_name=['speed_reference'],
-            peak_filter_value=[profiling_conf.control_metrics.speed_stop],
-            peak_filter_mode=[0],
-            peak_threshold=math.pi
-        )),
-        control_error_code_count=compute_count(grading_mtx, grading_arguments(
-            count_feature_name='control_error_code'
-        )))
+            filter_mode=[0],
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        throttle_deadzone_mean=compute_mean(grading_mtx, GradingArguments(
+            feature_name='throttle_chassis',
+            filter_name=['brake_cmd'],
+            filter_value=[feature_utils.MIN_EPSILON],
+            filter_mode=[0],
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        brake_deadzone_mean=compute_mean(grading_mtx, GradingArguments(
+            feature_name='brake_chassis',
+            filter_name=['throttle_cmd'],
+            filter_value=[feature_utils.MIN_EPSILON],
+            filter_mode=[0],
+            weight=profiling_conf.control_command_pct
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        total_time_usage=compute_usage(grading_mtx, GradingArguments(
+            feature_name='total_time',
+            weight=profiling_conf.control_period * profiling_conf.total_time_factor
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        total_time_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='total_time',
+            time_name='timestamp_sec',
+            threshold=profiling_conf.control_period * profiling_conf.total_time_factor
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        total_time_exceeded_count=compute_count(grading_mtx, GradingArguments(
+            feature_name='total_time_exceeded'
+        ), FEATURE_IDX),
+        replan_trajectory_count=compute_count(grading_mtx, GradingArguments(
+            feature_name='replan_flag'
+        ), FEATURE_IDX),
+        pose_heading_offset_std=compute_usage(grading_mtx, GradingArguments(
+            feature_name='pose_heading_offset',
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
+            weight=math.pi
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        pose_heading_offset_peak=compute_peak(grading_mtx, GradingArguments(
+            feature_name='pose_heading_offset',
+            time_name='timestamp_sec',
+            filter_name=['speed_reference'],
+            filter_value=[profiling_conf.control_metrics.speed_stop],
+            filter_mode=[0],
+            threshold=math.pi
+        ), profiling_conf.min_sample_size, FEATURE_IDX),
+        control_error_code_count=compute_count(grading_mtx, GradingArguments(
+            feature_name='control_error_code'
+        ), FEATURE_IDX))
     return (target, grading_group_result)
-
-
-def compute_std(grading_mtx, arg):
-    """Compute the std deviation value by using specified arguments in namedtuple format"""
-    profiling_conf = feature_utils.get_config_control_profiling()
-    if arg.std_filter_name:
-        for idx in range(len(arg.std_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.std_filter_name[idx]],
-                                       arg.std_filter_value[idx], arg.std_filter_mode[idx])
-    elem_num, _ = grading_mtx.shape
-    if elem_num < profiling_conf.min_sample_size:
-        logging.warning(F'no enough elements {elem_num} '
-                        F'for std computing requirement {profiling_conf.min_sample_size}')
-        return (0.0, 0)
-    column_norm = grading_mtx[:, FEATURE_IDX[arg.std_norm_name]]
-    column_denorm = grading_mtx[:, np.array([FEATURE_IDX[denorm_name]
-                                             for denorm_name in arg.std_denorm_name])]
-    column_denorm = np.maximum(np.fabs(column_denorm), arg.std_max_compare)
-    column_denorm = [np.prod(column) for column in column_denorm]
-    std = [nor / (denor * arg.std_denorm_weight)
-           for nor, denor in zip(column_norm, column_denorm)]
-    return (get_std_value(std), elem_num)
-
-
-def compute_peak(grading_mtx, arg):
-    """Compute the peak value"""
-    profiling_conf = feature_utils.get_config_control_profiling()
-    if arg.peak_filter_name:
-        for idx in range(len(arg.peak_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.peak_filter_name[idx]],
-                                       arg.peak_filter_value[idx], arg.peak_filter_mode[idx])
-    elem_num, _ = grading_mtx.shape
-    if elem_num < profiling_conf.min_sample_size:
-        logging.warning(F'no enough elements {elem_num} '
-                        F'for peak computing requirement {profiling_conf.min_sample_size}')
-        return ([0.0, 0.0], 0)
-    idx_max = np.argmax(
-        np.fabs(grading_mtx[:, FEATURE_IDX[arg.peak_feature_name]]))
-    return ([np.fabs(grading_mtx[idx_max, FEATURE_IDX[arg.peak_feature_name]]) /
-             arg.peak_threshold, grading_mtx[idx_max, FEATURE_IDX[arg.peak_time_name]]],
-            elem_num)
-
-
-def compute_ending(grading_mtx, arg):
-    """Compute the specific value at the final state"""
-    if arg.ending_filter_name:
-        for idx in range(len(arg.ending_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.ending_filter_name[idx]],
-                                       arg.ending_filter_value[idx], arg.ending_filter_mode[idx])
-    elem_num, item_num = grading_mtx.shape
-    if elem_num < 1:
-        logging.warning(F'no enough elements {elem_num} for ending computing requirement 1')
-        return ([[0.0], [0.0], [0.0]], 0)
-    grading_mtx = grading_mtx[np.argsort(
-        grading_mtx[:, FEATURE_IDX[arg.ending_time_name]])]
-    static_error = [np.fabs(grading_mtx[0, FEATURE_IDX[arg.ending_feature_name]]) /
-                    arg.ending_threshold]
-    static_start_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]]
-    static_stop_time = [grading_mtx[0, FEATURE_IDX[arg.ending_time_name]]]
-    for idx in range(1, grading_mtx.shape[0]):
-        if (grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]] -
-                grading_mtx[idx - 1, FEATURE_IDX[arg.ending_time_name]] <= 1.0):
-            static_stop_time[-1] = grading_mtx[idx,
-                                               FEATURE_IDX[arg.ending_time_name]]
-        else:
-            static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.ending_feature_name]]) /
-                                arg.ending_threshold)
-            static_start_time.append(
-                grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
-            static_stop_time.append(
-                grading_mtx[idx, FEATURE_IDX[arg.ending_time_name]])
-    return ([static_error, static_start_time, static_stop_time], elem_num)
-
-
-def compute_usage(grading_mtx, arg):
-    """Compute the usage value"""
-    profiling_conf = feature_utils.get_config_control_profiling()
-    if arg.usage_filter_name:
-        for idx in range(len(arg.usage_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.usage_filter_name[idx]],
-                                       arg.usage_filter_value[idx], arg.usage_filter_mode[idx])
-    elem_num, _ = grading_mtx.shape
-    if elem_num < profiling_conf.min_sample_size:
-        logging.warning(F'no enough elements {elem_num} '
-                        F'for usage computing requirement {profiling_conf.min_sample_size}')
-        return (0.0, 0)
-    return (get_std_value([val / arg.usage_weight
-                           for val in grading_mtx[:, FEATURE_IDX[arg.usage_feature_name]]]),
-            elem_num)
-
-
-def compute_beyond(grading_mtx, arg):
-    """Compute the beyond_the_threshold counting value"""
-    elem_num, _ = grading_mtx.shape
-    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.beyond_feature_name]]) >=
-                         arg.beyond_threshold)[0]) / elem_num,
-            elem_num)
-
-
-def compute_count(grading_mtx, arg):
-    """Compute the event (boolean true) counting value"""
-    elem_num, _ = grading_mtx.shape
-    return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.count_feature_name]] == 1)[0]) / elem_num,
-            elem_num)
-
-
-def compute_mean(grading_mtx, arg):
-    """Compute the mean value"""
-    profiling_conf = feature_utils.get_config_control_profiling()
-    if arg.mean_filter_name:
-        for idx in range(len(arg.mean_filter_name)):
-            grading_mtx = filter_value(grading_mtx, FEATURE_IDX[arg.mean_filter_name[idx]],
-                                       arg.mean_filter_value[idx], arg.mean_filter_mode[idx])
-    elem_num, item_num = grading_mtx.shape
-    if elem_num < profiling_conf.min_sample_size:
-        logging.warning(F'no enough elements {elem_num} '
-                        F'for mean computing requirement {profiling_conf.min_sample_size}')
-        return (0.0, 0)
-    if item_num <= FEATURE_IDX[arg.mean_feature_name]:
-        logging.warning(F'no desired feature item {item_num} '
-                        F'for mean computing requirement {FEATURE_IDX[arg.mean_feature_name]}')
-        return (0.0, 0)
-    return (np.mean(grading_mtx[:, FEATURE_IDX[arg.mean_feature_name]], axis=0) / arg.mean_weight,
-            elem_num)
-
-
-def get_std_value(grading_column):
-    """Calculate the standard deviation value"""
-    return (sum(val**2 for val in grading_column) / (len(grading_column) - 1)) ** 0.5
-
-
-def filter_value(grading_mtx, column_name, threshold, filter_mode=0):
-    """Filter the rows out if they do not satisfy threshold values"""
-    if filter_mode == 0:
-        return np.delete(grading_mtx,
-                         np.where(np.fabs(grading_mtx[:, column_name]) < threshold), axis=0)
-    if filter_mode == 1:
-        return np.delete(grading_mtx,
-                         np.where(np.fabs(grading_mtx[:, column_name]) >= threshold), axis=0)
-    return grading_mtx
 
 
 def combine_gradings(grading_x, grading_y):
