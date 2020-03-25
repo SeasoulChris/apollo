@@ -22,8 +22,8 @@ class FrameEnv(BasePipeline):
 
     def run(self):
         """Run prod."""
-        origin_prefix = 'small-records'
-        target_prefix = 'modules/prediction/frame_env'
+        origin_prefix = "/fuel/kinglong_data/records/"
+        target_prefix = "/fuel/kinglong_data/frame_env/"
         records_dir = (
             # RDD(file), start with origin_prefix
             self.to_rdd(self.our_storage().list_files(origin_prefix))
@@ -54,10 +54,11 @@ class FrameEnv(BasePipeline):
     @staticmethod
     def process_dir(record_dir, target_dir, map_name):
         """Call prediction C++ code."""
+        additional_ld_path = "/usr/local/miniconda/envs/fuel/lib/"
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/prediction/data_pipelines/scripts/records_to_frame_env.sh '
-            '"{}" "{}" "{}"'.format(record_dir, target_dir, map_name))
+            '"{}" "{}" "{}" "{}"'.format(record_dir, target_dir, map_name, additional_ld_path))
         if os.system(command) == 0:
             logging.info('Successfully processed {} to {}'.format(record_dir, target_dir))
             return 1
@@ -65,17 +66,39 @@ class FrameEnv(BasePipeline):
             logging.error('Failed to process {} to {}'.format(record_dir, target_dir))
         return 0
 
+    def get_map_dir_by_path(self, path):
+        path_lower = path.lower()
+        if "baidudasha" in path_lower:
+            return "baidudasha"
+        if "xionganshiminzhongxin" in path_lower:
+            return "XiongAn"
+        if "xiamen" in path_lower:
+            return "XiaMen"
+        if "feifengshan" in path_lower:
+            return "FuZhouFeiFengShan"
+        return "demo"
+
     def get_dirs_map(self, record_dirs):
         """Return the (record_dir, map_name) pair"""
+        dir_map_list = []
         record_dirs = list(record_dirs)
+
+        """ For US data
         collection = Mongo().record_collection()
         dir_map_dict = db_backed_utils.lookup_map_for_dirs(record_dirs, collection)
-        dir_map_list = []
         for record_dir, map_name in dir_map_dict.items():
             if "Sunnyvale" in map_name:
                 dir_map_list.append((record_dir, "sunnyvale"))
             if "San Mateo" in map_name:
                 dir_map_list.append((record_dir, "san_mateo"))
+        """
+
+        """ For Kinglong data """
+        for record_dir in record_dirs:
+            map_dir = self.get_map_dir_by_path(record_dir)
+            dir_map_list.append((record_dir, map_dir))
+        """ End Kinglong data """
+
         return dir_map_list
 
 
