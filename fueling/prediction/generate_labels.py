@@ -11,21 +11,16 @@ import fueling.common.logging as logging
 
 
 SKIP_EXISTING_DST_FILE = False
+PATH_ON_CLOUD = False
 
 
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        # RDD(bin_files)
-        bin_files = self.to_rdd(glob.glob('/apollo/data/prediction/labels/*/feature.*.bin'))
-        self.run_internal(bin_files)
-
     def run(self):
         """Run prod."""
-        source_prefix = 'modules/prediction/kinglong_labels/'
-        # source_prefix = '/fuel/kinglong_data/features/'
+        source_prefix = '/fuel/kinglong_data/labels/'
+        if PATH_ON_CLOUD:
+            source_prefix = 'modules/prediction/kinglong_labels/'
 
         # RDD(bin_files)
         bin_files = (

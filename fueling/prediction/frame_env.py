@@ -9,21 +9,19 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 
+PATH_ON_CLOUD = False
+
+
 class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide'
-        target_prefix = '/apollo/data/prediction/frame_env'
-        self.run_internal(records_dir, origin_prefix, target_prefix)
-
     def run(self):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"
         target_prefix = "/fuel/kinglong_data/frame_env/"
+        if PATH_ON_CLOUD:
+            origin_prefix = 'modules/prediction/kinglong/'
+            target_prefix = 'modules/prediction/kinglong_frame_env/'
+
         records_dir = (
             # RDD(file), start with origin_prefix
             self.to_rdd(self.our_storage().list_files(origin_prefix))

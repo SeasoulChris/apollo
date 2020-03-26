@@ -9,21 +9,18 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 
+PATH_ON_CLOUD = False
+
+
 class DataForLearning(BasePipeline):
     """Records to DataForLearning proto pipeline."""
-
-    def run_test(self):
-        """Run test."""
-        # RDD(dir_path)
-        records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-        origin_prefix = '/apollo/docs/demo_guide/'
-        target_prefix = '/apollo/data/prediction/features/'
-        self.run_internal(records_dir, origin_prefix, target_prefix)
-
     def run(self):
         """Run prod."""
-        origin_prefix = 'modules/prediction/kinglong/'
-        target_prefix = 'modules/prediction/kinglong_data_for_learning/'
+        origin_prefix = "/fuel/kinglong_data/records/"
+        target_prefix = "/fuel/kinglong_data/data_for_learning/"
+        if PATH_ON_CLOUD:
+            origin_prefix = 'modules/prediction/kinglong/'
+            target_prefix = 'modules/prediction/kinglong_data_for_learning/'
 
         records_dir = (
             # RDD(file), start with origin_prefix

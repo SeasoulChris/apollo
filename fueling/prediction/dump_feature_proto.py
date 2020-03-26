@@ -11,26 +11,18 @@ import fueling.common.record_utils as record_utils
 
 
 SKIP_EXISTING_DST_FILE = False
+PATH_ON_CLOUD = False
 
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
-
-    # def run_test(self):
-    #     """Run test."""
-    #     # RDD(dir_path)
-    #     records_dir = self.to_rdd(['/apollo/docs/demo_guide'])
-    #     origin_prefix = '/apollo/docs/demo_guide'
-    #     target_prefix = '/apollo/data/prediction/labels/'
-    #     self.run_internal(records_dir, origin_prefix, target_prefix)
-
     def run(self):
         """Run prod."""
-        # origin_prefix = 'modules/prediction/kinglong/jinlong-JinLongBaiduDaSha/20190716/'
-        # target_prefix = 'modules/prediction/tmp/'
-
         origin_prefix = "/fuel/kinglong_data/records/"
-        target_prefix = "/fuel/kinglong_data/features/"
+        target_prefix = "/fuel/kinglong_data/labels/"
+        if PATH_ON_CLOUD:
+            origin_prefix = 'modules/prediction/kinglong/'
+            target_prefix = 'modules/prediction/kinglong_labels/'
 
         records_dir = (
             # RDD(file), start with origin_prefix
