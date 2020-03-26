@@ -8,7 +8,6 @@ import os
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 from fueling.profiling.common.stats_utils import compute_count, compute_mean, compute_std
-from fueling.profiling.common.numpy_utils import filter_value
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX
 import fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils as feature_utils
 
