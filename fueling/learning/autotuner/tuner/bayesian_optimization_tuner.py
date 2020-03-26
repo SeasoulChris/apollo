@@ -87,6 +87,7 @@ class BayesianOptimizationTuner():
             logging.error(f"Failed to parse control config: {error}")
 
         for parameter in tuner_parameters.parameter:
+            parameter = self.separate_repeated_param(parameter)
             self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
 
         self.n_iter = tuner_parameters.n_iter
@@ -113,6 +114,35 @@ class BayesianOptimizationTuner():
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
+    def separate_repeated_param(self, parameter):
+        """Seqarate the repeated messages by adding several surffix '__I' to their names"""
+        i = 0
+        while (i < len(self.pbounds)):
+            if list(self.pbounds)[i] == parameter.parameter_name:
+                parameter.parameter_name += '__I'
+                i = 0
+            else:
+                i += 1
+        return parameter
+
+    def merge_repeated_param(self, point_origin):
+        """Merge the separated message in a dict (config point) by eliminating the '__I' """
+        """and mergeing the values of repeated message into one list"""
+        point = point_origin.copy()
+        repeated = []
+        for key in point:
+            if '__I' in key:
+                repeated.append((key.count('__I'), key))
+        repeated.sort()
+        for number, key in repeated:
+            base_key = key.replace('__I', '')
+            if number == 1:
+                point[base_key] = [point[base_key], point[key]]
+            else:
+                point[base_key].append(point[key])
+            del point[key]
+        return point
+
     def set_bounds(self, bounds):
         self.pbounds = bounds
 
@@ -122,32 +152,32 @@ class BayesianOptimizationTuner():
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
 
-    def optimize(self, n_iter=5):
-        self.n_iter = n_iter
+    def optimize(self, n_iter=0):
+        self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.iteration_records = {}
         visual = BayesianOptimizationVisual()
-        for i in range(n_iter):
+        for i in range(self.n_iter):
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
-            next_point = self.optimizer.suggest(self.utility)
-            next_point = self.config_sanity_check(next_point)
-
-            # TODO(QiL) extend to support tuning for repeated fields (repeated key in dict())
+                    
+            next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
+            self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.ClearField(list(next_point)[0])
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
-                proto_utils.dict_to_pb(next_point, MracConf()))
+                proto_utils.dict_to_pb(self.merge_repeated_param(next_point), MracConf()))
             logging.info(f"Enable MRAC control: "
                          f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
             logging.info(f"New MRAC Conf files: "
                          f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+            logging.info(f"next point: {next_point}")
 
             training_id, score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
-            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
 
-            if len(self.pbounds.keys()) == 1:
-                param_name = list(self.pbounds.keys())[0]
+            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
+            if len(self.pbounds) == 1:
+                param_name = list(self.pbounds)[0]
                 visual.plot_gp(self.optimizer, self.utility, self.pbounds,
                                self.visual_storage_dir, param_name)
 
@@ -156,14 +186,15 @@ class BayesianOptimizationTuner():
 
             logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
 
-    def config_sanity_check(self, point):
-        param_name = list(point.keys())[0]
+    def config_sanity_check(self, point_origin):
+        point = point_origin.copy()
+        param_name = list(point)[0]
         param_value = point[param_name]
         param_delta = (self.pbounds[param_name][1] - self.pbounds[param_name][0]) / 1000
         delta_sign = (param_value <= (self.pbounds[param_name][1] + self.pbounds[param_name][0]) / 2)
 
         iter = 0
-        while (iter < len(self.iteration_records.keys())):
+        while (iter < len(self.iteration_records)):
             if self.iteration_records[f'iter-{iter}']['config_point'] == point:
                 param_value = point[param_name]
                 point[param_name] = param_value + param_delta * delta_sign
@@ -171,7 +202,7 @@ class BayesianOptimizationTuner():
                 logging.info(f"The config prameter {param_name} is adjusted from {param_value} "
                              f"to {point[param_name]} to fix the repeated config samples")
             else:
-                iter = iter + 1
+                iter += 1
         return point
 
     def get_result(self):
