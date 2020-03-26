@@ -157,11 +157,11 @@ class BayesianOptimizationTuner():
         self.iteration_records = {}
         visual = BayesianOptimizationVisual()
         for i in range(self.n_iter):
+            next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
+
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
-                    
-            next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.ClearField(list(next_point)[0])
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
                 proto_utils.dict_to_pb(self.merge_repeated_param(next_point), MracConf()))
@@ -169,7 +169,6 @@ class BayesianOptimizationTuner():
                          f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
             logging.info(f"New MRAC Conf files: "
                          f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
-            logging.info(f"next point: {next_point}")
 
             training_id, score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
@@ -221,9 +220,9 @@ class BayesianOptimizationTuner():
         with open(os.path.join(saving_path, "tuner_results.json"), 'w') as tuner_json:
             tuner_json.write(json.dumps(self.tuner_results))
 
-        shutil.copyfile(
-            os.path.join(self.visual_storage_dir, 'gaussian_process.png'),
-            os.path.join(saving_path, 'gaussian_process.png'))
+        final_visual_file = os.path.join(self.visual_storage_dir, 'gaussian_process.png')
+        if os.path.exist(final_visual_file):
+            shutil.copyfile(final_visual_file, os.path.join(saving_path, 'gaussian_process.png'))
         logging.info(f"Detailed results saved at {saving_path} ")
 
 
