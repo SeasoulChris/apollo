@@ -3,6 +3,8 @@ import operator
 import os
 import time
 
+from absl import flags
+
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 import fueling.common.db_backed_utils as db_backed_utils
@@ -11,7 +13,6 @@ import fueling.common.record_utils as record_utils
 
 
 SKIP_EXISTING_DST_FILE = False
-PATH_ON_CLOUD = False
 
 
 class DumpFeatureProto(BasePipeline):
@@ -20,7 +21,7 @@ class DumpFeatureProto(BasePipeline):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"
         target_prefix = "/fuel/kinglong_data/labels/"
-        if PATH_ON_CLOUD:
+        if flags.FLAGS.cloud:
             origin_prefix = 'modules/prediction/kinglong/'
             target_prefix = 'modules/prediction/kinglong_labels/'
 

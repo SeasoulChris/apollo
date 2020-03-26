@@ -2,14 +2,13 @@
 import operator
 import os
 
+from absl import flags
+
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-
-
-PATH_ON_CLOUD = False
 
 
 class DataForLearning(BasePipeline):
@@ -18,7 +17,7 @@ class DataForLearning(BasePipeline):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"
         target_prefix = "/fuel/kinglong_data/data_for_learning/"
-        if PATH_ON_CLOUD:
+        if flags.FLAGS.cloud:
             origin_prefix = 'modules/prediction/kinglong/'
             target_prefix = 'modules/prediction/kinglong_data_for_learning/'
 

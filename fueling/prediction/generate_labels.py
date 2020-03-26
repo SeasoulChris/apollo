@@ -3,6 +3,7 @@ import os
 import glob
 import operator
 
+from absl import flags
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
@@ -11,7 +12,6 @@ import fueling.common.logging as logging
 
 
 SKIP_EXISTING_DST_FILE = False
-PATH_ON_CLOUD = False
 
 
 class GenerateLabels(BasePipeline):
@@ -19,7 +19,7 @@ class GenerateLabels(BasePipeline):
     def run(self):
         """Run prod."""
         source_prefix = '/fuel/kinglong_data/labels/'
-        if PATH_ON_CLOUD:
+        if flags.FLAGS.cloud:
             source_prefix = 'modules/prediction/kinglong_labels/'
 
         # RDD(bin_files)
