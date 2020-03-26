@@ -21,7 +21,7 @@ class ObstaclesImgRenderer(object):
         self.local_base_point_w_idx = (self.local_size_w - 1) / 2
         self.local_base_point_h_idx = 376  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
-        self.max_history_length = 8  # second
+        self.max_history_length = 3  # second
         self.current_timestamp = None
 
     def _get_trans_point(self, p):

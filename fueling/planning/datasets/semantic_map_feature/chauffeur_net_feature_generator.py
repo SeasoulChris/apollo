@@ -21,9 +21,12 @@ from modules.planning.proto import learning_data_pb2
 class ChauffeurNetFeatureGenerator(object):
     """class of ChauffeurNetFeatureGenerator to initialize renderers and aggregate input features"""
 
-    def __init__(self, region):
+    def __init__(self, region, base_map_update_flag):
         self.imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-        # self.draw_base_map()
+        if not os.path.isfile(os.path.join(self.imgs_dir, region + ".png")) \
+                or not os.path.isfile(os.path.join(self.imgs_dir, region + "_speedlimit.png")) \
+                or base_map_update_flag:
+            self.draw_base_map(region)
         self.agent_box_mapping = AgentBoxImgRenderer()
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer()
         self.obstacles_mapping = ObstaclesImgRenderer()
@@ -33,18 +36,19 @@ class ChauffeurNetFeatureGenerator(object):
         self.speed_limit_mapping = SpeedLimitImgRenderer(region)
         self.traffic_lights_mapping = TrafficLightsImgRenderer(region)
 
-    def draw_base_map(self):
+    def draw_base_map(self, region):
         self.base_road_map_mapping = BaseRoadMapImgRenderer(region)
         self.base_speed_limit_mapping = BaseSpeedLimitImgRenderer(region)
-        cv.imwrite(os.path.join(self.imgs_dir, self.base_road_map_mapping.region + ".png"),
+        cv.imwrite(os.path.join(self.imgs_dir, region + ".png"),
                    self.base_road_map_mapping.base_map)
-        cv.imwrite(os.path.join(self.imgs_dir, self.base_speed_limit_mapping.region + "_speedlimit.png"),
+        cv.imwrite(os.path.join(self.imgs_dir, region + "_speedlimit.png"),
                    self.base_speed_limit_mapping.base_map)
 
     def draw_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                       center_x, center_y, center_heading, routing_response,
                       observed_traffic_lights, output_dirs):
         '''
+        For debug purposes, features are drawn seprately
         agent_box_img: np.array in shape (501, 501, 1)
         agent_pose_history_img: np.array in shape (501, 501, 1)
         obstacles_img: np.array in shape (501, 501, 1)
@@ -53,12 +57,10 @@ class ChauffeurNetFeatureGenerator(object):
         routing_img: np.array in shape (501, 501, 1)
         speed_limit_img: np.array in shape (501, 501, 3)
         traffic_lights_img: np.array in shape (501, 501, 1)
-
-        All images in np.unit8 and concatenated along channel axis
         '''
         agent_box_img = self.agent_box_mapping.draw_agent_box()
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            ego_pose_history)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history)
         obstacles_img = self.obstacles_mapping.draw_obstacles(
             frame_time_sec, obstacle)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
@@ -96,7 +98,7 @@ class ChauffeurNetFeatureGenerator(object):
 
         agent_box_img = self.agent_box_mapping.draw_agent_box()
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            ego_pose_history)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history)
         obstacles_img = self.obstacles_mapping.draw_obstacles(
             frame_time_sec, obstacle)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
@@ -110,27 +112,19 @@ class ChauffeurNetFeatureGenerator(object):
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
             center_x, center_y, center_heading, observed_traffic_lights)
 
-        # print(agent_box_img.shape)
-        # print(agent_pose_history_img.shape)
-        # print(obstacles_img.shape)
-        # print(obstacle_predictions_img.shape)
-        # print(road_map_img.shape)
-        # print(routing_img.shape)
-        # print(speed_limit_img.shape)
-        # print(traffic_lights_img.shape)
-        # cv.resize(output, (224, 224))
         return cv.resize(np.concatenate([agent_box_img, agent_pose_history_img, obstacles_img, obstacle_predictions_img,
-                               road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
+                                         road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
 
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/2019-10-17-13-36-41/learning_data.259.bin", 'rb') as file_in:
+    with open("/apollo/data/2019-10-17-13-36-41/learning_data.66.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
     region = "sunnyvale_with_two_offices"
-    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(region)
+    base_map_update_flag = True
+    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(region, base_map_update_flag)
     print("Finish loading chauffeur_net_feature_generator...")
 
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'

@@ -48,8 +48,9 @@ class ImgInTrajOutDataset(Dataset):
             self.total_num_data_pt))
 
         # TODO(Jinyun): recognize map_name in __getitem__
+        base_map_update_flag = False
         self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
-            region)
+            region, base_map_update_flag)
 
     def __len__(self):
         return self.total_num_data_pt

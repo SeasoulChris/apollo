@@ -21,13 +21,13 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_point_w_idx = (self.local_size_w - 1) // 2
         self.local_base_point_h_idx = 376  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
-        self.max_prediction_time_horizon = 3  # second
         self.local_base_point = None
         self.local_base_heading = None
+        self.max_prediction_time_horizon = 3  # second
 
     def _get_affine_points(self, p):
-        p = p - self.local_base_point
-        theta = 3 * np.pi / 2 - self.local_base_heading
+        # obstacles are in ego vehicle coordiantes where ego car faces toward EAST, so rotation to NORTH is done below
+        theta = np.pi / 2
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
