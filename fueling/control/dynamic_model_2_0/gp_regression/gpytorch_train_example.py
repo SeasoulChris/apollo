@@ -11,6 +11,7 @@ import gpytorch
 import torch
 import torch.nn as nn
 import torch.nn.functional as Func
+import pyro
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
@@ -43,14 +44,13 @@ def get_dataset():
 
 
 def train_gp(train_x, train_y, train_loader):
+    """Train the model"""
     inducing_points = train_x[:500, :]
+    likelihood = gpytorch.likelihoods.GaussianLikelihood(variance=0.1 * torch.ones(2, 1))
     model = GPModel(inducing_points=inducing_points)
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
-
-    model.train()
     likelihood.train()
+    model.train()
 
-    # We use SGD here, rather than Adam. Emperically, we find that SGD is better for variational regression
     optimizer = torch.optim.Adam([
         {'params': model.parameters()},
         {'params': likelihood.parameters()},
@@ -68,6 +68,8 @@ def train_gp(train_x, train_y, train_loader):
             logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(i, loss))
             loss.backward()
             optimizer.step()
+        if i == 2:
+            gpytorch.settings.tridiagonal_jitter(1e-4)
     # Get into evaluation (predictive posterior) mode
     # model.eval()
     # likelihood.eval()

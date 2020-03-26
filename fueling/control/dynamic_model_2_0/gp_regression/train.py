@@ -60,7 +60,7 @@ def train_gp(args, dataset, gp_class):
     logging.info("************Output Example: {}".format(label[0]))
 
     # Encode the original features to lower-dimensional feature with kernel size
-    encoder = Encoder(args, feature.shape[2], args.kernel_dim)
+    encoder = Encoder(feature.shape[2], args.kernel_dim)
 
     def _encoded_feature(original_feature):
         return pyro.module("Encoder", encoder)(original_feature)

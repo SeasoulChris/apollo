@@ -23,7 +23,7 @@ def test_gp(args, dataset, GaussianProcess):
         kernel_dict = torch.load(os.path.join(sub_dir, "kernel.p"))
         gp_dict = torch.load(os.path.join(sub_dir, "gp_f.p"))
 
-        deep_encoding_net = Encoder(args, input_data.shape[2], args.kernel_dim)
+        deep_encoding_net = Encoder(input_data.shape[2], args.kernel_dim)
         deep_encoding_net.load_state_dict(fnet_dict)
 
         def _encoded_feature(original_feature):
