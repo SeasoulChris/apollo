@@ -25,9 +25,14 @@ message TunerParameters {
   repeated Parameter parameter = 7;
 }
 
+message Scenarios {
+  repeated uint32 id = 3;
+}
+
 message TunerConfigs {
   GitInfo git_info = 1;
   TunerParameters tuner_parameters = 2;
+  Scenarios scenarios = 3;
 }
 
 message Utility {

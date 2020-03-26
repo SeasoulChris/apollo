@@ -2,7 +2,6 @@
 """Auto Tuner Base"""
 
 # standard packages
-import csv
 import json
 import uuid
 import os
@@ -15,7 +14,6 @@ import pyspark_utils.op as spark_op
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 # Flags
@@ -104,19 +102,7 @@ class BaseCostComputation(BasePipeline):
 
     def get_scenarios(self):
         """Return RDD(scenario_id)"""
-        scenario_path = file_utils.fuel_path(self.FLAGS.get("scenario_path"))
-        with open(scenario_path) as scenario_file:
-            reader = csv.reader(scenario_file, delimiter=",")
-            scenarios = []
-            for line in reader:
-                # skip comment
-                if len(line) > 0 and line[0].startswith("#"):
-                    continue
-                scenarios.extend([int(id) for id in line if id.isnumeric()])
-
-        logging.info(f"Training scenarios are {scenarios}")
-
-        return self.to_rdd(scenarios)
+        raise Exception("Not implemented!")
 
     def get_config_map(self):
         """Return a map of map: {config_id: {local_config_file_path: serialized_config}} """

@@ -49,6 +49,7 @@ def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
             {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
                 algorithm_conf_pb)},
         },
+        list(tuner_param_config_pb.scenarios.id)
     )
     logging.info(f"Received score for {training_id}")
     return training_id, weighted_score[config_id]
@@ -107,6 +108,8 @@ class BayesianOptimizationTuner():
             flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
                                           else 'testdata/autotuner'
         )
+
+        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 

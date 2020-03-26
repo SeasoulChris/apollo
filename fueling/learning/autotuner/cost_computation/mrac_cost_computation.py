@@ -51,6 +51,11 @@ class MracCostComputation(BaseCostComputation):
             for (id, config_pb) in self.request_pb2.config.items()
         }
 
+    def get_scenarios(self):
+        scenarios = self.request_pb2.scenario_id
+        logging.info(f"Training scenarios are {scenarios}")
+        return self.to_rdd(scenarios)
+
     def SubmitJobAtLocal(self, options):
         job_cmd = "bazel run //fueling/profiling/control:multi_job_control_profiling_metrics"
         option_strings = [f"--{name}={value}" for (name, value) in options.items()]
