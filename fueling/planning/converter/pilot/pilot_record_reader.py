@@ -6,6 +6,9 @@ from cybertron_record_pb2 import ChunkSection
 from cybertron_record_pb2 import HeaderSection
 from cybertron_record_pb2 import ParamSection, IndexSection, ReserveSection
 
+from google.protobuf.descriptor_pb2 import DescriptorProto
+from proto.localization_pose_pb2 import LocalizationEstimate
+
 fn = sys.argv[1]
 with open(fn, 'rb') as f:
     result = []
@@ -34,9 +37,22 @@ with open(fn, 'rb') as f:
             header = HeaderSection()
             header.ParseFromString(f.read(2048000))
             # print(header)
+            for channel in header.channels:
+                print("---")
+                print(channel.name)
+                print(channel.type)
+                # print(channel.proto_desc)
+                # print(type(channel.proto_desc))
+
+                # bytes1 = bytearray(channel.proto_desc)
+                # print(type(bytes1))
+                #bytes1 = channel.proto_desc.decode('utf-8')
+                #DescriptorProto().ParseFromString(bytes1)
+            #break
         elif section_type == 1:
             header = HeaderSection()
             header.ParseFromString(f.read(204800))
+
 
         elif section_type == 5:
             param = ParamSection()
@@ -51,6 +67,14 @@ with open(fn, 'rb') as f:
             section = ChunkSection()
             section.ParseFromString(f.read(section_len))
             print("len(section.msgs) = " + str(len(section.msgs)))
+            for msg in section.msgs:
+                if msg.channelname == '/localization/100hz/localization_pose':
+                    #print(msg.channelname)
+                    localization = LocalizationEstimate()
+                    localization.ParseFromString(msg.msg)
+                    #print(localization.pose.position.x)
+                if msg.channelname == '':
+                    print(msg.channelname)
 
         elif section_type == 4:
             section = IndexSection()
