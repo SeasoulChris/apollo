@@ -1,10 +1,10 @@
-import sys
 import struct
-from cyber.proto.record_pb2 import SectionType
-from cyber.proto.record_pb2 import Header
+import sys
+
 from cyber.proto.record_pb2 import Channel
-from cyber.proto.record_pb2 import ChunkHeader
 from cyber.proto.record_pb2 import ChunkBody
+from cyber.proto.record_pb2 import ChunkHeader
+from cyber.proto.record_pb2 import Header
 from cyber.proto.record_pb2 import Index
 
 fn = sys.argv[1]
