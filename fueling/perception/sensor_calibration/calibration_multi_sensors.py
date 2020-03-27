@@ -92,12 +92,10 @@ class SensorCalibrationPipeline(BasePipeline):
             logging.error(e)
 
         # Send result to job owner.
-        # receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
-        receivers = []
+        receivers = email_utils.PERCEPTION_TEAM + email_utils.DATA_TEAM + email_utils.D_KIT_TEAM
         partner = partners.get(job_owner)
         if partner:
             receivers.append(partner.email)
-        receivers = ['longtaolin@baidu.com']
 
         if result_files:
             title = 'Your sensor calibration job is done!'
