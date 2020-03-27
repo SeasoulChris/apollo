@@ -5,7 +5,6 @@ py_library(
     srcs = ["feature_extraction_utils.py"],
     deps = [
         "//fueling/common:logging",
-        "//fueling/common:proto_utils",
-        "//fueling/profiling/proto:open_space_planner_profiling_pb2",
+        "//fueling/profiling/common:multi_vehicle_utils",
     ],
 )

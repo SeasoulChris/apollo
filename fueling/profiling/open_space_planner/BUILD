@@ -14,6 +14,7 @@ py_binary(
     srcs = ["metrics.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",
         "//fueling/profiling/control/feature_visualization:control_feature_visualization_utils",
@@ -26,6 +27,7 @@ py_test(
     name = "metrics_test",
     srcs = ["metrics_test.py"],
     data = [
+        "//fueling/profiling/open_space_planner/testdata:control_conf",
         "//fueling/profiling/open_space_planner/testdata:records",
     ],
     deps = [

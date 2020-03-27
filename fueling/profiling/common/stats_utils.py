@@ -5,8 +5,8 @@ import numpy as np
 import fueling.common.logging as logging
 
 
-def compute_std(grading_mtx, arg, min_sample_size, FEATURE_IDX):
-    """Compute the standard deviation"""
+def compute_rms(grading_mtx, arg, min_sample_size, FEATURE_IDX):
+    """Compute the root mean square"""
     grading_mtx = apply_filter(grading_mtx, arg, FEATURE_IDX)
     if grading_mtx is None:
         return (0.0, 0)
@@ -15,18 +15,18 @@ def compute_std(grading_mtx, arg, min_sample_size, FEATURE_IDX):
     if not check_data_size(elem_num, min_sample_size):
         return (0.0, 0)
 
-    column_norm = grading_mtx[:, FEATURE_IDX[arg.std_norm_name]]
+    column_norm = grading_mtx[:, FEATURE_IDX[arg.norm_name]]
     column_denorm = grading_mtx[:, np.array([FEATURE_IDX[denorm_name]
-                                             for denorm_name in arg.std_denorm_name])]
-    column_denorm = np.maximum(np.fabs(column_denorm), arg.std_max_compare)
+                                             for denorm_name in arg.denorm_name])]
+    column_denorm = np.maximum(np.fabs(column_denorm), arg.max_compare)
     column_denorm = [np.prod(column) for column in column_denorm]
-    std = [nor / (denor * arg.std_denorm_weight)
+    std = [nor / (denor * arg.denorm_weight)
            for nor, denor in zip(column_norm, column_denorm)]
-    return (get_std_value(std), elem_num)
+    return (get_rms_value(std), elem_num)
 
 
 def compute_peak(grading_mtx, arg, min_sample_size, FEATURE_IDX):
-    """Compute the peak value"""
+    """Compute the peak value and the time it occurred"""
     grading_mtx = apply_filter(grading_mtx, arg, FEATURE_IDX)
     if grading_mtx is None:
         return ([0.0, 0.0], 0)
@@ -37,8 +37,10 @@ def compute_peak(grading_mtx, arg, min_sample_size, FEATURE_IDX):
 
     idx_max = np.argmax(
         np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]]))
-    return ([np.fabs(grading_mtx[idx_max, FEATURE_IDX[arg.feature_name]]) /
-             arg.threshold, grading_mtx[idx_max, FEATURE_IDX[arg.time_name]]],
+
+    threshold = 1.0 if arg.threshold is None else arg.threshold
+    timestamp = 0.0 if arg.time_name is None else grading_mtx[idx_max, FEATURE_IDX[arg.time_name]]
+    return ([np.fabs(grading_mtx[idx_max, FEATURE_IDX[arg.feature_name]]) / threshold, timestamp],
             elem_num)
 
 
@@ -77,13 +79,21 @@ def compute_usage(grading_mtx, arg, min_sample_size, FEATURE_IDX):
     elem_num, _ = grading_mtx.shape
     if not check_data_size(elem_num, min_sample_size):
         return (0.0, 0)
-    return (get_std_value([val / arg.weight
+    return (get_rms_value([val / arg.weight
                            for val in grading_mtx[:, FEATURE_IDX[arg.feature_name]]]),
             elem_num)
 
 
+def compute_below(grading_mtx, arg, FEATURE_IDX):
+    """Compute the count below the threshold, normalized by the total number"""
+    elem_num, _ = grading_mtx.shape
+    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) <=
+                         arg.threshold)[0]) / elem_num,
+            elem_num)
+
+
 def compute_beyond(grading_mtx, arg, FEATURE_IDX):
-    """Compute the beyond_the_threshold counting value"""
+    """Compute the count beyond the threshold, normalized by the total number"""
     elem_num, _ = grading_mtx.shape
     return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) >=
                          arg.threshold)[0]) / elem_num,
@@ -91,7 +101,7 @@ def compute_beyond(grading_mtx, arg, FEATURE_IDX):
 
 
 def compute_count(grading_mtx, arg, FEATURE_IDX):
-    """Compute the event (boolean true) counting value"""
+    """Compute the count of event (boolean true), normalized by the total number"""
     elem_num, _ = grading_mtx.shape
     return (len(np.where(grading_mtx[:, FEATURE_IDX[arg.feature_name]] == 1)[0]) / elem_num,
             elem_num)
@@ -111,8 +121,36 @@ def compute_mean(grading_mtx, arg, min_sample_size, FEATURE_IDX):
         logging.warning(F'No desired feature item for mean computing: required '
                         F'{FEATURE_IDX[arg.feature_name]}, but found {item_num}')
         return (0.0, 0)
-    return (np.mean(grading_mtx[:, FEATURE_IDX[arg.feature_name]], axis=0) / arg.weight,
-            elem_num)
+
+    weight = 1.0 if arg.weight is None else arg.weight
+    return (np.mean(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) / weight, elem_num)
+
+
+def compute_std(grading_mtx, arg, min_sample_size, FEATURE_IDX):
+    """Compute the standard deviation value"""
+    grading_mtx = apply_filter(grading_mtx, arg, FEATURE_IDX)
+    if grading_mtx is None:
+        return (0.0, 0)
+
+    elem_num, item_num = grading_mtx.shape
+    if not check_data_size(elem_num, min_sample_size):
+        return (0.0, 0)
+
+    if item_num <= FEATURE_IDX[arg.feature_name]:
+        logging.warning(F'No desired feature item for std dev computing: required '
+                        F'{FEATURE_IDX[arg.feature_name]}, but found {item_num}')
+        return (0.0, 0)
+
+    weight = 1.0 if arg.weight is None else arg.weight
+    return (np.std(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) / weight, elem_num)
+
+
+def compute_percentile(grading_mtx, arg, min_sample_size, FEATURE_IDX):
+    # arg.threshold must be between 0 and 100 inclusive.
+    elem_num, _ = grading_mtx.shape
+    if not check_data_size(elem_num, min_sample_size):
+        return (0.0, 0)
+    return (np.percentile(grading_mtx[:, FEATURE_IDX[arg.feature_name]], arg.threshold), elem_num)
 
 
 def apply_filter(grading_mtx, arg, FEATURE_IDX):
@@ -146,6 +184,6 @@ def check_data_size(elem_num, min_sample_size):
     return True
 
 
-def get_std_value(grading_column):
-    """Calculate the standard deviation value"""
+def get_rms_value(grading_column):
+    """Calculate the root mean square value"""
     return (sum(val**2 for val in grading_column) / (len(grading_column) - 1)) ** 0.5

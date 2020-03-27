@@ -6,8 +6,9 @@ py_library(
     deps = [
         "//fueling/common:h5_utils",
         "//fueling/common:logging",
+        "//fueling/common:proto_utils",
         "//fueling/profiling/common:stats_utils",
         "//fueling/profiling/conf:open_space_planner_conf",
-        "//fueling/profiling/open_space_planner/feature_extraction:feature_extraction_utils",
+        "//fueling/profiling/proto:open_space_planner_profiling_pb2",
     ],
 )

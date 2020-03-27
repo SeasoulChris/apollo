@@ -2,20 +2,20 @@
 
 import glob
 import os
+import shutil
 
 from absl import flags
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-# TODO(SHU): will refract it later
-from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx
-from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import extract_mtx_repeated_field
-from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading, output_result
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
     as visual_utils
-
+from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils \
+    import extract_mtx_single_field, extract_mtx_repeated_field
+from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading, output_result
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 flags.DEFINE_string('open_space_planner_profiling_input_path',
@@ -28,6 +28,7 @@ flags.DEFINE_string('open_space_planner_profiling_output_path',
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
 MSG_PER_SEGMENT = 100000
+VEHICLE_PARAM_FILE = 'vehicle_param.pb.txt'
 
 
 def has_desired_stage(parsed_planning_msg):
@@ -64,8 +65,21 @@ class OpenSpacePlannerMetrics(BasePipeline):
         target_dir = our_storage.abs_path(target_prefix)
         logging.info(F'target_dir: {target_dir}')
 
+        src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_dir))
+
+        # Copy over vehicle param config
+        src_dst_rdd = (src_dirs
+                       .map(lambda src_dir: (src_dir, src_dir.replace(origin_dir, target_dir, 1)))
+                       .cache())
+        logging.info(F'src_dst_rdd: {src_dst_rdd.collect()}')
+        src_dst_rdd.values().foreach(file_utils.makedirs)
+        src_dst_rdd.foreach(
+            lambda src_dst: shutil.copyfile(
+                os.path.join(src_dst[0], VEHICLE_PARAM_FILE),
+                os.path.join(src_dst[1], VEHICLE_PARAM_FILE)))
+
         # PairRDD(todo_task_dirs)
-        todo_task_dirs = (self.to_rdd(object_storage.list_end_dirs(origin_dir))
+        todo_task_dirs = (src_dirs
                           # PairRDD(target_dir, source_dir), the map of target dirs and source dirs
                           .keyBy(lambda source: source.replace(origin_dir, target_dir, 1))
                           # PairRDD(target_dir, file)
@@ -106,7 +120,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
         #                 # RDD(target_dir, group_id, group of (message)s),
         #                 # divide messages into groups
         #                 .flatMap(partition_data)
-        #                 .map(extract_mtx))
+        #                 .map(extract_mtx_single_field))
         # logging.info(F'feature_data_count: {feature_data.count()}')
         # logging.info(F'feature_data_first: {feature_data.first()}')
 

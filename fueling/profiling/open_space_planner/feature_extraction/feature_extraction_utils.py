@@ -6,20 +6,12 @@
 import numpy as np
 import math
 
-from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
 import fueling.common.logging as logging
-import fueling.common.proto_utils as proto_utils
+import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 
-def get_config_open_space_profiling():
-    """Get configured value in open_space_profiling_conf.pb.txt"""
-    profiling_conf = '/fuel/fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt'
-    open_space_planner_profiling = OpenSpacePlannerProfiling()
-    proto_utils.get_pb_from_text_file(profiling_conf, open_space_planner_profiling)
-    return open_space_planner_profiling
-
-#  trajectory point example:
-#  path_point:
+# trajectory point example:
+# path_point:
 #     x: 559787.066030095
 #     y: 4157751.813925536
 #     z: 0.000000000
@@ -28,12 +20,10 @@ def get_config_open_space_profiling():
 #     s: -2.356402468
 #     dkappa: 0.000000000
 #     ddkappa: 0.000000000
-#   v: 4.474370468
-#   a: 0.995744297
-#   relative_time: -0.400000000
-
-
-def extract_data_from_trajectory_point(trajectory_point):
+# v: 4.474370468
+# a: 0.995744297
+# relative_time: -0.400000000
+def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
     speed = trajectory_point.v
@@ -54,49 +44,41 @@ def extract_data_from_trajectory_point(trajectory_point):
         lon_dec = -1.0 * math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
     # calculate lateral acceleration bound
     lat_acc_bound = calc_lat_acc_bound(lon_acc, lon_dec)
+
     if hasattr(trajectory_point, 'relative_time'):
         data_array = np.array([
             trajectory_point.relative_time,
-            speed,
-            trajectory_point.a,
-            lat_acc,
-            lat_dec,
-            lon_acc,
-            lon_dec,
-            lat_acc >= lat_acc_bound,
+            speed, # not sure if needed
+            a,
+            a / vehicle_param.max_acceleration if a > 0.0 else 0.0,
+            a / vehicle_param.max_deceleration if a < 0.0 else 0.0,
+            lat_acc / lat_acc_bound,
         ])
     return data_array
 
 
-def extract_data_from_all_trajectory_point(msg):
+def extract_data_from_trajectory(trajectory, vehicle_param):
     """Extract data from all trajectory points"""
-    trajectory_points = msg.trajectory_point
-    # logging.info('computing {} trajectory_point from frame No {}'.format(
-    #     len(trajectory_points), msg.header.sequence_num))
-    extract_list = (extract_data_from_trajectory_point(trajectory_point)
-                    for trajectory_point in trajectory_points)
+    extract_list = (extract_data_from_trajectory_point(trajectory_point, vehicle_param)
+                    for trajectory_point in trajectory)
     trajectory_mtx = np.array([data for data in extract_list if data is not None])
-
     return trajectory_mtx
 
 
-def extract_planning_data_from_msg(msg):
-    """Extract non-repeated field from planning message"""
-    data_array = np.array([
-        # Features: "Header" category
-        msg.header.timestamp_sec,
-        msg.header.sequence_num,
-        # Features: "Latency" category
-        msg.latency_stats.total_time_ms,
+def extract_meta_from_planning(msg):
+    """Extract non-repeated field from one planning message"""
+    meta_array = np.array([
+        msg.latency_stats.total_time_ms, # end-to-end time latency
+        msg.debug.planning_data.open_space.time_latency, # zigzag trajectory latency
     ])
-    return data_array
+    return meta_array
 
 
-def extract_mtx(target_groups):
+def extract_mtx_single_field(target_groups):
     """Extract matrix data of non-repeated fields from a group of messages"""
     target, group_id, msgs = target_groups
-    logging.info('computing {} messages for target {}'.format(len(msgs), target))
-    planning_mtx = np.array([data for data in [extract_planning_data_from_msg(msg)
+    logging.info(F'Computing {len(msgs)} messages for target {target}')
+    planning_mtx = np.array([data for data in [extract_meta_from_planning(msg)
                                                for msg in msgs] if data is not None])
     return target, group_id, planning_mtx
 
@@ -104,9 +86,12 @@ def extract_mtx(target_groups):
 def extract_mtx_repeated_field(target_groups):
     """Extract matrix data of repeated fields from a group of messages"""
     target, group_id, msgs = target_groups
-    logging.info(F'computing {len(msgs)} messages for target {target}')
+    logging.info(F'Computing {len(msgs)} messages for target {target}')
 
-    extracted_data = (extract_data_from_all_trajectory_point(msg) for msg in msgs)
+    vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
+
+    extracted_data = (extract_data_from_trajectory(msg.trajectory_point, vehicle_param)
+                      for msg in msgs)
     planning_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])
 
@@ -116,5 +101,4 @@ def extract_mtx_repeated_field(target_groups):
 def calc_lat_acc_bound(acc_lon, dec_lon):
     if acc_lon == 0.0:
         return 3.0 / 2.0 * dec_lon + 3.0
-    else:
-        return -2.0 * acc_lon + 3.0
+    return -2.0 * acc_lon + 3.0
