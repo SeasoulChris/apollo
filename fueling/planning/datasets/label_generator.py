@@ -175,7 +175,7 @@ class LabelGenerator(object):
         np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
         return self.future_status_dict
 
-    def MergeDict(self):
+    def MergeDict(self, is_dump2txt=False):
         """ merge feature and label """
         features_labels = learning_data_pb2.LearningData()
         learning_data_frame = learning_data_pb2.LearningDataFrame()
@@ -190,6 +190,10 @@ class LabelGenerator(object):
         # export proto to bin
         with open(self.dst_filepath + '.future_status.bin', 'wb') as bin_f:
             bin_f.write(features_labels.SerializeToString())
+        if is_dump2txt:
+            # export proto to txt
+            txt_file_name = self.dst_filepath + '.future_status.txt'
+            proto_utils.write_pb_to_text_file(features_labels, txt_file_name)
         return len(features_labels.learning_data)
 
     def Label(self):
