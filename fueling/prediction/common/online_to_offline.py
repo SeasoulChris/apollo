@@ -172,13 +172,7 @@ class LabelGenerator(object):
                              feature_sequence[j].acc))
 
             if not enable_lane_related_labeling:
-                dict_val = dict()
-                dict_val['obs_traj'] = obs_traj
-                dict_val['obs_traj_len'] = len(obs_traj)
-                dict_val['total_observed_time_span'] = total_observed_time_span
-                self.observation_dict["{}@{:.3f}".format(
-                    feature_curr.id, feature_curr.timestamp)] = dict_val
-                return
+                continue
 
             #####################################################################
             # Update the visited lane segment info:
@@ -226,6 +220,15 @@ class LabelGenerator(object):
                         # of the original lane for the first time.
                         if lane_change_finish_time is None:
                             lane_change_finish_time = time_span
+
+        if not enable_lane_related_labeling:
+            dict_val = dict()
+            dict_val['obs_traj'] = obs_traj
+            dict_val['obs_traj_len'] = len(obs_traj)
+            dict_val['total_observed_time_span'] = total_observed_time_span
+            self.observation_dict["{}@{:.3f}".format(
+                feature_curr.id, feature_curr.timestamp)] = dict_val
+            return
 
         if len(obs_actual_lane_ids) == 0:
             # print("No lane id")

@@ -151,3 +151,14 @@ py_binary(
         "//fueling/common:record_utils",
     ]
 )
+
+py_binary(
+    name = "combine_frame_env_and_future_status",
+    srcs = ["combine_frame_env_and_future_status.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:proto_utils",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
+    ]
+)
