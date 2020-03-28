@@ -11,25 +11,15 @@ import gpytorch
 import torch
 import torch.nn as nn
 import torch.nn.functional as Func
-import pyro
 import pickle
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model_example import GPModelExample
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 import fueling.common.logging as logging
 
 
-def encoding(dataset):
-    feature, label = dataset.get_train_data()
-    logging.info("************Input Dim: {}".format(feature.shape))
-    logging.info("************Output Dim: {}".format(label.shape))
-    encoder = Encoder(args, feature.shape[2], args.kernel_dim)
-    encoded_feature = encoder.forward(feature)
-    logging.info("************Input Dim: {}".format(encoded_feature.shape))
-
-
 def get_dataset():
+    ''' naive data sets'''
     X, y = torch.randn(1000, 3), torch.randn(1000)
     train_n = int(floor(0.8 * len(X)))
     train_x = X[:train_n, :].contiguous()
@@ -38,10 +28,13 @@ def get_dataset():
     test_y = y[train_n:].contiguous()
     train_dataset = TensorDataset(train_x, train_y)
     train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
+    logging.info(f'train_x size: {train_x.shape}')
+    logging.info(f'train_dataset size: {train_dataset[0][0].shape}')
+    logging.info(f'train_dataset size: {train_dataset[799][0].shape}')
 
     test_dataset = TensorDataset(test_x, test_y)
     test_loader = DataLoader(test_dataset, batch_size=1024, shuffle=False)
-    return train_x, train_y, train_loader, test_x, test_y
+    return train_x, train_y, train_loader, test_x, test_y, test_loader
 
 
 def train_gp(train_x, train_y, train_loader):
@@ -71,20 +64,36 @@ def train_gp(train_x, train_y, train_loader):
             optimizer.step()
         if i == 2:
             gpytorch.settings.tridiagonal_jitter(1e-4)
-    # Get into evaluation (predictive posterior) mode
+    return model, likelihood, inducing_points
+
+
+def save_model(model, likelihood, file_path):
+    '''save as state_dict'''
     model.eval()
     likelihood.eval()
     # save and load model
     state_dict = model.state_dict()
-    logging.info(state_dict)
-    torch.save(model.state_dict(),
-               '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pth')
-    state_dict = torch.load(
-        '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pth')
+    logging.info(f'saving model state dict: {state_dict}')
+    torch.save(model.state_dict(), file_path)
+
+
+def load_model(inducing_points, train_x, file_path):
+    '''load from state dict'''
+    state_dict = torch.load(file_path)
     model = GPModelExample(inducing_points, train_x.shape[0])
     model.load_state_dict(state_dict)
-    logging.info(model.state_dict)
-    return model, likelihood
+    logging.info(f'loading model state dict: {model.state_dict}')
+    return model
+
+
+def predict(model, test_loader):
+    '''predict model'''
+    means = torch.tensor([0.])
+    with torch.no_grad():
+        for x_batch, y_batch in test_loader:
+            preds = model(x_batch)
+            means = torch.cat([means, preds.mean.cpu()])
+    return means[1:]
 
 
 class MeanVarModelWrapper(nn.Module):
@@ -97,49 +106,25 @@ class MeanVarModelWrapper(nn.Module):
         return output_dist.mean, output_dist.variance
 
 
-def save_gp(model, test_x):
+def save_gp(model, test_x, jit_file_path):
+    '''save to TorchScript'''
     wrapped_model = MeanVarModelWrapper(model)
-    with torch.no_grad():
+    with gpytorch.settings.trace_mode(), torch.no_grad():
         fake_input = test_x
         pred = wrapped_model(fake_input)  # Compute caches
-        traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
-        logging.info("saving model")
-    traced_model.save('/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pt')
+        traced_model = torch.jit.trace(wrapped_model, fake_input)
+        logging.info('saving model')
+    traced_model.save(jit_file_path)
 
 
 if __name__ == '__main__':
-    train_x, train_y, train_loader, test_x, test_y = get_dataset()
-    gp_model, gp_likelihood = train_gp(train_x, train_y, train_loader)
-
-    # prediction & evaluation
-    test_dataset = TensorDataset(test_x, test_y)
-    test_loader = DataLoader(test_dataset, batch_size=1024, shuffle=False)
-    gp_model.eval()
-    gp_likelihood.eval()
-    means = torch.tensor([0.])
-    with torch.no_grad():
-        for x_batch, y_batch in test_loader:
-            preds = gp_model(x_batch)
-            means = torch.cat([means, preds.mean.cpu()])
-    means = means[1:]
-    print('Test MAE: {}'.format(torch.mean(torch.abs(means - test_y.cpu()))))
-
-    save_gp(gp_model, test_x)
-
-# parser = argparse.ArgumentParser(description='GP')
-# # paths
-# parser.add_argument(
-#     '--training_data_path',
-#     type=str,
-#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
-# parser.add_argument(
-#     '--testing_data_path',
-#     type=str,
-#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
-# parser.add_argument(
-#     '--gp_model_path',
-#     type=str,
-#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
-# parser.add_argument('--kernel_dim', type=int, default=20)
-# args = parser.parse_args()
-# dataset = GPDataSet(args)
+    FILE_PATH = '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pth'
+    JIT_FILE_PATH = '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pt'
+    train_x, train_y, train_loader, test_x, test_y, test_loader = get_dataset()
+    gp_model, gp_likelihood, inducing_point = train_gp(train_x, train_y, train_loader)
+    save_model(gp_model, gp_likelihood, FILE_PATH)
+    loaded_gp_model = load_model(inducing_point, train_x, FILE_PATH)
+    means = predict(loaded_gp_model, test_loader)
+    # evaluation
+    logging.info('Test MAE: {}'.format(torch.mean(torch.abs(means - test_y.cpu()))))
+    save_gp(gp_model, test_x, JIT_FILE_PATH)
