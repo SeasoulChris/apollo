@@ -16,10 +16,10 @@ class FrameEnv(BasePipeline):
     def run(self):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"
-        target_prefix = "/fuel/kinglong_data/frame_env/"
+        target_prefix = "/fuel/kinglong_data/frame_envs/"
         if flags.FLAGS.cloud:
             origin_prefix = 'modules/prediction/kinglong/'
-            target_prefix = 'modules/prediction/kinglong_frame_env/'
+            target_prefix = 'modules/prediction/kinglong_frame_envs/'
 
         records_dir = (
             # RDD(file), start with origin_prefix
