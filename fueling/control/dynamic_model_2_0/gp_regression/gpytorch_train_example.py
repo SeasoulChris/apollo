@@ -12,9 +12,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as Func
 import pyro
+import pickle
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
-from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
+from fueling.control.dynamic_model_2_0.gp_regression.gp_model_example import GPModelExample
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 import fueling.common.logging as logging
 
@@ -47,7 +48,7 @@ def train_gp(train_x, train_y, train_loader):
     """Train the model"""
     inducing_points = train_x[:500, :]
     likelihood = gpytorch.likelihoods.GaussianLikelihood(variance=0.1 * torch.ones(2, 1))
-    model = GPModel(inducing_points=inducing_points)
+    model = GPModelExample(inducing_points=inducing_points, input_data_dim=train_x.shape[0])
     likelihood.train()
     model.train()
 
@@ -71,8 +72,18 @@ def train_gp(train_x, train_y, train_loader):
         if i == 2:
             gpytorch.settings.tridiagonal_jitter(1e-4)
     # Get into evaluation (predictive posterior) mode
-    # model.eval()
-    # likelihood.eval()
+    model.eval()
+    likelihood.eval()
+
+    state_dict = model.state_dict()
+    logging.info(state_dict)
+    torch.save(model.state_dict(),
+               '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pth')
+    state_dict = torch.load(
+        '/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pth')
+    model = GPModelExample(inducing_points, train_x.shape[0])
+    model.load_state_dict(state_dict)
+    logging.info(model.state_dict)
     return model
 
 
@@ -93,28 +104,28 @@ def save_gp(model, test_x):
         pred = wrapped_model(fake_input)  # Compute caches
         traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
         logging.info("saving model")
-    traced_model.save('/tmp/traced_gp.pt')
+    traced_model.save('/tmp/traced_gp_example.pt')
 
 
 if __name__ == '__main__':
     train_x, train_y, train_loader, test_x, test_y = get_dataset()
     gp_model = train_gp(train_x, train_y, train_loader)
-    save_gp(gp_model, test_x)
+    # save_gp(gp_model, test_x)
 
-    parser = argparse.ArgumentParser(description='GP')
-    # paths
-    parser.add_argument(
-        '--training_data_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
-    parser.add_argument(
-        '--testing_data_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
-    parser.add_argument(
-        '--gp_model_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
-    parser.add_argument('--kernel_dim', type=int, default=20)
-    args = parser.parse_args()
-    dataset = GPDataSet(args)
+    # parser = argparse.ArgumentParser(description='GP')
+    # # paths
+    # parser.add_argument(
+    #     '--training_data_path',
+    #     type=str,
+    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
+    # parser.add_argument(
+    #     '--testing_data_path',
+    #     type=str,
+    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
+    # parser.add_argument(
+    #     '--gp_model_path',
+    #     type=str,
+    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
+    # parser.add_argument('--kernel_dim', type=int, default=20)
+    # args = parser.parse_args()
+    # dataset = GPDataSet(args)
