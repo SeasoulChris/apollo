@@ -48,7 +48,7 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     if hasattr(trajectory_point, 'relative_time'):
         data_array = np.array([
             trajectory_point.relative_time,
-            speed, # not sure if needed
+            speed,  # not sure if needed
             a,
             a / vehicle_param.max_acceleration if a > 0.0 else 0.0,
             a / vehicle_param.max_deceleration if a < 0.0 else 0.0,
@@ -68,8 +68,8 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
 def extract_meta_from_planning(msg):
     """Extract non-repeated field from one planning message"""
     meta_array = np.array([
-        msg.latency_stats.total_time_ms, # end-to-end time latency
-        msg.debug.planning_data.open_space.time_latency, # zigzag trajectory latency
+        msg.latency_stats.total_time_ms,  # end-to-end time latency
+        msg.debug.planning_data.open_space.time_latency,  # zigzag trajectory latency
     ])
     return meta_array
 

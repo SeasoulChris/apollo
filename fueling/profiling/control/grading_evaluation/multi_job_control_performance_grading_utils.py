@@ -11,7 +11,7 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 from fueling.profiling.common.stats_utils import compute_beyond, compute_count, compute_ending, \
-    compute_mean, compute_peak, compute_rms, compute_usage
+    compute_mean, compute_peak, compute_rms, compute_usage, GradingArguments
 import fueling.profiling.control.feature_extraction.multi_job_control_feature_extraction_utils \
     as feature_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
@@ -78,20 +78,7 @@ def compute_h5_and_gradings(target_groups, flags):
                                  'pose_heading_offset_std',
                                  'pose_heading_offset_peak',
                                  'control_error_code_count'])
-    GradingArguments = namedtuple('GradingArguments',
-                                  ['filter_name',
-                                   'filter_value',
-                                   'filter_mode',
-                                   'norm_name',
-                                   'denorm_name',
-                                   'max_compare',
-                                   'denorm_weight',
-                                   'feature_name',
-                                   'time_name',
-                                   'threshold',
-                                   'weight'])
     GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
-    GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
 
     grading_group_result = GradingResults(
         station_err_std=compute_rms(grading_mtx, GradingArguments(

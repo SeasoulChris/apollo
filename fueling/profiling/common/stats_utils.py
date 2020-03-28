@@ -1,8 +1,53 @@
 #!/usr/bin/env python
 
+from collections import namedtuple
 import numpy as np
 
 import fueling.common.logging as logging
+
+
+GradingArguments = namedtuple('grading_arguments',
+                              ['denorm_name',
+                               'denorm_weight',
+                               'feature_name',
+                               'filter_mode',
+                               'filter_name',
+                               'filter_value',
+                               'max_compare',
+                               'norm_name',
+                               'threshold',
+                               'time_name',
+                               'weight',
+                               ])
+GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
+
+
+def compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
+                  above_threshold=True, ratio_threshold=1.0, percentile=95):
+    if above_threshold:
+        hit_bound_times, _ = compute_beyond(feature_mtx, GradingArguments(
+            feature_name=feature_name,
+            threshold=ratio_threshold
+        ), FEATURE_IDX)
+    else:
+        hit_bound_times, _ = compute_below(feature_mtx, GradingArguments(
+            feature_name=feature_name,
+            threshold=ratio_threshold
+        ), FEATURE_IDX)
+    max, elem_num = compute_peak(feature_mtx, GradingArguments(
+        feature_name=feature_name,
+    ), profiling_conf.min_sample_size, FEATURE_IDX)
+    mean, _ = compute_mean(feature_mtx, GradingArguments(
+        feature_name=feature_name,
+    ), profiling_conf.min_sample_size, FEATURE_IDX)
+    std_dev, _ = compute_std(feature_mtx, GradingArguments(
+        feature_name=feature_name,
+    ), profiling_conf.min_sample_size, FEATURE_IDX)
+    percentile, _ = compute_percentile(feature_mtx, GradingArguments(
+        feature_name=feature_name,
+        threshold=percentile
+    ), profiling_conf.min_sample_size, FEATURE_IDX)
+    return [hit_bound_times, max[0], mean, std_dev, percentile, elem_num]
 
 
 def compute_rms(grading_mtx, arg, min_sample_size, FEATURE_IDX):
