@@ -28,7 +28,7 @@ import fueling.common.proto_utils as proto_utils
 calibration_conf_file = file_utils.fuel_path('fueling/control/conf/calibration_table_conf.pb.txt')
 CALIBRATION_TABLE_CONF = proto_utils.get_pb_from_text_file(
     calibration_conf_file, CalibrationTable())
-logging.info('Load calibration table conf: %s' % conf_filename)
+logging.info('Load calibration table conf: %s' % calibration_conf_file)
 
 # calibration table parameters
 steer_condition = CALIBRATION_TABLE_CONF.steer_condition
