@@ -74,7 +74,7 @@ def train_gp(train_x, train_y, train_loader):
     # Get into evaluation (predictive posterior) mode
     model.eval()
     likelihood.eval()
-
+    # save and load model
     state_dict = model.state_dict()
     logging.info(state_dict)
     torch.save(model.state_dict(),
@@ -84,7 +84,7 @@ def train_gp(train_x, train_y, train_loader):
     model = GPModelExample(inducing_points, train_x.shape[0])
     model.load_state_dict(state_dict)
     logging.info(model.state_dict)
-    return model
+    return model, likelihood
 
 
 class MeanVarModelWrapper(nn.Module):
@@ -104,28 +104,42 @@ def save_gp(model, test_x):
         pred = wrapped_model(fake_input)  # Compute caches
         traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
         logging.info("saving model")
-    traced_model.save('/tmp/traced_gp_example.pt')
+    traced_model.save('/fuel/fueling/control/dynamic_model_2_0/gp_regression/traced_gp_example.pt')
 
 
 if __name__ == '__main__':
     train_x, train_y, train_loader, test_x, test_y = get_dataset()
-    gp_model = train_gp(train_x, train_y, train_loader)
-    # save_gp(gp_model, test_x)
+    gp_model, gp_likelihood = train_gp(train_x, train_y, train_loader)
 
-    # parser = argparse.ArgumentParser(description='GP')
-    # # paths
-    # parser.add_argument(
-    #     '--training_data_path',
-    #     type=str,
-    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
-    # parser.add_argument(
-    #     '--testing_data_path',
-    #     type=str,
-    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
-    # parser.add_argument(
-    #     '--gp_model_path',
-    #     type=str,
-    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
-    # parser.add_argument('--kernel_dim', type=int, default=20)
-    # args = parser.parse_args()
-    # dataset = GPDataSet(args)
+    # prediction & evaluation
+    test_dataset = TensorDataset(test_x, test_y)
+    test_loader = DataLoader(test_dataset, batch_size=1024, shuffle=False)
+    gp_model.eval()
+    gp_likelihood.eval()
+    means = torch.tensor([0.])
+    with torch.no_grad():
+        for x_batch, y_batch in test_loader:
+            preds = gp_model(x_batch)
+            means = torch.cat([means, preds.mean.cpu()])
+    means = means[1:]
+    print('Test MAE: {}'.format(torch.mean(torch.abs(means - test_y.cpu()))))
+
+    save_gp(gp_model, test_x)
+
+# parser = argparse.ArgumentParser(description='GP')
+# # paths
+# parser.add_argument(
+#     '--training_data_path',
+#     type=str,
+#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
+# parser.add_argument(
+#     '--testing_data_path',
+#     type=str,
+#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
+# parser.add_argument(
+#     '--gp_model_path',
+#     type=str,
+#     default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
+# parser.add_argument('--kernel_dim', type=int, default=20)
+# args = parser.parse_args()
+# dataset = GPDataSet(args)
