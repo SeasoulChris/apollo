@@ -16,6 +16,8 @@ spec:
     spec:
       imagePullSecrets:
       - name: baidubce
+      nodeSelector:
+        nodezone: czone
       containers:
       - name: warehouse
         image: hub.baidubce.com/apollofuel/warehouse:20200325_1628

@@ -126,7 +126,7 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '
             '--conf spark.kubernetes.container.image=%(docker_image)s '
             # Driver
-            '--conf spark.driver.memory=2g '
+            '--conf spark.driver.memory=%(driver_memory)sg '
             '--conf spark.kubernetes.authenticate.driver.serviceAccountName=spark '
             # Executor
             '--conf spark.executor.instances=%(workers)s '
@@ -141,6 +141,7 @@ class SparkSubmitJob(flask_restful.Resource):
                 'worker_cpu': arg.worker.cpu,
                 'worker_gpu': arg.worker.gpu,
                 'worker_disk': arg.worker.disk,
+                'driver_memory': arg.driver.driver_memory,
             })
 
         # Select nodes.

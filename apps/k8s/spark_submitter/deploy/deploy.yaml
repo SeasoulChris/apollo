@@ -16,9 +16,11 @@ spec:
     spec:
       imagePullSecrets:
       - name: baidubce
+      nodeSelector:
+        nodezone: czone      
       containers:
       - name: spark-submitter
-        image: hub.baidubce.com/apollofuel/spark_submitter:20200324_1112
+        image: hub.baidubce.com/apollofuel/spark_submitter:20200328_1236
         ports:
         - containerPort: 8000
         env:

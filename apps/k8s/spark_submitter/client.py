@@ -35,6 +35,9 @@ flags.DEFINE_integer('gpu', 0, 'Worker GPU cores.', short_name='g')
 flags.DEFINE_integer('memory', 12, 'Worker memory in GB.', short_name='m')
 flags.DEFINE_integer('disk', 20, 'Worker disk in GB.', short_name='d')
 
+# Driver.
+flags.DEFINE_integer('driver_memory', 2, 'Driver memory in GB.')
+
 # Partner.
 flags.DEFINE_boolean('partner_storage_writable', False, 'Mount partner storage as writable.')
 flags.DEFINE_string('partner_bos_bucket', None, 'Partner bos bucket.')
@@ -64,6 +67,7 @@ class SparkSubmitterClient(object):
             'env': self.get_env(),
             'job': self.get_job(),
             'worker': self.get_worker(),
+            'driver': self.get_driver(),
             'partner': self.get_partner(),
         }
 
@@ -149,6 +153,11 @@ class SparkSubmitterClient(object):
             'gpu': self.client_flags.get('gpu', self.get_default('gpu')),
             'memory': self.client_flags.get('memory', self.get_default('memory')),
             'disk': self.client_flags.get('disk', self.get_default('disk')),
+        }
+
+    def get_driver(self):
+        return {
+            'driver_memory': self.client_flags.get('driver_memory', self.get_default('driver_memory')),
         }
 
     def get_partner(self):
