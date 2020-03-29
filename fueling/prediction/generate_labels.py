@@ -19,7 +19,7 @@ class GenerateLabels(BasePipeline):
     def run(self):
         """Run prod."""
         source_prefix = '/fuel/kinglong_data/labels/'
-        if flags.FLAGS.cloud:
+        if self.FLAGS.get('running_mode') == 'PROD':
             source_prefix = 'modules/prediction/kinglong_labels/'
 
         # RDD(bin_files)

@@ -10,6 +10,7 @@ import pyspark_utils.op as spark_op
 from modules.prediction.proto import offline_features_pb2
 from modules.perception.proto import perception_obstacle_pb2
 
+import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
@@ -34,7 +35,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         frame_env_prefix = '/fuel/kinglong_data/frame_envs/'
         label_prefix = '/fuel/kinglong_data/labels/'
         output_prefix = '/fuel/kinglong_data/training/'
-        if flags.FLAGS.cloud:
+        if self.FLAGS.get('running_mode') == 'PROD':
             frame_env_prefix = 'modules/prediction/kinglong_frame_envs/'
             label_prefix = 'modules/prediction/kinglong_labels/'
             output_prefix = 'modules/prediction/kinglong_training/'
@@ -61,6 +62,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         logging.info(frame_env_dir)
         label_dir = frame_env_dir.replace('frame_envs', 'labels', 1)
         output_dir = frame_env_dir.replace('frame_envs', 'training', 1)
+
+        file_utils.makedirs(output_dir)
         
         label_filenames = os.listdir(label_dir)
         label_dict_merged = dict()

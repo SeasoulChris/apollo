@@ -157,6 +157,7 @@ py_binary(
     srcs = ["combine_frame_env_and_future_status.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",

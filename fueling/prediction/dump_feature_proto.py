@@ -21,7 +21,7 @@ class DumpFeatureProto(BasePipeline):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"
         target_prefix = "/fuel/kinglong_data/labels/"
-        if flags.FLAGS.cloud:
+        if self.FLAGS.get('running_mode') == 'PROD':
             origin_prefix = 'modules/prediction/kinglong/'
             target_prefix = 'modules/prediction/kinglong_labels/'
 
