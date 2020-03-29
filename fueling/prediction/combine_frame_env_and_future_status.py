@@ -33,12 +33,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
     def run(self):
         '''Run prod.'''
         frame_env_prefix = '/fuel/kinglong_data/frame_envs/'
-        label_prefix = '/fuel/kinglong_data/labels/'
-        output_prefix = '/fuel/kinglong_data/training/'
         if self.FLAGS.get('running_mode') == 'PROD':
             frame_env_prefix = 'modules/prediction/kinglong_frame_envs/'
-            label_prefix = 'modules/prediction/kinglong_labels/'
-            output_prefix = 'modules/prediction/kinglong_training/'
 
         frame_env_dir = self.to_rdd(self.our_storage().list_end_dirs(frame_env_prefix))
 
@@ -51,19 +47,23 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
     def run_internal(self, frame_env_dir_rdd):
         '''Run the pipeline with given arguments.'''
         result = frame_env_dir_rdd.map(self.process_dir).cache()
-
-        if result.isEmpty():
-            logging.info('Nothing to be processed, everything is under control!')
-            return
+        # if result.isEmpty():
+        #     logging.info('Nothing to be processed, everything is under control!')
+        #     return
         logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     @staticmethod
     def process_dir(frame_env_dir):
         logging.info(frame_env_dir)
         label_dir = frame_env_dir.replace('frame_envs', 'labels', 1)
-        output_dir = frame_env_dir.replace('frame_envs', 'training', 1)
-
-        file_utils.makedirs(output_dir)
+        output_dir = frame_env_dir.replace('frame_envs', 'train', 1)
+        # file_utils.makedirs(output_dir)
+        mkdir_cmd = 'sudo mkdir -p {}'.format(output_dir)
+        chmod_cmd = 'sudo chmod 777 {}'.format(output_dir)
+        os.system(mkdir_cmd)
+        logging.info(mkdir_cmd)
+        os.system(chmod_cmd)
+        logging.info(chmod_cmd)
         
         label_filenames = os.listdir(label_dir)
         label_dict_merged = dict()
@@ -81,7 +81,6 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             frame_envs = proto_utils.get_pb_from_bin_file(frame_env_filepath, frame_envs)
             for frame_env in frame_envs.frame_env:
                 list_frame_env.frame_env.append(frame_env)
-
         data_output = []
         for frame_env in list_frame_env.frame_env:
             scene_output = []
@@ -114,7 +113,6 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                         obstacle_output[1].append((x, y))
                 scene_output.append(obstacle_output)
             data_output.append(scene_output)
-
         output_file_path = os.path.join(output_dir, 'training_data.npy')
         np.save(output_file_path, data_output)
         return 1
