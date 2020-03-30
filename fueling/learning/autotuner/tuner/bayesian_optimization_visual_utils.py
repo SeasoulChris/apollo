@@ -18,7 +18,7 @@ import time
 import fueling.common.logging as logging
 
 
-class BayesianOptimizationVisual():
+class BayesianOptimizationVisualUtils():
     """Basic functionality for Bayesian optimization visualization."""
 
     def __init__(self):

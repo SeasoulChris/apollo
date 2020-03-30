@@ -17,7 +17,7 @@ from modules.control.proto.mrac_conf_pb2 import MracConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
-from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils import BayesianOptimizationVisual
+from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils import BayesianOptimizationVisualUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -155,7 +155,7 @@ class BayesianOptimizationTuner():
     def optimize(self, n_iter=0):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.iteration_records = {}
-        visual = BayesianOptimizationVisual()
+        visual = BayesianOptimizationVisualUtils()
         for i in range(self.n_iter):
             next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
 
