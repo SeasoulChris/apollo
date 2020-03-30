@@ -249,7 +249,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
         # TODO(Hongyi): add the drawing class here.
         self.base_map = {"sunnyvale": cv.imread("/fuel/testdata/map_feature/sunnyvale_with_two_offices.png"),
-                         "san_mateo": cv.imread("/fuel/testdata/map_feature/san_mateo.png")}
+                         "san_mateo": cv.imread("/fuel/testdata/map_feature/san_mateo.png"),
+                         "baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png"),}
 
         scene_id = -1
         all_file_paths = file_utils.list_files(data_dir)

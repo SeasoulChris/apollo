@@ -20,12 +20,17 @@ class Mapping(object):
             self.base_point = np.array([585870, 4139900])
             self.resolution = 0.1
             self.GRID = [28000, 20000]
+        elif (self.region == "baidudasha"):
+            self.base_point = np.array([439700, 4433250])
+            self.resolution = 0.1
+            self.GRID = [4100, 5100]
         else:
             (p_min, p_max) = self._read_hdmap()
             self.base_point = p_min - 100.0
             self.resolution = 0.1
             self.GRID = [int((p_max[0] - p_min[0] + 200.0) / self.resolution),
                          int((p_max[1] - p_min[1] + 200.0) / self.resolution)]
+
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
         self._read_hdmap()
         self._draw_base_map()

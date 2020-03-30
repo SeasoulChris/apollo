@@ -21,6 +21,9 @@ class ObstacleMapping(object):
             # print("sunnyvale_with_two_offices.png exist, read it directly!")
             center_idx = [int(np.round((center_point[0]-585870)/0.1)),
                           int(20000-np.round((center_point[1]-4139900)/0.1))]
+        elif region == "baidudasha":
+            center_idx = [int(np.round((center_point[0]-439700)/0.1)),
+                          int(5100-np.round((center_point[1]-4433250)/0.1))]
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map
