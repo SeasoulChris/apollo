@@ -7,7 +7,7 @@ import fueling.common.logging as logging
 
 
 class Encoder(nn.Module):
-    """Convolutional neural network to encode high-dimensional features"""
+    """Convolutional neural network to encode high-dimensional features, this just serves as an example"""
 
     def __init__(self, u_dim, kernel_dim):
         """Network initialization"""

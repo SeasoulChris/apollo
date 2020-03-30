@@ -7,8 +7,6 @@ from gpytorch.variational import CholeskyVariationalDistribution
 from gpytorch.variational import VariationalStrategy
 import gpytorch
 
-# from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
-
 from fueling.control.dynamic_model_2_0.gp_regression.encoder_gpytorch import GPEncoder
 import fueling.common.logging as logging
 
