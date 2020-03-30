@@ -19,6 +19,14 @@ py_library(
 )
 
 py_library(
+    name = "encoder_gpytorch",
+    srcs = ["encoder_gpytorch.py"],
+    deps = [
+        "//fueling/common:logging",
+    ],
+)
+
+py_library(
     name = "dataset",
     srcs = ["dataset.py"],
     deps = [
@@ -41,7 +49,7 @@ py_library(
     deps = [
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
-        "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
+        "//fueling/control/dynamic_model_2_0/gp_regression:encoder_gpytorch",
         requirement("gpytorch"),
     ],
 )
@@ -62,7 +70,6 @@ py_binary(
     srcs = ["gpytorch_train_example.py"],
     deps = [
         "//fueling/control/dynamic_model_2_0/gp_regression:dataset",
-        "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
         "//fueling/control/dynamic_model_2_0/gp_regression:gp_model_example",
     ],
 )
@@ -72,7 +79,6 @@ py_binary(
     srcs = ["gpytorch_train.py"],
     deps = [
         "//fueling/control/dynamic_model_2_0/gp_regression:dataset",
-        "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
         "//fueling/control/dynamic_model_2_0/gp_regression:gp_model",
     ],
 )

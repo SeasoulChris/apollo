@@ -13,28 +13,32 @@ import torch.nn.functional as Func
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 import fueling.common.logging as logging
 
 
 def train(args, dataset, gp_class):
     """Train the model"""
-    feature, label = dataset.get_train_data()
+    features, labels = dataset.get_train_data()
+    labels = labels.view(labels.shape[1], -1)
     # get data
-    logging.info("************Input Dim: {}".format(feature.shape))
-    logging.info("************Output Dim: {}".format(label.shape))
-    logging.info("************Output Example: {}".format(label[0]))
+    logging.info("************Input Dim: {}".format(features.shape))
+    logging.info("************Output Dim: {}".format(labels.shape))
+    logging.info("************Output Example: {}".format(labels[0]))
+
+    train_dataset = TensorDataset(features, labels)
+    train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
 
     # noise_prior
-    likelihood = gpytorch.likelihoods.GaussianLikelihood(variance=0.1 * torch.ones(2, 1))
+    likelihood = gpytorch.likelihoods.GaussianLikelihood()
 
     # Define the inducing points of Gaussian Process
-    inducing_points = feature[torch.arange(0, feature.shape[0],
-                                           step=int(max(feature.shape[0] / args.num_inducing_point, 1))).long()]
+    inducing_points = features[torch.arange(0, features.shape[0],
+                                            step=int(max(features.shape[0] / args.num_inducing_point, 1))).long()]
     logging.info('inducing points data shape: {}'.format(inducing_points.shape))
-    logging.info('feature data shape: {}'.format(feature.shape))
-    model = GPModel(inducing_points=inducing_points, input_data_dim=feature.shape[-1])
-
+    logging.info('feature data shape: {}'.format(features.shape))
+    model = GPModel(inducing_points=inducing_points, input_data_dim=features.shape[-1])
+    likelihood.train()
+    model.train()
     optimizer = torch.optim.Adam([
         {'params': model.parameters()},
         {'params': likelihood.parameters()},
@@ -42,20 +46,48 @@ def train(args, dataset, gp_class):
 
     logging.info("Start of training")
 
-    mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=label.shape[0])
+    mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=labels.shape[0])
+    logging.info(labels.shape[0])
 
     for epoch in range(1, args.epochs + 1):
-        optimizer.zero_grad()
-        output = model.forward(feature)
-        loss = -mll(output, label)
-        loss.sum().backward(retain_graph=True)
-        optimizer.step()
-        logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
+        # load single data point
+        # for feature, label in zip(features, labels):
+        for feature, label in train_loader:
+            optimizer.zero_grad()
+            # output = model.forward(feature)
+            output = model(feature)
+            loss = -mll(output, label)
+            # loss.backward(retain_graph=True)
+            loss.sum().backward(retain_graph=True)
+            optimizer.step()
+            logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
     # save_gp(args, gp_instante, feature, encoder)
+    test_features, test_labels = dataset.get_test_data()
+    save_gp(model, test_features)
     return model
+
+
+class MeanVarModelWrapper(nn.Module):
+    def __init__(self, gp):
+        super().__init__()
+        self.gp = gp
+
+    def forward(self, x):
+        output_dist = self.gp(x)
+        return output_dist.mean, output_dist.variance
+
+
+def save_gp(model, test_x):
+    wrapped_model = MeanVarModelWrapper(model)
+    with gpytorch.settings.trace_mode(), torch.no_grad():
+        fake_input = test_x
+        pred = wrapped_model(fake_input)  # Compute caches
+        traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
+        logging.info("saving model")
+    traced_model.save('/tmp/traced_gp.pt')
 
 
 if __name__ == '__main__':

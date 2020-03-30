@@ -7,21 +7,25 @@ from gpytorch.variational import CholeskyVariationalDistribution
 from gpytorch.variational import VariationalStrategy
 import gpytorch
 
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+# from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+
+from fueling.control.dynamic_model_2_0.gp_regression.encoder_gpytorch import GPEncoder
 import fueling.common.logging as logging
 
 
 class GPModel(ApproximateGP):
     def __init__(self, inducing_points, input_data_dim):
-        # for test
-        variational_distribution = CholeskyVariationalDistribution(inducing_points.size(0))
+        logging.info('inducing point size: {}'.format(inducing_points.shape))
+        # (100*6) input dimension
+        variational_distribution = CholeskyVariationalDistribution(inducing_points.shape[0])
         variational_strategy = VariationalStrategy(
             self, inducing_points, variational_distribution, learn_inducing_locations=True)
+        # logging.info(inducing_points)
         super(GPModel, self).__init__(variational_strategy)
         self.mean_module = gpytorch.means.ConstantMean()
         # kernel
         self.covar_module = MaternKernel()  # default nu=2.5
-        self.warping = Encoder(input_data_dim, kernel_dim=20)
+        self.warping = GPEncoder(input_data_dim, kernel_dim=20)
         # SparseGPR
         # self.covar_module = InducingPointKernel(
         #     self.base_covar_module, inducing_points=inducing_points, likelihood=likelihood)
