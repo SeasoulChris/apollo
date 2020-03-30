@@ -18,15 +18,16 @@ import fueling.common.logging as logging
 
 TARGET_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
 TARGET_NUM_FUTURE_POINT = 30
+MAX_NUM_FRAME_ENV_FILE = 100
 
 '''
 [scene, scene, ..., scene]
   scene: [obstacle, obstacle, ..., obstacle]
     obstacle: [history, future_status]
       history: [feature, feature, ..., feature]
-        feature: [(timestamp, x, y, heading), polygon_points]
-          polygon_points:[(x, y), (x, y), ..., (x, y)]
-      future_status: [(x, y), (x, y), ... (x, y)]
+        feature: [timestamp, x, y, heading, polygon_points]
+          polygon_points: x, y, x, y, ..., x, y # 20 (x,y)
+      future_status: [x, y, x, y, ... x, y]
 '''
 class CombineFrameEnvAndFutureStatus(BasePipeline):
     '''Records to feature proto pipeline.'''
@@ -72,49 +73,66 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             if label_filepath.endswith('future_status.npy'):
                 label_dict_curr = np.load(label_filepath, allow_pickle=True).item()
                 label_dict_merged.update(label_dict_curr)
+        logging.info('Finished merge labels from {}'.format(label_dir))
 
-        list_frame_env = offline_features_pb2.ListFrameEnv()
+        data_output = []
         frame_env_files = os.listdir(frame_env_dir)
+        start = 0
+        end = len(frame_env_files)
+        if len(frame_env_files) > MAX_NUM_FRAME_ENV_FILE:
+            start = (len(frame_env_files) - MAX_NUM_FRAME_ENV_FILE) // 2
+            end = start + MAX_NUM_FRAME_ENV_FILE
+        logging.info('[start, end) = [{}, {})'.format(start, end))
         for frame_env_filename in frame_env_files:
+            file_index = int(frame_env_filename.split('.')[-2])
+            logging.info('file_index = {}'.format(file_index))
+            if file_index < start or file_index >= end:
+                continue
             frame_envs = offline_features_pb2.ListFrameEnv()
             frame_env_filepath = os.path.join(frame_env_dir, frame_env_filename)
             frame_envs = proto_utils.get_pb_from_bin_file(frame_env_filepath, frame_envs)
+            logging.info('dealing with frame env file {}'.format(frame_env_filepath))
             for frame_env in frame_envs.frame_env:
-                list_frame_env.frame_env.append(frame_env)
-        data_output = []
-        for frame_env in list_frame_env.frame_env:
-            scene_output = []
-            for obstacle_history in frame_env.obstacles_history:
-                if len(obstacle_history.feature) == 0:
-                    continue
-                obstacle_output = [[], []]
-                for feature in obstacle_history.feature:
-                    frame_output = []
-                    feature_output = (feature.timestamp, feature.position.x, \
-                                      feature.position.y, feature.velocity_heading)
-                    frame_output.append(feature_output)
-                    polygon = []
-                    for point in feature.polygon_point:
-                        polygon.append((point.x, point.y))
-                    frame_output.append(polygon)
-                    obstacle_output[0].append(frame_output)
-                obstacle_output[0] = obstacle_output[0][::-1]
+                scene_output = []
+                for obstacle_history in frame_env.obstacles_history:
+                    if len(obstacle_history.feature) == 0:
+                        continue
+                    obstacle_output = [[], []]
+                    for feature in obstacle_history.feature:
+                        frame_output = [0 for i in range(4 + 20 * 2)]
+                        frame_output[0] = feature.timestamp
+                        frame_output[1] = feature.position.x
+                        frame_output[2] = feature.position.y
+                        frame_output[3] = feature.velocity_heading
+                        i = 4
+                        for point in feature.polygon_point:
+                            if i >= len(frame_output):
+                                break
+                            frame_output[i] = point.x
+                            i += 1
+                            frame_output[i] = point.y
+                            i += 1
+                        obstacle_output[0].append(frame_output)
+                    obstacle_output[0] = obstacle_output[0][::-1]
 
-                obstacle_id = obstacle_history.feature[0].id
-                obstacle_ts = obstacle_history.feature[0].timestamp
-                obstacle_type = obstacle_history.feature[0].type
-                key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
-                if obstacle_type == TARGET_OBSTACLE_TYPE and \
-                   key in label_dict_merged and \
-                   len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
-                    for i in range(1, TARGET_NUM_FUTURE_POINT + 1):
-                        x = label_dict_merged[key][i][0]
-                        y = label_dict_merged[key][i][1]
-                        obstacle_output[1].append((x, y))
-                scene_output.append(obstacle_output)
-            data_output.append(scene_output)
+                    obstacle_id = obstacle_history.feature[0].id
+                    obstacle_ts = obstacle_history.feature[0].timestamp
+                    obstacle_type = obstacle_history.feature[0].type
+                    key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
+                    if obstacle_type == TARGET_OBSTACLE_TYPE and \
+                       key in label_dict_merged and \
+                       len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
+                        for i in range(1, TARGET_NUM_FUTURE_POINT + 1):
+                            x = label_dict_merged[key][i][0]
+                            y = label_dict_merged[key][i][1]
+                            obstacle_output[1].append(x)
+                            obstacle_output[1].append(y)
+                    scene_output.append(obstacle_output)
+                data_output.append(scene_output)
+
         output_file_path = os.path.join(output_dir, 'training_data.npy')
         np.save(output_file_path, data_output)
+        logging.info('npy saved {}'.format(output_file_path))
         return 1
 
 
