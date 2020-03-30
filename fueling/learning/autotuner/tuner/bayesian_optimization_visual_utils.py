@@ -5,8 +5,6 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
-from matplotlib.colors import BoundaryNorm
-from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.mplot3d import Axes3D
 
 from bayes_opt import BayesianOptimization
@@ -53,8 +51,7 @@ class BayesianOptimizationVisualUtils():
         x_obs = np.array([[res["params"][name] for name in param_name] for res in optimizer.res])
         y_obs = np.array([res["target"] for res in optimizer.res])
 
-        logging.info(f"x obs shape: {x_obs.shape}, \n x obs: {x_obs}")
-        logging.info(f"y obs shape: {y_obs.shape}, \n y obs: {y_obs}")
+        logging.debug(f"x_obs size: {x_obs.shape}; y_obs size: {y_obs.shape}")
 
         if len(param_name) == 1:
             gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
@@ -95,28 +92,32 @@ class BayesianOptimizationVisualUtils():
             fig_acq = plt.subplot(gs[1])
             fig_mean = plt.subplot(gs[2])
             fig_std = plt.subplot(gs[3])
+            cmap = plt.get_cmap('jet')
 
             param_x1 = np.linspace(param_min[0], param_max[0], 100)
             param_x2 = np.linspace(param_min[1], param_max[1], 100)
             grid_x1, grid_x2 = np.meshgrid(param_x1, param_x2)
             param_grid = np.hstack([grid_x1.flatten().reshape(-1, 1),
                                     grid_x2.flatten().reshape(-1, 1)])
-            logging.info(f"param_grid_0 size: {param_grid[:, 0].shape} \n"
-                         f"param_grid_1 size: {param_grid[:, 1].shape} \n")
+            logging.debug(f"param_grid_0 size: {param_grid[:, 0].shape}; "
+                          f"param_grid_1 size: {param_grid[:, 1].shape}")
 
             mu, sigma = self.posterior(optimizer, x_obs, y_obs, param_grid)
             utility = utility_function.utility(param_grid, optimizer._gp, 0)
-            logging.info(f"mu size: {mu.shape}; utility size: {utility.shape}")
-            # logging.info(f"mu: {mu} \n sigma: {sigma}")
+            logging.debug(f"mu size: {mu.shape}; utility size: {utility.shape}")
 
             acq_value = np.array([[acq] for acq in utility])
-            logging.info(f"acq_value size: {acq_value.shape}")
-            # logging.info(f"acq_value: {acq_value}")
+            logging.debug(f"acq_value size: {acq_value.shape}")
             acq_im = fig_acq.pcolormesh(param_grid[:, 0].reshape(100, 100),
                                         param_grid[:, 1].reshape(100, 100),
-                                        acq_value.reshape(100, 100), shading='nearest')
+                                        acq_value.reshape(100, 100), shading='nearest', cmap=cmap)
             fig_acq.plot(param_grid[np.argmax(acq_value), 0], param_grid[np.argmax(acq_value), 1],
-                         'o', markersize=4, color='k')
+                         'o', markersize=6, color='k')
+            fig_acq.plot([param_grid[np.argmax(acq_value), 0], param_grid[np.argmax(acq_value), 0]],
+                         [param_min[1], param_max[1]], '--k')
+            fig_acq.plot([param_min[0], param_max[0]],
+                         [param_grid[np.argmax(acq_value), 1], param_grid[np.argmax(acq_value), 1]],
+                         '--k')
             plt.colorbar(acq_im, ax=fig_acq)
             fig_acq.set_xlim((param_min[0], param_max[0]))
             fig_acq.set_ylim((param_min[1], param_max[1]))
@@ -125,11 +126,10 @@ class BayesianOptimizationVisualUtils():
             fig_acq.set_title('Gaussian Process Acquisition Function')
 
             mean_value = np.array([[mean] for mean in mu])
-            logging.info(f"mean_value size: {mean_value.shape}")
-            # logging.info(f"mean_value: {mean_value}")
+            logging.debug(f"mean_value size: {mean_value.shape}")
             mean_im = fig_mean.pcolormesh(param_grid[:, 0].reshape(100, 100),
                                           param_grid[:, 1].reshape(100, 100),
-                                          mean_value.reshape(100, 100), shading='nearest')
+                                          mean_value.reshape(100, 100), shading='nearest', cmap=cmap)
             fig_mean.plot(x_obs[:, 0], x_obs[:, 1], 'D', markersize=4, color='k')
             plt.colorbar(mean_im, ax=fig_mean)
             fig_mean.set_xlim((param_min[0], param_max[0]))
@@ -139,18 +139,17 @@ class BayesianOptimizationVisualUtils():
             fig_mean.set_title('Gaussian Process Predicted Mean')
 
             std_value = np.array([[std] for std in sigma])
-            logging.info(f"std_value size: {std_value.shape}")
-            # logging.info(f"std_value: {std_value}")
+            logging.debug(f"std_value size: {std_value.shape}")
             std_im = fig_std.pcolormesh(param_grid[:, 0].reshape(100, 100),
                                         param_grid[:, 1].reshape(100, 100),
-                                        std_value.reshape(100, 100), shading='nearest')
+                                        std_value.reshape(100, 100), shading='nearest', cmap=cmap)
             fig_std.plot(x_obs[:, 0], x_obs[:, 1], 'D', markersize=4, color='k')
             plt.colorbar(std_im, ax=fig_std)
             fig_std.set_xlim((param_min[0], param_max[0]))
             fig_std.set_ylim((param_min[1], param_max[1]))
             fig_std.set_xlabel(param_name[0], fontdict={'size':12})
             fig_std.set_ylabel(param_name[1], fontdict={'size':12})
-            fig_std.set_title('Gaussian Process Predicted Standard Variance')
+            fig_std.set_title('Gaussian Process Predicted Standard-Deviation')
 
             fig_tgt.scatter(x_obs[:, 0], x_obs[:, 1], y_obs)
             fig_tgt.set_xlim((param_min[0], param_max[0]))
@@ -165,7 +164,6 @@ class BayesianOptimizationVisualUtils():
         else:
             logging.info(f"No visualization display for paramter size: {len(param_name)}")
 
-        plt.tight_layout()
         plt.draw()
         plt.pause(1)
 
