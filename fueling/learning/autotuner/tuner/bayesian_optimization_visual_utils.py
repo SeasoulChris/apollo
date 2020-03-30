@@ -5,6 +5,9 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
+from mpl_toolkits.mplot3d import Axes3D
 
 from bayes_opt import BayesianOptimization
 from bayes_opt import UtilityFunction
@@ -12,16 +15,18 @@ import numpy as np
 import os
 import time
 
+import fueling.common.logging as logging
+
 
 class BayesianOptimizationVisual():
     """Basic functionality for Bayesian optimization visualization."""
 
     def __init__(self):
         """Initialize the optimization visualization"""
-        self.figure = plt.figure(figsize=(16, 10))
+        self.figure = plt.figure(figsize=(12, 9))
         plt.show(block=False)
         self.figure.suptitle(
-            f'Gaussian Process and Utility Function Initialization, Waiting ...',
+            f'Gaussian Process and Utility Function Initialization, Waiting ...'
         )
         plt.draw()
         plt.pause(1)
@@ -33,51 +38,134 @@ class BayesianOptimizationVisual():
         mu, sigma = optimizer._gp.predict(grid, return_std=True)
         return mu, sigma
 
-    def plot_gp(self, optimizer, utility_function, pbounds, visual_storage_dir, param_name):
+    def plot_gp(self, optimizer, utility_function, pbounds, visual_storage_dir):
         """Plot the single-param Gaussian Process and Utility function"""
-        param_min = pbounds[param_name][0]
-        param_max = pbounds[param_name][1]
-        param_grid = np.linspace(param_min, param_max, 10000).reshape(-1, 1)
+        param_name = list(pbounds)
+        param_min = [pbounds[name][0] for name in param_name]
+        param_max = [pbounds[name][1] for name in param_name]
 
-        steps = len(optimizer.space)
+        plt.clf()
         self.figure.suptitle(
-            f'Gaussian Process and Utility Function After {steps} Steps',
+            f'Gaussian Process and Utility Function After {len(optimizer.space)} Steps',
             fontdict={'size':30}
         )
 
-        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-        axis = plt.subplot(gs[0])
-        acq = plt.subplot(gs[1])
-
-        x_obs = np.array([[res["params"][param_name]] for res in optimizer.res])
+        x_obs = np.array([[res["params"][name] for name in param_name] for res in optimizer.res])
         y_obs = np.array([res["target"] for res in optimizer.res])
 
-        mu, sigma = self.posterior(optimizer, x_obs, y_obs, param_grid)
-        axis.plot(x_obs.flatten(), y_obs, 'D', markersize=8, label=u'Observations', color='r')
-        axis.plot(param_grid, mu, '--', color='k', label='Prediction')
+        logging.info(f"x obs shape: {x_obs.shape}, \n x obs: {x_obs}")
+        logging.info(f"y obs shape: {y_obs.shape}, \n y obs: {y_obs}")
 
-        axis.fill(np.concatenate([param_grid, param_grid[::-1]]),
-                  np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
-                  alpha=.6, fc='c', ec='None', label='95% confidence interval')
+        if len(param_name) == 1:
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
+            axis = plt.subplot(gs[0])
+            acq = plt.subplot(gs[1])
 
-        axis.set_xlim((param_min, param_max))
-        axis.set_ylim((None, None))
-        axis.set_ylabel('Target', fontdict={'size':20})
-        axis.set_xlabel(param_name, fontdict={'size':20})
+            param_grid = np.linspace(param_min[0], param_max[0], 10000).reshape(-1, 1)
+            mu, sigma = self.posterior(optimizer, x_obs, y_obs, param_grid)
 
-        utility = utility_function.utility(param_grid, optimizer._gp, 0)
-        acq.plot(param_grid, utility, label='Utility Function', color='purple')
-        acq.plot(param_grid[np.argmax(utility)], np.max(utility), '*', markersize=15,
-                 label=u'Next Best Guess', markerfacecolor='gold', markeredgecolor='k',
-                 markeredgewidth=1)
-        acq.set_xlim((param_min, param_max))
-        acq.set_ylim((-np.max(utility) - 0.5, np.max(utility) + 0.5))
-        acq.set_ylabel('Utility', fontdict={'size':20})
-        acq.set_xlabel(param_name, fontdict={'size':20})
+            axis.plot(x_obs.flatten(), y_obs, 'D', markersize=8, label=u'Observations', color='r')
+            axis.plot(param_grid, mu, '--', color='k', label='Prediction')
 
-        axis.legend(loc=2, bbox_to_anchor=(1.01, 1), borderaxespad=0.)
-        acq.legend(loc=2, bbox_to_anchor=(1.01, 1), borderaxespad=0.)
+            axis.fill(np.concatenate([param_grid, param_grid[::-1]]),
+                      np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
+                      alpha=.6, fc='c', ec='None', label='95% confidence interval')
 
+            axis.set_xlim((param_min[0], param_max[0]))
+            axis.set_ylim((None, None))
+            axis.set_ylabel('Target', fontdict={'size':20})
+            axis.set_xlabel(param_name[0], fontdict={'size':20})
+
+            utility = utility_function.utility(param_grid, optimizer._gp, 0)
+            acq.plot(param_grid, utility, label='Utility Function', color='purple')
+            acq.plot(param_grid[np.argmax(utility)], np.max(utility), '*', markersize=15,
+                     label=u'Next Best Guess', markerfacecolor='gold', markeredgecolor='k',
+                     markeredgewidth=1)
+            acq.set_xlim((param_min[0], param_max[0]))
+            acq.set_ylim((-np.max(utility) - 0.5, np.max(utility) + 0.5))
+            acq.set_ylabel('Utility', fontdict={'size':20})
+            acq.set_xlabel(param_name[0], fontdict={'size':20})
+
+            axis.legend(loc=2, bbox_to_anchor=(1.01, 1), borderaxespad=0.)
+            acq.legend(loc=2, bbox_to_anchor=(1.01, 1), borderaxespad=0.)
+
+        elif len(param_name) == 2:
+            gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1])
+            fig_tgt = plt.subplot(gs[0], projection='3d')
+            fig_acq = plt.subplot(gs[1])
+            fig_mean = plt.subplot(gs[2])
+            fig_std = plt.subplot(gs[3])
+
+            param_x1 = np.linspace(param_min[0], param_max[0], 100)
+            param_x2 = np.linspace(param_min[1], param_max[1], 100)
+            grid_x1, grid_x2 = np.meshgrid(param_x1, param_x2)
+            param_grid = np.hstack([grid_x1.flatten().reshape(-1, 1),
+                                    grid_x2.flatten().reshape(-1, 1)])
+            logging.info(f"param_grid_0 size: {param_grid[:, 0].shape} \n"
+                         f"param_grid_1 size: {param_grid[:, 1].shape} \n")
+
+            mu, sigma = self.posterior(optimizer, x_obs, y_obs, param_grid)
+            utility = utility_function.utility(param_grid, optimizer._gp, 0)
+            logging.info(f"mu size: {mu.shape}; utility size: {utility.shape}")
+            # logging.info(f"mu: {mu} \n sigma: {sigma}")
+
+            acq_value = np.array([[acq] for acq in utility])
+            logging.info(f"acq_value size: {acq_value.shape}")
+            # logging.info(f"acq_value: {acq_value}")
+            acq_im = fig_acq.pcolormesh(param_grid[:, 0].reshape(100, 100),
+                                        param_grid[:, 1].reshape(100, 100),
+                                        acq_value.reshape(100, 100), shading='nearest')
+            fig_acq.plot(param_grid[np.argmax(acq_value), 0], param_grid[np.argmax(acq_value), 1],
+                         'o', markersize=4, color='k')
+            plt.colorbar(acq_im, ax=fig_acq)
+            fig_acq.set_xlim((param_min[0], param_max[0]))
+            fig_acq.set_ylim((param_min[1], param_max[1]))
+            fig_acq.set_xlabel(param_name[0], fontdict={'size':12})
+            fig_acq.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_acq.set_title('Gaussian Process Acquisition Function')
+
+            mean_value = np.array([[mean] for mean in mu])
+            logging.info(f"mean_value size: {mean_value.shape}")
+            # logging.info(f"mean_value: {mean_value}")
+            mean_im = fig_mean.pcolormesh(param_grid[:, 0].reshape(100, 100),
+                                          param_grid[:, 1].reshape(100, 100),
+                                          mean_value.reshape(100, 100), shading='nearest')
+            fig_mean.plot(x_obs[:, 0], x_obs[:, 1], 'D', markersize=4, color='k')
+            plt.colorbar(mean_im, ax=fig_mean)
+            fig_mean.set_xlim((param_min[0], param_max[0]))
+            fig_mean.set_ylim((param_min[1], param_max[1]))
+            fig_mean.set_xlabel(param_name[0], fontdict={'size':12})
+            fig_mean.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_mean.set_title('Gaussian Process Predicted Mean')
+
+            std_value = np.array([[std] for std in sigma])
+            logging.info(f"std_value size: {std_value.shape}")
+            # logging.info(f"std_value: {std_value}")
+            std_im = fig_std.pcolormesh(param_grid[:, 0].reshape(100, 100),
+                                        param_grid[:, 1].reshape(100, 100),
+                                        std_value.reshape(100, 100), shading='nearest')
+            fig_std.plot(x_obs[:, 0], x_obs[:, 1], 'D', markersize=4, color='k')
+            plt.colorbar(std_im, ax=fig_std)
+            fig_std.set_xlim((param_min[0], param_max[0]))
+            fig_std.set_ylim((param_min[1], param_max[1]))
+            fig_std.set_xlabel(param_name[0], fontdict={'size':12})
+            fig_std.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_std.set_title('Gaussian Process Predicted Standard Variance')
+
+            fig_tgt.scatter(x_obs[:, 0], x_obs[:, 1], y_obs)
+            fig_tgt.set_xlim((param_min[0], param_max[0]))
+            fig_tgt.set_ylim((param_min[1], param_max[1]))
+            fig_tgt.set_xlabel(param_name[0], fontdict={'size':10})
+            fig_tgt.set_ylabel(param_name[1], fontdict={'size':10})
+            fig_tgt.set_zlabel('Target', fontdict={'size':10})
+            fig_tgt.set_title('Gaussian Process Target Value')
+
+            gs.tight_layout(self.figure, rect=[0, 0.03, 1, 0.95])
+
+        else:
+            logging.info(f"No visualization display for paramter size: {len(param_name)}")
+
+        plt.tight_layout()
         plt.draw()
         plt.pause(1)
 

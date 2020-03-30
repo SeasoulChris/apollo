@@ -167,7 +167,7 @@ class BayesianOptimizationTuner():
                 proto_utils.dict_to_pb(self.merge_repeated_param(next_point), MracConf()))
             logging.info(f"Enable MRAC control: "
                          f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
-            logging.info(f"New MRAC Conf files: "
+            logging.info(f"New MRAC Conf files: \n"
                          f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
 
             training_id, score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
@@ -175,10 +175,7 @@ class BayesianOptimizationTuner():
             self.optimizer.register(params=next_point, target=target)
 
             self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
-            if len(self.pbounds) == 1:
-                param_name = list(self.pbounds)[0]
-                visual.plot_gp(self.optimizer, self.utility, self.pbounds,
-                               self.visual_storage_dir, param_name)
+            visual.plot_gp(self.optimizer, self.utility, self.pbounds, self.visual_storage_dir)
 
             self.iteration_records.update({f'iter-{i}': {'training_id': training_id, 'target': target,
                                                          'config_point': next_point}})
@@ -190,7 +187,7 @@ class BayesianOptimizationTuner():
         param_name = list(point)[0]
         param_value = point[param_name]
         param_delta = (self.pbounds[param_name][1] - self.pbounds[param_name][0]) / 1000
-        delta_sign = (param_value <= (self.pbounds[param_name][1] + self.pbounds[param_name][0]) / 2)
+        delta_sign = 1 if param_value <= sum(self.pbounds[param_name]) / 2 else -1
 
         iter = 0
         while (iter < len(self.iteration_records)):
@@ -221,7 +218,7 @@ class BayesianOptimizationTuner():
             tuner_json.write(json.dumps(self.tuner_results))
 
         final_visual_file = os.path.join(self.visual_storage_dir, 'gaussian_process.png')
-        if os.path.exist(final_visual_file):
+        if os.path.exists(final_visual_file):
             shutil.copyfile(final_visual_file, os.path.join(saving_path, 'gaussian_process.png'))
         logging.info(f"Detailed results saved at {saving_path} ")
 
