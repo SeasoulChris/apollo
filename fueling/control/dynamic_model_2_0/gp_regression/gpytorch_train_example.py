@@ -110,9 +110,8 @@ def save_gp(model, test_x, jit_file_path):
     '''save to TorchScript'''
     wrapped_model = MeanVarModelWrapper(model)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        fake_input = test_x
-        pred = wrapped_model(fake_input)  # Compute caches
-        traced_model = torch.jit.trace(wrapped_model, fake_input)
+        pred = wrapped_model(test_x)  # Compute caches
+        traced_model = torch.jit.trace(wrapped_model, test_x)
         logging.info('saving model')
     traced_model.save(jit_file_path)
 
