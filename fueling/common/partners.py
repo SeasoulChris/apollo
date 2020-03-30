@@ -28,4 +28,6 @@ partners = {
                              bos_bucket='jmcauto', bos_region='su'),
     'd-kit-bqyjy-73': Partner(name='BQYJY73', email='wanglanying@baicgroup.com.cn',
                               bos_bucket='baic-wly', bos_region='bj'),
+    'd-kit-bqyjy-66': Partner(name='BQYJY66', email='golem_z@hotmail.com',
+                              bos_bucket='cyouyou-calibration', bos_region='bj'),
 }
