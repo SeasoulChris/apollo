@@ -56,3 +56,14 @@ py_library(
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
 )
+
+py_binary(
+    name = "main",
+    srcs = ["main.py"],
+    deps = [
+        ":evaluation",
+        ":dataset",
+        ":gaussian_process",
+        ":train",
+    ],
+)
