@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torchvision import models
 from torchvision import transforms
+from torchvision.models.resnet import BasicBlock
 
 from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import *
@@ -181,8 +182,12 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
                  embed_size=64, hidden_size=128,
                  cnn_net=models.mobilenet_v2, pretrained=True):
         super(SemanticMapSelfAttentionLSTMModel, self).__init__()
-        # self.att = Self_Attn(3)
-        self.attn = SpatialAttention2d(3)
+        self.attn_block = torch.nn.Sequential(
+            # nn.Conv2d(3, 3, kernel_size=1),
+            BasicBlock(3, 3),
+            # Self_Attn(3),
+            SpatialAttention2d(3),
+        )
         self.cnn = cnn_net(pretrained=pretrained)
         self.cnn_out_size = 1000
         self.pred_len = pred_len
@@ -210,7 +215,7 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
         N = obs_pos.size(0)
         ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
 
-        img, img_attn = self.attn(img)
+        img, img_attn = self.attn_block(img)
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
         pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
