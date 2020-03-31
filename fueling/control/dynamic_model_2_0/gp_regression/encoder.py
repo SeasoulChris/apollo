@@ -6,25 +6,25 @@ import torch.nn as nn
 import fueling.common.logging as logging
 
 
-class GPEncoder(nn.Module):
-    def __init__(self, u_dim, kernel_dim):
+class Encoder(nn.Module):
+    def __init__(self, input_dim, kernel_dim):
         """Network initialization"""
-        logging.info('u_dim: {}'.format(u_dim))
+        logging.info('input_dim: {}'.format(input_dim))
         super().__init__()
         # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1,
         # padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
         self.conv_net = nn.Sequential(
-            nn.Conv1d(u_dim, 200, u_dim, stride=3),  # 32
+            nn.Conv1d(input_dim, 200, input_dim, stride=3),  # 32
             nn.ReLU(),
-            nn.Conv1d(200, 100, u_dim, stride=3),  # 9
+            nn.Conv1d(200, 100, input_dim, stride=3),  # 9
             nn.ReLU(),
-            nn.Conv1d(100, 100, u_dim, stride=3),  # 2
+            nn.Conv1d(100, 100, input_dim, stride=3),  # 2
             nn.ReLU()
         )
         self.fc = nn.Linear(200, kernel_dim)
-        self.conv1 = nn.Conv1d(u_dim, 200, u_dim, stride=3)  # 5
-        self.conv2 = nn.Conv1d(200, 100, u_dim, stride=3)  # 4
-        self.conv3 = nn.Conv1d(100, 100, u_dim, stride=9)
+        self.conv1 = nn.Conv1d(input_dim, 200, input_dim, stride=3)  # 5
+        self.conv2 = nn.Conv1d(200, 100, input_dim, stride=3)  # 4
+        self.conv3 = nn.Conv1d(100, 100, input_dim, stride=3)
         self.relu = nn.ReLU()
 
     def forward(self, data):

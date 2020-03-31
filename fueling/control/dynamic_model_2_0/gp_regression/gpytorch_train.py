@@ -22,10 +22,12 @@ def train(args, dataset, gp_class):
     labels = labels.view(labels.shape[1], -1)
     # get data
     logging.info("************Input Dim: {}".format(features.shape))
+    logging.info("************Input Example: {}".format(features[0]))
     logging.info("************Output Dim: {}".format(labels.shape))
     logging.info("************Output Example: {}".format(labels[0]))
 
     train_dataset = TensorDataset(features, labels)
+    logging.info(f'train_dataset size: {train_dataset[0][0].shape}')
     train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
 
     # noise_prior
@@ -35,8 +37,8 @@ def train(args, dataset, gp_class):
     inducing_points = features[torch.arange(0, features.shape[0],
                                             step=int(max(features.shape[0] / args.num_inducing_point, 1))).long()]
     logging.info('inducing points data shape: {}'.format(inducing_points.shape))
-    logging.info('feature data shape: {}'.format(features.shape))
-    model = GPModel(inducing_points=inducing_points, input_data_dim=features.shape[-1])
+    #logging.info('feature data shape: {}'.format(features.shape))
+    model = GPModel(inducing_points=inducing_points, input_dim=features.shape[-1])
     likelihood.train()
     model.train()
     optimizer = torch.optim.Adam([
@@ -47,7 +49,7 @@ def train(args, dataset, gp_class):
     logging.info("Start of training")
 
     mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=labels.shape[0])
-    logging.info(labels.shape[0])
+    #logging.info(labels.shape[0])
 
     for epoch in range(1, args.epochs + 1):
         # load single data point
