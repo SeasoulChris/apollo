@@ -166,7 +166,8 @@ class PedestrianTrajectoryDataset(Dataset):
                  torch.from_numpy(target_obs_pos_abs).float(),
                  torch.from_numpy(target_obs_hist_size).float(),
                  torch.from_numpy(target_obs_pos_rel).float(),
-                 torch.from_numpy(target_obs_pos_step).float()),
+                 torch.from_numpy(target_obs_pos_step).float(),
+                 origin_img),
                 torch.from_numpy(target_obs_future_traj).float())
 
     # Only for test purpose
