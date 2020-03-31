@@ -29,6 +29,7 @@ def get_dataset():
     train_dataset = TensorDataset(train_x, train_y)
     train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
     logging.info(f'train_x size: {train_x.shape}')
+    logging.info(f'train_y size: {train_y.shape}')
     logging.info(f'train_dataset size: {train_dataset[0][0].shape}')
     logging.info(f'train_dataset size: {train_dataset[799][0].shape}')
 
@@ -40,8 +41,9 @@ def get_dataset():
 def train_gp(train_x, train_y, train_loader):
     """Train the model"""
     inducing_points = train_x[:500, :]
+    logging.info(f'inducing_points size: {inducing_points.shape}')
     likelihood = gpytorch.likelihoods.GaussianLikelihood(variance=0.1 * torch.ones(2, 1))
-    model = GPModelExample(inducing_points=inducing_points, input_data_dim=train_x.shape[0])
+    model = GPModelExample(inducing_points=inducing_points)
     likelihood.train()
     model.train()
 
@@ -80,7 +82,7 @@ def save_model(model, likelihood, file_path):
 def load_model(inducing_points, train_x, file_path):
     '''load from state dict'''
     state_dict = torch.load(file_path)
-    model = GPModelExample(inducing_points, train_x.shape[0])
+    model = GPModelExample(inducing_points)
     model.load_state_dict(state_dict)
     logging.info(f'loading model state dict: {model.state_dict}')
     return model
