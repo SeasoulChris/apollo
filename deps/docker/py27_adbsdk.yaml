@@ -1,0 +1,3 @@
+name: py27_adbsdk
+dependencies:
+  - python=2.7

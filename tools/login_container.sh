@@ -49,12 +49,20 @@ else
     CALIBRATION_DATA="$(cd ${CALIBRATION_DATA}; pwd)"
     optional_volumes="-v ${CALIBRATION_DATA}:/apollo/modules/calibration/data ${optional_volumes}"
   fi
-
+  
+  # required by streaming record reader in adbsdk
+  # git clone --single-branch --branch RB_U1804 --depth 1 ssh://${YOURNAME}@icode.baidu.com:8235/baidu/adu-lab/cybertron-release cybertron-release
+  CYBERTRON_ENV="../cybertron-release"
+  if [ -d "${CYBERTRON_ENV}" ]; then
+    CYBERTRON_ENV="$(cd ${CYBERTRON_ENV}; pwd)"
+    optional_volumes="-v ${CYBERTRON_ENV}:/cybertron ${optional_volumes}"
+  fi   
+ 
   DATA_VOLUME="/data"
   if [ -d "${DATA_VOLUME}" ]; then
     optional_volumes="-v ${DATA_VOLUME}:${DATA_VOLUME} ${optional_volumes}"
   fi
-
+  
   ${DOCKER_RUN} -it -d --privileged \
       --net host \
       --name ${CONTAINER} \
