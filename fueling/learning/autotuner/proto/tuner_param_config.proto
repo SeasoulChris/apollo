@@ -20,9 +20,10 @@ message TunerParameters {
   string default_conf_filename = 2;
   Utility utility = 3;
   int32 n_iter = 4;  // Number of iterations
-  bool opt_max = 5;  // If True, explore the maximum; or, explore the minimum  
-  repeated Flag flag = 6;
-  repeated Parameter parameter = 7;
+  int32 init_points_1D = 5;  //Number of initial points per parameter
+  bool opt_max = 6;  // If True, explore the maximum; or, explore the minimum
+  repeated Flag flag = 7;
+  repeated Parameter parameter = 8;
 }
 
 message Scenarios {

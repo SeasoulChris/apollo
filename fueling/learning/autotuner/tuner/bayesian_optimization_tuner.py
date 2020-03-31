@@ -10,6 +10,7 @@ from absl import flags
 from bayes_opt import BayesianOptimization
 from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
+import numpy as np
 
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
@@ -17,7 +18,8 @@ from modules.control.proto.mrac_conf_pb2 import MracConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
-from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils import BayesianOptimizationVisualUtils
+from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils \
+    import BayesianOptimizationVisualUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -92,6 +94,9 @@ class BayesianOptimizationTuner():
 
         self.n_iter = tuner_parameters.n_iter
 
+        self.init_points = tuner_parameters.init_points_1D ** (len(self.pbounds))
+        self.init_params = self.initial_points(tuner_parameters.init_points_1D)
+
         self.opt_max = tuner_parameters.opt_max
 
         self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
@@ -143,6 +148,18 @@ class BayesianOptimizationTuner():
             del point[key]
         return point
 
+    def initial_points(self, init_points_1D):
+        init_grid_1D = {
+            key: np.linspace(self.pbounds[key][0], self.pbounds[key][1], init_points_1D)
+            for key in self.pbounds
+        }
+        input_grid_nD = np.array(np.meshgrid(*(init_grid_1D.values())))
+        init_params = []
+        for pts in range(self.init_points):
+            init_params.append({list(self.pbounds)[idx]: input_grid_nD[idx].flatten()[pts]
+                                for idx in range(len(self.pbounds))})
+        return init_params
+
     def set_bounds(self, bounds):
         self.pbounds = bounds
 
@@ -152,12 +169,16 @@ class BayesianOptimizationTuner():
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
 
-    def optimize(self, n_iter=0):
+    def optimize(self, n_iter=0, init_points=0):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
+        self.init_points = init_points if init_points > 0 else self.init_points
         self.iteration_records = {}
         visual = BayesianOptimizationVisualUtils()
-        for i in range(self.n_iter):
-            next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
+        for i in range(self.n_iter + self.init_points):
+            if i < self.init_points:
+                next_point = self.config_sanity_check(self.init_params[i])
+            else:
+                next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
 
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
