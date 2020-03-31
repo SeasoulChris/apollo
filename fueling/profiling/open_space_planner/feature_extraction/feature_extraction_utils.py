@@ -10,6 +10,29 @@ import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 
 
+def calc_lon_acc_bound(acc_lat, dec_lat):
+    if acc_lat == 0.0:
+        return 0.5 * (dec_lat + 3.0)
+    return -0.5 * (acc_lat - 3.0)
+
+
+def calc_lon_dec_bound(acc_lat, dec_lat):
+    if acc_lat == 0.0:
+        return -2.0 / 3.0 * (dec_lat + 3.0)
+    return 2.0 / 3.0 * (acc_lat - 3.0)
+
+
+def calc_lat_acc_bound(acc_lon, dec_lon):
+    if acc_lon == 0.0:
+        return 3.0 / 2.0 * dec_lon + 3.0
+    return -2.0 * acc_lon + 3.0
+
+
+def calc_lat_dec_bound(acc_lon, dec_lon):
+    if acc_lon == 0.0:
+        return -3.0 / 2.0 * dec_lon - 3.0
+    return 2 * acc_lon - 3.0
+
 # trajectory point example:
 # path_point:
 #     x: 559787.066030095
@@ -41,9 +64,14 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
         lon_dec = 0.0
     else:
         lon_acc = 0.0
-        lon_dec = -1.0 * math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
-    # calculate lateral acceleration bound
+        lon_dec = -1.0 * \
+            math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
+
+    # calculate comfort bound
+    lon_acc_bound = calc_lon_acc_bound(lat_acc, lat_dec)
+    lon_dec_bound = calc_lon_dec_bound(lat_acc, lat_dec)
     lat_acc_bound = calc_lat_acc_bound(lon_acc, lon_dec)
+    lat_dec_bound = calc_lat_dec_bound(lon_acc, lon_dec)
 
     if hasattr(trajectory_point, 'relative_time'):
         data_array = np.array([
@@ -52,7 +80,10 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
             a,
             a / vehicle_param.max_acceleration if a > 0.0 else 0.0,
             a / vehicle_param.max_deceleration if a < 0.0 else 0.0,
+            lon_acc / lon_acc_bound,
+            lon_dec / lon_dec_bound,
             lat_acc / lat_acc_bound,
+            lat_dec / lat_dec_bound,
         ])
     return data_array
 
@@ -61,7 +92,8 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
     """Extract data from all trajectory points"""
     extract_list = (extract_data_from_trajectory_point(trajectory_point, vehicle_param)
                     for trajectory_point in trajectory)
-    trajectory_mtx = np.array([data for data in extract_list if data is not None])
+    trajectory_mtx = np.array(
+        [data for data in extract_list if data is not None])
     return trajectory_mtx
 
 
@@ -127,9 +159,3 @@ def extract_zigzag_trajectory_feature(target_groups):
     for msg in msgs:
         zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
     return target, group_id, np.array([zigzag_list]).T # make sure numpy shape is (num, 1)
-
-
-def calc_lat_acc_bound(acc_lon, dec_lon):
-    if acc_lon == 0.0:
-        return 3.0 / 2.0 * dec_lon + 3.0
-    return -2.0 * acc_lon + 3.0

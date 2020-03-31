@@ -125,10 +125,10 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.info(F'latency_feature_first: {latency_feature.first()}')
         zigzag_feature = raw_data.map(extract_zigzag_trajectory_feature)
         logging.info(F'zigzag_feature_count: {zigzag_feature.count()}')
-        logging.info(F'zigzag_feature_first: {zigzag_feature.first()}')
+        logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
         trajectory_feature = raw_data.map(extract_planning_trajectory_feature)
         logging.info(F'trajectory_feature_count: {trajectory_feature.count()}')
-        logging.info(F'trajectory_feature_first: {trajectory_feature.first()}')
+        logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
         latency_result = latency_feature.map(latency_grading)
@@ -140,7 +140,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
                        .join(trajectory_result)
                        .mapValues(merge_grading_results))
         logging.info(F'result_data_count: {result_data.count()}')
-        logging.info(F'result_data_first: {result_data.first()}')
+        logging.debug(F'result_data_first: {result_data.first()}')
 
         # 5. plot and visualize features, save grading result
         trajectory_feature.foreach(visual_utils.plot_hist)

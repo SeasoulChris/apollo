@@ -19,7 +19,10 @@ GradingResults = namedtuple('grading_results',
                              'non_gear_switch_length_ratio',
                              'acceleration_ratio',
                              'deceleration_ratio',
+                             'longitudinal_acceleration_ratio',
+                             'longitudinal_deceleration_ratio',
                              'lateral_acceleration_ratio',
+                             'lateral_deceleration_ratio',
                              ])
 GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
 
@@ -100,7 +103,10 @@ def trajectory_grading(target_groups):
     grading_group_result = GradingResults(
         acceleration_ratio=stats_helper(feature_mtx, 'acceleration_ratio'),
         deceleration_ratio=stats_helper(feature_mtx, 'deceleration_ratio'),
-        lateral_acceleration_ratio=stats_helper(feature_mtx, 'lateral_acceleration_ratio'),
+        longitudinal_acceleration_ratio=stats_helper(feature_mtx, 'longitudinal_acceleration_ratio', True),
+        longitudinal_deceleration_ratio=stats_helper(feature_mtx, 'longitudinal_deceleration_ratio', False),
+        lateral_acceleration_ratio=stats_helper(feature_mtx, 'lateral_acceleration_ratio', True),
+        lateral_deceleration_ratio=stats_helper(feature_mtx, 'lateral_deceleration_ratio', False),
     )
     return (target, grading_group_result)
 
