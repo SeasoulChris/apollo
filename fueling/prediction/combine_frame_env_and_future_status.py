@@ -128,11 +128,22 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                             obstacle_output[1].append(x)
                             obstacle_output[1].append(y)
                     scene_output.append(obstacle_output)
+
+                has_label = False
+                for obs in scene_output:
+                    if len(obs[1]) > 0:
+                        has_label = True
+                        break
+                if not has_label:
+                    continue
+
                 data_output.append(scene_output)
 
         output_file_path = os.path.join(output_dir, 'training_data.npy')
-        np.save(output_file_path, data_output)
-        logging.info('npy saved {}'.format(output_file_path))
+        if len(data_output) > 0:
+            np.save(output_file_path, data_output)
+            logging.info('npy saved {}'.format(output_file_path))
+        logging.info('Skip saving empty data {}'.format(output_file_path))
         return 1
 
 
