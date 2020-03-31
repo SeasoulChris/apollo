@@ -20,8 +20,8 @@ py_library(
 )
 
 py_binary(
-    name = "gpytorch_train",
-    srcs = ["gpytorch_train.py"],
+    name = "train",
+    srcs = ["train.py"],
     deps = [
         ":dataset",
         ":gp_model",

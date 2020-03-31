@@ -12,7 +12,7 @@ import fueling.common.logging as logging
 
 
 class GPModel(ApproximateGP):
-    def __init__(self, inducing_points, input_dim):
+    def __init__(self, inducing_points, encoder_net_model):
         logging.info('inducing point size: {}'.format(inducing_points.shape))
         # (100*6) input dimension
         variational_distribution = CholeskyVariationalDistribution(inducing_points.shape[0])
@@ -23,7 +23,8 @@ class GPModel(ApproximateGP):
         self.mean_module = gpytorch.means.ConstantMean()
         # kernel
         self.covar_module = MaternKernel()  # default nu=2.5
-        self.warping = Encoder(input_dim, kernel_dim=20)
+        #self.warping = Encoder(input_dim, kernel_dim=20)
+        self.warping = encoder_net_model
         # SparseGPR
         # self.covar_module = InducingPointKernel(
         #     self.base_covar_module, inducing_points=inducing_points, likelihood=likelihood)

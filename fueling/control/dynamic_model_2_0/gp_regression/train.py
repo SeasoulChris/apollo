@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as Func
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
@@ -38,7 +39,8 @@ def train(args, dataset, gp_class):
                                             step=int(max(features.shape[0] / args.num_inducing_point, 1))).long()]
     logging.info('inducing points data shape: {}'.format(inducing_points.shape))
     #logging.info('feature data shape: {}'.format(features.shape))
-    model = GPModel(inducing_points=inducing_points, input_dim=features.shape[-1])
+    encoder_net_model = Encoder(input_dim=features.shape[-1], kernel_dim=args.kernel_dim)
+    model = GPModel(inducing_points=inducing_points, encoder_net_model=encoder_net_model)
     likelihood.train()
     model.train()
     optimizer = torch.optim.Adam([
