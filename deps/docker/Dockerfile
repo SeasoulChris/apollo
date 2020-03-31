@@ -14,7 +14,9 @@ RUN apt update -y && \
         libyaml-cpp-dev \
         liblz4-dev \
         liblz4-tool \
-        libreadline-dev && \
+        libreadline-dev \
+        libunwind-dev \
+        libpcap-dev && \
     apt clean -y
 
 
@@ -32,3 +34,4 @@ COPY bash.rc /home/libs/bash.rc
 
 COPY installers/install_adbsdk.sh /tmp/installers/
 RUN bash /tmp/installers/install_adbsdk.sh
+

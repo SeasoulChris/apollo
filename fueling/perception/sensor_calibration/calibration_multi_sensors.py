@@ -18,7 +18,7 @@ import fueling.common.storage.bos_client as bos_client
 
 def execute_task(message_meta):
     """example task executing, return results dir."""
-    source_dir, output_dir = message_meta
+    source_dir, output_dir, executable_dir = message_meta
     # from input config file, generating final fuel-using config file
     in_config_file = os.path.join(source_dir, 'sample_config.yaml')
     calib_config = CalibrationConfig()
@@ -33,7 +33,6 @@ def execute_task(message_meta):
     # Invoke benchmark binary
     logging.info('start to execute sensor calbiration service')
     # Add lib path
-    executable_dir = os.path.join(os.path.dirname(__file__), 'executable_bin')
     if executable_dir not in os.environ['LD_LIBRARY_PATH']:
         os.environ['LD_LIBRARY_PATH'] = executable_dir + ':' + os.environ['LD_LIBRARY_PATH']
     os.system("echo $LD_LIBRARY_PATH")
@@ -130,7 +129,9 @@ class SensorCalibrationPipeline(BasePipeline):
             job_output_dir = job_dir
 
         subjobs = self._get_subdirs(job_dir)
-        message_meta = [(os.path.join(job_dir, j), os.path.join(job_output_dir, j))
+        executable_dir = 'modules/perception/sensor_calibration/executable_bin'
+        message_meta = [(os.path.join(job_dir, j),
+                        os.path.join(job_output_dir, j), self.our_storage().abs_path(executable_dir))
                         for j in subjobs]
 
         # Run the pipeline with given parameters.
