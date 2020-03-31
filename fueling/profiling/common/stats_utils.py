@@ -23,7 +23,8 @@ GradingArguments.__new__.__defaults__ = (None,) * len(GradingArguments._fields)
 
 
 def compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
-                  above_threshold=True, ratio_threshold=1.0, percentile=95):
+                  above_threshold=True, ratio_threshold=1.0, percentile=95,
+                  filter_name='', filter_value='', filter_mode=''):
     if above_threshold:
         hit_bound_times, _ = compute_beyond(feature_mtx, GradingArguments(
             feature_name=feature_name,
@@ -36,16 +37,28 @@ def compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
         ), FEATURE_IDX)
     max, elem_num = compute_peak(feature_mtx, GradingArguments(
         feature_name=feature_name,
+        filter_name=filter_name,
+        filter_value=filter_value,
+        filter_mode=filter_mode,
     ), profiling_conf.min_sample_size, FEATURE_IDX)
     mean, _ = compute_mean(feature_mtx, GradingArguments(
         feature_name=feature_name,
+        filter_name=filter_name,
+        filter_value=filter_value,
+        filter_mode=filter_mode,
     ), profiling_conf.min_sample_size, FEATURE_IDX)
     std_dev, _ = compute_std(feature_mtx, GradingArguments(
         feature_name=feature_name,
+        filter_name=filter_name,
+        filter_value=filter_value,
+        filter_mode=filter_mode,
     ), profiling_conf.min_sample_size, FEATURE_IDX)
     percentile, _ = compute_percentile(feature_mtx, GradingArguments(
         feature_name=feature_name,
-        threshold=percentile
+        threshold=percentile,
+        filter_name=filter_name,
+        filter_value=filter_value,
+        filter_mode=filter_mode,
     ), profiling_conf.min_sample_size, FEATURE_IDX)
     return [hit_bound_times, max[0], mean, std_dev, percentile, elem_num]
 
@@ -191,7 +204,12 @@ def compute_std(grading_mtx, arg, min_sample_size, FEATURE_IDX):
 
 
 def compute_percentile(grading_mtx, arg, min_sample_size, FEATURE_IDX):
-    # arg.threshold must be between 0 and 100 inclusive.
+    """Compute the percentile value set by arg.threshold.
+       arg.threshold must be between 0 and 100 inclusive."""
+    grading_mtx = apply_filter(grading_mtx, arg, FEATURE_IDX)
+    if grading_mtx is None:
+        return (0.0, 0)
+
     elem_num, _ = grading_mtx.shape
     if not check_data_size(elem_num, min_sample_size):
         return (0.0, 0)

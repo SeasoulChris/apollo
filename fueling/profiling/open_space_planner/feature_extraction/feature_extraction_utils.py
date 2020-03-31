@@ -82,9 +82,12 @@ def extract_planning_trajectory_feature(target_groups):
 
 def extract_meta_from_planning(msg):
     """Extract non-repeated field from one planning message"""
+    zigzag_latency = 0.0
+    if msg.debug.planning_data.open_space.time_latency:
+        zigzag_latency = msg.debug.planning_data.open_space.time_latency
     meta_array = np.array([
         msg.latency_stats.total_time_ms,  # end-to-end time latency
-        msg.debug.planning_data.open_space.time_latency,  # zigzag trajectory latency
+        zigzag_latency,  # zigzag trajectory time latency
         # TODO stage completed time: equation needs confirmation
     ])
     return meta_array

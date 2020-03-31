@@ -15,7 +15,7 @@ from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePl
 
 GradingResults = namedtuple('grading_results',
                             ['end_to_end_time',
-                             # 'zigzag_time',
+                             'zigzag_time',
                              'non_gear_switch_length_ratio',
                              'acceleration_ratio',
                              'deceleration_ratio',
@@ -32,9 +32,12 @@ def get_config_open_space_profiling():
     return open_space_planner_profiling
 
 
-def stats_helper(feature_mtx, feature_name):
+def stats_helper(feature_mtx, feature_name, above_threshold=True,
+                 filter_name='', filter_value='', filter_mode=''):
     profiling_conf = get_config_open_space_profiling()
-    return compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX)
+    return compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
+                         above_threshold=above_threshold, ratio_threshold=1.0, percentile=95,
+                         filter_name=filter_name, filter_value=filter_value, filter_mode=filter_mode)
 
 
 def merge_grading_results(grading_tuple):
@@ -58,7 +61,8 @@ def latency_grading(target_groups):
     grading_group_result = GradingResults(
         # Exclude HitBoundTimes for these metrics
         end_to_end_time=stats_helper(feature_mtx, 'end_to_end_time')[1:],
-        # zigzag_time=stats_helper(feature_mtx, 'zigzag_time')[1:],
+        zigzag_time=stats_helper(feature_mtx, 'zigzag_time', True, filter_name=['zigzag_time'],
+                                 filter_value=[0.1], filter_mode=[0])[1:],
     )
     return (target, grading_group_result)
 
