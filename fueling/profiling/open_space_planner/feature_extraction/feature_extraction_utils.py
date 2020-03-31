@@ -65,26 +65,8 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
     return trajectory_mtx
 
 
-def extract_meta_from_planning(msg):
-    """Extract non-repeated field from one planning message"""
-    meta_array = np.array([
-        msg.latency_stats.total_time_ms,  # end-to-end time latency
-        msg.debug.planning_data.open_space.time_latency,  # zigzag trajectory latency
-    ])
-    return meta_array
-
-
-def extract_mtx_single_field(target_groups):
-    """Extract matrix data of non-repeated fields from a group of messages"""
-    target, group_id, msgs = target_groups
-    logging.info(F'Computing {len(msgs)} messages for target {target}')
-    planning_mtx = np.array([data for data in [extract_meta_from_planning(msg)
-                                               for msg in msgs] if data is not None])
-    return target, group_id, planning_mtx
-
-
-def extract_mtx_repeated_field(target_groups):
-    """Extract matrix data of repeated fields from a group of messages"""
+def extract_planning_trajectory_feature(target_groups):
+    """Extract planning trajectory related feature matrix from a group of planning messages"""
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
@@ -92,10 +74,56 @@ def extract_mtx_repeated_field(target_groups):
 
     extracted_data = (extract_data_from_trajectory(msg.trajectory_point, vehicle_param)
                       for msg in msgs)
-    planning_mtx = np.concatenate(
+    planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])
 
-    return target, group_id, planning_mtx
+    return target, group_id, planning_trajectory_mtx
+
+
+def extract_meta_from_planning(msg):
+    """Extract non-repeated field from one planning message"""
+    meta_array = np.array([
+        msg.latency_stats.total_time_ms,  # end-to-end time latency
+        msg.debug.planning_data.open_space.time_latency,  # zigzag trajectory latency
+        # TODO stage completed time: equation needs confirmation
+    ])
+    return meta_array
+
+
+def extract_latency_feature(target_groups):
+    """Extract latency related feature matrix from a group of planning messages"""
+    target, group_id, msgs = target_groups
+    logging.info(F'Computing {len(msgs)} messages for target {target}')
+    latency_mtx = np.array([data for data in [extract_meta_from_planning(msg)
+                                              for msg in msgs] if data is not None])
+    return target, group_id, latency_mtx
+
+
+def compute_path_length(trajectory):
+    trajectory_points = trajectory.trajectory_point
+    if len(trajectory_points) < 2:
+        return 0.0
+    return abs(trajectory_points[-1].path_point.s - trajectory_points[0].path_point.s)
+
+
+def extract_data_from_zigzag(msg, wheel_base):
+    """Extract open space debug from one planning message"""
+    data = [compute_path_length(zigzag) / wheel_base
+            for zigzag in msg.debug.planning_data.open_space.partitioned_trajectories.trajectory]
+    return data
+
+
+def extract_zigzag_trajectory_feature(target_groups):
+    """Extract zigzag trajectory related feature matrix from a group of planning messages"""
+    target, group_id, msgs = target_groups
+    logging.info(F'Computing {len(msgs)} messages for target {target}')
+
+    vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
+
+    zigzag_list = []
+    for msg in msgs:
+        zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
+    return target, group_id, np.array([zigzag_list]).T # make sure numpy shape is (num, 1)
 
 
 def calc_lat_acc_bound(acc_lon, dec_lon):

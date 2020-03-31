@@ -33,7 +33,11 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.pipeline.run()
 
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_latency.hdf5')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_zigzag.hdf5')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_trajectory.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/open_space_performance_grading.txt')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(

@@ -4,6 +4,12 @@
 
 # TODO think of better way to merge these two configs
 FEATURE_IDX = {
+    # latency features
+    'end_to_end_time': 0,
+    'zigzag_time': 1,
+    # zigzag feature
+    'non_gear_switch_length_ratio': 0,
+    # trajectory features
     'relative_time': 0,
     'speed': 1, # not sure if needed
     'acceleration': 2,

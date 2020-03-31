@@ -13,9 +13,10 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
     as visual_utils
-from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils \
-    import extract_mtx_single_field, extract_mtx_repeated_field
-from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import grading, output_result
+from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
+    extract_latency_feature, extract_planning_trajectory_feature, extract_zigzag_trajectory_feature
+from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import \
+    latency_grading, merge_grading_results, output_result, trajectory_grading, zigzag_grading
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 flags.DEFINE_string('open_space_planner_profiling_input_path',
@@ -112,36 +113,37 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.info(F'open_space_messeger_count: {open_space_msgs.count()}')
         # logging.info(F'open_space_msgs_first: {open_space_msgs.first()}')
 
-        # # 3. get features from message (for non-repeated fields)
-        # # TODO merge these two steps of # 3
-        # feature_data = (open_space_msgs
-        #                 # PairRDD(target_dir, filtered_message)
-        #                 .groupByKey()
-        #                 # RDD(target_dir, group_id, group of (message)s),
-        #                 # divide messages into groups
-        #                 .flatMap(partition_data)
-        #                 .map(extract_mtx_single_field))
-        # logging.info(F'feature_data_count: {feature_data.count()}')
-        # logging.info(F'feature_data_first: {feature_data.first()}')
-
         # 3. get feature from all frames with desired stage
-        feature_data = (open_space_msgs
-                        # PairRDD(target_dir, filtered_message)
-                        .groupByKey()
-                        # RDD(target_dir, group_id, group of (message)s),
-                        # divide messages into groups
-                        .flatMap(partition_data)
-                        .map(extract_mtx_repeated_field))
-        logging.info(F'feature_data_count: {feature_data.count()}')
-        logging.info(F'feature_data_first: {feature_data.first()}')
+        raw_data = (open_space_msgs
+                    # PairRDD(target_dir, filtered_message)
+                    .groupByKey()
+                    # RDD(target_dir, group_id, group of (message)s),
+                    # divide messages into groups
+                    .flatMap(partition_data))
+        latency_feature = raw_data.map(extract_latency_feature)
+        logging.info(F'latency_feature_count: {latency_feature.count()}')
+        logging.info(F'latency_feature_first: {latency_feature.first()}')
+        zigzag_feature = raw_data.map(extract_zigzag_trajectory_feature)
+        logging.info(F'zigzag_feature_count: {zigzag_feature.count()}')
+        logging.info(F'zigzag_feature_first: {zigzag_feature.first()}')
+        trajectory_feature = raw_data.map(extract_planning_trajectory_feature)
+        logging.info(F'trajectory_feature_count: {trajectory_feature.count()}')
+        logging.info(F'trajectory_feature_first: {trajectory_feature.first()}')
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
-        result_data = feature_data.map(grading)
+        latency_result = latency_feature.map(latency_grading)
+        zigzag_result = zigzag_feature.map(zigzag_grading)
+        trajectory_result = trajectory_feature.map(trajectory_grading)
+        result_data = (latency_result
+                       .join(zigzag_result)
+                       .mapValues(merge_grading_results)
+                       .join(trajectory_result)
+                       .mapValues(merge_grading_results))
         logging.info(F'result_data_count: {result_data.count()}')
         logging.info(F'result_data_first: {result_data.first()}')
 
-        # 5. plot and visualize
-        feature_data.foreach(visual_utils.plot_hist)
+        # 5. plot and visualize features, save grading result
+        trajectory_feature.foreach(visual_utils.plot_hist)
         (result_data
          # PairRDD(target_dir, combined_grading_result), output grading results for each target
          .foreach(output_result))
