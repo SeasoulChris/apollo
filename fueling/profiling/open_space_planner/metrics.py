@@ -14,9 +14,11 @@ import fueling.common.record_utils as record_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
     as visual_utils
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
-    extract_latency_feature, extract_planning_trajectory_feature, extract_zigzag_trajectory_feature
+    extract_latency_feature, extract_planning_trajectory_feature, extract_stage_feature, \
+    extract_zigzag_trajectory_feature
 from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import \
-    latency_grading, merge_grading_results, output_result, trajectory_grading, zigzag_grading
+    latency_grading, merge_grading_results, output_result, stage_grading, trajectory_grading, \
+    zigzag_grading
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 flags.DEFINE_string('open_space_planner_profiling_input_path',
@@ -120,6 +122,9 @@ class OpenSpacePlannerMetrics(BasePipeline):
                     # RDD(target_dir, group_id, group of (message)s),
                     # divide messages into groups
                     .flatMap(partition_data))
+        stage_feature = raw_data.map(extract_stage_feature)
+        logging.info(F'stage_feature_count: {stage_feature.count()}')
+        logging.debug(F'stage_feature_first: {stage_feature.first()}')
         latency_feature = raw_data.map(extract_latency_feature)
         logging.info(F'latency_feature_count: {latency_feature.count()}')
         logging.debug(F'latency_feature_first: {latency_feature.first()}')
@@ -131,10 +136,13 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
+        stage_result = stage_feature.map(stage_grading)
         latency_result = latency_feature.map(latency_grading)
         zigzag_result = zigzag_feature.map(zigzag_grading)
         trajectory_result = trajectory_feature.map(trajectory_grading)
-        result_data = (latency_result
+        result_data = (stage_result
+                       .join(latency_result)
+                       .mapValues(merge_grading_results)
                        .join(zigzag_result)
                        .mapValues(merge_grading_results)
                        .join(trajectory_result)

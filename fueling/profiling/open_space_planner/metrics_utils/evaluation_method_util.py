@@ -16,7 +16,11 @@ from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePl
 GradingResults = namedtuple('grading_results',
                             ['end_to_end_time',
                              'zigzag_time',
+                             'stage_completion_time',
                              'non_gear_switch_length_ratio',
+                             'initial_heading_diff_ratio',
+                             'curvature_ratio',
+                             'curvature_change_ratio',
                              'acceleration_ratio',
                              'deceleration_ratio',
                              'longitudinal_acceleration_ratio',
@@ -51,6 +55,31 @@ def merge_grading_results(grading_tuple):
     def find(*values):
         return next((x for x in values if x is not None), None)
     return GradingResults(*map(find, grading_tuple[0], grading_tuple[1]))
+
+
+def stage_grading(target_groups):
+    target, group_id, feature_mtx = target_groups
+    if feature_mtx.shape[0] == 0:
+        logging.warning(F'No valid element in group {group_id} for target {target}')
+        return (target, None)
+    if feature_mtx.shape[0] != 1:
+        logging.warning(F'Unexpected number of elements in group {group_id} for target {target}'
+                        'Only one element/sample should be present!')
+        return (target, None)
+
+    # TODO(shu): added scenario type and stage type
+    h5_output_file = '_{:05d}_stage'.format(group_id)
+    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
+                 F'for target {target}')
+    h5_utils.write_h5(feature_mtx, target, h5_output_file)
+
+    grading_group_result = GradingResults(
+        stage_completion_time=(feature_mtx[0, FEATURE_IDX['stage_completion_time']],
+                               feature_mtx.shape[0]),
+        initial_heading_diff_ratio=(feature_mtx[0, FEATURE_IDX['initial_heading_diff_ratio']],
+                                    feature_mtx.shape[0]),
+    )
+    return (target, grading_group_result)
 
 
 def latency_grading(target_groups):
@@ -105,6 +134,8 @@ def trajectory_grading(target_groups):
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     grading_group_result = GradingResults(
+        curvature_ratio=stats_helper(feature_mtx, 'curvature_ratio'),
+        curvature_change_ratio=stats_helper(feature_mtx, 'curvature_change_ratio'),
         acceleration_ratio=stats_helper(feature_mtx, 'acceleration_ratio'),
         deceleration_ratio=stats_helper(feature_mtx, 'deceleration_ratio'),
 
@@ -143,8 +174,8 @@ def output_result(target_grading):
 
             if len(value) == 2:
                 # it has a single value and num of elements
-                grading_file.write('{:<36s} {:<80s} {:<16.3n} {:<16n}\n'
-                                   .format(name, ' ', value[0], value[1]))
+                grading_file.write('{:<36s} {:<84s} {:<16.6f} {:<16n}\n'
+                                   .format(name, ' ', value[0], value[-1]))
             if len(value) == 5:
                 # it has 4 statistics and num of elements
                 grading_file.write('{:<36s} {:<16s} {:<16.3f} {:<16.3f} {:<16.3f} {:<16.3f} {:<16s} {:<16n}\n'

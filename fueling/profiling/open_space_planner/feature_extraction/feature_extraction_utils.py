@@ -10,6 +10,10 @@ import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
 
+def delta(feature_name, prev_feature, curr_feature):
+    feature_idx = FEATURE_IDX[feature_name]
+    return curr_feature[feature_idx] - prev_feature[feature_idx]
+
 
 def calc_lon_acc_bound(acc_lat, dec_lat):
     if acc_lat == 0.0:
@@ -34,6 +38,11 @@ def calc_lat_dec_bound(acc_lon, dec_lon):
         return -3.0 / 2.0 * dec_lon - 3.0
     return 2 * acc_lon - 3.0
 
+
+def steer_limit(steer_val, vehicle_param):
+    return steer_val / vehicle_param.steer_ratio / vehicle_param.wheel_base
+
+
 # trajectory point example:
 # path_point:
 #     x: 559787.066030095
@@ -47,8 +56,6 @@ def calc_lat_dec_bound(acc_lon, dec_lon):
 # v: 4.474370468
 # a: 0.995744297
 # relative_time: -0.400000000
-
-
 def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
@@ -82,6 +89,8 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
         # Will need a better way to sync these two pieces.
         data_array = np.array([
             trajectory_point.relative_time,
+            path_point.kappa,
+            abs(path_point.kappa) / steer_limit(vehicle_param.max_steer_angle, vehicle_param),
             speed,  # not sure if needed
             a,
             lon_acc if a > 0.0 else lon_dec,
@@ -102,12 +111,9 @@ def calculate_jerk_ratios(prev_feature, curr_feature):
     if prev_feature is None or curr_feature is None:
         return [0.0, 0.0, 0.0, 0.0]
 
-    def delta(feature_name):
-        feature_idx = FEATURE_IDX[feature_name]
-        return curr_feature[feature_idx] - prev_feature[feature_idx]
 
-    delta_t = delta('relative_time')
-    lon_jerk = delta('longitudinal_acceleration') / delta_t
+    delta_t = delta('relative_time', prev_feature, curr_feature)
+    lon_jerk = delta('longitudinal_acceleration', prev_feature, curr_feature) / delta_t
     if lon_jerk > 0.0:
         lon_pos_jerk = lon_jerk
         lon_neg_jerk = 0.0
@@ -115,7 +121,7 @@ def calculate_jerk_ratios(prev_feature, curr_feature):
         lon_pos_jerk = 0.0
         lon_neg_jerk = lon_jerk
 
-    lat_jerk = delta('lateral_acceleration') / delta_t
+    lat_jerk = delta('lateral_acceleration', prev_feature, curr_feature) / delta_t
     if lat_jerk > 0.0:
         lat_pos_jerk = lat_jerk
         lat_neg_jerk = 0.0
@@ -131,6 +137,16 @@ def calculate_jerk_ratios(prev_feature, curr_feature):
     ]
 
 
+def calculate_dkappa_ratio(prev_feature, curr_feature, vehicle_param):
+    if prev_feature is None or curr_feature is None:
+        return 0.0
+
+    delta_t = delta('relative_time', prev_feature, curr_feature)
+    dkappa = delta('kappa', prev_feature, curr_feature) / delta_t
+    dkappa_ratio = abs(dkappa) / steer_limit(vehicle_param.max_steer_angle_rate, vehicle_param),
+    return [dkappa_ratio]
+
+
 def extract_data_from_trajectory(trajectory, vehicle_param):
     """Extract data from all trajectory points"""
     feature_list = []
@@ -141,6 +157,7 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
             continue
 
         features = np.append(features, calculate_jerk_ratios(prev_features, features))
+        features = np.append(features, calculate_dkappa_ratio(prev_features, features, vehicle_param))
         feature_list.append(features)
         prev_features = features
 
@@ -171,7 +188,6 @@ def extract_meta_from_planning(msg):
     meta_array = np.array([
         msg.latency_stats.total_time_ms,  # end-to-end time latency
         zigzag_latency,  # zigzag trajectory time latency
-        # TODO stage completed time: equation needs confirmation
     ])
     return meta_array
 
@@ -181,7 +197,7 @@ def extract_latency_feature(target_groups):
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
     latency_mtx = np.array([data for data in [extract_meta_from_planning(msg)
-                                              for msg in msgs] if data is not None])
+                                               for msg in msgs] if data is not None])
     return target, group_id, latency_mtx
 
 
@@ -210,3 +226,30 @@ def extract_zigzag_trajectory_feature(target_groups):
     for msg in msgs:
         zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
     return target, group_id, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
+
+
+def extract_stage_feature(target_groups):
+    """Extract scenario stage related feature matrix from a group of planning messages"""
+    target, group_id, msgs = target_groups
+    logging.info(F'Computing {len(msgs)} messages for target {target}')
+    
+    start_timestamp = msgs[0].header.timestamp_sec
+    end_timestamp = msgs[-1].header.timestamp_sec
+    gear_shift_times = 1
+    for msg in msgs:
+        # Find the first frame when zigzag trajectory is ready
+        zigzag_count = len(msg.debug.planning_data.open_space.partitioned_trajectories.trajectory)
+        if zigzag_count > 0:
+            gear_shift_times = zigzag_count
+            for point in msg.trajectory_point:
+                if point.relative_time == 0.0:
+                    initial_heading = point.path_point.theta
+                    break
+            break
+    stage_completion_time = (end_timestamp - start_timestamp) / gear_shift_times * 1000.0
+
+    actual_heading = msgs[0].debug.planning_data.adc_position.pose.heading
+    vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
+    initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
+                                 / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
+    return target, group_id, np.array([[stage_completion_time, initial_heading_diff_ratio]])

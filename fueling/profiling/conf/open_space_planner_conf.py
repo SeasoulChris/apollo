@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """Configs to store the necessary dict or list"""
-
-
 TRAJECTORY_FEATURE_NAMES = [
     'relative_time',
+    'kappa',
+    'curvature_ratio',
     'speed',  # not sure if needed
     'acceleration',
     'longitudinal_acceleration',  # include both +/-
@@ -19,14 +19,19 @@ TRAJECTORY_FEATURE_NAMES = [
     'longitudinal_negative_jerk_ratio',
     'lateral_positive_jerk_ratio',
     'lateral_negative_jerk_ratio',
+    'curvature_change_ratio',
 ]
 
 # TODO: think of better way to merge these two configs
 FEATURE_IDX = {
+    # planning stage feature
+    'stage_completion_time': 0,
+    'initial_heading_diff_ratio': 1,
+    
     # latency features
     'end_to_end_time': 0,
     'zigzag_time': 1,
-
+    
     # zigzag feature
     'non_gear_switch_length_ratio': 0,
 }
