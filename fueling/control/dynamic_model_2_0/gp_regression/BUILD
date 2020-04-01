@@ -38,3 +38,13 @@ py_library(
         requirement("gpytorch"),
     ],
 )
+
+
+py_library(
+    name = "evaluation",
+    srcs = ["evaluation.py"],
+    deps = [
+        ":dataset",
+        ":encoder",
+    ],
+)

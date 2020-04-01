@@ -18,9 +18,10 @@ import fueling.common.logging as logging
 def train(args, dataset, gp_class):
     """Train the model"""
     features, labels = dataset.get_train_data()
-    labels = labels.view(labels.shape[1], -1)
     # [window_size, batch_size, channel]
     features = torch.transpose(features, 0, 1)
+    # [batch_size, channel] (window_size = 1)
+    labels = torch.transpose(labels, 0, 1)
     input_dim = features.shape[-1]
     output_dim = labels.shape[-1]
     batch_size = features.shape[-2]
@@ -58,9 +59,6 @@ def train(args, dataset, gp_class):
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
-    test_features, test_labels = dataset.get_test_data()
-    test_labels = labels.view(test_labels.shape[1], -1)
-    test_features = torch.transpose(test_features, 0, 1)
     # save model as state_dict
     timestr = time.strftime('%Y%m%d-%H%M%S')
     state_dict_file_path = args.gp_model_path
