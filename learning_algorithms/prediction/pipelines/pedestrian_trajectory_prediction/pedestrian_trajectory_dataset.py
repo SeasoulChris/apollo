@@ -144,6 +144,7 @@ class PedestrianTrajectoryDataset(Dataset):
         region = self.map_region[s_idx + predicting_idx]
         obs_mapping = ObstacleMapping(region, self.base_map[region], world_coord, obs_polygons)
         img = obs_mapping.crop_by_history(obs_polygons[predicting_idx])
+        # cv.imwrite('/fuel/kinglong_data/train/hehe.png', img)
         origin_img = img.copy()
         if self.img_transform:
             img = self.img_transform(img)
