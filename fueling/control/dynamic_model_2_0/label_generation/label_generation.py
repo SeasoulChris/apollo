@@ -136,7 +136,7 @@ def get_train_data(args):
         logging.info(h5_file)
         pre_file_name = h5_file.split(args.unlabeled_dataset_path)[1].split(path_suffix)[0]
         file_name = os.path.join(args.labeled_dataset_path, pre_file_name + '.h5')
-        # logging.info(args.labeled_dataset_path)
+        logging.info(args.labeled_dataset_path)
         logging.info(file_name)
         if os.path.exists(file_name):
             logging.info("File Already Generated: {}".format(file_name))
@@ -155,10 +155,14 @@ if __name__ == '__main__':
     logging.info("running....")
     parser = argparse.ArgumentParser(description='Label')
     parser.add_argument('--unlabeled_dataset_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/train_data/")
+                        default="./apollo/data/mbg_1_all/")
+    # parser.add_argument('--unlabeled_dataset_path', type=str,
+    # default="/fuel/fueling/control/dynamic_model_2_0/testdata/train_data/")
     parser.add_argument('--model_path', type=str,
                         default="/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward/")
+    # parser.add_argument('--labeled_dataset_path', type=str,
+    #                     default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data/")
     parser.add_argument('--labeled_dataset_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data/")
+                        default="./apollo/data/labeled_data")
     args = parser.parse_args()
     get_train_data(args)

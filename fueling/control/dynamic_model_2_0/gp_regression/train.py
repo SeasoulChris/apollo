@@ -21,26 +21,24 @@ def train(args, dataset, gp_class):
     """Train the model"""
     features, labels = dataset.get_train_data()
     labels = labels.view(labels.shape[1], -1)
-    # get data
+    # [window_size, batch_size, channel]
+    features = torch.transpose(features, 0, 1)
+    input_dim = features.shape[-1]
+    output_dim = labels.shape[-1]
+    batch_size = features.shape[-2]
     logging.info("************Input Dim: {}".format(features.shape))
-    logging.info("************Input Example: {}".format(features[0]))
     logging.info("************Output Dim: {}".format(labels.shape))
-    logging.info("************Output Example: {}".format(labels[0]))
-
-    train_dataset = TensorDataset(features, labels)
-    logging.info(f'train_dataset size: {train_dataset[0][0].shape}')
-    train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
 
     # noise_prior
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=output_dim)
 
     # Define the inducing points of Gaussian Process
-    inducing_points = features[torch.arange(0, features.shape[0],
-                                            step=int(max(features.shape[0] / args.num_inducing_point, 1))).long()]
+    inducing_points = features[:, torch.arange(0, batch_size,
+                                               step=int(max(batch_size / args.num_inducing_point, 1))).long(), :]
     logging.info('inducing points data shape: {}'.format(inducing_points.shape))
-    #logging.info('feature data shape: {}'.format(features.shape))
-    encoder_net_model = Encoder(input_dim=features.shape[-1], kernel_dim=args.kernel_dim)
-    model = GPModel(inducing_points=inducing_points, encoder_net_model=encoder_net_model)
+    encoder_net_model = Encoder(u_dim=input_dim, kernel_dim=args.kernel_dim)
+    model = GPModel(inducing_points=inducing_points,
+                    encoder_net_model=encoder_net_model, num_tasks=output_dim)
     likelihood.train()
     model.train()
     optimizer = torch.optim.Adam([
@@ -50,26 +48,21 @@ def train(args, dataset, gp_class):
 
     logging.info("Start of training")
 
-    mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=labels.shape[0])
-    #logging.info(labels.shape[0])
-
+    mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=labels.shape[-1])
+    logging.info(labels.shape[0])
     for epoch in range(1, args.epochs + 1):
-        # load single data point
-        # for feature, label in zip(features, labels):
-        for feature, label in train_loader:
-            optimizer.zero_grad()
-            # output = model.forward(feature)
-            output = model(feature)
-            loss = -mll(output, label)
-            # loss.backward(retain_graph=True)
-            loss.sum().backward(retain_graph=True)
-            optimizer.step()
-            logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
+        optimizer.zero_grad()
+        output = model(features)
+        loss = -mll(output, labels)
+        loss.backward(retain_graph=True)
+        optimizer.step()
+        logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
-    # save_gp(args, gp_instante, feature, encoder)
     test_features, test_labels = dataset.get_test_data()
+    test_labels = labels.view(test_labels.shape[1], -1)
+    test_features = torch.transpose(test_features, 0, 1)
     save_gp(model, test_features)
     return model
 
