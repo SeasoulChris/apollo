@@ -120,32 +120,24 @@ class BayesianOptimizationTuner():
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
     def separate_repeated_param(self, parameter):
-        """Seqarate the repeated messages by adding several surffix '__I' to their names"""
-        i = 0
-        while (i < len(self.pbounds)):
-            if list(self.pbounds)[i] == parameter.parameter_name:
-                parameter.parameter_name += '__I'
-                i = 0
-            else:
-                i += 1
+        """Seqarate the repeated messages by adding the surffix '___digit' to their names"""
+        if parameter.is_repeated:
+            repeated_keys = [key for key in self.pbounds if parameter.parameter_name in key]
+            parameter.parameter_name += ('___' + str(len(repeated_keys)))
         return parameter
 
     def merge_repeated_param(self, point_origin):
-        """Merge the separated message in a dict (config point) by eliminating the '__I' """
+        """Merge the separated message in a dict (config point) by eliminating the '___digit' """
         """and mergeing the values of repeated message into one list"""
         point = point_origin.copy()
-        repeated = []
-        for key in point:
-            if '__I' in key:
-                repeated.append((key.count('__I'), key))
-        repeated.sort()
-        for number, key in repeated:
-            base_key = key.replace('__I', '')
-            if number == 1:
-                point[base_key] = [point[base_key], point[key]]
-            else:
-                point[base_key].append(point[key])
-            del point[key]
+        repeated_first_key = [key for key in point if '___0' in key]
+        for first_key in repeated_first_key:
+            base_key = first_key.replace('___0', '')
+            repeated_keys = [key for key in point if base_key in key]
+            repeated_keys.sort()
+            point.update({base_key: [point[key] for key in repeated_keys]})
+            for key in repeated_keys:
+                del point[key]
         return point
 
     def initial_points(self, init_points_1D):
@@ -183,9 +175,11 @@ class BayesianOptimizationTuner():
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
-            self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.ClearField(list(next_point)[0])
+            next_point_pb = self.merge_repeated_param(next_point)
+            for field in next_point_pb:
+                self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.ClearField(field)
             self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
-                proto_utils.dict_to_pb(self.merge_repeated_param(next_point), MracConf()))
+                proto_utils.dict_to_pb(next_point_pb, MracConf()))
             logging.info(f"Enable MRAC control: "
                          f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
             logging.info(f"New MRAC Conf files: \n"
