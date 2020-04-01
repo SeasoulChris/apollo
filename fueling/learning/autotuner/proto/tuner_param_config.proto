@@ -8,6 +8,7 @@ message Parameter {
   string parameter_name = 1;
   double min = 2;
   double max = 3;
+  bool is_repeated = 4;
 }
 
 message Flag {

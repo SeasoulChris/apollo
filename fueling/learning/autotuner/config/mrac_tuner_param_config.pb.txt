@@ -21,11 +21,13 @@ tuner_parameters {
     parameter_name: "reference_time_constant"
     min: 0.00001
     max: 10.0
+    is_repeated: false
   }
   parameter {
-    parameter_name: "adaption_desired_gain"
+    parameter_name: "adaption_matrix_p"
     min: 0.00001
     max: 10.0
+    is_repeated: true
   }
 }
 scenarios {
