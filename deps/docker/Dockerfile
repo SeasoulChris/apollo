@@ -1,4 +1,4 @@
-FROM apolloauto/apollo:dev-18.04-x86_64-20200316_1910
+FROM apolloauto/apollo:dev-18.04-x86_64-20200331_0146
 
 RUN apt update -y && \
     apt install -y iputils-ping openjdk-8-jre vim \

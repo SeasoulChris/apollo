@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IMAGE="apolloauto/fuel-client:20200330_1918"
+IMAGE="apolloauto/fuel-client:20200331_1937"
 CONTAINER="fuel"
 
 # Goto fuel root
