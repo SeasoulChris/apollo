@@ -23,6 +23,10 @@ GradingResults = namedtuple('grading_results',
                              'longitudinal_deceleration_ratio',
                              'lateral_acceleration_ratio',
                              'lateral_deceleration_ratio',
+                             'longitudinal_positive_jerk_ratio',
+                             'longitudinal_negative_jerk_ratio',
+                             'lateral_positive_jerk_ratio',
+                             'lateral_negative_jerk_ratio',
                              ])
 GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
 
@@ -103,10 +107,20 @@ def trajectory_grading(target_groups):
     grading_group_result = GradingResults(
         acceleration_ratio=stats_helper(feature_mtx, 'acceleration_ratio'),
         deceleration_ratio=stats_helper(feature_mtx, 'deceleration_ratio'),
-        longitudinal_acceleration_ratio=stats_helper(feature_mtx, 'longitudinal_acceleration_ratio', True),
-        longitudinal_deceleration_ratio=stats_helper(feature_mtx, 'longitudinal_deceleration_ratio', False),
+
+        longitudinal_acceleration_ratio=stats_helper(
+            feature_mtx, 'longitudinal_acceleration_ratio', True),
+        longitudinal_deceleration_ratio=stats_helper(
+            feature_mtx, 'longitudinal_deceleration_ratio', False),
         lateral_acceleration_ratio=stats_helper(feature_mtx, 'lateral_acceleration_ratio', True),
         lateral_deceleration_ratio=stats_helper(feature_mtx, 'lateral_deceleration_ratio', False),
+
+        longitudinal_positive_jerk_ratio=stats_helper(
+            feature_mtx, 'longitudinal_positive_jerk_ratio', True),
+        longitudinal_negative_jerk_ratio=stats_helper(
+            feature_mtx, 'longitudinal_negative_jerk_ratio', False),
+        lateral_positive_jerk_ratio=stats_helper(feature_mtx, 'lateral_positive_jerk_ratio', True),
+        lateral_negative_jerk_ratio=stats_helper(feature_mtx, 'lateral_negative_jerk_ratio', False),
     )
     return (target, grading_group_result)
 

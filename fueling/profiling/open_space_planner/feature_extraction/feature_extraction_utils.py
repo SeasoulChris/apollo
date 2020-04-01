@@ -8,6 +8,7 @@ import math
 
 import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
+from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
 
 
 def calc_lon_acc_bound(acc_lat, dec_lat):
@@ -46,26 +47,28 @@ def calc_lat_dec_bound(acc_lon, dec_lon):
 # v: 4.474370468
 # a: 0.995744297
 # relative_time: -0.400000000
+
+
 def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
     speed = trajectory_point.v
     a = trajectory_point.a
     # get lateral acc and dec
-    if speed * speed * path_point.kappa > 0.0:
-        lat_acc = speed * speed * path_point.kappa
+    lat = speed * speed * path_point.kappa
+    if lat > 0.0:
+        lat_acc = lat
         lat_dec = 0.0
     else:
         lat_acc = 0.0
-        lat_dec = speed * speed * path_point.kappa
+        lat_dec = lat
     # get longitudinal acc and dec
     if a > 0.0:
-        lon_acc = math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
+        lon_acc = math.sqrt(abs(a**2 - (lat)**2))
         lon_dec = 0.0
     else:
         lon_acc = 0.0
-        lon_dec = -1.0 * \
-            math.sqrt(abs(a**2 - (speed * speed * path_point.kappa)**2))
+        lon_dec = -1.0 * math.sqrt(abs(a**2 - (lat)**2))
 
     # calculate comfort bound
     lon_acc_bound = calc_lon_acc_bound(lat_acc, lat_dec)
@@ -74,10 +77,17 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     lat_dec_bound = calc_lat_dec_bound(lon_acc, lon_dec)
 
     if hasattr(trajectory_point, 'relative_time'):
+        # NOTE: make sure to update TRAJECTORY_FEATURE_NAMES in
+        # open_space_planner_conf.py if updating this data array.
+        # Will need a better way to sync these two pieces.
         data_array = np.array([
             trajectory_point.relative_time,
             speed,  # not sure if needed
             a,
+            lon_acc if a > 0.0 else lon_dec,
+            lat_acc if lat > 0.0 else lat_dec,
+
+            # ratios
             a / vehicle_param.max_acceleration if a > 0.0 else 0.0,
             a / vehicle_param.max_deceleration if a < 0.0 else 0.0,
             lon_acc / lon_acc_bound,
@@ -88,12 +98,53 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     return data_array
 
 
+def calculate_jerk_ratios(prev_feature, curr_feature):
+    if prev_feature is None or curr_feature is None:
+        return [0.0, 0.0, 0.0, 0.0]
+
+    def delta(feature_name):
+        feature_idx = FEATURE_IDX[feature_name]
+        return curr_feature[feature_idx] - prev_feature[feature_idx]
+
+    delta_t = delta('relative_time')
+    lon_jerk = delta('longitudinal_acceleration') / delta_t
+    if lon_jerk > 0.0:
+        lon_pos_jerk = lon_jerk
+        lon_neg_jerk = 0.0
+    else:
+        lon_pos_jerk = 0.0
+        lon_neg_jerk = lon_jerk
+
+    lat_jerk = delta('lateral_acceleration') / delta_t
+    if lat_jerk > 0.0:
+        lat_pos_jerk = lat_jerk
+        lat_neg_jerk = 0.0
+    else:
+        lat_pos_jerk = 0.0
+        lat_neg_jerk = lat_jerk
+
+    return [
+        lon_pos_jerk / REFERENCE_VALUES['longitudinal_jerk_positive_upper_bound'],
+        lon_neg_jerk / REFERENCE_VALUES['longitudinal_jerk_negative_upper_bound'],
+        lat_pos_jerk / REFERENCE_VALUES['lateral_jerk_positive_upper_bound'],
+        lat_neg_jerk / REFERENCE_VALUES['lateral_jerk_negative_upper_bound'],
+    ]
+
+
 def extract_data_from_trajectory(trajectory, vehicle_param):
     """Extract data from all trajectory points"""
-    extract_list = (extract_data_from_trajectory_point(trajectory_point, vehicle_param)
-                    for trajectory_point in trajectory)
-    trajectory_mtx = np.array(
-        [data for data in extract_list if data is not None])
+    feature_list = []
+    prev_features = None
+    for trajectory_point in trajectory:
+        features = extract_data_from_trajectory_point(trajectory_point, vehicle_param)
+        if features is None:
+            continue
+
+        features = np.append(features, calculate_jerk_ratios(prev_features, features))
+        feature_list.append(features)
+        prev_features = features
+
+    trajectory_mtx = np.array(feature_list)
     return trajectory_mtx
 
 
@@ -158,4 +209,4 @@ def extract_zigzag_trajectory_feature(target_groups):
     zigzag_list = []
     for msg in msgs:
         zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
-    return target, group_id, np.array([zigzag_list]).T # make sure numpy shape is (num, 1)
+    return target, group_id, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)

@@ -122,7 +122,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
                     .flatMap(partition_data))
         latency_feature = raw_data.map(extract_latency_feature)
         logging.info(F'latency_feature_count: {latency_feature.count()}')
-        logging.info(F'latency_feature_first: {latency_feature.first()}')
+        logging.debug(F'latency_feature_first: {latency_feature.first()}')
         zigzag_feature = raw_data.map(extract_zigzag_trajectory_feature)
         logging.info(F'zigzag_feature_count: {zigzag_feature.count()}')
         logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
