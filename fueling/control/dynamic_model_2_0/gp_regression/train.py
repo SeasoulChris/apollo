@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from math import floor
 import argparse
 import os
 import time
@@ -9,7 +8,6 @@ import numpy as np
 import gpytorch
 import torch
 import torch.nn as nn
-import torch.nn.functional as Func
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
@@ -63,8 +61,19 @@ def train(args, dataset, gp_class):
     test_features, test_labels = dataset.get_test_data()
     test_labels = labels.view(test_labels.shape[1], -1)
     test_features = torch.transpose(test_features, 0, 1)
-    save_gp(model, test_features)
-    return model
+    # save model as state_dict
+    timestr = time.strftime('%Y%m%d-%H%M%S')
+    state_dict_file_path = args.gp_model_path
+    # commented for test purpose
+    # with time stamp
+    # state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    save_model_state_dict(model, likelihood, state_dict_file_path)
+    # save model as torchscript
+    jit_file_path = args.online_gp_model_path
+    # commented for test purpose
+    # with time stamp
+    # state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    save_model_torch_script(model, test_features, jit_file_path)
 
 
 class MeanVarModelWrapper(nn.Module):
@@ -77,14 +86,25 @@ class MeanVarModelWrapper(nn.Module):
         return output_dist.mean, output_dist.variance
 
 
-def save_gp(model, test_x):
+def save_model_torch_script(model, fake_input, jit_file_path):
+    '''save to TorchScript'''
+    file_name = os.path.join(jit_file_path, "gp_online.pt")
     wrapped_model = MeanVarModelWrapper(model)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        fake_input = test_x
-        pred = wrapped_model(fake_input)  # Compute caches
+        pred = wrapped_model(fake_input)  # Compute cache
         traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
-        logging.info("saving model")
-    traced_model.save('/tmp/traced_gp.pt')
+        logging.info(f'saving model: {file_name}')
+    traced_model.save(file_name)
+
+
+def save_model_state_dict(model, likelihood, state_dict_file_path):
+    '''save as state_dict'''
+    model.eval()
+    likelihood.eval()
+    file_name = os.path.join(state_dict_file_path, "gp.pth")
+    state_dict = model.state_dict()
+    logging.info(f'saving model state dict: {file_name}')
+    torch.save(model.state_dict(), file_name)
 
 
 if __name__ == '__main__':
@@ -100,6 +120,7 @@ if __name__ == '__main__':
         '--testing_data_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
+    # offline model
     parser.add_argument(
         '--gp_model_path',
         type=str,
@@ -108,10 +129,11 @@ if __name__ == '__main__':
         '--eval_result_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/results")
-    # parser.add_argument(
-    #     '--online_gp_model_path',
-    #     type=str,
-    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/20191004-130454")
+    # on-line model
+    parser.add_argument(
+        '--online_gp_model_path',
+        type=str,
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
