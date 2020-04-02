@@ -34,14 +34,19 @@ class GPDataSet(Dataset):
         """
         self.training_data_path = args.training_data_path
         self.testing_data_path = args.testing_data_path
+        self.use_cuda = args.use_cuda
 
     def get_train_data(self):
         """
         Generate training data from a list of labeled data
         """
         datasets = glob.glob(os.path.join(self.training_data_path, '*.h5'))
-        input_data = torch.zeros(0, INPUT_LENGTH, INPUT_DIM)
-        output_data = torch.zeros(OUTPUT_DIM, 0)
+        if self.use_cuda:
+            input_data = torch.zeros(0, INPUT_LENGTH, INPUT_DIM).cuda
+            output_data = torch.zeros(OUTPUT_DIM, 0).cuda
+        else:
+            input_data = torch.zeros(0, INPUT_LENGTH, INPUT_DIM)
+            output_data = torch.zeros(OUTPUT_DIM, 0)
         for h5_file in datasets:
             logging.debug(os.path.join(h5_file))
             with h5py.File(h5_file, 'r') as model_norms_file:

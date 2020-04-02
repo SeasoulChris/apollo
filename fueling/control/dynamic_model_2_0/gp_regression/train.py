@@ -38,12 +38,16 @@ def train(args, dataset, gp_class):
     encoder_net_model = Encoder(u_dim=input_dim, kernel_dim=args.kernel_dim)
     model = GPModel(inducing_points=inducing_points,
                     encoder_net_model=encoder_net_model, num_tasks=output_dim)
-    likelihood.train()
-    model.train()
+    if args.use_cuda:
+        likelihood.train().cuda
+        model.train().cuda
+    else:
+        likelihood.train()
+        model.train()
     optimizer = torch.optim.Adam([
         {'params': model.parameters()},
         {'params': likelihood.parameters()},
-    ], lr=0.01)
+    ], lr=args.lr)
 
     logging.info("Start of training")
 
@@ -122,16 +126,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
     parser.add_argument(
         '--eval_result_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/results")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_result")
     # on-line model
     parser.add_argument(
         '--online_gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
@@ -150,6 +154,8 @@ if __name__ == '__main__':
     parser.add_argument('--train_gp', type=bool, default=True)
     parser.add_argument('--test_gp', type=bool, default=True)
 
+    # argument to use cuda or not for training
+    parser.add_argument('--use_cuda', type=bool, default=False)
     args = parser.parse_args()
     dataset = GPDataSet(args)
     train(args, dataset, GPModel)
