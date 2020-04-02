@@ -24,6 +24,12 @@ class ObstacleMapping(object):
         elif region == "baidudasha":
             center_idx = [int(np.round((center_point[0]-439700)/0.1)),
                           int(5100-np.round((center_point[1]-4433250)/0.1))]
+        elif region == "XiongAn":
+            center_idx = [int(np.round((center_point[0]-405100)/0.1)),
+                          int(8300-np.round((center_point[1]-4322300)/0.1))]
+        elif region == "XiaMen":
+            center_idx = [int(np.round((center_point[0]-597700)/0.1)),
+                          int(10300-np.round((center_point[1]-2720000)/0.1))]
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map

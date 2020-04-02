@@ -24,6 +24,14 @@ class Mapping(object):
             self.base_point = np.array([439700, 4433250])
             self.resolution = 0.1
             self.GRID = [4100, 5100]
+        elif (self.region == "XiongAn"):
+            self.base_point = np.array([405100, 4322300])
+            self.resolution = 0.1
+            self.GRID = [6700, 8300]
+        elif (self.region == "XiaMen"):
+            self.base_point = np.array([597700, 2720000])
+            self.resolution = 0.1
+            self.GRID = [9800, 10300]
         else:
             (p_min, p_max) = self._read_hdmap()
             self.base_point = p_min - 100.0
