@@ -73,7 +73,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             if label_filepath.endswith('future_status.npy'):
                 label_dict_curr = np.load(label_filepath, allow_pickle=True).item()
                 label_dict_merged.update(label_dict_curr)
-        logging.info('Finished merge labels from {}'.format(label_dir))
+        logging.info('Finished merge labels from {}, total {}'.format(label_dir,
+                     len(label_dict_merged)))
 
         data_output = []
         frame_env_files = os.listdir(frame_env_dir)
@@ -119,6 +120,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                     obstacle_ts = obstacle_history.feature[0].timestamp
                     obstacle_type = obstacle_history.feature[0].type
                     key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
+                    if key not in label_dict_merged:
+                        logging.info('key ({}) is not in label'.format(key))
                     if obstacle_type == TARGET_OBSTACLE_TYPE and \
                        key in label_dict_merged and \
                        len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
@@ -137,13 +140,25 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                 if not has_label:
                     continue
 
+                # TODO(kechxu) this is just a patch, fix it from root
+                has_invalid_position = False
+                for obs in scene_output:
+                    if abs(obs[0][-1][1]) < 1.0 or abs(obs[0][-1][2]) < 1.0:
+                        has_invalid_position = True
+                        break
+                if has_invalid_position:
+                    continue
+
                 data_output.append(scene_output)
+            logging.info('So far, data_output length = {}'.format(len(len(data_output))))
 
         output_file_path = os.path.join(output_dir, 'training_data.npy')
         if len(data_output) > 0:
+            logging.info('length of data_output is {}'.format(len(data_output)))
             np.save(output_file_path, data_output)
             logging.info('npy saved {}'.format(output_file_path))
-        logging.info('Skip saving empty data {}'.format(output_file_path))
+        else:
+            logging.info('Skip saving empty data {}'.format(output_file_path))
         return 1
 
 
