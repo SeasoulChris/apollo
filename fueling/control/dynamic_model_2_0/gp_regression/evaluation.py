@@ -22,7 +22,7 @@ def evaluation(args, dataset, GaussianProcess):
     batch_size = input_data.shape[-2]
     output_dim = gt_data.shape[-1]
 
-    logging.info(f'input data shape is {input_data.shape}')
+    logging.debug(f'input data shape is {input_data.shape}')
     logging.info(f'output data shape is {gt_data.shape}')
 
     inducing_points = input_data[:, torch.arange(0, batch_size,
@@ -52,12 +52,12 @@ def evaluation(args, dataset, GaussianProcess):
         if i % 100 == 0:
             plt.figure(figsize=(4, 3))
             plt.title("Dataset Visualization")
-            plt.plot(input_data[i, :, 0], 'o', color='black')
-            plt.plot(input_data[i, :, 1], 'o', color='grey')
-            plt.plot(input_data[i, :, 2], 'o', color='green')
-            plt.plot(input_data[i, :, 3], 'o', color='red')
-            plt.plot(input_data[i, :, 4], 'o', color='blue')
-            plt.plot(input_data[i, :, 5], 'o', color='purple')
+            plt.plot(input_data[:, i, 0], 'o', color='black')
+            plt.plot(input_data[:, i, 1], 'o', color='grey')
+            plt.plot(input_data[:, i, 2], 'o', color='green')
+            plt.plot(input_data[:, i, 3], 'o', color='red')
+            plt.plot(input_data[:, i, 4], 'o', color='blue')
+            plt.plot(input_data[:, i, 5], 'o', color='purple')
             plt.show()
     criterion = nn.MSELoss()
     loss = torch.sqrt(criterion(gt_data, mean))
@@ -68,8 +68,7 @@ def evaluation(args, dataset, GaussianProcess):
     plt.title("Result Visualization")
     plt.plot(gt_data[:, 0], gt_data[:, 1], 'o', color='blue')
     plt.plot(mean[:, 0], mean[:, 1], 'o', color='red')
-    plt.plot([gt_data[:, 0], mean[:, 0]], [gt_data[:, 1],
-                                           mean[:, 1]], 'g:')
+    plt.plot([gt_data[:, 0], mean[:, 0]], [gt_data[:, 1], mean[:, 1]], 'g:')
     plt.show()
 
 
