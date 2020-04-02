@@ -116,6 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--train_gp', type=bool, default=True)
     parser.add_argument('--test_gp', type=bool, default=True)
 
+    # argment to use cuda or not
+    parser.add_argument('--use_cuda', type=bool, default=False)
     args = parser.parse_args()
     dataset = GPDataSet(args)
     evaluation(args, dataset, GPModel)

@@ -40,11 +40,12 @@ py_library(
 )
 
 
-py_library(
+py_binary(
     name = "evaluation",
     srcs = ["evaluation.py"],
     deps = [
         ":dataset",
         ":encoder",
+        ":gp_model",
     ],
 )
