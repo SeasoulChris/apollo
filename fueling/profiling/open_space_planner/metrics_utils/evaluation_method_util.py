@@ -116,7 +116,10 @@ def zigzag_grading(target_groups):
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     grading_group_result = GradingResults(
-        non_gear_switch_length_ratio=stats_helper(feature_mtx, 'non_gear_switch_length_ratio'),
+        non_gear_switch_length_ratio=stats_helper(feature_mtx, 'non_gear_switch_length_ratio',
+                                                  True, filter_name=[
+                                                      'non_gear_switch_length_ratio'],
+                                                  filter_value=[0.0], filter_mode=[0]),
     )
     return (target, grading_group_result)
 

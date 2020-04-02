@@ -10,6 +10,7 @@ import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
 
+
 def delta(feature_name, prev_feature, curr_feature):
     feature_idx = FEATURE_IDX[feature_name]
     return curr_feature[feature_idx] - prev_feature[feature_idx]
@@ -111,7 +112,6 @@ def calculate_jerk_ratios(prev_feature, curr_feature):
     if prev_feature is None or curr_feature is None:
         return [0.0, 0.0, 0.0, 0.0]
 
-
     delta_t = delta('relative_time', prev_feature, curr_feature)
     lon_jerk = delta('longitudinal_acceleration', prev_feature, curr_feature) / delta_t
     if lon_jerk > 0.0:
@@ -157,7 +157,12 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
             continue
 
         features = np.append(features, calculate_jerk_ratios(prev_features, features))
-        features = np.append(features, calculate_dkappa_ratio(prev_features, features, vehicle_param))
+        features = np.append(
+            features,
+            calculate_dkappa_ratio(
+                prev_features,
+                features,
+                vehicle_param))
         feature_list.append(features)
         prev_features = features
 
@@ -197,21 +202,27 @@ def extract_latency_feature(target_groups):
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
     latency_mtx = np.array([data for data in [extract_meta_from_planning(msg)
-                                               for msg in msgs] if data is not None])
+                                              for msg in msgs] if data is not None])
     return target, group_id, latency_mtx
 
 
 def compute_path_length(trajectory):
     trajectory_points = trajectory.trajectory_point
     if len(trajectory_points) < 2:
-        return 0.0
+        return -1
     return abs(trajectory_points[-1].path_point.s - trajectory_points[0].path_point.s)
 
 
 def extract_data_from_zigzag(msg, wheel_base):
     """Extract open space debug from one planning message"""
-    data = [compute_path_length(zigzag) / wheel_base
-            for zigzag in msg.debug.planning_data.open_space.partitioned_trajectories.trajectory]
+    data = []
+    for zigzag in msg.debug.planning_data.open_space.partitioned_trajectories.trajectory:
+        path_length = compute_path_length(zigzag)
+        if path_length == -1:
+            data.extend(-1)  # no zigzag path length
+        else:
+            data.extend(wheel_base / path_length)
+
     return data
 
 
@@ -232,7 +243,7 @@ def extract_stage_feature(target_groups):
     """Extract scenario stage related feature matrix from a group of planning messages"""
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
-    
+
     start_timestamp = msgs[0].header.timestamp_sec
     end_timestamp = msgs[-1].header.timestamp_sec
     gear_shift_times = 1
@@ -251,5 +262,5 @@ def extract_stage_feature(target_groups):
     actual_heading = msgs[0].debug.planning_data.adc_position.pose.heading
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
     initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
-                                 / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
+        / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
     return target, group_id, np.array([[stage_completion_time, initial_heading_diff_ratio]])

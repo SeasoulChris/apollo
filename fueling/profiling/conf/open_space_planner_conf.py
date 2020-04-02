@@ -31,7 +31,7 @@ FEATURE_IDX = {
     # latency features
     'end_to_end_time': 0,
     'zigzag_time': 1,
-    
+
     # zigzag feature
     'non_gear_switch_length_ratio': 0,
 }
