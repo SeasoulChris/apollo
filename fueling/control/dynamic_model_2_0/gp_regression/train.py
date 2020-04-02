@@ -15,7 +15,7 @@ from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
 
-def train(args, dataset, gp_class):
+def train_and_save(args, dataset, gp_class):
     """Train the model"""
     features, labels = dataset.get_train_data()
     # [window_size, batch_size, channel]
@@ -75,6 +75,8 @@ def train(args, dataset, gp_class):
     # commented for test purpose
     # with time stamp
     # state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    test_features, test_labels = dataset.get_train_data()
+    test_features = torch.transpose(test_features, 0, 1)
     save_model_torch_script(model, test_features, jit_file_path)
 
 
@@ -88,13 +90,13 @@ class MeanVarModelWrapper(nn.Module):
         return output_dist.mean, output_dist.variance
 
 
-def save_model_torch_script(model, fake_input, jit_file_path):
+def save_model_torch_script(model, test_features, jit_file_path):
     '''save to TorchScript'''
     file_name = os.path.join(jit_file_path, "gp_online.pt")
     wrapped_model = MeanVarModelWrapper(model)
     with gpytorch.settings.trace_mode(), torch.no_grad():
-        pred = wrapped_model(fake_input)  # Compute cache
-        traced_model = torch.jit.trace(wrapped_model, fake_input, check_trace=False)
+        pred = wrapped_model(test_features)  # Compute cache
+        traced_model = torch.jit.trace(wrapped_model, test_features, check_trace=False)
         logging.info(f'saving model: {file_name}')
     traced_model.save(file_name)
 
@@ -158,4 +160,4 @@ if __name__ == '__main__':
     parser.add_argument('--use_cuda', type=bool, default=False)
     args = parser.parse_args()
     dataset = GPDataSet(args)
-    train(args, dataset, GPModel)
+    train_and_save(args, dataset, GPModel)

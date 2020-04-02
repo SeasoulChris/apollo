@@ -89,11 +89,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
     parser.add_argument(
         '--eval_result_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/results")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_results")
     # parser.add_argument(
     #     '--online_gp_model_path',
     #     type=str,
