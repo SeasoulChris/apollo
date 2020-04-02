@@ -18,6 +18,7 @@ import fueling.common.logging as logging
 
 TARGET_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
 TARGET_NUM_FUTURE_POINT = 30
+MAX_NUM_LABEL_FILE = 180
 MAX_NUM_FRAME_ENV_FILE = 100
 
 '''
@@ -67,8 +68,18 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         logging.info(chmod_cmd)
         
         label_filenames = os.listdir(label_dir)
+        label_file_start = 0
+        label_file_end = len(label_filenames)
+        if len(label_filenames) > MAX_NUM_LABEL_FILE:
+            label_file_start = (len(label_filenames) - MAX_NUM_LABEL_FILE) // 2
+            label_file_end = label_file_start + MAX_NUM_LABEL_FILE
+        logging.info('label [start, end) = [{}, {})'.format(label_file_start, label_file_end))
         label_dict_merged = dict()
         for label_filename in label_filenames:
+            file_index = int(label_filename.split('.')[1])
+            logging.info('label file index ({})'.format(file_index))
+            if file_index < label_file_start or file_index >= label_file_end:
+                continue
             label_filepath = os.path.join(label_dir, label_filename)
             if label_filepath.endswith('future_status.npy'):
                 label_dict_curr = np.load(label_filepath, allow_pickle=True).item()
@@ -83,7 +94,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         if len(frame_env_files) > MAX_NUM_FRAME_ENV_FILE:
             start = (len(frame_env_files) - MAX_NUM_FRAME_ENV_FILE) // 2
             end = start + MAX_NUM_FRAME_ENV_FILE
-        logging.info('[start, end) = [{}, {})'.format(start, end))
+        logging.info('frame_env [start, end) = [{}, {})'.format(start, end))
         for frame_env_filename in frame_env_files:
             file_index = int(frame_env_filename.split('.')[-2])
             logging.info('file_index = {}'.format(file_index))
@@ -120,8 +131,6 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                     obstacle_ts = obstacle_history.feature[0].timestamp
                     obstacle_type = obstacle_history.feature[0].type
                     key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
-                    if key not in label_dict_merged:
-                        logging.info('key ({}) is not in label'.format(key))
                     if obstacle_type == TARGET_OBSTACLE_TYPE and \
                        key in label_dict_merged and \
                        len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
@@ -150,7 +159,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                     continue
 
                 data_output.append(scene_output)
-            logging.info('So far, data_output length = {}'.format(len(len(data_output))))
+            logging.info('So far, data_output length = {}'.format(len(data_output)))
 
         output_file_path = os.path.join(output_dir, 'training_data.npy')
         if len(data_output) > 0:
