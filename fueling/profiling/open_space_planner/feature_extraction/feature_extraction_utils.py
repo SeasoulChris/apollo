@@ -218,10 +218,10 @@ def extract_data_from_zigzag(msg, wheel_base):
     data = []
     for zigzag in msg.debug.planning_data.open_space.partitioned_trajectories.trajectory:
         path_length = compute_path_length(zigzag)
-        if path_length == -1:
-            data.extend(-1)  # no zigzag path length
+        if path_length == -1 or path_length == 0.0:
+            data.append(-1)  # no zigzag path length
         else:
-            data.extend(wheel_base / path_length)
+            data.append(wheel_base / path_length)
 
     return data
 
@@ -235,7 +235,10 @@ def extract_zigzag_trajectory_feature(target_groups):
 
     zigzag_list = []
     for msg in msgs:
-        zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
+        # Find the first frame when zigzag trajectory is ready
+        # Do not depend on the number of zigzag trajectories as it may be a stopping one
+        if msg.debug.planning_data.open_space.time_latency > 0:
+            zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
     return target, group_id, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
 
 
@@ -249,9 +252,10 @@ def extract_stage_feature(target_groups):
     gear_shift_times = 1
     for msg in msgs:
         # Find the first frame when zigzag trajectory is ready
-        zigzag_count = len(msg.debug.planning_data.open_space.partitioned_trajectories.trajectory)
-        if zigzag_count > 0:
-            gear_shift_times = zigzag_count
+        # Do not depend on the number of zigzag trajectories as it may be a stopping one
+        if msg.debug.planning_data.open_space.time_latency > 0:
+            gear_shift_times = len(
+                msg.debug.planning_data.open_space.partitioned_trajectories.trajectory)
             for point in msg.trajectory_point:
                 if point.relative_time == 0.0:
                     initial_heading = point.path_point.theta
