@@ -6,6 +6,8 @@
 import numpy as np
 import math
 
+from shapely.geometry import LineString, Point
+
 import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
@@ -44,20 +46,22 @@ def steer_limit(steer_val, vehicle_param):
     return steer_val / vehicle_param.steer_ratio / vehicle_param.wheel_base
 
 
-# trajectory point example:
-# path_point:
-#     x: 559787.066030095
-#     y: 4157751.813925536
-#     z: 0.000000000
-#     theta: 2.379002832
-#     kappa: -0.019549716
-#     s: -2.356402468
-#     dkappa: 0.000000000
-#     ddkappa: 0.000000000
-# v: 4.474370468
-# a: 0.995744297
-# relative_time: -0.400000000
-def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
+"""
+ trajectory point example:
+ path_point:
+     x: 559787.066030095
+     y: 4157751.813925536
+     z: 0.000000000
+     theta: 2.379002832
+     kappa: -0.019549716
+     s: -2.356402468
+     dkappa: 0.000000000
+     ddkappa: 0.000000000
+ v: 4.474370468
+ a: 0.995744297
+ relative_time: -0.400000000
+"""
+def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boundaries):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
     speed = trajectory_point.v
@@ -84,6 +88,12 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
     lat_acc_bound = calc_lat_acc_bound(lon_acc, lon_dec)
     lat_dec_bound = calc_lat_dec_bound(lon_acc, lon_dec)
 
+    # roi distances
+    traj_point = Point(path_point.x, path_point.y)
+    distances_to_roi = [boundary.distance(traj_point) for boundary in roi_boundaries]
+    reference_distance = REFERENCE_VALUES['distance_to_roi_boundary_buffer'] + \
+        REFERENCE_VALUES['control_precision'] / 2.0
+
     if hasattr(trajectory_point, 'relative_time'):
         # NOTE: make sure to update TRAJECTORY_FEATURE_NAMES in
         # open_space_planner_conf.py if updating this data array.
@@ -104,6 +114,7 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param):
             lon_dec / lon_dec_bound,
             lat_acc / lat_acc_bound,
             lat_dec / lat_dec_bound,
+            reference_distance / min(distances_to_roi) if distances_to_roi else 0.0
         ])
     return data_array
 
@@ -147,12 +158,13 @@ def calculate_dkappa_ratio(prev_feature, curr_feature, vehicle_param):
     return [dkappa_ratio]
 
 
-def extract_data_from_trajectory(trajectory, vehicle_param):
+def extract_data_from_trajectory(trajectory, vehicle_param, roi_boundaries):
     """Extract data from all trajectory points"""
     feature_list = []
     prev_features = None
     for trajectory_point in trajectory:
-        features = extract_data_from_trajectory_point(trajectory_point, vehicle_param)
+        features = extract_data_from_trajectory_point(
+            trajectory_point, vehicle_param, roi_boundaries)
         if features is None:
             continue
 
@@ -170,14 +182,29 @@ def extract_data_from_trajectory(trajectory, vehicle_param):
     return trajectory_mtx
 
 
+def extract_roi_boundaries(msgs):
+    boundaries = []
+    for msg in msgs:
+        # Not a mistake, ROI boundaries are stored as open_space obstacles
+        # TODO(vivian): add origin point to (x, y)
+        if msg.debug.planning_data.open_space.obstacles:
+            boundaries = [LineString(list(zip(roi_pb2.vertices_x_coords, roi_pb2.vertices_y_coords)))
+                          for roi_pb2 in msg.debug.planning_data.open_space.obstacles
+                          ]
+            break
+
+    return boundaries
+
+
 def extract_planning_trajectory_feature(target_groups):
     """Extract planning trajectory related feature matrix from a group of planning messages"""
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
+    roi_boundaries = extract_roi_boundaries(msgs)
 
-    extracted_data = (extract_data_from_trajectory(msg.trajectory_point, vehicle_param)
+    extracted_data = (extract_data_from_trajectory(msg.trajectory_point, vehicle_param, roi_boundaries)
                       for msg in msgs)
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])

@@ -2,6 +2,7 @@
 
 """Configs to store the necessary dict or list"""
 TRAJECTORY_FEATURE_NAMES = [
+    # from extract_data_from_trajectory_point()
     'relative_time',
     'kappa',
     'curvature_ratio',
@@ -15,10 +16,15 @@ TRAJECTORY_FEATURE_NAMES = [
     'longitudinal_deceleration_ratio',
     'lateral_acceleration_ratio',
     'lateral_deceleration_ratio',
+    'distance_to_roi_boundaries_ratio',
+
+    # from calculate_jerk_ratios()
     'longitudinal_positive_jerk_ratio',
     'longitudinal_negative_jerk_ratio',
     'lateral_positive_jerk_ratio',
     'lateral_negative_jerk_ratio',
+
+    # from calculate_dkappa_ratio()
     'curvature_change_ratio',
 ]
 
@@ -41,8 +47,11 @@ for (idx, name) in enumerate(TRAJECTORY_FEATURE_NAMES):
     FEATURE_IDX[name] = idx
 
 REFERENCE_VALUES = {
-    'longitudinal_jerk_positive_upper_bound': 2.0,
-    'longitudinal_jerk_negative_upper_bound': -2.0,
+    'control_precision': 0.25,
+    'distance_to_roi_boundary_buffer': 0.1, # meter
+
     'lateral_jerk_positive_upper_bound': 1.0,
     'lateral_jerk_negative_upper_bound': -1.0,
+    'longitudinal_jerk_positive_upper_bound': 2.0,
+    'longitudinal_jerk_negative_upper_bound': -2.0,
 }

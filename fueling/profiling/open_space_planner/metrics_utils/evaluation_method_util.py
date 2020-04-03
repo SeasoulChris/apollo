@@ -31,6 +31,7 @@ GradingResults = namedtuple('grading_results',
                              'longitudinal_negative_jerk_ratio',
                              'lateral_positive_jerk_ratio',
                              'lateral_negative_jerk_ratio',
+                             'distance_to_roi_boundaries_ratio',
                              ])
 GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
 
@@ -150,11 +151,13 @@ def trajectory_grading(target_groups):
         lateral_deceleration_ratio=stats_helper(feature_mtx, 'lateral_deceleration_ratio', False),
 
         longitudinal_positive_jerk_ratio=stats_helper(
-            feature_mtx, 'longitudinal_positive_jerk_ratio', True),
+            feature_mtx, 'longitudinal_positive_jerk_ratio'),
         longitudinal_negative_jerk_ratio=stats_helper(
-            feature_mtx, 'longitudinal_negative_jerk_ratio', False),
-        lateral_positive_jerk_ratio=stats_helper(feature_mtx, 'lateral_positive_jerk_ratio', True),
-        lateral_negative_jerk_ratio=stats_helper(feature_mtx, 'lateral_negative_jerk_ratio', False),
+            feature_mtx, 'longitudinal_negative_jerk_ratio'),
+        lateral_positive_jerk_ratio=stats_helper(feature_mtx, 'lateral_positive_jerk_ratio'),
+        lateral_negative_jerk_ratio=stats_helper(feature_mtx, 'lateral_negative_jerk_ratio'),
+        distance_to_roi_boundaries_ratio=stats_helper(
+            feature_mtx, 'distance_to_roi_boundaries_ratio'),
     )
     return (target, grading_group_result)
 
