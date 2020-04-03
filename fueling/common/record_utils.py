@@ -19,6 +19,7 @@ from modules.drivers.proto.pointcloud_pb2 import PointCloud
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from modules.localization.proto.localization_pb2 import LocalizationEstimate
 from modules.planning.proto.planning_pb2 import ADCTrajectory
+from modules.prediction.proto.prediction_obstacle_pb2 import PredictionObstacles
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
 import fueling.common.logging as logging
@@ -30,6 +31,7 @@ CONTROL_CHANNEL = '/apollo/control'
 DRIVE_EVENT_CHANNEL = '/apollo/drive_event'
 HMI_STATUS_CHANNEL = '/apollo/hmi/status'
 LOCALIZATION_CHANNEL = '/apollo/localization/pose'
+PREDICTION_CHANNEL = '/apollo/prediction'
 PLANNING_CHANNEL = '/apollo/planning'
 ROUTING_RESPONSE_HISTORY_CHANNEL = '/apollo/routing_response_history'
 FRONT_12mm_CHANNEL = '/apollo/sensor/camera/front_12mm/image/compressed'
@@ -53,6 +55,7 @@ CHANNEL_TO_TYPE = {
     REAR_6mm_CHANNEL: CompressedImage,
     LEFT_FISHEYE_CHANNEL: CompressedImage,
     RIGHT_FISHEYE_CHANNEL: CompressedImage,
+    PREDICTION_CHANNEL: PredictionObstacles,
     PLANNING_CHANNEL: ADCTrajectory,
     FRONT_RADAR_CHANNEL: ContiRadar,
     REAR_RADAR_CHANNEL: ContiRadar,

@@ -187,9 +187,9 @@ def extract_roi_boundaries(msgs):
     for msg in msgs:
         # Not a mistake, ROI boundaries are stored as open_space obstacles
         # TODO(vivian): add origin point to (x, y)
-        if msg.debug.planning_data.open_space.obstacles:
+        if msg['planning'].debug.planning_data.open_space.obstacles:
             boundaries = [LineString(list(zip(roi_pb2.vertices_x_coords, roi_pb2.vertices_y_coords)))
-                          for roi_pb2 in msg.debug.planning_data.open_space.obstacles
+                          for roi_pb2 in msg['planning'].debug.planning_data.open_space.obstacles
                           ]
             break
 
@@ -204,7 +204,7 @@ def extract_planning_trajectory_feature(target_groups):
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
     roi_boundaries = extract_roi_boundaries(msgs)
 
-    extracted_data = (extract_data_from_trajectory(msg.trajectory_point, vehicle_param, roi_boundaries)
+    extracted_data = (extract_data_from_trajectory(msg['planning'].trajectory_point, vehicle_param, roi_boundaries)
                       for msg in msgs)
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])
@@ -228,7 +228,7 @@ def extract_latency_feature(target_groups):
     """Extract latency related feature matrix from a group of planning messages"""
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
-    latency_mtx = np.array([data for data in [extract_meta_from_planning(msg)
+    latency_mtx = np.array([data for data in [extract_meta_from_planning(msg['planning'])
                                               for msg in msgs] if data is not None])
     return target, group_id, latency_mtx
 
@@ -264,8 +264,8 @@ def extract_zigzag_trajectory_feature(target_groups):
     for msg in msgs:
         # Find the first frame when zigzag trajectory is ready
         # Do not depend on the number of zigzag trajectories as it may be a stopping one
-        if msg.debug.planning_data.open_space.time_latency > 0:
-            zigzag_list.extend(extract_data_from_zigzag(msg, vehicle_param.wheel_base))
+        if msg['planning'].debug.planning_data.open_space.time_latency > 0:
+            zigzag_list.extend(extract_data_from_zigzag(msg['planning'], vehicle_param.wheel_base))
     return target, group_id, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
 
 
@@ -274,23 +274,23 @@ def extract_stage_feature(target_groups):
     target, group_id, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
-    start_timestamp = msgs[0].header.timestamp_sec
-    end_timestamp = msgs[-1].header.timestamp_sec
+    start_timestamp = msgs[0]['planning'].header.timestamp_sec
+    end_timestamp = msgs[-1]['planning'].header.timestamp_sec
     gear_shift_times = 1
     for msg in msgs:
         # Find the first frame when zigzag trajectory is ready
         # Do not depend on the number of zigzag trajectories as it may be a stopping one
-        if msg.debug.planning_data.open_space.time_latency > 0:
+        if msg['planning'].debug.planning_data.open_space.time_latency > 0:
             gear_shift_times = len(
-                msg.debug.planning_data.open_space.partitioned_trajectories.trajectory)
-            for point in msg.trajectory_point:
+                msg['planning'].debug.planning_data.open_space.partitioned_trajectories.trajectory)
+            for point in msg['planning'].trajectory_point:
                 if point.relative_time == 0.0:
                     initial_heading = point.path_point.theta
                     break
             break
     stage_completion_time = (end_timestamp - start_timestamp) / gear_shift_times * 1000.0
 
-    actual_heading = msgs[0].debug.planning_data.adc_position.pose.heading
+    actual_heading = msgs[0]['planning'].debug.planning_data.adc_position.pose.heading
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
     initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
         / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)

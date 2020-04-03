@@ -34,9 +34,18 @@ MSG_PER_SEGMENT = 100000
 VEHICLE_PARAM_FILE = 'vehicle_param.pb.txt'
 
 
-def has_desired_stage(parsed_planning_msg):
-    if hasattr(parsed_planning_msg.debug.planning_data, 'scenario'):
-        scenario = parsed_planning_msg.debug.planning_data.scenario
+def combine_msg_keys(rdds):
+    planning_pair_rdd, prediction_pair_rdd = rdds
+    planning_key, planning_rdd = planning_pair_rdd
+    prediction_key, prediction_rdd = prediction_pair_rdd
+    if planning_key != prediction_key:
+        raise Exception(F"Wrong key {planning_key} vs. {prediction_key}")
+    return (planning_key, {'planning': planning_rdd, 'prediction': prediction_rdd})
+
+
+def has_desired_stage(msgs):
+    if hasattr(msgs['planning'].debug.planning_data, 'scenario'):
+        scenario = msgs['planning'].debug.planning_data.scenario
         return (scenario.scenario_type == SCENARIO_TYPE and
                 scenario.stage_type == STAGE_TYPE)
     return False
@@ -45,11 +54,23 @@ def has_desired_stage(parsed_planning_msg):
 def partition_data(target_msgs):
     """Divide the messages to groups each of which has exact number of messages"""
     target, msgs = target_msgs
-    logging.info(F'partition data for {len(msgs)} messages in target {target}')
-    msgs = sorted(msgs, key=lambda msg: msg.header.sequence_num)
+    logging.info(F'Partition data for {len(msgs)} messages in target {target}')
+
+    msgs = sorted(msgs, key=lambda msg: msg['planning'].header.sequence_num)
     msgs_groups = [msgs[idx: idx + MSG_PER_SEGMENT]
                    for idx in range(0, len(msgs), MSG_PER_SEGMENT)]
     return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
+
+
+def read_channel_messages(todo_task_dirs, channel):
+    channel_msgs = (todo_task_dirs
+                    # PairRDD(target_dir, message)
+                    .flatMapValues(record_utils.read_record([channel]))
+                    # PairRDD(target_dir, parsed_message)
+                    .mapValues(record_utils.message_to_proto))
+    logging.info(F'{channel} count: {channel_msgs.count()}')
+    logging.debug(F'{channel} first: {channel_msgs.first()}')
+    return channel_msgs
 
 
 class OpenSpacePlannerMetrics(BasePipeline):
@@ -99,25 +120,29 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
     def process(self, todo_task_dirs, origin_prefix, target_prefix):
         """ process records """
-        # 1. records to planning messages
-        planning_msgs = (todo_task_dirs
-                         # PairRDD(target_dir, message), planing message
-                         .flatMapValues(record_utils.read_record([record_utils.PLANNING_CHANNEL]))
-                         # PairRDD(target_dir, parsed_message), parsed planing message
-                         .mapValues(record_utils.message_to_proto))
-        logging.info(F'planning_messeger_count: {planning_msgs.count()}')
+        planning_msgs = read_channel_messages(todo_task_dirs, record_utils.PLANNING_CHANNEL)
+        prediction_msgs = read_channel_messages(todo_task_dirs, record_utils.PREDICTION_CHANNEL)
+        if planning_msgs.count() != prediction_msgs.count():
+            raise Exception(F'Different number of messages found between planning and predcition.')
+
+        msgs = (planning_msgs
+                # RDD((target_dir, planning), (target_dir, prediction))
+                .zip(prediction_msgs)
+                # PairRDD(target_dir, {planning, prediction})
+                .map(combine_msg_keys)
+                )
 
         # 2. filter messages belonging to a certain stage (STAGE_TYPE)
-        open_space_msgs = (planning_msgs
+        open_space_msgs = (msgs
                            # PairRDD(target_dir, parsed_message), keep message with desired stage
                            .filter(spark_op.filter_value(has_desired_stage))
                            ).cache()
-        logging.info(F'open_space_messeger_count: {open_space_msgs.count()}')
-        # logging.info(F'open_space_msgs_first: {open_space_msgs.first()}')
+        logging.info(F'open_space_message_count: {open_space_msgs.count()}')
+        logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
 
         # 3. get feature from all frames with desired stage
         raw_data = (open_space_msgs
-                    # PairRDD(target_dir, filtered_message)
+                    # PairRDD(target_dir, filtered_messages)
                     .groupByKey()
                     # RDD(target_dir, group_id, group of (message)s),
                     # divide messages into groups
@@ -140,6 +165,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
         latency_result = latency_feature.map(latency_grading)
         zigzag_result = zigzag_feature.map(zigzag_grading)
         trajectory_result = trajectory_feature.map(trajectory_grading)
+        # TODO: results under same target are partitioned, combine them.
         result_data = (stage_result
                        .join(latency_result)
                        .mapValues(merge_grading_results)
