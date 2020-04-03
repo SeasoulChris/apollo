@@ -161,5 +161,6 @@ py_binary(
         "//fueling/common:proto_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",
+        "//fueling/prediction/common:configure",
     ]
 )

@@ -14,12 +14,16 @@ import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
+from fueling.prediction.common.configure import parameters
 
 
 TARGET_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
 TARGET_NUM_FUTURE_POINT = 30
 MAX_NUM_LABEL_FILE = 180
 MAX_NUM_FRAME_ENV_FILE = 100
+
+OFFSET_X = parameters['offset_x']
+OFFSET_Y = parameters['offset_y']
 
 '''
 [scene, scene, ..., scene]
@@ -113,16 +117,16 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                     for feature in obstacle_history.feature:
                         frame_output = [0 for i in range(4 + 20 * 2)]
                         frame_output[0] = feature.timestamp
-                        frame_output[1] = feature.position.x
-                        frame_output[2] = feature.position.y
+                        frame_output[1] = feature.position.x - OFFSET_X
+                        frame_output[2] = feature.position.y - OFFSET_Y
                         frame_output[3] = feature.velocity_heading
                         i = 4
                         for point in feature.polygon_point:
                             if i >= len(frame_output):
                                 break
-                            frame_output[i] = point.x
+                            frame_output[i] = point.x - OFFSET_X
                             i += 1
-                            frame_output[i] = point.y
+                            frame_output[i] = point.y - OFFSET_Y
                             i += 1
                         obstacle_output[0].append(frame_output)
                     obstacle_output[0] = obstacle_output[0][::-1]
@@ -137,8 +141,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                         for i in range(1, TARGET_NUM_FUTURE_POINT + 1):
                             x = label_dict_merged[key][i][0]
                             y = label_dict_merged[key][i][1]
-                            obstacle_output[1].append(x)
-                            obstacle_output[1].append(y)
+                            obstacle_output[1].append(x - OFFSET_X)
+                            obstacle_output[1].append(y - OFFSET_Y)
                     scene_output.append(obstacle_output)
 
                 has_label = False
@@ -152,7 +156,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                 # TODO(kechxu) this is just a patch, fix it from root
                 has_invalid_position = False
                 for obs in scene_output:
-                    if abs(obs[0][-1][1]) < 1.0 or abs(obs[0][-1][2]) < 1.0:
+                    if abs(obs[0][-1][1] + OFFSET_X) < 1.0 or \
+                       abs(obs[0][-1][2] + OFFSET_Y) < 1.0:
                         has_invalid_position = True
                         break
                 if has_invalid_position:

@@ -35,7 +35,9 @@ parameters = {
         # from center-line to the lane width is within this: (must be < 0.5)
         'lane_change_finish_condition': 0.1,
         'maximum_observation_time': 9.0
-    }
+    },
+    'offset_x': 439700,
+    'offset_y': 4433250
 }
 
 labels = {'go_false': 0, 'go_true': 1, 'cutin_false': -1, 'cutin_true': 2}
