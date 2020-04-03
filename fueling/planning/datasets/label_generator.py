@@ -26,7 +26,9 @@ class LabelGenerator(object):
         # training data with label
         self.feature_label_dict = dict()
         # label dict
-        self. label_dict = dict()
+        self.label_dict = dict()
+        # planning tag dict
+        self.tag_dict = dict()
 
     def LoadFeaturePBAndSaveLabelFiles(self, input_filepath, output_filepath, secondary_filepath=None):
         self.src_filepath = input_filepath
@@ -53,7 +55,6 @@ class LabelGenerator(object):
         adc_trajectory = []
         timestamps = []
         # logging.info(learning_data_sequence[-1])
-        logging.info(len(offline_features.learning_data))
         for idx, learning_data in enumerate(learning_data_sequence):
             # key + feature
             # logging.info(learning_data.adc_trajectory_point)
@@ -72,7 +73,40 @@ class LabelGenerator(object):
         logging.info(len(adc_trajectory))
         # logging.info(adc_trajectory[-1].timestamp_sec)
         self.feature_sequence = adc_trajectory
-        return self.ObserveAllFeatureSequences()
+        self.ObserveAllFeatureSequences()
+        return self.ObservePlanningTag()
+
+    def ObservePlanningTag(self):
+        # go through labeled data and add tag
+        # extract key from adc_trajectory(feature_sequence)
+        for idx, feature in enumerate(self.feature_sequence):
+            dict_key = "adc@{:.3f}".format(feature.timestamp_sec)
+            # logging.info(f'logging.info: {dict_key}')
+            # (measurement_time, planning_tag)
+            if feature.planning_tag:
+                self.tag_dict[dict_key] = feature.planning_tag
+        logging.info(f'tag_dict length: {len(self.tag_dict)}')
+        logging.info(f'feature_dict length: {len(self.feature_dict)}')
+
+    def WriteTagToFrame(self, is_dump2txt=False):
+        features_labels = learning_data_pb2.LearningData()
+        learning_data_frame = learning_data_pb2.LearningDataFrame()
+        logging.info(self.feature_dict.keys())
+        for key in self.feature_dict.keys():
+            # write feature to proto
+            learning_data_frame.CopyFrom(self.feature_dict[key])
+            # write tag to proto when tag exists
+            if key in self.tag_dict:
+                learning_data_frame.planning_tag.CopyFrom(self.tag_dict[key])
+            features_labels.learning_data.add().CopyFrom(learning_data_frame)
+        # export proto to bin
+        with open(self.dst_filepath + '.with_tag.bin', 'wb') as bin_f:
+            bin_f.write(features_labels.SerializeToString())
+        if is_dump2txt:
+            # export proto to txt
+            txt_file_name = self.dst_filepath + '.with_tag.txt'
+            proto_utils.write_pb_to_text_file(features_labels, txt_file_name)
+        return len(features_labels.learning_data)
 
     '''
     @brief: observe all feature sequences and build observation_dict.
@@ -222,18 +256,19 @@ class LabelGenerator(object):
 
 
 if __name__ == '__main__':
-    FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.0.bin'
-    FILE2 = '/apollo/data/learning_based_planning/bin_result/learning_data.1.bin'
-    OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin'
+    FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.38.bin'
+    # FILE2 = '/apollo/data/learning_based_planning/bin_result/learning_data.1.bin'
+    OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.38.bin'
     label_gen = LabelGenerator()
-    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE, FILE2)
+    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
+    label_gen.WriteTagToFrame()
     result2 = label_gen.LabelTrajectory()
     logging.info(len(result2))
     logging.debug(label_gen.MergeDict())
-    data_points = result2['adc@1571344611.893']
+    data_points = result2['adc@1571344830.834']
     logging.debug(data_points)
     IMG_FN = '/apollo/data/learning_based_planning/learning_data.0.bin.pdf'
     label_gen.Visualize(data_points, IMG_FN)
-    OUTPUT_BIN_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.0.bin.future_status.bin'
+    OUTPUT_BIN_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.38.bin.future_status.bin'
     offline_features = learning_data_pb2.LearningData()
     offline_features = proto_utils.get_pb_from_bin_file(OUTPUT_BIN_FILE, offline_features)
