@@ -5,6 +5,7 @@
 from collections import namedtuple
 import os
 
+import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -38,7 +39,8 @@ GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
 
 def get_config_open_space_profiling():
     """Get configuration from open_space_planner_profiling_conf.pb.txt"""
-    profiling_conf_file = '/fuel/fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt'
+    profiling_conf_file = file_utils.fuel_path(
+        'fueling/profiling/conf/open_space_planner_profiling_conf.pb.txt')
     open_space_planner_profiling = OpenSpacePlannerProfiling()
     proto_utils.get_pb_from_text_file(profiling_conf_file, open_space_planner_profiling)
     return open_space_planner_profiling

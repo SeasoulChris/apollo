@@ -50,6 +50,10 @@ D_KIT_TEAM = [
     'v_panxuechao@baidu.com',
     'v_wangxitong02@baidu.com',
 ]
+SIMULATION_TEAM = [
+    'caoyu05@baidu.com',
+    'linvivian@baidu.com',
+]
 
 
 def send_email_info(title, content, receivers, attachments=[]):

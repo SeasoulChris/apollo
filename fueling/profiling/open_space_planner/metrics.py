@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
+from collections import namedtuple
 import glob
 import os
 import shutil
+import tarfile
 
 from absl import flags
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -64,13 +67,20 @@ def partition_data(target_msgs):
 
 def read_channel_messages(todo_task_dirs, channel):
     channel_msgs = (todo_task_dirs
-                    # PairRDD(target_dir, message)
+                    # PairRDD(target_prefix, message)
                     .flatMapValues(record_utils.read_record([channel]))
-                    # PairRDD(target_dir, parsed_message)
+                    # PairRDD(target_prefix, parsed_message)
                     .mapValues(record_utils.message_to_proto))
     logging.info(F'{channel} count: {channel_msgs.count()}')
     logging.debug(F'{channel} first: {channel_msgs.first()}')
     return channel_msgs
+
+
+def copyIfNeeded(src, dst):
+    if os.path.exists(dst):
+        logging.info(F'No need to copy {dst}')
+        return
+    shutil.copyfile(src, dst)
 
 
 class OpenSpacePlannerMetrics(BasePipeline):
@@ -83,32 +93,30 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
         # Access partner's storage if provided.
         object_storage = self.partner_storage() or our_storage
-        origin_dir = object_storage.abs_path(origin_prefix)
-        logging.info(F'origin_dir: {origin_dir}')
 
-        target_dir = our_storage.abs_path(target_prefix)
-        logging.info(F'target_dir: {target_dir}')
-
-        src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_dir))
+        # This will return absolute path
+        src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_prefix))
+        logging.info(F'src_dirs: {src_dirs.collect()}')
 
         # Copy over vehicle param config
         src_dst_rdd = (src_dirs
-                       .map(lambda src_dir: (src_dir, src_dir.replace(origin_dir, target_dir, 1)))
+                       .map(lambda src_dir: (
+                            src_dir, src_dir.replace(origin_prefix, target_prefix, 1)))
                        .cache())
         logging.info(F'src_dst_rdd: {src_dst_rdd.collect()}')
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(
-            lambda src_dst: shutil.copyfile(
+            lambda src_dst: copyIfNeeded(
                 os.path.join(src_dst[0], VEHICLE_PARAM_FILE),
                 os.path.join(src_dst[1], VEHICLE_PARAM_FILE)))
 
         # PairRDD(todo_task_dirs)
         todo_task_dirs = (src_dirs
-                          # PairRDD(target_dir, source_dir), the map of target dirs and source dirs
-                          .keyBy(lambda source: source.replace(origin_dir, target_dir, 1))
-                          # PairRDD(target_dir, file)
+                          # PairRDD(target_prefix, src_dir), the map of target dirs and source dirs
+                          .keyBy(lambda source: source.replace(origin_prefix, target_prefix, 1))
+                          # PairRDD(target_prefix, file)
                           .flatMapValues(object_storage.list_files)
-                          # PairRDD(target_dir, record_file)
+                          # PairRDD(target_prefix, record_file)
                           .filter(spark_op.filter_value(
                               lambda file: record_utils.is_record_file(file) or
                               record_utils.is_bag_file(file)))
@@ -126,15 +134,15 @@ class OpenSpacePlannerMetrics(BasePipeline):
             raise Exception(F'Different number of messages found between planning and predcition.')
 
         msgs = (planning_msgs
-                # RDD((target_dir, planning), (target_dir, prediction))
+                # RDD((target_prefix, planning), (target_prefix, prediction))
                 .zip(prediction_msgs)
-                # PairRDD(target_dir, {planning, prediction})
+                # PairRDD(target_prefix, {planning, prediction})
                 .map(combine_msg_keys)
                 )
 
         # 2. filter messages belonging to a certain stage (STAGE_TYPE)
         open_space_msgs = (msgs
-                           # PairRDD(target_dir, parsed_message), keep message with desired stage
+                           # PairRDD(target_prefix, parsed_message), keep message with desired stage
                            .filter(spark_op.filter_value(has_desired_stage))
                            ).cache()
         logging.info(F'open_space_message_count: {open_space_msgs.count()}')
@@ -142,9 +150,9 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
         # 3. get feature from all frames with desired stage
         raw_data = (open_space_msgs
-                    # PairRDD(target_dir, filtered_messages)
+                    # PairRDD(target_prefix, filtered_messages)
                     .groupByKey()
-                    # RDD(target_dir, group_id, group of (message)s),
+                    # RDD(target_prefix, group_id, group of (message)s),
                     # divide messages into groups
                     .flatMap(partition_data))
         stage_feature = raw_data.map(extract_stage_feature)
@@ -179,8 +187,49 @@ class OpenSpacePlannerMetrics(BasePipeline):
         # 5. plot and visualize features, save grading result
         trajectory_feature.foreach(visual_utils.plot_hist)
         (result_data
-         # PairRDD(target_dir, combined_grading_result), output grading results for each target
+         # PairRDD(target_prefix, combined_grading_result), output grading results for each target
          .foreach(output_result))
+        self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)
+
+    def email_output(self, tasks, origin_prefix, target_prefix, partner_email='', error_msg=''):
+        title = 'Open Space Planner Profiling Results'
+        # Uncomment this for dev test
+        # recipients = email_utils.SIMULATION_TEAM
+        recipients = email_utils.CONTROL_TEAM
+        recipients.append(partner_email)
+        SummaryTuple = namedtuple('Summary', ['Task', 'FeatureHDF5s', 'Profiling'])
+        if tasks:
+            email_content = []
+            attachments = []
+            tar_filename = None
+            tar = None
+            tasks.sort()
+            for task in tasks:
+                source = task.replace(target_prefix, origin_prefix, 1)
+                logging.info(F'task: {task}, source: {source}')
+                output = glob.glob(os.path.join(task, '*performance_grading*'))
+                email_content.append(SummaryTuple(
+                    Task=source,
+                    FeatureHDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
+                    Profiling=len(output),
+                ))
+                if output:
+                    tar_filename = F'{os.path.basename(source)}_profiling.tar.gz'
+                    tar = tarfile.open(tar_filename, 'w:gz')
+                    for report in output:
+                        tar.add(report)
+                    tar.close()
+            attachments.append(tar_filename)
+        else:
+            logging.info('todo_task_dirs: None')
+            if error_msg:
+                email_content = error_msg
+            else:
+                email_content = 'No profiling results: No raw data.'
+            attachments = []
+
+        email_utils.send_email_info(
+            title, email_content, recipients, attachments)
 
 
 if __name__ == '__main__':

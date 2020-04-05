@@ -46,6 +46,28 @@ class BosClient(BaseStorage):
         """
         return [obj['Key'] for obj in self.list_objects(prefix) if not obj['Key'].endswith('/')]
 
+    # Override
+    def list_files(self, prefix, suffix='', to_abs_path=True):
+        """
+        Get a list of files with given prefix and suffix.
+        Return absolute paths if to_abs_path is True else keys.
+        Allow prefix to be both absolute path and relative path in BOS mount
+        """
+        if prefix.startswith(self.mnt_path):
+            prefix = prefix[len(self.mnt_path)+1:]
+        return BaseStorage.list_files(self, prefix, suffix, to_abs_path)
+
+    # Override
+    def list_end_dirs(self, prefix, to_abs_path=True):
+        """
+        Get a list of dirs with given prefix, which contain at least one file.
+        Return absolute paths if to_abs_path is True else keys.
+        Allow prefix to be both absolute path and relative path in BOS mount
+        """
+        if prefix.startswith(self.mnt_path):
+            prefix = prefix[len(self.mnt_path)+1:]
+        return BaseStorage.list_end_dirs(self, prefix, to_abs_path)
+
     def client(self):
         """Get a boto3 client."""
         return boto3.client('s3',
