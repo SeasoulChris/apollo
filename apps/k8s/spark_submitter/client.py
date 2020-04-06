@@ -47,7 +47,7 @@ flags.DEFINE_string('partner_bos_secret', None, 'Partner bos secret.')
 
 # Internal use.
 # TODO(longtao): Change it back when switch is done
-flags.DEFINE_string('kube_proxy', 'usa-data1.baidu.com', 'Kube proxy.')
+flags.DEFINE_string('kube_proxy', 'usa-data.baidu.com', 'Kube proxy.')
 flags.DEFINE_string('spark_submitter_service_url', None, 'URL of the Spark Submitter service')
 
 
