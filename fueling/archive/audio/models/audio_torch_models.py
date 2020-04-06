@@ -181,7 +181,7 @@ class AudioCNN2dModel(nn.Module):
         # FC layers
         X = F.relu(self.fc1(X))
         X = self.dropout(X)
-        X = torch.sigmoid(self.fc2(X))
+        X = nn.Sigmoid(self.fc2(X))
 
         return X
 

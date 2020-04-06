@@ -6,6 +6,7 @@ import numpy as np
 import cv2 as cv
 
 from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer import AgentBoxImgRenderer
+from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
 from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer import AgentPosesHistoryImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer import BaseRoadMapImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer import BaseSpeedLimitImgRenderer
@@ -28,6 +29,7 @@ class ChauffeurNetFeatureGenerator(object):
                 or base_map_update_flag:
             self.draw_base_map(region)
         self.agent_box_mapping = AgentBoxImgRenderer()
+        self.agent_pose_future_mapping = AgentPosesFutureImgRenderer()
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer()
         self.obstacles_mapping = ObstaclesImgRenderer()
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer()
@@ -115,6 +117,22 @@ class ChauffeurNetFeatureGenerator(object):
         return cv.resize(np.concatenate([agent_box_img, agent_pose_history_img, obstacles_img, obstacle_predictions_img,
                                          road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
 
+    # TODO (Jinyun): fine tune the resizing for computation efficiency
+    def render_gt_pose_dist(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+        return cv.resize(self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
+                                                                               center_y,
+                                                                               center_heading,
+                                                                               ego_pose_future,
+                                                                               timestamp_idx),
+                         (224, 224))
+
+    def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+        return cv.resize(self.agent_pose_future_mapping.draw_agent_box_future(center_x,
+                                                                               center_y,
+                                                                               center_heading,
+                                                                               ego_pose_future,
+                                                                               timestamp_idx),
+                         (224, 224))
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
@@ -124,7 +142,8 @@ if __name__ == "__main__":
 
     region = "sunnyvale_with_two_offices"
     base_map_update_flag = True
-    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(region, base_map_update_flag)
+    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
+        region, base_map_update_flag)
     print("Finish loading chauffeur_net_feature_generator...")
 
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'

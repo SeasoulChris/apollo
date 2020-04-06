@@ -137,6 +137,9 @@ class RoutingImgRenderer(object):
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.center = np.array([center_x, center_y])
         self.center_heading = center_heading
+        if len(local_routing) == 0:
+            print("No routing provided")
+            return local_map
         routing_color_delta = int(255 / len(local_routing))
         for i in range(len(local_routing)):
             color = int(255 - i * routing_color_delta)
