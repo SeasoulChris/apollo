@@ -3,8 +3,8 @@ package(default_visibility = ["//visibility:public"])
 load("@default_deps//:requirements.bzl", "requirement")
 
 py_binary(
-    name = "bayesian_optimization_tuner",
-    srcs = ["bayesian_optimization_tuner.py"],
+    name = "mrac_bayesian_optimization_tuner",
+    srcs = ["mrac_bayesian_optimization_tuner.py"],
     data = [
         "//fueling/learning/autotuner/config",
     ],

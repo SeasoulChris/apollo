@@ -54,7 +54,7 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
 
    ```bash
    # Run at the updated BCE environment.
-   bazel run //fueling/learning/autotuner/tuner:bayesian_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052
+   bazel run //fueling/learning/autotuner/tuner:mrac_bayesian_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052
    ```
 
 
@@ -109,7 +109,7 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
 
    For the locally bazel-run tuner, the step-by-step visualization and overall results will be expected at the following path:
 
-   **//apollo-fuel/bazel-bin/fueling/learning/autotuner/tuner/bayesian_optimization_tuner.runfiles/fuel/testdata/autotuner**
+   **//apollo-fuel/bazel-bin/fueling/learning/autotuner/tuner/mrac_bayesian_optimization_tuner.runfiles/fuel/testdata/autotuner**
 
    For every single-step visualization, the visualization result will be save as **training_id/gaussian_process.png**, such as:
    ```text

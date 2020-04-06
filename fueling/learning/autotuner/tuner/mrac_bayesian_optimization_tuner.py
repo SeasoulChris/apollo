@@ -25,7 +25,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
-class BayesianOptimizationTuner(BaseTuner):
+class MRACBayesianOptimizationTuner(BaseTuner):
     """Basic functionality for NLP."""
 
     def __init__(self):
@@ -78,7 +78,7 @@ class BayesianOptimizationTuner(BaseTuner):
 
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
-    tuner = BayesianOptimizationTuner()
+    tuner = MRACBayesianOptimizationTuner()
     tuner.optimize()
     tuner.get_result()
     tuner.save_result()
