@@ -50,11 +50,18 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
    **Note:** for the repeated fields, all the repeated parameters have to be updated at every tuning iteration (i.e., partial repeated parameters tuning are not allowed)
 
 
-1. **Run the Bayesian Optimizer Tuner (binary target):**
+1. **Run the  MRAC Bayesian Optimizer Tuner (binary target):**
 
    ```bash
    # Run at the updated BCE environment.
    bazel run //fueling/learning/autotuner/tuner:mrac_bayesian_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052
+   ```
+
+   alternatively, run complete control tuning service with
+
+   ```bash
+   # Run at the updated BCE environment.
+   bazel run //fueling/learning/autotuner/tuner:control_bayesian_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052 --tuner_param_config_filename=fueling/learning/autotuner/config/control_tuner_param_config.pb.txt
    ```
 
 

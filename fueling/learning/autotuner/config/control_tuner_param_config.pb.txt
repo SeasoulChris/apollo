@@ -1,0 +1,37 @@
+git_info {
+  commit_id: "aa9d805d04cd8c9ef2ac9c51b0641b41f39a8cfc"
+  repo: "https://github.com/ApolloAuto/apollo.git"
+}
+tuner_parameters {
+  default_conf_proto: "/apollo/modules/control/proto/control_conf.proto"
+  default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
+  utility {
+    utility_name: "ucb"
+    kappa: 3.0
+    xi: 1.0
+  }
+  n_iter: 5
+  init_points_1D: 5
+  opt_max: false
+  flag {
+    flag_name: "enable_steer_mrac_control"
+    enable: true
+  }
+  parameter {
+    parameter_name: "reference_time_constant"
+    min: 0.00001
+    max: 10.0
+    is_repeated: false
+  }
+  parameter {
+    parameter_name: "adaption_matrix_p"
+    min: 0.00001
+    max: 10.0
+    is_repeated: true
+  }
+}
+scenarios {
+  id: 11002
+  id: 11008
+  id: 11010
+}

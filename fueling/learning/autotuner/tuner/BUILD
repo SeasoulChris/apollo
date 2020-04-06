@@ -9,13 +9,8 @@ py_binary(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
-        "//fueling/learning/autotuner/client:cost_computation_client",
-        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
         "//fueling/learning/autotuner/tuner:base_tuner",
         "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
-        "//fueling/common:file_utils",
-        "//fueling/common:proto_utils",
-        requirement("bayesian-optimization"),
     ],
 )
 
@@ -49,5 +44,18 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         requirement("bayesian-optimization"),
+    ],
+)
+
+
+py_binary(
+    name = "control_bayesian_optimization_tuner",
+    srcs = ["control_bayesian_optimization_tuner.py"],
+    data = [
+        "//fueling/learning/autotuner/config",
+    ],
+    deps = [
+        "//fueling/learning/autotuner/tuner:base_tuner",
+        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
     ],
 )
