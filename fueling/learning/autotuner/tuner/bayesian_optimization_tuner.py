@@ -66,7 +66,6 @@ class BayesianOptimizationTuner():
         self.pbounds = {}
 
         self.tuner_param_config_pb = TunerConfigs()
-        self.algorithm_conf_pb = ControlConf()
         # Read and parse config from a pb file
         try:
             proto_utils.get_pb_from_text_file(
@@ -78,7 +77,7 @@ class BayesianOptimizationTuner():
             logging.error(f"Failed to parse autotune config: {error}")
 
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
-
+        self.algorithm_conf_pb = tuner_parameters.default_conf_proto
         try:
             proto_utils.get_pb_from_text_file(
                 tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
