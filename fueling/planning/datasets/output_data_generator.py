@@ -10,11 +10,11 @@ from fueling.planning.datasets.label_generator import LabelGenerator
 import fueling.common.logging as logging
 
 SKIP_EXISTING_DST_FILE = False
-SRC_DIR_PREFIX = 'modules/planning/learning_data/2019-10-17-13-36-4'
-DST_DIR_PREFIX = 'modules/planning/output_data/2019-10-17-13-36-4'
+SRC_DIR_PREFIX = 'modules/planning/learning_data'
+DST_DIR_PREFIX = 'modules/planning/output_data'
 # for local test
-# SRC_DIR_PREFIX = '/apollo/data/learning_data'
-# DST_DIR_PREFIX = '/apollo/data/output_data'
+# SRC_DIR_PREFIX = 'apollo/data/learning_data'
+# DST_DIR_PREFIX = 'apollo/data/output_data'
 
 
 class OutputDataGenerator(BasePipeline):
@@ -47,18 +47,51 @@ class OutputDataGenerator(BasePipeline):
         """Run the pipeline with given arguments."""
         # RDD(0/1), 1 for success
         logging.info(bin_files_rdd.count())
+        # bin_files_rdd = bin_files_rdd.keyBy(lambda src_file: os.path.dirname(src_file))
+        # logging.info(f'(file_dir, src_file): {bin_files_rdd.collect()}')
         # combine every 2 rdd files
-        # Paired RDD(file_id, file_dir)
+        # Paired RDD(dir, (file_id,file_dir))
         bin_files_rdd_origin = bin_files_rdd.map(self.get_file_id).cache()
-        logging.info(bin_files_rdd_origin.keys().collect())
-        # Paired RDD(file_id-1, file_dir)
+        # logging.info(bin_files_rdd_origin.collect())
+        # get the id of the first file (when the file ID starts from non-zero)
+        # combine file ids in a folder
+        # find the minimum id in each folder
+        min_fileID_rdd = (bin_files_rdd_origin.keys().reduceByKey(min))
+        # reduceByKey(
+        #     lambda dir_FileID: dir_FileID[1] >= 0))  # .reduceByKey(min)
+        logging.info(min_fileID_rdd.collect())
+        # logging.info(f'first file id in origin bin files: {grouped}')
+
+        # Paired RDD(file_id-1, (dir, file_dir))
         bin_files_rdd_shifted = (
             bin_files_rdd
-            .map(lambda elem: self.get_file_id(elem, True))
-            .filter(spark_op.filter_key(lambda key: key >= 0))
-            .cache())
-        logging.info(bin_files_rdd_shifted.keys().collect())
-        # Paired RDD(file_id, (file_dir,next_file_dir))
+            .map(lambda elem: self.get_file_id(elem, True)))
+        # remove the first file (with min_fileID) in shifted bin files rdd
+        # for example:
+        # origin RDD fileIDs are (37, 38, 39)
+        # shift RDD fileIDs are (37-1, 38-1, 39-1) => (36, 37, 38)
+        # and shifted file 37 is complete file for origin file 37;
+        # shifted file 38 is complete file for origin file 38
+        # and file 36 is an extra file.
+        bin_files_rdd_shifted = (
+            bin_files_rdd_shifted
+            # PairedRDD (dir, (fileID, srcFile))
+            .map(lambda dir_FileID_srcFile: (
+                dir_FileID_srcFile[0][0], (dir_FileID_srcFile[0][1], dir_FileID_srcFile[1])))
+            # PairedRDD (dir, ((fileID, srcFile), min_fileID))
+            .join(min_fileID_rdd)
+            # PairedRDD (dir, ((fileID, srcFile), min_fileID)) where fileID>min_fileID
+            .filter(
+                spark_op.filter_value(
+                    lambda FileID_srcFile_minFileID: FileID_srcFile_minFileID[0][0]
+                    >= FileID_srcFile_minFileID[1]))
+            # PairedRDD (dir, (fileID, srcFile))
+            .map(lambda dir_FileID_srcFile_minFileID:
+                 ((dir_FileID_srcFile_minFileID[0],
+                   dir_FileID_srcFile_minFileID[1][0][0]), dir_FileID_srcFile_minFileID[1][0][1]))
+            .cache()
+        )
+        # Paired RDD( (file_dir, file_id), (file_dir,next_file_dir))
         bin_file_couple_rdd = (
             bin_files_rdd_origin
             .cogroup(bin_files_rdd_shifted)
@@ -78,15 +111,17 @@ class OutputDataGenerator(BasePipeline):
     def get_file_id(src_file, is_shift=False):
         # file name is learning_data.x.bin
         file_name = os.path.basename(src_file)
+        # # using dir as part of key
+        file_dir = os.path.dirname(src_file)
         logging.debug(file_name.split('.')[1])
         file_id = int(file_name.split('.')[1])
         if is_shift:
             file_id = file_id - 1
-        return file_id, src_file
+        return (file_dir, file_id), src_file
 
     @staticmethod
     def process_file(file_paths):
-        """Call prediction python code to generate labels."""
+        """Call label_generator to generate labels."""
         logging.info(file_paths)
         src_file = file_paths[0][0]
         if len(file_paths[1]):
