@@ -63,16 +63,6 @@ class BaseTuner():
 
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
         #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
-        self.algorithm_conf_pb = ControlConf()
-        try:
-            proto_utils.get_pb_from_text_file(
-                tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
-            )
-            logging.debug(f"Parsed control config files {self.algorithm_conf_pb}")
-
-        except Exception as error:
-            logging.error(f"Failed to parse control config: {error}")
-
         for parameter in tuner_parameters.parameter:
             parameter = self.separate_repeated_param(parameter)
             self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})

@@ -30,6 +30,15 @@ class BayesianOptimizationTuner(BaseTuner):
 
     def __init__(self):
         BaseTuner.__init__(self)
+        self.algorithm_conf_pb = ControlConf()
+        try:
+            proto_utils.get_pb_from_text_file(
+                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
+            )
+            logging.debug(f"Parsed control config files {self.algorithm_conf_pb}")
+
+        except Exception as error:
+            logging.error(f"Failed to parse control config: {error}")
 
     def optimize(self, n_iter=0, init_points=0):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
