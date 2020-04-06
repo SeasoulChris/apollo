@@ -41,22 +41,6 @@ flags.DEFINE_string(
     "Tuner storage root directory"
 )
 
-def black_box_function(tuner_param_config_pb, algorithm_conf_pb):
-    config_id = uuid.uuid1().hex
-    CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
-    training_id, weighted_score = CostComputationClient.compute_mrac_cost(
-        tuner_param_config_pb.git_info.commit_id,
-        {  # list of config_id : {path, config} pairs
-            config_id:
-            {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
-                algorithm_conf_pb)},
-        },
-        list(tuner_param_config_pb.scenarios.id)
-    )
-    logging.info(f"Received score for {training_id}")
-    return training_id, weighted_score[config_id]
-
-
 class BaseTuner():
     """Basic functionality for NLP."""
 
@@ -78,7 +62,8 @@ class BaseTuner():
             logging.error(f"Failed to parse autotune config: {error}")
 
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
-        self.algorithm_conf_pb = tuner_parameters.default_conf_proto
+        #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
+        self.algorithm_conf_pb = ControlConf()
         try:
             proto_utils.get_pb_from_text_file(
                 tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
@@ -103,8 +88,10 @@ class BaseTuner():
                                        kappa=tuner_parameters.utility.kappa,
                                        xi=tuner_parameters.utility.xi)
 
+        #self.black_box_function = black_box_function(tuner_param_config_pb, algorithm_conf_pb)
+
         self.optimizer = BayesianOptimization(
-            f=black_box_function,
+            f=self.black_box_function,
             pbounds=self.pbounds,
             verbose=2,  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
             random_state=1,
@@ -118,6 +105,22 @@ class BaseTuner():
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
+
+    def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):
+        config_id = uuid.uuid1().hex
+        CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
+        training_id, weighted_score = CostComputationClient.compute_mrac_cost(
+            tuner_param_config_pb.git_info.commit_id,
+            {  # list of config_id : {path, config} pairs
+                config_id:
+                {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
+                    algorithm_conf_pb)},
+            },
+            list(tuner_param_config_pb.scenarios.id)
+        )
+        logging.info(f"Received score for {training_id}")
+        return training_id, weighted_score[config_id]
 
     def separate_repeated_param(self, parameter):
         """Seqarate the repeated messages by adding the surffix '___digit' to their names"""

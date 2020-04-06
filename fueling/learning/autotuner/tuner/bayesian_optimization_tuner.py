@@ -55,7 +55,7 @@ class BayesianOptimizationTuner(BaseTuner):
             logging.info(f"New MRAC Conf files: \n"
                          f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
 
-            training_id, score = black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
+            training_id, score = self.black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
 

@@ -11,6 +11,7 @@ py_binary(
     deps = [
         "//fueling/learning/autotuner/client:cost_computation_client",
         "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
+        "//fueling/learning/autotuner/tuner:base_tuner",
         "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
