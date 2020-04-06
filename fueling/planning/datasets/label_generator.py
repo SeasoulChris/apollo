@@ -27,46 +27,85 @@ class LabelGenerator(object):
         self.feature_label_dict = dict()
         # label dict
         self.label_dict = dict()
-        # planning tag dict
-        self.tag_dict = dict()
+        # planning tag dict (key: timestamp, val: planning_tag)
+        self.planning_tag_dict = dict()
+        # history dict for debug purpose
+        self.history_adc_trajectory_dict = dict()
 
-    def LoadFeaturePBAndSaveLabelFiles(self, input_filepath, output_filepath, secondary_filepath=None):
+    def LoadPBFiles(self, input_filepath, output_filepath, secondary_filepath=None):
         self.src_filepath = input_filepath
         logging.info(input_filepath)
+
         self.dst_filepath = output_filepath
         logging.info(output_filepath)
-        offline_features = learning_data_pb2.LearningData()
-        offline_features = proto_utils.get_pb_from_bin_file(self.src_filepath, offline_features)
+        # load origin PB file
+        offline_features = proto_utils.get_pb_from_bin_file(
+            self.src_filepath, learning_data_pb2.LearningData())
+        # get learning data sequence
         learning_data_sequence = offline_features.learning_data
-        data_len = len(learning_data_sequence)  # origin data length
+        origin_data_len = len(learning_data_sequence)  # origin data length
         logging.info(len(learning_data_sequence))
 
         if secondary_filepath:
             self.secondary_filepath = secondary_filepath
-
             # extra trajectory
             extra_offline_features = proto_utils.get_pb_from_bin_file(
                 self.secondary_filepath, offline_features)
             # learning_data from current bin + learning data from next bin
             learning_data_sequence.extend(extra_offline_features.learning_data)
             logging.info(len(learning_data_sequence))
+        return learning_data_sequence, origin_data_len
 
+    def UpdatePlanningTag(self, dict_key, current_tag, future_tag):
+        # campare one trajectory point in different time frame
+        # update trajectory point overlapFeature field only when this field is not setted
+        # to guaranttee the nearest OverlapFeature
+        tag_bp = learning_data_pb2.PlanningTag()
+        current_tag_dict = proto_utils.pb_to_dict(current_tag)
+        future_tag_dict = proto_utils.pb_to_dict(future_tag)
+        # find the unsetted overlap
+        unsetted_tag = set(future_tag_dict.keys()) - set(current_tag_dict.keys())
+        for key in unsetted_tag:
+            current_tag_dict[key] = future_tag_dict[key]
+        updated_tag = proto_utils.dict_to_pb(current_tag_dict, tag_bp)
+        # logging.info(f'*****{dict_key}: current_tag_dict:{current_tag_dict}')
+        # logging.info(f'future_tag_dict:{future_tag_dict}')
+        return updated_tag
+
+    def GetObserveAllFeatureSequences(self, input_filepath, output_filepath, secondary_filepath=None):
+        learning_data_sequence, origin_data_len = self.LoadPBFiles(
+            input_filepath, output_filepath, secondary_filepath)
         # get all trajectory points from feature_sequence
         adc_trajectory = []
         timestamps = []
-        # logging.info(learning_data_sequence[-1])
         for idx, learning_data in enumerate(learning_data_sequence):
             # key + feature
             # logging.info(learning_data.adc_trajectory_point)
-            for adc_trajectory_point in learning_data.adc_trajectory_point:
+            frame_key = "adc@{:.3f}".format(learning_data.adc_trajectory_point[0].timestamp_sec)
+            # logging.info(f'****************frame_key: {frame_key}')
+            # first trajectory point has the latest timestamp
+            for adc_trajectory_point in reversed(learning_data.adc_trajectory_point):
+                # assuming last point is the lastest/newest/current trajectory point
+                # logging.info(f'trajectory_point time: {adc_trajectory_point.timestamp_sec}')
+                # 1. write a newer trajectory point to trajectory point tag list
+                dict_key = "adc@{:.3f}".format(adc_trajectory_point.timestamp_sec)
+                # logging.info(f'trajectory_key: {dict_key}')
+                if dict_key in self.planning_tag_dict:
+                    # decide whether to update current planning_tag
+                    self.planning_tag_dict[dict_key] = self.UpdatePlanningTag(
+                        dict_key, self.planning_tag_dict[dict_key], adc_trajectory_point.planning_tag)
+                else:
+                    # first time encounter
+                    self.planning_tag_dict[dict_key] = adc_trajectory_point.planning_tag
                 # remove duplication
                 if adc_trajectory_point.timestamp_sec not in timestamps:
                     timestamps.append(adc_trajectory_point.timestamp_sec)
                     adc_trajectory.append(adc_trajectory_point)
             # key: current localization point
-            if idx < data_len:
-                self.feature_dict["adc@{:.3f}".format(timestamps[-1])] = learning_data
-        # print(adc_trajectory[-1])
+            if idx < origin_data_len:  # first part of the list is from origin PB file
+                # key of each learning_data is the timestamps of current trajectory point
+                # logging.info(f'key of learning_data: {timestamps[-1]}')
+                self.feature_dict[frame_key] = learning_data
 
         # [Feature1, Feature2, Feature3, ...] (sequentially sorted)
         adc_trajectory.sort(key=lambda x: x.timestamp_sec)
@@ -74,30 +113,18 @@ class LabelGenerator(object):
         # logging.info(adc_trajectory[-1].timestamp_sec)
         self.feature_sequence = adc_trajectory
         self.ObserveAllFeatureSequences()
-        return self.ObservePlanningTag()
 
-    def ObservePlanningTag(self):
-        # go through labeled data and add tag
-        # extract key from adc_trajectory(feature_sequence)
-        for idx, feature in enumerate(self.feature_sequence):
-            dict_key = "adc@{:.3f}".format(feature.timestamp_sec)
-            # logging.info(f'logging.info: {dict_key}')
-            # (measurement_time, planning_tag)
-            if feature.planning_tag:
-                self.tag_dict[dict_key] = feature.planning_tag
-        logging.info(f'tag_dict length: {len(self.tag_dict)}')
-        logging.info(f'feature_dict length: {len(self.feature_dict)}')
-
-    def WriteTagToFrame(self, is_dump2txt=False):
+    def WriteTagToFrame(self, is_dump2txt=True):
         features_labels = learning_data_pb2.LearningData()
         learning_data_frame = learning_data_pb2.LearningDataFrame()
-        logging.info(self.feature_dict.keys())
+        logging.debug(self.feature_dict.keys())
+        logging.debug(self.planning_tag_dict.keys())
         for key in self.feature_dict.keys():
             # write feature to proto
             learning_data_frame.CopyFrom(self.feature_dict[key])
             # write tag to proto when tag exists
-            if key in self.tag_dict:
-                learning_data_frame.planning_tag.CopyFrom(self.tag_dict[key])
+            if key in self.planning_tag_dict:
+                learning_data_frame.planning_tag.CopyFrom(self.planning_tag_dict[key])
             features_labels.learning_data.add().CopyFrom(learning_data_frame)
         # export proto to bin
         with open(self.dst_filepath + '.with_tag.bin', 'wb') as bin_f:
@@ -141,7 +168,6 @@ class LabelGenerator(object):
         # Declare needed varables.
         is_jittering = False
         feature_seq_len = len(feature_sequence)
-        prev_timestamp = -1.0
         adc_traj = []
         total_observed_time_span = 0.0
         maximum_observation_time = 3.0
@@ -209,6 +235,25 @@ class LabelGenerator(object):
         np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
         return self.future_status_dict
 
+    def GetHistoryTrajectory(self):
+        """ for debug purpose """
+        for key in self.feature_dict:
+            current_learning_data = self.feature_dict[key]
+            # get history trajectory from each learning frame
+            adc_traj = []
+            for history_adc_trajectory_point in reversed(current_learning_data.adc_trajectory_point):
+                adc_traj.append((history_adc_trajectory_point.trajectory_point.path_point.x,
+                                 history_adc_trajectory_point.trajectory_point.path_point.y,
+                                 history_adc_trajectory_point.trajectory_point.path_point.z,
+                                 history_adc_trajectory_point.trajectory_point.path_point.theta,
+                                 history_adc_trajectory_point.trajectory_point.v,
+                                 history_adc_trajectory_point.trajectory_point.a,
+                                 history_adc_trajectory_point.timestamp_sec))
+            self.history_adc_trajectory_dict[key] = adc_traj
+        logging.info(f'history path: {self.dst_filepath }.history_status.npy')
+        np.save(self.dst_filepath + '.history_status.npy', self.history_adc_trajectory_dict)
+        return self.history_adc_trajectory_dict
+
     def MergeDict(self, is_dump2txt=False):
         """ merge feature and label """
         features_labels = learning_data_pb2.LearningData()
@@ -257,14 +302,20 @@ class LabelGenerator(object):
 
 if __name__ == '__main__':
     FILE = '/apollo/data/learning_based_planning/bin_result/learning_data.38.bin'
-    # FILE2 = '/apollo/data/learning_based_planning/bin_result/learning_data.1.bin'
+    FILE2 = '/apollo/data/learning_based_planning/bin_result/learning_data.39.bin'
     OUTPUT_FILE = '/apollo/data/learning_based_planning/npy_result/learning_data.38.bin'
     label_gen = LabelGenerator()
-    result = label_gen.LoadFeaturePBAndSaveLabelFiles(FILE, OUTPUT_FILE)
-    label_gen.WriteTagToFrame()
+    result = label_gen.GetObserveAllFeatureSequences(FILE, OUTPUT_FILE, FILE2)
+    label_gen.WriteTagToFrame()  # write planning tag to learning data
+    # logging.info(label_gen.planning_tag_dict)
     result2 = label_gen.LabelTrajectory()
     logging.info(len(result2))
     logging.debug(label_gen.MergeDict())
+    history_result2 = label_gen.GetHistoryTrajectory()
+    logging.info(history_result2.keys())
+    history_data_points = history_result2['adc@1571344830.834']
+    history_IMG_FN = '/apollo/data/learning_based_planning/learning_data_history.38.bin.pdf'
+    label_gen.Visualize(history_data_points, history_IMG_FN)
     data_points = result2['adc@1571344830.834']
     logging.debug(data_points)
     IMG_FN = '/apollo/data/learning_based_planning/learning_data.0.bin.pdf'

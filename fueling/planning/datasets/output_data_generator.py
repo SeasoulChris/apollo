@@ -138,7 +138,7 @@ class OutputDataGenerator(BasePipeline):
         logging.info(dst_file)
         logging.info(dst_dir)
         try:
-            label_gen.LoadFeaturePBAndSaveLabelFiles(src_file, dst_file, secondary_file)
+            label_gen.GetObserveAllFeatureSequences(src_file, dst_file, secondary_file)
             logging.info('Successfully load feature pb and save label files {}'.format(src_file))
             label_gen.Label()
             logging.info('Successfully labeled {}'.format(src_file))
