@@ -19,6 +19,7 @@ message Request {
   GitInfo git_info = 1;
   map<string, ModelConfig> config = 2;  // config_id -> model_config
   repeated uint32 scenario_id = 3;
+  DynamicModel dynamic_model = 4;
 }
 
 message Response {

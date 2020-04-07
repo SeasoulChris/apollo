@@ -11,6 +11,15 @@ service SimService {
   }
 }
 
+enum DynamicModel {
+  PERFECT_CONTROL = 0;
+  POINT_MASS = 1;
+  INTELLI_LINCOLN = 2;
+  INTELLI_COOLHIGH = 3;
+  ECHO_LINCOLN = 4;
+  CASCADED_MODEL = 5;
+}
+
 message JobInfo {
   GitInfo git_info = 1;
   int32 scenario =
@@ -21,6 +30,7 @@ message JobInfo {
   string record_output_filename =
       5;                   // storage file name for output record file
   string training_id = 6;  // used to identify which training task it belongs to
+  DynamicModel dynamic_model = 7;
 }
 
 message Status {

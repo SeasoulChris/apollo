@@ -4,6 +4,7 @@ import grpc
 
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
+import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
 
@@ -17,7 +18,15 @@ class CostComputationClient(object):
         cls.CHANNEL_URL = channel
 
     @staticmethod
-    def construct_request(commit_id, configs, scenario_ids):
+    def get_dynamic_model_enum(name):
+        try:
+            enum = sim_service_pb2.DynamicModel.Value(name.upper())
+            return enum
+        except Exception as error:
+            raise ValueError(F"Dynamic model not found. \n\t{error}")
+
+    @staticmethod
+    def construct_request(commit_id, configs, scenario_ids, dynamic_model_name):
         # validate inputs
         if not isinstance(configs, dict):
             raise TypeError(
@@ -29,10 +38,12 @@ class CostComputationClient(object):
             )
         if not scenario_ids:
             raise ValueError("Scenario list cannot be empty.")
+        dynamic_model = CostComputationClient.get_dynamic_model_enum(dynamic_model_name)
 
         # construct
         request = cost_service_pb2.Request()
         request.git_info.commit_id = commit_id
+        request.dynamic_model = dynamic_model
         request.scenario_id.extend(scenario_ids)
         for (config_id, path_2_pb2) in configs.items():
             if not isinstance(path_2_pb2, dict):
@@ -45,15 +56,14 @@ class CostComputationClient(object):
         return request
 
     @classmethod
-    def compute_mrac_cost(cls, commit_id, configs, scenario_ids):
+    def compute_mrac_cost(cls, commit_id, configs, scenario_ids, dynamic_model_name):
         try:
             with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
                 stub = cost_service_pb2_grpc.CostComputationStub(channel)
-
                 logging.info(
                     f"Sending compute request with commit_id {commit_id} ...")
                 request = CostComputationClient.construct_request(
-                    commit_id, configs, scenario_ids)
+                    commit_id, configs, scenario_ids, dynamic_model_name)
                 response = stub.ComputeMracCost(request)
 
             status = response.status

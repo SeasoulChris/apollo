@@ -15,6 +15,7 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
 import fueling.common.logging as logging
+import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 
 # Flags
 flags.DEFINE_string("training_id", None, "A unique id")
@@ -104,6 +105,10 @@ class BaseCostComputation(BasePipeline):
         """Return RDD(scenario_id)"""
         raise Exception("Not implemented!")
 
+    def get_dynamic_model(self):
+        """Return dynamic model enum"""
+        return sim_service_pb2.DynamicModel.ECHO_LINCOLN
+
     def get_config_map(self):
         """Return a map of map: {config_id: {local_config_file_path: serialized_config}} """
         raise Exception("Not implemented!")
@@ -126,6 +131,7 @@ class BaseCostComputation(BasePipeline):
             self.config_id_2_pb2[config_id],
             record_relative_dir,
             record_filename,
+            self.get_dynamic_model(),
         )
         if not success:
             raise Exception(f"Failed to run scenario {scenario_id}")

@@ -39,7 +39,7 @@ class SimClient(object):
 
     @classmethod
     def run_scenario(
-        cls, training_id, commit_id, scenario, config, record_output_path, record_output_filename
+        cls, training_id, commit_id, scenario, config, record_output_path, record_output_filename, dynamic_model
     ):
         try:
             with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
@@ -53,6 +53,7 @@ class SimClient(object):
                     record_output_path=record_output_path,
                     record_output_filename=record_output_filename,
                     training_id=training_id,
+                    dynamic_model=dynamic_model,
                 )
 
                 logging.info(f"Running scenario {scenario} for {record_output_filename} ...")

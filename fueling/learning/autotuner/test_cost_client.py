@@ -23,7 +23,9 @@ training_id, score = CostComputationClient.compute_mrac_cost(
         },
     },
     # scenario id list
-    [11008, 11010]
+    [11008, 11010],
+    # dynamic model
+    "echo_lincoln",
 )
 
 print(f"Received score {score} for {training_id}")
