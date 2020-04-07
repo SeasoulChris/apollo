@@ -17,6 +17,7 @@ TRAJECTORY_FEATURE_NAMES = [
     'lateral_acceleration_ratio',
     'lateral_deceleration_ratio',
     'distance_to_roi_boundaries_ratio',
+    'distance_to_obstacles_ratio',
 
     # from calculate_jerk_ratios()
     'longitudinal_positive_jerk_ratio',
@@ -33,7 +34,7 @@ FEATURE_IDX = {
     # planning stage feature
     'stage_completion_time': 0,
     'initial_heading_diff_ratio': 1,
-    
+
     # latency features
     'end_to_end_time': 0,
     'zigzag_time': 1,
@@ -48,10 +49,16 @@ for (idx, name) in enumerate(TRAJECTORY_FEATURE_NAMES):
 
 REFERENCE_VALUES = {
     'control_precision': 0.25,
-    'distance_to_roi_boundary_buffer': 0.1, # meter
+    'distance_to_roi_boundary_buffer': 0.1,  # meter
 
     'lateral_jerk_positive_upper_bound': 1.0,
     'lateral_jerk_negative_upper_bound': -1.0,
     'longitudinal_jerk_positive_upper_bound': 2.0,
     'longitudinal_jerk_negative_upper_bound': -2.0,
 }
+
+REFERENCE_VALUES['roi_reference_distance'] = REFERENCE_VALUES['distance_to_roi_boundary_buffer'] + \
+    REFERENCE_VALUES['control_precision'] / 2.0
+
+REFERENCE_VALUES['obstacle_reference_distance'] = 1.7 * \
+    REFERENCE_VALUES['control_precision']
