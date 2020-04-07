@@ -4,7 +4,7 @@ py_library(
     name = "multi_job_control_feature_extraction_utils",
     srcs = ["multi_job_control_feature_extraction_utils.py"],
     data = [
-        "//fueling/profiling/conf:control_profiling_conf",
+        "//fueling/profiling/conf:profiling_conf",
     ],
     deps = [
         "//fueling/common:file_utils",
