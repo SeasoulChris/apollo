@@ -27,7 +27,7 @@ import fueling.common.proto_utils as proto_utils
 
 flags.DEFINE_string(
     "tuner_param_config_filename",
-    "fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt",
+    "",
     "File path to tuner parameter config."
 )
 flags.DEFINE_string(

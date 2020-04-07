@@ -14,7 +14,6 @@ import numpy as np
 
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
-from modules.control.proto.mrac_conf_pb2 import MracConf
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
@@ -24,6 +23,7 @@ from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils \
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+
 
 class ControlBayesianOptimizationTuner(BaseTuner):
     """Basic functionality for NLP."""
@@ -57,13 +57,9 @@ class ControlBayesianOptimizationTuner(BaseTuner):
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
             next_point_pb = self.merge_repeated_param(next_point)
             for field in next_point_pb:
-                self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.ClearField(field)
-            self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf.MergeFrom(
-                proto_utils.dict_to_pb(next_point_pb, MracConf()))
-            logging.info(f"Enable MRAC control: "
-                         f"{self.algorithm_conf_pb.lat_controller_conf.enable_steer_mrac_control}")
-            logging.info(f"New MRAC Conf files: \n"
-                         f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
+                self.algorithm_conf_pb.lat_controller_conf.ClearField(field)
+            self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
+                proto_utils.dict_to_pb(next_point_pb, LatControllerConf()))
 
             training_id, score = self.black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score

@@ -25,6 +25,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
+
 class MRACBayesianOptimizationTuner(BaseTuner):
     """Basic functionality for NLP."""
 

@@ -54,7 +54,8 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
 
    ```bash
    # Run at the updated BCE environment.
-   bazel run //fueling/learning/autotuner/tuner:mrac_bayesian_optimization_tuner -- --cost_computation_service_url=180.76.242.157:50052
+   bazel run //fueling/learning/autotuner/tuner:mrac_bayesian_optimization_tuner --  --cost_computation_service_url=180.76.242.157:50052
+   --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt
    ```
 
    alternatively, run complete control tuning service with
