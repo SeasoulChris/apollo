@@ -168,7 +168,7 @@ def plot_h5_features_hist(data_rdd):
         pdffile = os.path.join(dir_data, 'control_data_visualization.pdf')
 
     profiling_conf = proto_utils.get_pb_from_text_file(
-        '/fuel/fueling/profiling/conf/control_profiling_conf.pb.txt',
+        file_utils.fuel_path('/fuel/fueling/profiling/conf/control_profiling_conf.pb.txt'),
         ControlProfiling())
 
     with PdfPages(pdffile) as pdf:
