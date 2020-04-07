@@ -45,18 +45,18 @@ def generate_segment(h5_file):
     return segment
 
 
-def generate_gp_data(args, segment):
+def generate_gp_data(model_path, segment):
     """
     Generate one sample (input_segment, output_segment) from a segment
     """
-    model_norms_path = os.path.join(args.model_path, 'norms.h5')
+    model_norms_path = os.path.join(model_path, 'norms.h5')
     with h5py.File(model_norms_path, 'r') as model_norms_file:
         input_mean = np.array(model_norms_file.get('input_mean'))
         input_std = np.array(model_norms_file.get('input_std'))
         output_mean = np.array(model_norms_file.get('output_mean'))
         output_std = np.array(model_norms_file.get('output_std'))
         norms = (input_mean, input_std, output_mean, output_std)
-    model_weights_path = os.path.join(args.model_path, 'weights.h5')
+    model_weights_path = os.path.join(model_path, 'weights.h5')
     model = load_model(model_weights_path)
 
     input_segment = np.zeros([INPUT_LENGTH, DIM_INPUT])
@@ -143,7 +143,7 @@ def get_train_data(args):
             continue
         # generated data segment for unhandled file
         segment = generate_segment(h5_file)
-        input_segment, output_segment = generate_gp_data(args, segment)
+        input_segment, output_segment = generate_gp_data(args.model_path, segment)
         # save the generated label dataset
         logging.info(file_name)
         with h5py.File(file_name, 'w') as h5_file:
