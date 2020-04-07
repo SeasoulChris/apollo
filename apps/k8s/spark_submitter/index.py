@@ -74,8 +74,8 @@ class SparkSubmitJob(flask_restful.Resource):
             'LOG_VERBOSITY': Env.LogVerbosity.Name(arg.env.log_verbosity),
         }
 
-        submitter = arg.user.submitter
-        # running_role = arg.user.running_role
+        running_role = arg.user.running_role
+        submitter = running_role or arg.user.submitter
         # TODO: Verify submitter and running_role, and save to DB for job management.
 
         # Prepare fueling package.

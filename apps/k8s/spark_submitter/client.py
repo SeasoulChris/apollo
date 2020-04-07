@@ -16,7 +16,7 @@ import fueling.common.file_utils as file_utils
 
 
 # User.
-flags.DEFINE_string('role', 'apollo', 'Running as another role instead of the job submitter.')
+flags.DEFINE_string('role', '', 'Running as another role instead of the job submitter.')
 
 # Env.
 flags.DEFINE_string('image', 'hub.baidubce.com/apollofuel/spark:bazel2', 'Docker image.')
