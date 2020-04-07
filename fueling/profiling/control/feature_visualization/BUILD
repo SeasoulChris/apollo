@@ -3,7 +3,11 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "control_feature_visualization_utils",
     srcs = ["control_feature_visualization_utils.py"],
+    data = [
+        "//fueling/profiling/conf:profiling_conf",
+    ],
     deps = [
+        "//fueling/common:file_utils",
         "//fueling/common:h5_utils",
         "//fueling/common:json_utils",
         "//fueling/common:logging",
