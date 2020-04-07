@@ -59,7 +59,7 @@ class SimClient(object):
                 logging.info(f"Running scenario {scenario} for {record_output_filename} ...")
                 status = stub.RunScenario(job_info)
 
-            if status.message == 'finish_pass':
+            if status.message.startswith('finish'):
                 logging.info(f"Done running scenario {scenario} for {record_output_filename}.")
                 return True
             else:
