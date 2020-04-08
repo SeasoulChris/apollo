@@ -6,9 +6,6 @@ load("@default_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "optuna_tuner",
     srcs = ["optuna_tuner.py"],
-    deps = [
-        requirement("optuna"),
-    ],
 )
 
 py_binary(

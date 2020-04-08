@@ -14,18 +14,16 @@ We have the following two ways to execute this example:
 import optuna
 
 
-# Define a simple 2-dimensional objective function whose minimum value is -1 when (x, y) = (0, -1).
 def objective(trial):
-    x = trial.suggest_uniform("x", -100, 100)
-    y = trial.suggest_categorical("y", [-1, 0, 1])
-    return x ** 2 + y
+    x = trial.suggest_uniform('x', -10, 10)
+    return (x - 2) ** 2
 
 
 if __name__ == "__main__":
     # Let us minimize the objective function above.
     print("Running 10 trials...")
-    study = optuna.create_study()
-    study.optimize(objective, n_trials=10)
+    study = optuna.create_study(study_name='distributed-example', storage='sqlite:///example.db')
+    study.optimize(objective, n_trials=100)
     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
 
     # We can continue the optimization as follows.

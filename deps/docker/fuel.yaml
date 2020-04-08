@@ -22,6 +22,7 @@ dependencies:
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
   - torchvision
+  - optuna
 
 
   - pip:
