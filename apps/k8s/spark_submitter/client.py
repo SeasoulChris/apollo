@@ -103,7 +103,7 @@ class SparkSubmitterClient(object):
             res = requests.get(service_url, params={'job_id': job_id})
             if res.ok:
                 job_status = json.loads(res.json() or '{}').get('status')
-                logging.info('Job is {}...'.format(job_status))
+                logging.info('Job {} is {}...'.format(job_id, job_status))
             else:
                 logging.error('Failed to get job status.')
         if job_status != 'Completed':
