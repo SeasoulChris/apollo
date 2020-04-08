@@ -5,6 +5,7 @@ load("@default_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "label_generation",
     srcs = ["label_generation.py"],
+    data = ["//fueling/control/dynamic_model_2_0/label_generation/mlp_model"],
     deps = [
         "//fueling/common:file_utils",
         "//fueling/common:logging",
@@ -15,7 +16,6 @@ py_binary(
 py_binary(
     name = "pipeline_label_generation",
     srcs = ["pipeline_label_generation.py"],
-    data = [":mlp_model"],
     deps = [
         ":label_generation",
         "//fueling/common:base_pipeline",
