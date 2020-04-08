@@ -164,3 +164,12 @@ py_binary(
         "//fueling/prediction/common:configure",
     ]
 )
+
+py_binary(
+    name = "clean_and_balance_training_data",
+    srcs = ["clean_and_balance_training_data.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
+    ],
+)
