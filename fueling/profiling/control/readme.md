@@ -1,6 +1,6 @@
 # Profiling
 
-## 1. Control Profiling Application on Dreamland (for Simulation-Test)
+## 1. Control Profiling Application on Dreamland (for Simulation-Test based on Fuel 1.0 version)
 
 ### Command Line Format
 (The following codes are executed under the path **/fuel**)

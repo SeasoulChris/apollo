@@ -1,28 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-py_library(
-    name = "control_profiling_metrics",
-    srcs = ["control_profiling_metrics.py"],
-    deps = [
-        "//fueling/common:base_pipeline",
-        "//fueling/common:email_utils",
-        "//fueling/common:file_utils",
-        "//fueling/common:logging",
-        "//fueling/common:partners",
-    ],
-)
-
-py_library(
-    name = "control_profiling_visualization",
-    srcs = ["control_profiling_visualization.py"],
-    deps = [
-        "//fueling/common:base_pipeline",
-        "//fueling/common:email_utils",
-        "//fueling/common:file_utils",
-        "//fueling/common:logging",
-        "//fueling/common:partners",
-    ],
-)
 
 py_binary(
     name = "control_profiling",
