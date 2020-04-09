@@ -24,8 +24,8 @@ training_id, score = CostComputationClient.compute_mrac_cost(
     },
     # scenario id list
     [11008, 11010],
-    # dynamic model
-    "echo_lincoln",
+    # dynamic model https://github.com/ApolloAuto/apollo-fuel/blob/07bf1f696e9020244366bee8c77f343c131f432e/fueling/learning/autotuner/proto/sim_service.proto#L14
+    4, 
 )
 
 print(f"Received score {score} for {training_id}")

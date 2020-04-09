@@ -47,3 +47,4 @@ scenarios {
   id: 11008
   id: 11010
 }
+dynamic_model: ECHO_LINCOLN

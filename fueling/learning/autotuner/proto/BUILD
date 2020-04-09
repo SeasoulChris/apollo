@@ -8,8 +8,12 @@ py_proto(
     with_grpc = True,
     deps = [
         ":sim_service_pb2",
-        ":git_info_pb2",
     ],
+)
+
+py_proto(
+    name = "dynamic_model_info_pb2",
+    src = "dynamic_model_info.proto",
 )
 
 py_proto(
@@ -21,11 +25,19 @@ py_proto(
     name = "sim_service_pb2",
     src = "sim_service.proto",
     with_grpc = True,
+    deps = [
+        ":dynamic_model_info_pb2",
+        ":git_info_pb2",
+    ],
 )
 
 py_proto(
     name = "tuner_param_config_pb2",
     src = "tuner_param_config.proto",
+    deps = [
+        ":dynamic_model_info_pb2",
+        ":git_info_pb2",
+    ],
 )
 
 py_proto(

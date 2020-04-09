@@ -107,7 +107,8 @@ class BaseTuner():
                 {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
                     algorithm_conf_pb)},
             },
-            list(tuner_param_config_pb.scenarios.id)
+            list(tuner_param_config_pb.scenarios.id),
+            tuner_param_config_pb.dynamic_model
         )
         logging.info(f"Received score for {training_id}")
         return training_id, weighted_score[config_id]

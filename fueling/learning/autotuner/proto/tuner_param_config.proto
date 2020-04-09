@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
+import "fueling/learning/autotuner/proto/dynamic_model_info.proto";
 import "fueling/learning/autotuner/proto/git_info.proto";
 
 message Parameter {
@@ -35,6 +36,7 @@ message TunerConfigs {
   GitInfo git_info = 1;
   TunerParameters tuner_parameters = 2;
   Scenarios scenarios = 3;
+  DynamicModel dynamic_model = 4;
 }
 
 message Utility {

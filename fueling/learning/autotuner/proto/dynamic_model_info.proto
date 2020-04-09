@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+enum DynamicModel {
+  PERFECT_CONTROL = 0;
+  POINT_MASS = 1;
+  INTELLI_LINCOLN = 2;
+  INTELLI_COOLHIGH = 3;
+  ECHO_LINCOLN = 4;
+  CASCADED_MODEL = 5;
+}

@@ -18,14 +18,6 @@ class CostComputationClient(object):
         cls.CHANNEL_URL = channel
 
     @staticmethod
-    def get_dynamic_model_enum(name):
-        try:
-            enum = sim_service_pb2.DynamicModel.Value(name.upper())
-            return enum
-        except Exception as error:
-            raise ValueError(F"Dynamic model not found. \n\t{error}")
-
-    @staticmethod
     def construct_request(commit_id, configs, scenario_ids, dynamic_model_name):
         # validate inputs
         if not isinstance(configs, dict):
@@ -38,7 +30,7 @@ class CostComputationClient(object):
             )
         if not scenario_ids:
             raise ValueError("Scenario list cannot be empty.")
-        dynamic_model = CostComputationClient.get_dynamic_model_enum(dynamic_model_name)
+        dynamic_model = dynamic_model_name
 
         # construct
         request = cost_service_pb2.Request()
