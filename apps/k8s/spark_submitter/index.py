@@ -26,6 +26,11 @@ import fueling.common.proto_utils as proto_utils
 
 flags.DEFINE_boolean('debug', False, 'Enable debug mode.')
 
+# Define the total resources here and reject jobs applying too many
+# TODO(all): see if we can get these numbers dynamically by calling K8S interfaces
+flags.DEFINE_integer('total_memory', 250 * 5, 'cluster total memory in GB.')
+flags.DEFINE_integer('total_cpu', 32 * 5, 'cluster total CPU cores.')
+flags.DEFINE_integer('min_shared_jobs', 3, 'resources can be shared by minimum how many jobs')
 
 class SparkSubmitJob(flask_restful.Resource):
     """SparkSubmit job restful service"""
@@ -42,6 +47,13 @@ class SparkSubmitJob(flask_restful.Resource):
         try:
             arg = json_format.Parse(flask.request.get_json(), SparkSubmitArg())
             job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
+
+            # Validate args
+            if arg.worker.count * arg.worker.memory * flags.FLAGS.min_shared_jobs >= flags.FLAGS.total_memory:
+                return json.dumps({'error': 'Too many memory required!'}), HTTPStatus.BAD_REQUEST
+            elif arg.worker.count * arg.worker.cpu * flags.FLAGS.min_shared_jobs >= flags.FLAGS.total_cpu: 
+                return json.dumps({'error': 'Too many cpu required!'}), HTTPStatus.BAD_REQUEST
+
             if flags.FLAGS.debug:
                 self.spark_submit(job_id, arg)
             else:
