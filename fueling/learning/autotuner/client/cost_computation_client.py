@@ -18,7 +18,7 @@ class CostComputationClient(object):
         cls.CHANNEL_URL = channel
 
     @staticmethod
-    def construct_request(commit_id, configs, scenario_ids, dynamic_model_name):
+    def construct_request(commit_id, configs, scenario_ids, dynamic_model):
         # validate inputs
         if not isinstance(configs, dict):
             raise TypeError(
@@ -30,7 +30,6 @@ class CostComputationClient(object):
             )
         if not scenario_ids:
             raise ValueError("Scenario list cannot be empty.")
-        dynamic_model = dynamic_model_name
 
         # construct
         request = cost_service_pb2.Request()
@@ -48,14 +47,14 @@ class CostComputationClient(object):
         return request
 
     @classmethod
-    def compute_mrac_cost(cls, commit_id, configs, scenario_ids, dynamic_model_name):
+    def compute_mrac_cost(cls, commit_id, configs, scenario_ids, dynamic_model):
         try:
             with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
                 stub = cost_service_pb2_grpc.CostComputationStub(channel)
                 logging.info(
                     f"Sending compute request with commit_id {commit_id} ...")
                 request = CostComputationClient.construct_request(
-                    commit_id, configs, scenario_ids, dynamic_model_name)
+                    commit_id, configs, scenario_ids, dynamic_model)
                 response = stub.ComputeMracCost(request)
 
             status = response.status
