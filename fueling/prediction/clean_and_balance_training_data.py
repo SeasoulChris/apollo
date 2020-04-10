@@ -12,8 +12,8 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 
-LINEAR_ACC_THRESHOLD = 50
-ANGULAR_VEL_THRESHOLD = 0.85
+LINEAR_ACC_THRESHOLD = 100
+ANGULAR_VEL_THRESHOLD = 0.50
 TURNING_ANGLE_THRESHOLD = np.pi/6
 
 '''
@@ -32,31 +32,35 @@ class CleanTrainingDataPipeline(BasePipeline):
         training_data_prefix = '/fuel/kinglong_data/train/'
         if self.FLAGS.get('running_mode') == 'PROD':
             training_data_prefix = 'modules/prediction/kinglong_train/'
-        training_data_dir_rdd = self.to_rdd(self.our_storage().list_end_dirs(training_data_prefix))
-        if training_data_dir_rdd.isEmpty():
-            logging.info('No training data dir to be processed!')
+        training_data_file_rdd = (
+            self.to_rdd(self.our_storage()
+                .list_files(training_data_prefix))
+                .filter(spark_op.filter_path(['*training_data.npy'])))
+        if training_data_file_rdd.isEmpty():
+            logging.info('No training data file to be processed!')
             return
-        self.run_internal(training_data_dir_rdd)
+        self.run_internal(training_data_file_rdd)
 
-    def run_internal(self, training_data_dir_rdd):
+    def run_internal(self, training_data_file_rdd):
         '''Run the pipeline with given arguments.'''
-        result = training_data_dir_rdd.map(self.process_dir).cache()
+        result = training_data_file_rdd.map(self.process_file).cache()
         # if result.isEmpty():
         #     logging.info('Nothing to be processed, everything is under control!')
         #     return
         logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
     # @staticmethod
-    def process_dir(self, training_data_dir):
-        logging.info(training_data_dir)
-        cleaned_training_data_dir = training_data_dir.replace('train', 'train_clean', 1)
+    def process_file(self, training_data_filepath):
+        logging.info(training_data_filepath)
+        cleaned_training_data_filepath = training_data_filepath.replace('train', 'train_clean', 1)
+        cleaned_training_data_dir = os.path.dirname(cleaned_training_data_filepath)
         mkdir_cmd = 'sudo mkdir -p {}'.format(cleaned_training_data_dir)
         chmod_cmd = 'sudo chmod 777 {}'.format(cleaned_training_data_dir)
         os.system(mkdir_cmd)
         logging.info(mkdir_cmd)
         os.system(chmod_cmd)
         logging.info(chmod_cmd)
-        self.CleanTrainingData(training_data_dir, cleaned_training_data_dir)
+        self.CleanTrainingData(training_data_filepath, cleaned_training_data_filepath)
         return 1
 
     '''
@@ -94,35 +98,29 @@ class CleanTrainingDataPipeline(BasePipeline):
     '''
     @param training_data_dir: end dir containing training_data.npy
     '''
-    def CleanTrainingData(self, training_data_dir, cleaned_training_data_dir):
-        training_data_filenames = os.listdir(training_data_dir)
+    def CleanTrainingData(self, training_data_filepath, cleaned_training_data_filepath):
         count = Counter()
-        for filename in training_data_filenames:
-            filepath = os.path.join(training_data_dir, filename)
-            if 'training_data.npy' not in filepath:
-                    continue
-            file_content = np.load(filepath, allow_pickle=True).tolist()
-            cleaned_content = []
-            for scene in file_content:
-                cleaned_scene = []
-                num_valid_label = 0
-                for data_pt in scene:
-                    cleaned_data_pt = []
-                    cleaned_data_pt.append(data_pt[0])
-                    turn_type = self.CleanFutureSequence(data_pt[1])
-                    if turn_type is None:
-                        cleaned_data_pt.append([])
-                    else:
-                        cleaned_data_pt.append(data_pt[1])
-                        count[turn_type] += 1
-                        num_valid_label += 1
-                    cleaned_scene.append(cleaned_data_pt)
-                if num_valid_label > 0:
-                    cleaned_content.append(cleaned_scene)
-            logging.info(count)
-            cleaned_filepath = os.path.join(cleaned_training_data_dir, 'training_data_clean.npy')
-            logging.info('npy save {}'.format(cleaned_filepath))
-            np.save(cleaned_filepath, cleaned_content)
+        file_content = np.load(training_data_filepath, allow_pickle=True).tolist()
+        cleaned_content = []
+        for scene in file_content:
+            cleaned_scene = []
+            num_valid_label = 0
+            for data_pt in scene:
+                cleaned_data_pt = []
+                cleaned_data_pt.append(data_pt[0])
+                turn_type = self.CleanFutureSequence(data_pt[1])
+                if turn_type is None:
+                    cleaned_data_pt.append([])
+                else:
+                    cleaned_data_pt.append(data_pt[1])
+                    count[turn_type] += 1
+                    num_valid_label += 1
+                cleaned_scene.append(cleaned_data_pt)
+            if num_valid_label > 0:
+                cleaned_content.append(cleaned_scene)
+        logging.info(count)
+        logging.info('npy save {}'.format(cleaned_training_data_filepath))
+        np.save(cleaned_training_data_filepath, cleaned_content)
 
 
 if __name__ == '__main__':
