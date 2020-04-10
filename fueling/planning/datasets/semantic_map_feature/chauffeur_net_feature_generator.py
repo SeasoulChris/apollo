@@ -8,10 +8,12 @@ import cv2 as cv
 from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer import AgentBoxImgRenderer
 from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
 from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer import AgentPosesHistoryImgRenderer
+from fueling.planning.datasets.semantic_map_feature.base_offroad_mask_img_renderer import BaseOffroadMaskImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer import BaseRoadMapImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer import BaseSpeedLimitImgRenderer
 from fueling.planning.datasets.semantic_map_feature.obstacles_img_renderer import ObstaclesImgRenderer
 from fueling.planning.datasets.semantic_map_feature.obstacle_predictions_img_renderer import ObstaclePredictionsImgRenderer
+from fueling.planning.datasets.semantic_map_feature.offroad_mask_img_renderer import OffroadMaskImgRenderer
 from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer import RoadMapImgRenderer
 from fueling.planning.datasets.semantic_map_feature.routing_img_renderer import RoutingImgRenderer
 from fueling.planning.datasets.semantic_map_feature.speed_limit_img_renderer import SpeedLimitImgRenderer
@@ -26,6 +28,7 @@ class ChauffeurNetFeatureGenerator(object):
         self.imgs_dir = "/fuel/testdata/planning/semantic_map_features"
         if not os.path.isfile(os.path.join(self.imgs_dir, region + ".png")) \
                 or not os.path.isfile(os.path.join(self.imgs_dir, region + "_speedlimit.png")) \
+                or not os.path.isfile(os.path.join(self.imgs_dir, region + "_offroad_mask.png")) \
                 or base_map_update_flag:
             self.draw_base_map(region)
         self.agent_box_mapping = AgentBoxImgRenderer()
@@ -33,14 +36,18 @@ class ChauffeurNetFeatureGenerator(object):
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer()
         self.obstacles_mapping = ObstaclesImgRenderer()
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer()
+        self.offroad_mask_mapping = OffroadMaskImgRenderer()
         self.road_map_mapping = RoadMapImgRenderer(region)
         self.routing_mapping = RoutingImgRenderer(region)
         self.speed_limit_mapping = SpeedLimitImgRenderer(region)
         self.traffic_lights_mapping = TrafficLightsImgRenderer(region)
 
     def draw_base_map(self, region):
+        self.base_offroad_mask_mapping = BaseOffroadMaskImgRenderer(region)
         self.base_road_map_mapping = BaseRoadMapImgRenderer(region)
         self.base_speed_limit_mapping = BaseSpeedLimitImgRenderer(region)
+        cv.imwrite(os.path.join(self.imgs_dir, region + "_offroad_mask.png"),
+                   self.base_offroad_mask_mapping.base_map)
         cv.imwrite(os.path.join(self.imgs_dir, region + ".png"),
                    self.base_road_map_mapping.base_map)
         cv.imwrite(os.path.join(self.imgs_dir, region + "_speedlimit.png"),
@@ -128,11 +135,26 @@ class ChauffeurNetFeatureGenerator(object):
 
     def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
         return cv.resize(self.agent_pose_future_mapping.draw_agent_box_future(center_x,
-                                                                               center_y,
-                                                                               center_heading,
-                                                                               ego_pose_future,
-                                                                               timestamp_idx),
+                                                                              center_y,
+                                                                              center_heading,
+                                                                              ego_pose_future,
+                                                                              timestamp_idx),
                          (224, 224))
+
+    def render_offroad_mask(self, center_x, center_y, center_heading):
+        return cv.resize(self.offroad_mask_mapping.draw_offroad_mask(center_x,
+                                                                     center_y,
+                                                                     center_heading),
+                         (224, 224))
+
+    def render_obstacle_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_prediction_frame(center_x,
+                                                                                          center_y,
+                                                                                          center_heading,
+                                                                                          obstacles,
+                                                                                          timestamp_idx),
+                         (224, 224))
+
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
