@@ -5,6 +5,7 @@ from datetime import datetime
 import glob
 import os
 import shutil
+import time
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
@@ -18,7 +19,11 @@ import fueling.common.storage.bos_client as bos_client
 
 def execute_task(message_meta):
     """example task executing, return results dir."""
+    logging.info('start to execute sensor calbiration service')
     source_dir, output_dir, executable_dir = message_meta
+    
+    logging.info(F'executable dir: {executable_dir}, exist? {os.path.exists(executable_dir)}')
+
     # from input config file, generating final fuel-using config file
     in_config_file = os.path.join(source_dir, 'sample_config.yaml')
     calib_config = CalibrationConfig()
@@ -30,9 +35,8 @@ def execute_task(message_meta):
     """Execute task by task"""
     logging.info('type of {} is {}'.format(task_name, type(task_name)))
     logging.info('executing task: {} with src_dir: {}'.format(task_name, source_dir))
+
     # Invoke benchmark binary
-    logging.info('start to execute sensor calbiration service')
-    # Add lib path
     if executable_dir not in os.environ['LD_LIBRARY_PATH']:
         os.environ['LD_LIBRARY_PATH'] = executable_dir + ':' + os.environ['LD_LIBRARY_PATH']
     os.system("echo $LD_LIBRARY_PATH")
@@ -40,10 +44,9 @@ def execute_task(message_meta):
         executable_bin = os.path.join(executable_dir, 'multi_lidar_gnss_calibrator')
     elif task_name == 'camera_to_lidar':
         executable_bin = os.path.join(executable_dir, 'multi_grid_lidar_camera_calibrator')
-        #logging.info('executable not ready, stay for tune')
-        # return None
     else:
         logging.error('not support {} yet'.format(task_name))
+        time.sleep(60 * 3)
         return None
 
     # set command
@@ -55,6 +58,7 @@ def execute_task(message_meta):
         logging.info('Finished sensor caliration.')
     else:
         logging.error('Failed to run sensor caliration for {}: {}'.format(task_name, return_code))
+        time.sleep(60 * 3)
     return os.path.join(output_dir, 'results')
 
 
@@ -128,7 +132,11 @@ class SensorCalibrationPipeline(BasePipeline):
             job_dir = self.our_storage().abs_path(job_dir)
             job_output_dir = job_dir
 
+        logging.info(F'job dir: {job_dir}')
+
         subjobs = self._get_subdirs(job_dir)
+        logging.info(F'subjobs : {subjobs}')
+
         executable_dir = 'modules/perception/sensor_calibration/executable_bin'
         message_meta = [(os.path.join(job_dir, j),
                         os.path.join(job_output_dir, j), self.our_storage().abs_path(executable_dir))
