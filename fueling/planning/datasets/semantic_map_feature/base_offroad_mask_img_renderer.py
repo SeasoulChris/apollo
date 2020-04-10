@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+import os
+
+import numpy as np
+import cv2 as cv
+import pyproj
+
+from modules.map.proto import map_pb2
+from modules.map.proto import map_road_pb2
+
+
+class BaseOffroadMaskImgRenderer(object):
+    """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
+
+    def __init__(self, region):
+        """contruct function to init BaseRoadMapImgRenderer object"""
+        self.region = region
+        # TODO(Jinyun): use config file
+        self.resolution = 0.1   # in meter/pixel
+        self.base_map_padding = 100    # in meter
+
+        self.base_point = None
+        self.GRID = None
+        self.base_map = None
+
+        self._read_hdmap()
+        self._build_canvas()
+        self._draw_base_map()
+        print("Base Offoad Mask Map base point is " +
+              str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        print("Base Offroad Mask Map W * H is " +
+              str(self.GRID[0]) + " * " + str(self.GRID[1]))
+
+    def _read_hdmap(self):
+        """read the hdmap from base_map.bin"""
+        self.hd_map = map_pb2.Map()
+        map_path = "/apollo/modules/map/data/" + self.region + "/base_map.bin"
+        try:
+            with open(map_path, 'rb') as file_in:
+                self.hd_map.ParseFromString(file_in.read())
+        except IOError:
+            print("File at [" + map_path + "] is not accessible")
+            exit()
+
+    def _build_canvas(self):
+        """build canvas in np.array with padded left bottom point as base_point"""
+        projection_rule = self.hd_map.header.projection.proj
+        projector = pyproj.Proj(projection_rule, preserve_units=True)
+        left_bottom_x, left_bottom_y = projector(self.hd_map.header.left,
+                                                 self.hd_map.header.bottom)
+        right_top_x, right_top_y = projector(self.hd_map.header.right,
+                                             self.hd_map.header.top)
+
+        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue (Map "sunnyvle" is too large)
+        if self.region == "sunnyvale":
+            left_bottom_x = 585975.3316302994
+            left_bottom_y = 4140016.6342316796
+            right_top_x = 588538.5457265645
+            right_top_y = 4141747.6943244375
+
+        self.base_point = np.array([left_bottom_x - self.base_map_padding,
+                                    left_bottom_y - self.base_map_padding])
+        self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
+                     int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.base_map = np.zeros(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+
+    def _draw_base_map(self):
+        self._draw_road()
+
+    def get_trans_point(self, p):
+        point = np.round((p - self.base_point) / self.resolution)
+        return [int(point[0]), self.GRID[1] - int(point[1])]
+
+    def _draw_road(self, color=(0)):
+        self.base_map = (self.base_map + 1) * 255
+        print(self.base_map.dtype)
+        for road in self.hd_map.road:
+            for section in road.section:
+                points = np.zeros((0, 2))  
+                for edge in section.boundary.outer_polygon.edge:
+                    if edge.type == map_road_pb2.BoundaryEdge.Type.LEFT_BOUNDARY:
+                        for segment in edge.curve.segment:
+                            for i in range(len(segment.line_segment.point)):
+                                point = self.get_trans_point(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                points = np.vstack((points, point))
+                    elif edge.type == map_road_pb2.BoundaryEdge.Type.RIGHT_BOUNDARY:
+                        for segment in edge.curve.segment:
+                            for i in range(len(segment.line_segment.point)-1, -1, -1):
+                                point = self.get_trans_point(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                points = np.vstack((points, point))
+                cv.fillPoly(self.base_map, [np.int32(points)], color=color)
+
+
+
+if __name__ == '__main__':
+    imgs_dir = "/fuel/testdata/planning/semantic_map_features"
+    mapping = BaseOffroadMaskImgRenderer("sunnyvale_with_two_offices")
+    # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
+    cv.imwrite(os.path.join(imgs_dir, mapping.region + "_offroad_mask.png"), mapping.base_map)

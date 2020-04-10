@@ -7,6 +7,7 @@ import pyproj
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
+from modules.map.proto import map_road_pb2
 
 
 class BaseRoadMapImgRenderer(object):
@@ -101,13 +102,13 @@ class BaseRoadMapImgRenderer(object):
             for section in road.section:
                 points = np.zeros((0, 2))
                 for edge in section.boundary.outer_polygon.edge:
-                    if edge.type == 2:
+                    if edge.type == map_road_pb2.BoundaryEdge.Type.LEFT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point)):
                                 point = self.get_trans_point(
                                     [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                                 points = np.vstack((points, point))
-                    elif edge.type == 3:
+                    if edge.type == map_road_pb2.BoundaryEdge.Type.RIGHT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point)-1, -1, -1):
                                 point = self.get_trans_point(
@@ -193,7 +194,7 @@ class BaseRoadMapImgRenderer(object):
 
 if __name__ == '__main__':
     imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    mapping = BaseRoadMapImgRenderer("sunnyvale")
+    mapping = BaseRoadMapImgRenderer("sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(os.path.join(imgs_dir, mapping.region + ".png"),
                mapping.base_map)
