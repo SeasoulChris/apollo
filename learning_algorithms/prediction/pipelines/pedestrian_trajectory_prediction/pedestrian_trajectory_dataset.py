@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cv2 as cv
+import math
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -9,9 +10,13 @@ from torchvision import transforms
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+from fueling.prediction.common.configure import parameters
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 MAX_OBS_HISTORY_SIZE = 20
+OFFSET_X = parameters['offset_x']
+OFFSET_Y = parameters['offset_y']
+
 '''
 [scene, scene, ..., scene]
   scene: [data_pt, data_pt, ..., data_pt]
@@ -22,7 +27,19 @@ MAX_OBS_HISTORY_SIZE = 20
       future: [x, y, x, y, ..., x, y]
 '''
 class PedestrianTrajectoryDataset(Dataset):
-    def __init__(self, data_dir, pred_len=30):
+    def RecoverHistory(self, history):
+        history[:, 1] += OFFSET_X
+        history[:, 2] += OFFSET_Y
+        history[:, 4::2] += OFFSET_X
+        history[:, 5::2] += OFFSET_Y
+        return history
+
+    def RecoverFuture(self, future):
+        future[0::2] += OFFSET_X
+        future[1::2] += OFFSET_Y
+        return future
+
+    def __init__(self, data_dir, pred_len=30, shifted=True):
         self.pred_len = pred_len
         self.map_region = []
         self.img_transform = transforms.Compose([
@@ -47,6 +64,8 @@ class PedestrianTrajectoryDataset(Dataset):
 
         self.base_map = {"baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png")}
 
+        self.shifted = shifted
+
         scene_id = -1
         accumulated_data_pt = 0
         all_file_paths = file_utils.list_files(data_dir)
@@ -62,6 +81,9 @@ class PedestrianTrajectoryDataset(Dataset):
                     accumulated_data_pt += 1
                     curr_history = np.array(data_pt[0])
                     curr_future = np.array(data_pt[1])
+                    if shifted:
+                        curr_history = self.RecoverHistory(curr_history)
+                        curr_future = self.RecoverFuture(curr_future)
                     curr_obs_hist_size = curr_history.shape[0]
                     if curr_obs_hist_size <= 0:
                         accumulated_data_pt -= 1
@@ -103,6 +125,10 @@ class PedestrianTrajectoryDataset(Dataset):
                     self.is_predictable.append(np.ones((1, 1)))
                     curr_future_traj = curr_future.reshape([self.pred_len, 2])
                     ref_world_coord = list(curr_history[-1, 1:4])
+                    if curr_obs_hist_size > 1:
+                        diff_x = curr_history[-1, 1] - curr_history[-2, 1]
+                        diff_y = curr_history[-1, 2] - curr_history[-2, 2]
+                        ref_world_coord[-1] = math.atan2(diff_y, diff_x)
                     self.reference_world_coord.append(ref_world_coord)
                     new_curr_future_traj = np.zeros((1, self.pred_len, 2))
                     for i in range(self.pred_len):
@@ -179,3 +205,4 @@ class PedestrianTrajectoryDataset(Dataset):
 if __name__ == '__main__':
     pedestrian_dataset = PedestrianTrajectoryDataset('/fuel/kinglong_data/train/')
     pedestrian_dataset.getitem(10)
+

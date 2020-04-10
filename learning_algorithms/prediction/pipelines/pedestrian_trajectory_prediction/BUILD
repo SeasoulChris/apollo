@@ -18,6 +18,7 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/learning:loss_utils",
         "//fueling/learning:train_utils",
+	"//fueling/prediction/common:configure",
         ":pedestrian_trajectory_dataset",
         "//learning_algorithms/prediction/models/semantic_map_model:semantic_map_model",
     ]
