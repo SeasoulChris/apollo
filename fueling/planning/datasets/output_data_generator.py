@@ -105,7 +105,7 @@ class OutputDataGenerator(BasePipeline):
         if result.isEmpty():
             logging.info("Nothing to be processed.")
             return
-        logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(result.values().reduce(operator.add), result.count()))
 
     @staticmethod
     def get_file_id(src_file, is_shift=False):
@@ -131,8 +131,11 @@ class OutputDataGenerator(BasePipeline):
         logging.info(src_file)
         logging.info(secondary_file)
         label_gen = LabelGenerator()
+
         dst_file = src_file.replace(SRC_DIR_PREFIX, DST_DIR_PREFIX)
-        dst_dir = os.path.dirname(dst_file)
+        # add complete
+        dst_dir = os.path.join(os.path.dirname(dst_file), 'complete')
+        dst_file = os.path.join(dst_dir, os.path.basename(dst_file))
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
         logging.info(dst_file)
