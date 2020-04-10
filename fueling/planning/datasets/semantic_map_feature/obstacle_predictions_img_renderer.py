@@ -25,6 +25,10 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_heading = None
         self.max_prediction_time_horizon = 3  # second
 
+    def _get_trans_point(self, p):
+        p = np.round(p / self.resolution)
+        return [self.local_base_point_w_idx + int(p[0]), self.local_base_point_h_idx - int(p[1])]
+
     def _get_affine_points(self, p):
         # obstacles are in ego vehicle coordiantes where ego car faces toward EAST, so rotation to NORTH is done below
         theta = np.pi / 2
@@ -32,6 +36,23 @@ class ObstaclePredictionsImgRenderer(object):
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
         return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+
+    # TODO(Jinyun): move to utils
+    def _get_affine_prediction_box(self, p, box_theta, box_length, box_width):
+        p = p - self.local_base_point
+        theta = np.pi / 2 - self.local_base_heading
+        point = np.dot(np.array(
+            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
+        box_theta_diff = np.pi / 2 + box_theta - self.local_base_heading
+        corner_points = np.dot(np.array([[np.cos(box_theta_diff), -np.sin(box_theta_diff)],
+                                         [np.sin(box_theta_diff), np.cos(box_theta_diff)]]),
+                               np.array([[box_length / 2, box_length / 2,
+                                          -box_length/ 2, box_length/ 2],
+                                         [box_width, -box_width,
+                                          -box_width, box_width]])).T + point
+        corner_points = [self._get_trans_point(
+            point) for point in corner_points]
+        return np.int32(corner_points)
 
     def draw_obstacle_prediction(self, center_x, center_y, center_heading, obstacles):
         # TODO(Jinyun): make use of multi-modal and probability
@@ -59,7 +80,7 @@ class ObstaclePredictionsImgRenderer(object):
 
         return local_map
 
-    def draw_obstacle_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+    def draw_obstacle_box_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -70,6 +91,8 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_heading = center_heading
 
         for obstacle in obstacles:
+            obs_length = obstacle.length
+            obs_width = obstacle.width
             if obstacle.HasField("obstacle_prediction") and len(obstacle.obstacle_prediction.trajectory) > 0:
                 max_prob_idx = 0
                 max_prob = 0
@@ -81,9 +104,14 @@ class ObstaclePredictionsImgRenderer(object):
                 if len(obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
                     print("timestamp_idx larger than what is available in obstacle prediction")
                 else:
-                    trajectory_point = obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point[timestamp_idx]
-                    cv.circle(local_map, tuple(self._get_affine_points(
-                        np.array([trajectory_point.path_point.x, trajectory_point.path_point.y]))), radius=4, color=255)
+                    path_point = obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point[timestamp_idx].path_point
+                    corner_points = self._get_affine_prediction_box(
+                        np.array([path_point.x, path_point.y]), path_point.theta, obs_length, obs_width)
+                    for corner_point in corner_points:
+                        if corner_point[0] < 0 or corner_point[0] > self.local_size_h or corner_point[1] < 0 or corner_point[1] > self.local_size_h:
+                            print("draw_agent_box_future out of canvas bound")
+                            return local_map
+                    cv.fillPoly(local_map, [corner_points], color=255)
 
         return local_map
 

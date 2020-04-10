@@ -147,8 +147,8 @@ class ChauffeurNetFeatureGenerator(object):
                                                                      center_heading),
                          (224, 224))
 
-    def render_obstacle_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
-        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_prediction_frame(center_x,
+    def render_obstacle_box_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(center_x,
                                                                                           center_y,
                                                                                           center_heading,
                                                                                           obstacles,
