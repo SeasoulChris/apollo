@@ -85,10 +85,11 @@ class AgentPosesFutureImgRenderer(object):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
-        if len(ego_pose_future) < timestamp_idx:
-            print("timestamp_idx larger than what is available")
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        if len(ego_pose_future) <= timestamp_idx:
+            print("timestamp_idx larger than what is available in agent pose future")
+            return local_map
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         ego_pose = ego_pose_future[timestamp_idx]
@@ -104,10 +105,11 @@ class AgentPosesFutureImgRenderer(object):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
-        if len(ego_pose_future) < timestamp_idx:
-            print("timestamp_idx larger than what is available")
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        if len(ego_pose_future) <= timestamp_idx:
+            print("timestamp_idx larger than what is availablein agent box future")
+            return local_map
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         ego_pose = ego_pose_future[timestamp_idx]

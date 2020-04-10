@@ -59,6 +59,33 @@ class ObstaclePredictionsImgRenderer(object):
 
         return local_map
 
+    def draw_obstacle_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+        '''
+        It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
+        '''
+        local_map = np.zeros(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        self.local_base_point = np.array(
+            [center_x, center_y])
+        self.local_base_heading = center_heading
+
+        for obstacle in obstacles:
+            if obstacle.HasField("obstacle_prediction") and len(obstacle.obstacle_prediction.trajectory) > 0:
+                max_prob_idx = 0
+                max_prob = 0
+                for i in range(len(obstacle.obstacle_prediction.trajectory)):
+                    trajectory = obstacle.obstacle_prediction.trajectory[i]
+                    if trajectory.probability > max_prob:
+                        max_prob_idx = i
+                        max_prob = trajectory.probability
+                if len(obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
+                    print("timestamp_idx larger than what is available in obstacle prediction")
+                else:
+                    trajectory_point = obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point[timestamp_idx]
+                    cv.circle(local_map, tuple(self._get_affine_points(
+                        np.array([trajectory_point.path_point.x, trajectory_point.path_point.y]))), radius=4, color=255)
+
+        return local_map
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
