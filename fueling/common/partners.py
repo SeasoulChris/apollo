@@ -30,4 +30,10 @@ partners = {
                               bos_bucket='baic-wly', bos_region='bj'),
     'd-kit-bqyjy-66': Partner(name='BQYJY66', email='golem_z@hotmail.com',
                               bos_bucket='cyouyou-calibration', bos_region='bj'),
+    'd-kit-sdxk-39': Partner(name='SDXK39', email='qzhenxing@xktech.com',
+                              bos_bucket='sdxk-apollo', bos_region='bj'),
+    'd-kit-szds-77': Partner(name='SZDS77', email='hummerautosys@gmail.com',
+                              bos_bucket='hummerautosys', bos_region='hkg'),
+    'd-kit-zkyzdhs-13': Partner(name='ZKYZDHS13', email='gaohongfeinn＠gmail.com',
+                              bos_bucket='drl-coolhigh', bos_region='bj'),
 }
