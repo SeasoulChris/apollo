@@ -348,9 +348,9 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
             task = original_prefix + target_postfix.replace('/' + controller, '', 1)
             logging.info(F'task_dir in summarize_tasks: {task}')
             target_file = glob.glob(os.path.join(
-                target_dir, '*performance_grading*'))
+                target_dir, '*performance_grading.txt'))
             target_conf = glob.glob(os.path.join(
-                target_dir, '*control_profiling_conf*'))
+                target_dir, '*control_profiling_conf.pb.txt'))
             scores, samples = grading_utils.highlight_gradings(
                 task, target_file)
             email_content.append(SummaryTuple(
@@ -359,7 +359,7 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
                 + len(glob.glob(os.path.join(task, '*bag*'))),
                 HDF5s=len(glob.glob(os.path.join(target_dir, '*.hdf5'))),
                 Profling=len(glob.glob(os.path.join(
-                    target_dir, '*performance_grading*'))),
+                    target_dir, '*performance_grading.txt'))),
                 Primary_Gradings=scores,
                 Sample_Sizes=samples))
             if target_file:
