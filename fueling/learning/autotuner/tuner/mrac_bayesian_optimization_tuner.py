@@ -65,21 +65,21 @@ class MRACBayesianOptimizationTuner(BaseTuner):
             logging.info(f"New MRAC Conf files: \n"
                          f"{self.algorithm_conf_pb.lat_controller_conf.steer_mrac_conf}")
 
-            training_id, score = self.black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
+            iteration_id, score = self.black_box_function(
+                self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
 
-            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
+            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, iteration_id)
             visual.plot_gp(self.optimizer, self.utility, self.pbounds, self.visual_storage_dir)
 
-            self.iteration_records.update({f'iter-{i}': {'training_id': training_id, 'target': target,
+            self.iteration_records.update({f'iter-{i}': {'iteration_id': iteration_id, 'target': target,
                                                          'config_point': next_point}})
 
             logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
 
+
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     tuner = MRACBayesianOptimizationTuner()
-    tuner.optimize()
-    tuner.get_result()
-    tuner.save_result()
+    tuner.run()

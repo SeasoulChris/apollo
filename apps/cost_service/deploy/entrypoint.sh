@@ -19,6 +19,7 @@ function mount_bos() {
 
 function start_service() {
   source /home/libs/bash.rc
+  source /apollo/scripts/apollo_base.sh
 
   LOG_DIR=/fuel/fueling/learning/autotuner/log
   mkdir -p $LOG_DIR

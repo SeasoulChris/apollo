@@ -13,6 +13,7 @@ from absl import flags
 import grpc
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
+from fueling.learning.autotuner.client.sim_client import SimClient
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.file_utils as file_utils
@@ -39,20 +40,29 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         logging.info(f"Running server in {mode} mode.")
 
         if flags.FLAGS.cloud:
-            self.submit_job = self.SubmitJobToK8s
+            self.submit_job = CostComputation.SubmitJobToK8s
         else:
-            self.submit_job = self.SubmitJobAtLocal
+            self.submit_job = CostComputation.SubmitJobAtLocal
 
-    def CreateResponse(self, training_id, exit_code, message="", score=None):
-        response = cost_service_pb2.Response()
+    @staticmethod
+    def create_init_response(exit_code, message="", token=None):
+        response = cost_service_pb2.InitResponse(token=token)
         response.status.code = exit_code
         response.status.message = message
-        response.training_id = training_id
+        return response
+
+    @staticmethod
+    def create_compute_response(exit_code, message="", iteration_id="error", score=None):
+        response = cost_service_pb2.ComputeResponse()
+        response.status.code = exit_code
+        response.status.message = message
+        response.iteration_id = iteration_id
         if score is not None:
             response.score = score
         return response
 
-    def SubmitJobAtLocal(self, options):
+    @staticmethod
+    def SubmitJobAtLocal(options):
         job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:mrac_cost_computation"
         option_strings = [f"--{name}={value}" for (name, value) in options.items()]
         cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
@@ -62,33 +72,63 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         exit_code = os.system(cmd)
         return os.WEXITSTATUS(exit_code) == 0
 
-    def SubmitJobToK8s(self, options):
+    @staticmethod
+    def SubmitJobToK8s(options):
         entrypoint = "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py"
         client = SparkSubmitterClient(entrypoint, {}, options)
         client.submit()
         return True
 
-    def ComputeMracCost(self, request, context):
-        if not request.git_info.commit_id:
-            return self.CreateResponse("error", exit_code=1, message="Commit ID not specified.")
+    def get_service_dir(self, token):
+        return f"{TMP_ROOT_DIR}/{token}"
 
-        training_id = uuid.uuid4().hex
-        tmp_dir = f"{TMP_ROOT_DIR}/{training_id}"
+    def Initialize(self, request, context):
+        if not request.git_info.commit_id:
+            return CostComputation.create_init_response(1, "Commit ID not specified.")
+        if not request.scenario_id:
+            return CostComputation.create_init_response(1, "Scenario(s) not specified.")
+
+        # Save config to a local file
+        service_token = uuid.uuid4().hex
+        tmp_dir = self.get_service_dir(service_token)
+        file_utils.makedirs(tmp_dir)
+        proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")
+
+        # init
+        num_workers = len(request.scenario_id)
+        SimClient.set_channel(flags.FLAGS.sim_service_url)
+        status = SimClient.initialize(
+            service_token,
+            request.git_info,
+            num_workers,
+            request.dynamic_model)
+
+        return CostComputation.create_init_response(
+            status.code, status.message, service_token,
+        )
+
+    def ComputeMracCost(self, request, context):
+        if not request.token:
+            return CostComputation.create_compute_response(
+                exit_code=1, message="Service token not specified.")
+
+        iteration_id = uuid.uuid4().hex
+        tmp_dir = f"{self.get_service_dir(request.token)}/{iteration_id}"
         file_utils.makedirs(tmp_dir)
 
         # Save config to a local file
-        proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/request.pb.txt")
+        proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/compute_request.pb.txt")
 
         # submit job
         options = {
             "sim_service_url": flags.FLAGS.sim_service_url,
-            "commit_id": request.git_info.commit_id,
-            "training_id": training_id,
+            "token": request.token,
+            "iteration_id": iteration_id,
         }
 
         if not self.submit_job(options):
-            return self.CreateResponse(
-                training_id, exit_code=1, message="failed to run mrac_cost_computation."
+            return CostComputation.create_compute_response(
+                exit_code=1, message="failed to compute MRAC cost."
             )
 
         # read and return score
@@ -96,16 +136,29 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             with open(f"{tmp_dir}/scores.out") as score_file:
                 scores = json.loads(score_file.readline())
 
-            response = self.CreateResponse(training_id, exit_code=0, message="Done.")
+            response = CostComputation.create_compute_response(
+                exit_code=0, message="Done.", iteration_id=iteration_id)
             for (config_id, weighted_score) in scores.items():
                 response.score[config_id] = float(weighted_score)
             return response
 
         except Exception as error:
             logging.error(f"failed to get weighted score.\n\t{error}")
-            return self.CreateResponse(
-                training_id, exit_code=1, message="failed to calculate weighted score."
+            return CostComputation.create_compute_response(
+                exit_code=1, message="failed to calculate weighted score.",
+                iteration_id=iteration_id
             )
+
+    def Close(self, request, context):
+        if not request.token:
+            response = cost_service_pb2.CloseResponse()
+            response.status.code = 1
+            response.status.message = "Service token not specified."
+            return response
+
+        SimClient.set_channel(flags.FLAGS.sim_service_url)
+        status = SimClient.close(request.token)
+        return status
 
 
 def __main__(argv):

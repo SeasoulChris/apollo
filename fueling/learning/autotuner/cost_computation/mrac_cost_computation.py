@@ -4,14 +4,12 @@ import glob
 import json
 import os
 import sys
-import time
 
 from absl import flags
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -39,9 +37,9 @@ class MracCostComputation(BaseCostComputation):
 
     def read_request(self):
         """Read and parse request from a pb file"""
-        request_pb2 = cost_service_pb2.Request()
+        request_pb2 = cost_service_pb2.ComputeRequest()
         proto_utils.get_pb_from_text_file(
-            f"{self.get_temp_dir()}/request.pb.txt", request_pb2,
+            f"{self.get_absolute_iter_dir()}/compute_request.pb.txt", request_pb2,
         )
         return request_pb2
 
@@ -50,11 +48,6 @@ class MracCostComputation(BaseCostComputation):
             id: proto_utils.pb_to_dict(config_pb)["model_config"]
             for (id, config_pb) in self.request_pb2.config.items()
         }
-
-    def get_scenarios(self):
-        scenarios = self.request_pb2.scenario_id
-        logging.info(f"Training scenarios are {scenarios}")
-        return self.to_rdd(scenarios)
 
     def get_dynamic_model(self):
         return self.request_pb2.dynamic_model
@@ -104,7 +97,7 @@ class MracCostComputation(BaseCostComputation):
 
         if not self.submit_job(options):
             logging.error(f"Fail to submit the control profiling job.")
-            time.sleep(600) # keep the exec pod for some time if error
+            self.pause_to_debug()
             return [float('nan'), 0]
 
         # extract the profiling score of the individual scenario
@@ -114,7 +107,7 @@ class MracCostComputation(BaseCostComputation):
         if not profiling_grading_dir:
             logging.error(f"Fail to acquire the control profiling grading .json file "
                           f"under the path: {bag_path}")
-            time.sleep(600) # keep the exec pod for some time if error
+            self.pause_to_debug()
             return [float('nan'), 0]
         else:
             with open(profiling_grading_dir[0], 'r') as grading_json:
@@ -127,7 +120,7 @@ class MracCostComputation(BaseCostComputation):
 
     def calculate_weighted_score(self, config_and_scores):
         if not len(config_and_scores):
-            time.sleep(600) # keep the exec pod for some time if error
+            self.pause_to_debug()
             return float('nan')
 
         # Calculate weighted score through multiple scenarios

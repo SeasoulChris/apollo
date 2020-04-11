@@ -41,6 +41,7 @@ flags.DEFINE_string(
     "Tuner storage root directory"
 )
 
+
 class BaseTuner():
     """Basic functionality for NLP."""
 
@@ -77,9 +78,7 @@ class BaseTuner():
         self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
                                        kappa=tuner_parameters.utility.kappa,
                                        xi=tuner_parameters.utility.xi)
-
-        #self.black_box_function = black_box_function(tuner_param_config_pb, algorithm_conf_pb)
-
+        self.init_cost_client()
         self.optimizer = BayesianOptimization(
             f=self.black_box_function,
             pbounds=self.pbounds,
@@ -89,29 +88,34 @@ class BaseTuner():
 
         self.tuner_storage_dir = (
             flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
-                                          else 'testdata/autotuner'
+            else 'testdata/autotuner'
         )
 
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
+    def init_cost_client(self):
+        config = self.tuner_param_config_pb
+
+        CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
+        self.cost_client = CostComputationClient(
+            config.git_info.commit_id,
+            list(config.scenarios.id),
+            config.dynamic_model,
+        )
 
     def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):
         config_id = uuid.uuid1().hex
-        CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
-        training_id, weighted_score = CostComputationClient.compute_mrac_cost(
-            tuner_param_config_pb.git_info.commit_id,
+        iteration_id, weighted_score = self.cost_client.compute_mrac_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
                 {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
                     algorithm_conf_pb)},
-            },
-            list(tuner_param_config_pb.scenarios.id),
-            tuner_param_config_pb.dynamic_model
+            }
         )
-        logging.info(f"Received score for {training_id}")
-        return training_id, weighted_score[config_id]
+        logging.info(f"Received score for {iteration_id}")
+        return iteration_id, weighted_score[config_id]
 
     def separate_repeated_param(self, parameter):
         """Seqarate the repeated messages by adding the surffix '___digit' to their names"""
@@ -156,8 +160,8 @@ class BaseTuner():
         self.optimizer = optimizer
 
     def optimize(self, n_iter=0, init_points=0):
-            "OPtimize core algorithm"
-            raise Exception("Not implemented!")
+        "Optimize core algorithm"
+        raise Exception("Not implemented!")
 
     def config_sanity_check(self, point_origin):
         point = point_origin.copy()
@@ -198,3 +202,15 @@ class BaseTuner():
         if os.path.exists(final_visual_file):
             shutil.copyfile(final_visual_file, os.path.join(saving_path, 'gaussian_process.png'))
         logging.info(f"Detailed results saved at {saving_path} ")
+
+    def run(self):
+        try:
+            self.optimize()
+            self.get_result()
+            self.save_result()
+        finally:
+            self.cleanup()
+
+    def cleanup(self):
+        if self.cost_client:
+            self.cost_client.close()

@@ -9,6 +9,7 @@ py_library(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:sim_client",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
    ],
@@ -21,6 +22,7 @@ py_binary(
         "//apps/k8s/spark_submitter:client",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
+        "//fueling/learning/autotuner/client:sim_client",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
     ],
 )
@@ -33,5 +35,6 @@ py_binary(
         "//apps/k8s/spark_submitter:client",
         "//fueling/common:proto_utils",
         "//fueling/profiling/control:multi_job_control_profiling_metrics",
+        "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
     ],
 )

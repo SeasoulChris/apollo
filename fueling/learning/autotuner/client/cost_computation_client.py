@@ -13,17 +13,26 @@ class CostComputationClient(object):
 
     CHANNEL_URL = "localhost:50052"
 
+    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None):
+        self.service_token = None
+        if commit_id and scenario_ids and dynamic_model:
+            self.initialize(commit_id, scenario_ids, dynamic_model)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     @classmethod
     def set_channel(cls, channel):
         cls.CHANNEL_URL = channel
 
-    @staticmethod
-    def construct_request(commit_id, configs, scenario_ids, dynamic_model):
+    def is_initialized(self):
+        return self.service_token is not None
+
+    def construct_init_request(self, commit_id, scenario_ids, dynamic_model):
         # validate inputs
-        if not isinstance(configs, dict):
-            raise TypeError(
-                f"incorrect config type found. Should be dict, but found {type(configs)}."
-            )
         if not isinstance(scenario_ids, list):
             raise TypeError(
                 f"incorrect scenario type found. Should be list, but found {type(scenario_ids)}."
@@ -31,11 +40,24 @@ class CostComputationClient(object):
         if not scenario_ids:
             raise ValueError("Scenario list cannot be empty.")
 
-        # construct
-        request = cost_service_pb2.Request()
+        # construct request
+        request = cost_service_pb2.InitRequest()
         request.git_info.commit_id = commit_id
-        request.dynamic_model = dynamic_model
         request.scenario_id.extend(scenario_ids)
+        request.dynamic_model = dynamic_model
+
+        return request
+
+    def construct_compute_request(self, configs):
+        # validate inputs
+        if not isinstance(configs, dict):
+            raise TypeError(
+                f"incorrect config type found. Should be dict, but found {type(configs)}."
+            )
+
+        # construct request
+        request = cost_service_pb2.ComputeRequest()
+        request.token = self.service_token
         for (config_id, path_2_pb2) in configs.items():
             if not isinstance(path_2_pb2, dict):
                 raise TypeError(
@@ -46,26 +68,57 @@ class CostComputationClient(object):
 
         return request
 
-    @classmethod
-    def compute_mrac_cost(cls, commit_id, configs, scenario_ids, dynamic_model):
-        try:
-            with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
-                stub = cost_service_pb2_grpc.CostComputationStub(channel)
-                logging.info(
-                    f"Sending compute request with commit_id {commit_id} ...")
-                request = CostComputationClient.construct_request(
-                    commit_id, configs, scenario_ids, dynamic_model)
-                response = stub.ComputeMracCost(request)
+    def construct_close_request(self):
+        return cost_service_pb2.CloseRequest(token=self.service_token)
 
-            status = response.status
-            if status.code == 0:
-                logging.info(
-                    f"Done computing cost {response.score} for training_id {response.training_id}")
-                return response.training_id, response.score
-            else:
-                logging.error(f"Error: {status.message}")
-                return None
+    def send_request(self, request_name, request_payload):
+        with grpc.insecure_channel(CostComputationClient.CHANNEL_URL) as channel:
+            stub = cost_service_pb2_grpc.CostComputationStub(channel)
+            request_function = getattr(stub, request_name)
+            response = request_function(request_payload)
 
-        except Exception as error:
-            logging.error(f"Error: {error}")
+        status = response.status
+        if status.code != 0:
+            raise Exception(f"failed to run {request_name}. "
+                            f"\n\tcode: {status.code}"
+                            f"\n\tmessage: {status.message}")
+
+        return response
+
+    def set_token(self, service_token):
+        if self.is_initialized():
+            self.close()
+
+        self.service_token = service_token
+
+    def initialize(self, commit_id, scenario_ids, dynamic_model):
+        if self.is_initialized():
+            logging.info(f"Service {self.service_token} has been initialized")
+            return
+
+        logging.info(f"Initializing service for commit {commit_id} with training scenarios {scenario_ids} ...")
+        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model)
+        response = self.send_request('Initialize', request)
+        self.service_token = response.token
+        logging.info(f"Service {self.service_token} initialized ")
+
+    def compute_mrac_cost(self, configs):
+        if not self.is_initialized():
+            logging.error("Please initialize first.")
             return None
+
+        logging.info(f"Sending compute request to service {self.service_token} ...")
+        request = self.construct_compute_request(configs)
+        response = self.send_request('ComputeMracCost', request)
+        logging.info(f"Service {self.service_token} finished computing cost {response.score} for iteration {response.iteration_id}")
+        return response.iteration_id, response.score
+
+    def close(self):
+        if not self.is_initialized():
+            return
+
+        logging.info(f"Closing {self.service_token} service ...")
+        request = self.construct_close_request()
+        response = self.send_request('Close', request)
+        logging.info(f"Service {self.service_token} closed.")
+        self.service_token = None

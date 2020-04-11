@@ -7,8 +7,9 @@ import "fueling/learning/autotuner/proto/git_info.proto";
 import "fueling/learning/autotuner/proto/sim_service.proto";
 
 service CostComputation {
-  rpc ComputeMracCost(Request) returns (Response) {
-  }
+  rpc Initialize(InitRequest) returns (InitResponse) {}
+  rpc ComputeMracCost(ComputeRequest) returns (ComputeResponse) {}
+  rpc Close(CloseRequest) returns (CloseResponse) {}
 }
 
 message ModelConfig {
@@ -16,15 +17,32 @@ message ModelConfig {
       1;  // map from local config file path to serialized config
 }
 
-message Request {
+message InitRequest {
   GitInfo git_info = 1;
-  map<string, ModelConfig> config = 2;  // config_id -> model_config
-  repeated uint32 scenario_id = 3;
-  DynamicModel dynamic_model = 4;
+  repeated uint32 scenario_id = 2;
+  DynamicModel dynamic_model = 3;
 }
 
-message Response {
+message InitResponse {
+  Status status = 1;
+  string token = 2;
+}
+
+message ComputeRequest {
+  string token = 1;
+  map<string, ModelConfig> config = 2;  // config_id -> model_config
+}
+
+message ComputeResponse {
   Status status = 1;
   map<string, float> score = 2;  // config_id -> weighted score
-  string training_id = 3;
+  string iteration_id = 3;
+}
+
+message CloseRequest {
+  string token = 1;
+}
+
+message CloseResponse {
+  Status status = 1;
 }

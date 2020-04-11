@@ -119,7 +119,7 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
 
    **//apollo-fuel/bazel-bin/fueling/learning/autotuner/tuner/mrac_bayesian_optimization_tuner.runfiles/fuel/testdata/autotuner**
 
-   For every single-step visualization, the visualization result will be save as **training_id/gaussian_process.png**, such as:
+   For every single-step visualization, the visualization result will be save as **iteration_id/gaussian_process.png**, such as:
    ```text
       bd54928a63b04bb5bc87a92525cec6e9/gaussian_process.png
       98146aa93df1475188c4bfd8125a7fc1/gaussian_process.png

@@ -51,7 +51,8 @@ class ControlBayesianOptimizationTuner(BaseTuner):
             else:
                 next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
 
-            #TODO(Yu, Qi): The following should be the one needs re-implementation and simplification
+            # TODO(Yu, Qi): The following should be the one needs re-implementation
+            # and simplification
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:
                 self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                     proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
@@ -61,21 +62,21 @@ class ControlBayesianOptimizationTuner(BaseTuner):
             self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
                 proto_utils.dict_to_pb(next_point_pb, LatControllerConf()))
 
-            training_id, score = self.black_box_function(self.tuner_param_config_pb, self.algorithm_conf_pb)
+            iteration_id, score = self.black_box_function(
+                self.tuner_param_config_pb, self.algorithm_conf_pb)
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
 
-            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, training_id)
+            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, iteration_id)
             visual.plot_gp(self.optimizer, self.utility, self.pbounds, self.visual_storage_dir)
 
-            self.iteration_records.update({f'iter-{i}': {'training_id': training_id, 'target': target,
+            self.iteration_records.update({f'iter-{i}': {'iteration_id': iteration_id, 'target': target,
                                                          'config_point': next_point}})
 
             logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
 
+
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     tuner = ControlBayesianOptimizationTuner()
-    tuner.optimize()
-    tuner.get_result()
-    tuner.save_result()
+    tuner.run()

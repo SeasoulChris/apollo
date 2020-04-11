@@ -16,16 +16,12 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
 import fueling.common.logging as logging
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
+import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.common.proto_utils as proto_utils
 
 # Flags
-flags.DEFINE_string("training_id", None, "A unique id")
-flags.DEFINE_string("commit_id", None, "Apollo commit id.")
-
-flags.DEFINE_string(
-    "scenario_path",
-    "fueling/learning/autotuner/config/sim_scenarios.csv",
-    "File path to list of scenarios in csv format.",
-)
+flags.DEFINE_string("token", None, "Sim service token.")
+flags.DEFINE_string("iteration_id", None, "A unique id")
 flags.DEFINE_string(
     "mnt_root_dir", "/mnt/bos", "BOS directory"
 )
@@ -46,12 +42,12 @@ class BaseCostComputation(BasePipeline):
         mode = "CLOUD" if self.FLAGS.get('running_mode') == 'PROD' else "LOCAL"
         logging.info(f"Running cost_computation in {mode} mode.")
 
-        if not flags.FLAGS.commit_id:
-            logging.error("Apollo commit id not specified.")
+        if not flags.FLAGS.token:
+            logging.error("Service token not specified.")
             return False
 
-        if not flags.FLAGS.training_id:
-            logging.error("Training id not specified.")
+        if not flags.FLAGS.iteration_id:
+            logging.error("Iteration id not specified.")
             return False
 
         return True
@@ -61,10 +57,6 @@ class BaseCostComputation(BasePipeline):
 
     def run_once(self):
         if not self.init():
-            return
-
-        # build
-        if not self.build():
             return
 
         # RDD(scenario_id)
@@ -97,13 +89,18 @@ class BaseCostComputation(BasePipeline):
         logging.info(f'Setting sim service url to {url}')
         SimClient.set_channel(url)
 
-    def build(self):
-        self.set_sim_channel()
-        return SimClient.trigger_build(self.FLAGS.get("commit_id"))
+    def pause_to_debug(self):
+        if self.FLAGS.get('running_mode') != 'PROD':
+            time.sleep(600)  # keep the exec pod for some time if error
 
     def get_scenarios(self):
         """Return RDD(scenario_id)"""
-        raise Exception("Not implemented!")
+        request_pb2 = cost_service_pb2.InitRequest()
+        proto_utils.get_pb_from_text_file(
+            f"{self.get_absolute_training_dir()}/init_request.pb.txt", request_pb2,
+        )
+        logging.info(f"Training scenarios are {request_pb2.scenario_id}")
+        return self.to_rdd(request_pb2.scenario_id)
 
     def get_dynamic_model(self):
         """Return dynamic model enum"""
@@ -118,25 +115,27 @@ class BaseCostComputation(BasePipeline):
         (config_id, scenario_id) = input
         logging.info(f"Setting up scenario {scenario_id} with config id {config_id}")
 
-        training_id = self.FLAGS.get("training_id")
         job_id = f"{config_id}_{scenario_id}"
-        record_relative_dir = f"{self.FLAGS.get('record_output_dir')}/{training_id}/{job_id}"
-        record_filename = f"{config_id}_{scenario_id}.record"
+        record_relative_dir = f"{self.get_relative_iter_dir()}/{job_id}"
+        record_filename = f"{job_id}.record"
 
         self.set_sim_channel()
-        success = SimClient.run_scenario(
-            training_id,
-            self.FLAGS.get("commit_id"),
+        status = SimClient.run_scenario(
+            self.FLAGS.get("token"),
+            self.FLAGS.get("iteration_id"),
             scenario_id,
             self.config_id_2_pb2[config_id],
             record_relative_dir,
             record_filename,
-            self.get_dynamic_model(),
         )
-        if not success:
+
+        if status.message.startswith('finish'):
+            logging.info(f"Done running scenario {scenario_id} for {record_filename}.")
+        else:
+            self.pause_to_debug()
             raise Exception(f"Failed to run scenario {scenario_id}")
 
-        record_absolute_dir = f"{self.get_temp_dir()}/{job_id}"
+        record_absolute_dir = f"{self.get_absolute_iter_dir()}/{job_id}"
         # Retry in case the BOS dir mounted has network delay
         for t in range(1, 6):
             if os.path.exists(f"{record_absolute_dir}/{record_filename}"):
@@ -145,7 +144,7 @@ class BaseCostComputation(BasePipeline):
             elif t == 5:
                 raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
             else:
-                logging.info(f"Retry fetching result bag in {t}min...")
+                logging.info(f"Retry fetching result bag in {t} min...")
                 time.sleep(60 * t)  # sleep time increases from 1min, to 4min
 
         return record_absolute_dir
@@ -163,9 +162,18 @@ class BaseCostComputation(BasePipeline):
         """Return a weighted score from (config, scenario) -> score(s) map"""
         raise Exception("Not implemented!")
 
-    def get_temp_dir(self):
-        return f"{self.FLAGS.get('mnt_root_dir')}/{self.FLAGS.get('record_output_dir')}/{self.FLAGS.get('training_id')}"
+    def get_relative_training_dir(self):
+        return f"{self.FLAGS.get('record_output_dir')}/{self.FLAGS.get('token')}"
+
+    def get_relative_iter_dir(self):
+        return f"{self.get_relative_training_dir()}/{self.FLAGS.get('iteration_id')}"
+
+    def get_absolute_training_dir(self):
+        return f"{self.FLAGS.get('mnt_root_dir')}/{self.get_relative_training_dir()}"
+
+    def get_absolute_iter_dir(self):
+        return f"{self.FLAGS.get('mnt_root_dir')}/{self.get_relative_iter_dir()}"
 
     def save_weighted_score(self, score):
-        with open(f"{self.get_temp_dir()}/scores.out", "w") as output_score_file:
+        with open(f"{self.get_absolute_iter_dir()}/scores.out", "w") as output_score_file:
             output_score_file.write(json.dumps(dict(score)))

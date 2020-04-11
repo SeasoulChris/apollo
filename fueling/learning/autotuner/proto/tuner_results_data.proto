@@ -10,7 +10,7 @@ message ConfigPoint {
 }
 
 message IterationDetails {
-  double training_id = 1;
+  double iteration_id = 1;
   double target = 2;
   ConfigPoint config_point = 3;
 }
