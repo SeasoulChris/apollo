@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-afs-data-service
+  labels:
+    app: afs-data-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: afs-data-service
+  template:
+    metadata:
+      labels:
+        app: afs-data-service
+    spec:
+      imagePullSecrets:
+      - name: baidubce
+      containers:
+      - name: afs-data-service
+        image: hub.baidubce.com/apollofuel/afs-data-service:20200411_0039
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 50053
+        env:
+        - name: ADB_SDK_USER
+          valueFrom:
+            secretKeyRef:
+              name: adb-secret
+              key: user 
+        - name: ADB_SDK_PASSWD 
+          valueFrom:
+            secretKeyRef:
+              name: adb-secret
+              key: passwd
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: afs-data-service
+  annotations:
+    service.beta.kubernetes.io/cce-load-balancer-subnet-id: sbn-zzhw95mf9xi8
+spec:
+  selector:
+    app: afs-data-service
+  ports:
+   - port: 50053
+     targetPort: 50053
+     protocol: TCP
+     name: grpc
+  type: LoadBalancer
+

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package afs_data_service; 
+
+service AfsDataTransfer{
+  rpc Scan(ScanRequest) returns (ScanResponse) {}
+  rpc ReadMessages(ReadMessagesRequest) returns (stream ReadMessagesResponse) {}
+}
+
+message ScanRequest {
+  repeated string dates = 1;
+}
+
+message ScanResponse {
+  repeated string record_files = 1;
+}
+
+message ReadMessagesRequest {
+  repeated string record_files = 1;
+}
+
+message ReadMessagesResponse {
+  uint32 status = 1;
+}
