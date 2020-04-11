@@ -4,14 +4,13 @@ from absl import logging
 from absl.testing import absltest
 
 from fueling.common.base_pipeline import BasePipelineTest
-from fueling.planning.datasets.dump_learning_data import DumpLearningData
+from fueling.planning.datasets.learning_data_generator import LearningDataGenerator
 
-
-class DumpLearningDataTest(BasePipelineTest):
+class LearningDataGeneratorTest(BasePipelineTest):
     def setUp(self):
-        super().setUp(DumpLearningData())
+        super().setUp(LearningDataGenerator())
 
-    def test_dump_learning_data(self):
+    def test_learning_data_generator(self):
         """test"""
         # self.assertEqual(0, self.pipeline.run_test())
 

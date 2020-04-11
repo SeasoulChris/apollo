@@ -11,8 +11,8 @@ py_library(
 )
 
 py_binary(
-    name = "dump_learning_data",
-    srcs = ["dump_learning_data.py"],
+    name = "learning_data_generator",
+    srcs = ["learning_data_generator.py"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
@@ -22,10 +22,10 @@ py_binary(
 )
 
 py_test(
-    name = "dump_learning_data_test",
-    srcs = ["dump_learning_data_test.py"],
+    name = "learning_data_generator_test",
+    srcs = ["learning_data_generator_test.py"],
     deps = [
-        ":dump_learning_data",
+        ":learning_data_generator",
     ],
 )
 

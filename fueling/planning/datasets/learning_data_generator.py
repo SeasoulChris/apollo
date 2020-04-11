@@ -8,7 +8,7 @@ import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 
-class DumpLearningData(BasePipeline):
+class LearningDataGenerator(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
@@ -67,7 +67,7 @@ class DumpLearningData(BasePipeline):
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/planning/data_pipelines/scripts/'
-            'records_to_data_for_learning.sh '
+            'record_to_learning_data.sh '
             '"{}" "{}" "{}"'.format(src_dir, dest_dir, map_name))
 
         if os.system(command) == 0:
@@ -82,4 +82,4 @@ class DumpLearningData(BasePipeline):
 
 
 if __name__ == '__main__':
-    DumpLearningData().main()
+    LearningDataGenerator().main()
