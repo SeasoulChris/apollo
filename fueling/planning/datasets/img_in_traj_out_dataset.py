@@ -109,8 +109,8 @@ class TrajectoryImitationRNNDataset(Dataset):
             # 12 channels is used
             transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
                                  std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
-        self.img_pred_transform = transforms.Compose([
-            # Normalized to [0, 1] is good enough
+        self.img_bitmap_transform = transforms.Compose([
+            # Normalized to [0, 1]
             transforms.ToTensor()])
         self.instances = []
 
@@ -160,12 +160,19 @@ class TrajectoryImitationRNNDataset(Dataset):
         if self.img_feature_transform:
             img_feature = self.img_feature_transform(img_feature)
 
+        offroad_mask = self.chauffeur_net_feature_generator.render_offroad_mask(frame.localization.position.x,
+                                                                                frame.localization.position.y,
+                                                                                frame.localization.heading)
+        if self.img_bitmap_transform:
+            offroad_mask = self.img_bitmap_transform(offroad_mask)
+
         ref_coords = [frame.localization.position.x,
                       frame.localization.position.y,
                       frame.localization.heading]
         pred_points = np.zeros((0, 4))
-        pred_pose_dists = torch.rand(30, 1 , 224, 224)
+        pred_pose_dists = torch.rand(30, 1, 224, 224)
         pred_boxs = torch.rand(30, 1, 224, 224)
+        pred_obs = torch.rand(30, 1, 224, 224)
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
             # TODO(Jinyun): validate future trajectory points size and deltaT, 30 points
             if i + 1 > 30:
@@ -187,18 +194,27 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                                     frame.localization.heading,
                                                                                     frame.output.adc_future_trajectory_point,
                                                                                     i)
-            if self.img_pred_transform:
-                gt_pose_dist = self.img_pred_transform(gt_pose_dist)
-            pred_pose_dists[i,:,:,:] = gt_pose_dist
+            if self.img_bitmap_transform:
+                gt_pose_dist = self.img_bitmap_transform(gt_pose_dist)
+            pred_pose_dists[i, :, :, :] = gt_pose_dist
 
             gt_pose_box = self.chauffeur_net_feature_generator.render_gt_box(frame.localization.position.x,
                                                                              frame.localization.position.y,
                                                                              frame.localization.heading,
                                                                              frame.output.adc_future_trajectory_point,
                                                                              i)
-            if self.img_pred_transform:
-                gt_pose_box = self.img_pred_transform(gt_pose_box)
-            pred_boxs[i,:,:,:] = gt_pose_box
+            if self.img_bitmap_transform:
+                gt_pose_box = self.img_bitmap_transform(gt_pose_box)
+            pred_boxs[i, :, :, :] = gt_pose_box
+
+            pred_obs_box = self.chauffeur_net_feature_generator.render_obstacle_box_prediction_frame(frame.localization.position.x,
+                                                                                                     frame.localization.position.y,
+                                                                                                     frame.localization.heading,
+                                                                                                     frame.obstacle,
+                                                                                                     i)
+            if self.img_bitmap_transform:
+                pred_obs_box = self.img_bitmap_transform(pred_obs_box)
+            pred_obs[i, :, :, :] = pred_obs_box
 
         # TODO(Jinyun): it's a tmp fix, will add data clean to make sure output point size is right
         if pred_points.shape[0] < 30:
@@ -206,8 +222,10 @@ class TrajectoryImitationRNNDataset(Dataset):
 
         return (img_feature,
                 (pred_pose_dists,
-                pred_boxs,
-                torch.from_numpy(pred_points).float()))
+                 pred_boxs,
+                 torch.from_numpy(pred_points).float(),
+                 pred_obs,
+                 offroad_mask))
 
 
 if __name__ == '__main__':
