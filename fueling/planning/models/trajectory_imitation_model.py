@@ -221,3 +221,38 @@ class TrajectoryImitationRNNLoss():
         out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
         out = torch.mean(out)
         return out
+
+class TrajectoryImitationWithEnvRNNLoss():
+    def loss_fn(self, y_pred, y_true):
+        batch_size = y_pred[0].shape[0]
+        pred_pos_dists = y_pred[0].view(batch_size, -1)
+        pred_boxs = y_pred[1].view(batch_size, -1)
+        pred_points = y_pred[2].view(batch_size, -1)
+        true_pos_dists = y_true[0].view(batch_size, -1)
+        true_boxs = y_true[1].view(batch_size, -1)
+        true_points = y_true[2].view(batch_size, -1)
+        true_pred_obs = y_true[3].view(batch_size, -1)
+        true_offroad_mask = y_true[4].view(batch_size, -1)
+
+        pos_dist_loss = nn.BCELoss()(pred_pos_dists, true_pos_dists)
+
+        box_loss = nn.BCELoss()(pred_boxs, true_boxs)
+
+        pos_reg_loss = nn.L1Loss()(pred_points, true_points)
+
+        collision_loss = torch.mean(pred_boxs * true_pred_obs)
+
+        offroad_loss = torch.mean(pred_boxs * true_offroad_mask)
+
+        return pos_dist_loss + box_loss + pos_reg_loss + collision_loss + offroad_loss
+
+    def loss_info(self, y_pred, y_true):
+        # Focus on pose displacement error
+        pred_points = y_pred[2]
+        true_points = y_true[2]
+        points_diff = pred_points - true_points
+        pose_diff = points_diff[:, :, 0:2]
+        
+        out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
+        out = torch.mean(out)
+        return out
