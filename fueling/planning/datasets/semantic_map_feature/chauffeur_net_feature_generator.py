@@ -36,7 +36,7 @@ class ChauffeurNetFeatureGenerator(object):
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer()
         self.obstacles_mapping = ObstaclesImgRenderer()
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer()
-        self.offroad_mask_mapping = OffroadMaskImgRenderer()
+        self.offroad_mask_mapping = OffroadMaskImgRenderer(region)
         self.road_map_mapping = RoadMapImgRenderer(region)
         self.routing_mapping = RoutingImgRenderer(region)
         self.speed_limit_mapping = SpeedLimitImgRenderer(region)
