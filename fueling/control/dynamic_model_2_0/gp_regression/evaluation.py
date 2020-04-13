@@ -16,26 +16,36 @@ def evaluation(args, dataset, GaussianProcess):
     """Load GP model params from files and make predictions and testset"""
     # get training data
     input_data, gt_data = dataset.get_test_data()
+    features, labels = dataset.get_train_data()
     # reformulate training data
     input_data = torch.transpose(input_data, 0, 1)
+
+    features = torch.transpose(features, 0, 1)
+    # [batch_size, channel] (window_size = 1)
+    labels = torch.transpose(labels, 0, 1)
+
     input_dim = input_data.shape[-1]
     batch_size = input_data.shape[-2]
     output_dim = gt_data.shape[-1]
 
     logging.debug(f'input data shape is {input_data.shape}')
     logging.info(f'output data shape is {gt_data.shape}')
+    logging.info("************Input Dim: {}".format(features.shape))
+    logging.info("************Output Dim: {}".format(labels.shape))
+    step_size = int(max(features.shape[-2] / args.num_inducing_point, 1))
+    logging.info(f'step_size: {step_size}')
 
-    inducing_points = input_data[:, torch.arange(0, batch_size,
-                                                 step=int(max(batch_size / args.num_inducing_point, 1))).long(), :]
+    inducing_points = features[:, torch.arange(0, features.shape[-2], step=step_size), :]
+
     logging.info(f'inducing_points shape is {inducing_points.shape}')
     # load state dict
     file_path = os.path.join(args.gp_model_path, 'gp.pth')
     logging.info("************Loading GP model from {}".format(file_path))
-    state_dict = torch.load(file_path)
+    model_state_dict = torch.load(file_path)
     # model
-    encoder_net_model = Encoder(u_dim=input_dim, kernel_dim=args.kernel_dim)
+    encoder_net_model = Encoder(u_dim=features.shape[-1], kernel_dim=args.kernel_dim)
     gp_model = GPModel(inducing_points, encoder_net_model, output_dim)
-    gp_model.load_state_dict(state_dict)
+    gp_model.load_state_dict(model_state_dict)
     # predicted results
     gp_model.eval()
     logging.info(input_data.shape)
@@ -79,7 +89,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data")
     # default = "/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data"
     parser.add_argument(
         '--testing_data_path',
@@ -101,7 +111,7 @@ if __name__ == '__main__':
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
     parser.add_argument('--Delta_t', type=float, default=1)
-    parser.add_argument('--num_inducing_point', type=int, default=10)
+    parser.add_argument('--num_inducing_point', type=int, default=400)
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters

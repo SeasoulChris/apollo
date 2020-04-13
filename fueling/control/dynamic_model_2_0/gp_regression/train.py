@@ -4,6 +4,7 @@ import os
 import time
 
 from torch.utils.data import TensorDataset, DataLoader
+from torch.optim.lr_scheduler import MultiStepLR
 import numpy as np
 import gpytorch
 import torch
@@ -48,6 +49,8 @@ def train_and_save(args, dataset, gp_class):
         {'params': model.parameters()},
         {'params': likelihood.parameters()},
     ], lr=args.lr)
+    # scheduler = MultiStepLR(optimizer, milestones=[
+    #                         0.25 * args.epochs, 0.25 * args.epochs, 0.75 * args.epochs], gamma=0.5)
 
     logging.info("Start of training")
 
@@ -59,23 +62,24 @@ def train_and_save(args, dataset, gp_class):
         loss = -mll(output, labels)
         loss.backward(retain_graph=True)
         optimizer.step()
+        # scheduler.step()
         logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
     # save model as state_dict
     timestr = time.strftime('%Y%m%d-%H%M%S')
-    state_dict_file_path = args.gp_model_path
-    # commented for test purpose
+    # state_dict_file_path = args.gp_model_path
+
     # with time stamp
-    # state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    state_dict_file_path = os.path.join(args.gp_model_path, timestr)
     save_model_state_dict(model, likelihood, state_dict_file_path)
     # save model as torchscript
-    jit_file_path = args.online_gp_model_path
-    # commented for test purpose
+    # jit_file_path = args.online_gp_model_path
+
     # with time stamp
-    # state_dict_file_path = os.path.join(args.gp_model_path, timestr)
-    test_features, test_labels = dataset.get_train_data()
+    jit_file_path = os.path.join(args.online_gp_model_path, timestr)
+    test_features, test_labels = dataset.get_test_data()
     test_features = torch.transpose(test_features, 0, 1)
     save_model_torch_script(model, test_features, jit_file_path)
 
@@ -119,7 +123,6 @@ if __name__ == '__main__':
         '--training_data_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
-    # default = "/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data"
     parser.add_argument(
         '--testing_data_path',
         type=str,
@@ -146,7 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters
-    parser.add_argument('--epochs', type=int, default=70)
+    parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--lr_decay', type=float, default=0.999)
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
