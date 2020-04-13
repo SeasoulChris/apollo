@@ -21,23 +21,23 @@ class Mapping(object):
             self.resolution = 0.1
             self.GRID = [28000, 20000]
         elif (self.region == "baidudasha"):
-            self.base_point = np.array([439700, 4433250])
+            self.base_point = np.array([439600, 4433150])
             self.resolution = 0.1
-            self.GRID = [4100, 5100]
+            self.GRID = [6100, 7100]
         elif (self.region == "XiongAn"):
-            self.base_point = np.array([405100, 4322300])
+            self.base_point = np.array([405000, 4322200])
             self.resolution = 0.1
-            self.GRID = [6700, 8300]
+            self.GRID = [8700, 10300]
         elif (self.region == "XiaMen"):
-            self.base_point = np.array([597700, 2720000])
+            self.base_point = np.array([597600, 2719900])
             self.resolution = 0.1
-            self.GRID = [9800, 10300]
+            self.GRID = [11800, 12300]
         else:
             (p_min, p_max) = self._read_hdmap()
-            self.base_point = p_min - 100.0
+            self.base_point = p_min - 200.0
             self.resolution = 0.1
-            self.GRID = [int((p_max[0] - p_min[0] + 200.0) / self.resolution),
-                         int((p_max[1] - p_min[1] + 200.0) / self.resolution)]
+            self.GRID = [int((p_max[0] - p_min[0] + 400.0) / self.resolution),
+                         int((p_max[1] - p_min[1] + 400.0) / self.resolution)]
 
         self.base_map = np.zeros([self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
         self._read_hdmap()
