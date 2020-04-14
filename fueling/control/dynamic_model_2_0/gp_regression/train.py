@@ -4,7 +4,7 @@ import os
 import time
 
 from torch.utils.data import TensorDataset, DataLoader
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
 import gpytorch
 import torch
@@ -49,8 +49,9 @@ def train_and_save(args, dataset, gp_class):
         {'params': model.parameters()},
         {'params': likelihood.parameters()},
     ], lr=args.lr)
-    # scheduler = MultiStepLR(optimizer, milestones=[
-    #                         0.25 * args.epochs, 0.25 * args.epochs, 0.75 * args.epochs], gamma=0.5)
+    # adjust learning rate
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
+                                  verbose=True, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
 
     logging.info("Start of training")
 
@@ -62,25 +63,26 @@ def train_and_save(args, dataset, gp_class):
         loss = -mll(output, labels)
         loss.backward(retain_graph=True)
         optimizer.step()
-        # scheduler.step()
+        scheduler.step(loss)
         logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
     # save model as state_dict
     timestr = time.strftime('%Y%m%d-%H%M%S')
-    # state_dict_file_path = args.gp_model_path
-
     # with time stamp
     state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    if not os.path.exists(state_dict_file_path):
+        os.makedirs(state_dict_file_path)
     save_model_state_dict(model, likelihood, state_dict_file_path)
-    # save model as torchscript
-    # jit_file_path = args.online_gp_model_path
 
+    # save model as torchscript
     # with time stamp
     jit_file_path = os.path.join(args.online_gp_model_path, timestr)
     test_features, test_labels = dataset.get_test_data()
     test_features = torch.transpose(test_features, 0, 1)
+    if not os.path.exists(jit_file_path):
+        os.makedirs(jit_file_path)
     save_model_torch_script(model, test_features, jit_file_path)
 
 

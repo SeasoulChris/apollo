@@ -44,6 +44,7 @@ def evaluation(args, dataset, GaussianProcess):
     model_state_dict = torch.load(file_path)
     # model
     encoder_net_model = Encoder(u_dim=features.shape[-1], kernel_dim=args.kernel_dim)
+    # TODO(Shu): check if it is necessary to use training data for initialization
     gp_model = GPModel(inducing_points, encoder_net_model, output_dim)
     gp_model.load_state_dict(model_state_dict)
     # predicted results
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
     parser.add_argument('--Delta_t', type=float, default=1)
-    parser.add_argument('--num_inducing_point', type=int, default=400)
+    parser.add_argument('--num_inducing_point', type=int, default=10)
     parser.add_argument('--kernel_dim', type=int, default=20)
 
     # optimizer parameters
