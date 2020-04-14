@@ -10,36 +10,37 @@ tuner_parameters {
     kappa: 3.0
     xi: 1.0
   }
-  n_iter: 30
+  n_iter: 19
   init_points_1D: 3
   opt_max: false
   flag {
     flag_name: "enable_steer_mrac_control"
+    flag_dir: "lat_controller_conf"
     enable: false
   }
   parameter {
     parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
     min: 0.01
     max: 1.0
-    is_repeated: true
   }
   parameter {
     parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
     min: 0.001
     max: 0.1
-    is_repeated: true
   }
   parameter {
     parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
     min: 0.01
     max: 1.0
-    is_repeated: true
   }
   parameter {
     parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
     min: 0.001
     max: 0.1
-    is_repeated: true
   }
 }
 scenarios {

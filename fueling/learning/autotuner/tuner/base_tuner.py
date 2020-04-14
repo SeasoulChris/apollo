@@ -12,15 +12,8 @@ from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
 import numpy as np
 
-from modules.control.proto.control_conf_pb2 import ControlConf
-from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
-from modules.control.proto.mrac_conf_pb2 import MracConf
-
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
-from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils \
-    import BayesianOptimizationVisualUtils
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -45,26 +38,19 @@ flags.DEFINE_string(
 class BaseTuner():
     """Basic functionality for NLP."""
 
-    def __init__(self):
+    def __init__(self, tuner_conf, user_conf):
         logging.info(f"Init BayesianOptimization Tuner.")
+
+        self.tuner_param_config_pb = tuner_conf
+        self.algorithm_conf_pb = user_conf
+
         # Bounded region of parameter space
         self.pbounds = {}
-
-        self.tuner_param_config_pb = TunerConfigs()
-
-        # Read and parse config from a pb file
-        try:
-            proto_utils.get_pb_from_text_file(
-                flags.FLAGS.tuner_param_config_filename, self.tuner_param_config_pb,
-            )
-            logging.debug(f"Parsed autotune config files {self.tuner_param_config_pb}")
-
-        except Exception as error:
-            logging.error(f"Failed to parse autotune config: {error}")
-
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
         #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
         for parameter in tuner_parameters.parameter:
+            if parameter.parameter_dir:
+                parameter.parameter_name = parameter.parameter_dir + "." + parameter.parameter_name
             parameter = self.separate_repeated_param(parameter)
             self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
 
@@ -117,9 +103,25 @@ class BaseTuner():
         logging.info(f"Received score for {iteration_id}")
         return iteration_id, weighted_score[config_id]
 
+    def parse_param_to_proto(self, parameter_name):
+        """Parse the parameters to generate all the elements in the form of protobf"""
+        message_name = parameter_name.split('.')[0:-1]
+        field_name = parameter_name.split('.')[-1]
+        message = self.algorithm_conf_pb
+        for name in message_name:
+            message = getattr(message, name)
+        # DESCRIPTOR attribute 'full_name' is formatted as 'Package Name + Enclosing Type Name + Field name'
+        # For example, 'apollo.control.LatControllerConf.matrix_q'
+        config_name = message.DESCRIPTOR.fields_by_name[field_name].full_name.split('.')[-2]
+        # DESCRIPTOR attribute 'label' is formatted as 'OPTIONAL = 1, REPEATED = 3, REQUIRED = 2'
+        label = message.DESCRIPTOR.fields_by_name[field_name].label
+        is_repeated = True if label is 3 else False
+        return message, config_name, field_name, is_repeated
+
     def separate_repeated_param(self, parameter):
         """Seqarate the repeated messages by adding the surffix '___digit' to their names"""
-        if parameter.is_repeated:
+        _, _, _, is_repeated = self.parse_param_to_proto(parameter.parameter_name)
+        if is_repeated:
             repeated_keys = [key for key in self.pbounds if parameter.parameter_name in key]
             parameter.parameter_name += ('___' + str(len(repeated_keys)))
         return parameter

@@ -7,14 +7,15 @@ import "fueling/learning/autotuner/proto/git_info.proto";
 
 message Parameter {
   string parameter_name = 1;
-  double min = 2;
-  double max = 3;
-  bool is_repeated = 4;
+  string parameter_dir = 2;
+  double min = 3;
+  double max = 4;
 }
 
 message Flag {
   string flag_name = 1;
-  bool enable = 2;
+  string flag_dir = 2;
+  bool enable = 3;
 }
 
 message TunerParameters {

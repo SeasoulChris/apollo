@@ -2,17 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@default_deps//:requirements.bzl", "requirement")
 
-py_binary(
-    name = "mrac_bayesian_optimization_tuner",
-    srcs = ["mrac_bayesian_optimization_tuner.py"],
-    data = [
-        "//fueling/learning/autotuner/config",
-    ],
-    deps = [
-        "//fueling/learning/autotuner/tuner:base_tuner",
-        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
-    ],
-)
 
 py_binary(
     name = "optuna_tuner",

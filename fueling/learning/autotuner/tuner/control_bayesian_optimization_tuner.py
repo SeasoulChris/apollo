@@ -1,26 +1,23 @@
 import argparse
-from datetime import datetime
-import json
 import os
-import shutil
 import sys
-import uuid
 
 from absl import flags
-from bayes_opt import BayesianOptimization
-from bayes_opt.util import UtilityFunction, Colours
-import google.protobuf.text_format as text_format
 import numpy as np
 
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
+from modules.control.proto.lon_controller_conf_pb2 import LonControllerConf
+from modules.control.proto.mpc_controller_conf_pb2 import MPCControllerConf
+from modules.control.proto.gain_scheduler_conf_pb2 import GainScheduler
+from modules.control.proto.leadlag_conf_pb2 import LeadlagConf
+from modules.control.proto.mrac_conf_pb2 import MracConf
+from modules.control.proto.pid_conf_pb2 import PidConf
 
-from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
 from fueling.learning.autotuner.tuner.bayesian_optimization_visual_utils \
     import BayesianOptimizationVisualUtils
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
@@ -29,16 +26,31 @@ class ControlBayesianOptimizationTuner(BaseTuner):
     """Basic functionality for NLP."""
 
     def __init__(self):
-        BaseTuner.__init__(self)
-        self.algorithm_conf_pb = ControlConf()
+        tuner_conf = TunerConfigs()
+        user_conf = ControlConf()  # Basic configuration corresponding to user module
+
+        # Read and parse config from a pb file
         try:
             proto_utils.get_pb_from_text_file(
-                self.tuner_param_config_pb.tuner_parameters.default_conf_filename, self.algorithm_conf_pb,
+                flags.FLAGS.tuner_param_config_filename, tuner_conf,
             )
-            logging.debug(f"Parsed control config files {self.algorithm_conf_pb}")
+            logging.debug(f"Parsed autotune config files {tuner_conf}")
 
         except Exception as error:
-            logging.error(f"Failed to parse control config: {error}")
+            logging.error(f"Failed to parse autotune config: {error}")
+            sys.exit(1)
+
+        try:
+            proto_utils.get_pb_from_text_file(
+                tuner_conf.tuner_parameters.default_conf_filename, user_conf,
+            )
+            logging.debug(f"Parsed user config files {user_conf}")
+
+        except Exception as error:
+            logging.error(f"Failed to parse user config: {error}")
+            sys.exit(1)
+
+        BaseTuner.__init__(self, tuner_conf, user_conf)
 
     def optimize(self, n_iter=0, init_points=0):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
@@ -51,16 +63,22 @@ class ControlBayesianOptimizationTuner(BaseTuner):
             else:
                 next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
 
-            # TODO(Yu, Qi): The following should be the one needs re-implementation
-            # and simplification
-            for flag in self.tuner_param_config_pb.tuner_parameters.flag:
-                self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
-                    proto_utils.dict_to_pb({flag.flag_name: flag.enable}, LatControllerConf()))
             next_point_pb = self.merge_repeated_param(next_point)
-            for field in next_point_pb:
-                self.algorithm_conf_pb.lat_controller_conf.ClearField(field)
-            self.algorithm_conf_pb.lat_controller_conf.MergeFrom(
-                proto_utils.dict_to_pb(next_point_pb, LatControllerConf()))
+
+            for proto in next_point_pb:
+                message, config_name, field_name, _ = self.parse_param_to_proto(proto)
+                config = eval(config_name + '()')
+                message.ClearField(field_name)
+                message.MergeFrom(proto_utils.dict_to_pb({field_name: next_point_pb[proto]}, config))
+                logging.info(f"\n  {proto}: {getattr(message, field_name)}")
+
+            for flag in self.tuner_param_config_pb.tuner_parameters.flag:
+                flag_full_name = flag.flag_dir + '.' + flag.flag_name if flag.flag_dir else flag.flag_name
+                message, config_name, flag_name, _ = self.parse_param_to_proto(flag_full_name)
+                config = eval(config_name + '()')
+                message.ClearField(flag_name)
+                message.MergeFrom(proto_utils.dict_to_pb({flag_name: flag.enable}, config))
+                logging.info(f"\n  {flag_full_name}: {getattr(message, flag_name)}")
 
             iteration_id, score = self.black_box_function(
                 self.tuner_param_config_pb, self.algorithm_conf_pb)
