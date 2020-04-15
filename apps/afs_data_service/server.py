@@ -1,14 +1,12 @@
 #!/usr/bin/env python
+
 from concurrent import futures
 import os
 import time
-#import sys
-#reload(sys)
-#sys.setdefaultencoding('utf8')
+
 from absl import app
-import future
 import grpc
-from future.utils.surrogateescape import register_surrogateescape
+
 from adbsdk import cmm
 from adbsdk.adb_client import AdbClient
 from adbsdk.dump.record_dump import RecordDump
@@ -25,13 +23,9 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         self.adb_client = AdbClient()
         # TODO(weixiao): Replace IP with a list
         self.adb_client.set_config('adb.server.hosts', '10.197.199.17:8010')
-        self.adb_client.set_config(
-            'adb.export_server.hosts',
-            '10.90.222.37:8000')
+        self.adb_client.set_config('adb.export_server.hosts', '10.90.222.37:8000')
         self.adb_client.set_config('adb.user', os.environ.get('ADB_SDK_USER'))
-        self.adb_client.set_config(
-            'adb.pass', os.environ.get('ADB_SDK_PASSWD'))
-
+        self.adb_client.set_config('adb.pass', os.environ.get('ADB_SDK_PASSWD'))
         print('AfsDataTransfer server running with adbsdk client setup.')
 
     def Scan(self, request, context):
@@ -45,7 +39,6 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         response = afs_data_service_pb2.ScanResponse()
         for scan_result in scan_result_iterator:
             if not scan_result.success:
-                #raise Exception('exception occurred: %s' % (scan_result.errMessage, ))
                 print('exception occurred: {}'.format(scan_result.errMessage))
                 continue
             print('rowKey:{}, task_id: {}, stime: {}, etime: {}'.format(
@@ -56,10 +49,8 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             responseItem = afs_data_service_pb2.ScanResponseItem()
             responseItem.rowKey = scan_result.rowKey
             responseItem.task_id = scan_result.meta['task_id'].str
-            responseItem.start_time = int(
-                float((scan_result.meta['start_time'].str)))
-            responseItem.end_time = int(
-                float((scan_result.meta['end_time'].str)))
+            responseItem.start_time = int(float((scan_result.meta['start_time'].str)))
+            responseItem.end_time = int(float((scan_result.meta['end_time'].str)))
             response.records.append(responseItem)
         return response
 
@@ -72,13 +63,11 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             request.start_time_second,
             request.end_time_second,
             request.table_name)
-        register_surrogateescape()
         for topic, message, data_type, timestamp in messages:
             print('task_id:{}, topic:{}, data_type:{}, timestamp:{}'.format(
-                request.task_id, topic, data_type, timestamp))
+                  request.task_id, topic, data_type, timestamp))
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
-            #response.message = message.decode('utf-8', 'surrogateescape')
             response.message = message
             response.data_type = data_type
             response.timestamp = timestamp
