@@ -28,6 +28,7 @@ RUN apt update -y && \
 # Python libs
 RUN pip install --no-cache-dir \
     absl-py \
+    future \
     protobuf \
     pyyaml \
     grpcio \

@@ -4,6 +4,7 @@ import os
 import time
 
 from absl import app
+import future
 import grpc
 
 from adbsdk import cmm
@@ -69,13 +70,13 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             request.start_time_second,
             request.end_time_second,
             request.table_name)
+        future.utils.surrogateescape.register_surrogateescape()
         for topic, message, data_type, timestamp in messages:
             print('task_id:{}, topic:{}, data_type:{}, timestamp:{}'.format(
                 request.task_id, topic, data_type, timestamp))
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
-            response.message = message.decode(
-                'latin1').encode('utf-8', 'surrogateescape')
+            response.message = message.encode('utf-8', 'surrogateescape')
             response.data_type = data_type
             response.timestamp = timestamp
             yield response
