@@ -8,17 +8,35 @@ service AfsDataTransfer{
 }
 
 message ScanRequest {
-  repeated string dates = 1;
+  string table_name = 1; // adb table name, e.g.: kinglong/auto_car/cyberecord
+  string where = 2; // scan condition, e.g.: task_id = MKZ053_20200108165555 and xxx = yyy
+  string columns = 3; // scan columns, separated by commam e.g.: meta.task_id, default scan all columns
+  string order = 4; // scan result order by column, e.g.: meta.task_id
+  uint32 limit = 5; // scan limit count
+}
+
+message ScanResponseItem {
+  string rowKey = 1;
+  string task_id = 2;
+  uint32 start_time = 3;
+  uint32 end_time = 4;
 }
 
 message ScanResponse {
-  repeated string record_files = 1;
+  repeated ScanResponseItem records = 1;
 }
 
 message ReadMessagesRequest {
-  repeated string record_files = 1;
+  string task_id = 1;
+  string topics = 2; // e.g.:  '/sensor/gnss/raw_data,/pnc/carstatus'，default all topics
+  uint32 start_time_second = 3;
+  uint32 end_time_second = 4;
+  string table_name = 5; // e.g.: 'kinglong/auto_car'
 }
 
 message ReadMessagesResponse {
-  uint32 status = 1;
+  string topic = 1;
+  string message = 2;
+  string data_type = 3;
+  uint64 timestamp = 4;
 }
