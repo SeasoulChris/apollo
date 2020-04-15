@@ -33,8 +33,13 @@ def train_and_save(args, dataset, gp_class):
     likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=output_dim)
 
     # Define the inducing points of Gaussian Process
-    inducing_points = features[:, torch.arange(0, batch_size,
-                                               step=int(max(batch_size / args.num_inducing_point, 1))).long(), :]
+    # inducing_points = features[:, torch.arange(0, batch_size,
+    #                                            step=int(max(batch_size / args.num_inducing_point, 1))).long(), :]
+    step_size = int(max(batch_size / args.num_inducing_point, 1))
+    logging.info(f'step size is: {step_size}')
+    inducing_point_num = torch.arange(0, batch_size, step=step_size).long()
+    logging.info(f'inducing point indices are {inducing_point_num}')
+    inducing_points = features[:, inducing_point_num, :]
     logging.info('inducing points data shape: {}'.format(inducing_points.shape))
     encoder_net_model = Encoder(u_dim=input_dim, kernel_dim=args.kernel_dim)
     model = GPModel(inducing_points=inducing_points,
@@ -67,6 +72,7 @@ def train_and_save(args, dataset, gp_class):
         logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
         if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
+    # return
 
     # save model as state_dict
     timestr = time.strftime('%Y%m%d-%H%M%S')

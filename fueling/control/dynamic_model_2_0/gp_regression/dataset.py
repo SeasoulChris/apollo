@@ -40,7 +40,8 @@ class GPDataSet(Dataset):
         """
         Generate training data from a list of labeled data
         """
-        datasets = glob.glob(os.path.join(self.training_data_path, '*.h5'))
+        datasets = glob.glob(os.path.join(self.training_data_path, '**/*.h5'), recursive=True)
+        logging.info(len(datasets))
         if self.use_cuda:
             input_data = torch.zeros(0, INPUT_LENGTH, INPUT_DIM).cuda
             output_data = torch.zeros(OUTPUT_DIM, 0).cuda

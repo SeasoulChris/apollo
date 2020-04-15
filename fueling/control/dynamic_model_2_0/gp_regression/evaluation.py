@@ -87,16 +87,18 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='GP')
     # paths
-    parser.add_argument(
-        '--training_data_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data")
+    parser.add_argument('-train',
+                        '--training_data_path',
+                        type=str,
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data")
     # default = "/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data"
     parser.add_argument(
+        '-test',
         '--testing_data_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
     parser.add_argument(
+        '-md',
         '--gp_model_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
