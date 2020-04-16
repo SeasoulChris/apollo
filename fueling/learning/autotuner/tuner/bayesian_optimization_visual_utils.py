@@ -121,8 +121,8 @@ class BayesianOptimizationVisualUtils():
             plt.colorbar(acq_im, ax=fig_acq)
             fig_acq.set_xlim((param_min[0], param_max[0]))
             fig_acq.set_ylim((param_min[1], param_max[1]))
-            fig_acq.set_xlabel(param_name[0], fontdict={'size':12})
-            fig_acq.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_acq.set_xlabel(param_name[0].split('.')[-1], fontdict={'size':12})
+            fig_acq.set_ylabel(param_name[1].split('.')[-1], fontdict={'size':12})
             fig_acq.set_title('Gaussian Process Acquisition Function')
 
             mean_value = np.array([[mean] for mean in mu])
@@ -134,8 +134,8 @@ class BayesianOptimizationVisualUtils():
             plt.colorbar(mean_im, ax=fig_mean)
             fig_mean.set_xlim((param_min[0], param_max[0]))
             fig_mean.set_ylim((param_min[1], param_max[1]))
-            fig_mean.set_xlabel(param_name[0], fontdict={'size':12})
-            fig_mean.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_mean.set_xlabel(param_name[0].split('.')[-1], fontdict={'size':12})
+            fig_mean.set_ylabel(param_name[1].split('.')[-1], fontdict={'size':12})
             fig_mean.set_title('Gaussian Process Predicted Mean')
 
             std_value = np.array([[std] for std in sigma])
@@ -147,22 +147,32 @@ class BayesianOptimizationVisualUtils():
             plt.colorbar(std_im, ax=fig_std)
             fig_std.set_xlim((param_min[0], param_max[0]))
             fig_std.set_ylim((param_min[1], param_max[1]))
-            fig_std.set_xlabel(param_name[0], fontdict={'size':12})
-            fig_std.set_ylabel(param_name[1], fontdict={'size':12})
+            fig_std.set_xlabel(param_name[0].split('.')[-1], fontdict={'size':12})
+            fig_std.set_ylabel(param_name[1].split('.')[-1], fontdict={'size':12})
             fig_std.set_title('Gaussian Process Predicted Standard-Deviation')
 
             fig_tgt.scatter(x_obs[:, 0], x_obs[:, 1], y_obs)
             fig_tgt.set_xlim((param_min[0], param_max[0]))
             fig_tgt.set_ylim((param_min[1], param_max[1]))
-            fig_tgt.set_xlabel(param_name[0], fontdict={'size':10})
-            fig_tgt.set_ylabel(param_name[1], fontdict={'size':10})
+            fig_tgt.set_xlabel(param_name[0].split('.')[-1], fontdict={'size':10})
+            fig_tgt.set_ylabel(param_name[1].split('.')[-1], fontdict={'size':10})
             fig_tgt.set_zlabel('Target', fontdict={'size':10})
             fig_tgt.set_title('Gaussian Process Target Value')
 
             gs.tight_layout(self.figure, rect=[0, 0.03, 1, 0.95])
 
         else:
-            logging.info(f"No visualization display for paramter size: {len(param_name)}")
+            gs = gridspec.GridSpec(len(param_name), 1)
+            for i in range(len(param_name)):
+                axis = plt.subplot(gs[i])
+                axis.plot(x_obs[0:-1, i], y_obs[0:-1], 'D', markersize=6, color='k')
+                axis.plot(x_obs[-1, i], y_obs[-1], 'D', markersize=6, color='r')
+                axis.set_xlim((param_min[i], param_max[i]))
+                axis.set_ylim((None, None))
+                axis.set_ylabel('Target', fontdict={'size':20})
+                axis.set_xlabel(param_name[i], fontdict={'size':20})
+
+            gs.tight_layout(self.figure, rect=[0, 0.03, 1, 0.95])
 
         plt.draw()
         plt.pause(1)
