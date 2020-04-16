@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from absl import flags
 import os
 import time
 
+from absl import flags
 import grpc
 
 from cyber_py3.record import RecordWriter
