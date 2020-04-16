@@ -11,8 +11,10 @@ from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
 from fueling.learning.autotuner.proto.cost_computation_conf_pb2 import CostMetrics
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+
 
 flags.DEFINE_string(
     "cost_computation_conf_filename",
@@ -144,7 +146,7 @@ class ControlCostComputation(BaseCostComputation):
             sample = grading['total_time_usage'][1]
 
             # Read and parse config from control cost computation pb file
-            config_file = self.FLAGS.get('cost_computation_conf_filename')
+            config_file = file_utils.fuel_path(self.FLAGS.get('cost_computation_conf_filename'))
             logging.info(f'Processing profiling with {config_file}')
             cost_conf = CostMetrics()
             proto_utils.get_pb_from_text_file(config_file, cost_conf)
