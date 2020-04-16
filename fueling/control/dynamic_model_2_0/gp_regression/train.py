@@ -10,10 +10,105 @@ import gpytorch
 import torch
 import torch.nn as nn
 
+from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
+# from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
+from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
+
+INPUT_DIM = feature_config["input_dim"]
+OUTPUT_DIM = feature_config["output_dim"]
+
+
+def train_with_dataloader(train_loader, args):
+    """Training using data-loader"""
+    batch_size = args.batch_size
+    num_inducing_point = args.num_inducing_point
+    kernel_dim = args.kernel_dim
+    use_cuda = args.use_cuda
+    lr = args.lr
+    # likelihood
+    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=OUTPUT_DIM)
+
+    # inducing points
+    step_size = int(max(batch_size / num_inducing_point, 1))
+    logging.info(f'step size is: {step_size}')
+    inducing_point_num = torch.arange(0, batch_size, step=step_size)
+    logging.info(f'inducing point indices are {inducing_point_num}')
+    # init inducing points
+    for idx, (features, labels) in enumerate(train_loader):
+        # pre_features = train_loader[0].features
+        features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
+        inducing_points = features[:, inducing_point_num, :]
+        break
+    # randmon
+    # inducing_points = torch.randn(100, inducing_point_num.shape[0], INPUT_DIM)
+    logging.info('inducing points data shape: {}'.format(inducing_points.shape))
+
+    # encoder
+    encoder_net_model = Encoder(u_dim=INPUT_DIM, kernel_dim=kernel_dim)
+
+    # model
+    model = GPModel(inducing_points=inducing_points,
+                    encoder_net_model=encoder_net_model, num_tasks=OUTPUT_DIM)
+
+    if use_cuda:
+        likelihood.train().cuda
+        model.train().cuda
+    else:
+        likelihood.train()
+        model.train()
+
+   # optimizer
+    optimizer = torch.optim.Adam([
+        {'params': model.parameters()},
+        {'params': likelihood.parameters()},
+    ], lr=lr)
+
+    # adjust learning rate
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
+                                  verbose=False, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
+
+    logging.info("Start of training")
+    # return
+
+    mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=OUTPUT_DIM)
+
+    for epoch in range(1, args.epochs + 1):
+        for idx, (features, labels) in enumerate(train_loader):
+
+            # [window_size, batch_size, channel]
+            features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
+            optimizer.zero_grad()
+            output = model(features)
+            # train loss
+            loss = -mll(output, labels)
+            loss.backward(retain_graph=True)
+            optimizer.step()
+            scheduler.step(loss)
+        logging.info('Train Epoch: {:2d} \tLoss: {:.6f}'.format(epoch, loss.sum()))
+        if epoch == 10:
+            gpytorch.settings.tridiagonal_jitter(1e-4)
+
+
+def save_mode(model, likelihood, args):
+    # save model as state_dict
+    timestr = time.strftime('%Y%m%d-%H%M%S')
+    # state_dict_file_path = args.gp_model_path
+
+    # with time stamp
+    state_dict_file_path = os.path.join(args.gp_model_path, timestr)
+    save_model_state_dict(model, likelihood, state_dict_file_path)
+    # save model as torchscript
+    # jit_file_path = args.online_gp_model_path
+
+    # with time stamp
+    jit_file_path = os.path.join(args.online_gp_model_path, timestr)
+    test_features, test_labels = dataset.get_test_data()
+    test_features = torch.transpose(test_features, 0, 1)
+    save_model_torch_script(model, test_features, jit_file_path)
 
 
 def train_and_save(args, dataset, gp_class):
@@ -120,7 +215,7 @@ def save_model_state_dict(model, likelihood, state_dict_file_path):
     file_name = os.path.join(state_dict_file_path, "gp.pth")
     state_dict = model.state_dict()
     logging.info(f'saving model state dict: {file_name}')
-    torch.save(model.state_dict(), file_name)
+    torch.save([model.state_dict(), likelihood.state_dict()], file_name)
 
 
 if __name__ == '__main__':
@@ -128,10 +223,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GP')
     # paths
     parser.add_argument(
+        '-train',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data")
+
     parser.add_argument(
+        '-test',
         '--testing_data_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
@@ -160,6 +258,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=500)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--lr_decay', type=float, default=0.999)
+    parser.add_argument('--batch_size', type=int, default=1024)
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
     parser.add_argument('--compare', type=str, default="model")
 
@@ -170,5 +269,15 @@ if __name__ == '__main__':
     # argument to use cuda or not for training
     parser.add_argument('--use_cuda', type=bool, default=False)
     args = parser.parse_args()
+    # setup data-loader
+    train_dataset = DynamicModelDataset(args.training_data_path)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
+                              shuffle=True, drop_last=True)  # num_workers=8
+    valid_dataset = DynamicModelDataset(args.testing_data_path)
+    # for i, (X, y) in enumerate(train_loader):
+    #     logging.info(f'data batch: {i}, input size is {X.size()}, output size is {y.size()}')
+    # train_with_dataloader(train_loader, args)
+    # for i, (X, y) in enumerate(train_loader):
+    #     logging.info(f'data batch: {i}, input size is {X.size()}, output size is {y.size()}')
     dataset = GPDataSet(args)
     train_and_save(args, dataset, GPModel)

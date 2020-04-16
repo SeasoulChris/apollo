@@ -2,9 +2,11 @@
 import argparse
 import os
 
+import gpytorch
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+
 
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
@@ -41,12 +43,15 @@ def evaluation(args, dataset, GaussianProcess):
     # load state dict
     file_path = os.path.join(args.gp_model_path, 'gp.pth')
     logging.info("************Loading GP model from {}".format(file_path))
-    model_state_dict = torch.load(file_path)
+    model_state_dict, likelihood_state_dict = torch.load(file_path)
     # model
     encoder_net_model = Encoder(u_dim=features.shape[-1], kernel_dim=args.kernel_dim)
     # TODO(Shu): check if it is necessary to use training data for initialization
     gp_model = GPModel(inducing_points, encoder_net_model, output_dim)
     gp_model.load_state_dict(model_state_dict)
+
+    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=output_dim)
+    likelihood.load_state_dict(likelihood_state_dict)
     # predicted results
     gp_model.eval()
     logging.info(input_data.shape)
