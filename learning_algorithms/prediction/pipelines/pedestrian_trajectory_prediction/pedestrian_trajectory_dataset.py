@@ -39,6 +39,22 @@ class PedestrianTrajectoryDataset(Dataset):
         future[1::2] += OFFSET_Y
         return future
 
+    def SceneHasInvalidDataPt(self, scene):
+        for data_pt in scene:
+            if len(data_pt[1]) == 0:
+                continue
+            if len(data_pt[0]) == 0:
+                return True
+            curr = data_pt[0][-1]
+            curr_x = data_pt[0][-1][1]
+            curr_y = data_pt[0][-1][2]
+            if self.shifted:
+                curr_x += OFFSET_X
+                curr_y += OFFSET_Y
+            if abs(curr_x) < 1.0 or abs(curr_y) < 1.0:
+                return True
+        return False
+
     def __init__(self, data_dir, pred_len=30, shifted=True):
         self.pred_len = pred_len
         self.map_region = []
@@ -62,7 +78,9 @@ class PedestrianTrajectoryDataset(Dataset):
 
         self.reference_world_coord = []
 
-        self.base_map = {"baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png")}
+        self.base_map = {"baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png"),
+                         "XiaMen": cv.imread("/fuel/testdata/map_feature/XiaMen.png"),
+                         "XiongAn": cv.imread("/fuel/testdata/map_feature/XiongAn.png")}
 
         self.shifted = shifted
 
@@ -75,6 +93,8 @@ class PedestrianTrajectoryDataset(Dataset):
             file_content = np.load(file_path, allow_pickle=True).tolist()
 
             for scene in file_content:
+                if self.SceneHasInvalidDataPt(scene):
+                    continue
                 self.start_idx.append(accumulated_data_pt)
                 scene_id += 1
                 for data_pt in scene:
@@ -92,6 +112,10 @@ class PedestrianTrajectoryDataset(Dataset):
                     # Get map_region
                     if file_path.find("baidudasha") != -1:
                         self.map_region.append("baidudasha")
+                    elif file_path.find("XiaMen") != -1:
+                        self.map_region.append("XiaMen")
+                    elif file_path.find("XiongAn") != -1:
+                        self.map_region.append("XiongAn")
                     else:
                         self.map_region.append("unknown")
 
