@@ -48,7 +48,7 @@ class CostComputationClient(object):
 
         return request
 
-    def construct_compute_request(self, configs):
+    def construct_compute_request(self, configs, cost_conf_file):
         # validate inputs
         if not isinstance(configs, dict):
             raise TypeError(
@@ -58,6 +58,8 @@ class CostComputationClient(object):
         # construct request
         request = cost_service_pb2.ComputeRequest()
         request.token = self.service_token
+        if cost_conf_file:
+            request.cost_computation_conf_filename = cost_conf_file
         for (config_id, path_2_pb2) in configs.items():
             if not isinstance(path_2_pb2, dict):
                 raise TypeError(
@@ -72,7 +74,7 @@ class CostComputationClient(object):
         return cost_service_pb2.CloseRequest(token=self.service_token)
 
     def send_request(self, request_name, request_payload):
-        with grpc.insecure_channel(CostComputationClient.CHANNEL_URL) as channel:
+        with grpc.insecure_channel(CostComputationClient.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
             request_function = getattr(stub, request_name)
             response = request_function(request_payload)
@@ -102,14 +104,14 @@ class CostComputationClient(object):
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")
 
-    def compute_mrac_cost(self, configs):
+    def compute_cost(self, configs, cost_config_file=None):
         if not self.is_initialized():
             logging.error("Please initialize first.")
             return None
 
         logging.info(f"Sending compute request to service {self.service_token} ...")
-        request = self.construct_compute_request(configs)
-        response = self.send_request('ComputeMracCost', request)
+        request = self.construct_compute_request(configs, cost_config_file)
+        response = self.send_request('ComputeCost', request)
         logging.info(f"Service {self.service_token} finished computing cost {response.score} for iteration {response.iteration_id}")
         return response.iteration_id, response.score
 

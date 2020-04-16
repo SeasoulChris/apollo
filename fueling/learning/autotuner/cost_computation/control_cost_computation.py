@@ -119,7 +119,7 @@ class ControlCostComputation(BaseCostComputation):
             with open(profiling_grading_dir[0], 'r') as grading_json:
                 grading = json.load(grading_json)
             # Parse the profiling results and compute the combined weighted-score
-            profiling_score = process_profiling_results(grding)
+            profiling_score = self.process_profiling_results(grading)
             logging.info(f"Profiling score for individual scenario: "
                          f"score={profiling_score[0]}, sample={profiling_score[1]}")
             return profiling_score
@@ -142,12 +142,13 @@ class ControlCostComputation(BaseCostComputation):
             score = 0.0
             weighting = 0.0
             sample = grading['total_time_usage'][1]
+
             # Read and parse config from control cost computation pb file
+            config_file = self.FLAGS.get('cost_computation_conf_filename')
+            logging.info(f'Processing profiling with {config_file}')
             cost_conf = CostMetrics()
-            proto_utils.get_pb_from_text_file(
-                flags.FLAGS.cost_computation_conf_filename,
-                cost_conf
-            )
+            proto_utils.get_pb_from_text_file(config_file, cost_conf)
+
             # Parse and compute the weighting metrics from control profiling results
             for metrics in cost_conf.weighting_metrics:
                 if 'peak' in metrics.metrics_name:
@@ -158,10 +159,12 @@ class ControlCostComputation(BaseCostComputation):
                     score += grading[metrics.metrics_name][0] * metrics.weighting_factor
                 weighting += metrics.weighting_factor
             score /= weighting
+
             # Parse and compute the penalty metrics from control profiling results
             for metrics in cost_conf.penalty_metrics:
                 score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1] *
                           metrics.penalty_score)
+
             # Parse and compute the fail metrics from control profiling results
             for metrics in cost_conf.fail_metrics:
                 if grading[metrics.metrics_name][0] > 0:

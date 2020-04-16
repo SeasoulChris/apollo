@@ -8,7 +8,7 @@ import "fueling/learning/autotuner/proto/sim_service.proto";
 
 service CostComputation {
   rpc Initialize(InitRequest) returns (InitResponse) {}
-  rpc ComputeMracCost(ComputeRequest) returns (ComputeResponse) {}
+  rpc ComputeCost(ComputeRequest) returns (ComputeResponse) {}
   rpc Close(CloseRequest) returns (CloseResponse) {}
 }
 
@@ -31,6 +31,7 @@ message InitResponse {
 message ComputeRequest {
   string token = 1;
   map<string, ModelConfig> config = 2;  // config_id -> model_config
+  string cost_computation_conf_filename = 3;
 }
 
 message ComputeResponse {

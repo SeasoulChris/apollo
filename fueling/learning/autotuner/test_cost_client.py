@@ -27,7 +27,7 @@ configs = {  # map of config_id to path_to_config pairs
 # method 1:
 """
 with CostComputationClient(commit_id, scenario_ids, dynamic_model) as client:
-    iteration_id, score = client.compute_mrac_cost(configs)
+    iteration_id, score = client.compute_cost(configs)
     print(f"Received score {score} for {iteration_id}")
 """
 
@@ -35,7 +35,7 @@ with CostComputationClient(commit_id, scenario_ids, dynamic_model) as client:
 client = CostComputationClient()
 try:
     client.initialize(commit_id, scenario_ids, dynamic_model)
-    iteration_id, score = client.compute_mrac_cost(configs)
+    iteration_id, score = client.compute_cost(configs)
     print(f"Received score {score} for {iteration_id}")
 except Exception as error:
     print(f"Exception: {error}")

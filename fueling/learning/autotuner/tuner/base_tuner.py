@@ -98,7 +98,7 @@ class BaseTuner():
 
     def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):
         config_id = uuid.uuid1().hex
-        iteration_id, weighted_score = self.cost_client.compute_mrac_cost(
+        iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
                 {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(

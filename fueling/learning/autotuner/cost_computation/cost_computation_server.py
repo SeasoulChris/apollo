@@ -2,6 +2,7 @@
 
 # standard packages
 from concurrent import futures
+from datetime import datetime
 import json
 import os
 import time
@@ -89,7 +90,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             return CostComputation.create_init_response(1, "Scenario(s) not specified.")
 
         # Save config to a local file
-        service_token = uuid.uuid4().hex
+        service_token = f"autotuner-{uuid.uuid4().hex}"
         tmp_dir = self.get_service_dir(service_token)
         file_utils.makedirs(tmp_dir)
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")
@@ -107,12 +108,12 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             status.code, status.message, service_token,
         )
 
-    def ComputeMracCost(self, request, context):
+    def ComputeCost(self, request, context):
         if not request.token:
             return CostComputation.create_compute_response(
                 exit_code=1, message="Service token not specified.")
 
-        iteration_id = uuid.uuid4().hex
+        iteration_id = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         tmp_dir = f"{self.get_service_dir(request.token)}/{iteration_id}"
         file_utils.makedirs(tmp_dir)
 
@@ -125,10 +126,12 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             "token": request.token,
             "iteration_id": iteration_id,
         }
+        if request.cost_computation_conf_filename:
+            options['cost_computation_conf_filename'] = request.cost_computation_conf_filename
 
         if not self.submit_job(options):
             return CostComputation.create_compute_response(
-                exit_code=1, message="failed to compute MRAC cost."
+                exit_code=1, message="failed to compute cost."
             )
 
         # read and return score
@@ -162,7 +165,9 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
 
 def __main__(argv):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10),
+        compression=grpc.Compression.Gzip)
     cost_service_pb2_grpc.add_CostComputationServicer_to_server(
         CostComputation(), server
     )
