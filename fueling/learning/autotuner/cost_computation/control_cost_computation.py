@@ -9,12 +9,13 @@ from absl import flags
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.cost_computation.base_cost_computation import BaseCostComputation
+from fueling.learning.autotuner.proto.cost_computation_conf_pb2 import CostMetrics
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
-class MracCostComputation(BaseCostComputation):
+class ControlCostComputation(BaseCostComputation):
     def __init__(self):
         BaseCostComputation.__init__(self)
 
@@ -112,8 +113,8 @@ class MracCostComputation(BaseCostComputation):
         else:
             with open(profiling_grading_dir[0], 'r') as grading_json:
                 grading = json.load(grading_json)
-            # TODO(Yu): implement weighting under the AutoTuner instead of directly reading
-            profiling_score = grading['weighted_score']
+            # Parse the profiling results and compute the combined weighted-score
+            profiling_score = process_profiling_results(grding)
             logging.info(f"Profiling score for individual scenario: "
                          f"score={profiling_score[0]}, sample={profiling_score[1]}")
             return profiling_score
@@ -132,6 +133,37 @@ class MracCostComputation(BaseCostComputation):
         avg_score = total_score / total_sample if total_sample > 0 else float('nan')
         return avg_score
 
+    def process_profiling_results(self, grading):
+            score = 0.0
+            weighting = 0.0
+            sample = grading['total_time_usage'][1]
+            # Read and parse config from control cost computation pb file
+            cost_conf = CostMetrics()
+            proto_utils.get_pb_from_text_file(
+                'fueling/learning/autotuner/config/control_cost_computation_conf.pb.txt',
+                cost_conf
+            )
+            # Parse and compute the weighting metrics from control profiling results
+            for metrics in cost_conf.weighting_metrics:
+                if 'peak' in metrics.metrics_name:
+                    # for peak metrics, the grading format: [[score, timestamp], sample]
+                    score += grading[metrics.metrics_name][0][0] * metrics.weighting_factor
+                else:
+                    # for other metrics, the grading format: [score, sample]
+                    score += grading[metrics.metrics_name][0] * metrics.weighting_factor
+                weighting += metrics.weighting_factor
+            score /= weighting
+            # Parse and compute the penalty metrics from control profiling results
+            for metrics in cost_conf.penalty_metrics:
+                score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1] *
+                          metrics.penalty_score)
+            # Parse and compute the fail metrics from control profiling results
+            for metrics in cost_conf.fail_metrics:
+                if grading[metrics.metrics_name][0] > 0:
+                    score = cost_conf.fail_score
+
+            return (score, sample)
+
 
 if __name__ == "__main__":
-    MracCostComputation().main()
+    ControlCostComputation().main()

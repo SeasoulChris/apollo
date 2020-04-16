@@ -28,13 +28,17 @@ py_binary(
 )
 
 py_binary(
-    name = "mrac_cost_computation",
-    srcs = ["mrac_cost_computation.py"],
+    name = "control_cost_computation",
+    srcs = ["control_cost_computation.py"],
+    data = [
+        "//fueling/learning/autotuner/config",
+    ],
     deps = [
         ":base_cost_computation",
         "//apps/k8s/spark_submitter:client",
         "//fueling/common:proto_utils",
         "//fueling/profiling/control:multi_job_control_profiling_metrics",
+        "//fueling/learning/autotuner/proto:cost_computation_conf_pb2",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
     ],
 )

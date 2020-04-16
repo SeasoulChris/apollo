@@ -63,7 +63,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     @staticmethod
     def SubmitJobAtLocal(options):
-        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:mrac_cost_computation"
+        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:control_cost_computation"
         option_strings = [f"--{name}={value}" for (name, value) in options.items()]
         cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
         logging.info(f"Executing '{cmd}'")
@@ -74,7 +74,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
     @staticmethod
     def SubmitJobToK8s(options):
-        entrypoint = "fueling/learning/autotuner/cost_computation/mrac_cost_computation.py"
+        entrypoint = "fueling/learning/autotuner/cost_computation/control_cost_computation.py"
         client = SparkSubmitterClient(entrypoint, {}, options)
         client.submit()
         return True
