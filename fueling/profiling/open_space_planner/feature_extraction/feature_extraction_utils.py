@@ -46,6 +46,108 @@ def steer_limit(steer_val, vehicle_param):
     return steer_val / vehicle_param.steer_ratio / vehicle_param.wheel_base
 
 
+def transform(polygon, position, heading, new_position, new_heading):
+    """
+    2D Rigid body tranformation matrix T = [[cos -sin x],
+                                            [sin  cos y],
+                                            [ 0    0  1]]
+    Point(p2 w.r.t world) = T(p2 w.r.t world)*T(world w.r.t p1)*Point(p1 w.r.t world)
+    """
+    cur_T = ([math.cos(heading), -math.sin(heading), position[0]],
+             [math.sin(heading), math.cos(heading), position[1]],
+             [0, 0, 1])
+    new_T = ([math.cos(new_heading), -math.sin(new_heading), new_position[0]],
+             [math.sin(new_heading), math.cos(new_heading), new_position[1]],
+             [0, 0, 1])
+    return np.dot(polygon, np.dot(new_T, np.linalg.inv(cur_T)).T)
+
+
+def compute_adc_points(position, heading, vehicle_param, z=1):
+    front_edge_to_center = vehicle_param.front_edge_to_center
+    back_edge_to_center = vehicle_param.back_edge_to_center
+    length = vehicle_param.length
+    width = vehicle_param.width
+
+    offset = 0.0
+    if front_edge_to_center > back_edge_to_center:
+        offset = front_edge_to_center - length / 2.0
+    else:
+        offset = back_edge_to_center - length / 2.0
+    center_x = position[0] + offset * math.cos(heading)
+    center_y = position[1] + offset * math.sin(heading)
+
+    dx1 = math.cos(heading) * length / 2.0
+    dy1 = math.sin(heading) * length / 2.0
+    dx2 = math.sin(heading) * width / 2.0
+    dy2 = -math.cos(heading) * width / 2.0
+    return [[center_x + dx1 + dx2, center_y + dy1 + dy2, z],
+            [center_x + dx1 - dx2, center_y + dy1 - dy2, z],
+            [center_x - dx1 - dx2, center_y - dy1 - dy2, z],
+            [center_x - dx1 + dx2, center_y - dy1 + dy2, z]]
+
+
+def extract_obstacle_polygon_points(perception_obstacle, z=1):
+    """
+    Returns a list of polygon points representing one obstacle
+    """
+    points = getattr(perception_obstacle, 'polygon_point', [])
+    return [[point.x, point.y, z] for point in points]
+
+
+def find_min_collision_time(msg, vehicle_param):
+    """
+    Returns the minimum time to collision for a planning trajectory in relatvie time
+    """
+    min_collision_time = REFERENCE_VALUES['max_time_to_collision']
+    prediction = msg['prediction']
+    obstacle_start_time = prediction.header.timestamp_sec
+    planning = msg['planning']
+    adc_start_time = planning.header.timestamp_sec
+
+    for traj_point in planning.trajectory_point:
+        if (traj_point.relative_time < 0):
+            continue
+        adc_time = adc_start_time + traj_point.relative_time
+        path_point = traj_point.path_point
+        adc_polygon = compute_adc_points(
+            [path_point.x, path_point.y], path_point.theta, vehicle_param)
+
+        for obstacle in prediction.prediction_obstacle:
+            cur_polygon = extract_obstacle_polygon_points(obstacle.perception_obstacle)
+            cur_position = obstacle.perception_obstacle.position
+            if Polygon(adc_polygon).intersects(Polygon(cur_polygon)):
+                logging.info(F'{adc_start_time}s: Found collision at {traj_point.relative_time} '
+                             F'with {obstacle.perception_obstacle.id}')
+                min_collision_time = min(traj_point.relative_time, min_collision_time)
+                continue
+
+            if not obstacle.trajectory:
+                continue
+
+            # TODO sort prediction trajectory based on probability
+            predicted_traj = obstacle.trajectory[0]
+            for predicted_pt in predicted_traj.trajectory_point:
+                predicted_time = obstacle_start_time + predicted_pt.relative_time
+                if abs(adc_time - predicted_time) < 0.1:
+                    predicted_polygon = transform(cur_polygon,
+                                                  [cur_position.x,
+                                                      cur_position.y], obstacle.perception_obstacle.theta,
+                                                  [predicted_pt.path_point.x, predicted_pt.path_point.y],
+                                                  predicted_pt.path_point.theta)
+                    if Polygon(adc_polygon).intersects(Polygon(predicted_polygon)):
+                        logging.info(F'{adc_start_time}s: Predicted collision at '
+                                     F'{traj_point.relative_time} '
+                                     F'with {obstacle.perception_obstacle.id}')
+                        min_collision_time = min(traj_point.relative_time, min_collision_time)
+                        # ignore further predicted points
+                        break
+
+        # collision occurs at traj_point, ignore further trajectory points
+        if min_collision_time < REFERENCE_VALUES['max_time_to_collision']:
+            break
+    return min_collision_time
+
+
 """
  trajectory point example:
  path_point:
@@ -61,7 +163,10 @@ def steer_limit(steer_val, vehicle_param):
  a: 0.995744297
  relative_time: -0.400000000
 """
-def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boundaries, obstacles):
+
+
+def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boundaries, obstacles,
+                                       min_collision_time):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
     speed = trajectory_point.v
@@ -97,6 +202,12 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boun
     distance_to_obstacles = [obstacle.distance(traj_point) for obstacle in obstacles]
     distance_to_obstacle_ratio = REFERENCE_VALUES['obstacle_reference_distance'] / min(
         distance_to_obstacles) if distance_to_obstacles else 0.0
+    if min_collision_time == REFERENCE_VALUES['max_time_to_collision']:
+        time_to_collision = min_collision_time  # no collision
+    elif trajectory_point.relative_time > min_collision_time:
+        time_to_collision = 0  # collision has already occurred
+    else:
+        time_to_collision = min_collision_time - trajectory_point.relative_time
 
     if hasattr(trajectory_point, 'relative_time'):
         # NOTE: make sure to update TRAJECTORY_FEATURE_NAMES in
@@ -120,6 +231,7 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boun
             lat_dec / lat_dec_bound,
             distance_to_roi_ratio,
             distance_to_obstacle_ratio,
+            time_to_collision / REFERENCE_VALUES['time_to_collision'],
         ])
     return data_array
 
@@ -163,13 +275,14 @@ def calculate_dkappa_ratio(prev_feature, curr_feature, vehicle_param):
     return [dkappa_ratio]
 
 
-def extract_data_from_trajectory(trajectory, vehicle_param, roi_boundaries, obstacles):
+def extract_data_from_trajectory(trajectory, vehicle_param, roi_boundaries, obstacles,
+                                 min_collision_time):
     """Extract data from all trajectory points"""
     feature_list = []
     prev_features = None
     for trajectory_point in trajectory:
         features = extract_data_from_trajectory_point(
-            trajectory_point, vehicle_param, roi_boundaries, obstacles)
+            trajectory_point, vehicle_param, roi_boundaries, obstacles, min_collision_time)
         if features is None:
             continue
 
@@ -206,6 +319,9 @@ def extract_roi_boundaries(msgs):
 
 
 def extract_obstacle_polygons(msg):
+    """
+    Returns a list of shapely.geometry.Polygon objects that represents all the obstacles
+    """
     if 'prediction' not in msg:
         return []
 
@@ -226,7 +342,9 @@ def extract_planning_trajectory_feature(target_groups):
     roi_boundaries = extract_roi_boundaries(msgs)
 
     extracted_data = (extract_data_from_trajectory(
-        msg['planning'].trajectory_point, vehicle_param, roi_boundaries, extract_obstacle_polygons(msg))
+        msg['planning'].trajectory_point, vehicle_param, roi_boundaries, extract_obstacle_polygons(
+            msg),
+        find_min_collision_time(msg, vehicle_param))
         for msg in msgs)
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])

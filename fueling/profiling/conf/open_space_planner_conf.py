@@ -18,6 +18,7 @@ TRAJECTORY_FEATURE_NAMES = [
     'lateral_deceleration_ratio',
     'distance_to_roi_boundaries_ratio',
     'distance_to_obstacles_ratio',
+    'min_time_to_collision_ratio',
 
     # from calculate_jerk_ratios()
     'longitudinal_positive_jerk_ratio',
@@ -50,6 +51,8 @@ for (idx, name) in enumerate(TRAJECTORY_FEATURE_NAMES):
 REFERENCE_VALUES = {
     'control_precision': 0.25,
     'distance_to_roi_boundary_buffer': 0.1,  # meter
+    'time_to_collision': 6.0,  # second
+    'max_time_to_collision': 10.0,  # second
 
     'lateral_jerk_positive_upper_bound': 1.0,
     'lateral_jerk_negative_upper_bound': -1.0,

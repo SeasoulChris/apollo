@@ -10,7 +10,7 @@ import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 from fueling.profiling.common.stats_utils import compute_stats
-from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX
+from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
 from fueling.profiling.proto.open_space_planner_profiling_pb2 import OpenSpacePlannerProfiling
 
 
@@ -33,7 +33,8 @@ GradingResults = namedtuple('grading_results',
                              'lateral_positive_jerk_ratio',
                              'lateral_negative_jerk_ratio',
                              'distance_to_roi_boundaries_ratio',
-                             'distance_to_obstacles_ratio'
+                             'distance_to_obstacles_ratio',
+                             'min_time_to_collision_ratio',
                              ])
 GradingResults.__new__.__defaults__ = (None,) * len(GradingResults._fields)
 
@@ -140,6 +141,18 @@ def trajectory_grading(target_groups):
                  F'for target {target}')
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
+    max_time_to_collision_ratio = (REFERENCE_VALUES['max_time_to_collision'] /
+                                   REFERENCE_VALUES['time_to_collision'])
+    has_collision = stats_helper(feature_mtx, 'min_time_to_collision_ratio', False,
+                                 filter_name=['min_time_to_collision_ratio'],
+                                 filter_value=[max_time_to_collision_ratio], filter_mode=[1])
+    no_collision = [
+        0,
+        max_time_to_collision_ratio,
+        max_time_to_collision_ratio,
+        0.0,
+        max_time_to_collision_ratio,
+        0]
     grading_group_result = GradingResults(
         curvature_ratio=stats_helper(feature_mtx, 'curvature_ratio'),
         curvature_change_ratio=stats_helper(feature_mtx, 'curvature_change_ratio'),
@@ -162,6 +175,7 @@ def trajectory_grading(target_groups):
         distance_to_roi_boundaries_ratio=stats_helper(
             feature_mtx, 'distance_to_roi_boundaries_ratio'),
         distance_to_obstacles_ratio=stats_helper(feature_mtx, 'distance_to_obstacles_ratio'),
+        min_time_to_collision_ratio=(has_collision if has_collision[-1] > 0 else no_collision),
     )
     return (target, grading_group_result)
 

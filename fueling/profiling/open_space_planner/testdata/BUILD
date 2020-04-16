@@ -3,13 +3,15 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "control_conf",
     srcs = [
-        "vehicle_param.pb.txt",
+        "no_obstacle/vehicle_param.pb.txt",
+        "obstacle/vehicle_param.pb.txt",
     ],
 )
 
 filegroup(
     name = "records",
     srcs = [
-        "scenario522.bag",
+        "no_obstacle/scenario522.bag",
+        "obstacle/scenario569.bag",
     ],
 )
