@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package apollo.fuelation;
+
+// Weighting Metrics indicate the statistically-meaningful metrics, such as std, rms, max, min
+// For the i-th metrics, weighting_ratio[i] = weighting_factor[i] / sum(weighting_factor[1: n])
+message WeightingMetrics {
+  string metrics_name = 1;
+  double weighting_factor = 2;
+}
+
+// Penalty Metrics indicate the event-counting metrics, such as replan counter
+// Penalty score is the score of every individual event
+message PenaltyMetrics {
+  string metrics_name = 1;
+  double penalty_score = 2;
+}
+
+// Fail Metrics indicate the once-per-scenario fail-related metrics, such as e-stop error code
+message FailMetrics {
+  string metrics_name = 1;
+}
+
+message CostMetrics {
+  repeated WeightingMetrics weighting_metrics = 1;
+  repeated PenaltyMetrics penalty_metrics = 2;
+  repeated FailMetrics fail_metrics = 3;
+  // Fail score is the score in case of the fail metrics exist (non-zero)
+  double fail_score = 4;
+}

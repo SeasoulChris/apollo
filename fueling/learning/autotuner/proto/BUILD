@@ -3,6 +3,11 @@ package(default_visibility = ["//visibility:public"])
 load("//tools:py_proto.bzl", "py_proto")
 
 py_proto(
+    name = "cost_computation_conf_pb2",
+    src = "cost_computation_conf.proto",
+)
+
+py_proto(
     name = "cost_computation_service_pb2",
     src = "cost_computation_service.proto",
     with_grpc = True,

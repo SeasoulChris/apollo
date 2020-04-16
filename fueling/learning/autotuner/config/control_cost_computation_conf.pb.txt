@@ -1,0 +1,43 @@
+weighting_metrics {
+  metrics_name: "station_err_std_harsh"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "speed_err_std_harsh"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "lateral_err_std_harsh"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "heading_err_std_harsh"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "station_err_peak"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "speed_err_peak"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "lateral_err_peak"
+  weighting_factor: 1.0
+}
+weighting_metrics {
+  metrics_name: "heading_err_peak"
+  weighting_factor: 1.0
+}
+
+penalty_metrics {
+  metrics_name: "replan_trajectory_count"
+  penalty_score: 1.0
+}
+
+fail_metrics {
+  metrics_name: "control_error_code_count"
+}
+
+fail_score: 10.0
