@@ -14,7 +14,7 @@ class MsgFreqAnalyzer:
         self.perception_timestamp = -1
         self.prediction_timestamp = -1
         self.chassis_timestamp = -1
-        self.is_debug = True
+        self.is_debug = False
         self.msgs_set = []
 
     def process(self, msgs):

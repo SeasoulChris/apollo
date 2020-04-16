@@ -52,7 +52,6 @@ py_binary(
     ],
 )
 
-
 py_test(
     name = "data_cleaner_test",
     srcs = ["data_cleaner_test.py"],

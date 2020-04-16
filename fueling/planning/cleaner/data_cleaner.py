@@ -3,6 +3,7 @@
 
 import os
 import time
+import resource
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -46,8 +47,8 @@ class CleanPlanningRecords(BasePipeline):
     def run(self):
         """Run prod."""
 
-        tasks = [
-            # 'small-records/2019/2019-11-01/',
+        date_tasks = [
+            'small-records/2019/2019-11-01/',
             'small-records/2019/2019-11-02/',
             'small-records/2019/2019-11-03/',
             'small-records/2019/2019-11-04/',
@@ -77,14 +78,16 @@ class CleanPlanningRecords(BasePipeline):
             'small-records/2019/2019-11-28/',
             'small-records/2019/2019-11-29/',
             'small-records/2019/2019-11-30/',
-            # 'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
-            # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
         ]
 
+        individual_tasks = [
+            'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
+            # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
+        ]
         prefix = "/mnt/bos/"
 
         final_tasks = []
-        for day_folder in tasks:
+        for day_folder in date_tasks:
             day_abs_folder = prefix + day_folder
             if not os.path.exists(day_abs_folder):
                 continue
@@ -99,6 +102,9 @@ class CleanPlanningRecords(BasePipeline):
                 except Exception as e:
                     print('Failed to delete %s. Reason: %s' % (file_path, e))
 
+        for task in individual_tasks:
+            final_tasks.append(task)
+
         self.to_rdd(final_tasks).map(self.process_folder_ecom).count()
 
         logging.info('Processing is done')
@@ -111,33 +117,65 @@ class CleanPlanningRecords(BasePipeline):
         topic_descs = {}
         has_routing = False
 
+        reader = None
+        file_cnt = 0
+        total_file_cnt = len(files)
+        current_hmi_status_msg = None
+        current_routing_response = None
+
         for fn in files:
-            logging.info('process file: ' + fn)
+            file_cnt += 1
+            logging.info('process file (' + str(file_cnt) + "/" + str(total_file_cnt) + "):" + fn)
 
             if record_utils.is_record_file(fn):
                 try:
+                    print_current_memory_usage("RecordReader-before")
                     reader = RecordReader(fn)
+                    print_current_memory_usage("RecordReader-after")
                     time.sleep(2)
                     for msg in reader.read_messages():
                         if msg.topic == '/apollo/routing_response':
+                            current_routing_response = msg
                             logging.info("found a routing response!")
                             has_routing = True
                             self.process_msgs(msgs, task_folder, topic_descs)
                             msgs = []
+                            if current_hmi_status_msg is not None:
+                                msgs.append(current_hmi_status_msg)
+
+                        if msg.topic == "/apollo/hmi/status":
+                            current_hmi_status_msg = msg
 
                         if msg.topic in self.topics:
                             if msg.topic not in topic_descs:
                                 topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
                             if has_routing:
                                 msgs.append(msg)
-                    del reader
+
+                        if len(msgs) > 200 * 60 * 5:
+                            self.process_msgs(msgs, task_folder, topic_descs)
+                            msgs = []
+                            if current_hmi_status_msg is not None:
+                                msgs.append(current_hmi_status_msg)
+                            if current_routing_response is not None:
+                                msgs.append(current_routing_response)
+
+                    # reader.__del__()
+                    logging.info("process file done!")
                 except Exception as err:
+                    if reader is not None:
+                        pass
+                        # reader.__del__()
+                    logging.info("read file error!!")
                     print(err)
                     continue
 
+        self.process_msgs(msgs, task_folder, topic_descs)
         logging.info("total {} original msg".format(len(msgs)))
 
     def process_msgs(self, msgs, task_folder, topic_descs):
+        logging.info("processing {} messages".format(len(msgs)))
+
         if len(msgs) == 0:
             logging.error('Failed to read any message from {}'.format(task_folder))
             return 0
@@ -159,9 +197,10 @@ class CleanPlanningRecords(BasePipeline):
             if same_routing_msgs[1].topic == "/apollo/hmi/status":
                 hmi_status = same_routing_msgs[1]
 
-            logging.info("Has Routing = " + str(has_routing))
+            # logging.info("Has Routing = " + str(has_routing))
 
             if has_routing:
+                logging.info("processing msgs...")
                 freq_analyzer = MsgFreqAnalyzer()
                 freq_msgs_set = freq_analyzer.process(same_routing_msgs)
                 for freq_msgs in freq_msgs_set:
@@ -174,7 +213,7 @@ class CleanPlanningRecords(BasePipeline):
                         if routing_resp is not None:
                             freq_msgs.insert(0, routing_resp)
                     self.write_to_file(freq_msgs, topic_descs, task_folder)
-
+                logging.info("processing msgs done!")
         return 1
 
     def write_to_file(self, freq_msgs, topic_descs, task_folder):
@@ -203,6 +242,19 @@ class CleanPlanningRecords(BasePipeline):
             writer.close()
         return dst_record_fn
 
+def print_current_memory_usage(step_name):
+
+    mb_2_kb = 1024
+
+    meminfo = dict((m.split()[0].rstrip(':'), int(m.split()[1]))
+
+                   for m in open('/proc/meminfo').readlines())
+
+    total_mem = meminfo['MemTotal'] // mb_2_kb
+
+    used_mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // mb_2_kb
+
+    logging.info(f'step: {step_name}, total memory: {total_mem} MB, current memory: {used_mem} MB')
 
 if __name__ == '__main__':
     cleaner = CleanPlanningRecords()
