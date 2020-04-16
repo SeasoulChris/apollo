@@ -11,10 +11,14 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
+from fueling.prediction.common.configure import semantic_map_config
 
 LINEAR_ACC_THRESHOLD = 100
 ANGULAR_VEL_THRESHOLD = 0.50
 TURNING_ANGLE_THRESHOLD = np.pi/6
+
+OFFSET_X = semantic_map_config['offset_x']
+OFFSET_Y = semantic_map_config['offset_y']
 
 '''
 [scene, scene, ..., scene]
@@ -121,6 +125,28 @@ class CleanTrainingDataPipeline(BasePipeline):
         logging.info(count)
         logging.info('npy save {}'.format(cleaned_training_data_filepath))
         np.save(cleaned_training_data_filepath, cleaned_content)
+
+    def SceneHasInvalidDataPt(self, scene):
+        for data_pt in scene:
+            if len(data_pt[1]) == 0:
+                continue
+            if len(data_pt[0]) == 0:
+                return True
+            if self.IsDataPtZeroCurrPosition(data_pt):
+                return True
+        return False
+
+    def IsDataPtZeroCurrPosition(self, data_pt):
+        curr = data_pt[0][-1]
+        curr_x = data_pt[0][-1][1] + OFFSET_X
+        curr_y = data_pt[0][-1][2] + OFFSET_Y
+        if abs(curr_x) < 1.0 or abs(curr_y) < 1.0:
+            return True
+        return False
+
+    def IsDataPtOutsideMapArea(self, data_pt, map_region, buffer):
+        # TODO(kechxu) implement
+        return False
 
 
 if __name__ == '__main__':

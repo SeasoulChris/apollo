@@ -35,9 +35,62 @@ parameters = {
         # from center-line to the lane width is within this: (must be < 0.5)
         'lane_change_finish_condition': 0.1,
         'maximum_observation_time': 9.0
-    },
+    }
+}
+
+semantic_map_config = {
     'offset_x': 439700,
-    'offset_y': 4433250
+    'offset_y': 4433250,
+    'map_coords': {
+        'san_mateo': {
+            'lower_left_x': 558980,
+            'lower_left_y': 4156780,
+            'horizontal_pixel_size': 11000,
+            'vertical_pixel_size': 14000,
+            'resolution': 0.1,
+            'distance_buffer': 100
+        },
+        'sunnyvale': {
+            'lower_left_x': 585870,
+            'lower_left_y': 4139900,
+            'horizontal_pixel_size': 28000,
+            'vertical_pixel_size': 20000,
+            'resolution': 0.1,
+            'distance_buffer': 100
+        },
+        'sunnyvale_with_two_offices': {
+            'lower_left_x': 585870,
+            'lower_left_y': 4139900,
+            'horizontal_pixel_size': 28000,
+            'vertical_pixel_size': 20000,
+            'resolution': 0.1,
+            'distance_buffer': 100
+        },
+        'baidudasha': {
+            'lower_left_x': 439600,
+            'lower_left_y': 4433150,
+            'horizontal_pixel_size': 6100,
+            'vertical_pixel_size': 7100,
+            'resolution': 0.1,
+            'distance_buffer': 200
+        },
+        'XiongAn': {
+            'lower_left_x': 405000,
+            'lower_left_y': 4322200,
+            'horizontal_pixel_size': 8700,
+            'vertical_pixel_size': 10300,
+            'resolution': 0.1,
+            'distance_buffer': 200
+        },
+        'XiaMen': {
+            'lower_left_x': 597600,
+            'lower_left_y': 2719900,
+            'horizontal_pixel_size': 11800,
+            'vertical_pixel_size': 12300,
+            'resolution': 0.1,
+            'distance_buffer': 200
+        }
+    },
 }
 
 labels = {'go_false': 0, 'go_true': 1, 'cutin_false': -1, 'cutin_true': 2}

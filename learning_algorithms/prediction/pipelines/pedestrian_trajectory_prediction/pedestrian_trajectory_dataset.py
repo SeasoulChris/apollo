@@ -10,12 +10,12 @@ from torchvision import transforms
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-from fueling.prediction.common.configure import parameters
+from fueling.prediction.common.configure import semantic_map_config
 from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 MAX_OBS_HISTORY_SIZE = 20
-OFFSET_X = parameters['offset_x']
-OFFSET_Y = parameters['offset_y']
+OFFSET_X = semantic_map_config['offset_x']
+OFFSET_Y = semantic_map_config['offset_y']
 
 '''
 [scene, scene, ..., scene]

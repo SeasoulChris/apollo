@@ -5,6 +5,8 @@ import cv2 as cv
 
 from modules.map.proto import map_pb2
 
+from fueling.prediction.common.configure import semantic_map_config
+
 
 class Mapping(object):
     """class of Mapping to get a feature map"""
@@ -12,26 +14,12 @@ class Mapping(object):
     def __init__(self, region):
         """contruct function to init Mapping object"""
         self.region = region
-        if (self.region == "san_mateo"):
-            self.base_point = np.array([558980, 4156780])
-            self.resolution = 0.1
-            self.GRID = [11000, 14000]
-        elif (self.region == "sunnyvale_with_two_offices"):
-            self.base_point = np.array([585870, 4139900])
-            self.resolution = 0.1
-            self.GRID = [28000, 20000]
-        elif (self.region == "baidudasha"):
-            self.base_point = np.array([439600, 4433150])
-            self.resolution = 0.1
-            self.GRID = [6100, 7100]
-        elif (self.region == "XiongAn"):
-            self.base_point = np.array([405000, 4322200])
-            self.resolution = 0.1
-            self.GRID = [8700, 10300]
-        elif (self.region == "XiaMen"):
-            self.base_point = np.array([597600, 2719900])
-            self.resolution = 0.1
-            self.GRID = [11800, 12300]
+        map_coords = semantic_map_config['map_coords']
+        if region in map_coords:
+            region_param = map_coords[region]
+            self.base_point = np.array([region_param['lower_left_x'], region_param['lower_left_y']])
+            self.resolution = region_param['resolution']
+            self.GRID = [region_param['horizontal_pixel_size'], region_param['vertical_pixel_size']]
         else:
             (p_min, p_max) = self._read_hdmap()
             self.base_point = p_min - 200.0

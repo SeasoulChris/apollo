@@ -8,6 +8,9 @@ py_library(
 py_binary(
     name = "mapping",
     srcs = ["mapping.py"],
+    deps = [
+        "//fueling/prediction/common:configure",
+    ],
 )
 
 py_binary(
@@ -23,6 +26,7 @@ py_library(
     srcs = ["online_mapping.py"],
     deps = [
         ":mapping",
+        "//fueling/prediction/common:configure",
     ],
 )
 

@@ -3,7 +3,9 @@
 import numpy as np
 import cv2 as cv
 
+from fueling.prediction.common.configure import semantic_map_config
 from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
+
 
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
@@ -11,25 +13,14 @@ class ObstacleMapping(object):
     def __init__(self, region, base_map, world_coord, obstacles_history):
         """contruct function to init ObstacleMapping object"""
         center_point = world_coord[0:2]
-        if region == "san_mateo":
-            # base_map = cv.imread("san_mateo.png")
-            # print("san_mateo.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-558980)/0.1)),
-                          int(14000-np.round((center_point[1]-4156780)/0.1))]
-        elif region == "sunnyvale":
-            # base_map = cv.imread("sunnyvale_with_two_offices.png")
-            # print("sunnyvale_with_two_offices.png exist, read it directly!")
-            center_idx = [int(np.round((center_point[0]-585870)/0.1)),
-                          int(20000-np.round((center_point[1]-4139900)/0.1))]
-        elif region == "baidudasha":
-            center_idx = [int(np.round((center_point[0]-439600)/0.1)),
-                          int(7100-np.round((center_point[1]-4433150)/0.1))]
-        elif region == "XiongAn":
-            center_idx = [int(np.round((center_point[0]-405000)/0.1)),
-                          int(10300-np.round((center_point[1]-4322200)/0.1))]
-        elif region == "XiaMen":
-            center_idx = [int(np.round((center_point[0]-597600)/0.1)),
-                          int(12300-np.round((center_point[1]-2719900)/0.1))]
+        map_coords = semantic_map_config['map_coords']
+        if region in map_coords:
+            region_param = map_coords[region]
+            x, y = region_param['lower_left_x'], region_param['lower_left_y']
+            r = region_param['resolution']
+            y_size = region_param['vertical_pixel_size']
+            center_idx = [int(np.round((center_point[0] - x) / r)),
+                          int(y_size - np.round((center_point[1] - y) / r))]
         else:
             mapping = Mapping(region)
             base_map = mapping.base_map
