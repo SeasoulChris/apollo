@@ -61,16 +61,9 @@ class BaseTuner():
 
         self.opt_max = tuner_parameters.opt_max
 
-        self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
-                                       kappa=tuner_parameters.utility.kappa,
-                                       xi=tuner_parameters.utility.xi)
         self.init_cost_client()
-        self.optimizer = BayesianOptimization(
-            f=self.black_box_function,
-            pbounds=self.pbounds,
-            verbose=2,  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
-            random_state=1,
-        )
+
+        self.init_optimizer(tuner_parameters)
 
         self.tuner_storage_dir = (
             flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
@@ -89,6 +82,18 @@ class BaseTuner():
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,
+        )
+
+    def init_optimizer(self, tuner_parameters):
+        self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
+                                       kappa=tuner_parameters.utility.kappa,
+                                       xi=tuner_parameters.utility.xi)
+
+        self.optimizer = BayesianOptimization(
+            f=self.black_box_function,
+            pbounds=self.pbounds,
+            verbose=2,  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
+            random_state=1,
         )
 
     def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):

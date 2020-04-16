@@ -14,6 +14,11 @@ import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_ser
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
+flags.DEFINE_string(
+    "cost_computation_conf_filename",
+    "fueling/learning/autotuner/config/control_cost_computation_conf.pb.txt",
+    "File path to cost computation config."
+)
 
 class ControlCostComputation(BaseCostComputation):
     def __init__(self):
@@ -140,7 +145,7 @@ class ControlCostComputation(BaseCostComputation):
             # Read and parse config from control cost computation pb file
             cost_conf = CostMetrics()
             proto_utils.get_pb_from_text_file(
-                'fueling/learning/autotuner/config/control_cost_computation_conf.pb.txt',
+                flags.FLAGS.cost_computation_conf_filename,
                 cost_conf
             )
             # Parse and compute the weighting metrics from control profiling results
