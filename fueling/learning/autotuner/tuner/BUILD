@@ -6,6 +6,12 @@ load("@default_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "optuna_tuner",
     srcs = ["optuna_tuner.py"],
+    deps = [
+      "//fueling/learning/autotuner/client:cost_computation_client",
+      "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
+      "//fueling/common:file_utils",
+      "//fueling/common:proto_utils",
+    ]
 )
 
 py_binary(
