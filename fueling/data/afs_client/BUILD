@@ -21,3 +21,12 @@ py_binary(
         "//fueling/data/afs_client:client",
     ]
 )
+
+py_binary(
+    name = "copy_to_bos",
+    srcs = ["copy_to_bos.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/data/afs_client:client",
+    ]
+)

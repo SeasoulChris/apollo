@@ -31,7 +31,7 @@ message ReadMessagesRequest {
   string topics = 2; // e.g.:  '/sensor/gnss/raw_data,/pnc/carstatus'，default all topics
   uint32 start_time_second = 3;
   uint32 end_time_second = 4;
-  string table_name = 5; // e.g.: 'kinglong/auto_car'
+  string namespace = 5; // e.g.: 'kinglong/auto_car'
   bool with_data = 6; // True: return message content; default false.
 }
 
@@ -42,4 +42,5 @@ message ReadMessagesResponse {
   string data_type = 4;
   uint64 timestamp = 5;
 }
+
 

@@ -14,18 +14,16 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as cybertron_localization_pose_pb2
 
-
-
 class AfsClient(object):
     """Afs client."""
 
-    def __init__(self, scan_table_name=None, message_table_name=None):
+    def __init__(self, scan_table_name=None, message_namespace=None):
         """init common variables"""
         self.SERVER_URL = '180.76.53.252:50053'
         self.GRPC_OPTIONS = [('grpc.max_send_message_length', 512 * 1024 * 1024),
                              ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.scan_table_name = scan_table_name or 'kinglong/auto_car/cyberecord'
-        self.message_table_name = message_table_name or 'kinglong/auto_car'
+        self.message_namespace = message_namespace or 'kinglong/auto_car'
 
     def convert_message(self, topic, message):
         """Check message format"""
@@ -57,6 +55,7 @@ class AfsClient(object):
         return res
 
     def transfer_messages(self, task_id, start_time, end_time, target_dir, topics='*'):
+        """Read and transfer afs messages into apollo format, then insert them into bos"""
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
             # Get ReadMessages result, it could be a stream of record messages
@@ -64,7 +63,7 @@ class AfsClient(object):
                 task_id=task_id,
                 start_time_second=start_time,
                 end_time_second=end_time,
-                table_name=self.message_table_name,
+                namespace=self.message_namespace,
                 topics=topics,
                 with_data=True)
             response = stub.ReadMessages(request)
@@ -89,7 +88,7 @@ class AfsClient(object):
                 task_id=task_id,
                 start_time_second=start_time,
                 end_time_second=end_time,
-                table_name=self.message_table_name,
+                namespace=self.message_namespace,
                 with_data=False)
             response = stub.ReadMessages(request)
             for msg in response:
@@ -119,3 +118,4 @@ class AfsClientPipeline(BasePipeline):
 
 if __name__ == '__main__':
     AfsClientPipeline().main()
+

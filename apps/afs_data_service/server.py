@@ -58,11 +58,11 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         """Dump and ReadMessages"""
         record_dump = RecordDump(self.adb_client)
         messages = record_dump.read_messages(
-            request.task_id,
-            request.topics if request.topics else '*',
-            request.start_time_second,
-            request.end_time_second,
-            request.table_name)
+            task_id=request.task_id,
+            topics=request.topics if request.topics else '*',
+            start_time_s=request.start_time_second,
+            end_time_s=request.end_time_second,
+            namespace=request.namespace)
         for topic, message, data_type, timestamp in messages:
             print('task_id:{}, topic:{}, message_size: {}, data_type:{}, timestamp:{}'.format(
                   request.task_id, topic, len(message), data_type, timestamp))
@@ -93,3 +93,4 @@ def __main__(argv):
 
 if __name__ == "__main__":
     app.run(__main__)
+
