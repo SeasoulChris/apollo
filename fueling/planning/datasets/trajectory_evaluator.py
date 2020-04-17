@@ -5,23 +5,20 @@ import time
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
 
-class LearningDataGenerator(BasePipeline):
-    """Records to feature proto pipeline."""
-
+class TrajectoryEvaluator(BasePipeline):
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/cleaned_data/',
+            'modules/planning/output_data/',
         ]
-        self.dest_dir_prefix = 'modules/planning/learning_data/'
+        self.dest_dir_prefix = 'modules/planning/output_data_evaluated/'
 
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
-            '/apollo/data/cleaned_data/',
+            '/apollo/data/output_data/',
         ]
-        self.dest_dir_prefix = '/apollo/data/learning_data/'
+        self.dest_dir_prefix = '/apollo/data/output_data_evaluated/'
 
         src_dirs_set = set([])
         for prefix in self.src_dir_prefixs:
@@ -29,9 +26,9 @@ class LearningDataGenerator(BasePipeline):
                 for file in files:
                     src_dirs_set.add(root)
 
-        processed_records = self.to_rdd(src_dirs_set).map(self.process_record)
+        processed_files = self.to_rdd(src_dirs_set).map(self.process_dir)
 
-        logging.info('Processed {}/{} records'.format(processed_records.count(),
+        logging.info('Processed {}/{} files'.format(processed_files.count(),
                                                       len(src_dirs_set)))
         return 0
 
@@ -44,17 +41,17 @@ class LearningDataGenerator(BasePipeline):
                 .distinct()
             for prefix in self.src_dir_prefixs])
 
-        processed_records = records_rdd.map(self.process_record)
+        processed_files = records_rdd.map(self.process_dir)
 
-        logging.info('Processed {} records'.format(processed_records.count()))
+        logging.info('Processed {} files'.format(processed_files.count()))
 
-    def process_record(self, src_dir):
-        """ Process Records """
+    def process_dir(self, src_dir):
+        """ Process files """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
-        dest_dir_elements = ['learning_data' if x ==
-                             'cleaned_data' else x for x in src_dir_elements]
-        if ('learning_data' in dest_dir_elements):
+        dest_dir_elements = ['output_data_evaluated' if x ==
+                             'output_data' else x for x in src_dir_elements]
+        if ('output_data_evaluated' in dest_dir_elements):
             dest_dir = "/".join(dest_dir_elements)
         else:
             dest_dir = "/".join(src_dir_elements)
@@ -66,8 +63,8 @@ class LearningDataGenerator(BasePipeline):
         command = (
             'cd /apollo && sudo bash '
             'modules/tools/planning/data_pipelines/scripts/'
-            'record_to_learning_data.sh '
-            '"{}" "{}" "{}"'.format(src_dir, dest_dir, map_name))
+            'evaluate_trajectory.sh '
+            '"{}" "{}"'.format(src_dir, dest_dir))
 
         if os.system(command) == 0:
             logging.info('Successfully processed {} to {}'.format(src_dir,
@@ -80,4 +77,4 @@ class LearningDataGenerator(BasePipeline):
         return 0
 
 if __name__ == '__main__':
-    LearningDataGenerator().main()
+    TrajectoryEvaluator().main()

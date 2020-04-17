@@ -30,6 +30,16 @@ py_test(
 )
 
 py_binary(
+    name = "trajectory_evaluator",
+    srcs = ["trajectory_evaluator.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+    ],
+)
+
+py_binary(
     name = "generate_training_data",
     srcs = ["generate_training_data.py"],
     deps = [
