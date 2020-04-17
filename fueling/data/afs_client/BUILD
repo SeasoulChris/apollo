@@ -12,3 +12,12 @@ py_binary(
         "//fueling/common:file_utils",
     ]
 )
+
+py_binary(
+    name = "scan_all_topics",
+    srcs = ["scan_all_topics.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/data/afs_client:client",
+    ]
+)

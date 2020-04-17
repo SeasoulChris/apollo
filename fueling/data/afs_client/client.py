@@ -3,17 +3,17 @@
 import os
 import time
 
-from absl import flags
 import grpc
 
+import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
+import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
 from cyber_py3.record import RecordWriter
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.record.kinglong.cybertron.python.convert import transfer_localization_estimate
-import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
-import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as cybertron_localization_pose_pb2
+
 
 
 class AfsClient(object):
@@ -22,6 +22,8 @@ class AfsClient(object):
     def __init__(self, scan_table_name=None, message_table_name=None):
         """init common variables"""
         self.SERVER_URL = '180.76.53.252:50053'
+        self.GRPC_OPTIONS = [('grpc.max_send_message_length', 512 * 1024 * 1024),
+                             ('grpc.max_receive_message_length', 512 * 1024 * 1024)]
         self.scan_table_name = scan_table_name or 'kinglong/auto_car/cyberecord'
         self.message_table_name = message_table_name or 'kinglong/auto_car'
 
@@ -34,17 +36,17 @@ class AfsClient(object):
             apollo_loc = transfer_localization_estimate(loc)
             logging.info(F'localization coordinates after transfer: {apollo_loc.pose.position.x}')
 
-    def scan_tasks(self, start_time, end_time):
-        """Scan tasks by date range"""
+    def scan_tasks(self, query_date):
+        """Scan tasks by date"""
         res = []
         columns='task_id,start_time,end_time'
-        with grpc.insecure_channel(self.SERVER_URL) as channel:
+        with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             # Get scan result, it could be a list of record files
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
             request = afs_data_service_pb2.ScanRequest(
                 table_name=self.scan_table_name,
                 columns=columns,
-                where='date >= {} and date <= {}'.format(start_time, end_time))
+                where='date = {}'.format(query_date))
             response = stub.Scan(request)
             for resItem in response.records:
                 task_id = resItem.task_id
@@ -55,7 +57,7 @@ class AfsClient(object):
         return res
 
     def transfer_messages(self, task_id, start_time, end_time, target_dir, topics='*'):
-        with grpc.insecure_channel(self.SERVER_URL) as channel:
+        with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
             # Get ReadMessages result, it could be a stream of record messages
             request = afs_data_service_pb2.ReadMessagesRequest(
@@ -63,7 +65,8 @@ class AfsClient(object):
                 start_time_second=start_time,
                 end_time_second=end_time,
                 table_name=self.message_table_name,
-                topics=topics)
+                topics=topics,
+                with_data=True)
             response = stub.ReadMessages(request)
             # Write message to BOS
             target_dir = os.path.join(target_dir, task_id)
@@ -77,6 +80,22 @@ class AfsClient(object):
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
             writer.close()
 
+    def get_topics(self, task_id, start_time, end_time):
+        """Get topics of task"""
+        topics = []
+        with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
+            stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
+            request = afs_data_service_pb2.ReadMessagesRequest(
+                task_id=task_id,
+                start_time_second=start_time,
+                end_time_second=end_time,
+                table_name=self.message_table_name,
+                with_data=False)
+            response = stub.ReadMessages(request)
+            for msg in response:
+                topics.append((msg.topic, msg.message_size))
+                logging.info((msg.topic, msg.message_size))
+        return topics
 
 class AfsClientPipeline(BasePipeline):
     """AFS data transfer pipeline""" 
@@ -100,4 +119,3 @@ class AfsClientPipeline(BasePipeline):
 
 if __name__ == '__main__':
     AfsClientPipeline().main()
-

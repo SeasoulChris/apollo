@@ -64,11 +64,12 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             request.end_time_second,
             request.table_name)
         for topic, message, data_type, timestamp in messages:
-            print('task_id:{}, topic:{}, data_type:{}, timestamp:{}'.format(
-                  request.task_id, topic, data_type, timestamp))
+            print('task_id:{}, topic:{}, message_size: {}, data_type:{}, timestamp:{}'.format(
+                  request.task_id, topic, len(message), data_type, timestamp))
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
-            response.message = message
+            response.message = message if request.with_data else b''
+            response.message_size = len(message)
             response.data_type = data_type
             response.timestamp = timestamp
             yield response

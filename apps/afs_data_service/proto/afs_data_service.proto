@@ -32,11 +32,14 @@ message ReadMessagesRequest {
   uint32 start_time_second = 3;
   uint32 end_time_second = 4;
   string table_name = 5; // e.g.: 'kinglong/auto_car'
+  bool with_data = 6; // True: return message content; default false.
 }
 
 message ReadMessagesResponse {
   string topic = 1;
   bytes message = 2;
-  string data_type = 3;
-  uint64 timestamp = 4;
+  uint32 message_size = 3;
+  string data_type = 4;
+  uint64 timestamp = 5;
 }
+
