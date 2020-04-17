@@ -35,6 +35,7 @@ py_binary(
         ":dataset",
         ":dynamic_model_dataset",
         ":gp_model",
+        "//fueling/learning:train_utils",
     ],
 )
 
