@@ -114,7 +114,7 @@ class OutputDataGenerator(BasePipeline):
         # # using dir as part of key
         file_dir = os.path.dirname(src_file)
         logging.debug(file_name.split('.')[1])
-        file_id = int(file_name.split('.')[1])
+        file_id = int(file_name.split('.')[0])
         if is_shift:
             file_id = file_id - 1
         return (file_dir, file_id), src_file
