@@ -171,5 +171,6 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/prediction/common:configure",
     ],
 )

@@ -14,7 +14,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
-from fueling.prediction.common.configure import parameters
+from fueling.prediction.common.configure import semantic_map_config
 
 
 TARGET_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
@@ -22,8 +22,8 @@ TARGET_NUM_FUTURE_POINT = 30
 MAX_NUM_LABEL_FILE = 180
 MAX_NUM_FRAME_ENV_FILE = 100
 
-OFFSET_X = parameters['offset_x']
-OFFSET_Y = parameters['offset_y']
+OFFSET_X = semantic_map_config['offset_x']
+OFFSET_Y = semantic_map_config['offset_y']
 
 '''
 [scene, scene, ..., scene]

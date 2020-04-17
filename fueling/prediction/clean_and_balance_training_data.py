@@ -106,7 +106,10 @@ class CleanTrainingDataPipeline(BasePipeline):
         count = Counter()
         file_content = np.load(training_data_filepath, allow_pickle=True).tolist()
         cleaned_content = []
+        region = self.get_map_dir_by_path(training_data_filepath)
         for scene in file_content:
+            if self.SceneHasInvalidDataPt(scene, region):
+                continue
             cleaned_scene = []
             num_valid_label = 0
             for data_pt in scene:
@@ -126,13 +129,15 @@ class CleanTrainingDataPipeline(BasePipeline):
         logging.info('npy save {}'.format(cleaned_training_data_filepath))
         np.save(cleaned_training_data_filepath, cleaned_content)
 
-    def SceneHasInvalidDataPt(self, scene):
+    def SceneHasInvalidDataPt(self, scene, region):
         for data_pt in scene:
             if len(data_pt[1]) == 0:
                 continue
             if len(data_pt[0]) == 0:
                 return True
             if self.IsDataPtZeroCurrPosition(data_pt):
+                return True
+            if self.IsDataPtOutsideMapArea(data_pt, region):
                 return True
         return False
 
@@ -144,9 +149,37 @@ class CleanTrainingDataPipeline(BasePipeline):
             return True
         return False
 
-    def IsDataPtOutsideMapArea(self, data_pt, map_region, buffer):
-        # TODO(kechxu) implement
+    def IsDataPtOutsideMapArea(self, data_pt, map_region, threshold=10.0, history_limit=10):
+        region_param = semantic_map_config['map_coords'][map_region]
+        buff = region_param['distance_buffer']
+        x_range = region_param['horizontal_pixel_size'] * region_param['resolution']
+        y_range = region_param['vertical_pixel_size'] * region_param['resolution']
+        accepted_x_lower = region_param['lower_left_x'] + buff - threshold
+        accepted_y_lower = region_param['lower_left_y'] + buff - threshold
+        accepted_x_upper = region_param['lower_left_x'] + x_range - buff + threshold
+        accepted_y_upper = region_param['lower_left_y'] + y_range - buff + threshold
+        history = data_pt[0]
+        length = min(len(history), history_limit)
+        start_index = len(history) - length
+        for i in range(start_index, len(history)):
+            x = history[i][1] + OFFSET_X
+            y = history[i][2] + OFFSET_Y
+            if x < accepted_x_lower or x > accepted_x_upper or \
+               y < accepted_y_lower or y > accepted_y_upper:
+                return True
         return False
+
+    def get_map_dir_by_path(self, path):
+        path_lower = path.lower()
+        if "baidudasha" in path_lower:
+            return "baidudasha"
+        if "xionganshiminzhongxin" in path_lower:
+            return "XiongAn"
+        if "xiamen" in path_lower:
+            return "XiaMen"
+        if "feifengshan" in path_lower:
+            return "FuZhouFeiFengShan"
+        return "demo"
 
 
 if __name__ == '__main__':
