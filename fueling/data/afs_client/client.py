@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 import os
-import time
 
 import grpc
 
+from cyber_py3.record import RecordWriter
+from fueling.common.record.kinglong.cybertron.python.convert import transfer_localization_estimate
 import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
 import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
-from cyber_py3.record import RecordWriter
-from fueling.common.base_pipeline import BasePipeline
-from fueling.common.record.kinglong.cybertron.python.convert import transfer_localization_estimate
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as cybertron_localization_pose_pb2
+
 
 class AfsClient(object):
     """Afs client."""
@@ -71,10 +70,10 @@ class AfsClient(object):
             target_dir = os.path.join(target_dir, task_id)
             file_utils.makedirs(target_dir)
             target_file = os.path.join(target_dir, F'{start_time}.record')
+            logging.info(F'writing to target file: {target_file}')
             writer = RecordWriter(0, 0)
             writer.open(target_file)
             for msg in response:
-                logging.info(F'message topic: {msg.topic}')
                 self.convert_message(msg.topic, msg.message)
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
             writer.close()
@@ -96,26 +95,4 @@ class AfsClient(object):
                 logging.info((msg.topic, msg.message_size))
         return topics
 
-class AfsClientPipeline(BasePipeline):
-    """AFS data transfer pipeline""" 
-    def execute(self, task_id):
-        """Connect to gRPC server, issue requests and get responses"""
-        # TODO(all): for demonstation only for now, replace the params with real ones later
-        target_dir = self.our_storage().abs_path('modules/data/planning')
-        afs_client = AfsClient()
-        afs_client.transfer_messages('KL056_20200326111402', 1585193067, 1585193068, target_dir)
-        logging.info('done executing')
-        time.sleep(60*2)
-        return 1
-
-    def run(self):
-        """Run."""
-        # Multiple tasks to get messages from gRPC service in parallel
-        tasks_count = 1
-        total_messages_num = self.to_rdd(range(tasks_count)).map(self.execute).sum()
-        logging.info(F'total messages number: {total_messages_num}')
-
-
-if __name__ == '__main__':
-    AfsClientPipeline().main()
 
