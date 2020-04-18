@@ -33,7 +33,6 @@ flags.DEFINE_string('open_space_planner_profiling_output_path',
 
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
-MSG_PER_SEGMENT = 100000
 VEHICLE_PARAM_FILE = 'vehicle_param.pb.txt'
 
 
@@ -54,15 +53,9 @@ def has_desired_stage(msgs):
     return False
 
 
-def partition_data(target_msgs):
-    """Divide the messages to groups each of which has exact number of messages"""
-    target, msgs = target_msgs
-    logging.info(F'Partition data for {len(msgs)} messages in target {target}')
-
-    msgs = sorted(msgs, key=lambda msg: msg['planning'].header.sequence_num)
-    msgs_groups = [msgs[idx: idx + MSG_PER_SEGMENT]
-                   for idx in range(0, len(msgs), MSG_PER_SEGMENT)]
-    return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
+def sort_messages(msgs):
+    logging.info(F'Sorting {len(msgs)} messages')
+    return sorted(msgs, key=lambda msg: msg['planning'].header.sequence_num)
 
 
 def read_channel_messages(todo_task_dirs, channel):
@@ -144,27 +137,23 @@ class OpenSpacePlannerMetrics(BasePipeline):
         open_space_msgs = (msgs
                            # PairRDD(target_prefix, parsed_message), keep message with desired stage
                            .filter(spark_op.filter_value(has_desired_stage))
+                           .groupByKey()
+                           .mapValues(sort_messages)
                            ).cache()
         logging.info(F'open_space_message_count: {open_space_msgs.count()}')
         logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
 
         # 3. get feature from all frames with desired stage
-        raw_data = (open_space_msgs
-                    # PairRDD(target_prefix, filtered_messages)
-                    .groupByKey()
-                    # RDD(target_prefix, group_id, group of (message)s),
-                    # divide messages into groups
-                    .flatMap(partition_data))
-        stage_feature = raw_data.map(extract_stage_feature)
+        stage_feature = open_space_msgs.map(extract_stage_feature)
         logging.info(F'stage_feature_count: {stage_feature.count()}')
         logging.debug(F'stage_feature_first: {stage_feature.first()}')
-        latency_feature = raw_data.map(extract_latency_feature)
+        latency_feature = open_space_msgs.map(extract_latency_feature)
         logging.info(F'latency_feature_count: {latency_feature.count()}')
         logging.debug(F'latency_feature_first: {latency_feature.first()}')
-        zigzag_feature = raw_data.map(extract_zigzag_trajectory_feature)
+        zigzag_feature = open_space_msgs.map(extract_zigzag_trajectory_feature)
         logging.info(F'zigzag_feature_count: {zigzag_feature.count()}')
         logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
-        trajectory_feature = raw_data.map(extract_planning_trajectory_feature)
+        trajectory_feature = open_space_msgs.map(extract_planning_trajectory_feature)
         logging.info(F'trajectory_feature_count: {trajectory_feature.count()}')
         logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
 
@@ -173,7 +162,6 @@ class OpenSpacePlannerMetrics(BasePipeline):
         latency_result = latency_feature.map(latency_grading)
         zigzag_result = zigzag_feature.map(zigzag_grading)
         trajectory_result = trajectory_feature.map(trajectory_grading)
-        # TODO: results under same target are partitioned, combine them.
         result_data = (stage_result
                        .join(latency_result)
                        .mapValues(merge_grading_results)
@@ -193,11 +181,11 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
     def email_output(self, tasks, origin_prefix, target_prefix, partner_email='', error_msg=''):
         title = 'Open Space Planner Profiling Results'
+        recipients = email_utils.CONTROL_TEAM + email_utils.SIMULATION_TEAM
         # Uncomment this for dev test
-        # recipients = email_utils.SIMULATION_TEAM
-        recipients = email_utils.CONTROL_TEAM
+        # recipients = ['caoyu05@baidu.com']
         recipients.append(partner_email)
-        SummaryTuple = namedtuple('Summary', ['Task', 'FeatureHDF5s', 'Profiling'])
+        SummaryTuple = namedtuple('Summary', ['Task', 'FeatureHDF5s', 'FeaturePlot', 'Profiling'])
         if tasks:
             email_content = []
             attachments = []
@@ -207,16 +195,23 @@ class OpenSpacePlannerMetrics(BasePipeline):
             for task in tasks:
                 source = task.replace(target_prefix, origin_prefix, 1)
                 logging.info(F'task: {task}, source: {source}')
-                output = glob.glob(os.path.join(task, '*performance_grading*'))
+                features = glob.glob(os.path.join(task, '*.hdf5'))
+                plot = glob.glob(os.path.join(task, '*visualization*'))
+                profiling = glob.glob(os.path.join(task, '*performance_grading*'))
                 email_content.append(SummaryTuple(
                     Task=source,
-                    FeatureHDF5s=len(glob.glob(os.path.join(task, '*.hdf5'))),
-                    Profiling=len(output),
+                    FeatureHDF5s=len(features),
+                    FeaturePlot=len(plot),
+                    Profiling=len(profiling),
                 ))
-                if output:
+                if profiling or features or plot:
                     tar_filename = F'{os.path.basename(source)}_profiling.tar.gz'
                     tar = tarfile.open(tar_filename, 'w:gz')
-                    for report in output:
+                    for report in profiling:
+                        tar.add(report)
+                    for report in features:
+                        tar.add(report)
+                    for report in plot:
                         tar.add(report)
                     tar.close()
             attachments.append(tar_filename)

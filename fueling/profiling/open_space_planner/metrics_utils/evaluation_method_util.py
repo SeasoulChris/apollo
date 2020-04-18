@@ -63,17 +63,16 @@ def merge_grading_results(grading_tuple):
 
 
 def stage_grading(target_groups):
-    target, group_id, feature_mtx = target_groups
+    target, feature_mtx = target_groups
     if feature_mtx.shape[0] == 0:
-        logging.warning(F'No valid element in group {group_id} for target {target}')
+        logging.warning(F'No valid element for target {target}')
         return (target, None)
     if feature_mtx.shape[0] != 1:
-        logging.warning(F'Unexpected number of elements in group {group_id} for target {target}'
+        logging.warning(F'Unexpected number of elements for target {target}'
                         'Only one element/sample should be present!')
         return (target, None)
 
-    # TODO(shu): added scenario type and stage type
-    h5_output_file = '_{:05d}_stage'.format(group_id)
+    h5_output_file = 'stage_feature'
     logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
                  F'for target {target}')
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
@@ -88,13 +87,12 @@ def stage_grading(target_groups):
 
 
 def latency_grading(target_groups):
-    target, group_id, feature_mtx = target_groups
+    target, feature_mtx = target_groups
     if feature_mtx.shape[0] == 0:
-        logging.warning(F'No valid element in group {group_id} for target {target}')
+        logging.warning(F'No valid element for target {target}')
         return (target, None)
 
-    # TODO(shu): added scenario type and stage type
-    h5_output_file = '_{:05d}_latency'.format(group_id)
+    h5_output_file = 'latency_feature'
     logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
                  F'for target {target}')
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
@@ -109,13 +107,12 @@ def latency_grading(target_groups):
 
 
 def zigzag_grading(target_groups):
-    target, group_id, feature_mtx = target_groups
+    target, feature_mtx = target_groups
     if feature_mtx.shape[0] == 0:
-        logging.warning(F'No valid element in group {group_id} for target {target}')
+        logging.warning(F'No valid element for target {target}')
         return (target, None)
 
-    # TODO(shu): added scenario type and stage type
-    h5_output_file = '_{:05d}_zigzag'.format(group_id)
+    h5_output_file = 'zigzag_feature'
     logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
                  F'for target {target}')
     h5_utils.write_h5(feature_mtx, target, h5_output_file)
@@ -130,13 +127,12 @@ def zigzag_grading(target_groups):
 
 
 def trajectory_grading(target_groups):
-    target, group_id, feature_mtx = target_groups
+    target, feature_mtx = target_groups
     if feature_mtx.shape[0] == 0:
-        logging.warning(F'No valid element in group {group_id} for target {target}')
+        logging.warning(F'No valid element for target {target}')
         return (target, None)
 
-    # TODO(shu): added scenario type and stage type
-    h5_output_file = '_{:05d}_trajectory'.format(group_id)
+    h5_output_file = 'trajectory_feature'
     logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
                  F'for target {target}')
     h5_utils.write_h5(feature_mtx, target, h5_output_file)

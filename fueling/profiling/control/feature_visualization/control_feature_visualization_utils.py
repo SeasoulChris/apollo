@@ -110,7 +110,7 @@ def clean_data(data, seq):
 
 # TODO(Una/Vivian): This is only used in open space planner, and we may need to re-factor this out.
 def plot_hist(data_rdd):
-    dir_data, group_id, data = data_rdd
+    dir_data, data = data_rdd
     pdffile = os.path.join(dir_data, 'visualization.pdf')
     feature_names = OpenSpaceConf.TRAJECTORY_FEATURE_NAMES
     with PdfPages(pdffile) as pdf:

@@ -105,7 +105,8 @@ def find_min_collision_time(msg, vehicle_param):
     adc_start_time = planning.header.timestamp_sec
 
     for traj_point in planning.trajectory_point:
-        if (traj_point.relative_time < 0):
+        # exclude past or stationary trajectory points
+        if (traj_point.relative_time < 0) or (abs(traj_point.v) < 0.1):
             continue
         adc_time = adc_start_time + traj_point.relative_time
         path_point = traj_point.path_point
@@ -194,14 +195,19 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boun
     lat_dec_bound = calc_lat_dec_bound(lon_acc, lon_dec)
 
     # distance
-    traj_point = Point(path_point.x, path_point.y)
-    distances_to_roi = [boundary.distance(traj_point) for boundary in roi_boundaries]
-    distance_to_roi_ratio = REFERENCE_VALUES['roi_reference_distance'] / \
-        min(distances_to_roi) if distances_to_roi else 0.0
+    if trajectory_point.relative_time < 0:
+        distance_to_roi_ratio = 0
+        distance_to_obstacle_ratio = 0
+    else:
+        traj_point = Point(path_point.x, path_point.y)
+        distances_to_roi = [boundary.distance(traj_point) for boundary in roi_boundaries]
+        distance_to_roi_ratio = REFERENCE_VALUES['roi_reference_distance'] / \
+            min(distances_to_roi) if distances_to_roi else 0.0
 
-    distance_to_obstacles = [obstacle.distance(traj_point) for obstacle in obstacles]
-    distance_to_obstacle_ratio = REFERENCE_VALUES['obstacle_reference_distance'] / min(
-        distance_to_obstacles) if distance_to_obstacles else 0.0
+        distance_to_obstacles = [obstacle.distance(traj_point) for obstacle in obstacles]
+        distance_to_obstacle_ratio = REFERENCE_VALUES['obstacle_reference_distance'] / min(
+            distance_to_obstacles) if distance_to_obstacles else 0.0
+
     if min_collision_time == REFERENCE_VALUES['max_time_to_collision']:
         time_to_collision = min_collision_time  # no collision
     elif trajectory_point.relative_time > min_collision_time:
@@ -335,7 +341,7 @@ def extract_obstacle_polygons(msg):
 
 def extract_planning_trajectory_feature(target_groups):
     """Extract planning trajectory related feature matrix from a group of planning messages"""
-    target, group_id, msgs = target_groups
+    target, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
@@ -349,7 +355,7 @@ def extract_planning_trajectory_feature(target_groups):
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])
 
-    return target, group_id, planning_trajectory_mtx
+    return target, planning_trajectory_mtx
 
 
 def extract_meta_from_planning(msg):
@@ -366,11 +372,11 @@ def extract_meta_from_planning(msg):
 
 def extract_latency_feature(target_groups):
     """Extract latency related feature matrix from a group of planning messages"""
-    target, group_id, msgs = target_groups
+    target, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
     latency_mtx = np.array([data for data in [extract_meta_from_planning(msg['planning'])
                                               for msg in msgs] if data is not None])
-    return target, group_id, latency_mtx
+    return target, latency_mtx
 
 
 def compute_path_length(trajectory):
@@ -395,7 +401,7 @@ def extract_data_from_zigzag(msg, wheel_base):
 
 def extract_zigzag_trajectory_feature(target_groups):
     """Extract zigzag trajectory related feature matrix from a group of planning messages"""
-    target, group_id, msgs = target_groups
+    target, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
@@ -406,12 +412,12 @@ def extract_zigzag_trajectory_feature(target_groups):
         # Do not depend on the number of zigzag trajectories as it may be a stopping one
         if msg['planning'].debug.planning_data.open_space.time_latency > 0:
             zigzag_list.extend(extract_data_from_zigzag(msg['planning'], vehicle_param.wheel_base))
-    return target, group_id, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
+    return target, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
 
 
 def extract_stage_feature(target_groups):
     """Extract scenario stage related feature matrix from a group of planning messages"""
-    target, group_id, msgs = target_groups
+    target, msgs = target_groups
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     start_timestamp = msgs[0]['planning'].header.timestamp_sec
@@ -434,4 +440,4 @@ def extract_stage_feature(target_groups):
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
     initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
         / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
-    return target, group_id, np.array([[stage_completion_time, initial_heading_diff_ratio]])
+    return target, np.array([[stage_completion_time, initial_heading_diff_ratio]])

@@ -35,13 +35,13 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         grading_output = file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/open_space_performance_grading.txt')
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_stage.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/stage_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_latency.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/latency_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_zigzag.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/zigzag_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_trajectory.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/trajectory_feature.hdf5')))
         self.assertTrue(os.path.exists(grading_output))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/visualization.pdf')))
@@ -68,13 +68,13 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         grading_output = file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/open_space_performance_grading.txt')
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_stage.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/stage_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_latency.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/latency_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_zigzag.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/zigzag_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/_00000_trajectory.hdf5')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/trajectory_feature.hdf5')))
         self.assertTrue(os.path.exists(grading_output))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/visualization.pdf')))
@@ -84,10 +84,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertListEqual(['0.0126582', '100.000%', '31.570%', '17.569%',
                               '42.629%', 'N.A.', '237'], output_dict['non_gear_switch_length_ratio'])
         self.assertListEqual(['0.000041', '1'], output_dict['initial_heading_diff_ratio'])
-        self.assertListEqual(['0', '33.019%', '9.677%', '7.795%', '28.619%',
+        self.assertListEqual(['0', '33.019%', '7.184%', '9.217%', '28.619%',
                               'N.A.', '26301'], output_dict['distance_to_obstacles_ratio'])
-        self.assertListEqual(['0.0558914', '58.333%', '7.517%', '15.283%', '50.000%',
-                              'N.A.', '1470'], output_dict['min_time_to_collision_ratio'])
 
     def parse_grading_output(self, output_path):
         output_dict = {}
