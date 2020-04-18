@@ -93,7 +93,7 @@ def parse_vehicle_controller(task, flags):
     return (vehicle_controller_parsed_dir, task)
 
 
-def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, control_error_code):
+def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, control_nonerror_status):
     """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
@@ -109,6 +109,7 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
                  F'control {control_mtx.shape[0]}, and localization {localization_mtx.shape[0]}')
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
         return np.take(control_mtx, [], axis=0)
+
     # First, filter the chassis data with desired driving modes and gear locations
     driving_condition = (
         chassis_mtx[:, MODE_IDX['driving_mode']] == driving_mode)
@@ -119,7 +120,26 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
             chassis_mtx[:, MODE_IDX['gear_location']] == gear_position[gear_idx])
     chassis_idx_filtered = np.where(driving_condition & gear_condition)[0]
     chassis_mtx_filtered = np.take(chassis_mtx, chassis_idx_filtered, axis=0)
-    # Second, filter the control data with existing chassis and localization sequence_num
+
+    # Second, identify the control error code and re-build the control data with control error
+    # Note: when any error_code emerges, the chassis_header and localization_header in the control
+    #       channel are abondoned; so we need to dig the error_code from the non-filtered control data,
+    #       and then feed the chassis_timestamp and localization_timestamp back to control data
+    control_error_condition = (
+        control_mtx[:, FEATURE_IDX['control_error_code']] != control_nonerror_status)
+    for control_idx in np.where(control_error_condition)[0]:
+        error_timestamp = round(control_mtx[control_idx, FEATURE_IDX['timestamp_sec']], 3)
+        chassis_idx = np.argmin(np.abs(chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']] -
+                                       error_timestamp))
+        chassis_timestamp = chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']]
+        localization_idx = np.argmin(np.abs(localization_mtx[:, POSE_IDX['timestamp_sec']] -
+                                            error_timestamp))
+        localization_timestamp = localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]
+        if (abs(chassis_timestamp - error_timestamp) < MAX_PHASE_DELTA):
+            control_mtx[control_idx, FEATURE_IDX['chassis_timestamp_sec']] = chassis_timestamp
+            control_mtx[control_idx, FEATURE_IDX['localization_timestamp_sec']] = localization_timestamp
+
+    # Third, filter the control data with existing chassis and localization sequence_num
     control_idx_by_chassis = np.in1d(['%.3f' % x for x in
                                       control_mtx[:, FEATURE_IDX['chassis_timestamp_sec']]],
                                      ['%.3f' % x for x in
@@ -130,19 +150,22 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
                                            localization_mtx[:, POSE_IDX['timestamp_sec']]])
     control_mtx_rtn = control_mtx[control_idx_by_chassis &
                                   control_idx_by_localization, :]
-    # Third, filter the control data with specific status flags
+
+    # Fourth, filter the control data with specific status flags
     if flags['ctl_metrics_filter_by_MRAC']:
         MRAC_condition = (control_mtx_rtn[:, FEATURE_IDX['steer_mrac_enable_status']] != 1)
         control_mtx_rtn = np.delete(control_mtx_rtn, np.where(MRAC_condition)[0], axis=0)
         logging.info(F'Control channel messages with MRAC off are filtered out')
-    # Fourth, delete the control data with inverted-sequence chassis and localization sequence_num
+
+    # Fifth, delete the control data with inverted-sequence chassis and localization sequence_num
     # (in very rare cases, the sequence number in control record is like ... 100, 102, 101, 103 ...)
     inv_seq_chassis = (np.diff(control_mtx_rtn[:, FEATURE_IDX['chassis_timestamp_sec']]) < 0.0)
     inv_seq_localization = (np.diff(control_mtx_rtn[:, FEATURE_IDX['localization_timestamp_sec']])
                             < 0.0)
     for inv in np.where(inv_seq_chassis | inv_seq_localization):
         control_mtx_rtn = np.delete(control_mtx_rtn, [inv, inv + 1], axis=0)
-    # Fourth, filter the chassis and localization data with filtered control data
+
+    # Sixth, filter the chassis and localization data with filtered control data
     chassis_idx_rtn = []
     localization_idx_rtn = []
     chassis_idx = 0
@@ -166,6 +189,7 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
     logging.info(F'The filtered msgs size are: chassis {chassis_mtx_rtn.shape[0]}, '
                  F'control {control_mtx_rtn.shape[0]}, and '
                  F'localization {localization_mtx_rtn.shape[0]}')
+
     # Finally, rebuild the grading mtx with the control data combined with
     # chassis and localizaiton data
     if (control_mtx_rtn.shape[0] > 0):
@@ -200,10 +224,6 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
             pose_heading_offset[sigular_idx] = 0.0
         grading_mtx = np.column_stack(
             (grading_mtx, np.append(pose_heading_offset, [0.0], axis=0)))
-        # Fourth, reformat the control error code data from Enum to boolean
-        grading_mtx[:, FEATURE_IDX['control_error_code']] = (
-            [0 if code == control_error_code else 1
-             for code in grading_mtx[:, FEATURE_IDX['control_error_code']]])
     else:
         grading_mtx = control_mtx_rtn
     return grading_mtx
