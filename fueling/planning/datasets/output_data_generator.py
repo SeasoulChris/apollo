@@ -13,7 +13,7 @@ SKIP_EXISTING_DST_FILE = False
 SRC_DIR_PREFIX = 'modules/planning/learning_data'
 DST_DIR_PREFIX = 'modules/planning/output_data'
 # for local test
-# SRC_DIR_PREFIX = 'apollo/data/learning_data'
+# SRC_DIR_PREFIX = 'apollo/data/learning_data2'
 # DST_DIR_PREFIX = 'apollo/data/output_data'
 
 
@@ -109,12 +109,13 @@ class OutputDataGenerator(BasePipeline):
 
     @staticmethod
     def get_file_id(src_file, is_shift=False):
-        # file name is learning_data.x.bin
+        # learning data file name formate: <record id>.record.<file id>.bin
         file_name = os.path.basename(src_file)
-        # # using dir as part of key
+        # using dir as part of key
         file_dir = os.path.dirname(src_file)
-        logging.debug(file_name.split('.')[1])
-        file_id = int(file_name.split('.')[0])
+        logging.debug(file_name.split('.')[-2])
+        # change this when learning data file name is changed
+        file_id = int(file_name.split('.')[-2])
         if is_shift:
             file_id = file_id - 1
         return (file_dir, file_id), src_file
