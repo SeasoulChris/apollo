@@ -7,6 +7,9 @@ import os
 import pickle
 import sys
 
+# disable GPU for local test
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 from keras.models import load_model
 import h5py
 import numpy as np
@@ -85,6 +88,7 @@ def generate_gp_data(model_path, segment):
         predicted_v += predicted_a * feature_config["delta_t"]
         predicted_heading += predicted_w * feature_config["delta_t"]
         # Calculate the model prediction on current position
+        # TODO(SHU): s = v * dt + 1/2 * a * dt * dt
         predicted_x += predicted_v * np.cos(predicted_heading) * feature_config["delta_t"]
         predicted_y += predicted_v * np.sin(predicted_heading) * feature_config["delta_t"]
     # logging.info("The predicted x:{}, y:{}".format(predicted_x, predicted_y))
