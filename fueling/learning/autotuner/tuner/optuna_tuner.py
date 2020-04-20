@@ -134,8 +134,11 @@ if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     tuner = OptunaBaseTuner()
     # Let us minimize the objective function above.
-    print("Running 10 trials...")
+    print("Running 5 trials...")
     #study = optuna.create_study(study_name='distributed-example', storage='sqlite:///example.db')
     study = optuna.create_study(sampler=TPESampler())
-    study.optimize(tuner.objective, n_trials=10)
+    study.optimize(tuner.objective, n_trials=5)
     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))
+    optuna.visualization.plot_intermediate_values(study)
+    optuna.visualization.plot_optimization_history(study)
+    optuna.visualization.plot_contour(study, params=['kp', 'ki'])
