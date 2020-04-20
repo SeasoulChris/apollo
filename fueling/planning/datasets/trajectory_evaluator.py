@@ -28,7 +28,7 @@ class TrajectoryEvaluator(BasePipeline):
 
         processed_files = self.to_rdd(src_dirs_set).map(self.process_dir)
 
-        logging.info('Processed {}/{} files'.format(processed_files.count(),
+        logging.info('Processed {}/{} folders'.format(processed_files.count(),
                                                       len(src_dirs_set)))
         return 0
 
@@ -43,7 +43,7 @@ class TrajectoryEvaluator(BasePipeline):
 
         processed_files = records_rdd.map(self.process_dir)
 
-        logging.info('Processed {} files'.format(processed_files.count()))
+        logging.info('Processed {} folders'.format(processed_files.count()))
 
     def process_dir(self, src_dir):
         """ Process files """
