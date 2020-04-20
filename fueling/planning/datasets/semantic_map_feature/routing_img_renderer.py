@@ -91,7 +91,8 @@ class RoutingImgRenderer(object):
                         dist_to_point = self._calc_euclidean_dist(
                             point.x, point.y, center_x, center_y)
                         if dist_to_point < max_acceptable_dist:
-                            return self._get_lane_sequence_by_startlane(self.lane_list.index(lane_id))
+                            return self._get_lane_sequence_by_startlane(
+                                self.lane_list.index(lane_id))
                         else:
                             if dist_to_point < min_distance:
                                 nearest_lane_id = lane_id
@@ -104,7 +105,8 @@ class RoutingImgRenderer(object):
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     # TODO(Jinyun): to be deprecated
     def draw_routing(self, center_x, center_y, center_heading, routing_response):
@@ -123,11 +125,11 @@ class RoutingImgRenderer(object):
             color = int(255 - i * routing_color_delta)
             routing_lane = nearest_routing_lanes[i]
             for segment in routing_lane.central_curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self._get_affine_points(
                         np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
                     p1 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
+                        np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
                     cv.line(local_map, tuple(p0), tuple(
                         p1), color=color, thickness=12)
         return local_map
@@ -145,11 +147,11 @@ class RoutingImgRenderer(object):
             color = int(255 - i * routing_color_delta)
             routing_lane = self.lane_dict[local_routing[i]]
             for segment in routing_lane.central_curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self._get_affine_points(
                         np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
                     p1 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
+                        np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
                     cv.line(local_map, tuple(p0), tuple(
                         p1), color=color, thickness=12)
         return local_map
@@ -179,4 +181,4 @@ if __name__ == "__main__":
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

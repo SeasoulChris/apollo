@@ -21,7 +21,7 @@ def execute_task(message_meta):
     """example task executing, return results dir."""
     logging.info('start to execute sensor calbiration service')
     source_dir, output_dir, executable_dir = message_meta
-    
+
     logging.info(F'executable dir: {executable_dir}, exist? {os.path.exists(executable_dir)}')
 
     # from input config file, generating final fuel-using config file
@@ -139,7 +139,7 @@ class SensorCalibrationPipeline(BasePipeline):
 
         executable_dir = 'modules/perception/sensor_calibration/executable_bin'
         message_meta = [(os.path.join(job_dir, j),
-                        os.path.join(job_output_dir, j), self.our_storage().abs_path(executable_dir))
+                         os.path.join(job_output_dir, j), self.our_storage().abs_path(executable_dir))
                         for j in subjobs]
 
         # Run the pipeline with given parameters.

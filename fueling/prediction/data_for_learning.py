@@ -13,6 +13,7 @@ import fueling.common.record_utils as record_utils
 
 class DataForLearning(BasePipeline):
     """Records to DataForLearning proto pipeline."""
+
     def run(self):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"

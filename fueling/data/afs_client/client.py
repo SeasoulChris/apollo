@@ -39,7 +39,7 @@ class AfsClient(object):
     def scan_tasks(self, query_date):
         """Scan tasks by date"""
         res = []
-        columns='task_id,start_time,end_time'
+        columns = 'task_id,start_time,end_time'
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             # Get scan result, it could be a list of record files
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
@@ -103,5 +103,3 @@ class AfsClient(object):
                 topics.append((msg.topic, msg.message_size))
                 logging.info((msg.topic, msg.message_size))
         return topics
-
-

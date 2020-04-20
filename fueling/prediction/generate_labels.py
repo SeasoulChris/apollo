@@ -16,6 +16,7 @@ SKIP_EXISTING_DST_FILE = False
 
 class GenerateLabels(BasePipeline):
     """Records to GenerateLabels proto pipeline."""
+
     def run(self):
         """Run prod."""
         source_prefix = '/fuel/kinglong_data/labels/'

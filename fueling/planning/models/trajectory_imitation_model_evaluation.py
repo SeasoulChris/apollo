@@ -58,6 +58,7 @@ def cnn_model_evaluator(test_loader, model):
         print('average speed error: {}.'.format(average_v_error))
         print('average acceleration error: {}.'.format(average_a_error))
 
+
 def calculate_rnn_displacement_error(pred, y):
     pred_points = pred[2]
     true_points = pred[2]
@@ -66,7 +67,7 @@ def calculate_rnn_displacement_error(pred, y):
     heading_diff = points_diff[:, :, 2]
     v_diff = points_diff[:, :, 3]
 
-    displacement_error =  torch.mean(torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))).item()
+    displacement_error = torch.mean(torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))).item()
     heading_error = torch.mean(torch.abs(heading_diff)).item()
     v_error = torch.mean(torch.abs(v_diff)).item()
     return displacement_error, heading_error, v_error
@@ -95,6 +96,7 @@ def rnn_model_evaluator(test_loader, model):
             average_displacement_error))
         print('average heading error: {}.'.format(average_heading_error))
         print('average speed error: {}.'.format(average_v_error))
+
 
 if __name__ == "__main__":
 

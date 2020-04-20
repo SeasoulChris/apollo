@@ -17,6 +17,7 @@ SKIP_EXISTING_DST_FILE = False
 
 class DumpFeatureProto(BasePipeline):
     """Records to feature proto pipeline."""
+
     def run(self):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"

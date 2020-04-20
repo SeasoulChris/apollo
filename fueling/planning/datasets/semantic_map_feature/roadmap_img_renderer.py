@@ -36,12 +36,12 @@ class RoadMapImgRenderer(object):
         elif region == "sunnyvale_with_two_offices":
             self.map_base_point_x = 585875.3316302994
             self.map_base_point_y = 4139916.6342316796
-            self.map_size_h = 19311 
+            self.map_size_h = 19311
             self.map_size_w = 27632
         elif region == "sunnyvale":
             self.map_base_point_x = 585875.3316302994
             self.map_base_point_y = 4139916.6342316796
-            self.map_size_h = 19311 
+            self.map_size_h = 19311
             self.map_size_w = 27632
         else:
             print("Chosen base map not created")
@@ -52,7 +52,7 @@ class RoadMapImgRenderer(object):
     def draw_roadmap(self, center_x, center_y, center_heading):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = [int(np.round((center_point[0] - self.map_base_point_x) / self.resolution)),
-                              int(self.map_size_h - np.round((center_point[1]-self.map_base_point_y) /
+                              int(self.map_size_h - np.round((center_point[1] - self.map_base_point_y) /
                                                              self.resolution))]
         rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius: center_basemap_idx[1] + self.rough_crop_radius,
                                         center_basemap_idx[0] - self.rough_crop_radius: center_basemap_idx[0] + self.rough_crop_radius]
@@ -93,4 +93,4 @@ if __name__ == '__main__':
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

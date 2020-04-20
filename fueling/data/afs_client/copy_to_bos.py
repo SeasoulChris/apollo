@@ -98,4 +98,3 @@ class CopyToBosPipeline(BasePipeline):
 
 if __name__ == '__main__':
     CopyToBosPipeline().main()
-

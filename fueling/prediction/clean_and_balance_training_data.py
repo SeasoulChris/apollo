@@ -15,7 +15,7 @@ from fueling.prediction.common.configure import semantic_map_config
 
 LINEAR_ACC_THRESHOLD = 100
 ANGULAR_VEL_THRESHOLD = 0.50
-TURNING_ANGLE_THRESHOLD = np.pi/6
+TURNING_ANGLE_THRESHOLD = np.pi / 6
 
 OFFSET_X = semantic_map_config['offset_x']
 OFFSET_Y = semantic_map_config['offset_y']
@@ -30,6 +30,7 @@ OFFSET_Y = semantic_map_config['offset_y']
       future_status: [x, y, x, y, ... x, y]
 '''
 
+
 class CleanTrainingDataPipeline(BasePipeline):
     def run(self):
         '''Run prod.'''
@@ -38,7 +39,7 @@ class CleanTrainingDataPipeline(BasePipeline):
             training_data_prefix = 'modules/prediction/kinglong_train/'
         training_data_file_rdd = (
             self.to_rdd(self.our_storage()
-                .list_files(training_data_prefix))
+                        .list_files(training_data_prefix))
                 .filter(spark_op.filter_path(['*training_data.npy'])))
         if training_data_file_rdd.isEmpty():
             logging.info('No training data file to be processed!')
@@ -70,6 +71,7 @@ class CleanTrainingDataPipeline(BasePipeline):
     '''
     @param future_sequence: list [x, y, x, y, ... x, y]
     '''
+
     def CleanFutureSequence(self, future_sequence, pred_len=30):
         # 1. Only keep pred_len length
         if len(future_sequence) < 2 * pred_len:
@@ -84,8 +86,8 @@ class CleanTrainingDataPipeline(BasePipeline):
         angular_vel = np.sum(
             obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
         turning_ang = (np.arctan2(
-            obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
-        turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
+            obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
+        turning_ang = turning_ang if turning_ang < np.pi else turning_ang - 2 * np.pi
         # 3. Filtered the extream values for acc and ang_vel.
         if np.max(np.abs(linear_acc)) > LINEAR_ACC_THRESHOLD:
             return None
@@ -102,6 +104,7 @@ class CleanTrainingDataPipeline(BasePipeline):
     '''
     @param training_data_dir: end dir containing training_data.npy
     '''
+
     def CleanTrainingData(self, training_data_filepath, cleaned_training_data_filepath):
         count = Counter()
         file_content = np.load(training_data_filepath, allow_pickle=True).tolist()

@@ -72,7 +72,8 @@ class LabelGenerator(object):
         logging.debug(f'future_tag_dict:{future_tag_dict}')
         return updated_tag
 
-    def GetObserveAllFeatureSequences(self, input_filepath, output_filepath, secondary_filepath=None):
+    def GetObserveAllFeatureSequences(
+            self, input_filepath, output_filepath, secondary_filepath=None):
         learning_data_sequence, origin_data_len = self.LoadPBFiles(
             input_filepath, output_filepath, secondary_filepath)
         # get all trajectory points from feature_sequence

@@ -8,6 +8,7 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 from modules.planning.proto import learning_data_pb2
 
+
 class ConvertBinToPBTxt(BasePipeline):
     """Records to feature proto pipeline."""
 
@@ -26,7 +27,7 @@ class ConvertBinToPBTxt(BasePipeline):
 
     def process_file(self, src_file):
         """ Process File"""
-        dest_dir, dest_filename = os.path.split(src_file);
+        dest_dir, dest_filename = os.path.split(src_file)
         dest_filename += ".txt.tmp"
         dest_file = src_file + ".txt.tmp"
 
@@ -37,6 +38,7 @@ class ConvertBinToPBTxt(BasePipeline):
         proto_utils.write_pb_to_text_file(pb, dest_file)
 
         return 0
+
 
 if __name__ == '__main__':
     ConvertBinToPBTxt().main()

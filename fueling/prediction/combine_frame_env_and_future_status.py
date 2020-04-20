@@ -34,8 +34,11 @@ OFFSET_Y = semantic_map_config['offset_y']
           polygon_points: x, y, x, y, ..., x, y # 20 (x,y)
       future_status: [x, y, x, y, ... x, y]
 '''
+
+
 class CombineFrameEnvAndFutureStatus(BasePipeline):
     '''Records to feature proto pipeline.'''
+
     def run(self):
         '''Run prod.'''
         frame_env_prefix = '/fuel/kinglong_data/frame_envs/'
@@ -70,7 +73,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         logging.info(mkdir_cmd)
         os.system(chmod_cmd)
         logging.info(chmod_cmd)
-        
+
         label_filenames = os.listdir(label_dir)
         label_file_start = 0
         label_file_end = len(label_filenames)
@@ -89,7 +92,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                 label_dict_curr = np.load(label_filepath, allow_pickle=True).item()
                 label_dict_merged.update(label_dict_curr)
         logging.info('Finished merge labels from {}, total {}'.format(label_dir,
-                     len(label_dict_merged)))
+                                                                      len(label_dict_merged)))
 
         data_output = []
         frame_env_files = os.listdir(frame_env_dir)

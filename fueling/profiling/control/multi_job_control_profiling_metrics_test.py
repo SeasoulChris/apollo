@@ -78,7 +78,8 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
         output_dict = self.parse_grading_output(output_path)
         self.assertEqual(44, len(output_dict))
         self.assertTrue('ending_station_err_trajectory_0' in output_dict)
-        self.assertListEqual(['34.425%', '177', '1556733975.015'], output_dict['ending_station_err_trajectory_0'])
+        self.assertListEqual(['34.425%', '177', '1556733975.015'],
+                             output_dict['ending_station_err_trajectory_0'])
         self.assertTrue('weighted_score' in output_dict)
         self.assertListEqual(['22.044%', '5399'], output_dict['weighted_score'])
 
@@ -95,7 +96,8 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
                 output_dict[line_list[1]] = line_list[2:]
                 line = f.readline()
         return output_dict
- 
+
+
 if __name__ == '__main__':
     absltest.main(warnings='ignore')
     """

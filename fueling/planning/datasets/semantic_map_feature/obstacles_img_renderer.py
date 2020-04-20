@@ -24,12 +24,14 @@ class ObstaclesImgRenderer(object):
         self.max_history_length = 1  # second
 
     def _get_trans_point(self, p):
-        # obstacles are in ego vehicle coordiantes where ego car faces toward EAST, so rotation to NORTH is done below
+        # obstacles are in ego vehicle coordiantes where ego car faces toward
+        # EAST, so rotation to NORTH is done below
         theta = np.pi / 2
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     # TODO(Jinyun): evaluate whether use localization as current time
     def draw_obstacles(self, current_timestamp, obstacles):
@@ -37,7 +39,7 @@ class ObstaclesImgRenderer(object):
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
             current_time = obstacle.obstacle_trajectory_point[-1].timestamp_sec
-            for i in range(len(obstacle.obstacle_trajectory_point)-1, -1, -1):
+            for i in range(len(obstacle.obstacle_trajectory_point) - 1, -1, -1):
                 obstacle_history = obstacle.obstacle_trajectory_point[i]
                 relative_time = current_time - obstacle_history.timestamp_sec
                 if relative_time > self.max_history_length:
@@ -76,4 +78,4 @@ if __name__ == "__main__":
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

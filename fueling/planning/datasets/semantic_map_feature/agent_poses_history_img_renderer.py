@@ -31,15 +31,17 @@ class AgentPosesHistoryImgRenderer(object):
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
-    def draw_agent_poses_history(self, frame_time_sec, center_x, center_y, center_heading, ego_pose_history):
+    def draw_agent_poses_history(self, frame_time_sec, center_x,
+                                 center_y, center_heading, ego_pose_history):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         current_time = frame_time_sec
-        for i in range(len(ego_pose_history)-1, -1, -1):
+        for i in range(len(ego_pose_history) - 1, -1, -1):
             ego_pose = ego_pose_history[i]
             relative_time = current_time - ego_pose.timestamp_sec
             if relative_time > self.max_history_time_horizon:
@@ -78,4 +80,4 @@ if __name__ == "__main__":
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

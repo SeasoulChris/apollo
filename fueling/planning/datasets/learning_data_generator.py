@@ -7,6 +7,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
+
 class LearningDataGenerator(BasePipeline):
     """Records to feature proto pipeline."""
 
@@ -76,6 +77,7 @@ class LearningDataGenerator(BasePipeline):
                                                               dest_dir))
 
         return 0
+
 
 if __name__ == '__main__':
     LearningDataGenerator().main()

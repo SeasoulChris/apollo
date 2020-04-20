@@ -54,7 +54,7 @@ class BosClient(BaseStorage):
         Allow prefix to be both absolute path and relative path in BOS mount
         """
         if prefix.startswith(self.mnt_path):
-            prefix = prefix[len(self.mnt_path)+1:]
+            prefix = prefix[len(self.mnt_path) + 1:]
         return BaseStorage.list_files(self, prefix, suffix, to_abs_path)
 
     # Override
@@ -65,7 +65,7 @@ class BosClient(BaseStorage):
         Allow prefix to be both absolute path and relative path in BOS mount
         """
         if prefix.startswith(self.mnt_path):
-            prefix = prefix[len(self.mnt_path)+1:]
+            prefix = prefix[len(self.mnt_path) + 1:]
         return BaseStorage.list_end_dirs(self, prefix, to_abs_path)
 
     def client(self):

@@ -219,7 +219,7 @@ def compute_percentile(grading_mtx, arg, min_sample_size, FEATURE_IDX):
 def apply_filter(grading_mtx, arg, FEATURE_IDX):
     if arg.filter_name:
         if (len(arg.filter_name) != len(arg.filter_value)
-            or len(arg.filter_name) != len(arg.filter_mode)):
+                or len(arg.filter_name) != len(arg.filter_mode)):
             logging.warning('Number of filter attributes are not equal!')
             return None
 

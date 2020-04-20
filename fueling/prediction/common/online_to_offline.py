@@ -17,6 +17,7 @@ param_fea = parameters['feature']
 
 enable_lane_related_labeling = False
 
+
 class LabelGenerator(object):
 
     def __init__(self):

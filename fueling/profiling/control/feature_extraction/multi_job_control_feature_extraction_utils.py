@@ -93,7 +93,8 @@ def parse_vehicle_controller(task, flags):
     return (vehicle_controller_parsed_dir, task)
 
 
-def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, control_nonerror_status):
+def extract_data_at_multi_channels(msgs, flags, driving_mode,
+                                   gear_position, control_nonerror_status):
     """Extract control/chassis/ data array and filter the control data with selected chassis features"""
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
@@ -137,7 +138,8 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode, gear_position, con
         localization_timestamp = localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]
         if (abs(chassis_timestamp - error_timestamp) < MAX_PHASE_DELTA):
             control_mtx[control_idx, FEATURE_IDX['chassis_timestamp_sec']] = chassis_timestamp
-            control_mtx[control_idx, FEATURE_IDX['localization_timestamp_sec']] = localization_timestamp
+            control_mtx[control_idx,
+                        FEATURE_IDX['localization_timestamp_sec']] = localization_timestamp
 
     # Third, filter the control data with existing chassis and localization sequence_num
     control_idx_by_chassis = np.in1d(['%.3f' % x for x in

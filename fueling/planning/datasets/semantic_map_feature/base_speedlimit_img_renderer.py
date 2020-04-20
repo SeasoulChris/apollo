@@ -52,7 +52,8 @@ class BaseSpeedLimitImgRenderer(object):
         right_top_x, right_top_y = projector(self.hd_map.header.right,
                                              self.hd_map.header.top)
 
-        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue (Map "sunnyvle" is too large)
+        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue
+        # (Map "sunnyvle" is too large)
         if self.region == "sunnyvale":
             left_bottom_x = 585975.3316302994
             left_bottom_y = 4140016.6342316796
@@ -84,11 +85,11 @@ class BaseSpeedLimitImgRenderer(object):
         for lane in self.hd_map.lane:
             speedlimit = lane.speed_limit
             for segment in lane.central_curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self.get_trans_point(
                         [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                     p1 = self.get_trans_point(
-                        [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self.get_speedlimit_coloring(speedlimit), thickness=4)
 
@@ -96,11 +97,11 @@ class BaseSpeedLimitImgRenderer(object):
         for speed_bump in self.hd_map.speed_bump:
             for position in speed_bump.position:
                 for segment in position.segment:
-                    for i in range(len(segment.line_segment.point)-1):
+                    for i in range(len(segment.line_segment.point) - 1):
                         p0 = self.get_trans_point(
                             [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                         p1 = self.get_trans_point(
-                            [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
                         cv.line(self.base_map, tuple(p0), tuple(
                             p1), color=color, thickness=12)
 

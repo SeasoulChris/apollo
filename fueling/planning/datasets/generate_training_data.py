@@ -189,7 +189,8 @@ class GenerateTrainingData(BasePipeline):
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_x)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_y)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.correlation)
-            current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
+            current_label.append(
+                adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_a)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_b)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.theta_a)
@@ -346,7 +347,8 @@ class GenerateTrainingData(BasePipeline):
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_x)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_y)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.correlation)
-            current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
+            current_label.append(
+                adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_a)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_b)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.theta_a)
@@ -503,7 +505,8 @@ class GenerateTrainingData(BasePipeline):
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_x)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_y)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.correlation)
-            current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
+            current_label.append(
+                adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_a)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_b)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.theta_a)
@@ -658,7 +661,8 @@ class GenerateTrainingData(BasePipeline):
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_x)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.sigma_y)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.correlation)
-            current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
+            current_label.append(
+                adc_trajectory_point.trajectory_point.gaussian_info.area_probability)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_a)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.ellipse_b)
             current_label.append(adc_trajectory_point.trajectory_point.gaussian_info.theta_a)

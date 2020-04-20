@@ -181,7 +181,7 @@ class TrajectoryImitationRNNModel(nn.Module):
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            arg_max_row_index = arg_max_index//F_P_B_k.shape[-2:][0]
+            arg_max_row_index = arg_max_index // F_P_B_k.shape[-2:][0]
             arg_max_col_index = arg_max_index % F_P_B_k.shape[-2:][1]
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
@@ -217,10 +217,11 @@ class TrajectoryImitationRNNLoss():
         true_points = y_true[2]
         points_diff = pred_points - true_points
         pose_diff = points_diff[:, :, 0:2]
-        
+
         out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
         out = torch.mean(out)
         return out
+
 
 class TrajectoryImitationWithEnvRNNLoss():
     def loss_fn(self, y_pred, y_true):
@@ -252,7 +253,7 @@ class TrajectoryImitationWithEnvRNNLoss():
         true_points = y_true[2]
         points_diff = pred_points - true_points
         pose_diff = points_diff[:, :, 0:2]
-        
+
         out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
         out = torch.mean(out)
         return out

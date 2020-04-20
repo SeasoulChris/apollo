@@ -125,7 +125,8 @@ class ChauffeurNetFeatureGenerator(object):
                                          road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
 
     # TODO (Jinyun): fine tune the resizing for computation efficiency
-    def render_gt_pose_dist(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+    def render_gt_pose_dist(self, center_x, center_y, center_heading,
+                            ego_pose_future, timestamp_idx):
         return cv.resize(self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
                                                                                center_y,
                                                                                center_heading,
@@ -147,12 +148,13 @@ class ChauffeurNetFeatureGenerator(object):
                                                                      center_heading),
                          (224, 224))
 
-    def render_obstacle_box_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+    def render_obstacle_box_prediction_frame(
+            self, center_x, center_y, center_heading, obstacles, timestamp_idx):
         return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(center_x,
-                                                                                          center_y,
-                                                                                          center_heading,
-                                                                                          obstacles,
-                                                                                          timestamp_idx),
+                                                                                              center_y,
+                                                                                              center_heading,
+                                                                                              obstacles,
+                                                                                              timestamp_idx),
                          (224, 224))
 
 

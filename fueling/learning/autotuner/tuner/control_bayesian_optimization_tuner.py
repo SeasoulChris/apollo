@@ -69,7 +69,8 @@ class ControlBayesianOptimizationTuner(BaseTuner):
                 message, config_name, field_name, _ = self.parse_param_to_proto(proto)
                 config = eval(config_name + '()')
                 message.ClearField(field_name)
-                message.MergeFrom(proto_utils.dict_to_pb({field_name: next_point_pb[proto]}, config))
+                message.MergeFrom(proto_utils.dict_to_pb(
+                    {field_name: next_point_pb[proto]}, config))
                 logging.info(f"\n  {proto}: {getattr(message, field_name)}")
 
             for flag in self.tuner_param_config_pb.tuner_parameters.flag:

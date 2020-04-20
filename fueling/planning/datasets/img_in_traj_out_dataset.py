@@ -76,7 +76,8 @@ class TrajectoryImitationCNNDataset(Dataset):
                       frame.localization.heading]
         pred_points = []
         for pred_point in frame.output.adc_future_trajectory_point:
-            # TODO(Jinyun): validate future trajectory points size and deltaT, 30 points, 5 attributes
+            # TODO(Jinyun): validate future trajectory points size and deltaT, 30
+            # points, 5 attributes
             if len(pred_points) >= 30 * 5:
                 break
             # TODO(Jinyun): evaluate whether use heading and acceleration

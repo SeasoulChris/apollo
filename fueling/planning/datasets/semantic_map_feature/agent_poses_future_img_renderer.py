@@ -41,7 +41,8 @@ class AgentPosesFutureImgRenderer(object):
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     def _get_affine_ego_box(self, p, box_theta):
         p = p - self.local_base_point
@@ -59,7 +60,8 @@ class AgentPosesFutureImgRenderer(object):
             point) for point in corner_points]
         return np.int32(corner_points)
 
-    def draw_agent_future_trajectory(self, frame_time_sec, center_x, center_y, center_heading, ego_pose_future):
+    def draw_agent_future_trajectory(self, frame_time_sec, center_x,
+                                     center_y, center_heading, ego_pose_future):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
@@ -81,7 +83,8 @@ class AgentPosesFutureImgRenderer(object):
             cv.circle(local_map, traj_points, radius=4, color=color)
         return local_map
 
-    def draw_agent_pose_future(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+    def draw_agent_pose_future(self, center_x, center_y, center_heading,
+                               ego_pose_future, timestamp_idx):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -101,7 +104,8 @@ class AgentPosesFutureImgRenderer(object):
         local_map[idx[1], idx[0]] = 255
         return local_map
 
-    def draw_agent_box_future(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+    def draw_agent_box_future(self, center_x, center_y, center_heading,
+                              ego_pose_future, timestamp_idx):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -161,4 +165,4 @@ if __name__ == "__main__":
             filename = key + ".png"
             cv.imwrite(os.path.join(output_dir, filename), img)
 
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

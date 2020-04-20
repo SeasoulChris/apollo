@@ -49,6 +49,7 @@ class AgentBoxImgRenderer(object):
     def draw_agent_box(self):
         return self.local_map
 
+
 if __name__ == "__main__":
     agentbox_renderer = AgentBoxImgRenderer()
 

@@ -13,6 +13,7 @@ import fueling.common.record_utils as record_utils
 
 class FrameEnv(BasePipeline):
     """Records to FrameEnv proto pipeline."""
+
     def run(self):
         """Run prod."""
         origin_prefix = "/fuel/kinglong_data/records/"

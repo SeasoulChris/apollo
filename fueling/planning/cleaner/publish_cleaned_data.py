@@ -33,7 +33,7 @@ class PubishCleanedData(BasePipeline):
         target_folder = '/mnt/bos/modules/planning/cleaned_data/'
         try:
             shutil.rmtree(target_folder)
-        except:
+        except BaseException:
             pass
         os.rename(temp_cleaned_data, target_folder)
         return 1

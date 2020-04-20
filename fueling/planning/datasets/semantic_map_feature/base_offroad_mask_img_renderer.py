@@ -51,7 +51,8 @@ class BaseOffroadMaskImgRenderer(object):
         right_top_x, right_top_y = projector(self.hd_map.header.right,
                                              self.hd_map.header.top)
 
-        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue (Map "sunnyvle" is too large)
+        # TODO(Jinyun): resolve opencv can't open lager than 1 Gigapixel issue
+        # (Map "sunnyvle" is too large)
         if self.region == "sunnyvale":
             left_bottom_x = 585975.3316302994
             left_bottom_y = 4140016.6342316796
@@ -77,7 +78,7 @@ class BaseOffroadMaskImgRenderer(object):
         print(self.base_map.dtype)
         for road in self.hd_map.road:
             for section in road.section:
-                points = np.zeros((0, 2))  
+                points = np.zeros((0, 2))
                 for edge in section.boundary.outer_polygon.edge:
                     if edge.type == map_road_pb2.BoundaryEdge.Type.LEFT_BOUNDARY:
                         for segment in edge.curve.segment:
@@ -87,12 +88,11 @@ class BaseOffroadMaskImgRenderer(object):
                                 points = np.vstack((points, point))
                     elif edge.type == map_road_pb2.BoundaryEdge.Type.RIGHT_BOUNDARY:
                         for segment in edge.curve.segment:
-                            for i in range(len(segment.line_segment.point)-1, -1, -1):
+                            for i in range(len(segment.line_segment.point) - 1, -1, -1):
                                 point = self.get_trans_point(
                                     [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                                 points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
-
 
 
 if __name__ == '__main__':

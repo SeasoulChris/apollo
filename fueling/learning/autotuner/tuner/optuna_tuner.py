@@ -120,7 +120,6 @@ class OptunaBaseTuner():
         logging.info(f"Received score for {iteration_id} as {weighted_score[config_id]}")
         return weighted_score[config_id]
 
-
     def init_cost_client(self):
         config = self.tuner_param_config_pb
         CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
@@ -129,8 +128,6 @@ class OptunaBaseTuner():
             list(config.scenarios.id),
             config.dynamic_model,
         )
-
-
 
 
 if __name__ == "__main__":

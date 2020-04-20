@@ -6,6 +6,7 @@ from absl.testing import absltest
 from fueling.common.base_pipeline import BasePipelineTest
 from fueling.planning.datasets.learning_data_generator import LearningDataGenerator
 
+
 class LearningDataGeneratorTest(BasePipelineTest):
     def setUp(self):
         super().setUp(LearningDataGenerator())

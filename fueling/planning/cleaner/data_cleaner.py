@@ -148,7 +148,8 @@ class CleanPlanningRecords(BasePipeline):
 
                         if msg.topic in self.topics:
                             if msg.topic not in topic_descs:
-                                topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
+                                topic_descs[msg.topic] = (
+                                    msg.data_type, reader.get_protodesc(msg.topic))
                             if has_routing:
                                 msgs.append(msg)
 
@@ -242,6 +243,7 @@ class CleanPlanningRecords(BasePipeline):
             writer.close()
         return dst_record_fn
 
+
 def print_current_memory_usage(step_name):
 
     mb_2_kb = 1024
@@ -255,6 +257,7 @@ def print_current_memory_usage(step_name):
     used_mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // mb_2_kb
 
     logging.info(f'step: {step_name}, total memory: {total_mem} MB, current memory: {used_mem} MB')
+
 
 if __name__ == '__main__':
     cleaner = CleanPlanningRecords()

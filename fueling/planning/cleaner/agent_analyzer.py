@@ -14,7 +14,6 @@ class AgentAnalyzer:
                 routing_response = RoutingResponse()
                 routing_response.ParseFromString(msg.message)
 
-
             if msg.topic == '/apollo/localization/pose':
                 localization_estimate = localization_pb2.LocalizationEstimate()
                 localization_estimate.ParseFromString(msg.message)

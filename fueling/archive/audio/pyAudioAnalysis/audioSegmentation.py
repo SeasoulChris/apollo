@@ -770,7 +770,8 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0,
         [Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
         [Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
         MidTermFeatures2[0:MidTermFeatures.shape[0], i] = MidTermFeatures[:, i]
-        MidTermFeatures2[MidTermFeatures.shape[0]                         :MidTermFeatures.shape[0] + len(classNames1), i] = P1 + 0.0001
+        MidTermFeatures2[MidTermFeatures.shape[0]
+            :MidTermFeatures.shape[0] + len(classNames1), i] = P1 + 0.0001
         MidTermFeatures2[MidTermFeatures.shape[0] + len(classNames1)::, i] = P2 + 0.0001
 
     MidTermFeatures = MidTermFeatures2    # TODO
@@ -857,7 +858,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0,
             [Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
             [Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
             mtFeaturesToReduce2[0:mtFeaturesToReduce.shape[0], i] = mtFeaturesToReduce[:, i]
-            mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]:mtFeaturesToReduce.shape[0] + len(classNames1), i] = P1 + 0.0001
+            mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]                                :mtFeaturesToReduce.shape[0] + len(classNames1), i] = P1 + 0.0001
             mtFeaturesToReduce2[mtFeaturesToReduce.shape[0] + len(classNames1)::, i] = P2 + 0.0001
         mtFeaturesToReduce = mtFeaturesToReduce2
         mtFeaturesToReduce = mtFeaturesToReduce[iFeaturesSelect, :]

@@ -30,12 +30,14 @@ class ObstaclePredictionsImgRenderer(object):
         return [self.local_base_point_w_idx + int(p[0]), self.local_base_point_h_idx - int(p[1])]
 
     def _get_affine_points(self, p):
-        # obstacles are in ego vehicle coordiantes where ego car faces toward EAST, so rotation to NORTH is done below
+        # obstacles are in ego vehicle coordiantes where ego car faces toward
+        # EAST, so rotation to NORTH is done below
         theta = np.pi / 2
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     # TODO(Jinyun): move to utils
     def _get_affine_prediction_box(self, p, box_theta, box_length, box_width):
@@ -47,7 +49,7 @@ class ObstaclePredictionsImgRenderer(object):
         corner_points = np.dot(np.array([[np.cos(box_theta_diff), -np.sin(box_theta_diff)],
                                          [np.sin(box_theta_diff), np.cos(box_theta_diff)]]),
                                np.array([[box_length / 2, box_length / 2,
-                                          -box_length/ 2, box_length/ 2],
+                                          -box_length / 2, box_length / 2],
                                          [box_width, -box_width,
                                           -box_width, box_width]])).T + point
         corner_points = [self._get_trans_point(
@@ -63,7 +65,8 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_heading = center_heading
 
         for obstacle in obstacles:
-            if obstacle.HasField("obstacle_prediction") and len(obstacle.obstacle_prediction.trajectory) > 0:
+            if obstacle.HasField("obstacle_prediction") and len(
+                    obstacle.obstacle_prediction.trajectory) > 0:
                 max_prob_idx = 0
                 max_prob = 0
                 for i in range(len(obstacle.obstacle_prediction.trajectory)):
@@ -80,7 +83,8 @@ class ObstaclePredictionsImgRenderer(object):
 
         return local_map
 
-    def draw_obstacle_box_prediction_frame(self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+    def draw_obstacle_box_prediction_frame(
+            self, center_x, center_y, center_heading, obstacles, timestamp_idx):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -93,7 +97,8 @@ class ObstaclePredictionsImgRenderer(object):
         for obstacle in obstacles:
             obs_length = obstacle.length
             obs_width = obstacle.width
-            if obstacle.HasField("obstacle_prediction") and len(obstacle.obstacle_prediction.trajectory) > 0:
+            if obstacle.HasField("obstacle_prediction") and len(
+                    obstacle.obstacle_prediction.trajectory) > 0:
                 max_prob_idx = 0
                 max_prob = 0
                 for i in range(len(obstacle.obstacle_prediction.trajectory)):
@@ -101,10 +106,12 @@ class ObstaclePredictionsImgRenderer(object):
                     if trajectory.probability > max_prob:
                         max_prob_idx = i
                         max_prob = trajectory.probability
-                if len(obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
+                if len(
+                        obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
                     print("timestamp_idx larger than what is available in obstacle prediction")
                 else:
-                    path_point = obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point[timestamp_idx].path_point
+                    path_point = obstacle.obstacle_prediction.trajectory[
+                        max_prob_idx].trajectory_point[timestamp_idx].path_point
                     corner_points = self._get_affine_prediction_box(
                         np.array([path_point.x, path_point.y]), path_point.theta, obs_length, obs_width)
                     for corner_point in corner_points:
@@ -114,6 +121,7 @@ class ObstaclePredictionsImgRenderer(object):
                     cv.fillPoly(local_map, [corner_points], color=255)
 
         return local_map
+
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
@@ -139,4 +147,4 @@ if __name__ == "__main__":
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

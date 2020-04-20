@@ -6,6 +6,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
+
 class TrajectoryEvaluator(BasePipeline):
     def __init__(self):
         self.src_dir_prefixs = [
@@ -73,6 +74,7 @@ class TrajectoryEvaluator(BasePipeline):
                                                               dest_dir))
 
         return 0
+
 
 if __name__ == '__main__':
     TrajectoryEvaluator().main()

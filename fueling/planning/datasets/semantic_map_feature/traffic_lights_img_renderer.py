@@ -12,6 +12,7 @@ from modules.map.proto import map_overlap_pb2
 from modules.perception.proto import traffic_light_detection_pb2
 from modules.planning.proto import learning_data_pb2
 
+
 class TrafficLightsImgRenderer(object):
     """class of TrafficLightsImgRenderer to create images of surrounding traffic conditions"""
 
@@ -76,7 +77,8 @@ class TrafficLightsImgRenderer(object):
         point = np.dot(np.array(
             [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
         point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx + int(point[0]), self.local_base_point_h_idx - int(point[1])]
+        return [self.local_base_point_w_idx +
+                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     def draw_traffic_lights(self, center_x, center_y, center_heading, observed_traffic_lights):
         local_map = np.zeros(
@@ -100,15 +102,16 @@ class TrafficLightsImgRenderer(object):
                     if overlap_object.HasField("lane_overlap_info"):
                         lane = self._get_lane_by_id(overlap_object.id.id)
                         for segment in lane.central_curve.segment:
-                            for i in range(len(segment.line_segment.point)-1):
+                            for i in range(len(segment.line_segment.point) - 1):
                                 p0 = self._get_affine_points(
                                     np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
                                 p1 = self._get_affine_points(
-                                    np.array([segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y]))
+                                    np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
                                 cv.line(local_map, tuple(p0), tuple(p1),
                                         color=traffic_light_color, thickness=4)
         return local_map
-                    
+
+
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
@@ -132,6 +135,4 @@ if __name__ == "__main__":
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
         cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir+"/ego_pos.npy"), ego_pos_dict)
-
-        
+    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)
