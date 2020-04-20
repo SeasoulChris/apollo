@@ -68,8 +68,8 @@ class LabelGenerator(object):
         for key in unsetted_tag:
             current_tag_dict[key] = future_tag_dict[key]
         updated_tag = proto_utils.dict_to_pb(current_tag_dict, tag_bp)
-        # logging.debug(f'*****{dict_key}: current_tag_dict:{current_tag_dict}')
-        # logging.debug(f'future_tag_dict:{future_tag_dict}')
+        logging.debug(f'*****{dict_key}: current_tag_dict:{current_tag_dict}')
+        logging.debug(f'future_tag_dict:{future_tag_dict}')
         return updated_tag
 
     def GetObserveAllFeatureSequences(self, input_filepath, output_filepath, secondary_filepath=None):
@@ -80,12 +80,12 @@ class LabelGenerator(object):
         timestamps = []
         for idx, learning_data in enumerate(learning_data_sequence):
             # key + feature
-            frame_key = "adc@{:.3f}".format(learning_data.adc_trajectory_point[0].timestamp_sec)
-            # first trajectory point has the latest timestamp
-            for adc_trajectory_point in reversed(learning_data.adc_trajectory_point):
+            for adc_trajectory_point in learning_data.adc_trajectory_point:
+                # for adc_trajectory_point in reversed(learning_data.adc_trajectory_point):
                 # assuming last point is the lastest/newest/current trajectory point
                 # 1. write a newer trajectory point to trajectory point tag list
                 dict_key = "adc@{:.3f}".format(adc_trajectory_point.timestamp_sec)
+                logging.debug(f'dict_key: {dict_key}')
 
                 # add planning tag
                 if dict_key in self.planning_tag_dict:
@@ -100,6 +100,9 @@ class LabelGenerator(object):
                 if adc_trajectory_point.timestamp_sec not in timestamps:
                     timestamps.append(adc_trajectory_point.timestamp_sec)
                     adc_trajectory.append(adc_trajectory_point)
+            # last trajectory point has the latest timestamp
+            frame_key = "adc@{:.3f}".format(timestamps[-1])
+            logging.debug(f'No {idx} frame_key: {frame_key}')
             # key: current localization point
             if idx < origin_data_len:  # first part of the list is from origin PB file
                 # key of each learning_data is the timestamps of current trajectory point
@@ -237,7 +240,7 @@ class LabelGenerator(object):
             current_learning_data = self.feature_dict[key]
             # get history trajectory from each learning frame
             adc_traj = []
-            for history_adc_trajectory_point in reversed(current_learning_data.adc_trajectory_point):
+            for history_adc_trajectory_point in current_learning_data.adc_trajectory_point:
                 adc_traj.append((history_adc_trajectory_point.trajectory_point.path_point.x,
                                  history_adc_trajectory_point.trajectory_point.path_point.y,
                                  history_adc_trajectory_point.trajectory_point.path_point.z,
@@ -305,30 +308,32 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='labeling')
     parser.add_argument(
         '--input_file', type=str,
-        default='/apollo/data/learning_based_planning/input/learning_data.38.bin')
+        default='/apollo/data/learning_based_planning/input/00036.record.6.bin')
     parser.add_argument(
-        '--secondary_input_file', type=str,
-        default='/apollo/data/learning_based_planning/input/learning_data.39.bin')
+        '--secondary_input_file', type=str)
 
     # output file name is modified in code
     parser.add_argument(
         '--output_file', type=str,
-        default='/apollo/data/learning_based_planning/output/learning_data.38.bin')
+        default='/apollo/data/learning_based_planning/output/labeled_data.bin')
     parser.add_argument(
         '--future_img_output_file', type=str,
-        default='/apollo/data/learning_based_planning/output/learning_data.38.bin.pdf')
+        default='/apollo/data/learning_based_planning/output/future_trajectory.pdf')
     parser.add_argument(
         '--history_img_output_file', type=str,
-        default='/apollo/data/learning_based_planning/output/learning_data_history.38.bin.pdf')
+        default='/apollo/data/learning_based_planning/output/history_trajectory.pdf')
     parser.add_argument(
         '--key_id', type=int,
-        default='50')
+        default='20')
 
     args = parser.parse_args()
     label_gen = LabelGenerator()
-
-    result = label_gen.GetObserveAllFeatureSequences(
-        args.input_file, args.output_file, args.secondary_input_file,)
+    if args.secondary_input_file:
+        result = label_gen.GetObserveAllFeatureSequences(
+            args.input_file, args.output_file, args.secondary_input_file)
+    else:
+        result = label_gen.GetObserveAllFeatureSequences(
+            args.input_file, args.output_file)
     label_gen.WriteTagToFrame()  # write planning tag to learning data
     result2 = label_gen.LabelTrajectory()
     logging.info(len(result2))
@@ -339,3 +344,4 @@ if __name__ == '__main__':
     data_points = result2[key_list[args.key_id]]
     # logging.info(data_points)
     label_gen.Visualize(data_points, args.future_img_output_file)
+    label_gen.Label()
