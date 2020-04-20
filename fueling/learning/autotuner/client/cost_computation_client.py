@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import grpc
+import signal
 
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
@@ -77,7 +78,15 @@ class CostComputationClient(object):
         with grpc.insecure_channel(CostComputationClient.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
             request_function = getattr(stub, request_name)
-            response = request_function(request_payload)
+            future = request_function.future(request_payload)
+
+            def cancel_request(unused_signum, unused_frame):
+                print(f'Cancelling {request_name} request...')
+                future.cancel()
+                raise Exception('Request Cancelled.')
+
+            signal.signal(signal.SIGINT, cancel_request)
+            response = future.result()
 
         status = response.status
         if status.code != 0:

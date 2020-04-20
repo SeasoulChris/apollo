@@ -19,10 +19,11 @@ py_binary(
     name = "cost_computation_server",
     srcs = ["cost_computation_server.py"],
     deps = [
-        "//apps/k8s/spark_submitter:client",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:sim_client",
+        "//fueling/learning/autotuner/cost_computation/job:local_cost_job",
+        "//fueling/learning/autotuner/cost_computation/job:k8s_cost_job",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
     ],
 )

@@ -22,6 +22,7 @@ flags.DEFINE_string(
     "File path to cost computation config."
 )
 
+
 class ControlCostComputation(BaseCostComputation):
     def __init__(self):
         BaseCostComputation.__init__(self)
@@ -141,38 +142,38 @@ class ControlCostComputation(BaseCostComputation):
         return avg_score
 
     def process_profiling_results(self, grading):
-            score = 0.0
-            weighting = 0.0
-            sample = grading['total_time_usage'][1]
+        score = 0.0
+        weighting = 0.0
+        sample = grading['total_time_usage'][1]
 
-            # Read and parse config from control cost computation pb file
-            config_file = file_utils.fuel_path(self.FLAGS.get('cost_computation_conf_filename'))
-            logging.info(f'Processing profiling with {config_file}')
-            cost_conf = CostMetrics()
-            proto_utils.get_pb_from_text_file(config_file, cost_conf)
+        # Read and parse config from control cost computation pb file
+        config_file = file_utils.fuel_path(self.FLAGS.get('cost_computation_conf_filename'))
+        logging.info(f'Processing profiling with {config_file}')
+        cost_conf = CostMetrics()
+        proto_utils.get_pb_from_text_file(config_file, cost_conf)
 
-            # Parse and compute the weighting metrics from control profiling results
-            for metrics in cost_conf.weighting_metrics:
-                if 'peak' in metrics.metrics_name:
-                    # for peak metrics, the grading format: [[score, timestamp], sample]
-                    score += grading[metrics.metrics_name][0][0] * metrics.weighting_factor
-                else:
-                    # for other metrics, the grading format: [score, sample]
-                    score += grading[metrics.metrics_name][0] * metrics.weighting_factor
-                weighting += metrics.weighting_factor
-            score /= weighting
+        # Parse and compute the weighting metrics from control profiling results
+        for metrics in cost_conf.weighting_metrics:
+            if 'peak' in metrics.metrics_name:
+                # for peak metrics, the grading format: [[score, timestamp], sample]
+                score += grading[metrics.metrics_name][0][0] * metrics.weighting_factor
+            else:
+                # for other metrics, the grading format: [score, sample]
+                score += grading[metrics.metrics_name][0] * metrics.weighting_factor
+            weighting += metrics.weighting_factor
+        score /= weighting
 
-            # Parse and compute the penalty metrics from control profiling results
-            for metrics in cost_conf.penalty_metrics:
-                score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1] *
-                          metrics.penalty_score)
+        # Parse and compute the penalty metrics from control profiling results
+        for metrics in cost_conf.penalty_metrics:
+            score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1] *
+                      metrics.penalty_score)
 
-            # Parse and compute the fail metrics from control profiling results
-            for metrics in cost_conf.fail_metrics:
-                if grading[metrics.metrics_name][0] > 0:
-                    score = cost_conf.fail_score
+        # Parse and compute the fail metrics from control profiling results
+        for metrics in cost_conf.fail_metrics:
+            if grading[metrics.metrics_name][0] > 0:
+                score = cost_conf.fail_score
 
-            return (score, sample)
+        return (score, sample)
 
 
 if __name__ == "__main__":

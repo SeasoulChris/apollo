@@ -1,3 +1,5 @@
+import time
+
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
 
@@ -34,10 +36,20 @@ with CostComputationClient(commit_id, scenario_ids, dynamic_model) as client:
 # method 2:
 client = CostComputationClient()
 try:
+    tic1 = time.perf_counter()
+
     client.initialize(commit_id, scenario_ids, dynamic_model)
+    print(f"Initialization time: {time.perf_counter() - tic1:0.4f} seconds")
+    """
+    client.set_token("tuner-8f6b804fc84f495280d27e6696330db2")
+    """
+
+    tic2 = time.perf_counter()
     iteration_id, score = client.compute_cost(configs)
+    print(f"Compute time: {time.perf_counter() - tic2:0.4f} seconds")
     print(f"Received score {score} for {iteration_id}")
 except Exception as error:
-    print(f"Exception: {error}")
+    print(error)
 finally:
     client.close()
+    print(f"Done. Total time: {time.perf_counter() - tic1:0.4f} seconds")

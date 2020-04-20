@@ -5,6 +5,7 @@ from concurrent import futures
 from datetime import datetime
 import json
 import os
+import threading
 import time
 import uuid
 
@@ -13,8 +14,9 @@ from absl import app
 from absl import flags
 import grpc
 
-from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.learning.autotuner.client.sim_client import SimClient
+from fueling.learning.autotuner.cost_computation.job.local_cost_job import LocalCostJob
+from fueling.learning.autotuner.cost_computation.job.k8s_cost_job import K8sCostJob
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.common.file_utils as file_utils
@@ -41,9 +43,9 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         logging.info(f"Running server in {mode} mode.")
 
         if flags.FLAGS.cloud:
-            self.submit_job = CostComputation.SubmitJobToK8s
+            self.CostJob = K8sCostJob
         else:
-            self.submit_job = CostComputation.SubmitJobAtLocal
+            self.CostJob = LocalCostJob
 
     @staticmethod
     def create_init_response(exit_code, message="", token=None):
@@ -62,24 +64,6 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             response.score = score
         return response
 
-    @staticmethod
-    def SubmitJobAtLocal(options):
-        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:control_cost_computation"
-        option_strings = [f"--{name}={value}" for (name, value) in options.items()]
-        cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
-        logging.info(f"Executing '{cmd}'")
-
-        # TODO: exit_code does not work so far, check abseil's app to see how to set exit code
-        exit_code = os.system(cmd)
-        return os.WEXITSTATUS(exit_code) == 0
-
-    @staticmethod
-    def SubmitJobToK8s(options):
-        entrypoint = "fueling/learning/autotuner/cost_computation/control_cost_computation.py"
-        client = SparkSubmitterClient(entrypoint, {}, options)
-        client.submit()
-        return True
-
     def get_service_dir(self, token):
         return f"{TMP_ROOT_DIR}/{token}"
 
@@ -89,20 +73,39 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if not request.scenario_id:
             return CostComputation.create_init_response(1, "Scenario(s) not specified.")
 
+        # set callback
+        init_sim_event = threading.Event()
+        stop_event = threading.Event()
+
+        def on_rpc_done():
+            stop_event.set()
+            if init_sim_event.is_set():
+                SimClient.set_channel(flags.FLAGS.sim_service_url)
+                SimClient.close(service_token)
+        context.add_callback(on_rpc_done)
+
         # Save config to a local file
-        service_token = f"autotuner-{uuid.uuid4().hex}"
+        service_token = f"tuner-{uuid.uuid4().hex}"
         tmp_dir = self.get_service_dir(service_token)
         file_utils.makedirs(tmp_dir)
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")
 
-        # init
+        # check if cancelled
+        if stop_event.is_set():
+            return CostComputation.create_init_response(
+                1, "request cancelled", service_token,
+            )
+
+        # init sim
         num_workers = len(request.scenario_id)
         SimClient.set_channel(flags.FLAGS.sim_service_url)
+        init_sim_event.set()
         status = SimClient.initialize(
             service_token,
             request.git_info,
             num_workers,
             request.dynamic_model)
+        init_sim_event.clear()
 
         return CostComputation.create_init_response(
             status.code, status.message, service_token,
@@ -113,12 +116,25 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             return CostComputation.create_compute_response(
                 exit_code=1, message="Service token not specified.")
 
+        # set callback
+        stop_event = threading.Event()
+        compute_event = threading.Event()
+        job = None
+
+        def on_rpc_done():
+            stop_event.set()
+            if job and compute_event.is_set():
+                job.cancel()
+        context.add_callback(on_rpc_done)
+
+        # Save config to a local file
         iteration_id = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         tmp_dir = f"{self.get_service_dir(request.token)}/{iteration_id}"
         file_utils.makedirs(tmp_dir)
-
-        # Save config to a local file
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/compute_request.pb.txt")
+        if stop_event.is_set():
+            return CostComputation.create_compute_response(
+                exit_code=1, message="Request cancelled")
 
         # submit job
         options = {
@@ -129,10 +145,19 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if request.cost_computation_conf_filename:
             options['cost_computation_conf_filename'] = request.cost_computation_conf_filename
 
-        if not self.submit_job(options):
+        compute_event.set()
+        try:
+            job = self.CostJob()
+            job.submit(options)
+        except Exception as error:
+            logging.error(f'Job failed: {error}')
             return CostComputation.create_compute_response(
-                exit_code=1, message="failed to compute cost."
+                exit_code=1, message="Failed to submit job."
             )
+        compute_event.clear()
+        if stop_event.is_set():
+            return CostComputation.create_compute_response(
+                exit_code=1, message="Request cancelled")
 
         # read and return score
         try:
