@@ -23,6 +23,7 @@ control_metrics{
   lat_jerk_thold: 2                     # unit: m/sec^3
   heading_acceleration_thold: 3.1416    # unit: radian/sec^2
   heading_jerk_thold: 1.5708            # unit: radian/sec^3
+  control_error_thold: CONTROL_ERROR    # reference: enum ErrorCode
 }
 control_period: 0.01                    # unit: sec
 control_frame_num: 100                  # unit: frame

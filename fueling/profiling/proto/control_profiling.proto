@@ -3,31 +3,6 @@ syntax = "proto2";
 package apollo_fuel.fueling.profiling.proto.control_profiling;
 
 
-message ControlMetrics {
-    optional double acceleration_harsh_limit = 1;
-    optional double curvature_harsh_limit = 2;
-
-    optional double speed_stop = 3;
-
-    optional double speed_still = 4;
-    optional double heading_error_still = 5;
-    optional double curvature_still = 6;
-
-    optional double station_error_thold = 7;
-    optional double speed_error_thold = 8;
-    optional double lateral_error_thold = 9;
-    optional double lateral_error_rate_thold = 10;
-    optional double heading_error_thold = 11;
-    optional double heading_error_rate_thold = 12;
-
-    optional double acceleration_thold = 13;
-    optional double jerk_thold = 14;
-    optional double lat_acceleration_thold = 15;
-    optional double lat_jerk_thold = 16;
-    optional double heading_acceleration_thold = 17;
-    optional double heading_jerk_thold = 18;
-}
-
 message ControlProfiling {
     enum DrivingMode {
       COMPLETE_MANUAL = 0;  // human drive
@@ -61,6 +36,32 @@ message ControlProfiling {
     optional DrivingMode driving_mode = 4;
     repeated GearPosition gear_position = 5;
     optional ErrorCode control_error_code = 6;
+
+    message ControlMetrics {
+        optional double acceleration_harsh_limit = 1;
+        optional double curvature_harsh_limit = 2;
+
+        optional double speed_stop = 3;
+
+        optional double speed_still = 4;
+        optional double heading_error_still = 5;
+        optional double curvature_still = 6;
+
+        optional double station_error_thold = 7;
+        optional double speed_error_thold = 8;
+        optional double lateral_error_thold = 9;
+        optional double lateral_error_rate_thold = 10;
+        optional double heading_error_thold = 11;
+        optional double heading_error_rate_thold = 12;
+
+        optional double acceleration_thold = 13;
+        optional double jerk_thold = 14;
+        optional double lat_acceleration_thold = 15;
+        optional double lat_jerk_thold = 16;
+        optional double heading_acceleration_thold = 17;
+        optional double heading_jerk_thold = 18;
+        optional ErrorCode control_error_thold = 19;
+    }
 
     optional ControlMetrics control_metrics = 7;
 

@@ -371,7 +371,7 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         control_error_code_count=compute_beyond(grading_mtx, GradingArguments(
             feature_name='control_error_code',
-            threshold=1000.0    # All the control error with enum >= 1000
+            threshold=profiling_conf.control_metrics.control_error_thold,
         ), FEATURE_IDX))
     return (target, grading_group_result)
 
