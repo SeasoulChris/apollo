@@ -12,16 +12,14 @@ class LearningDataGenerator(BasePipeline):
 
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/cleaned_data/',
+            'modules/planning/cleaned_data/test/',
         ]
-        self.dest_dir_prefix = 'modules/planning/learning_data/'
 
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
             '/apollo/data/cleaned_data/',
         ]
-        self.dest_dir_prefix = '/apollo/data/learning_data/'
 
         src_dirs_set = set([])
         for prefix in self.src_dir_prefixs:

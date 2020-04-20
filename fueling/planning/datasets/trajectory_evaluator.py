@@ -9,16 +9,14 @@ import fueling.common.logging as logging
 class TrajectoryEvaluator(BasePipeline):
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/output_data/',
+            'modules/planning/output_data/test/',
         ]
-        self.dest_dir_prefix = 'modules/planning/output_data_evaluated/'
 
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
             '/apollo/data/output_data/',
         ]
-        self.dest_dir_prefix = '/apollo/data/output_data_evaluated/'
 
         src_dirs_set = set([])
         for prefix in self.src_dir_prefixs:
