@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import copy
 import datetime
 import os
 import sys
@@ -27,10 +27,10 @@ class VisualPlanningRecords(BasePipeline):
     """CleanPlanningRecords pipeline."""
 
     def __init__(self):
-        task = "2019-11-22-20-39-47/"
+        task = "2019-10-17-13-36-41/"
         self.dst_prefix = 'modules/planning/visual_data/' + task
         self.src_prefixs = [
-            'modules/planning/cleaned_data/' + task
+            "modules/planning/cleaned_data_temp/cleaned_data_20200420_144101/2019-10-17-13-36-41/"
         ]
 
     def run_test(self):
@@ -73,7 +73,7 @@ class VisualPlanningRecords(BasePipeline):
         return dst_img_fn
 
     def visualize(self, record_fn, img_fn):
-        show_agent = False
+        show_agent = True
         show_obstacles = False
         show_routing = True
 
@@ -92,11 +92,18 @@ class VisualPlanningRecords(BasePipeline):
         localization_pb = localization_pb2.LocalizationEstimate()
         is_localization_updated = False
         cnt = 0
+        routing_resp_hist = None
+
+        first_localization = None
+        last_localization = None
+
         for msg in reader.read_messages():
 
             if msg.topic == "/apollo/localization/pose":
-                if show_agent:
-                    localization_pb.ParseFromString(msg.message)
+                localization_pb.ParseFromString(msg.message)
+                if first_localization is None:
+                    first_localization = copy.deepcopy(localization_pb)
+                last_localization = localization_pb
                 is_localization_updated = True
 
             if msg.topic == "/apollo/perception/obstacles":
@@ -116,10 +123,13 @@ class VisualPlanningRecords(BasePipeline):
                         obstacle_plotter.plot(obstacle, ax, c)
 
             if msg.topic == "/apollo/routing_response":
-                if show_routing:
-                    routing_response = RoutingResponse()
-                    routing_response.ParseFromString(msg.message)
-                    routing_plotter.plot(routing_response, ax)
+                routing_response = RoutingResponse()
+                routing_response.ParseFromString(msg.message)
+                routing_resp_hist = routing_response
+
+        if show_routing:
+            routing_plotter.plot_with_loc(
+                routing_resp_hist, ax, first_localization, last_localization)
 
         plt.axis('equal')
 

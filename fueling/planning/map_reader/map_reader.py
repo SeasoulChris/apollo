@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import json
 import fueling.common.redis_utils as redis_utils
