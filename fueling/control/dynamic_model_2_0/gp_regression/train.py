@@ -130,7 +130,7 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
             likelihood.eval()
             valid_loss = valid_dataloader(valid_loader, model, loss)
         scheduler.step(valid_loss)
-        if epoch == 10:
+        if epoch % 10 == 0:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
@@ -254,3 +254,8 @@ if __name__ == "__main__":
             f'validation data batch: {i}, input size is {X.size()}, output size is {y.size()}')
 
     train(args, train_loader, valid_loader)
+    # python ./fueling/control/dynamic_model_2_0/gp_regression/train.py
+    # -t /fuel/fueling/control/dynamic_model_2_0/testdata/0417/train
+    # -v /fuel/fueling/control/dynamic_model_2_0/testdata/0417/validation
+    # -ni 128
+    # -e 300
