@@ -7,23 +7,26 @@ import numpy as np
 import cv2 as cv
 
 from modules.planning.proto import learning_data_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.proto_utils as proto_utils
 
 class ObstaclePredictionsImgRenderer(object):
     """class of ObstaclesImgRenderer to create images of surrounding obstacles with bounding boxes"""
 
-    def __init__(self):
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1  # in meter/pixel
-        self.local_size_h = 501  # H * W image
-        self.local_size_w = 501  # H * W image
+    def __init__(self, config_file):
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution  # in meter/pixel
+        self.local_size_h = config.height  # H * W image
+        self.local_size_w = config.width  # H * W image
         # lower center point in the image
-        self.local_base_point_w_idx = (self.local_size_w - 1) // 2
-        self.local_base_point_h_idx = 376  # lower center point in the image
+        self.local_base_point_w_idx = config.ego_idx_x
+        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.local_base_point = None
         self.local_base_heading = None
-        self.max_prediction_time_horizon = 3  # second
+        self.max_prediction_time_horizon = config.max_obs_future_horizon  # second
 
     def _get_trans_point(self, p):
         p = np.round(p / self.resolution)
@@ -124,6 +127,7 @@ class ObstaclePredictionsImgRenderer(object):
 
 
 if __name__ == "__main__":
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
@@ -137,7 +141,7 @@ if __name__ == "__main__":
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    obstacle_predictions_mapping = ObstaclePredictionsImgRenderer()
+    obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(config_file)
     for frame in offline_frames.learning_data:
         img = obstacle_predictions_mapping.draw_obstacle_prediction(
             frame.localization.position.x,

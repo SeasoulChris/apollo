@@ -7,23 +7,27 @@ import numpy as np
 import cv2 as cv
 
 from modules.planning.proto import learning_data_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
+
+import fueling.common.proto_utils as proto_utils
 
 
 class AgentPosesHistoryImgRenderer(object):
     """class of AgentPosesHistoryImgRenderer to create a image of past ego car poses"""
 
-    def __init__(self):
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1  # in meter/pixel
-        self.local_size_h = 501  # H * W image
-        self.local_size_w = 501  # H * W image
+    def __init__(self, config_file):
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution  # in meter/pixel
+        self.local_size_h = config.height  # H * W image
+        self.local_size_w = config.width  # H * W image
         # lower center point in the image
-        self.local_base_point_w_idx = int((self.local_size_w - 1) / 2)
-        self.local_base_point_h_idx = 376  # lower center point in the image
+        self.local_base_point_w_idx = config.ego_idx_x
+        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.local_base_point = None
         self.local_base_heading = None
-        self.max_history_time_horizon = 3  # second
+        self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
     def _get_affine_points(self, p):
         p = p - self.local_base_point
@@ -54,6 +58,7 @@ class AgentPosesHistoryImgRenderer(object):
 
 
 if __name__ == "__main__":
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo/data/2019-10-17-13-36-41/ver0/valid_set/learning_data.66.bin.future_status.bin",
               'rb') as file_in:
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    agent_history_mapping = AgentPosesHistoryImgRenderer()
+    agent_history_mapping = AgentPosesHistoryImgRenderer(config_file)
     for frame in offline_frames.learning_data:
         img = agent_history_mapping.draw_agent_poses_history(frame.timestamp_sec,
                                                              frame.localization.position.x,

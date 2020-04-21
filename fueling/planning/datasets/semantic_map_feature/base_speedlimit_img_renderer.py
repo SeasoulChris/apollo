@@ -7,18 +7,23 @@ import pyproj
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.proto_utils as proto_utils
 
 class BaseSpeedLimitImgRenderer(object):
     """class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
-    def __init__(self, region):
-        """contruct function to init BaseSpeedLimitImgRenderer object"""
+    def __init__(self, config_file, region):
+        """contruct function to init BaseRoadMapImgRenderer object"""
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution   # in meter/pixel
+        self.base_map_padding = config.base_map_padding    # in meter
+        
         self.region = region
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1   # in meter/pixel
-        self.base_map_padding = 100    # in meter
-        self.city_driving_max_speed = 22.22  # 22.22 m/s /approx 80km/h
+        
+        self.city_driving_max_speed = config.city_driving_max_speed  # 22.22 m/s /approx 80km/h
 
         self.base_point = None
         self.GRID = None
@@ -108,7 +113,8 @@ class BaseSpeedLimitImgRenderer(object):
 
 if __name__ == '__main__':
     imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    mapping = BaseSpeedLimitImgRenderer("sunnyvale")
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    mapping = BaseSpeedLimitImgRenderer(config_file, "sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(os.path.join(imgs_dir, mapping.region +
                             "_speedlimit.png"), mapping.base_map)

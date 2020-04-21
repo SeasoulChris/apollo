@@ -7,17 +7,21 @@ import pyproj
 
 from modules.map.proto import map_pb2
 from modules.map.proto import map_road_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.proto_utils as proto_utils
 
 class BaseOffroadMaskImgRenderer(object):
     """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
-    def __init__(self, region):
+    def __init__(self, config_file, region):
         """contruct function to init BaseRoadMapImgRenderer object"""
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution   # in meter/pixel
+        self.base_map_padding = config.base_map_padding    # in meter
+        
         self.region = region
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1   # in meter/pixel
-        self.base_map_padding = 100    # in meter
 
         self.base_point = None
         self.GRID = None
@@ -97,6 +101,7 @@ class BaseOffroadMaskImgRenderer(object):
 
 if __name__ == '__main__':
     imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    mapping = BaseOffroadMaskImgRenderer("sunnyvale_with_two_offices")
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    mapping = BaseOffroadMaskImgRenderer(config_file, "sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(os.path.join(imgs_dir, mapping.region + "_offroad_mask.png"), mapping.base_map)

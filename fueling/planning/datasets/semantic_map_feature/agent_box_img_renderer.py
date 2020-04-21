@@ -7,19 +7,22 @@ import numpy as np
 import cv2 as cv
 
 from modules.planning.proto import learning_data_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.proto_utils as proto_utils
 
 class AgentBoxImgRenderer(object):
     """class of AgentBoxImgRenderer to create a image of ego car bounding box"""
 
-    def __init__(self):
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1  # in meter/pixel
-        self.local_size_h = 501  # H * W image
-        self.local_size_w = 501  # H * W image
+    def __init__(self, config_file):
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution  # in meter/pixel
+        self.local_size_h = config.height  # H * W image
+        self.local_size_w = config.width  # H * W image
         # lower center point in the image
-        self.local_base_point_w_idx = int((self.local_size_w - 1) / 2)
-        self.local_base_point_h_idx = 376  # lower center point in the image
+        self.local_base_point_w_idx = config.ego_idx_x
+        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
         # TODO(Jinyun): read vehicle param from elsewhere
         self.front_edge_to_center = 3.89
         self.back_edge_to_center = 1.043
@@ -51,7 +54,8 @@ class AgentBoxImgRenderer(object):
 
 
 if __name__ == "__main__":
-    agentbox_renderer = AgentBoxImgRenderer()
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    agentbox_renderer = AgentBoxImgRenderer(config_file)
 
     output_dir = './data_local_agent_box/'
     if os.path.isdir(output_dir):

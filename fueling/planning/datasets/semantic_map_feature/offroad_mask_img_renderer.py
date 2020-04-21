@@ -8,22 +8,25 @@ import numpy as np
 import math
 
 from modules.planning.proto import learning_data_pb2
+from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.proto_utils as proto_utils
 
 class OffroadMaskImgRenderer(object):
     """class of OffroadMaskImgRenderer to create an road map around ego vehicle with map element """
 
-    def __init__(self, region):
+    def __init__(self, config_file, region):
         """contruct function to init OffroadMaskImgRenderer object"""
         self.map_dir = "/fuel/testdata/planning/semantic_map_features"
-        self.base_map = cv.imread(os.path.join(self.map_dir, region + "_offroad_mask.png"))
-        # TODO(Jinyun): use config file
-        self.resolution = 0.1  # in meter/pixel
-        self.local_size_h = 501  # H * W image
-        self.local_size_w = 501  # H * W image
+        self.base_map = cv.imread(os.path.join(self.map_dir, region +  "_offroad_mask.png"))
+        config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        config = proto_utils.get_pb_from_text_file(config_file, config)
+        self.resolution = config.resolution  # in meter/pixel
+        self.local_size_h = config.height  # H * W image
+        self.local_size_w = config.width  # H * W image
         # lower center point in the image
-        self.local_base_point_w_idx = int((self.local_size_w - 1) / 2)
-        self.local_base_point_h_idx = 376  # lower center point in the image
+        self.local_base_point_w_idx = config.ego_idx_x
+        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
         self.map_base_point_x = None
         self.map_base_point_y = None
         self.map_size_h = None
@@ -71,6 +74,7 @@ class OffroadMaskImgRenderer(object):
 
 
 if __name__ == '__main__':
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo//data/one_sample_test/learning_data.166.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
@@ -84,7 +88,7 @@ if __name__ == '__main__':
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    offroad_mask_mapping = OffroadMaskImgRenderer("sunnyvale_with_two_offices")
+    offroad_mask_mapping = OffroadMaskImgRenderer(config_file, "sunnyvale_with_two_offices")
     for frame in offline_frames.learning_data:
         img = offroad_mask_mapping.draw_offroad_mask(
             frame.localization.position.x, frame.localization.position.y, frame.localization.heading)
