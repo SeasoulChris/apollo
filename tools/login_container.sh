@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 IMAGE="apolloauto/fuel-client:20200408_1125"
+# Change container name if the host machine is shared by multiple users.
 CONTAINER="fuel"
 
 # Goto fuel root
@@ -14,6 +15,10 @@ elif [ -z "$(which nvidia-container-toolkit)" ]; then
   echo "No nvidia-container-toolkit found"
 else
   DOCKER_RUN="docker run --gpus all --ipc=host"
+fi
+
+if [ -z "${HOME}" ]; then
+  HOME=$( cd; pwd )
 fi
 
 docker ps -a --format "{{.Names}}" | grep ${CONTAINER} > /dev/null
@@ -30,10 +35,11 @@ else
   GRP=$(id -g -n)
   GRP_ID=$(id -g)
 
-  CACHE_DIR="/home/.bazel_cache"
-  sudo mkdir -p ${CACHE_DIR}
-  sudo chown ${GRP}:${USER} ${CACHE_DIR}
-  required_volumes="-v ${CACHE_DIR}:${CACHE_DIR} ${required_volumes}"
+  # To support multi-containers on shared host.
+  LOCAL_CACHE_DIR="${HOME}/.cache/bazel/${CONTAINER}"
+  CONTAINER_CACHE_DIR="/home/.bazel_cache"
+  mkdir -p ${LOCAL_CACHE_DIR}
+  required_volumes="-v ${LOCAL_CACHE_DIR}:${CONTAINER_CACHE_DIR} ${required_volumes}"
 
   # Mount optional volumes.
   optional_volumes=""
@@ -68,9 +74,6 @@ else
       ${IMAGE} bash
   if [ "${USER}" != "root" ]; then
     docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_adduser.sh'
-    HOME="/home/${USER}"
-  else
-    HOME="/root"
   fi
   docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
 fi
