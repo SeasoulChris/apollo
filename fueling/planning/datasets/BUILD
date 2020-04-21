@@ -55,7 +55,7 @@ py_binary(
     deps = [
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
-        "//fueling/planning/data_visualizer:data_visualizer",
+        "//fueling/planning/data_visualizer",
     ],
 )
 
@@ -67,6 +67,17 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+    ],
+)
+
+py_binary(
+    name = "post_processor",
+    srcs = ["post_processor.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
     ],
 )
 
