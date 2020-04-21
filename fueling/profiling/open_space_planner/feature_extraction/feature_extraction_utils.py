@@ -48,9 +48,9 @@ def steer_limit(steer_val, vehicle_param):
 
 def transform(polygon, position, heading, new_position, new_heading):
     """
-    2D Rigid body tranformation matrix T = [[cos -sin x],
-                                            [sin  cos y],
-                                            [ 0    0  1]]
+    2D Rigid body transformation matrix T = [[cos -sin x],
+                                             [sin  cos y],
+                                             [ 0    0  1]]
     Point(p2 w.r.t world) = T(p2 w.r.t world)*T(world w.r.t p1)*Point(p1 w.r.t world)
     """
     cur_T = ([math.cos(heading), -math.sin(heading), position[0]],

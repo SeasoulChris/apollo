@@ -36,13 +36,28 @@ STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
 VEHICLE_PARAM_FILE = 'vehicle_param.pb.txt'
 
 
-def combine_msg_keys(rdds):
-    planning_pair_rdd, prediction_pair_rdd = rdds
-    planning_key, planning_rdd = planning_pair_rdd
-    prediction_key, prediction_rdd = prediction_pair_rdd
-    if planning_key != prediction_key:
-        raise Exception(F"Wrong key {planning_key} vs. {prediction_key}")
-    return (planning_key, {'planning': planning_rdd, 'prediction': prediction_rdd})
+def zip_msgs(msgs):
+    """convert a list of sorted prediction-and-planning msgs into a list of planning-prediction pairs"""
+    paired_msgs = []
+    latest_prediction_pb2 = None
+    for msg in msgs:
+        msg_pb2 = record_utils.message_to_proto(msg)
+        if not hasattr(msg_pb2, 'header'):
+            logging.warn(f"Found a message without header: {msg_pb2}")
+            continue
+
+        module_name = msg_pb2.header.module_name
+        if module_name == 'planning':
+            paired_msgs.append({
+                'planning': msg_pb2,
+                'prediction': latest_prediction_pb2
+            })
+        elif module_name == 'prediction':
+            latest_prediction_pb2 = msg_pb2
+        else:
+            logging.error(f"Unknown msg found: {msg_pb2.header}")
+
+    return paired_msgs
 
 
 def has_desired_stage(msgs):
@@ -58,18 +73,7 @@ def sort_messages(msgs):
     return sorted(msgs, key=lambda msg: msg['planning'].header.sequence_num)
 
 
-def read_channel_messages(todo_task_dirs, channel):
-    channel_msgs = (todo_task_dirs
-                    # PairRDD(target_prefix, message)
-                    .flatMapValues(record_utils.read_record([channel]))
-                    # PairRDD(target_prefix, parsed_message)
-                    .mapValues(record_utils.message_to_proto))
-    logging.info(F'{channel} count: {channel_msgs.count()}')
-    logging.debug(F'{channel} first: {channel_msgs.first()}')
-    return channel_msgs
-
-
-def copyIfNeeded(src, dst):
+def copy_if_needed(src, dst):
     if os.path.exists(dst):
         logging.info(F'No need to copy {dst}')
         return
@@ -99,7 +103,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
         logging.info(F'src_dst_rdd: {src_dst_rdd.collect()}')
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(
-            lambda src_dst: copyIfNeeded(
+            lambda src_dst: copy_if_needed(
                 os.path.join(src_dst[0], VEHICLE_PARAM_FILE),
                 os.path.join(src_dst[1], VEHICLE_PARAM_FILE)))
 
@@ -121,23 +125,23 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
     def process(self, todo_task_dirs, origin_prefix, target_prefix):
         """ process records """
-        planning_msgs = read_channel_messages(todo_task_dirs, record_utils.PLANNING_CHANNEL)
-        prediction_msgs = read_channel_messages(todo_task_dirs, record_utils.PREDICTION_CHANNEL)
-        if planning_msgs.count() != prediction_msgs.count():
-            raise Exception(F'Different number of messages found between planning and predcition.')
-
-        msgs = (planning_msgs
-                # RDD((target_prefix, planning), (target_prefix, prediction))
-                .zip(prediction_msgs)
-                # PairRDD(target_prefix, {planning, prediction})
-                .map(combine_msg_keys)
-                )
+        msgs = (todo_task_dirs
+                # PairRDD(target_prefix, raw_message)
+                .mapValues(record_utils.read_record(
+                    [record_utils.PLANNING_CHANNEL, record_utils.PREDICTION_CHANNEL]))
+                # PairRDD(target_prefix, {planning_pb2, prediction_pb2})
+                .flatMapValues(zip_msgs))
+        logging.info(F'msg count: {msgs.count()}')
+        logging.debug(F'msg first: {msgs.first()}')
 
         # 2. filter messages belonging to a certain stage (STAGE_TYPE)
         open_space_msgs = (msgs
-                           # PairRDD(target_prefix, parsed_message), keep message with desired stage
+                           # PairRDD(target_prefix, filtered_message),
+                           # keep message with desired stage
                            .filter(spark_op.filter_value(has_desired_stage))
+                           # PairRDD(target_prefix, iter[filtered_message])
                            .groupByKey()
+                           # PairRDD(target_prefix, filtered_and_sorted_messages)
                            .mapValues(sort_messages)
                            ).cache()
         logging.info(F'open_space_message_count: {open_space_msgs.count()}')

@@ -26,7 +26,7 @@ class SimClient(object):
                 num_workers=num_workers, token=service_token, dynamic_model=dynamic_model
             )
 
-            logging.info(f"Initialzing service {service_token}  ...")
+            logging.info(f"Initializing service {service_token}  ...")
             status = stub.Initialize(init_param)
         return status
 
