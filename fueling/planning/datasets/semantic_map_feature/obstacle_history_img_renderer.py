@@ -11,8 +11,8 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
 
-class ObstaclesImgRenderer(object):
-    """class of ObstaclesImgRenderer to create images of surrounding obstacles with bounding boxes"""
+class ObstacleHistoryImgRenderer(object):
+    """class of ObstacleHistoryImgRenderer to create images of surrounding obstacles with bounding boxes"""
 
     def __init__(self, config_file):
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
@@ -41,6 +41,8 @@ class ObstaclesImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
+            if len(obstacle.obstacle_trajectory_point) == 0:
+                continue
             current_time = obstacle.obstacle_trajectory_point[-1].timestamp_sec
             for i in range(len(obstacle.obstacle_trajectory_point) - 1, -1, -1):
                 obstacle_history = obstacle.obstacle_trajectory_point[i]
@@ -73,7 +75,7 @@ if __name__ == "__main__":
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    obstacle_mapping = ObstaclesImgRenderer(config_file)
+    obstacle_mapping = ObstacleHistoryImgRenderer(config_file)
     for frame in offline_frames.learning_data:
         img = obstacle_mapping.draw_obstacles(
             frame.timestamp_sec, frame.obstacle)

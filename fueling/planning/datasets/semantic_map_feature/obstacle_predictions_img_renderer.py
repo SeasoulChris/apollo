@@ -109,19 +109,22 @@ class ObstaclePredictionsImgRenderer(object):
                     if trajectory.probability > max_prob:
                         max_prob_idx = i
                         max_prob = trajectory.probability
-                if len(
-                        obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
-                    print("timestamp_idx larger than what is available in obstacle prediction")
+                if len(obstacle.obstacle_prediction.trajectory[max_prob_idx].trajectory_point) <= timestamp_idx:
+                    # print("timestamp_idx larger than what is available in obstacle prediction")
+                    continue
                 else:
                     path_point = obstacle.obstacle_prediction.trajectory[
                         max_prob_idx].trajectory_point[timestamp_idx].path_point
                     corner_points = self._get_affine_prediction_box(
                         np.array([path_point.x, path_point.y]), path_point.theta, obs_length, obs_width)
+                    Prediction_out_of_bound = False
                     for corner_point in corner_points:
                         if corner_point[0] < 0 or corner_point[0] > self.local_size_h or corner_point[1] < 0 or corner_point[1] > self.local_size_h:
-                            print("draw_agent_box_future out of canvas bound")
-                            return local_map
-                    cv.fillPoly(local_map, [corner_points], color=255)
+                            # print("draw_agent_box_future out of canvas bound")
+                            Prediction_out_of_bound = True
+                            break
+                    if not Prediction_out_of_bound:
+                        cv.fillPoly(local_map, [corner_points], color=255)
 
         return local_map
 

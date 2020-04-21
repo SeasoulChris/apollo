@@ -11,7 +11,7 @@ from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_rend
 from fueling.planning.datasets.semantic_map_feature.base_offroad_mask_img_renderer import BaseOffroadMaskImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer import BaseRoadMapImgRenderer
 from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer import BaseSpeedLimitImgRenderer
-from fueling.planning.datasets.semantic_map_feature.obstacles_img_renderer import ObstaclesImgRenderer
+from fueling.planning.datasets.semantic_map_feature.obstacle_history_img_renderer import ObstacleHistoryImgRenderer
 from fueling.planning.datasets.semantic_map_feature.obstacle_predictions_img_renderer import ObstaclePredictionsImgRenderer
 from fueling.planning.datasets.semantic_map_feature.offroad_mask_img_renderer import OffroadMaskImgRenderer
 from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer import RoadMapImgRenderer
@@ -35,7 +35,7 @@ class ChauffeurNetFeatureGenerator(object):
         self.agent_box_mapping = AgentBoxImgRenderer(self.config_file)
         self.agent_pose_future_mapping = AgentPosesFutureImgRenderer(self.config_file)
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer(self.config_file)
-        self.obstacles_mapping = ObstaclesImgRenderer(self.config_file)
+        self.obstacles_mapping = ObstacleHistoryImgRenderer(self.config_file)
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(self.config_file)
         self.offroad_mask_mapping = OffroadMaskImgRenderer(self.config_file, region)
         self.road_map_mapping = RoadMapImgRenderer(self.config_file, region)

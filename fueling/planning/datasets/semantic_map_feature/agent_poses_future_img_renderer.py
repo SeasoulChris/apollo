@@ -71,10 +71,10 @@ class AgentPosesFutureImgRenderer(object):
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         current_time = frame_time_sec
-        print("current_time is {}".format(current_time))
+        # print("current_time is {}".format(current_time))
         for ego_pose in ego_pose_future:
             relative_time = ego_pose.timestamp_sec - current_time
-            print("prediction_time is {}".format(ego_pose.timestamp_sec))
+            # print("prediction_time is {}".format(ego_pose.timestamp_sec))
             if relative_time > self.max_future_time_horizon:
                 break
             color = relative_time / self.max_future_time_horizon * 255
@@ -82,7 +82,7 @@ class AgentPosesFutureImgRenderer(object):
                 np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y])))
             for traj_point in traj_points:
                 if traj_point[0] < 0 or traj_point[0] > self.local_size_h or traj_point[1] < 0 or traj_point[1] > self.local_size_h:
-                    print("draw_agent_future_trajectory out of canvas bound")
+                    # print("draw_agent_future_trajectory out of canvas bound")
                     return local_map
             cv.circle(local_map, traj_points, radius=4, color=color)
         return local_map
@@ -95,7 +95,7 @@ class AgentPosesFutureImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         if len(ego_pose_future) <= timestamp_idx:
-            print("timestamp_idx larger than what is available in agent pose future")
+            # print("timestamp_idx larger than what is available in agent pose future")
             return local_map
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
@@ -103,7 +103,7 @@ class AgentPosesFutureImgRenderer(object):
         idx = self._get_affine_points(
             np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y]))
         if idx[0] < 0 or idx[0] > self.local_size_h or idx[1] < 0 or idx[1] > self.local_size_h:
-            print("draw_agent_pose_future out of canvas bound")
+            # print("draw_agent_pose_future out of canvas bound")
             return local_map
         local_map[idx[1], idx[0]] = 255
         return local_map
@@ -116,7 +116,7 @@ class AgentPosesFutureImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         if len(ego_pose_future) <= timestamp_idx:
-            print("timestamp_idx larger than what is availablein agent box future")
+            # print("timestamp_idx larger than what is availablein agent box future")
             return local_map
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
@@ -125,7 +125,7 @@ class AgentPosesFutureImgRenderer(object):
             np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y]), ego_pose.trajectory_point.path_point.theta)
         for corner_point in corner_points:
             if corner_point[0] < 0 or corner_point[0] > self.local_size_h or corner_point[1] < 0 or corner_point[1] > self.local_size_h:
-                print("draw_agent_box_future out of canvas bound")
+                # print("draw_agent_box_future out of canvas bound")
                 return local_map
         cv.fillPoly(local_map, [corner_points], color=255)
         return local_map
