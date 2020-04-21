@@ -33,6 +33,7 @@ message ReadMessagesRequest {
   uint32 end_time_second = 4;
   string namespace = 5; // e.g.: 'kinglong/auto_car'
   bool with_data = 6; // True: return message content; default false.
+  string skip_topics = 7; // Skip the specified topics, default ''.  This overwrites the "topics"
 }
 
 message ReadMessagesResponse {

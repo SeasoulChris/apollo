@@ -1,14 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "client",
     srcs = ["client.py"],
     deps = [
         "//apps/afs_data_service/proto:afs_data_service_pb2", 
+        "//fueling/common:file_utils",
         "//fueling/common:logging", 
         "//fueling/common/record/kinglong/cybertron/python:convert",
         "//fueling/common/record/kinglong/proto/modules:localization_pose_pb2",
-        "//fueling/common:file_utils",
     ]
 )
 
@@ -26,6 +26,8 @@ py_binary(
     srcs = ["copy_to_bos.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging", 
         "//fueling/data/afs_client:client",
     ]
 )

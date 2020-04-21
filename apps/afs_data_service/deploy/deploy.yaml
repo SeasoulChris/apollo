@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: afs-data-service
-        image: hub.baidubce.com/apollofuel/afs-data-service:20200412_0408
+        image: hub.baidubce.com/apollofuel/afs-data-service:20200420_1514
         imagePullPolicy: Always
         securityContext:
           privileged: true

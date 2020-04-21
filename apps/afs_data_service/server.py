@@ -63,9 +63,12 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             start_time_s=request.start_time_second,
             end_time_s=request.end_time_second,
             namespace=request.namespace)
+        skip_topics = request.skip_topics.split(',')
         for topic, message, data_type, timestamp in messages:
             print('task_id:{}, topic:{}, message_size: {}, data_type:{}, timestamp:{}'.format(
                   request.task_id, topic, len(message), data_type, timestamp))
+            if any(topic.find(x) != -1 for x in skip_topics):
+                continue
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
             response.message = message if request.with_data else b''
