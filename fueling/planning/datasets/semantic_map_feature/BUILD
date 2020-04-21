@@ -16,8 +16,8 @@ py_library(
 )
 
 py_library(
-    name = "obstacles_img_renderer",
-    srcs = ["obstacles_img_renderer.py"],
+    name = "obstacle_predictions_img_renderer",
+    srcs = ["obstacle_predictions_img_renderer.py"],
 )
 
 py_library(
