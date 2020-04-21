@@ -19,7 +19,7 @@ class LearningDataGenerator(BasePipeline):
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
-            '/apollo/data/cleaned_data/',
+            '/fuel/data/cleaned_data/test/',
         ]
 
         src_dirs_set = set([])

@@ -16,7 +16,7 @@ class TrajectoryEvaluator(BasePipeline):
     def run_test(self):
         """Run Test"""
         self.src_dir_prefixs = [
-            '/apollo/data/output_data/',
+            '/fuel/data/output_data/test/',
         ]
 
         src_dirs_set = set([])
