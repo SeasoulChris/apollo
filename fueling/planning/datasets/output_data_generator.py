@@ -15,6 +15,9 @@ DST_DIR_PREFIX = 'modules/planning/output_data'
 # for local test
 # SRC_DIR_PREFIX = 'apollo/data/learning_data2'
 # DST_DIR_PREFIX = 'apollo/data/output_data'
+# for apolloTitan
+# SRC_DIR_PREFIX = 'data/learning_data'
+# DST_DIR_PREFIX = 'data/output_data'
 
 
 class OutputDataGenerator(BasePipeline):
