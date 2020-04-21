@@ -28,9 +28,9 @@ class LearningDataGenerator(BasePipeline):
                 for file in files:
                     src_dirs_set.add(root)
 
-        processed_records = self.to_rdd(src_dirs_set).map(self.process_record)
+        processed_dirs = self.to_rdd(src_dirs_set).map(self.process_dir)
 
-        logging.info('Processed {}/{} records'.format(processed_records.count(),
+        logging.info('Processed {}/{} folders'.format(processed_dirs.count(),
                                                       len(src_dirs_set)))
         return 0
 
@@ -43,11 +43,11 @@ class LearningDataGenerator(BasePipeline):
                 .distinct()
             for prefix in self.src_dir_prefixs])
 
-        processed_records = records_rdd.map(self.process_record)
+        processed_dirs = records_rdd.map(self.process_dir)
 
-        logging.info('Processed {} records'.format(processed_records.count()))
+        logging.info('Processed {} folders'.format(processed_dir.count()))
 
-    def process_record(self, src_dir):
+    def process_dir(self, src_dir):
         """ Process Records """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]

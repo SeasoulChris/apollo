@@ -25,9 +25,9 @@ class TrajectoryEvaluator(BasePipeline):
                 for file in files:
                     src_dirs_set.add(root)
 
-        processed_files = self.to_rdd(src_dirs_set).map(self.process_dir)
+        processed_dirs = self.to_rdd(src_dirs_set).map(self.process_dir)
 
-        logging.info('Processed {}/{} folders'.format(processed_files.count(),
+        logging.info('Processed {}/{} folders'.format(processed_dirs.count(),
                                                       len(src_dirs_set)))
         return 0
 
@@ -40,9 +40,9 @@ class TrajectoryEvaluator(BasePipeline):
                 .distinct()
             for prefix in self.src_dir_prefixs])
 
-        processed_files = records_rdd.map(self.process_dir)
+        processed_dirs = records_rdd.map(self.process_dir)
 
-        logging.info('Processed {} folders'.format(processed_files.count()))
+        logging.info('Processed {} folders'.format(processed_dirs.count()))
 
     def process_dir(self, src_dir):
         """ Process files """
