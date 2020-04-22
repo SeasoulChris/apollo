@@ -62,13 +62,26 @@ class DataInspector:
         logging.info('Total number of data points = {}'.format(
             self.total_num_instances))
 
+        if self.total_num_instances == 0 :
+            exit()
+
+        bad_frame_count = 0
         for instance in self.instances:
+            # Filtering bad 
+            if len(instance.adc_trajectory_point) < 2:
+                logging.info('ego past len is {} at frame{}'.format(len(instance.adc_trajectory_point), instance.frame_num))
+                bad_frame_count += 1
+                continue
+            
             if len(instance.routing.local_routing_lane_id) == 0:
                 self.routing_existances.append(False)
             else:
                 self.routing_existances.append(True)
 
-            self.instance_timestamps.append(instance.timestamp_sec)
+            # current_time = instance.timestamp_sec
+            current_time = instance.adc_trajectory_point[-1].timestamp_sec # last element of adc_trajectory_point is current position time
+
+            self.instance_timestamps.append(current_time)
 
             self.ego_future_timestamps.append(
                 [adc_point.timestamp_sec for adc_point in instance.output.adc_future_trajectory_point])
@@ -76,18 +89,19 @@ class DataInspector:
             # Assuming ego past from learning_data is originally loaded in timestamp
             # ascending order, reverse it here to have newer points in front
             self.ego_past_timestamps.append(
-                [adc_point.timestamp_sec for adc_point in reversed(instance.adc_trajectory_point)])
+                [adc_point.timestamp_sec for adc_point in reversed(instance.adc_trajectory_point[:-1])])
 
             self.obstacles_future_timestamps.append(
-                [[[obs_point.relative_time + obstacle.obstacle_prediction.timestamp_sec
+                [[[obs_point.relative_time + current_time
                    for obs_point in pred_trajectory.trajectory_point]
                   for pred_trajectory in obstacle.obstacle_prediction.trajectory]
                  for obstacle in instance.obstacle])
             # Assuming obs past from learning_data is originally loaded in timestamp
             # ascending order, reverse it here to have newer points in front
             self.obstacles_past_timestamps.append(
-                [[obs_point.timestamp_sec for obs_point in reversed(obstacle.obstacle_trajectory_point)] for obstacle in instance.obstacle])
+                [[obs_point.relative_time + current_time for obs_point in reversed(obstacle.obstacle_trajectory.evaluated_trajectory_point)] for obstacle in instance.obstacle])
 
+        logging.info('bad_frame_count is {}'.format(bad_frame_count))
     def _inspect_instances(self):
         '''
         List of inspected items includes:
@@ -204,6 +218,9 @@ class DataInspector:
             current_timestamp = self.instance_timestamps[i]
             for obs in obs_prediction:
                 for pred_trajectory in obs:
+                    if len(pred_trajectory) == 0:
+                        logging.info('obs has no prediction at sequence num {}'.format(i))
+                        continue
                     obs_future_delta_t = []
                     obs_future_delta_t.append(pred_trajectory[0] - current_timestamp)
                     for j in range(1, len(pred_trajectory)):
@@ -234,6 +251,9 @@ class DataInspector:
         for i, obs_tracking in enumerate(self.obstacles_past_timestamps):
             current_timestamp = self.instance_timestamps[i]
             for obs_trajectory in obs_tracking:
+                if len(obs_trajectory) == 0:
+                    logging.info('obs has no past at sequence num {}'.format(i))
+                    continue
                 obs_past_delta_t = []
                 obs_past_delta_t.append(current_timestamp - obs_trajectory[0])
                 for j in range(1, len(obs_trajectory)):
