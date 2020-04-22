@@ -56,6 +56,11 @@ flags.DEFINE_string(
     "/mnt/bos/autotuner",
     "Tuner storage root directory"
 )
+flags.DEFINE_string(
+    "visualization_dir",
+    "/fuel/fueling/learning/autotuner/tuner",
+    "Tuner storage root directory"
+)
 
 
 class OptunaBaseTuner():
@@ -144,5 +149,5 @@ if __name__ == "__main__":
     figure2 = optuna.visualization.plot_contour(study, params=['kp', 'ki'])
     figure1.show()
     figure2.show()
-    #figure1.write_image("fig1.png")
-    #figure1.write_image("fig2.png")
+    figure1.write_image(f"{flags.FLAGS.visualization_dir}/optimization_history_{tuner.timestamp}.png")
+    figure1.write_image(f"{flags.FLAGS.visualization_dir}/contour_{tuner.timestamp}.png")
