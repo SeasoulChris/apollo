@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "base_pipeline",
     srcs = ["base_pipeline.py"],
@@ -22,7 +20,7 @@ py_library(
     name = "db_backed_utils",
     srcs = ["db_backed_utils.py"],
     deps = [
-	":proto_utils",
+        ":proto_utils",
         "//fueling/data/proto:record_meta_pb2",
     ],
 )
@@ -112,7 +110,6 @@ py_library(
     srcs = ["socket_utils.py"],
     deps = [
         ":logging",
-        requirement("psutil"),
     ],
 )
 

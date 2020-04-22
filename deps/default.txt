@@ -3,8 +3,6 @@ graphviz
 liegroups
 opt-einsum
 progressbar
-psutil
 pyro-ppl
 tqdm
-shapely
 -e git+git://github.com/cornellius-gp/gpytorch.git@master#egg=gpytorch
