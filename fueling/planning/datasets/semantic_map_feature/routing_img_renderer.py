@@ -13,7 +13,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class RoutingImgRenderer(object):
     """class of RoutingImgRenderer to create a image of routing of ego vehicle"""
@@ -24,12 +24,8 @@ class RoutingImgRenderer(object):
         self.resolution = config.resolution  # in meter/pixel
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
-        # TODO (Jinyun): try use a lane sequence by a fix length
-        self.lane_sequence_piece_num = 5
-
-        # lower center point in the image
-        self.local_base_point_w_idx = config.ego_idx_x
-        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
+        self.local_base_point_idx = np.array(
+            [config.ego_idx_x, config.ego_idx_y])  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.center = None
         self.center_heading = None
@@ -37,7 +33,6 @@ class RoutingImgRenderer(object):
         self.region = region
         self.hd_map = None
         self.lane_dict = {}
-        self.lane_list = []
         self._read_hdmap()
         self._load_lane()
 
@@ -56,93 +51,11 @@ class RoutingImgRenderer(object):
         for lane in self.hd_map.lane:
             self.lane_dict[lane.id.id] = lane
 
-    def _load_routing_response(self, routing_response):
-        for lane_id in routing_response:
-            self.lane_list.append(lane_id)
-
-    def _calc_euclidean_dist(self, p0_x, p0_y, p1_x, p1_y):
-        return math.sqrt((p0_x - p1_x)**2 + (p0_y - p1_y)**2)
-
-    def _get_lane_sequence_by_startlane(self, start_lane_idx):
-        lane_sequence = []
-        lane_sequence_id = []
-        for i in range(start_lane_idx, start_lane_idx + self.lane_sequence_piece_num, 1):
-            if i >= len(self.lane_list):
-                break
-            lane_sequence.append(self.lane_dict[self.lane_list[i]])
-            lane_sequence_id.append(self.lane_list[i])
-        return lane_sequence
-
-    def _get_nearest_routing_lanes(self, center_x, center_y):
-        # TODO (Jinyun): use kdtree and add memory to neglect traversed lanes
-        rough_distance_filter = 250  # meters
-        min_distance = 50
-        max_acceptable_dist = 1
-        nearest_lane_id = self.lane_list[0]
-        for lane_id in self.lane_list:
-            lane = self.lane_dict[lane_id]
-            dist_to_start = self._calc_euclidean_dist(lane.central_curve.segment[0].line_segment.point[0].x,
-                                                      lane.central_curve.segment[0].line_segment.point[0].y,
-                                                      center_x, center_y) > rough_distance_filter
-            dist_to_end = self._calc_euclidean_dist(lane.central_curve.segment[-1].line_segment.point[-1].x,
-                                                    lane.central_curve.segment[-1].line_segment.point[-1].y,
-                                                    center_x, center_y) > rough_distance_filter
-            if dist_to_start > rough_distance_filter and dist_to_end > rough_distance_filter:
-                continue
-            else:
-                for segment in lane.central_curve.segment:
-                    for point in segment.line_segment.point:
-                        dist_to_point = self._calc_euclidean_dist(
-                            point.x, point.y, center_x, center_y)
-                        if dist_to_point < max_acceptable_dist:
-                            return self._get_lane_sequence_by_startlane(
-                                self.lane_list.index(lane_id))
-                        else:
-                            if dist_to_point < min_distance:
-                                nearest_lane_id = lane_id
-                                min_distance = dist_to_point
-        return self._get_lane_sequence_by_startlane(self.lane_list.index(nearest_lane_id))
-
-    def _get_affine_points(self, p):
-        p = p - self.center
-        theta = np.pi / 2 - self.center_heading
-        point = np.dot(np.array(
-            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
-        point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx +
-                int(point[0]), self.local_base_point_h_idx - int(point[1])]
-
-    # TODO(Jinyun): to be deprecated
-    def draw_routing(self, center_x, center_y, center_heading, routing_response):
-        local_map = np.zeros(
-            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
-        self.center = np.array([center_x, center_y])
-        self.center_heading = center_heading
-        self._load_routing_response(routing_response)
-
-        nearest_routing_lanes = self._get_nearest_routing_lanes(
-            center_x, center_y)
-
-        routing_color_delta = int(255 / self.lane_sequence_piece_num)
-
-        for i in range(0, self.lane_sequence_piece_num, 1):
-            color = int(255 - i * routing_color_delta)
-            routing_lane = nearest_routing_lanes[i]
-            for segment in routing_lane.central_curve.segment:
-                for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
-                    p1 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
-                    cv.line(local_map, tuple(p0), tuple(
-                        p1), color=color, thickness=12)
-        return local_map
-
     def draw_local_routing(self, center_x, center_y, center_heading, local_routing):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
-        self.center = np.array([center_x, center_y])
-        self.center_heading = center_heading
+        self.local_base_point = np.array([center_x, center_y])
+        self.local_base_heading = center_heading
         if len(local_routing) == 0:
             print("No routing provided")
             return local_map
@@ -152,10 +65,22 @@ class RoutingImgRenderer(object):
             routing_lane = self.lane_dict[local_routing[i]]
             for segment in routing_lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
-                    p1 = self._get_affine_points(
-                        np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
+                    p0 = tuple(renderer_utils.get_img_idx(
+                        renderer_utils.point_affine_transformation(
+                            np.array([segment.line_segment.point[i].x,
+                                      segment.line_segment.point[i].y]),
+                            self.local_base_point,
+                            np.pi / 2 - self.local_base_heading),
+                        self.local_base_point_idx,
+                        self.resolution))
+                    p1 = tuple(renderer_utils.get_img_idx(
+                        renderer_utils.point_affine_transformation(
+                            np.array([segment.line_segment.point[i + 1].x,
+                                      segment.line_segment.point[i + 1].y]),
+                            self.local_base_point,
+                            np.pi / 2 - self.local_base_heading),
+                        self.local_base_point_idx,
+                        self.resolution))
                     cv.line(local_map, tuple(p0), tuple(
                         p1), color=color, thickness=12)
         return local_map
@@ -176,7 +101,8 @@ if __name__ == "__main__":
     print("Making output directory: " + output_dir)
 
     ego_pos_dict = dict()
-    routing_mapping = RoutingImgRenderer(config_file, "sunnyvale_with_two_offices")
+    routing_mapping = RoutingImgRenderer(
+        config_file, "sunnyvale_with_two_offices")
     for frame in offline_frames.learning_data:
         img = routing_mapping.draw_local_routing(
             frame.localization.position.x, frame.localization.position.y,

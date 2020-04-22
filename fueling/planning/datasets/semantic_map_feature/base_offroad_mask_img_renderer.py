@@ -10,6 +10,7 @@ from modules.map.proto import map_road_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class BaseOffroadMaskImgRenderer(object):
     """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -67,15 +68,12 @@ class BaseOffroadMaskImgRenderer(object):
                                     left_bottom_y - self.base_map_padding])
         self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
                      int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
 
     def _draw_base_map(self):
         self._draw_road()
-
-    def get_trans_point(self, p):
-        point = np.round((p - self.base_point) / self.resolution)
-        return [int(point[0]), self.GRID[1] - int(point[1])]
 
     def _draw_road(self, color=(0)):
         self.base_map = (self.base_map + 1) * 255
@@ -87,14 +85,18 @@ class BaseOffroadMaskImgRenderer(object):
                     if edge.type == map_road_pb2.BoundaryEdge.Type.LEFT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point)):
-                                point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                point = renderer_utils.get_img_idx(np.array(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                                    self.base_point_idx,
+                                    self.resolution)
                                 points = np.vstack((points, point))
                     elif edge.type == map_road_pb2.BoundaryEdge.Type.RIGHT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point) - 1, -1, -1):
-                                point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                point = renderer_utils.get_img_idx(np.array(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                                    self.base_point_idx,
+                                    self.resolution)
                                 points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 

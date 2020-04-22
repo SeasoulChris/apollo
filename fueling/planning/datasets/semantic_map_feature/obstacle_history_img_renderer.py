@@ -10,6 +10,8 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+
 
 class ObstacleHistoryImgRenderer(object):
     """class of ObstacleHistoryImgRenderer to create images of surrounding obstacles with bounding boxes"""
@@ -20,21 +22,10 @@ class ObstacleHistoryImgRenderer(object):
         self.resolution = config.resolution  # in meter/pixel
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
-        # lower center point in the image
-        self.local_base_point_w_idx = config.ego_idx_x
-        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
+        self.local_base_point_idx = np.array(
+            [config.ego_idx_x, config.ego_idx_y])  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.max_history_length = config.max_obs_past_horizon  # second
-
-    def _get_trans_point(self, p):
-        # obstacles are in ego vehicle coordiantes where ego car faces toward
-        # EAST, so rotation to NORTH is done below
-        theta = np.pi / 2
-        point = np.dot(np.array(
-            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
-        point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx +
-                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     # TODO(Jinyun): evaluate whether use localization as current time
     def draw_obstacles(self, current_timestamp, obstacles):
@@ -52,9 +43,14 @@ class ObstacleHistoryImgRenderer(object):
                 points = np.zeros((0, 2))
                 color = (1 - relative_time / self.max_history_length) * 255
                 for point in obstacle_history.polygon_point:
-                    point = self._get_trans_point(
-                        [point.x, point.y])
-                    points = np.vstack((points, point))
+                    point_idx = tuple(renderer_utils.get_img_idx(
+                        renderer_utils.point_affine_transformation(
+                            np.array([point.x, point.y]),
+                            np.array([0, 0]),
+                            np.pi / 2),
+                        self.local_base_point_idx,
+                        self.resolution))
+                    points = np.vstack((points, point_idx))
                 cv.fillPoly(local_map, [np.int32(points)], color=color)
 
         return local_map

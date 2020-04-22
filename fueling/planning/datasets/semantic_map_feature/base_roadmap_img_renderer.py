@@ -11,6 +11,8 @@ from modules.map.proto import map_road_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+
 
 class BaseRoadMapImgRenderer(object):
     """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -21,7 +23,7 @@ class BaseRoadMapImgRenderer(object):
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution   # in meter/pixel
         self.base_map_padding = config.base_map_padding    # in meter
-        
+
         self.region = region
 
         self.base_point = None
@@ -67,7 +69,8 @@ class BaseRoadMapImgRenderer(object):
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
         self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
-                     int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+                              int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
 
@@ -78,10 +81,6 @@ class BaseRoadMapImgRenderer(object):
         self._draw_lane_boundary()
         self._draw_stop_line()
         # self._draw_lane_central()
-
-    def get_trans_point(self, p):
-        point = np.round((p - self.base_point) / self.resolution)
-        return [int(point[0]), self.GRID[1] - int(point[1])]
 
     def _hsv_to_rgb(self, H=1.0, S=1.0, V=1.0):
         """
@@ -110,14 +109,18 @@ class BaseRoadMapImgRenderer(object):
                     if edge.type == map_road_pb2.BoundaryEdge.Type.LEFT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point)):
-                                point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                point = renderer_utils.get_img_idx(np.array(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                                    self.base_point_idx,
+                                    self.resolution)
                                 points = np.vstack((points, point))
                     if edge.type == map_road_pb2.BoundaryEdge.Type.RIGHT_BOUNDARY:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point) - 1, -1, -1):
-                                point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                point = renderer_utils.get_img_idx(np.array(
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                                    self.base_point_idx,
+                                    self.resolution)
                                 points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
@@ -126,8 +129,10 @@ class BaseRoadMapImgRenderer(object):
             if junction.HasField("polygon"):
                 points = np.zeros((0, 2))
                 for i in range(len(junction.polygon.point)):
-                    point = self.get_trans_point(
-                        [junction.polygon.point[i].x, junction.polygon.point[i].y])
+                    point = renderer_utils.get_img_idx(np.array(
+                        [junction.polygon.point[i].x, junction.polygon.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
@@ -136,8 +141,10 @@ class BaseRoadMapImgRenderer(object):
             if crosswalk.HasField("polygon"):
                 points = np.zeros((0, 2))
                 for i in range(len(crosswalk.polygon.point)):
-                    point = self.get_trans_point(
-                        [crosswalk.polygon.point[i].x, crosswalk.polygon.point[i].y])
+                    point = renderer_utils.get_img_idx(np.array(
+                        [crosswalk.polygon.point[i].x, crosswalk.polygon.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
@@ -146,10 +153,14 @@ class BaseRoadMapImgRenderer(object):
             for stop_line in stop_sign.stop_line:
                 for segment in stop_line.segment:
                     for i in range(len(segment.line_segment.point) - 1):
-                        p0 = self.get_trans_point(
-                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                        p1 = self.get_trans_point(
-                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                        p0 = renderer_utils.get_img_idx(np.array(
+                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                            self.base_point_idx,
+                            self.resolution)
+                        p1 = renderer_utils.get_img_idx(np.array(
+                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                            self.base_point_idx,
+                            self.resolution)
                         cv.line(self.base_map, tuple(p0), tuple(
                             p1), color=color, thickness=4)
 
@@ -165,10 +176,14 @@ class BaseRoadMapImgRenderer(object):
                 color = yellow_color
             for segment in lane.left_boundary.curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self.get_trans_point(
-                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                    p1 = self.get_trans_point(
-                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                    p0 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
+                    p1 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     cv.line(self.base_map, tuple(p0), tuple(
                         p1), color=color, thickness=2)
 
@@ -177,10 +192,14 @@ class BaseRoadMapImgRenderer(object):
                 color = yellow_color
             for segment in lane.right_boundary.curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self.get_trans_point(
-                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                    p1 = self.get_trans_point(
-                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                    p0 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
+                    p1 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     cv.line(self.base_map, tuple(p0), tuple(
                         p1), color=color, thickness=2)
 
@@ -188,10 +207,14 @@ class BaseRoadMapImgRenderer(object):
         for lane in self.hd_map.lane:
             for segment in lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self.get_trans_point(
-                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                    p1 = self.get_trans_point(
-                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                    p0 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
+                    p1 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     theta = np.arctan2(segment.line_segment.point[i + 1].y - segment.line_segment.point[i].y,
                                        segment.line_segment.point[i + 1].x - segment.line_segment.point[i].x) / (2 * np.pi) % 1
                     cv.line(self.base_map, tuple(p0), tuple(p1),

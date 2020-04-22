@@ -10,7 +10,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class AgentPosesHistoryImgRenderer(object):
     """class of AgentPosesHistoryImgRenderer to create a image of past ego car poses"""
@@ -21,22 +21,12 @@ class AgentPosesHistoryImgRenderer(object):
         self.resolution = config.resolution  # in meter/pixel
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
-        # lower center point in the image
-        self.local_base_point_w_idx = config.ego_idx_x
-        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
+        self.local_base_point_idx = np.array(
+            [config.ego_idx_x, config.ego_idx_y]) # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.local_base_point = None
         self.local_base_heading = None
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
-
-    def _get_affine_points(self, p):
-        p = p - self.local_base_point
-        theta = np.pi / 2 - self.local_base_heading
-        point = np.dot(np.array(
-            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
-        point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx +
-                int(point[0]), self.local_base_point_h_idx - int(point[1])]
 
     def draw_agent_poses_history(self, frame_time_sec, center_x,
                                  center_y, center_heading, ego_pose_history):
@@ -51,8 +41,15 @@ class AgentPosesHistoryImgRenderer(object):
             if relative_time > self.max_history_time_horizon:
                 break
             color = (1 - relative_time / self.max_history_time_horizon) * 255
-            cv.circle(local_map, tuple(self._get_affine_points(
-                np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y]))),
+            traj_point = tuple(renderer_utils.get_img_idx(
+                renderer_utils.affine_transformation(
+                    np.array([ego_pose.trajectory_point.path_point.x,
+                              ego_pose.trajectory_point.path_point.y]),
+                    self.local_base_point,
+                    np.pi / 2 - self.local_base_heading),
+                self.local_base_point_idx,
+                self.resolution))
+            cv.circle(local_map, tuple(traj_point),
                 radius=4, color=color)
         return local_map
 

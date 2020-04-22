@@ -10,6 +10,7 @@ from modules.map.proto import map_lane_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class BaseSpeedLimitImgRenderer(object):
     """class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format"""
@@ -69,16 +70,13 @@ class BaseSpeedLimitImgRenderer(object):
                                     left_bottom_y - self.base_map_padding])
         self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
                      int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
 
     def _draw_base_map(self):
         self._draw_speed_limit()
         self._draw_speed_bump()
-
-    def get_trans_point(self, p):
-        point = np.round((p - self.base_point) / self.resolution)
-        return [int(point[0]), self.GRID[1] - int(point[1])]
 
     def get_speedlimit_coloring(self, speed_limit):
         green_level = (
@@ -91,10 +89,14 @@ class BaseSpeedLimitImgRenderer(object):
             speedlimit = lane.speed_limit
             for segment in lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
-                    p0 = self.get_trans_point(
-                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                    p1 = self.get_trans_point(
-                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                    p0 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
+                    p1 = renderer_utils.get_img_idx(np.array(
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                        self.base_point_idx,
+                        self.resolution)
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self.get_speedlimit_coloring(speedlimit), thickness=4)
 
@@ -103,10 +105,14 @@ class BaseSpeedLimitImgRenderer(object):
             for position in speed_bump.position:
                 for segment in position.segment:
                     for i in range(len(segment.line_segment.point) - 1):
-                        p0 = self.get_trans_point(
-                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
-                        p1 = self.get_trans_point(
-                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                        p0 = renderer_utils.get_img_idx(np.array(
+                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                            self.base_point_idx,
+                            self.resolution)
+                        p1 = renderer_utils.get_img_idx(np.array(
+                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                            self.base_point_idx,
+                            self.resolution)
                         cv.line(self.base_map, tuple(p0), tuple(
                             p1), color=color, thickness=12)
 

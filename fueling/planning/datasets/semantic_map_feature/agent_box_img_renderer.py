@@ -34,7 +34,8 @@ class AgentBoxImgRenderer(object):
         self.front_length = int(self.front_edge_to_center / self.resolution)
         self.back_length = int(self.back_edge_to_center / self.resolution)
 
-        self.local_map = np.zeros(
+    def draw_agent_box(self):
+        local_map = np.zeros(
             [self.local_size_h, self.local_size_w, 1], dtype=np.uint8)
 
         front_right_connor = [self.local_base_point_w_idx + self.right_width, self.local_base_point_h_idx -
@@ -46,11 +47,10 @@ class AgentBoxImgRenderer(object):
         back_right_connor = [self.local_base_point_w_idx + self.right_width, self.local_base_point_h_idx +
                              self.back_length]
 
-        cv.fillPoly(self.local_map, [np.int32(
+        cv.fillPoly(local_map, [np.int32(
             [front_right_connor, front_left_connor, back_left_connor, back_right_connor])], color=(255))
 
-    def draw_agent_box(self):
-        return self.local_map
+        return local_map
 
 
 if __name__ == "__main__":

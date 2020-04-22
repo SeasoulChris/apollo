@@ -14,7 +14,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class TrafficLightsImgRenderer(object):
     """class of TrafficLightsImgRenderer to create images of surrounding traffic conditions"""
@@ -25,9 +25,8 @@ class TrafficLightsImgRenderer(object):
         self.resolution = config.resolution  # in meter/pixel
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
-        # lower center point in the image
-        self.local_base_point_w_idx = config.ego_idx_x
-        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
+        self.local_base_point_idx = np.array(
+            [config.ego_idx_x, config.ego_idx_y])  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.center = None
         self.center_heading = None
@@ -74,20 +73,11 @@ class TrafficLightsImgRenderer(object):
     def _get_overlap_by_id(self, id):
         return self.overlap_dict[id]
 
-    def _get_affine_points(self, p):
-        p = p - self.center
-        theta = np.pi / 2 - self.center_heading
-        point = np.dot(np.array(
-            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]), np.array(p).T).T
-        point = np.round(point / self.resolution)
-        return [self.local_base_point_w_idx +
-                int(point[0]), self.local_base_point_h_idx - int(point[1])]
-
     def draw_traffic_lights(self, center_x, center_y, center_heading, observed_traffic_lights):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
-        self.center = np.array([center_x, center_y])
-        self.center_heading = center_heading
+        self.local_base_point = np.array([center_x, center_y])
+        self.local_base_heading = center_heading
 
         for traffic_light_status in observed_traffic_lights:
             traffic_light = self._get_traffic_light_by_id(traffic_light_status.id)
@@ -106,10 +96,22 @@ class TrafficLightsImgRenderer(object):
                         lane = self._get_lane_by_id(overlap_object.id.id)
                         for segment in lane.central_curve.segment:
                             for i in range(len(segment.line_segment.point) - 1):
-                                p0 = self._get_affine_points(
-                                    np.array([segment.line_segment.point[i].x, segment.line_segment.point[i].y]))
-                                p1 = self._get_affine_points(
-                                    np.array([segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]))
+                                p0 = tuple(renderer_utils.get_img_idx(
+                                    renderer_utils.point_affine_transformation(
+                                        np.array([segment.line_segment.point[i].x,
+                                                segment.line_segment.point[i].y]),
+                                        self.local_base_point,
+                                        np.pi / 2 - self.local_base_heading),
+                                    self.local_base_point_idx,
+                                    self.resolution))
+                                p1 = tuple(renderer_utils.get_img_idx(
+                                    renderer_utils.point_affine_transformation(
+                                        np.array([segment.line_segment.point[i + 1].x,
+                                                segment.line_segment.point[i + 1].y]),
+                                        self.local_base_point,
+                                        np.pi / 2 - self.local_base_heading),
+                                    self.local_base_point_idx,
+                                    self.resolution))
                                 cv.line(local_map, tuple(p0), tuple(p1),
                                         color=traffic_light_color, thickness=4)
         return local_map

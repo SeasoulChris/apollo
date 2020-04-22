@@ -53,10 +53,6 @@ class SpeedLimitImgRenderer(object):
         self.rough_crop_radius = int(
             math.sqrt(self.local_size_h**2 + self.local_size_w**2))
 
-    def get_trans_point(self, p, local_base_point, GRID):
-        point = np.round((p - local_base_point) / self.resolution)
-        return [int(point[0]), GRID[1] - int(point[1])]
-
     def draw_speedlimit(self, center_x, center_y, center_heading):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = [int(np.round((center_point[0] - self.map_base_point_x) / self.resolution)),
