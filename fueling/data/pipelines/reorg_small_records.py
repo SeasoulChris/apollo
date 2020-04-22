@@ -28,14 +28,6 @@ MARKER = 'COMPLETE'
 class ReorgSmallRecords(BasePipeline):
     """ReorgSmallRecords pipeline."""
 
-    def run_test(self):
-        """Run test."""
-        # RDD(src_record)
-        src_records = self.to_rdd(['/fuel/testdata/data/small.record'])
-        src_prefix = '/apollo/modules/data'
-        dst_prefix = '/tmp/reorg_small_records'
-        self.run_internal(src_records, src_prefix, dst_prefix)
-
     def run(self):
         """Run prod."""
         src_prefix = 'modules/data/public-test-small/2020/'

@@ -33,15 +33,6 @@ class VisualPlanningRecords(BasePipeline):
             "modules/planning/cleaned_data_temp/cleaned_data_20200420_144101/2019-10-17-13-36-41/"
         ]
 
-    def run_test(self):
-        """Run test."""
-        # RDD(record_path)
-        self.dst_prefix = '/fuel/data/planning/visual_data/'
-
-        records = ['/fuel/testdata/data/small.record', '/fuel/testdata/data/small.record']
-        for record in records:
-            self.process_record(record)
-
     def run(self):
         """Run prod."""
         prefix = "/mnt/bos/"

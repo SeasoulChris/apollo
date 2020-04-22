@@ -51,6 +51,7 @@ py_binary(
 py_test(
     name = "reorg_small_records_test",
     srcs = ["reorg_small_records_test.py"],
+    data = ["//fueling/demo/testdata:small_record"],
     deps = [
         ":reorg_small_records",
     ]

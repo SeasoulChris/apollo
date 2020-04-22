@@ -68,14 +68,6 @@ MARKER = 'COMPLETE'
 class GenerateSmallRecords(BasePipeline):
     """GenerateSmallRecords pipeline."""
 
-    def run_test(self):
-        """Run test."""
-        # RDD(record_path)
-        todo_records = self.to_rdd([file_utils.fuel_path('fueling/demo/testdata/small.record')])
-        src_prefix = file_utils.fuel_path('fueling/demo/testdata')
-        dst_prefix = self.FLAGS.get('test_tmpdir')
-        self.run_internal(todo_records, src_prefix, dst_prefix)
-
     def run(self):
         """Run prod."""
         src_prefix = 'public-test/2020/'
