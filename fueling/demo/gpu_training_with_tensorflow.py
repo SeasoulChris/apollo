@@ -3,8 +3,8 @@
 A simple demo PySpark job with GPU training.
 
 Run with:
-    ./tools/submit-job-to-k8s.py --main=fueling/demo/gpu_training_with_tensorflow.py \
-        --node_selector=GPU
+    bazel run //fueling/demo:gpu_training_with_tensorflow
+    bazel run //fueling/demo:gpu_training_with_tensorflow -- --cloud --gpu=1 --workers=1
 """
 
 # Standard packages
@@ -18,6 +18,7 @@ import tensorflow as tf
 
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 
@@ -56,7 +57,8 @@ class TensorflowTraining(BasePipeline):
             sys.exit(-1)
 
         mnist = tf.keras.datasets.mnist
-        (x_train, y_train), (x_test, y_test) = mnist.load_data('/mnt/bos/test/datasets/mnist.npz')
+        mnist_data = file_utils.fuel_path('fueling/demo/testdata/mnist.npz')
+        (x_train, y_train), (x_test, y_test) = mnist.load_data(mnist_data)
         x_train, x_test = x_train / 255.0, x_test / 255.0
 
         model = tf.keras.models.Sequential([

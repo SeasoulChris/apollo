@@ -3,7 +3,7 @@
 A simple demo PySpark job with GPU training.
 
 Run with:
-    bazel run //fueling/demo/:gpu_training_with_pytorch -- --cloud --gpu=1 --workers=1
+    bazel run //fueling/demo:gpu_training_with_pytorch -- --cloud --gpu=1 --workers=1
 
 """
 

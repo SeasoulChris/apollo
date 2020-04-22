@@ -48,6 +48,7 @@ py_binary(
 py_binary(
     name = "gpu_training_with_tensorflow",
     srcs = ["gpu_training_with_tensorflow.py"],
+    data = ["//fueling/demo/testdata:mnist"],
     deps = [
         "//fueling/common:base_pipeline",
     ]

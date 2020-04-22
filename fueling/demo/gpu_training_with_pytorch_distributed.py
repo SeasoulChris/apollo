@@ -10,7 +10,7 @@ III. In Spark executor, convert regular data loader to distributed by
      "ddp.data_loader_to_dist" (optional)
 
 Run with:
-    bazel run //fueling/demo/:gpu_training_with_pytorch_distributed -- --cloud --gpu=2 --workers=2
+    bazel run //fueling/demo:gpu_training_with_pytorch_distributed -- --cloud --gpu=2 --workers=2
 
 """
 

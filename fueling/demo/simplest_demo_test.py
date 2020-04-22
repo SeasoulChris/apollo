@@ -3,7 +3,7 @@
 A unit test demo.
 
 Run with:
-    bazel test //fueling/demo:simplest_demo)test
+    bazel test //fueling/demo:simplest_demo_test
 """
 
 from absl import flags
