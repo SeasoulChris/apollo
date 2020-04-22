@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 import tarfile
+import time
 
 from absl import flags
 import pyspark_utils.op as spark_op
@@ -30,6 +31,8 @@ flags.DEFINE_string('open_space_planner_profiling_input_path',
 flags.DEFINE_string('open_space_planner_profiling_output_path',
                     '/apollo/data/open_space_profiling_generated',
                     'output data directory')
+flags.DEFINE_boolean('open_space_planner_profiling_generate_report', True,
+                     'whether an email report with feature plot etc. is required')
 
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
@@ -83,6 +86,7 @@ def copy_if_needed(src, dst):
 class OpenSpacePlannerMetrics(BasePipeline):
 
     def run(self):
+        tic = time.perf_counter()
         # 1. get record files
         origin_prefix = flags.FLAGS.open_space_planner_profiling_input_path
         target_prefix = flags.FLAGS.open_space_planner_profiling_output_path
@@ -93,14 +97,16 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
         # This will return absolute path
         src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_prefix))
-        logging.info(F'src_dirs: {src_dirs.collect()}')
+        if logging.level_debug():
+            logging.debug(F'src_dirs: {src_dirs.collect()}')
 
         # Copy over vehicle param config
         src_dst_rdd = (src_dirs
                        .map(lambda src_dir: (
                             src_dir, src_dir.replace(origin_prefix, target_prefix, 1)))
                        .cache())
-        logging.info(F'src_dst_rdd: {src_dst_rdd.collect()}')
+        if logging.level_debug():
+            logging.debug(F'src_dst_rdd: {src_dst_rdd.collect()}')
         src_dst_rdd.values().foreach(file_utils.makedirs)
         src_dst_rdd.foreach(
             lambda src_dst: copy_if_needed(
@@ -118,21 +124,30 @@ class OpenSpacePlannerMetrics(BasePipeline):
                               lambda file: record_utils.is_record_file(file) or
                               record_utils.is_bag_file(file)))
                           .cache())
-        logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+        if logging.level_debug():
+            logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
+        logging.info(F'Preparing record files used {time.perf_counter() - tic:0.3f} sec')
+        if not todo_task_dirs.collect():
+            logging.info('No data to perform open space planner profilng on.')
+            return
 
         # 2. run evaluation
-        self.process(todo_task_dirs, origin_prefix, target_prefix)
+        return self.process(todo_task_dirs, origin_prefix, target_prefix)
 
     def process(self, todo_task_dirs, origin_prefix, target_prefix):
         """ process records """
+        tic = time.perf_counter()
         msgs = (todo_task_dirs
                 # PairRDD(target_prefix, raw_message)
                 .mapValues(record_utils.read_record(
                     [record_utils.PLANNING_CHANNEL, record_utils.PREDICTION_CHANNEL]))
                 # PairRDD(target_prefix, {planning_pb2, prediction_pb2})
                 .flatMapValues(zip_msgs))
-        logging.info(F'msg count: {msgs.count()}')
-        logging.debug(F'msg first: {msgs.first()}')
+        if logging.level_debug():
+            logging.debug(F'msg count: {msgs.count()}')
+            logging.debug(F'msg first: {msgs.first()}')
+        tic1 = time.perf_counter()
+        logging.info(F'Extracting messages used {tic1 - tic:0.3f} sec')
 
         # 2. filter messages belonging to a certain stage (STAGE_TYPE)
         open_space_msgs = (msgs
@@ -144,22 +159,28 @@ class OpenSpacePlannerMetrics(BasePipeline):
                            # PairRDD(target_prefix, filtered_and_sorted_messages)
                            .mapValues(sort_messages)
                            ).cache()
-        logging.info(F'open_space_message_count: {open_space_msgs.count()}')
-        logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
+        if logging.level_debug():
+            logging.debug(F'open_space_message_count: {open_space_msgs.count()}')
+            logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
+        tic2 = time.perf_counter()
+        logging.info(F'Filtering messages used {tic2 - tic1:0.3f} sec')
 
         # 3. get feature from all frames with desired stage
         stage_feature = open_space_msgs.map(extract_stage_feature)
-        logging.info(F'stage_feature_count: {stage_feature.count()}')
-        logging.debug(F'stage_feature_first: {stage_feature.first()}')
         latency_feature = open_space_msgs.map(extract_latency_feature)
-        logging.info(F'latency_feature_count: {latency_feature.count()}')
-        logging.debug(F'latency_feature_first: {latency_feature.first()}')
         zigzag_feature = open_space_msgs.map(extract_zigzag_trajectory_feature)
-        logging.info(F'zigzag_feature_count: {zigzag_feature.count()}')
-        logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
         trajectory_feature = open_space_msgs.map(extract_planning_trajectory_feature)
-        logging.info(F'trajectory_feature_count: {trajectory_feature.count()}')
-        logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
+        if logging.level_debug():
+            logging.debug(F'stage_feature_count: {stage_feature.count()}')
+            logging.debug(F'stage_feature_first: {stage_feature.first()}')
+            logging.debug(F'latency_feature_count: {latency_feature.count()}')
+            logging.debug(F'latency_feature_first: {latency_feature.first()}')
+            logging.debug(F'zigzag_feature_count: {zigzag_feature.count()}')
+            logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
+            logging.debug(F'trajectory_feature_count: {trajectory_feature.count()}')
+            logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
+        tic3 = time.perf_counter()
+        logging.info(F'Extracting features used {tic3 - tic2:0.3f} sec')
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
         stage_result = stage_feature.map(stage_grading)
@@ -173,15 +194,22 @@ class OpenSpacePlannerMetrics(BasePipeline):
                        .mapValues(merge_grading_results)
                        .join(trajectory_result)
                        .mapValues(merge_grading_results))
-        logging.info(F'result_data_count: {result_data.count()}')
-        logging.debug(F'result_data_first: {result_data.first()}')
+        if logging.level_debug():
+            logging.debug(F'result_data_count: {result_data.count()}')
+            logging.debug(F'result_data_first: {result_data.first()}')
+        tic4 = time.perf_counter()
+        logging.info(F'Grading used {tic4 - tic3:0.3f} sec')
 
         # 5. plot and visualize features, save grading result
-        trajectory_feature.foreach(visual_utils.plot_hist)
-        (result_data
-         # PairRDD(target_prefix, combined_grading_result), output grading results for each target
-         .foreach(output_result))
-        self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)
+        if flags.FLAGS.open_space_planner_profiling_generate_report:
+            (result_data
+             # PairRDD(target_prefix, combined_grading_result), output grading results for each target
+             .foreach(output_result))
+            trajectory_feature.foreach(visual_utils.plot_hist)
+            self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)
+        tic5 = time.perf_counter()
+        logging.info(F'Generating output used {tic5 - tic4:0.3f} sec')
+        return result_data.collect()
 
     def email_output(self, tasks, origin_prefix, target_prefix, partner_email='', error_msg=''):
         title = 'Open Space Planner Profiling Results'

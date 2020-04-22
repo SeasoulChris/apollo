@@ -5,7 +5,10 @@ import os
 
 from absl.logging import *
 
-
+"""
+Usage tips
+https://github.com/abseil/abseil-py/blob/master/absl/logging/__init__.py#L15
+"""
 class LogInit(object):
     INITED = False
 
