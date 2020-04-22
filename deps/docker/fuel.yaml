@@ -6,28 +6,27 @@ dependencies:
 
   - absl-py
   - boto3
+  - conda-forge::optuna
   - h5py
   - keras-gpu
   - matplotlib
   - numpy
   - opencv
   - pillow = 6.1   # To be compatible with torchvision
+  - plotly
+  - plotly::plotly-orca
   - protobuf
+  - psutil
   - pymongo
   - pyproj
   - pytorch = 1.1  # Need to adapt code to newer version API.
+  - requests
   - redis-py
   - requests
   - scikit-learn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
   - torchvision
-  - optuna
-  - plotly
-  - plotly-orca = 1.3.1 # Version locked due to plotly statc image export
-  - psutil
-  - requests
-
 
   - pip:
     - pyspark-utils

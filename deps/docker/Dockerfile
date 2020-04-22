@@ -13,4 +13,3 @@ RUN /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
     chmod -R 777 /usr/local/miniconda/envs/fuel
 
 COPY bash.rc /home/libs/bash.rc
-
