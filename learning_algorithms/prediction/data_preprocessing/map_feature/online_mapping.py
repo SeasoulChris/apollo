@@ -6,12 +6,15 @@ import cv2 as cv
 from fueling.prediction.common.configure import semantic_map_config
 from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
 
+OFFSET_X = semantic_map_config['offset_x']
+OFFSET_Y = semantic_map_config['offset_y']
 
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
 
-    def __init__(self, region, base_map, world_coord, obstacles_history):
+    def __init__(self, region, base_map, world_coord, obstacles_history, shift=True):
         """contruct function to init ObstacleMapping object"""
+        self.shift = shift
         center_point = world_coord[0:2]
         map_coords = semantic_map_config['map_coords']
         if region in map_coords:
@@ -43,8 +46,13 @@ class ObstacleMapping(object):
 
     def _draw_polygon(self, feature_map, polygon_points, color=(0, 255, 255)):
         points = np.zeros((0, 2))
+        void_x = 0.0
+        void_y = 0.0
+        if self.shift:
+            void_x = OFFSET_X
+            void_y = OFFSET_Y
         for polygon_point in polygon_points:
-            if (polygon_point == np.array([0, 0])).all():
+            if (polygon_point == np.array([void_x, void_y])).all():
                 break
             point = self.get_trans_point(polygon_point)
             points = np.vstack((points, point))
