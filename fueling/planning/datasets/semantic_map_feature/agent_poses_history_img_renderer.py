@@ -29,9 +29,12 @@ class AgentPosesHistoryImgRenderer(object):
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
     def draw_agent_poses_history(self, frame_time_sec, center_x,
-                                 center_y, center_heading, ego_pose_history, coordinate_heading=0.):
+                                 center_y, center_heading, ego_pose_history, coordinate_heading=0., past_motion_dropout=False):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        if past_motion_dropout:
+            return local_map
+            
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         current_time = frame_time_sec

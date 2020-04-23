@@ -65,7 +65,7 @@ class ChauffeurNetFeatureGenerator(object):
 
     def render_seperated_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                                       center_x, center_y, center_heading, routing_response,
-                                      observed_traffic_lights, output_dirs, coordinate_heading=0.):
+                                      observed_traffic_lights, output_dirs, coordinate_heading=0., past_motion_dropout=False):
         '''
         For debug purposes, features are drawn seprately
         agent_box_img: np.array in shape (501, 501, 1)
@@ -79,7 +79,7 @@ class ChauffeurNetFeatureGenerator(object):
         '''
         agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
             frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
@@ -101,7 +101,7 @@ class ChauffeurNetFeatureGenerator(object):
 
     def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                                     center_x, center_y, center_heading, routing_response,
-                                    observed_traffic_lights, coordinate_heading=0.):
+                                    observed_traffic_lights, coordinate_heading=0., past_motion_dropout=False):
         '''
         agent_box_img: np.array in shape (501, 501, 1)
         agent_pose_history_img: np.array in shape (501, 501, 1)
@@ -117,7 +117,7 @@ class ChauffeurNetFeatureGenerator(object):
 
         agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
             frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
@@ -154,7 +154,7 @@ class ChauffeurNetFeatureGenerator(object):
                                                                               coordinate_heading),
                          (224, 224))
 
-    def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0):
+    def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0.):
         return cv.resize(self.offroad_mask_mapping.draw_offroad_mask(center_x,
                                                                      center_y,
                                                                      center_heading,
@@ -162,7 +162,7 @@ class ChauffeurNetFeatureGenerator(object):
                          (224, 224))
 
     def render_obstacle_box_prediction_frame(
-            self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0):
+            self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
         return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(center_x,
                                                                                               center_y,
                                                                                               center_heading,
