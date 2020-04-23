@@ -34,17 +34,17 @@ class LabelGenerator(object):
 
     def LoadPBFiles(self, input_filepath, output_filepath, secondary_filepath=None):
         self.src_filepath = input_filepath
-        logging.info(input_filepath)
+        logging.debug(input_filepath)
 
         self.dst_filepath = output_filepath
-        logging.info(output_filepath)
+        logging.debug(output_filepath)
         # load origin PB file
         offline_features = proto_utils.get_pb_from_bin_file(
             self.src_filepath, learning_data_pb2.LearningData())
         # get learning data sequence
         learning_data_sequence = offline_features.learning_data
         origin_data_len = len(learning_data_sequence)  # origin data length
-        logging.info(len(learning_data_sequence))
+        logging.debug(len(learning_data_sequence))
 
         if secondary_filepath:
             self.secondary_filepath = secondary_filepath
@@ -53,7 +53,7 @@ class LabelGenerator(object):
                 self.secondary_filepath, offline_features)
             # learning_data from current bin + learning data from next bin
             learning_data_sequence.extend(extra_offline_features.learning_data)
-            logging.info(len(learning_data_sequence))
+            logging.debug(len(learning_data_sequence))
         return learning_data_sequence, origin_data_len
 
     def UpdatePlanningTag(self, dict_key, current_tag, future_tag):
@@ -111,7 +111,7 @@ class LabelGenerator(object):
 
         # [Feature1, Feature2, Feature3, ...] (sequentially sorted)
         adc_trajectory.sort(key=lambda x: x.timestamp_sec)
-        logging.info(len(adc_trajectory))
+        logging.debug(len(adc_trajectory))
         self.feature_sequence = adc_trajectory
         self.ObserveAllFeatureSequences()
 
@@ -146,8 +146,7 @@ class LabelGenerator(object):
     def ObserveAllFeatureSequences(self):
         for idx, feature in enumerate(self.feature_sequence):
             self.ObserveFeatureSequence(self.feature_sequence, idx)
-        # np.save(self.src_filepath + '.npy', self.observation_dict)
-        logging.info(len(self.feature_dict))
+        logging.debug(len(self.feature_dict))
         logging.debug(self.feature_dict.keys())
         return
 
@@ -230,9 +229,10 @@ class LabelGenerator(object):
             logging.debug(len(observed_val[1]['adc_traj']))
             time_span = observed_val[1]['total_observed_time_span']
             logging.debug(time_span)
-        logging.info(self.dst_filepath)
-        logging.info("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
-        np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
+        logging.debug(self.dst_filepath)
+        logging.debug("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
+        # comment for now to save local disk space
+        # np.save(self.dst_filepath + '.future_status.npy', self.future_status_dict)
         return self.future_status_dict
 
     def GetHistoryTrajectory(self):
@@ -250,11 +250,12 @@ class LabelGenerator(object):
                                  history_adc_trajectory_point.trajectory_point.a,
                                  history_adc_trajectory_point.timestamp_sec))
             self.history_adc_trajectory_dict[key] = adc_traj
-        logging.info(f'history path: {self.dst_filepath }.history_status.npy')
-        np.save(self.dst_filepath + '.history_status.npy', self.history_adc_trajectory_dict)
+        logging.debug(f'history path: {self.dst_filepath }.history_status.npy')
+        # comment for now to save local disk space
+        # np.save(self.dst_filepath + '.history_status.npy', self.history_adc_trajectory_dict)
         return self.history_adc_trajectory_dict
 
-    def MergeDict(self, is_dump2txt=True):
+    def MergeDict(self, is_dump2txt=False):
         """ merge feature and label """
         features_labels = learning_data_pb2.LearningData()
         learning_data_frame = learning_data_pb2.LearningDataFrame()

@@ -38,7 +38,7 @@ class OutputDataGenerator(BasePipeline):
         #     .map(lambda label_file: label_file.replace('.bin.future_status.npy', '.bin')))
         # RDD(todo_bin_files)
         todo_bin_files = bin_files
-        logging.info(bin_files.collect())
+        logging.debug(bin_files.collect())
 
         # if SKIP_EXISTING_DST_FILE:
         #     # RDD(todo_bin_files)
@@ -62,7 +62,7 @@ class OutputDataGenerator(BasePipeline):
         min_fileID_rdd = (bin_files_rdd_origin.keys().reduceByKey(min))
         # reduceByKey(
         #     lambda dir_FileID: dir_FileID[1] >= 0))  # .reduceByKey(min)
-        logging.info(min_fileID_rdd.collect())
+        logging.debug(min_fileID_rdd.collect())
         # logging.info(f'first file id in origin bin files: {grouped}')
 
         # Paired RDD(file_id-1, (dir, file_dir))
@@ -99,9 +99,9 @@ class OutputDataGenerator(BasePipeline):
             bin_files_rdd_origin
             .cogroup(bin_files_rdd_shifted)
             .mapValues(lambda bin1_bin2: (list(bin1_bin2[0]), list(bin1_bin2[1]))))
-        logging.info(bin_file_couple_rdd.count())
-        logging.info(bin_file_couple_rdd.keys().collect())
-        logging.info(bin_file_couple_rdd.first())
+        logging.debug(bin_file_couple_rdd.count())
+        logging.debug(bin_file_couple_rdd.keys().collect())
+        logging.debug(bin_file_couple_rdd.first())
 
         # Paired RDD(file_id, (origin_bin, next_bin))
         result = bin_file_couple_rdd.mapValues(self.process_file).cache()
@@ -126,14 +126,14 @@ class OutputDataGenerator(BasePipeline):
     @staticmethod
     def process_file(file_paths):
         """Call label_generator to generate labels."""
-        logging.info(file_paths)
+        logging.debug(file_paths)
         src_file = file_paths[0][0]
         if len(file_paths[1]):
             secondary_file = file_paths[1][0]
         else:
             secondary_file = None
-        logging.info(src_file)
-        logging.info(secondary_file)
+        logging.debug(src_file)
+        logging.debug(secondary_file)
         label_gen = LabelGenerator()
 
         dst_file = src_file.replace(SRC_DIR_PREFIX, DST_DIR_PREFIX)
@@ -142,8 +142,8 @@ class OutputDataGenerator(BasePipeline):
         dst_file = os.path.join(dst_dir, os.path.basename(dst_file))
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
-        logging.info(dst_file)
-        logging.info(dst_dir)
+        logging.debug(dst_file)
+        logging.debug(dst_dir)
         try:
             label_gen.GetObserveAllFeatureSequences(src_file, dst_file, secondary_file)
             logging.info('Successfully load feature pb and save label files {}'.format(src_file))
