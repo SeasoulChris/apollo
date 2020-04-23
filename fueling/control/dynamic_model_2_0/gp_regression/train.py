@@ -226,7 +226,7 @@ if __name__ == "__main__":
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
 
     # model parameters
-    parser.add_argument('-ni', '--num_inducing_point', type=int, default=10)
+    parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
     parser.add_argument('--kernel_dim', type=int, default=20)
     # optimizer parameters
     parser.add_argument('-e', '--epochs', type=int, default=10)

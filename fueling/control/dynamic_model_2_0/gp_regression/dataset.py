@@ -70,7 +70,9 @@ class GPDataSet(Dataset):
         """
         Generate testing data from a list of labeled data
         """
-        datasets = glob.glob(os.path.join(self.testing_data_path, '*.h5'))
+        datasets = glob.glob(os.path.join(self.testing_data_path, '**/*.h5'), recursive=True)
+        logging.info(os.path.join(self.testing_data_path, '**/*.h5'))
+        logging.info(len(datasets))
         input_data = torch.zeros(0, INPUT_LENGTH, INPUT_DIM)
         gt_data = torch.zeros(0, OUTPUT_DIM)
         for h5_file in datasets:
