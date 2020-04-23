@@ -12,13 +12,15 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+
+
 class OffroadMaskImgRenderer(object):
     """class of OffroadMaskImgRenderer to create an road map around ego vehicle with map element """
 
     def __init__(self, config_file, region):
         """contruct function to init OffroadMaskImgRenderer object"""
         self.map_dir = "/fuel/testdata/planning/semantic_map_features"
-        self.base_map = cv.imread(os.path.join(self.map_dir, region +  "_offroad_mask.png"))
+        self.base_map = cv.imread(os.path.join(self.map_dir, region + "_offroad_mask.png"))
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution  # in meter/pixel
@@ -50,7 +52,8 @@ class OffroadMaskImgRenderer(object):
 
     def draw_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0.):
         center_point = np.array([center_x, center_y])
-        center_basemap_idx = renderer_utils.get_img_idx(center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
+        center_basemap_idx = renderer_utils.get_img_idx(
+            center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
         rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius: center_basemap_idx[1] + self.rough_crop_radius,
                                         center_basemap_idx[0] - self.rough_crop_radius: center_basemap_idx[0] + self.rough_crop_radius]
         rough_local_map_grid = [

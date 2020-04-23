@@ -103,13 +103,15 @@ class AgentPosesFutureImgRenderer(object):
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         ego_pose = ego_pose_future[timestamp_idx]
-        ego_path_point = np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y])
-        box_theta = ego_pose.trajectory_point.path_point.theta + np.pi / 2 - self.local_base_heading + coordinate_heading
+        ego_path_point = np.array([ego_pose.trajectory_point.path_point.x,
+                                   ego_pose.trajectory_point.path_point.y])
+        box_theta = ego_pose.trajectory_point.path_point.theta + \
+            np.pi / 2 - self.local_base_heading + coordinate_heading
         theta = np.pi / 2 - self.local_base_heading + coordinate_heading
         corner_points = renderer_utils.box_affine_tranformation(self.east_oriented_box,
                                                                 ego_path_point,
                                                                 box_theta,
-                                                                self.local_base_point, 
+                                                                self.local_base_point,
                                                                 theta,
                                                                 self.local_base_point_idx,
                                                                 self.resolution)

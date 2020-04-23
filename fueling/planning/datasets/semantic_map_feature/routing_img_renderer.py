@@ -15,6 +15,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class RoutingImgRenderer(object):
     """class of RoutingImgRenderer to create a image of routing of ego vehicle"""
 
@@ -51,7 +52,8 @@ class RoutingImgRenderer(object):
         for lane in self.hd_map.lane:
             self.lane_dict[lane.id.id] = lane
 
-    def draw_local_routing(self, center_x, center_y, center_heading, local_routing, coordinate_heading=0):
+    def draw_local_routing(self, center_x, center_y, center_heading,
+                           local_routing, coordinate_heading=0):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])

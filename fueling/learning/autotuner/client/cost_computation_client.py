@@ -107,7 +107,8 @@ class CostComputationClient(object):
             logging.info(f"Service {self.service_token} has been initialized")
             return
 
-        logging.info(f"Initializing service for commit {commit_id} with training scenarios {scenario_ids} ...")
+        logging.info(f"Initializing service for commit {commit_id} with training scenarios "
+                     f"{scenario_ids} ...")
         request = self.construct_init_request(commit_id, scenario_ids, dynamic_model)
         response = self.send_request('Initialize', request)
         self.service_token = response.token
@@ -121,7 +122,8 @@ class CostComputationClient(object):
         logging.info(f"Sending compute request to service {self.service_token} ...")
         request = self.construct_compute_request(configs, cost_config_file)
         response = self.send_request('ComputeCost', request)
-        logging.info(f"Service {self.service_token} finished computing cost {response.score} for iteration {response.iteration_id}")
+        logging.info(f"Service {self.service_token} finished computing cost {response.score} for "
+                     f"iteration {response.iteration_id}")
         return response.iteration_id, response.score
 
     def close(self):

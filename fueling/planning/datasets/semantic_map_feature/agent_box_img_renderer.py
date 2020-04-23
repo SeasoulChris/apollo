@@ -12,6 +12,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class AgentBoxImgRenderer(object):
     """class of AgentBoxImgRenderer to create a image of ego car bounding box"""
 

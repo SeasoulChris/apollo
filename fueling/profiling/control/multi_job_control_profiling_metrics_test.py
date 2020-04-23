@@ -27,7 +27,8 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
     def test_run_sim_mode(self):
         flags.FLAGS.ctl_metrics_simulation_only_test = True
         flags.FLAGS.ctl_metrics_input_path = file_utils.fuel_path(F'{self.TESTDATA_PATH}sim_test/')
-        flags.FLAGS.ctl_metrics_output_path = file_utils.fuel_path(F'{flags.FLAGS.test_tmpdir}/generated/')
+        flags.FLAGS.ctl_metrics_output_path = file_utils.fuel_path(
+            F'{flags.FLAGS.test_tmpdir}/generated/')
         flags.FLAGS.ctl_metrics_todo_tasks = ''
         flags.FLAGS.ctl_metrics_conf_path = file_utils.fuel_path(F'{self.TESTDATA_PATH}conf/')
         flags.FLAGS.ctl_metrics_simulation_vehicle = 'Mkz7'
@@ -60,15 +61,18 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
         flags.FLAGS.running_mode = 'TEST'
         flags.FLAGS.ctl_metrics_simulation_only_test = False
         flags.FLAGS.ctl_metrics_input_path = file_utils.fuel_path(F'{self.TESTDATA_PATH}road_test')
-        flags.FLAGS.ctl_metrics_output_path = file_utils.fuel_path(F'{flags.FLAGS.test_tmpdir}/generated/')
+        flags.FLAGS.ctl_metrics_output_path = file_utils.fuel_path(
+            F'{flags.FLAGS.test_tmpdir}/generated/')
 
         self.pipeline.init()
         self.pipeline.run()
 
         mark_file = 'apollo/2020/Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414/COMPLETE'
-        self.assertTrue(os.path.exists(file_utils.fuel_path(F'{flags.FLAGS.ctl_metrics_output_path}{mark_file}')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.ctl_metrics_output_path}{mark_file}')))
         mark_file = 'apollo/2020/Transit/Lon_Lat_Controller/2019-02-25/20190225165600/COMPLETE'
-        self.assertTrue(os.path.exists(file_utils.fuel_path(F'{flags.FLAGS.ctl_metrics_output_path}{mark_file}')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.ctl_metrics_output_path}{mark_file}')))
 
         grading_file = ('apollo/2020/Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414/'
                         'Mkz7_Lon_Lat_Controller_control_performance_grading.txt')
@@ -85,7 +89,8 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
 
         grading_file = ('apollo/2020/Transit/Lon_Lat_Controller/2019-02-25/20190225165600/'
                         'Transit_Lon_Lat_Controller_control_performance_grading.txt')
-        self.assertFalse(os.path.exists(file_utils.fuel_path(F'{flags.FLAGS.ctl_metrics_output_path}{grading_file}')))
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.ctl_metrics_output_path}{grading_file}')))
 
     def parse_grading_output(self, output_path):
         output_dict = {}

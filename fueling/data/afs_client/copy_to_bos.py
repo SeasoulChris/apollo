@@ -23,6 +23,7 @@ flags.DEFINE_list('capture_place_list', [], 'copy task with exact comma-separate
 flags.DEFINE_list('region_id_list', [], 'copy task with exact comma-separated region_id list')
 flags.DEFINE_list('task_purpose_list', [], 'copy task with exact comma-separated purposes list')
 
+
 class CopyToBosPipeline(BasePipeline):
     """Copy AFS data to Bos"""
 
@@ -32,10 +33,10 @@ class CopyToBosPipeline(BasePipeline):
         self.project_to_tables = {
             'KL': ('kinglong/auto_car/cyberecord',
                    'kinglong/auto_car',
-                   'kinglong/auto_car/task_keydata'), # KingLong
+                   'kinglong/auto_car/task_keydata'),  # KingLong
             'MK': ('auto_car/cyberecord',
                    'auto_car',
-                   'auto_car/task_keydata'), # Pilot
+                   'auto_car/task_keydata'),  # Pilot
         }
         # topics that could be skipped
         self.skip_topics = ['PointCloud', 'camera']
@@ -45,7 +46,7 @@ class CopyToBosPipeline(BasePipeline):
 
     def get_copy_src(self):
         """Get start and end date from input parameters"""
-        task_id = self.FLAGS.get('task_id') # something like MKZ167_20200121131624
+        task_id = self.FLAGS.get('task_id')  # something like MKZ167_20200121131624
         if task_id:
             exact_date = task_id.split('_')[1][:8]
             return exact_date, exact_date, task_id
@@ -77,19 +78,19 @@ class CopyToBosPipeline(BasePipeline):
         """Get date by start date and date incremen"""
         start_date = datetime.datetime.strptime(start_date_str, '%Y%m%d').date()
         return (start_date + datetime.timedelta(days=delta)).strftime('%Y%m%d')
-        
+
     def run(self):
         """Run"""
         # get input parameters
         start_date, end_date, task_id = self.get_copy_src()
-        interval = (datetime.datetime.strptime(end_date, '%Y%m%d').date() - 
+        interval = (datetime.datetime.strptime(end_date, '%Y%m%d').date() -
                     datetime.datetime.strptime(start_date, '%Y%m%d').date())
         task_tb, message_tb, keydata_tb = self.project_to_tables[self.FLAGS.get('project')]
         afs_client = AfsClient()
         logging.info(F'copying data for {task_tb} from {start_date} to {end_date}')
         # output bos directory
         target_dir = self.our_storage().abs_path('modules/data/planning')
-        # skip topics 
+        # skip topics
         skip_topics = '' if self.FLAGS.get('all_topics') else ','.join(self.skip_topics)
         # exact map_area_id
         capture_place_list = self.FLAGS.get('capture_place_list')
@@ -140,6 +141,6 @@ class CopyToBosPipeline(BasePipeline):
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
 
+
 if __name__ == '__main__':
     CopyToBosPipeline().main()
-

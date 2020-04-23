@@ -12,6 +12,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class BaseOffroadMaskImgRenderer(object):
     """class of BaseRoadMapImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
@@ -21,7 +22,7 @@ class BaseOffroadMaskImgRenderer(object):
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution   # in meter/pixel
         self.base_map_padding = config.base_map_padding    # in meter
-        
+
         self.region = region
 
         self.base_point = None

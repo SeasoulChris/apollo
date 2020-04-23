@@ -5,7 +5,8 @@ import numpy as np
 
 def get_img_idx(local_point, local_center_idx, resolution):
     """
-    Translate a point with respect to a local point on a integer img coordinates which as the upper left as origin
+    Translate a point with respect to a local point on a integer img coordinates which as the upper
+    left as origin
 
     Argument:
     local_point: a (2,) numpy array, the local point coordinates wrt local center where y aixs point up
@@ -13,7 +14,7 @@ def get_img_idx(local_point, local_center_idx, resolution):
     resolution: a float representing the ratio of world coordianates resolution to the integer coordinates
 
     Return:
-    local_point_idx: a (2,) integer numpy array, the point's indx on the integer coordinates  
+    local_point_idx: a (2,) integer numpy array, the point's indx on the integer coordinates
     """
     local_point_idx = np.round(local_point / resolution)
     local_point_idx = local_center_idx + (local_point_idx * np.array([1, -1]))
@@ -45,13 +46,14 @@ def point_affine_transformation(point, local_center, theta):
     return affined_point
 
 
-def box_affine_tranformation(east_oriented_corner_points, box_center_point, box_theta, local_center, theta, local_center_idx, resolution):
+def box_affine_tranformation(east_oriented_corner_points, box_center_point,
+                             box_theta, local_center, theta, local_center_idx, resolution):
     """
     Transform a box wrt to a local center
 
     Arguments:
-    east_oriented_corner_points: a (4, 2) numpy array, corner points coordinates around box center as origin
-    box_center_point: a (2, ) numpy array, box center point wrt world frame
+    east_oriented_corner_points: a (4, 2) numpy array, corner points coordinates around box center
+    as origin box_center_point: a (2, ) numpy array, box center point wrt world frame
     box_theta: radian angle, box rotation angle from east wrt world frame
     local_center: a (2,) numpy array, point to be translated to and rotated around
     theta: ccw angle in radian around the local center to rotate the point
@@ -61,13 +63,9 @@ def box_affine_tranformation(east_oriented_corner_points, box_center_point, box_
     """
     rear_center_point = point_affine_transformation(
         box_center_point, local_center, theta)
-    corner_points = [get_img_idx(point_affine_transformation(point.T,
-                                                       np.array(
-                                                           [0, 0]),
-                                                       box_theta)
+    corner_points = [get_img_idx(point_affine_transformation(point.T, np.array([0, 0]), box_theta)
                                  + rear_center_point,
                                  local_center_idx,
                                  resolution)
                      for point in east_oriented_corner_points]
     return np.asarray(corner_points)
-

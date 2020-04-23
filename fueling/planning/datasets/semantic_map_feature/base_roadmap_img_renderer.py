@@ -69,7 +69,7 @@ class BaseRoadMapImgRenderer(object):
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
         self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
-                              int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+                     int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
         self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)

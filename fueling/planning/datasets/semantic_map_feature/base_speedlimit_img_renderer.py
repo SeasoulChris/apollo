@@ -12,6 +12,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class BaseSpeedLimitImgRenderer(object):
     """class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format"""
 
@@ -21,9 +22,9 @@ class BaseSpeedLimitImgRenderer(object):
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution   # in meter/pixel
         self.base_map_padding = config.base_map_padding    # in meter
-        
+
         self.region = region
-        
+
         self.city_driving_max_speed = config.city_driving_max_speed  # 22.22 m/s /approx 80km/h
 
         self.base_point = None

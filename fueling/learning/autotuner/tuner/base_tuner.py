@@ -138,8 +138,7 @@ class BaseTuner():
         repeated_first_key = [key for key in point if '___0' in key]
         for first_key in repeated_first_key:
             base_key = first_key.replace('___0', '')
-            repeated_keys = [key for key in point if base_key in key]
-            repeated_keys.sort()
+            repeated_keys = sorted([key for key in point if base_key in key])
             point.update({base_key: [point[key] for key in repeated_keys]})
             for key in repeated_keys:
                 del point[key]

@@ -137,37 +137,38 @@ class ChauffeurNetFeatureGenerator(object):
             center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
 
         return np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
-                                         road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2)
+                               road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2)
 
     # TODO (Jinyun): fine tune the resizing for computation efficiency
     def render_gt_pose_dist(self, center_x, center_y, center_heading,
                             ego_pose_future, timestamp_idx, coordinate_heading=0.):
         return self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
-                                                                               center_y,
-                                                                               center_heading,
-                                                                               ego_pose_future,
-                                                                               timestamp_idx,
-                                                                               coordinate_heading)
+                                                                     center_y,
+                                                                     center_heading,
+                                                                     ego_pose_future,
+                                                                     timestamp_idx,
+                                                                     coordinate_heading)
 
-    def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx, coordinate_heading=0.):
+    def render_gt_box(self, center_x, center_y, center_heading,
+                      ego_pose_future, timestamp_idx, coordinate_heading=0.):
         return self.agent_pose_future_mapping.draw_agent_box_future(center_x,
-                                                                              center_y,
-                                                                              center_heading,
-                                                                              ego_pose_future,
-                                                                              timestamp_idx,
-                                                                              coordinate_heading)
+                                                                    center_y,
+                                                                    center_heading,
+                                                                    ego_pose_future,
+                                                                    timestamp_idx,
+                                                                    coordinate_heading)
 
     def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0.):
         return self.offroad_mask_mapping.draw_offroad_mask(center_x,
-                                                                     center_y,
-                                                                     center_heading,
-                                                                     coordinate_heading)
+                                                           center_y,
+                                                           center_heading,
+                                                           coordinate_heading)
 
     def render_obstacle_box_prediction_frame(
             self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
         return self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
-                                                                                              timestamp_idx,
-                                                                                              coordinate_heading)
+                                                                                    timestamp_idx,
+                                                                                    coordinate_heading)
 
 
 if __name__ == "__main__":

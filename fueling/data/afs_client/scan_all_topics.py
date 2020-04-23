@@ -63,4 +63,3 @@ class ScanAllTopicsPipeline(BasePipeline):
 
 if __name__ == '__main__':
     ScanAllTopicsPipeline().main()
-

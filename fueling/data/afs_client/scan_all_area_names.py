@@ -34,4 +34,3 @@ class ScanAllAreaNamesPipeline(BasePipeline):
 
 if __name__ == '__main__':
     ScanAllAreaNamesPipeline().main()
-

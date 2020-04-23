@@ -144,10 +144,11 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=TPESampler())
     study.optimize(tuner.objective, n_trials=2)
     logging.info(f"Best value: {study.best_value}  (params: {study.best_params})")
-    #optuna.visualization.plot_intermediate_values(study)
+    # optuna.visualization.plot_intermediate_values(study)
     figure1 = optuna.visualization.plot_optimization_history(study)
     figure2 = optuna.visualization.plot_contour(study, params=['kp', 'ki'])
     figure1.show()
     figure2.show()
-    figure1.write_image(f"{flags.FLAGS.visualization_dir}/optimization_history_{tuner.timestamp}.png")
+    figure1.write_image(
+        f"{flags.FLAGS.visualization_dir}/optimization_history_{tuner.timestamp}.png")
     figure1.write_image(f"{flags.FLAGS.visualization_dir}/contour_{tuner.timestamp}.png")

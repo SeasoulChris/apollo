@@ -86,8 +86,7 @@ class DataInspector:
 
             self.instance_timestamps.append(current_time)
 
-            self.message_instance_timestamps.append(
-                instance.message_timestamp_sec)
+            self.message_instance_timestamps.append(instance.message_timestamp_sec)
 
             self.ego_future_timestamps.append(
                 [adc_point.timestamp_sec for adc_point in instance.output.adc_future_trajectory_point])
@@ -120,7 +119,8 @@ class DataInspector:
         Some inspections use for-loop rather than numpy array manipulation to inspect instances
             because the dimension of some lists loaded in _load_instances is not self consistent
         '''
-        # Evaluate the time differnce between last point of adc trajectory and localization message time
+        # Evaluate the time differnce between last point of adc trajectory and
+        # localization message time
         frame_average_current_time_difference = np.mean(np.array(
             self.instance_timestamps) - np.array(self.message_instance_timestamps))
         logging.info('frame_average_current_time_difference between localization message time and current point GPS time is {}'.format(
@@ -212,12 +212,9 @@ class DataInspector:
             ego_past_delta_t = np.asarray(ego_past_delta_t)
             ego_past_time_info = np.vstack((ego_past_time_info,
                                             np.asarray([ego_past_delta_t[0],
-                                                        np.mean(
-                                                            ego_past_delta_t),
-                                                        np.max(
-                                                            ego_past_delta_t),
-                                                        np.min(
-                                                            ego_past_delta_t),
+                                                        np.mean(ego_past_delta_t),
+                                                        np.max(ego_past_delta_t),
+                                                        np.min(ego_past_delta_t),
                                                         np.sum(ego_past_delta_t)])))
         ego_past_time_info_average = np.mean(ego_past_time_info, axis=0)
         logging.info(
@@ -276,21 +273,16 @@ class DataInspector:
             for obs_trajectory in obs_tracking:
                 if len(obs_trajectory) == 0:
                     continue
-                obs_past_delta_t = []
-                obs_past_delta_t.append(
-                    self.instance_timestamps[i] - obs_trajectory[0])
+                obs_past_delta_t = [self.instance_timestamps[i] - obs_trajectory[0]]
                 for j in range(1, len(obs_trajectory)):
-                    obs_past_delta_t.append(
-                        obs_trajectory[j - 1] - obs_trajectory[j])
+                    obs_past_delta_t.append(obs_trajectory[j - 1] - obs_trajectory[j])
                 obs_past_delta_t = np.asarray(obs_past_delta_t)
-                obs_past_time_info = np.vstack((obs_past_time_info, np.asarray([obs_past_delta_t[0],
-                                                                                np.mean(
-                                                                                    obs_past_delta_t),
-                                                                                np.max(
-                                                                                    obs_past_delta_t),
-                                                                                np.min(
-                                                                                    obs_past_delta_t),
-                                                                                np.sum(obs_past_delta_t)])))
+                obs_past_time_info = np.vstack((obs_past_time_info,
+                                                np.asarray([obs_past_delta_t[0],
+                                                            np.mean(obs_past_delta_t),
+                                                            np.max(obs_past_delta_t),
+                                                            np.min(obs_past_delta_t),
+                                                            np.sum(obs_past_delta_t)])))
         obs_past_time_info_average = np.mean(obs_past_time_info, axis=0)
         logging.info(
             'frame-obs-multimodal-averaged  current_time - obs_past mostly time closed point = {}'.format(
@@ -307,8 +299,7 @@ class DataInspector:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='data_inspector data folder')
-    parser.add_argument('data_dir', type=str,
-                        help='data_inspector data folder')
+    parser.add_argument('data_dir', type=str, help='data_inspector data folder')
     args = parser.parse_args()
 
     data_inspector = DataInspector(args.data_dir)

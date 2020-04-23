@@ -16,6 +16,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class TrafficLightsImgRenderer(object):
     """class of TrafficLightsImgRenderer to create images of surrounding traffic conditions"""
 
@@ -73,7 +74,8 @@ class TrafficLightsImgRenderer(object):
     def _get_overlap_by_id(self, id):
         return self.overlap_dict[id]
 
-    def draw_traffic_lights(self, center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading=0.):
+    def draw_traffic_lights(self, center_x, center_y, center_heading,
+                            observed_traffic_lights, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
@@ -99,7 +101,7 @@ class TrafficLightsImgRenderer(object):
                                 p0 = tuple(renderer_utils.get_img_idx(
                                     renderer_utils.point_affine_transformation(
                                         np.array([segment.line_segment.point[i].x,
-                                                segment.line_segment.point[i].y]),
+                                                  segment.line_segment.point[i].y]),
                                         self.local_base_point,
                                         np.pi / 2 - self.local_base_heading + coordinate_heading),
                                     self.local_base_point_idx,
@@ -107,7 +109,7 @@ class TrafficLightsImgRenderer(object):
                                 p1 = tuple(renderer_utils.get_img_idx(
                                     renderer_utils.point_affine_transformation(
                                         np.array([segment.line_segment.point[i + 1].x,
-                                                segment.line_segment.point[i + 1].y]),
+                                                  segment.line_segment.point[i + 1].y]),
                                         self.local_base_point,
                                         np.pi / 2 - self.local_base_heading + coordinate_heading),
                                     self.local_base_point_idx,

@@ -12,6 +12,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class AgentPosesHistoryImgRenderer(object):
     """class of AgentPosesHistoryImgRenderer to create a image of past ego car poses"""
 
@@ -22,7 +23,7 @@ class AgentPosesHistoryImgRenderer(object):
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
         self.local_base_point_idx = np.array(
-            [config.ego_idx_x, config.ego_idx_y]) # lower center point in the image
+            [config.ego_idx_x, config.ego_idx_y])  # lower center point in the image
         self.GRID = [self.local_size_w, self.local_size_h]
         self.local_base_point = None
         self.local_base_heading = None
@@ -34,7 +35,7 @@ class AgentPosesHistoryImgRenderer(object):
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         if past_motion_dropout:
             return local_map
-            
+
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         current_time = frame_time_sec
@@ -52,8 +53,7 @@ class AgentPosesHistoryImgRenderer(object):
                     np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
-            cv.circle(local_map, tuple(traj_point),
-                radius=4, color=color)
+            cv.circle(local_map, tuple(traj_point), radius=4, color=color)
         return local_map
 
 

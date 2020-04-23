@@ -47,9 +47,9 @@ class ObstacleHistoryImgRenderer(object):
                 path_point = obstacle_traj_point.trajectory_point.path_point
                 path_point_array = np.array([path_point.x, path_point.y])
                 east_oriented_box = np.array([[box_length / 2, box_length / 2,
-                                                -box_length / 2, box_length / 2],
-                                                [box_width, -box_width,
-                                                -box_width, box_width]]).T
+                                               -box_length / 2, box_length / 2],
+                                              [box_width, -box_width,
+                                               -box_width, box_width]]).T
 
                 # obstacles are in ego vehicle coordiantes where ego car faces toward
                 # EAST, so rotation to NORTH is done below

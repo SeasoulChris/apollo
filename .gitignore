@@ -12,6 +12,7 @@ testdata/perception/sensor_calibration/camera_front_6mm_to_lidar128_calibration/
 apollo/
 py_proto/
 kube.config
+testdata/virtual_lane/result/
 *.zip
 *_pb2.py
 .DS_Store

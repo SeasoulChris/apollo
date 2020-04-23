@@ -43,14 +43,30 @@ if __name__ == "__main__":
     valid_dataset = None
 
     if args.model_type == 'cnn':
-        train_dataset = TrajectoryImitationCNNDataset(args.train_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
-        valid_dataset = TrajectoryImitationCNNDataset(args.valid_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
+        train_dataset = TrajectoryImitationCNNDataset(
+            args.train_file,
+            args.renderer_config_file,
+            args.imgs_dir,
+            args.input_data_augmentation)
+        valid_dataset = TrajectoryImitationCNNDataset(
+            args.valid_file,
+            args.renderer_config_file,
+            args.imgs_dir,
+            args.input_data_augmentation)
         model = TrajectoryImitationCNNModel()
         loss = TrajectoryImitationCNNLoss()
 
     elif args.model_type == 'rnn':
-        train_dataset = TrajectoryImitationRNNDataset(args.train_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
-        valid_dataset = TrajectoryImitationRNNDataset(args.valid_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
+        train_dataset = TrajectoryImitationRNNDataset(
+            args.train_file,
+            args.renderer_config_file,
+            args.imgs_dir,
+            args.input_data_augmentation)
+        valid_dataset = TrajectoryImitationRNNDataset(
+            args.valid_file,
+            args.renderer_config_file,
+            args.imgs_dir,
+            args.input_data_augmentation)
         model = TrajectoryImitationRNNModel()
         loss = TrajectoryImitationRNNLoss()
 

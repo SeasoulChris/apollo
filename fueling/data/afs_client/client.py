@@ -132,7 +132,8 @@ class AfsClient(object):
             logging.info(F'map_area_id: {map_area_id}, map_area_name: {map_area_name}')
         return res
 
-    def transfer_messages(self, message_namespace, task_params, target_dir, skip_topics, topics='*'):
+    def transfer_messages(self, message_namespace, task_params,
+                          target_dir, skip_topics, topics='*'):
         """Read and transfer afs messages into apollo format, then insert them into bos"""
         task_id, start_time, end_time = task_params
         target_dir = os.path.join(target_dir, task_id)
@@ -179,4 +180,3 @@ class AfsClient(object):
                 topics.append((msg.topic, msg.message_size))
                 logging.info((msg.topic, msg.message_size))
         return topics
-

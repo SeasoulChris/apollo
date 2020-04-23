@@ -13,6 +13,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
+
 class RoadMapImgRenderer(object):
     """class of RoadMapImgRenderer to create an road map around ego vehicle with map element """
 
@@ -51,7 +52,8 @@ class RoadMapImgRenderer(object):
 
     def draw_roadmap(self, center_x, center_y, center_heading, coordinate_heading=0.):
         center_point = np.array([center_x, center_y])
-        center_basemap_idx = renderer_utils.get_img_idx(center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
+        center_basemap_idx = renderer_utils.get_img_idx(
+            center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
         rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius: center_basemap_idx[1] + self.rough_crop_radius,
                                         center_basemap_idx[0] - self.rough_crop_radius: center_basemap_idx[0] + self.rough_crop_radius]
         rough_local_map_grid = [

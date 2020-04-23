@@ -35,4 +35,3 @@ class ScanAllRegionNamesPipeline(BasePipeline):
 
 if __name__ == '__main__':
     ScanAllRegionNamesPipeline().main()
-

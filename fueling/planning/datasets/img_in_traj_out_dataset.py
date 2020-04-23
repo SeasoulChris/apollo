@@ -18,7 +18,8 @@ from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_genera
 
 
 class TrajectoryImitationCNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir,
+                 input_data_agumentation=False, ouput_point_num=10):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -83,7 +84,7 @@ class TrajectoryImitationCNNDataset(Dataset):
                                                                                frame.localization.position.y,
                                                                                frame.localization.heading,
                                                                                frame.routing.local_routing_lane_id,
-                                                                               frame.traffic_light_detection.traffic_light, 
+                                                                               frame.traffic_light_detection.traffic_light,
                                                                                coordinate_heading,
                                                                                past_motion_dropout)
 
@@ -122,7 +123,8 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir,
+                 input_data_agumentation=False, ouput_point_num=10):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -211,11 +213,12 @@ class TrajectoryImitationRNNDataset(Dataset):
                       frame.localization.position.y,
                       frame.localization.heading]
         pred_points = np.zeros((0, 4))
-        pred_pose_dists = torch.rand(self.ouput_point_num, 1, self.img_size[1] , self.img_size[0])
+        pred_pose_dists = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
         pred_boxs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
         pred_obs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
-            # TODO(Jinyun): validate future trajectory points size and deltaT, ouput_point_num points
+            # TODO(Jinyun): validate future trajectory points size and deltaT,
+            # ouput_point_num points
             if i + 1 > self.ouput_point_num:
                 break
 
