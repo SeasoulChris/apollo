@@ -1,8 +1,8 @@
       resolution : 0.2
-      height : 400
-      width : 400
-      ego_idx_x : 200
-      ego_idx_y : 320
+      height : 200
+      width : 200
+      ego_idx_x : 100
+      ego_idx_y : 160
       max_rand_delta_phi : 25
       max_ego_future_horizon : 2
       max_ego_past_horizon : 6

@@ -21,21 +21,23 @@ Model definition
 
 class TrajectoryImitationCNNModel(nn.Module):
     def __init__(self,
-                 cnn_net=models.mobilenet_v2, pretrained=True):
+                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
         super(TrajectoryImitationCNNModel, self).__init__()
         # compressed to 3 channel
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
         self.cnn = cnn_net(pretrained=pretrained)
-        self.cnn = nn.Sequential(*list(self.cnn.children())[:-1])
         for param in self.cnn.parameters():
             param.requires_grad = True
 
+        self.feature_net_out_size = 1000
+        self.pred_horizon = pred_horizon
+
         self.fc = nn.Sequential(
-            nn.Linear(62720, 500),
+            nn.Linear(self.feature_net_out_size, 500),
             nn.Dropout(0.3),
             nn.Linear(500, 120),
             nn.Dropout(0.3),
-            nn.Linear(120, 30 * 5)
+            nn.Linear(120, self.pred_horizon * 5)
         )
 
     def forward(self, X):
@@ -44,7 +46,7 @@ class TrajectoryImitationCNNModel(nn.Module):
         out = self.cnn(out)
         out = out.view(out.size(0), -1)
         out = self.fc(out)
-        out = out.view(out.size(0), 30 * 5)
+        out = out.view(out.size(0), self.pred_horizon * 5)
         return out
 
 
@@ -63,8 +65,8 @@ class TrajectoryImitationCNNLoss():
 
 
 class TrajectoryImitationRNNModel(nn.Module):
-    def __init__(self,
-                 cnn_net=models.mobilenet_v2, pretrained=True):
+    def __init__(self, input_img_size,
+                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
         super(TrajectoryImitationRNNModel, self).__init__()
         # TODO(Jinyun): compressed to 3 channel, to be refined
         self.feature_compression_layer = nn.Conv2d(12, 3, 3, padding=1)
@@ -74,40 +76,49 @@ class TrajectoryImitationRNNModel(nn.Module):
             param.requires_grad = True
 
         self.feature_net_out_size = 1000
-        self.pred_horizon = 30
+        self.pred_horizon = pred_horizon
+        self.input_img_size_h = input_img_size[0]
+        self.input_img_size_w = input_img_size[1]
 
         # TODO(Jinyun): implementation and evaluate Method 1 below
         # Method 1:
-        # a. use ConvTranspose2d to upsample feature([1000,]) to [1, 224, 224]
-        # b. stack with M_k-1([1, 224, 224]) and B_k-1([1, 224, 224]) inorder to get 3 channel image as input
+        # a. use ConvTranspose2d to upsample feature([1000,])
+        #    to [1, self.input_img_size_h, self.input_img_size_w]
+        # b. stack with M_k-1([1, self.input_img_size_h, self.input_img_size_w]) and
+        #    B_k-1([1, self.input_img_size_h, self.input_img_size_w]) 
+        #    inorder to get 3 channel image as input
         # c. pass a Conv layer to get hidden state which is P_k and B_k
         # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] and add it to output
+        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] 
+        #    and add it to output
         # f. use argmax to update M_k by P_k
         # g. feed M_k and B_k to next iteration
 
         # Method 2:
-        # a. use Conv2d and FC layer to encode M_k-1 and B_k-1 ([2, 224, 224])to ([256,])
+        # a. use Conv2d and FC layer to encode M_k-1 and B_k-1 
+        #    ([2, self.input_img_size_h, self.input_img_size_w]) to ([256,])
         # b. stack with feature([1000,]) inorder to get a 1d vector as input
         # c. pass a ConvTranspose2d layer to output P_k and B_k
         # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] and add it to output
+        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] 
+        #    and add it to output
         # f. use argmax to update M_k by P_k
         # g. feed M_k and B_k to next iteration
 
-        self.M_B_0 = torch.zeros(2, 224, 224)
+        self.M_B_0 = torch.zeros(
+            2, self.input_img_size_h, self.input_img_size_w)
         nn.init.xavier_normal_(
             self.M_B_0[1, :, :], gain=nn.init.calculate_gain('relu'))
         self.M_B_0 = nn.Parameter(self.M_B_0, requires_grad=True)
 
         self.memory_encoder = nn.Sequential(
-            nn.Conv2d(in_channels=2, out_channels=1, kernel_size=145,
-                      padding=16),  # size 224 to 112
+            nn.Conv2d(in_channels=2, out_channels=1, kernel_size=121,
+                      padding=10),  # size self.input_img_size_h to 100
             nn.ReLU()
         )
 
         self.memory_flatener = nn.Sequential(
-            nn.Linear(112 * 112, 500),
+            nn.Linear(100 * 100, 500),
             nn.ReLU(),
             nn.Linear(500, 256),
             nn.ReLU(),
@@ -122,7 +133,8 @@ class TrajectoryImitationRNNModel(nn.Module):
 
         self.input_conv_layer = nn.Sequential(
             nn.ConvTranspose2d(in_channels=1, out_channels=2,
-                               kernel_size=149, stride=5),  # size 16 to 224,
+                               kernel_size=70, padding=10, stride=10),
+            # size 16 * 16 to self.input_img_size_h,
             nn.ReLU()
         )
 
@@ -133,9 +145,9 @@ class TrajectoryImitationRNNModel(nn.Module):
         )
 
         self.output_fc_layers = nn.Sequential(
-            nn.Linear(224 * 224, 500),
+            nn.Linear(self.input_img_size_h * self.input_img_size_w, 1000),
             nn.ReLU(),
-            nn.Linear(500, 120),
+            nn.Linear(1000, 120),
             nn.ReLU(),
             nn.Linear(120, 4),
             nn.ReLU()
@@ -146,12 +158,17 @@ class TrajectoryImitationRNNModel(nn.Module):
         batch_size = img_feature.size(0)
         M_B_k = self.M_B_0.repeat(batch_size, 1, 1, 1)
 
-        img_feature_encoding = self.feature_net(self.feature_compression_layer(img_feature))
+        img_feature_encoding = self.feature_net(
+            self.feature_compression_layer(img_feature))
 
         pred_pos_dists = torch.zeros(
-            (batch_size, self.pred_horizon, 1, 224, 224), device=img_feature.device)
+            (batch_size, self.pred_horizon, 1,
+             self.input_img_size_h, self.input_img_size_w),
+            device=img_feature.device)
         pred_boxs = torch.zeros(
-            (batch_size, self.pred_horizon, 1, 224, 224), device=img_feature.device)
+            (batch_size, self.pred_horizon, 1,
+             self.input_img_size_h, self.input_img_size_w),
+            device=img_feature.device)
         pred_points = torch.zeros(
             (batch_size, self.pred_horizon, 4), device=img_feature.device)
 
@@ -168,7 +185,9 @@ class TrajectoryImitationRNNModel(nn.Module):
             P_k = F_P_B_k[:, 0, :, :].clone()
             B_k = F_P_B_k[:, 1, :, :].clone()
             P_k = torch.softmax(
-                P_k.view(batch_size, -1), dim=1).view(batch_size, 224, 224)
+                P_k.view(batch_size, -1), dim=1).view(batch_size,
+                                                      self.input_img_size_h,
+                                                      self.input_img_size_w)
             B_k = torch.sigmoid(B_k)
 
             pred_pos_dists[:, t, 0, :, :] = P_k
@@ -245,7 +264,8 @@ class TrajectoryImitationWithEnvRNNLoss():
 
         offroad_loss = torch.mean(pred_boxs * true_offroad_mask)
 
-        return pos_dist_loss + box_loss + pos_reg_loss + collision_loss + offroad_loss
+        return pos_dist_loss + box_loss + pos_reg_loss + \
+            collision_loss + offroad_loss
 
     def loss_info(self, y_pred, y_true):
         # Focus on pose displacement error

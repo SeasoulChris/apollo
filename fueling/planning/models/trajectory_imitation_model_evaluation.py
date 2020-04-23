@@ -8,15 +8,17 @@ import torch
 
 import fueling.common.logging as logging
 from fueling.learning.train_utils import cuda
-from fueling.planning.datasets.img_in_traj_out_dataset import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
-from fueling.planning.models.trajectory_imitation_model import TrajectoryImitationCNNModel, TrajectoryImitationRNNModel
+from fueling.planning.datasets.img_in_traj_out_dataset \
+    import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
+from fueling.planning.models.trajectory_imitation_model \
+    import TrajectoryImitationCNNModel, TrajectoryImitationRNNModel
 
 
 def calculate_cnn_displacement_error(pred, y):
     y_true = y.view(y.size(0), -1)
     out = pred - y_true
-    # 30 points with 5 properties x,y,phi,v, a
-    out.view(30, 5)
+    # with 5 properties x,y,phi,v, a
+    out.view(-1, 5)
     pos_x_diff = out[:, 0]
     pos_y_diff = out[:, 1]
     phi_diff = out[:, 2]
@@ -41,8 +43,8 @@ def cnn_model_evaluator(test_loader, model):
         for i, (X, y) in enumerate(test_loader):
             X, y = cuda(X), cuda(y)
             pred = model(X)
-            displacement_error, heading_error, v_error, a_error = calculate_cnn_displacement_error(
-                pred, y)
+            displacement_error, heading_error, v_error, a_error = \
+                calculate_cnn_displacement_error(pred, y)
             displcement_errors.append(displacement_error)
             heading_errors.append(heading_error)
             v_errors.append(v_error)
@@ -67,7 +69,8 @@ def calculate_rnn_displacement_error(pred, y):
     heading_diff = points_diff[:, :, 2]
     v_diff = points_diff[:, :, 3]
 
-    displacement_error = torch.mean(torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))).item()
+    displacement_error = torch.mean(torch.sqrt(
+        torch.sum(pose_diff ** 2, dim=-1))).item()
     heading_error = torch.mean(torch.abs(heading_diff)).item()
     v_error = torch.mean(torch.abs(v_diff)).item()
     return displacement_error, heading_error, v_error
@@ -83,8 +86,8 @@ def rnn_model_evaluator(test_loader, model):
         for i, (X, y) in enumerate(test_loader):
             X, y = cuda(X), cuda(y)
             pred = model(X)
-            displacement_error, heading_error, v_error = calculate_rnn_displacement_error(
-                pred, y)
+            displacement_error, heading_error, v_error = \
+                calculate_rnn_displacement_error(pred, y)
             displcement_errors.append(displacement_error)
             heading_errors.append(heading_error)
             v_errors.append(v_error)
@@ -122,8 +125,11 @@ if __name__ == "__main__":
         logging.info('model {} is not implemnted'.format(args.model_type))
         exit()
 
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=True,
-                                              num_workers=4, drop_last=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=1,
+                                              shuffle=True,
+                                              num_workers=4,
+                                              drop_last=True)
     model_state_dict = torch.load(args.model_file)
     model.load_state_dict(model_state_dict)
 
