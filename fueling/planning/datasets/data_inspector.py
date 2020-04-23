@@ -32,6 +32,7 @@ class DataInspector:
         self.total_num_instances = 0
         self.routing_existances = []
         self.instance_timestamps = []
+        self.message_instance_timestamps = []
         self.ego_future_timestamps = []
         self.ego_past_timestamps = []
         self.obstacles_future_timestamps = []
@@ -62,26 +63,31 @@ class DataInspector:
         logging.info('Total number of data points = {}'.format(
             self.total_num_instances))
 
-        if self.total_num_instances == 0 :
+        if self.total_num_instances == 0:
             exit()
 
         bad_frame_count = 0
         for instance in self.instances:
-            # Filtering bad 
+            # Filtering bad
             if len(instance.adc_trajectory_point) < 2:
-                logging.info('ego past len is {} at frame{}'.format(len(instance.adc_trajectory_point), instance.frame_num))
+                logging.info('ego past len is {} at frame{}'.format(
+                    len(instance.adc_trajectory_point), instance.frame_num))
                 bad_frame_count += 1
                 continue
-            
+
             if len(instance.routing.local_routing_lane_id) == 0:
                 self.routing_existances.append(False)
             else:
                 self.routing_existances.append(True)
 
             # current_time = instance.timestamp_sec
-            current_time = instance.adc_trajectory_point[-1].timestamp_sec # last element of adc_trajectory_point is current position time
+            # last element of adc_trajectory_point is current position time
+            current_time = instance.adc_trajectory_point[-1].timestamp_sec
 
             self.instance_timestamps.append(current_time)
+
+            self.message_instance_timestamps.append(
+                instance.message_timestamp_sec)
 
             self.ego_future_timestamps.append(
                 [adc_point.timestamp_sec for adc_point in instance.output.adc_future_trajectory_point])
@@ -89,19 +95,20 @@ class DataInspector:
             # Assuming ego past from learning_data is originally loaded in timestamp
             # ascending order, reverse it here to have newer points in front
             self.ego_past_timestamps.append(
-                [adc_point.timestamp_sec for adc_point in reversed(instance.adc_trajectory_point[:-1])])
+                [adc_point.timestamp_sec for adc_point in reversed(instance.adc_trajectory_point)])
 
             self.obstacles_future_timestamps.append(
-                [[[obs_point.relative_time + current_time
+                [[[obs_point.timestamp_sec
                    for obs_point in pred_trajectory.trajectory_point]
                   for pred_trajectory in obstacle.obstacle_prediction.trajectory]
                  for obstacle in instance.obstacle])
             # Assuming obs past from learning_data is originally loaded in timestamp
             # ascending order, reverse it here to have newer points in front
             self.obstacles_past_timestamps.append(
-                [[obs_point.relative_time + current_time for obs_point in reversed(obstacle.obstacle_trajectory.evaluated_trajectory_point)] for obstacle in instance.obstacle])
+                [[obs_point.timestamp_sec for obs_point in reversed(obstacle.obstacle_trajectory.evaluated_trajectory_point)] for obstacle in instance.obstacle])
 
         logging.info('bad_frame_count is {}'.format(bad_frame_count))
+
     def _inspect_instances(self):
         '''
         List of inspected items includes:
@@ -113,6 +120,11 @@ class DataInspector:
         Some inspections use for-loop rather than numpy array manipulation to inspect instances
             because the dimension of some lists loaded in _load_instances is not self consistent
         '''
+        # Evaluate the time differnce between last point of adc trajectory and localization message time
+        frame_average_current_time_difference = np.mean(np.array(
+            self.instance_timestamps) - np.array(self.message_instance_timestamps))
+        logging.info('frame_average_current_time_difference between localization message time and current point GPS time is {}'.format(
+            frame_average_current_time_difference))
 
         # Logging instance timestamps when there is no routing
         routing_nonexistances = np.array(
@@ -143,21 +155,26 @@ class DataInspector:
         ego_future_time_info = np.zeros([0, 5])
         for i, ego_future_timestamps in enumerate(self.ego_future_timestamps):
             ego_future_delta_t = []
-            ego_future_delta_t.append(
-                ego_future_timestamps[0] - self.instance_timestamps[i])
+            if len(ego_future_timestamps) == 0:
+                continue
+            ego_future_delta_t.append(self.instance_timestamps[i] -
+                                      ego_future_timestamps[0])
             for j in range(1, len(ego_future_timestamps)):
                 ego_future_delta_t.append(
                     ego_future_timestamps[j] - ego_future_timestamps[j - 1])
             ego_future_delta_t = np.asarray(ego_future_delta_t)
             ego_future_time_info = np.vstack((ego_future_time_info,
                                               np.asarray([ego_future_delta_t[0],
-                                                          np.mean(ego_future_delta_t),
-                                                          np.max(ego_future_delta_t),
-                                                          np.min(ego_future_delta_t),
+                                                          np.mean(
+                                                              ego_future_delta_t),
+                                                          np.max(
+                                                              ego_future_delta_t),
+                                                          np.min(
+                                                              ego_future_delta_t),
                                                           np.sum(ego_future_delta_t)])))
         ego_future_time_info_average = np.mean(ego_future_time_info, axis=0)
         logging.info(
-            'frame-averaged ego_future point delta_t between first future point to current time is {}'.format(
+            'frame-averaged current_time - ego_future mostly time closed point =  {}'.format(
                 ego_future_time_info_average[0]))
         logging.info(
             'frame-averaged ego_future average delta t is {}'.format(ego_future_time_info_average[1]))
@@ -185,20 +202,26 @@ class DataInspector:
         ego_past_time_info = np.zeros([0, 5])
         for i, ego_past_timestamps in enumerate(self.ego_past_timestamps):
             ego_past_delta_t = []
-            ego_past_delta_t.append(self.instance_timestamps[i] - ego_past_timestamps[0])
+            if len(ego_past_timestamps) == 0:
+                continue
+            ego_past_delta_t.append(
+                self.instance_timestamps[i] - ego_past_timestamps[0])
             for j in range(1, len(ego_past_timestamps)):
                 ego_past_delta_t.append(
                     ego_past_timestamps[j - 1] - ego_past_timestamps[j])
             ego_past_delta_t = np.asarray(ego_past_delta_t)
             ego_past_time_info = np.vstack((ego_past_time_info,
                                             np.asarray([ego_past_delta_t[0],
-                                                        np.mean(ego_past_delta_t),
-                                                        np.max(ego_past_delta_t),
-                                                        np.min(ego_past_delta_t),
+                                                        np.mean(
+                                                            ego_past_delta_t),
+                                                        np.max(
+                                                            ego_past_delta_t),
+                                                        np.min(
+                                                            ego_past_delta_t),
                                                         np.sum(ego_past_delta_t)])))
         ego_past_time_info_average = np.mean(ego_past_time_info, axis=0)
         logging.info(
-            'frame-averaged ego_past point delta_t between first past point to current time is {}'.format(
+            'frame-averaged current_time - ego_past mostly time closed point = {}'.format(
                 ego_past_time_info_average[0]))
         logging.info(
             'frame-averaged ego_past average delta t is {}'.format(ego_past_time_info_average[1]))
@@ -211,20 +234,21 @@ class DataInspector:
 
         obs_prediction_num = np.array([len(obs_prediction)
                                        for obs_prediction in self.obstacles_future_timestamps])
-        logging.info('frame-averaged predicted obstacle num is {}'.format(np.mean(obs_prediction_num)))
+        logging.info(
+            'frame-averaged predicted obstacle num is {}'.format(np.mean(obs_prediction_num)))
 
         obs_future_time_info = np.zeros([0, 5])
         for i, obs_prediction in enumerate(self.obstacles_future_timestamps):
-            current_timestamp = self.instance_timestamps[i]
             for obs in obs_prediction:
                 for pred_trajectory in obs:
                     if len(pred_trajectory) == 0:
-                        logging.info('obs has no prediction at sequence num {}'.format(i))
                         continue
                     obs_future_delta_t = []
-                    obs_future_delta_t.append(pred_trajectory[0] - current_timestamp)
+                    obs_future_delta_t.append(
+                        self.instance_timestamps[i] - pred_trajectory[0])
                     for j in range(1, len(pred_trajectory)):
-                        obs_future_delta_t.append(pred_trajectory[j] - pred_trajectory[j - 1])
+                        obs_future_delta_t.append(
+                            pred_trajectory[j] - pred_trajectory[j - 1])
                     obs_future_delta_t = np.asarray(obs_future_delta_t)
                     obs_future_time_info = np.vstack((obs_future_time_info, np.asarray([obs_future_delta_t[0],
                                                                                         np.mean(
@@ -236,7 +260,7 @@ class DataInspector:
                                                                                         np.sum(obs_future_delta_t)])))
         obs_future_time_info_average = np.mean(obs_future_time_info, axis=0)
         logging.info(
-            'frame-obs-multimodal-averaged obs_future point delta_t between first future point to current time is {}'.format(
+            'frame-obs-multimodal-averaged  current_time - obs_future mostly time closed point = {}'.format(
                 obs_future_time_info_average[0]))
         logging.info(
             'frame-obs-multimodal-averaged obs_future average delta t is {}'.format(obs_future_time_info_average[1]))
@@ -249,15 +273,15 @@ class DataInspector:
 
         obs_past_time_info = np.zeros([0, 5])
         for i, obs_tracking in enumerate(self.obstacles_past_timestamps):
-            current_timestamp = self.instance_timestamps[i]
             for obs_trajectory in obs_tracking:
                 if len(obs_trajectory) == 0:
-                    logging.info('obs has no past at sequence num {}'.format(i))
                     continue
                 obs_past_delta_t = []
-                obs_past_delta_t.append(current_timestamp - obs_trajectory[0])
+                obs_past_delta_t.append(
+                    self.instance_timestamps[i] - obs_trajectory[0])
                 for j in range(1, len(obs_trajectory)):
-                    obs_past_delta_t.append(obs_trajectory[j - 1] - obs_trajectory[j])
+                    obs_past_delta_t.append(
+                        obs_trajectory[j - 1] - obs_trajectory[j])
                 obs_past_delta_t = np.asarray(obs_past_delta_t)
                 obs_past_time_info = np.vstack((obs_past_time_info, np.asarray([obs_past_delta_t[0],
                                                                                 np.mean(
@@ -269,7 +293,7 @@ class DataInspector:
                                                                                 np.sum(obs_past_delta_t)])))
         obs_past_time_info_average = np.mean(obs_past_time_info, axis=0)
         logging.info(
-            'frame-obs-averaged obs_past point delta_t between first past point to current time is {}'.format(
+            'frame-obs-multimodal-averaged  current_time - obs_past mostly time closed point = {}'.format(
                 obs_past_time_info_average[0]))
         logging.info(
             'frame-obs-averaged obs_past average delta t is {}'.format(obs_past_time_info_average[1]))
