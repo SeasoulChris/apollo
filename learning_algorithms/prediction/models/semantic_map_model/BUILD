@@ -30,3 +30,12 @@ py_binary(
         "//fueling/learning:train_utils",
     ],
 )
+
+py_binary(
+    name = "jit_trace",
+    srcs = ["jit_trace.py"],
+    deps = [
+        ":semantic_map_model",
+    ],
+)
+
