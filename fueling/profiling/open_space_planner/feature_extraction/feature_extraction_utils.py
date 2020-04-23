@@ -8,6 +8,7 @@ import math
 
 from shapely.geometry import Polygon, LineString, Point
 
+import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 from fueling.profiling.conf.open_space_planner_conf import FEATURE_IDX, REFERENCE_VALUES
@@ -339,9 +340,9 @@ def extract_obstacle_polygons(msg):
     return [get_polygon(obstacle) for obstacle in obstacles]
 
 
-def extract_planning_trajectory_feature(target_groups):
+def extract_planning_trajectory_feature(target_group):
     """Extract planning trajectory related feature matrix from a group of planning messages"""
-    target, msgs = target_groups
+    target, msgs = target_group
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
@@ -370,9 +371,9 @@ def extract_meta_from_planning(msg):
     return meta_array
 
 
-def extract_latency_feature(target_groups):
+def extract_latency_feature(target_group):
     """Extract latency related feature matrix from a group of planning messages"""
-    target, msgs = target_groups
+    target, msgs = target_group
     logging.info(F'Computing {len(msgs)} messages for target {target}')
     latency_mtx = np.array([data for data in [extract_meta_from_planning(msg['planning'])
                                               for msg in msgs] if data is not None])
@@ -399,9 +400,9 @@ def extract_data_from_zigzag(msg, wheel_base):
     return data
 
 
-def extract_zigzag_trajectory_feature(target_groups):
+def extract_zigzag_trajectory_feature(target_group):
     """Extract zigzag trajectory related feature matrix from a group of planning messages"""
-    target, msgs = target_groups
+    target, msgs = target_group
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
@@ -415,9 +416,9 @@ def extract_zigzag_trajectory_feature(target_groups):
     return target, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
 
 
-def extract_stage_feature(target_groups):
+def extract_stage_feature(target_group):
     """Extract scenario stage related feature matrix from a group of planning messages"""
-    target, msgs = target_groups
+    target, msgs = target_group
     logging.info(F'Computing {len(msgs)} messages for target {target}')
 
     start_timestamp = msgs[0]['planning'].header.timestamp_sec
@@ -441,3 +442,9 @@ def extract_stage_feature(target_groups):
     initial_heading_diff_ratio = abs(initial_heading - actual_heading) \
         / (vehicle_param.max_steer_angle / vehicle_param.steer_ratio)
     return target, np.array([[stage_completion_time, initial_heading_diff_ratio]])
+
+
+def output_features(target_group, file_name):
+    target, feature_mtx = target_group
+    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {target}/{file_name}.hdf5')
+    h5_utils.write_h5(feature_mtx, target, file_name)

@@ -8,7 +8,6 @@ py_library(
     ],
     deps = [
         "//fueling/common:file_utils",
-        "//fueling/common:h5_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/profiling/common:stats_utils",

@@ -6,7 +6,6 @@ from collections import namedtuple
 import os
 
 import fueling.common.file_utils as file_utils
-import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 from fueling.profiling.common.stats_utils import compute_stats
@@ -62,8 +61,8 @@ def merge_grading_results(grading_tuple):
     return GradingResults(*map(find, grading_tuple[0], grading_tuple[1]))
 
 
-def stage_grading(target_groups):
-    target, feature_mtx = target_groups
+def stage_grading(target_group):
+    target, feature_mtx = target_group
     if feature_mtx.shape[0] == 0:
         logging.warning(F'No valid element for target {target}')
         return (target, None)
@@ -71,11 +70,6 @@ def stage_grading(target_groups):
         logging.warning(F'Unexpected number of elements for target {target}'
                         'Only one element/sample should be present!')
         return (target, None)
-
-    h5_output_file = 'stage_feature'
-    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
-                 F'for target {target}')
-    h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     grading_group_result = GradingResults(
         stage_completion_time=(feature_mtx[0, FEATURE_IDX['stage_completion_time']],
@@ -86,16 +80,11 @@ def stage_grading(target_groups):
     return (target, grading_group_result)
 
 
-def latency_grading(target_groups):
-    target, feature_mtx = target_groups
+def latency_grading(target_group):
+    target, feature_mtx = target_group
     if feature_mtx.shape[0] == 0:
         logging.warning(F'No valid element for target {target}')
         return (target, None)
-
-    h5_output_file = 'latency_feature'
-    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
-                 F'for target {target}')
-    h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     grading_group_result = GradingResults(
         # Exclude HitBoundTimes for these metrics
@@ -106,16 +95,11 @@ def latency_grading(target_groups):
     return (target, grading_group_result)
 
 
-def zigzag_grading(target_groups):
-    target, feature_mtx = target_groups
+def zigzag_grading(target_group):
+    target, feature_mtx = target_group
     if feature_mtx.shape[0] == 0:
         logging.warning(F'No valid element for target {target}')
         return (target, None)
-
-    h5_output_file = 'zigzag_feature'
-    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
-                 F'for target {target}')
-    h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     grading_group_result = GradingResults(
         non_gear_switch_length_ratio=stats_helper(feature_mtx, 'non_gear_switch_length_ratio',
@@ -126,16 +110,11 @@ def zigzag_grading(target_groups):
     return (target, grading_group_result)
 
 
-def trajectory_grading(target_groups):
-    target, feature_mtx = target_groups
+def trajectory_grading(target_group):
+    target, feature_mtx = target_group
     if feature_mtx.shape[0] == 0:
         logging.warning(F'No valid element for target {target}')
         return (target, None)
-
-    h5_output_file = 'trajectory_feature'
-    logging.info(F'Writing {feature_mtx.shape[0]} samples to h5 file {h5_output_file} '
-                 F'for target {target}')
-    h5_utils.write_h5(feature_mtx, target, h5_output_file)
 
     max_time_to_collision_ratio = (REFERENCE_VALUES['max_time_to_collision'] /
                                    REFERENCE_VALUES['time_to_collision'])
@@ -176,8 +155,8 @@ def trajectory_grading(target_groups):
     return (target, grading_group_result)
 
 
-def output_result(target_grading):
-    """Write the grading results to files in corresponding target dirs"""
+def output_grading(target_grading):
+    """Write the grading results to txt file in corresponding target dir"""
     target_dir, grading = target_grading
     grading_output_path = os.path.join(target_dir, 'open_space_performance_grading.txt')
     logging.info(F'Writing grading output {grading} to {target_dir}')

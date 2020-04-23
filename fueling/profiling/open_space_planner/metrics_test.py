@@ -68,13 +68,13 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.pipeline.init()
         result_data = self.pipeline.run()
 
-        self.assertTrue(os.path.exists(file_utils.fuel_path(
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/stage_feature.hdf5')))
-        self.assertTrue(os.path.exists(file_utils.fuel_path(
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/latency_feature.hdf5')))
-        self.assertTrue(os.path.exists(file_utils.fuel_path(
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/zigzag_feature.hdf5')))
-        self.assertTrue(os.path.exists(file_utils.fuel_path(
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/trajectory_feature.hdf5')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/open_space_performance_grading.txt')))
@@ -85,10 +85,10 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         _, output = result_data[0]
         self.assertEqual(20, len(output))
         self.assertListEqual([0.012658227848101266, 1.0, 0.31569599160665557, 0.17568621907920884,
-                              0.42628587217711833, 237], output[3])  # non_gear_switch_length_ratio
-        self.assertTupleEqual((4.141625030490488e-05, 1), output[4])  # initial_heading_diff_ratio
+                              0.42628587217711833, 237], output.non_gear_switch_length_ratio)
+        self.assertTupleEqual((4.141625030490488e-05, 1), output.initial_heading_diff_ratio)
         self.assertListEqual([0.0, 0.33018652986519514, 0.07183626104490519, 0.0921702059601975,
-                              0.28618771851206865, 26301], output[18])  # distance_to_obstacles_ratio
+                              0.28618771851206865, 26301], output.distance_to_obstacles_ratio)
         shutil.rmtree(flags.FLAGS.open_space_planner_profiling_output_path)
 
     def parse_grading_output(self, output_path):

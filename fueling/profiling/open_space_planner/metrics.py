@@ -19,9 +19,9 @@ import fueling.profiling.control.feature_visualization.control_feature_visualiza
     as visual_utils
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
     extract_latency_feature, extract_planning_trajectory_feature, extract_stage_feature, \
-    extract_zigzag_trajectory_feature
+    extract_zigzag_trajectory_feature, output_features
 from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import \
-    latency_grading, merge_grading_results, output_result, stage_grading, trajectory_grading, \
+    latency_grading, merge_grading_results, output_grading, stage_grading, trajectory_grading, \
     zigzag_grading
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
@@ -126,10 +126,10 @@ class OpenSpacePlannerMetrics(BasePipeline):
                           .cache())
         if logging.level_debug():
             logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
-        logging.info(F'Preparing record files used {time.perf_counter() - tic:0.3f} sec')
         if not todo_task_dirs.collect():
             logging.info('No data to perform open space planner profilng on.')
             return
+        logging.info(F'Preparing record files took {time.perf_counter() - tic:0.3f} sec')
 
         # 2. run evaluation
         return self.process(todo_task_dirs, origin_prefix, target_prefix)
@@ -146,8 +146,6 @@ class OpenSpacePlannerMetrics(BasePipeline):
         if logging.level_debug():
             logging.debug(F'msg count: {msgs.count()}')
             logging.debug(F'msg first: {msgs.first()}')
-        tic1 = time.perf_counter()
-        logging.info(F'Extracting messages used {tic1 - tic:0.3f} sec')
 
         # 2. filter messages belonging to a certain stage (STAGE_TYPE)
         open_space_msgs = (msgs
@@ -158,12 +156,10 @@ class OpenSpacePlannerMetrics(BasePipeline):
                            .groupByKey()
                            # PairRDD(target_prefix, filtered_and_sorted_messages)
                            .mapValues(sort_messages)
-                           ).cache()
+                           .cache())
         if logging.level_debug():
             logging.debug(F'open_space_message_count: {open_space_msgs.count()}')
             logging.debug(F'open_space_message_first: {open_space_msgs.first()}')
-        tic2 = time.perf_counter()
-        logging.info(F'Filtering messages used {tic2 - tic1:0.3f} sec')
 
         # 3. get feature from all frames with desired stage
         stage_feature = open_space_msgs.map(extract_stage_feature)
@@ -179,37 +175,40 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'zigzag_feature_first: {zigzag_feature.first()}')
             logging.debug(F'trajectory_feature_count: {trajectory_feature.count()}')
             logging.debug(F'trajectory_feature_first: {trajectory_feature.first()}')
-        tic3 = time.perf_counter()
-        logging.info(F'Extracting features used {tic3 - tic2:0.3f} sec')
 
         # 4. grading, process feature (count, max, mean, standard deviation, 95 percentile)
         stage_result = stage_feature.map(stage_grading)
         latency_result = latency_feature.map(latency_grading)
         zigzag_result = zigzag_feature.map(zigzag_grading)
         trajectory_result = trajectory_feature.map(trajectory_grading)
-        result_data = (stage_result
-                       .join(latency_result)
-                       .mapValues(merge_grading_results)
-                       .join(zigzag_result)
-                       .mapValues(merge_grading_results)
-                       .join(trajectory_result)
-                       .mapValues(merge_grading_results))
+        grading_result = (stage_result
+                          .join(latency_result)
+                          .mapValues(merge_grading_results)
+                          .join(zigzag_result)
+                          .mapValues(merge_grading_results)
+                          .join(trajectory_result)
+                          .mapValues(merge_grading_results))
         if logging.level_debug():
-            logging.debug(F'result_data_count: {result_data.count()}')
-            logging.debug(F'result_data_first: {result_data.first()}')
-        tic4 = time.perf_counter()
-        logging.info(F'Grading used {tic4 - tic3:0.3f} sec')
+            logging.debug(F'grading_result_count: {grading_result.count()}')
+            logging.debug(F'grading_result_first: {grading_result.first()}')
 
         # 5. plot and visualize features, save grading result
-        if flags.FLAGS.open_space_planner_profiling_generate_report:
-            (result_data
-             # PairRDD(target_prefix, combined_grading_result), output grading results for each target
-             .foreach(output_result))
+        if self.FLAGS['open_space_planner_profiling_generate_report']:
+            # PairRDD(target, features), save features in h5 file
+            stage_feature.foreach(lambda group: output_features(group, 'stage_feature'))
+            latency_feature.foreach(lambda group: output_features(group, 'latency_feature'))
+            zigzag_feature.foreach(lambda group: output_features(group, 'zigzag_feature'))
+            trajectory_feature.foreach(lambda group: output_features(group, 'trajectory_feature'))
+            # PairRDD(target, combined_grading_result), output grading results for each target
+            grading_result.foreach(output_grading)
+            # PairRDD(target, planning_trajectory_features), plot histograms for features
             trajectory_feature.foreach(visual_utils.plot_hist)
             self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)
-        tic5 = time.perf_counter()
-        logging.info(F'Generating output used {tic5 - tic4:0.3f} sec')
-        return result_data.collect()
+            logging.info(F'Evaluation with report took {time.perf_counter() - tic:0.3f} sec')
+        else:
+            results = grading_result.collect()
+            logging.info(F'Evaluation alone took {time.perf_counter() - tic:0.3f} sec')
+            return results
 
     def email_output(self, tasks, origin_prefix, target_prefix, partner_email='', error_msg=''):
         title = 'Open Space Planner Profiling Results'
