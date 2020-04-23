@@ -90,14 +90,8 @@ class PedestrianTrajectoryDataset(Dataset):
     def __getitem__(self, idx):
         file_path, scene_id, data_pt_id = self.data_pt_list[idx]
         # Get map_region from file_path
-        if file_path.find("baidudasha") != -1:
-            map_region = "baidudasha"
-        elif file_path.find("XiaMen") != -1:
-            map_region = "XiaMen"
-        elif file_path.find("XiongAn") != -1:
-            map_region = "XiongAn"
-        else:
-            map_region = "unknown"
+        kRegions = ["baidudasha", "XiaMen", "XiongAn"]
+        map_region = next((region for region in kRegions if region in file_path), "unknown")
 
         # read file_content from the file_path
         file_content = np.load(file_path, allow_pickle=True).tolist()
@@ -166,6 +160,6 @@ class PedestrianTrajectoryDataset(Dataset):
 
 
 if __name__ == '__main__':
-    pedestrian_dataset = PedestrianTrajectoryDataset('/data/kinglong_train_clean/train/baidudasha/jinlong-JinLongBaiduDaSha/20200226/')
+    pedestrian_dataset = PedestrianTrajectoryDataset('/data/kinglong_train_clean/train/')
     pedestrian_dataset.getitem(10)
 
