@@ -29,7 +29,7 @@ class ObstaclePredictionsImgRenderer(object):
         self.local_base_heading = None
         self.max_prediction_time_horizon = config.max_obs_future_horizon  # second
 
-    def draw_obstacle_prediction(self, center_x, center_y, center_heading, obstacles):
+    def draw_obstacle_prediction(self, center_x, center_y, center_heading, obstacles, coordinate_heading=0.):
         # TODO(Jinyun): make use of multi-modal and probability
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -58,7 +58,7 @@ class ObstaclePredictionsImgRenderer(object):
                             np.array([trajectory_point.path_point.x,
                                       trajectory_point.path_point.y]),
                             np.array([0, 0]),
-                            np.pi / 2),
+                            np.pi / 2 + coordinate_heading),
                         self.local_base_point_idx,
                         self.resolution))
                     cv.circle(local_map, tuple(trajectory_idx),
@@ -67,7 +67,7 @@ class ObstaclePredictionsImgRenderer(object):
         return local_map
 
     def draw_obstacle_box_prediction_frame(
-            self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+            self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -105,9 +105,9 @@ class ObstaclePredictionsImgRenderer(object):
                     # EAST, so rotation to NORTH is done below
                     corner_points = renderer_utils.box_affine_tranformation(east_oriented_box,
                                                                             path_point_array,
-                                                                            np.pi / 2 + path_point.theta,
+                                                                            np.pi / 2 + path_point.theta + coordinate_heading,
                                                                             np.array([0, 0]),
-                                                                            np.pi / 2,
+                                                                            np.pi / 2 + coordinate_heading,
                                                                             self.local_base_point_idx,
                                                                             self.resolution)
 

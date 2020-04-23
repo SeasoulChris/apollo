@@ -10,6 +10,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 class AgentBoxImgRenderer(object):
     """class of AgentBoxImgRenderer to create a image of ego car bounding box"""
@@ -20,35 +21,31 @@ class AgentBoxImgRenderer(object):
         self.resolution = config.resolution  # in meter/pixel
         self.local_size_h = config.height  # H * W image
         self.local_size_w = config.width  # H * W image
-        # lower center point in the image
-        self.local_base_point_w_idx = config.ego_idx_x
-        self.local_base_point_h_idx = config.ego_idx_y  # lower center point in the image
-        # TODO(Jinyun): read vehicle param from elsewhere
+        self.local_base_point_idx = np.array(
+            [config.ego_idx_x, config.ego_idx_y])  # lower center point in the image
         self.front_edge_to_center = 3.89
         self.back_edge_to_center = 1.043
         self.left_edge_to_center = 1.055
         self.right_edge_to_center = 1.055
+        self.east_oriented_box = np.array([[self.front_edge_to_center, self.front_edge_to_center,
+                                            -self.back_edge_to_center, -self.back_edge_to_center],
+                                           [self.left_edge_to_center, -self.right_edge_to_center,
+                                            -self.right_edge_to_center, self.left_edge_to_center]]).T
 
-        self.right_width = int(self.right_edge_to_center / self.resolution)
-        self.left_width = int(self.left_edge_to_center / self.resolution)
-        self.front_length = int(self.front_edge_to_center / self.resolution)
-        self.back_length = int(self.back_edge_to_center / self.resolution)
-
-    def draw_agent_box(self):
+    def draw_agent_box(self, coordinate_heading=0.):
         local_map = np.zeros(
             [self.local_size_h, self.local_size_w, 1], dtype=np.uint8)
 
-        front_right_connor = [self.local_base_point_w_idx + self.right_width, self.local_base_point_h_idx -
-                              self.front_length]
-        front_left_connor = [self.local_base_point_w_idx - self.right_width, self.local_base_point_h_idx -
-                             self.front_length]
-        back_left_connor = [self.local_base_point_w_idx - self.right_width, self.local_base_point_h_idx +
-                            self.back_length]
-        back_right_connor = [self.local_base_point_w_idx + self.right_width, self.local_base_point_h_idx +
-                             self.back_length]
-
-        cv.fillPoly(local_map, [np.int32(
-            [front_right_connor, front_left_connor, back_left_connor, back_right_connor])], color=(255))
+        box_theta = np.pi / 2 + coordinate_heading
+        theta = 0.
+        corner_points = renderer_utils.box_affine_tranformation(self.east_oriented_box,
+                                                                np.array([0, 0]),
+                                                                box_theta,
+                                                                np.array([0, 0]),
+                                                                theta,
+                                                                self.local_base_point_idx,
+                                                                self.resolution)
+        cv.fillPoly(local_map, [corner_points], color=(255))
 
         return local_map
 
@@ -64,4 +61,4 @@ if __name__ == "__main__":
     os.mkdir(output_dir)
     print("Making output directory: " + output_dir)
 
-    cv.imwrite(os.path.join(output_dir, "agent_box.png"), agentbox_renderer.draw_agent_box())
+    cv.imwrite(os.path.join(output_dir, "agent_box.png"), agentbox_renderer.draw_agent_box(coordinate_heading=0.))

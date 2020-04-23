@@ -40,7 +40,7 @@ class AgentPosesFutureImgRenderer(object):
                                             -self.right_edge_to_center, self.left_edge_to_center]]).T
 
     def draw_agent_future_trajectory(self, frame_time_sec, center_x,
-                                     center_y, center_heading, ego_pose_future):
+                                     center_y, center_heading, ego_pose_future, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
@@ -58,7 +58,7 @@ class AgentPosesFutureImgRenderer(object):
                     np.array([ego_pose.trajectory_point.path_point.x,
                               ego_pose.trajectory_point.path_point.y]),
                     self.local_base_point,
-                    np.pi / 2 - self.local_base_heading),
+                    np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
             if traj_point[0] < 0 or traj_point[0] > self.local_size_h or traj_point[1] < 0 or traj_point[1] > self.local_size_w:
@@ -68,7 +68,7 @@ class AgentPosesFutureImgRenderer(object):
         return local_map
 
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
-                               ego_pose_future, timestamp_idx):
+                               ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -85,7 +85,7 @@ class AgentPosesFutureImgRenderer(object):
                 np.array([ego_pose.trajectory_point.path_point.x,
                           ego_pose.trajectory_point.path_point.y]),
                 self.local_base_point,
-                np.pi / 2 - self.local_base_heading),
+                np.pi / 2 - self.local_base_heading + coordinate_heading),
             self.local_base_point_idx,
             self.resolution))
         if idx[0] < 0 or idx[0] > self.local_size_h or idx[1] < 0 or idx[1] > self.local_size_w:
@@ -95,7 +95,7 @@ class AgentPosesFutureImgRenderer(object):
         return local_map
 
     def draw_agent_box_future(self, center_x, center_y, center_heading,
-                              ego_pose_future, timestamp_idx):
+                              ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
         It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
         '''
@@ -108,8 +108,8 @@ class AgentPosesFutureImgRenderer(object):
         self.local_base_heading = center_heading
         ego_pose = ego_pose_future[timestamp_idx]
         ego_path_point = np.array([ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y])
-        box_theta = ego_pose.trajectory_point.path_point.theta + np.pi / 2 - self.local_base_heading
-        theta = np.pi / 2 - self.local_base_heading
+        box_theta = ego_pose.trajectory_point.path_point.theta + np.pi / 2 - self.local_base_heading + coordinate_heading
+        theta = np.pi / 2 - self.local_base_heading + coordinate_heading
         corner_points = renderer_utils.box_affine_tranformation(self.east_oriented_box,
                                                                 ego_path_point,
                                                                 box_theta,

@@ -28,7 +28,7 @@ class ObstacleHistoryImgRenderer(object):
         self.max_history_length = config.max_obs_past_horizon  # second
 
     # TODO(Jinyun): evaluate whether use localization as current time
-    def draw_obstacles(self, current_timestamp, obstacles):
+    def draw_obstacles(self, current_timestamp, obstacles, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
@@ -47,7 +47,7 @@ class ObstacleHistoryImgRenderer(object):
                         renderer_utils.point_affine_transformation(
                             np.array([point.x, point.y]),
                             np.array([0, 0]),
-                            np.pi / 2),
+                            np.pi / 2 + coordinate_heading),
                         self.local_base_point_idx,
                         self.resolution))
                     points = np.vstack((points, point_idx))

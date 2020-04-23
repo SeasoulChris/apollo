@@ -51,7 +51,7 @@ class RoutingImgRenderer(object):
         for lane in self.hd_map.lane:
             self.lane_dict[lane.id.id] = lane
 
-    def draw_local_routing(self, center_x, center_y, center_heading, local_routing):
+    def draw_local_routing(self, center_x, center_y, center_heading, local_routing, coordinate_heading=0):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
@@ -70,7 +70,7 @@ class RoutingImgRenderer(object):
                             np.array([segment.line_segment.point[i].x,
                                       segment.line_segment.point[i].y]),
                             self.local_base_point,
-                            np.pi / 2 - self.local_base_heading),
+                            np.pi / 2 - self.local_base_heading + coordinate_heading),
                         self.local_base_point_idx,
                         self.resolution))
                     p1 = tuple(renderer_utils.get_img_idx(
@@ -78,7 +78,7 @@ class RoutingImgRenderer(object):
                             np.array([segment.line_segment.point[i + 1].x,
                                       segment.line_segment.point[i + 1].y]),
                             self.local_base_point,
-                            np.pi / 2 - self.local_base_heading),
+                            np.pi / 2 - self.local_base_heading + coordinate_heading),
                         self.local_base_point_idx,
                         self.resolution))
                     cv.line(local_map, tuple(p0), tuple(

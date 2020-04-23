@@ -53,7 +53,7 @@ class RoadMapImgRenderer(object):
         self.rough_crop_radius = int(
             math.sqrt(self.local_size_h**2 + self.local_size_w**2))
 
-    def draw_roadmap(self, center_x, center_y, center_heading):
+    def draw_roadmap(self, center_x, center_y, center_heading, coordinate_heading=0):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = [int(np.round((center_point[0] - self.map_base_point_x) / self.resolution)),
                               int(self.map_size_h - np.round((center_point[1] - self.map_base_point_y) /
@@ -63,7 +63,7 @@ class RoadMapImgRenderer(object):
         rough_local_map_grid = [
             2 * self.rough_crop_radius, 2 * self.rough_crop_radius]
         center_local_idx = [self.rough_crop_radius, self.rough_crop_radius]
-        rotation_angle = 90 - center_heading * 180 / np.pi
+        rotation_angle = 90 - np.degrees(center_heading) + np.degrees(coordinate_heading)
         M = cv.getRotationMatrix2D(
             tuple(center_local_idx), rotation_angle, 1.0)
         rotated = cv.warpAffine(

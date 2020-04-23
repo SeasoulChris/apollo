@@ -33,20 +33,29 @@ class ChauffeurNetFeatureGenerator(object):
                 or base_map_update_flag:
             self.draw_base_map(self.config_file, region)
         self.agent_box_mapping = AgentBoxImgRenderer(self.config_file)
-        self.agent_pose_future_mapping = AgentPosesFutureImgRenderer(self.config_file)
-        self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer(self.config_file)
-        self.obstacles_mapping = ObstacleHistoryImgRenderer(self.config_file)
-        self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(self.config_file)
-        self.offroad_mask_mapping = OffroadMaskImgRenderer(self.config_file, region)
+        self.agent_pose_future_mapping = AgentPosesFutureImgRenderer(
+            self.config_file)
+        self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer(
+            self.config_file)
+        self.obstacle_history_mapping = ObstacleHistoryImgRenderer(self.config_file)
+        self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(
+            self.config_file)
+        self.offroad_mask_mapping = OffroadMaskImgRenderer(
+            self.config_file, region)
         self.road_map_mapping = RoadMapImgRenderer(self.config_file, region)
         self.routing_mapping = RoutingImgRenderer(self.config_file, region)
-        self.speed_limit_mapping = SpeedLimitImgRenderer(self.config_file, region)
-        self.traffic_lights_mapping = TrafficLightsImgRenderer(self.config_file, region)
+        self.speed_limit_mapping = SpeedLimitImgRenderer(
+            self.config_file, region)
+        self.traffic_lights_mapping = TrafficLightsImgRenderer(
+            self.config_file, region)
 
     def draw_base_map(self, config_file, region):
-        self.base_offroad_mask_mapping = BaseOffroadMaskImgRenderer(config_file, region)
-        self.base_road_map_mapping = BaseRoadMapImgRenderer(config_file, region)
-        self.base_speed_limit_mapping = BaseSpeedLimitImgRenderer(config_file, region)
+        self.base_offroad_mask_mapping = BaseOffroadMaskImgRenderer(
+            config_file, region)
+        self.base_road_map_mapping = BaseRoadMapImgRenderer(
+            config_file, region)
+        self.base_speed_limit_mapping = BaseSpeedLimitImgRenderer(
+            config_file, region)
         cv.imwrite(os.path.join(self.imgs_dir, region + "_offroad_mask.png"),
                    self.base_offroad_mask_mapping.base_map)
         cv.imwrite(os.path.join(self.imgs_dir, region + ".png"),
@@ -54,36 +63,36 @@ class ChauffeurNetFeatureGenerator(object):
         cv.imwrite(os.path.join(self.imgs_dir, region + "_speedlimit.png"),
                    self.base_speed_limit_mapping.base_map)
 
-    def draw_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
-                      center_x, center_y, center_heading, routing_response,
-                      observed_traffic_lights, output_dirs):
+    def render_seperated_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
+                                      center_x, center_y, center_heading, routing_response,
+                                      observed_traffic_lights, output_dirs, coordinate_heading=0.):
         '''
         For debug purposes, features are drawn seprately
         agent_box_img: np.array in shape (501, 501, 1)
         agent_pose_history_img: np.array in shape (501, 501, 1)
-        obstacles_img: np.array in shape (501, 501, 1)
+        obstacle_history_img: np.array in shape (501, 501, 1)
         obstacle_predictions_img: np.array in shape (501, 501, 1)
         road_map_img: np.array in shape (501, 501, 3)
         routing_img: np.array in shape (501, 501, 1)
         speed_limit_img: np.array in shape (501, 501, 3)
         traffic_lights_img: np.array in shape (501, 501, 1)
         '''
-        agent_box_img = self.agent_box_mapping.draw_agent_box()
+        agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history)
-        obstacles_img = self.obstacles_mapping.draw_obstacles(
-            frame_time_sec, obstacle)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading)
+        obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
+            frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
-            center_x, center_y, center_heading, obstacle)
+            center_x, center_y, center_heading, obstacle, coordinate_heading)
         road_map_img = self.road_map_mapping.draw_roadmap(
-            center_x, center_y, center_heading)
+            center_x, center_y, center_heading, coordinate_heading)
         routing_img = self.routing_mapping.draw_local_routing(
-            center_x, center_y, center_heading, routing_response)
+            center_x, center_y, center_heading, routing_response, coordinate_heading)
         speed_limit_img = self.speed_limit_mapping.draw_speedlimit(
-            center_x, center_y, center_heading)
+            center_x, center_y, center_heading, coordinate_heading)
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
-            center_x, center_y, center_heading, observed_traffic_lights)
-        imgs_list = [agent_box_img, agent_pose_history_img, obstacles_img, obstacle_predictions_img,
+            center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
+        imgs_list = [agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
                      road_map_img, routing_img, speed_limit_img, traffic_lights_img]
         for i in range(len(output_dirs)):
             key = "{}@{:.3f}".format(frame_num, frame_time_sec)
@@ -92,11 +101,11 @@ class ChauffeurNetFeatureGenerator(object):
 
     def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                                     center_x, center_y, center_heading, routing_response,
-                                    observed_traffic_lights):
+                                    observed_traffic_lights, coordinate_heading=0.):
         '''
         agent_box_img: np.array in shape (501, 501, 1)
         agent_pose_history_img: np.array in shape (501, 501, 1)
-        obstacles_img: np.array in shape (501, 501, 1)
+        obstacle_history_img: np.array in shape (501, 501, 1)
         obstacle_predictions_img: np.array in shape (501, 501, 1)
         road_map_img: np.array in shape (501, 501, 3)
         routing_img: np.array in shape (501, 501, 1)
@@ -106,56 +115,60 @@ class ChauffeurNetFeatureGenerator(object):
         All images in np.unit8 and concatenated along channel axis
         '''
 
-        agent_box_img = self.agent_box_mapping.draw_agent_box()
+        agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history)
-        obstacles_img = self.obstacles_mapping.draw_obstacles(
-            frame_time_sec, obstacle)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading)
+        obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
+            frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
-            center_x, center_y, center_heading, obstacle)
+            center_x, center_y, center_heading, obstacle, coordinate_heading)
         road_map_img = self.road_map_mapping.draw_roadmap(
-            center_x, center_y, center_heading)
+            center_x, center_y, center_heading, coordinate_heading)
         routing_img = self.routing_mapping.draw_local_routing(
-            center_x, center_y, center_heading, routing_response)
+            center_x, center_y, center_heading, routing_response, coordinate_heading)
         speed_limit_img = self.speed_limit_mapping.draw_speedlimit(
-            center_x, center_y, center_heading)
+            center_x, center_y, center_heading, coordinate_heading)
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
-            center_x, center_y, center_heading, observed_traffic_lights)
+            center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
 
-        return cv.resize(np.concatenate([agent_box_img, agent_pose_history_img, obstacles_img, obstacle_predictions_img,
+        return cv.resize(np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
                                          road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
 
     # TODO (Jinyun): fine tune the resizing for computation efficiency
     def render_gt_pose_dist(self, center_x, center_y, center_heading,
-                            ego_pose_future, timestamp_idx):
+                            ego_pose_future, timestamp_idx, coordinate_heading=0.):
         return cv.resize(self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
                                                                                center_y,
                                                                                center_heading,
                                                                                ego_pose_future,
-                                                                               timestamp_idx),
+                                                                               timestamp_idx,
+                                                                               coordinate_heading),
                          (224, 224))
 
-    def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx):
+    def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx, coordinate_heading=0.):
         return cv.resize(self.agent_pose_future_mapping.draw_agent_box_future(center_x,
                                                                               center_y,
                                                                               center_heading,
                                                                               ego_pose_future,
-                                                                              timestamp_idx),
+                                                                              timestamp_idx,
+                                                                              coordinate_heading),
                          (224, 224))
 
-    def render_offroad_mask(self, center_x, center_y, center_heading):
+    def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0):
         return cv.resize(self.offroad_mask_mapping.draw_offroad_mask(center_x,
                                                                      center_y,
-                                                                     center_heading),
+                                                                     center_heading,
+                                                                     coordinate_heading),
                          (224, 224))
 
     def render_obstacle_box_prediction_frame(
-            self, center_x, center_y, center_heading, obstacles, timestamp_idx):
+            self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0):
         return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(center_x,
                                                                                               center_y,
                                                                                               center_heading,
                                                                                               obstacles,
-                                                                                              timestamp_idx),
+                                                                                              timestamp_idx,
+                                                                                              coordinate_heading),
                          (224, 224))
 
 
@@ -188,13 +201,13 @@ if __name__ == "__main__":
         print("Making output directory: " + output_dir)
 
     for frame in offline_frames.learning_data:
-        chauffeur_net_feature_generator.draw_features(frame.frame_num,
-                                                      frame.timestamp_sec,
-                                                      frame.adc_trajectory_point,
-                                                      frame.obstacle,
-                                                      frame.localization.position.x,
-                                                      frame.localization.position.y,
-                                                      frame.localization.heading,
-                                                      frame.routing.local_routing_lane_id,
-                                                      frame.traffic_light,
-                                                      output_dirs)
+        chauffeur_net_feature_generator.render_seperated_img_features(frame.frame_num,
+                                                                      frame.timestamp_sec,
+                                                                      frame.adc_trajectory_point,
+                                                                      frame.obstacle,
+                                                                      frame.localization.position.x,
+                                                                      frame.localization.position.y,
+                                                                      frame.localization.heading,
+                                                                      frame.routing.local_routing_lane_id,
+                                                                      frame.traffic_light,
+                                                                      output_dirs)

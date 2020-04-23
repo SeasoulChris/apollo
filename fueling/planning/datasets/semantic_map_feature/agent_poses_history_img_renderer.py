@@ -29,7 +29,7 @@ class AgentPosesHistoryImgRenderer(object):
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
     def draw_agent_poses_history(self, frame_time_sec, center_x,
-                                 center_y, center_heading, ego_pose_history):
+                                 center_y, center_heading, ego_pose_history, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         self.local_base_point = np.array([center_x, center_y])
@@ -42,11 +42,11 @@ class AgentPosesHistoryImgRenderer(object):
                 break
             color = (1 - relative_time / self.max_history_time_horizon) * 255
             traj_point = tuple(renderer_utils.get_img_idx(
-                renderer_utils.affine_transformation(
+                renderer_utils.point_affine_transformation(
                     np.array([ego_pose.trajectory_point.path_point.x,
                               ego_pose.trajectory_point.path_point.y]),
                     self.local_base_point,
-                    np.pi / 2 - self.local_base_heading),
+                    np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
             cv.circle(local_map, tuple(traj_point),
@@ -57,7 +57,7 @@ class AgentPosesHistoryImgRenderer(object):
 if __name__ == "__main__":
     config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/2019-10-17-13-36-41/ver0/valid_set/learning_data.66.bin.future_status.bin",
+    with open("/apollo/data/test_interpolated_data/00001.record.0.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
