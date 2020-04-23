@@ -46,7 +46,6 @@ class AgentBoxImgRenderer(object):
                                                                 self.local_base_point_idx,
                                                                 self.resolution)
         cv.fillPoly(local_map, [corner_points], color=(255))
-
         return local_map
 
 

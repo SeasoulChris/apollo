@@ -60,7 +60,7 @@ class AgentPosesHistoryImgRenderer(object):
 if __name__ == "__main__":
     config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/test_interpolated_data/00001.record.0.bin.future_status.bin",
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
@@ -75,12 +75,12 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     agent_history_mapping = AgentPosesHistoryImgRenderer(config_file)
     for frame in offline_frames.learning_data:
-        img = agent_history_mapping.draw_agent_poses_history(frame.timestamp_sec,
+        img = agent_history_mapping.draw_agent_poses_history(frame.adc_trajectory_point[-1].timestamp_sec,
                                                              frame.localization.position.x,
                                                              frame.localization.position.y,
                                                              frame.localization.heading,
                                                              frame.adc_trajectory_point)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
+        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]

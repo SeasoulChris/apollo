@@ -28,30 +28,40 @@ class ObstacleHistoryImgRenderer(object):
         self.max_history_length = config.max_obs_past_horizon  # second
 
     # TODO(Jinyun): evaluate whether use localization as current time
-    def draw_obstacles(self, current_timestamp, obstacles, coordinate_heading=0.):
+    def draw_obstacle_history(self, current_timestamp, obstacles, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
-            if len(obstacle.obstacle_trajectory_point) == 0:
+            obstacle_trajectory = obstacle.obstacle_trajectory.evaluated_trajectory_point
+            if len(obstacle_trajectory) == 0:
                 continue
-            current_time = obstacle.obstacle_trajectory_point[-1].timestamp_sec
-            for i in range(len(obstacle.obstacle_trajectory_point) - 1, -1, -1):
-                obstacle_history = obstacle.obstacle_trajectory_point[i]
-                relative_time = current_time - obstacle_history.timestamp_sec
+            box_length = obstacle.length
+            box_width = obstacle.width
+            for i in range(len(obstacle_trajectory) - 1, -1, -1):
+                obstacle_traj_point = obstacle_trajectory[i]
+                relative_time = current_timestamp - obstacle_traj_point.timestamp_sec
                 if relative_time > self.max_history_length:
                     break
-                points = np.zeros((0, 2))
                 color = (1 - relative_time / self.max_history_length) * 255
-                for point in obstacle_history.polygon_point:
-                    point_idx = tuple(renderer_utils.get_img_idx(
-                        renderer_utils.point_affine_transformation(
-                            np.array([point.x, point.y]),
-                            np.array([0, 0]),
-                            np.pi / 2 + coordinate_heading),
-                        self.local_base_point_idx,
-                        self.resolution))
-                    points = np.vstack((points, point_idx))
-                cv.fillPoly(local_map, [np.int32(points)], color=color)
+
+                path_point = obstacle_traj_point.trajectory_point.path_point
+                path_point_array = np.array([path_point.x, path_point.y])
+                east_oriented_box = np.array([[box_length / 2, box_length / 2,
+                                                -box_length / 2, box_length / 2],
+                                                [box_width, -box_width,
+                                                -box_width, box_width]]).T
+
+                # obstacles are in ego vehicle coordiantes where ego car faces toward
+                # EAST, so rotation to NORTH is done below
+                corner_points = renderer_utils.box_affine_tranformation(east_oriented_box,
+                                                                        path_point_array,
+                                                                        np.pi / 2 + path_point.theta + coordinate_heading,
+                                                                        np.array([0, 0]),
+                                                                        np.pi / 2 + coordinate_heading,
+                                                                        self.local_base_point_idx,
+                                                                        self.resolution)
+
+                cv.fillPoly(local_map, [np.int32(corner_points)], color=color)
 
         return local_map
 
@@ -59,11 +69,11 @@ class ObstacleHistoryImgRenderer(object):
 if __name__ == "__main__":
     config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/one_sample_test/learning_data.166.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
-    output_dir = './data_obstacles/'
+    output_dir = './data_obstacle_history/'
     if os.path.isdir(output_dir):
         print(output_dir + " directory exists, delete it!")
         shutil.rmtree(output_dir)
@@ -73,9 +83,9 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     obstacle_mapping = ObstacleHistoryImgRenderer(config_file)
     for frame in offline_frames.learning_data:
-        img = obstacle_mapping.draw_obstacles(
-            frame.timestamp_sec, frame.obstacle)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
+        img = obstacle_mapping.draw_obstacle_history(
+            frame.adc_trajectory_point[-1].timestamp_sec, frame.obstacle)
+        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]

@@ -61,10 +61,6 @@ class AgentPosesFutureImgRenderer(object):
                     np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
-            if traj_point[0] < 0 or traj_point[0] > self.local_size_h or traj_point[1] < 0 or traj_point[1] > self.local_size_w:
-                # print("draw_agent_future_trajectory out of canvas bound")
-                return local_map
-            cv.circle(local_map, traj_point, radius=4, color=color)
         return local_map
 
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
@@ -117,10 +113,6 @@ class AgentPosesFutureImgRenderer(object):
                                                                 theta,
                                                                 self.local_base_point_idx,
                                                                 self.resolution)
-        for corner_point in corner_points:
-            if corner_point[0] < 0 or corner_point[0] > self.local_size_h or corner_point[1] < 0 or corner_point[1] > self.local_size_w:
-                # print("draw_agent_box_future out of canvas bound")
-                return local_map
         cv.fillPoly(local_map, [corner_points], color=255)
         return local_map
 
@@ -128,7 +120,7 @@ class AgentPosesFutureImgRenderer(object):
 if __name__ == "__main__":
     config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/test_interpolated_data/00001.record.0.bin.future_status.bin",
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
@@ -144,7 +136,7 @@ if __name__ == "__main__":
     agent_future_mapping = AgentPosesFutureImgRenderer(config_file)
 
     for frame in offline_frames.learning_data:
-        img = agent_future_mapping.draw_agent_future_trajectory(frame.timestamp_sec,
+        img = agent_future_mapping.draw_agent_future_trajectory(frame.adc_trajectory_point[-1].timestamp_sec,
                                                                 frame.localization.position.x,
                                                                 frame.localization.position.y,
                                                                 frame.localization.heading,
@@ -153,7 +145,7 @@ if __name__ == "__main__":
         #                                                  frame.localization.position.y,
         #                                                  frame.localization.heading,
         #                                                  frame.output.adc_future_trajectory_point, 10)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
+        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]

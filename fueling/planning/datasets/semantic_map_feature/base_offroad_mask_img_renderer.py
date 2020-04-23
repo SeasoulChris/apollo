@@ -77,7 +77,6 @@ class BaseOffroadMaskImgRenderer(object):
 
     def _draw_road(self, color=(0)):
         self.base_map = (self.base_map + 1) * 255
-        print(self.base_map.dtype)
         for road in self.hd_map.road:
             for section in road.section:
                 points = np.zeros((0, 2))

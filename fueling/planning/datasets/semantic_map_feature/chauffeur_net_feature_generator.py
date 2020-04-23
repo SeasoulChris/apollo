@@ -82,10 +82,10 @@ class ChauffeurNetFeatureGenerator(object):
             coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
             frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
-        obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
+        obstacle_history_img = self.obstacle_history_mapping.draw_obstacle_history(
             frame_time_sec, obstacle, coordinate_heading)
-        obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
-            center_x, center_y, center_heading, obstacle, coordinate_heading)
+        obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_box_prediction(
+            frame_time_sec, obstacle, coordinate_heading)
         road_map_img = self.road_map_mapping.draw_roadmap(
             center_x, center_y, center_heading, coordinate_heading)
         routing_img = self.routing_mapping.draw_local_routing(
@@ -121,10 +121,10 @@ class ChauffeurNetFeatureGenerator(object):
             coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
             frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
-        obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
+        obstacle_history_img = self.obstacle_history_mapping.draw_obstacle_history(
             frame_time_sec, obstacle, coordinate_heading)
-        obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_prediction(
-            center_x, center_y, center_heading, obstacle, coordinate_heading)
+        obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_box_prediction(
+            frame_time_sec, obstacle, coordinate_heading)
         road_map_img = self.road_map_mapping.draw_roadmap(
             center_x, center_y, center_heading, coordinate_heading)
         routing_img = self.routing_mapping.draw_local_routing(
@@ -166,10 +166,7 @@ class ChauffeurNetFeatureGenerator(object):
 
     def render_obstacle_box_prediction_frame(
             self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
-        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(center_x,
-                                                                                              center_y,
-                                                                                              center_heading,
-                                                                                              obstacles,
+        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
                                                                                               timestamp_idx,
                                                                                               coordinate_heading),
                          (224, 224))
@@ -177,7 +174,7 @@ class ChauffeurNetFeatureGenerator(object):
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/2019-10-17-13-36-41/learning_data.66.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
@@ -186,7 +183,7 @@ if __name__ == "__main__":
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(config_file,
                                                                    imgs_dir,
-                                                                   region)
+                                                                   region, base_map_update_flag=False)
     print("Finish loading chauffeur_net_feature_generator...")
 
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
@@ -207,12 +204,12 @@ if __name__ == "__main__":
 
     for frame in offline_frames.learning_data:
         chauffeur_net_feature_generator.render_seperated_img_features(frame.frame_num,
-                                                                      frame.timestamp_sec,
+                                                                      frame.adc_trajectory_point[-1].timestamp_sec,
                                                                       frame.adc_trajectory_point,
                                                                       frame.obstacle,
                                                                       frame.localization.position.x,
                                                                       frame.localization.position.y,
                                                                       frame.localization.heading,
                                                                       frame.routing.local_routing_lane_id,
-                                                                      frame.traffic_light,
+                                                                      frame.traffic_light_detection.traffic_light,
                                                                       output_dirs)
