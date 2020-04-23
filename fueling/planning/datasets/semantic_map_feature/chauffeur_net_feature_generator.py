@@ -24,9 +24,9 @@ from modules.planning.proto import learning_data_pb2
 class ChauffeurNetFeatureGenerator(object):
     """class of ChauffeurNetFeatureGenerator to initialize renderers and aggregate input features"""
 
-    def __init__(self, region, base_map_update_flag):
-        self.imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-        self.config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    def __init__(self, config_file, imgs_dir, region, base_map_update_flag=True):
+        self.imgs_dir = imgs_dir
+        self.config_file = config_file
         if not os.path.isfile(os.path.join(self.imgs_dir, region + ".png")) \
                 or not os.path.isfile(os.path.join(self.imgs_dir, region + "_speedlimit.png")) \
                 or not os.path.isfile(os.path.join(self.imgs_dir, region + "_offroad_mask.png")) \
@@ -37,7 +37,8 @@ class ChauffeurNetFeatureGenerator(object):
             self.config_file)
         self.agent_pose_history_mapping = AgentPosesHistoryImgRenderer(
             self.config_file)
-        self.obstacle_history_mapping = ObstacleHistoryImgRenderer(self.config_file)
+        self.obstacle_history_mapping = ObstacleHistoryImgRenderer(
+            self.config_file)
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(
             self.config_file)
         self.offroad_mask_mapping = OffroadMaskImgRenderer(
@@ -77,7 +78,8 @@ class ChauffeurNetFeatureGenerator(object):
         speed_limit_img: np.array in shape (501, 501, 3)
         traffic_lights_img: np.array in shape (501, 501, 1)
         '''
-        agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
+        agent_box_img = self.agent_box_mapping.draw_agent_box(
+            coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
             frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
@@ -115,7 +117,8 @@ class ChauffeurNetFeatureGenerator(object):
         All images in np.unit8 and concatenated along channel axis
         '''
 
-        agent_box_img = self.agent_box_mapping.draw_agent_box(coordinate_heading)
+        agent_box_img = self.agent_box_mapping.draw_agent_box(
+            coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
             frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacles(
@@ -179,9 +182,11 @@ if __name__ == "__main__":
     print("Finish reading proto...")
 
     region = "sunnyvale_with_two_offices"
-    base_map_update_flag = True
-    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
-        region, base_map_update_flag)
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    imgs_dir = '/fuel/testdata/planning/semantic_map_features'
+    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(config_file,
+                                                                   imgs_dir,
+                                                                   region)
     print("Finish loading chauffeur_net_feature_generator...")
 
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'

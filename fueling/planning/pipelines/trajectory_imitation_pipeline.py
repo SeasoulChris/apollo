@@ -21,6 +21,12 @@ if __name__ == "__main__":
     parser.add_argument('model_type', type=str, help='model type, cnn or rnn')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
+    parser.add_argument('renderer_config_file', type=str, help='renderer configuration file in proto.txt',
+                        default='/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt')
+    parser.add_argument('imgs_dir', type=str, help='location to store input base img or output img',
+                        default='/fuel/testdata/planning/semantic_map_features')
+    parser.add_argument('input_data_augmentation', type=bool, help='whether to do input data augmentation',
+                        default=False)
     parser.add_argument('-s', '--save-path', type=str, default='./',
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
@@ -37,14 +43,14 @@ if __name__ == "__main__":
     valid_dataset = None
 
     if args.model_type == 'cnn':
-        train_dataset = TrajectoryImitationCNNDataset(args.train_file)
-        valid_dataset = TrajectoryImitationCNNDataset(args.valid_file)
+        train_dataset = TrajectoryImitationCNNDataset(args.train_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
+        valid_dataset = TrajectoryImitationCNNDataset(args.valid_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
         model = TrajectoryImitationCNNModel()
         loss = TrajectoryImitationCNNLoss()
 
     elif args.model_type == 'rnn':
-        train_dataset = TrajectoryImitationRNNDataset(args.train_file)
-        valid_dataset = TrajectoryImitationRNNDataset(args.valid_file)
+        train_dataset = TrajectoryImitationRNNDataset(args.train_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
+        valid_dataset = TrajectoryImitationRNNDataset(args.valid_file, args.renderer_config_file, args.imgs_dir, args.input_data_augmentation)
         model = TrajectoryImitationRNNModel()
         loss = TrajectoryImitationRNNLoss()
 
@@ -71,6 +77,6 @@ if __name__ == "__main__":
 
     # Model training:
     torch.autograd.set_detect_anomaly(True)
-    
+
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
                            scheduler, epochs=10, save_name='./', print_period=50)

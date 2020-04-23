@@ -7,15 +7,18 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-import fueling.common.logging as logging
-from fueling.common.coord_utils import CoordUtils
-import fueling.common.file_utils as file_utils
-from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator import ChauffeurNetFeatureGenerator
+from modules.planning.proto import planning_semantic_map_config_pb2
 from modules.planning.proto import learning_data_pb2
+
+from fueling.common.coord_utils import CoordUtils
+import fueling.common.logging as logging
+import fueling.common.file_utils as file_utils
+import fueling.common.proto_utils as proto_utils
+from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator import ChauffeurNetFeatureGenerator
 
 
 class TrajectoryImitationCNNDataset(Dataset):
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -48,15 +51,28 @@ class TrajectoryImitationCNNDataset(Dataset):
             self.total_num_data_pt))
 
         # TODO(Jinyun): recognize map_name in __getitem__
-        base_map_update_flag = False
-        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
-            region, base_map_update_flag)
+        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
+                                                                            imgs_dir,
+                                                                            region)
+        self.input_data_agumentation = input_data_agumentation
+        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        renderer_config = proto_utils.get_pb_from_text_file(
+            renderer_config_file, renderer_config)
+        self.max_rand_coordinate_heading = np.radians(
+            renderer_config.max_rand_delta_phi)
 
     def __len__(self):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
         frame = self.instances[idx]
+
+        coordinate_heading = 0.
+        past_motion_dropout = False
+        if self.input_data_agumentation:
+            coordinate_heading = np.random.uniform(
+                -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
+            past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
         img = self.chauffeur_net_feature_generator.render_stacked_img_features(frame.frame_num,
                                                                                frame.timestamp_sec,
@@ -66,7 +82,9 @@ class TrajectoryImitationCNNDataset(Dataset):
                                                                                frame.localization.position.y,
                                                                                frame.localization.heading,
                                                                                frame.routing.local_routing_lane_id,
-                                                                               frame.traffic_light)
+                                                                               frame.traffic_light, 
+                                                                               coordinate_heading,
+                                                                               past_motion_dropout)
 
         if self.img_transform:
             img = self.img_transform(img)
@@ -103,7 +121,7 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -139,15 +157,29 @@ class TrajectoryImitationRNNDataset(Dataset):
             self.total_num_data_pt))
 
         # TODO(Jinyun): recognize map_name in __getitem__
-        base_map_update_flag = False
-        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
-            region, base_map_update_flag)
+        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
+                                                                            imgs_dir,
+                                                                            region)
+        self.input_data_agumentation = input_data_agumentation
+        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
+        renderer_config = proto_utils.get_pb_from_text_file(
+            renderer_config_file, renderer_config)
+        self.max_rand_coordinate_heading = np.radians(
+            renderer_config.max_rand_delta_phi)
+        np.random.seed(0)
 
     def __len__(self):
         return self.total_num_data_pt
 
     def __getitem__(self, idx):
         frame = self.instances[idx]
+
+        coordinate_heading = 0.
+        past_motion_dropout = False
+        if self.input_data_agumentation:
+            coordinate_heading = np.random.uniform(
+                -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
+            past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
         img_feature = self.chauffeur_net_feature_generator.render_stacked_img_features(frame.frame_num,
                                                                                        frame.timestamp_sec,
@@ -157,13 +189,16 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                                        frame.localization.position.y,
                                                                                        frame.localization.heading,
                                                                                        frame.routing.local_routing_lane_id,
-                                                                                       frame.traffic_light)
+                                                                                       frame.traffic_light,
+                                                                                       coordinate_heading,
+                                                                                       past_motion_dropout)
         if self.img_feature_transform:
             img_feature = self.img_feature_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.render_offroad_mask(frame.localization.position.x,
                                                                                 frame.localization.position.y,
-                                                                                frame.localization.heading)
+                                                                                frame.localization.heading,
+                                                                                coordinate_heading)
         if self.img_bitmap_transform:
             offroad_mask = self.img_bitmap_transform(offroad_mask)
 
@@ -194,7 +229,8 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                                     frame.localization.position.y,
                                                                                     frame.localization.heading,
                                                                                     frame.output.adc_future_trajectory_point,
-                                                                                    i)
+                                                                                    i,
+                                                                                    coordinate_heading)
             if self.img_bitmap_transform:
                 gt_pose_dist = self.img_bitmap_transform(gt_pose_dist)
             pred_pose_dists[i, :, :, :] = gt_pose_dist
@@ -203,7 +239,8 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                              frame.localization.position.y,
                                                                              frame.localization.heading,
                                                                              frame.output.adc_future_trajectory_point,
-                                                                             i)
+                                                                             i,
+                                                                             coordinate_heading)
             if self.img_bitmap_transform:
                 gt_pose_box = self.img_bitmap_transform(gt_pose_box)
             pred_boxs[i, :, :, :] = gt_pose_box
@@ -212,7 +249,8 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                                                      frame.localization.position.y,
                                                                                                      frame.localization.heading,
                                                                                                      frame.obstacle,
-                                                                                                     i)
+                                                                                                     i,
+                                                                                                     coordinate_heading)
             if self.img_bitmap_transform:
                 pred_obs_box = self.img_bitmap_transform(pred_obs_box)
             pred_obs[i, :, :, :] = pred_obs_box
@@ -236,8 +274,9 @@ if __name__ == '__main__':
     # dump one instance image for debug
     # dataset = TrajectoryImitationCNNDataset(
     #     '/apollo/data/2019-10-17-13-36-41/')
-
+    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     dataset = TrajectoryImitationRNNDataset(
-        '/apollo/data/2019-10-17-13-36-41/')
+        '/apollo/data/2019-10-17-13-36-41/', config_file, imgs_dir)
 
     dataset[50]
