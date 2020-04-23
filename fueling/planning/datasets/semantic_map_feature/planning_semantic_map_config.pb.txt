@@ -1,12 +1,12 @@
-      resolution : 0.1
-      height : 501
-      width : 501
-      ego_idx_x : 250
-      ego_idx_y : 376
+      resolution : 0.2
+      height : 400
+      width : 400
+      ego_idx_x : 200
+      ego_idx_y : 320
       max_rand_delta_phi : 25
-      max_ego_future_horizon : 3
-      max_ego_past_horizon : 3
-      max_obs_future_horizon : 3
+      max_ego_future_horizon : 2
+      max_ego_past_horizon : 6
+      max_obs_future_horizon : 2
       max_obs_past_horizon : 1
       base_map_padding : 100
       city_driving_max_speed : 22.22

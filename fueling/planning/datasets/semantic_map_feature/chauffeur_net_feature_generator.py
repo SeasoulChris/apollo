@@ -69,14 +69,14 @@ class ChauffeurNetFeatureGenerator(object):
                                       observed_traffic_lights, output_dirs, coordinate_heading=0., past_motion_dropout=False):
         '''
         For debug purposes, features are drawn seprately
-        agent_box_img: np.array in shape (501, 501, 1)
-        agent_pose_history_img: np.array in shape (501, 501, 1)
-        obstacle_history_img: np.array in shape (501, 501, 1)
-        obstacle_predictions_img: np.array in shape (501, 501, 1)
-        road_map_img: np.array in shape (501, 501, 3)
-        routing_img: np.array in shape (501, 501, 1)
-        speed_limit_img: np.array in shape (501, 501, 3)
-        traffic_lights_img: np.array in shape (501, 501, 1)
+        agent_box_img: 1 channel np.array image
+        agent_pose_history_img: 1 channel np.array image
+        obstacle_history_img: 1 channel np.array image
+        obstacle_predictions_img: 1 channel np.array image
+        road_map_img: 3 channel np.array image
+        routing_img: 1 channel np.array image
+        speed_limit_img: 3 channel np.array image
+        traffic_lights_img: 1 channel np.array image
         '''
         agent_box_img = self.agent_box_mapping.draw_agent_box(
             coordinate_heading)
@@ -99,20 +99,22 @@ class ChauffeurNetFeatureGenerator(object):
         for i in range(len(output_dirs)):
             key = "{}@{:.3f}".format(frame_num, frame_time_sec)
             filename = key + ".png"
+            print('size {}'.format(imgs_list[i].shape))
             cv.imwrite(os.path.join(output_dirs[i], filename), imgs_list[i])
+        print('\n')
 
     def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                                     center_x, center_y, center_heading, routing_response,
                                     observed_traffic_lights, coordinate_heading=0., past_motion_dropout=False):
         '''
-        agent_box_img: np.array in shape (501, 501, 1)
-        agent_pose_history_img: np.array in shape (501, 501, 1)
-        obstacle_history_img: np.array in shape (501, 501, 1)
-        obstacle_predictions_img: np.array in shape (501, 501, 1)
-        road_map_img: np.array in shape (501, 501, 3)
-        routing_img: np.array in shape (501, 501, 1)
-        speed_limit_img: np.array in shape (501, 501, 3)
-        traffic_lights_img: np.array in shape (501, 501, 1)
+        agent_box_img: 1 channel np.array image
+        agent_pose_history_img: 1 channel np.array image
+        obstacle_history_img: 1 channel np.array image
+        obstacle_predictions_img: 1 channel np.array image
+        road_map_img: 3 channel np.array image
+        routing_img: 1 channel np.array image
+        speed_limit_img: 3 channel np.array image
+        traffic_lights_img: 1 channel np.array image
 
         All images in np.unit8 and concatenated along channel axis
         '''
@@ -134,42 +136,38 @@ class ChauffeurNetFeatureGenerator(object):
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
             center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
 
-        return cv.resize(np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
-                                         road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2), (224, 224))
+        return np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
+                                         road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2)
 
     # TODO (Jinyun): fine tune the resizing for computation efficiency
     def render_gt_pose_dist(self, center_x, center_y, center_heading,
                             ego_pose_future, timestamp_idx, coordinate_heading=0.):
-        return cv.resize(self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
+        return self.agent_pose_future_mapping.draw_agent_pose_future(center_x,
                                                                                center_y,
                                                                                center_heading,
                                                                                ego_pose_future,
                                                                                timestamp_idx,
-                                                                               coordinate_heading),
-                         (224, 224))
+                                                                               coordinate_heading)
 
     def render_gt_box(self, center_x, center_y, center_heading, ego_pose_future, timestamp_idx, coordinate_heading=0.):
-        return cv.resize(self.agent_pose_future_mapping.draw_agent_box_future(center_x,
+        return self.agent_pose_future_mapping.draw_agent_box_future(center_x,
                                                                               center_y,
                                                                               center_heading,
                                                                               ego_pose_future,
                                                                               timestamp_idx,
-                                                                              coordinate_heading),
-                         (224, 224))
+                                                                              coordinate_heading)
 
     def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0.):
-        return cv.resize(self.offroad_mask_mapping.draw_offroad_mask(center_x,
+        return self.offroad_mask_mapping.draw_offroad_mask(center_x,
                                                                      center_y,
                                                                      center_heading,
-                                                                     coordinate_heading),
-                         (224, 224))
+                                                                     coordinate_heading)
 
     def render_obstacle_box_prediction_frame(
             self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
-        return cv.resize(self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
+        return self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
                                                                                               timestamp_idx,
-                                                                                              coordinate_heading),
-                         (224, 224))
+                                                                                              coordinate_heading)
 
 
 if __name__ == "__main__":

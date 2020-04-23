@@ -18,7 +18,7 @@ from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_genera
 
 
 class TrajectoryImitationCNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -60,6 +60,7 @@ class TrajectoryImitationCNNDataset(Dataset):
             renderer_config_file, renderer_config)
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
+        self.ouput_point_num = ouput_point_num
 
     def __len__(self):
         return self.total_num_data_pt
@@ -75,14 +76,14 @@ class TrajectoryImitationCNNDataset(Dataset):
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
         img = self.chauffeur_net_feature_generator.render_stacked_img_features(frame.frame_num,
-                                                                               frame.timestamp_sec,
+                                                                               frame.adc_trajectory_point[-1].timestamp_sec,
                                                                                frame.adc_trajectory_point,
                                                                                frame.obstacle,
                                                                                frame.localization.position.x,
                                                                                frame.localization.position.y,
                                                                                frame.localization.heading,
                                                                                frame.routing.local_routing_lane_id,
-                                                                               frame.traffic_light, 
+                                                                               frame.traffic_light_detection.traffic_light, 
                                                                                coordinate_heading,
                                                                                past_motion_dropout)
 
@@ -94,9 +95,9 @@ class TrajectoryImitationCNNDataset(Dataset):
                       frame.localization.heading]
         pred_points = []
         for pred_point in frame.output.adc_future_trajectory_point:
-            # TODO(Jinyun): validate future trajectory points size and deltaT, 30
+            # TODO(Jinyun): validate future trajectory points size and deltaT, ouput_point_num
             # points, 5 attributes
-            if len(pred_points) >= 30 * 5:
+            if len(pred_points) >= self.ouput_point_num * 5:
                 break
             # TODO(Jinyun): evaluate whether use heading and acceleration
             pred_x = pred_point.trajectory_point.path_point.x
@@ -114,14 +115,14 @@ class TrajectoryImitationCNNDataset(Dataset):
             pred_points.append(pred_a)
 
         # TODO(Jinyun): it's a tmp fix, will add data clean to make sure output point size is right
-        if len(pred_points) < 30 * 5:
+        if len(pred_points) < self.ouput_point_num * 5:
             return self.__getitem__(idx - 1)
 
         return (img, torch.from_numpy(np.asarray(pred_points)).float())
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -141,6 +142,7 @@ class TrajectoryImitationRNNDataset(Dataset):
 
         region = None
         for file_path in all_file_paths:
+            print(file_path)
             if 'future_status' not in file_path or 'bin' not in file_path:
                 continue
             logging.info("loading {} ...".format(file_path))
@@ -159,7 +161,8 @@ class TrajectoryImitationRNNDataset(Dataset):
         # TODO(Jinyun): recognize map_name in __getitem__
         self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
                                                                             imgs_dir,
-                                                                            region)
+                                                                            region,
+                                                                            base_map_update_flag=False)
         self.input_data_agumentation = input_data_agumentation
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
@@ -167,6 +170,8 @@ class TrajectoryImitationRNNDataset(Dataset):
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
         np.random.seed(0)
+        self.img_size = [renderer_config.width, renderer_config.height]
+        self.ouput_point_num = ouput_point_num
 
     def __len__(self):
         return self.total_num_data_pt
@@ -182,14 +187,14 @@ class TrajectoryImitationRNNDataset(Dataset):
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
         img_feature = self.chauffeur_net_feature_generator.render_stacked_img_features(frame.frame_num,
-                                                                                       frame.timestamp_sec,
+                                                                                       frame.adc_trajectory_point[-1].timestamp_sec,
                                                                                        frame.adc_trajectory_point,
                                                                                        frame.obstacle,
                                                                                        frame.localization.position.x,
                                                                                        frame.localization.position.y,
                                                                                        frame.localization.heading,
                                                                                        frame.routing.local_routing_lane_id,
-                                                                                       frame.traffic_light,
+                                                                                       frame.traffic_light_detection.traffic_light,
                                                                                        coordinate_heading,
                                                                                        past_motion_dropout)
         if self.img_feature_transform:
@@ -206,12 +211,12 @@ class TrajectoryImitationRNNDataset(Dataset):
                       frame.localization.position.y,
                       frame.localization.heading]
         pred_points = np.zeros((0, 4))
-        pred_pose_dists = torch.rand(30, 1, 224, 224)
-        pred_boxs = torch.rand(30, 1, 224, 224)
-        pred_obs = torch.rand(30, 1, 224, 224)
+        pred_pose_dists = torch.rand(self.ouput_point_num, 1, self.img_size[1] , self.img_size[0])
+        pred_boxs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
+        pred_obs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
-            # TODO(Jinyun): validate future trajectory points size and deltaT, 30 points
-            if i + 1 > 30:
+            # TODO(Jinyun): validate future trajectory points size and deltaT, ouput_point_num points
+            if i + 1 > self.ouput_point_num:
                 break
 
             # TODO(Jinyun): evaluate whether use heading and acceleration
@@ -256,7 +261,7 @@ class TrajectoryImitationRNNDataset(Dataset):
             pred_obs[i, :, :, :] = pred_obs_box
 
         # TODO(Jinyun): it's a tmp fix, will add data clean to make sure output point size is right
-        if pred_points.shape[0] < 30:
+        if pred_points.shape[0] < self.ouput_point_num:
             return self.__getitem__(idx - 1)
 
         return (img_feature,
@@ -277,6 +282,6 @@ if __name__ == '__main__':
     config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     dataset = TrajectoryImitationRNNDataset(
-        '/apollo/data/2019-10-17-13-36-41/', config_file, imgs_dir)
+        '/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete', config_file, imgs_dir)
 
     dataset[50]
