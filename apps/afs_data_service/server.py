@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from concurrent import futures
+import json
 import os
 import time
 
@@ -41,17 +42,11 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             if not scan_result.success:
                 print('exception occurred: {}'.format(scan_result.errMessage))
                 continue
-            print('rowKey:{}, task_id: {}, stime: {}, etime: {}'.format(
-                  scan_result.rowKey,
-                  scan_result.meta['task_id'].str,
-                  scan_result.meta['start_time'].str,
-                  scan_result.meta['end_time'].str))
-            responseItem = afs_data_service_pb2.ScanResponseItem()
-            responseItem.rowKey = scan_result.rowKey
-            responseItem.task_id = scan_result.meta['task_id'].str
-            responseItem.start_time = int(float((scan_result.meta['start_time'].str)))
-            responseItem.end_time = int(float((scan_result.meta['end_time'].str)))
-            response.records.append(responseItem)
+            json_rets = {}
+            for k, v in scan_result.meta.items():
+                json_rets[k] = self.get_value(v)
+            print(json.dumps(json_rets))
+            response.records.append(json.dumps(json_rets))
         return response
 
     def ReadMessages(self, request, context):
@@ -67,7 +62,7 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         for topic, message, data_type, timestamp in messages:
             print('task_id:{}, topic:{}, message_size: {}, data_type:{}, timestamp:{}'.format(
                   request.task_id, topic, len(message), data_type, timestamp))
-            if any(topic.find(x) != -1 for x in skip_topics):
+            if request.skip_topics != '' and any(topic.find(x) != -1 for x in skip_topics):
                 continue
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
@@ -76,6 +71,17 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             response.data_type = data_type
             response.timestamp = timestamp
             yield response
+
+    def get_value(self, data):
+        """get scan result meta column value"""
+        if data.HasField('int'):
+            return data.int
+        if data.HasField('str'):
+            return data.str
+        if data.HasField('long'):
+            return data.long
+        if data.HasField('double'):
+            return data.double
 
 
 def __main__(argv):

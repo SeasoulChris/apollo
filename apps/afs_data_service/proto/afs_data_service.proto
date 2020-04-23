@@ -15,15 +15,8 @@ message ScanRequest {
   uint32 limit = 5; // scan limit count
 }
 
-message ScanResponseItem {
-  string rowKey = 1;
-  string task_id = 2;
-  uint32 start_time = 3;
-  uint32 end_time = 4;
-}
-
 message ScanResponse {
-  repeated ScanResponseItem records = 1;
+  repeated bytes records = 1;
 }
 
 message ReadMessagesRequest {
@@ -43,5 +36,3 @@ message ReadMessagesResponse {
   string data_type = 4;
   uint64 timestamp = 5;
 }
-
-

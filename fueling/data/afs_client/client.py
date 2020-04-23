@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+import io
+import json
 import os
+import sys
 
 import grpc
 
@@ -12,20 +15,34 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as cybertron_localization_pose_pb2
 
-
+# print chinese characters
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
 class AfsClient(object):
     """Afs client."""
 
-    def __init__(self, scan_table_name, message_namespace):
+    def __init__(self):
         """init common variables"""
         self.SERVER_URL = '180.76.53.252:50053'
         self.GRPC_OPTIONS = [
             ('grpc.max_send_message_length', 512 * 1024 * 1024),
             ('grpc.max_receive_message_length', 512 * 1024 * 1024)
         ]
-        self.scan_table_name = scan_table_name
-        self.message_namespace = message_namespace
+        # http://wiki.baidu.com/pages/viewpage.action?pageId=545138637
         self.respect_existing = True
+        self.region_info_table_name = 'ad_eap_api/region_info'
+        self.map_area_table_name = 'hdmap/map_area'
+        self.task_purpose_name = {'0': 'debug',
+                                  '1': 'ads',
+                                  '2': 'collection',
+                                  '3': 'dailybuild',
+                                  '4': 'roadtest',
+                                  '5': 'calibration',
+                                  '6': 'operation',
+                                  '7': 'mapcollection',
+                                  '8': 'prerelease',
+                                  '9': 'prepublish',
+                                  '10': 'publish',
+                                  '11': 'mapchecking'}
 
     def convert_message(self, topic, message):
         """Check message format"""
@@ -36,27 +53,86 @@ class AfsClient(object):
             apollo_loc = transfer_localization_estimate(loc)
             logging.info(F'localization coordinates after transfer: {apollo_loc.pose.position.x}')
 
-    def scan_tasks(self, query_date):
-        """Scan tasks by date"""
+    def scan(self, tablename, columns, where):
+        """Scan data from table"""
+        logging.info(F'tablename:{tablename}, columns:{columns}, where:{where}')
         res = []
-        columns = 'task_id,start_time,end_time'
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             # Get scan result, it could be a list of record files
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
             request = afs_data_service_pb2.ScanRequest(
-                table_name=self.scan_table_name,
+                table_name=tablename,
                 columns=columns,
-                where='date = {}'.format(query_date))
+                where=where)
             response = stub.Scan(request)
             for resItem in response.records:
-                task_id = resItem.task_id
-                start_time = resItem.start_time
-                end_time = resItem.end_time
-                res.append((task_id, start_time, end_time))
-                logging.info(F'task id: {task_id}, start_time: {start_time}, end_time: {end_time}')
+                json_rets = json.loads(resItem)
+                if json_rets is None:
+                    continue
+                res.append(json_rets)
         return res
 
-    def transfer_messages(self, task_params, target_dir, skip_topics, topics='*'):
+    def scan_tasks(self, table_name, query_date):
+        """Scan tasks by date"""
+        res = []
+        columns = 'task_id,start_time,end_time'
+        where = 'date = {}'.format(query_date)
+        query_ret = self.scan(table_name, columns, where)
+        for item in query_ret:
+            task_id = item.get('task_id', '')
+            start_time = int(str(item.get('start_time', ''))[:10])
+            end_time = int(str(item.get('end_time', ''))[:10])
+            res.append((task_id, start_time, end_time))
+            logging.info(F'task id: {task_id}, start_time: {start_time}, end_time: {end_time}')
+        return res
+
+    def scan_keydata(self, table_name, task_id):
+        """Scan key data of specific task_id"""
+        res = []
+        table_name = table_name
+        columns = 'capture_place,region_id,task_purpose'
+        where = 'task_id = {}'.format(task_id)
+        query_ret = self.scan(table_name, columns, where)
+        for item in query_ret:
+            capture_place = item.get('capture_place', '')
+            region_id = item.get('region_id', '')
+            task_purpose = self.task_purpose_name.get(item.get('task_purpose', ''), '')
+            res.append((task_id, capture_place, region_id, task_purpose))
+            logging.info(F'task id: {task_id}, '
+                         F'capture_place: {capture_place}, '
+                         F'region_id: {region_id}, '
+                         F'task_purpose: {task_purpose}')
+        return res
+
+    def scan_region_info(self):
+        """Scan name of region_id"""
+        res = []
+        table_name = self.region_info_table_name
+        columns = 'region_id,name'
+        where = ''
+        query_ret = self.scan(table_name, columns, where)
+        for item in query_ret:
+            region_id = item.get('region_id', '')
+            region_name = item.get('name', '')
+            res.append((region_id, region_name))
+            # logging.info(F'region_id: {region_id}, name: {region_name}')
+        return res
+
+    def scan_map_area(self):
+        """Scan area name by map_area_id"""
+        res = []
+        table_name = self.map_area_table_name
+        columns = 'map_area_id,map_area_name'
+        where = ''
+        query_ret = self.scan(table_name, columns, where)
+        for item in query_ret:
+            map_area_id = item.get('map_area_id', '')
+            map_area_name = item.get('map_area_name', '')
+            res.append((map_area_id, map_area_name))
+            logging.info(F'map_area_id: {map_area_id}, map_area_name: {map_area_name}')
+        return res
+
+    def transfer_messages(self, message_namespace, task_params, target_dir, skip_topics, topics='*'):
         """Read and transfer afs messages into apollo format, then insert them into bos"""
         task_id, start_time, end_time = task_params
         target_dir = os.path.join(target_dir, task_id)
@@ -73,7 +149,7 @@ class AfsClient(object):
                 task_id=task_id,
                 start_time_second=start_time,
                 end_time_second=end_time,
-                namespace=self.message_namespace,
+                namespace=message_namespace,
                 topics=topics,
                 skip_topics=skip_topics,
                 with_data=True)
@@ -87,7 +163,7 @@ class AfsClient(object):
             writer.close()
         return target_file
 
-    def get_topics(self, task_id, start_time, end_time):
+    def get_topics(self, message_namespace, task_id, start_time, end_time):
         """Get topics of task"""
         topics = []
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
@@ -96,10 +172,11 @@ class AfsClient(object):
                 task_id=task_id,
                 start_time_second=start_time,
                 end_time_second=end_time,
-                namespace=self.message_namespace,
+                namespace=message_namespace,
                 with_data=False)
             response = stub.ReadMessages(request)
             for msg in response:
                 topics.append((msg.topic, msg.message_size))
                 logging.info((msg.topic, msg.message_size))
         return topics
+

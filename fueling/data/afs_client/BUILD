@@ -18,8 +18,29 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/data/afs_client:client",
+	"//fueling/common:logging",
     ]
 )
+py_binary(
+    name = "scan_all_area_names",
+    srcs = ["scan_all_area_names.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/data/afs_client:client",
+	"//fueling/common:logging",
+    ]
+)
+
+py_binary(
+    name = "scan_all_region_names",
+    srcs = ["scan_all_region_names.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/data/afs_client:client",
+	"//fueling/common:logging",
+    ]
+)
+
 
 py_binary(
     name = "copy_to_bos",
