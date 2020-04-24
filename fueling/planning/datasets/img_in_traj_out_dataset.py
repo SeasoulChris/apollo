@@ -30,9 +30,6 @@ class TrajectoryImitationCNNDataset(Dataset):
 
         logging.info('Processing directory: {}'.format(data_dir))
         all_file_paths = file_utils.list_files(data_dir)
-        # sort by filenames numerically: learning_data.<int>.bin.training_data.bin
-        all_file_paths.sort(
-            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
 
         region = None
         for file_path in all_file_paths:
@@ -138,9 +135,6 @@ class TrajectoryImitationRNNDataset(Dataset):
 
         logging.info('Processing directory: {}'.format(data_dir))
         all_file_paths = file_utils.list_files(data_dir)
-        # sort by filenames numerically: learning_data.<int>.bin.training_data.bin
-        all_file_paths.sort(
-            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
 
         region = None
         for file_path in all_file_paths:

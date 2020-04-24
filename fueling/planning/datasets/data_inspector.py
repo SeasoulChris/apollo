@@ -45,8 +45,6 @@ class DataInspector:
     def _load_instances(self, data_dir):
         logging.info('Processing directory: {}'.format(data_dir))
         all_file_paths = file_utils.list_files(data_dir)
-        all_file_paths.sort(
-            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
 
         for file_path in all_file_paths:
             if 'future_status' not in file_path or 'bin' not in file_path:
