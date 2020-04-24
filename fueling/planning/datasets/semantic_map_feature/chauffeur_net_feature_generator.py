@@ -5,6 +5,8 @@ import shutil
 import numpy as np
 import cv2 as cv
 
+from modules.planning.proto import learning_data_pb2
+
 from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer import AgentBoxImgRenderer
 from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
 from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer import AgentPosesHistoryImgRenderer
@@ -18,7 +20,7 @@ from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer import 
 from fueling.planning.datasets.semantic_map_feature.routing_img_renderer import RoutingImgRenderer
 from fueling.planning.datasets.semantic_map_feature.speed_limit_img_renderer import SpeedLimitImgRenderer
 from fueling.planning.datasets.semantic_map_feature.traffic_lights_img_renderer import TrafficLightsImgRenderer
-from modules.planning.proto import learning_data_pb2
+import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 
 class ChauffeurNetFeatureGenerator(object):
@@ -107,14 +109,14 @@ class ChauffeurNetFeatureGenerator(object):
                                     center_x, center_y, center_heading, routing_response,
                                     observed_traffic_lights, coordinate_heading=0., past_motion_dropout=False):
         '''
-        agent_box_img: 1 channel np.array image
-        agent_pose_history_img: 1 channel np.array image
-        obstacle_history_img: 1 channel np.array image
-        obstacle_predictions_img: 1 channel np.array image
-        road_map_img: 3 channel np.array image
-        routing_img: 1 channel np.array image
-        speed_limit_img: 3 channel np.array image
-        traffic_lights_img: 1 channel np.array image
+        agent_box_img: 1 channel np.array image, [0]
+        agent_pose_history_img: 1 channel np.array image, [1]
+        obstacle_history_img: 1 channel np.array image, [2]
+        obstacle_predictions_img: 1 channel np.array image, [3]
+        road_map_img: 3 channel np.array image, [4:7]
+        routing_img: 1 channel np.array image, [7]
+        speed_limit_img: 3 channel np.array image, [8:11]
+        traffic_lights_img: 1 channel np.array image, [11]
 
         All images in np.unit8 and concatenated along channel axis
         '''
@@ -139,7 +141,50 @@ class ChauffeurNetFeatureGenerator(object):
         return np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
                                road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2)
 
+    def render_merged_img_feature(self, stacked_img_features):
+        '''
+        Merging sequence would be as follow up to down:
+        road_map_img: 3 channel np.array image
+        routing_img: 1 channel np.array image
+        speed_limit_img: 3 channel np.array image
+        traffic_lights_img: 1 channel np.array image
+        obstacle_history_img: 1 channel np.array image
+        obstacle_predictions_img: 1 channel np.array image
+        agent_box_img: 1 channel np.array image
+        agent_pose_history_img: 1 channel np.array image
+        '''
+        road_map_img = stacked_img_features[:, :, 4:7]
+        routing_img = np.repeat(stacked_img_features[:, :, 7], 3, axis=2)
+        speed_limit_img = stacked_img_features[:, :, 8:11]
+        traffic_lights_img = np.repeat(
+            stacked_img_features[:, :, 11], 3, axis=2)
+        # draw obstacle past in red color
+        obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(
+            stacked_img_features[:, :, 2], 3, axis=2), (0, 0, 255))
+        # draw obstacle future in green color
+        obstacle_predictions_img = renderer_utils.img_replace_white_with_color(np.repeat(
+            stacked_img_features[:, :, 3], 3, axis=2),  (0, 0, 255))
+        agent_box_img = np.repeat(stacked_img_features[:, :, 0], 3, axis=2)
+        agent_pose_history_img = np.repeat(
+            stacked_img_features[:, :, 1], 3, axis=2)
+        merged_img = renderer_utils.img_notblack_stacking(
+            routing_img, road_map_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            speed_limit_img, merged_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            traffic_lights_img, merged_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            obstacle_history_img, merged_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            obstacle_predictions_img, merged_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            agent_box_img, merged_img)
+        merged_img = renderer_utils.img_notblack_stacking(
+            agent_pose_history_img, merged_img)
+        return merged_img
+
     # TODO (Jinyun): fine tune the resizing for computation efficiency
+
     def render_gt_pose_dist(self, center_x, center_y, center_heading,
                             ego_pose_future, timestamp_idx, coordinate_heading=0.):
         return self.agent_pose_future_mapping.draw_agent_pose_future(center_x,

@@ -61,6 +61,8 @@ class AgentPosesFutureImgRenderer(object):
                     np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
+            cv.circle(local_map, tuple(traj_point),
+                radius=4, color=color)
         return local_map
 
     def draw_agent_pose_future(self, center_x, center_y, center_heading,

@@ -63,9 +63,69 @@ def box_affine_tranformation(east_oriented_corner_points, box_center_point,
     """
     rear_center_point = point_affine_transformation(
         box_center_point, local_center, theta)
-    corner_points = [get_img_idx(point_affine_transformation(point.T, np.array([0, 0]), box_theta)
+    corner_points = [get_img_idx(point_affine_transformation(point.T,
+                                                             np.array(
+                                                                 [0, 0]),
+                                                             box_theta)
                                  + rear_center_point,
                                  local_center_idx,
                                  resolution)
                      for point in east_oriented_corner_points]
     return np.asarray(corner_points)
+
+
+def img_notblack_stacking(img, target_img):
+    """
+    Stack the not black pixel of a img onto the target image, imgs have to be in the same size
+
+    Arguments:
+    img: a 3 channel img in np.array
+    target_img: the 3 channel img in np.array where the img is stacked onto
+
+    Return:
+    stacked_img: stacked 3 channel img
+    """
+    stacked_img = np.where(img[:, :] == (0, 0, 0), target_img[:, :], img[:, :])
+    return stacked_img
+
+
+def img_replace_white_with_color(img, color):
+    """
+    replace the white pixels of a 3 channel img with the given color
+
+    Arguments:
+    img: img to be coloered at white pixel
+    color: a size 3 tuple
+
+    Return:
+    color_img: colored img
+    """
+    colored_img = np.where(img[:, :] == (255, 255, 255), color, img[:, :])
+    return colored_img
+
+
+def img_white_gradient_to_color_gradient(img, single_color_max_value):
+    """
+    replace the white gradient pixels(a, b, c where a == b == c) of a 3 
+        channel img with the given gradient single_color
+
+    Arguments:
+    img: img to be coloered at white pixel
+    single_color_max_value: a size 3 numpy array, (0, 0, 255) for red max e.g
+
+    Return:
+    color_img: colored img
+    """
+    colored_img = np.where(
+        np.repeat(
+            np.expand_dims(
+                np.logical_and(img[:, :, 0] == img[:, :, 1],
+                               img[:, :, 0] ==
+                               img[:, :, 2]),
+                axis=2),
+            repeats=3,
+            axis=2),
+        single_color_max_value * (img[:, :] / 255),
+        img[:, :])
+    return colored_img
+
