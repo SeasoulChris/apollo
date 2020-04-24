@@ -30,24 +30,38 @@ py_binary(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
-        "//fueling/learning/autotuner/client:cost_computation_client",
-        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
-        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
-        "//fueling/common:file_utils",
+        "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "//fueling/learning/autotuner/client:cost_computation_client",
+    ],
+)
+
+
+py_binary(
+    name = "bayesian_optimization_tuner",
+    srcs = ["bayesian_optimization_tuner.py"],
+    data = [
+        "//fueling/learning/autotuner/config",
+    ],
+    deps = [
+        "//fueling/common:logging",
+        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
+        "//fueling/learning/autotuner/tuner:base_tuner",
+        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
         requirement("bayesian-optimization"),
     ],
 )
 
 
 py_binary(
-    name = "control_bayesian_optimization_tuner",
-    srcs = ["control_bayesian_optimization_tuner.py"],
+    name = "optuna_optimization_tuner",
+    srcs = ["optuna_optimization_tuner.py"],
     data = [
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        "//fueling/common:logging",
+        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
         "//fueling/learning/autotuner/tuner:base_tuner",
-        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
     ],
 )

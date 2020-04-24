@@ -3,6 +3,8 @@ import os
 import sys
 
 from absl import flags
+from bayes_opt import BayesianOptimization
+from bayes_opt.util import UtilityFunction
 import numpy as np
 
 from modules.control.proto.control_conf_pb2 import ControlConf
@@ -52,11 +54,25 @@ class ControlBayesianOptimizationTuner(BaseTuner):
 
         BaseTuner.__init__(self, tuner_conf, user_conf)
 
+        self.init_optimizer_visualizer(self.tuner_param_config_pb.tuner_parameters)
+
+    def init_optimizer_visualizer(self, tuner_parameters):
+        self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
+                                       kappa=tuner_parameters.utility.kappa,
+                                       xi=tuner_parameters.utility.xi)
+
+        self.optimizer = BayesianOptimization(
+            f=self.black_box_function,
+            pbounds=self.pbounds,
+            verbose=2,  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
+            random_state=1,
+        )
+        self.visualier = BayesianOptimizationVisualUtils()
+
     def optimize(self, n_iter=0, init_points=0):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.init_points = init_points if init_points > 0 else self.init_points
         self.iteration_records = {}
-        visual = BayesianOptimizationVisualUtils()
         for i in range(self.n_iter + self.init_points):
             if i < self.init_points:
                 next_point = self.config_sanity_check(self.init_params[i])
@@ -86,13 +102,19 @@ class ControlBayesianOptimizationTuner(BaseTuner):
             target = score if self.opt_max else -score
             self.optimizer.register(params=next_point, target=target)
 
-            self.visual_storage_dir = os.path.join(self.tuner_storage_dir, iteration_id)
-            visual.plot_gp(self.optimizer, self.utility, self.pbounds, self.visual_storage_dir)
+            self.visualize(iteration_id)
 
             self.iteration_records.update({f'iter-{i}': {'iteration_id': iteration_id, 'target': target,
                                                          'config_point': next_point}})
 
             logging.info(f"Optimizer iteration: {i}, target: {target}, config point: {next_point}")
+
+        self.best_cost = self.optimizer.max['target']
+        self.best_params = self.optimizer.max['params']
+
+    def visualize(self, task_dir):
+        self.visual_storage_dir = os.path.join(self.tuner_storage_dir, task_dir)
+        self.visualier.plot_gp(self.optimizer, self.utility, self.pbounds, self.visual_storage_dir)
 
 
 if __name__ == "__main__":
