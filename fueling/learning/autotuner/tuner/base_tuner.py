@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import glob
 import json
 import os
 import shutil
@@ -7,8 +8,6 @@ import sys
 import uuid
 
 from absl import flags
-from bayes_opt import BayesianOptimization
-from bayes_opt.util import UtilityFunction, Colours
 import google.protobuf.text_format as text_format
 import numpy as np
 
@@ -39,7 +38,7 @@ class BaseTuner():
     """Basic functionality for NLP."""
 
     def __init__(self, tuner_conf, user_conf):
-        logging.info(f"Init BayesianOptimization Tuner.")
+        logging.info(f"Init Optimization Tuner.")
 
         self.tuner_param_config_pb = tuner_conf
         self.algorithm_conf_pb = user_conf
@@ -63,16 +62,14 @@ class BaseTuner():
 
         self.init_cost_client()
 
-        self.init_optimizer(tuner_parameters)
-
         self.tuner_storage_dir = (
             flags.FLAGS.tuner_storage_dir if os.path.isdir(flags.FLAGS.tuner_storage_dir)
-            else 'testdata/autotuner'
+            else '/fuel/testdata/autotuner'
         )
 
-        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
-
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
+        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
     def init_cost_client(self):
         config = self.tuner_param_config_pb
@@ -84,19 +81,12 @@ class BaseTuner():
             config.dynamic_model,
         )
 
-    def init_optimizer(self, tuner_parameters):
-        self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
-                                       kappa=tuner_parameters.utility.kappa,
-                                       xi=tuner_parameters.utility.xi)
-
-        self.optimizer = BayesianOptimization(
-            f=self.black_box_function,
-            pbounds=self.pbounds,
-            verbose=2,  # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
-            random_state=1,
-        )
+    def init_optimizer_visualizer(self, tuner_parameters):
+        "Optimizer and visualizer initialization algorithm"
+        raise Exception("Not implemented!")
 
     def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):
+        """black box function for optimizers to implement the sim-tests and generate the costs"""
         config_id = uuid.uuid1().hex
         iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
@@ -166,7 +156,11 @@ class BaseTuner():
         self.optimizer = optimizer
 
     def optimize(self, n_iter=0, init_points=0):
-        "Optimize core algorithm"
+        """Optimize core algorithm"""
+        raise Exception("Not implemented!")
+
+    def visualize(self, task_dir):
+        """Visualize core algorithm"""
         raise Exception("Not implemented!")
 
     def config_sanity_check(self, point_origin):
@@ -189,25 +183,29 @@ class BaseTuner():
         return point
 
     def get_result(self):
-        logging.info(f"Result after: {self.n_iter} steps are  {self.optimizer.max}")
-        return self.optimizer.max
+        logging.info(f"Result after: {self.n_iter} steps are {self.best_cost} "
+                     f"with params {self.best_params}")
+        return (self.best_cost, self.best_params)
 
     def save_result(self):
         tuner_param_config_dict = proto_utils.pb_to_dict(self.tuner_param_config_pb)
-        self.tuner_results = {'target_max': self.optimizer.max['target'],
-                              'config_max': self.optimizer.max['params'],
+        self.tuner_results = {'target_max': self.best_cost,
+                              'config_max': self.best_params,
                               'tuner_parameters': tuner_param_config_dict['tuner_parameters'],
                               'iteration_records': self.iteration_records}
 
         saving_path = os.path.join(self.tuner_storage_dir, self.timestamp)
-        os.makedirs(saving_path)
+        if not os.path.isdir(saving_path):
+            os.makedirs(saving_path)
+        # Save step-by-step detailed optimization data
         with open(os.path.join(saving_path, "tuner_results.json"), 'w') as tuner_json:
             tuner_json.write(json.dumps(self.tuner_results))
-
-        final_visual_file = os.path.join(self.visual_storage_dir, 'gaussian_process.png')
-        if os.path.exists(final_visual_file):
-            shutil.copyfile(final_visual_file, os.path.join(saving_path, 'gaussian_process.png'))
-        logging.info(f"Detailed results saved at {saving_path} ")
+        # Save the final visual plots if the original figures are stored in single-iteration folder
+        if saving_path != self.visual_storage_dir:
+            final_visual_file = glob.glob(os.path.join(self.visual_storage_dir, '*.png'))
+            for visual_file in final_visual_file:
+                shutil.copyfile(visual_file, os.path.join(saving_path, os.path.basename(visual_file)))
+        logging.info(f"Complete results saved at {saving_path} ")
 
     def run(self):
         try:
