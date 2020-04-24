@@ -106,7 +106,7 @@ def img_replace_white_with_color(img, color):
 
 def img_white_gradient_to_color_gradient(img, single_color_max_value):
     """
-    replace the white gradient pixels(a, b, c where a == b == c) of a 3 
+    replace the white gradient pixels(a, b, c where a == b == c) of a 3
         channel img with the given gradient single_color
 
     Arguments:
@@ -128,4 +128,3 @@ def img_white_gradient_to_color_gradient(img, single_color_max_value):
         single_color_max_value * (img[:, :] / 255),
         img[:, :])
     return colored_img
-

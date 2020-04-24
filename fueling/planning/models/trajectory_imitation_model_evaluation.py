@@ -81,7 +81,8 @@ def calculate_rnn_displacement_error(pred, y):
     return displacement_error, heading_error, v_error
 
 
-def visualize_rnn_result(renderer, img_feature, coordinate_heading, message_timestamp_sec, output_dir, pred, y):
+def visualize_rnn_result(renderer, img_feature, coordinate_heading,
+                         message_timestamp_sec, output_dir, pred, y):
 
     batched_pred_point = pred[2]
     for i, pred_point in enumerate(batched_pred_point):

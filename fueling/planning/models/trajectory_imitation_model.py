@@ -85,22 +85,22 @@ class TrajectoryImitationRNNModel(nn.Module):
         # a. use ConvTranspose2d to upsample feature([1000,])
         #    to [1, self.input_img_size_h, self.input_img_size_w]
         # b. stack with M_k-1([1, self.input_img_size_h, self.input_img_size_w]) and
-        #    B_k-1([1, self.input_img_size_h, self.input_img_size_w]) 
+        #    B_k-1([1, self.input_img_size_h, self.input_img_size_w])
         #    inorder to get 3 channel image as input
         # c. pass a Conv layer to get hidden state which is P_k and B_k
         # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] 
+        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v]
         #    and add it to output
         # f. use argmax to update M_k by P_k
         # g. feed M_k and B_k to next iteration
 
         # Method 2:
-        # a. use Conv2d and FC layer to encode M_k-1 and B_k-1 
+        # a. use Conv2d and FC layer to encode M_k-1 and B_k-1
         #    ([2, self.input_img_size_h, self.input_img_size_w]) to ([256,])
         # b. stack with feature([1000,]) inorder to get a 1d vector as input
         # c. pass a ConvTranspose2d layer to output P_k and B_k
         # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v] 
+        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v]
         #    and add it to output
         # f. use argmax to update M_k by P_k
         # g. feed M_k and B_k to next iteration

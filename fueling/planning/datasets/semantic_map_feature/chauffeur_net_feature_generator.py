@@ -164,7 +164,7 @@ class ChauffeurNetFeatureGenerator(object):
             stacked_img_features[:, :, 2], axis=2), 3, axis=2), (0, 0, 255))
         # draw obstacle future in green color
         obstacle_predictions_img = renderer_utils.img_replace_white_with_color(np.repeat(np.expand_dims(
-            stacked_img_features[:, :, 3], axis=2), 3, axis=2),  (0, 0, 255))
+            stacked_img_features[:, :, 3], axis=2), 3, axis=2), (0, 0, 255))
         agent_box_img = np.repeat(np.expand_dims(
             stacked_img_features[:, :, 0], axis=2), 3, axis=2)
         agent_pose_history_img = np.repeat(np.expand_dims(

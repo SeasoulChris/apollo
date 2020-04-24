@@ -61,4 +61,9 @@ if __name__ == "__main__":
     os.mkdir(output_dir)
     print("Making output directory: " + output_dir)
 
-    cv.imwrite(os.path.join(output_dir, "agent_box.png"), agentbox_renderer.draw_agent_box(coordinate_heading=0.))
+    cv.imwrite(
+        os.path.join(
+            output_dir,
+            "agent_box.png"),
+        agentbox_renderer.draw_agent_box(
+            coordinate_heading=0.))

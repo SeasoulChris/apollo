@@ -159,7 +159,7 @@ if __name__ == "__main__":
         # img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
         #                                                  frame.localization.position.y,
         #                                                  frame.localization.heading,
-        #                                                  frame.output.adc_future_trajectory_point, 10)
+        # frame.output.adc_future_trajectory_point, 10)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

@@ -123,7 +123,8 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir,
+                 input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -280,7 +281,7 @@ class TrajectoryImitationRNNDataset(Dataset):
                      pred_obs,
                      offroad_mask),
                     merged_img_feature,
-                    coordinate_heading, 
+                    coordinate_heading,
                     frame.message_timestamp_sec)
 
         return (transformed_img_feature,
