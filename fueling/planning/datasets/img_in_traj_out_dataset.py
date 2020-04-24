@@ -123,8 +123,7 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir,
-                 input_data_agumentation=False, ouput_point_num=10):
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -174,6 +173,7 @@ class TrajectoryImitationRNNDataset(Dataset):
         np.random.seed(0)
         self.img_size = [renderer_config.width, renderer_config.height]
         self.ouput_point_num = ouput_point_num
+        self.evaluate_mode = evaluate_mode
 
     def __len__(self):
         return self.total_num_data_pt
@@ -199,8 +199,8 @@ class TrajectoryImitationRNNDataset(Dataset):
                                                                                        frame.traffic_light_detection.traffic_light,
                                                                                        coordinate_heading,
                                                                                        past_motion_dropout)
-        if self.img_feature_transform:
-            img_feature = self.img_feature_transform(img_feature)
+
+        transformed_img_feature = self.img_feature_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.render_offroad_mask(frame.localization.position.x,
                                                                                 frame.localization.position.y,
@@ -213,9 +213,12 @@ class TrajectoryImitationRNNDataset(Dataset):
                       frame.localization.position.y,
                       frame.localization.heading]
         pred_points = np.zeros((0, 4))
-        pred_pose_dists = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
-        pred_boxs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
-        pred_obs = torch.rand(self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
+        pred_pose_dists = torch.rand(
+            self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
+        pred_boxs = torch.rand(self.ouput_point_num, 1,
+                               self.img_size[1], self.img_size[0])
+        pred_obs = torch.rand(self.ouput_point_num, 1,
+                              self.img_size[1], self.img_size[0])
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
             # TODO(Jinyun): validate future trajectory points size and deltaT,
             # ouput_point_num points
@@ -267,7 +270,20 @@ class TrajectoryImitationRNNDataset(Dataset):
         if pred_points.shape[0] < self.ouput_point_num:
             return self.__getitem__(idx - 1)
 
-        return (img_feature,
+        if self.evaluate_mode:
+            merged_img_feature = self.chauffeur_net_feature_generator.render_merged_img_feature(
+                img_feature)
+            return (transformed_img_feature,
+                    (pred_pose_dists,
+                     pred_boxs,
+                     torch.from_numpy(pred_points).float(),
+                     pred_obs,
+                     offroad_mask),
+                    merged_img_feature,
+                    coordinate_heading, 
+                    frame.message_timestamp_sec)
+
+        return (transformed_img_feature,
                 (pred_pose_dists,
                  pred_boxs,
                  torch.from_numpy(pred_points).float(),

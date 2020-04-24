@@ -154,23 +154,25 @@ class ChauffeurNetFeatureGenerator(object):
         agent_pose_history_img: 1 channel np.array image
         '''
         road_map_img = stacked_img_features[:, :, 4:7]
-        routing_img = np.repeat(stacked_img_features[:, :, 7], 3, axis=2)
-        speed_limit_img = stacked_img_features[:, :, 8:11]
-        traffic_lights_img = np.repeat(
-            stacked_img_features[:, :, 11], 3, axis=2)
+        routing_img = np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 7], axis=2), 3, axis=2)
+        # speed_limit_img = stacked_img_features[:, :, 8:11]
+        traffic_lights_img = np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 11], 2), 3, axis=2)
         # draw obstacle past in red color
-        obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(
-            stacked_img_features[:, :, 2], 3, axis=2), (0, 0, 255))
+        obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 2], axis=2), 3, axis=2), (0, 0, 255))
         # draw obstacle future in green color
-        obstacle_predictions_img = renderer_utils.img_replace_white_with_color(np.repeat(
-            stacked_img_features[:, :, 3], 3, axis=2),  (0, 0, 255))
-        agent_box_img = np.repeat(stacked_img_features[:, :, 0], 3, axis=2)
-        agent_pose_history_img = np.repeat(
-            stacked_img_features[:, :, 1], 3, axis=2)
+        obstacle_predictions_img = renderer_utils.img_replace_white_with_color(np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 3], axis=2), 3, axis=2),  (0, 0, 255))
+        agent_box_img = np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 0], axis=2), 3, axis=2)
+        agent_pose_history_img = np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 1], axis=2), 3, axis=2)
         merged_img = renderer_utils.img_notblack_stacking(
             routing_img, road_map_img)
-        merged_img = renderer_utils.img_notblack_stacking(
-            speed_limit_img, merged_img)
+        # merged_img = renderer_utils.img_notblack_stacking(
+        #     speed_limit_img, merged_img)
         merged_img = renderer_utils.img_notblack_stacking(
             traffic_lights_img, merged_img)
         merged_img = renderer_utils.img_notblack_stacking(
@@ -182,8 +184,6 @@ class ChauffeurNetFeatureGenerator(object):
         merged_img = renderer_utils.img_notblack_stacking(
             agent_pose_history_img, merged_img)
         return merged_img
-
-    # TODO (Jinyun): fine tune the resizing for computation efficiency
 
     def render_gt_pose_dist(self, center_x, center_y, center_heading,
                             ego_pose_future, timestamp_idx, coordinate_heading=0.):

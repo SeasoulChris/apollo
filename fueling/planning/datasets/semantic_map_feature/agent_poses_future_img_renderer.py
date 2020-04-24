@@ -39,30 +39,41 @@ class AgentPosesFutureImgRenderer(object):
                                            [self.left_edge_to_center, -self.right_edge_to_center,
                                             -self.right_edge_to_center, self.left_edge_to_center]]).T
 
-    def draw_agent_future_trajectory(self, frame_time_sec, center_x,
-                                     center_y, center_heading, ego_pose_future, coordinate_heading=0.):
+    def draw_agent_pose_future_trajectory(self, ego_pose_future, coordinate_heading=0.):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
-        self.local_base_point = np.array([center_x, center_y])
-        self.local_base_heading = center_heading
-        current_time = frame_time_sec
-        # print("current_time is {}".format(current_time))
-        for ego_pose in ego_pose_future:
-            relative_time = ego_pose.timestamp_sec - current_time
-            # print("prediction_time is {}".format(ego_pose.timestamp_sec))
-            if relative_time > self.max_future_time_horizon:
-                break
-            color = relative_time / self.max_future_time_horizon * 255
+        ego_future_length = len(ego_pose_future)
+        for index, ego_pose in enumerate(ego_pose_future):
+            color = index / ego_future_length * 255
             traj_point = tuple(renderer_utils.get_img_idx(
                 renderer_utils.point_affine_transformation(
-                    np.array([ego_pose.trajectory_point.path_point.x,
-                              ego_pose.trajectory_point.path_point.y]),
-                    self.local_base_point,
-                    np.pi / 2 - self.local_base_heading + coordinate_heading),
+                    np.array([ego_pose[0],
+                              ego_pose[1]]),
+                    np.array([0, 0]),
+                    np.pi / 2 + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
             cv.circle(local_map, tuple(traj_point),
-                radius=4, color=color)
+                      radius=4, color=color, thickness=-1)
+        return local_map
+
+    def draw_agent_box_future_trajectory(self, ego_pose_future, coordinate_heading=0.):
+        local_map = np.zeros(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        ego_future_length = len(ego_pose_future)
+        for index, ego_pose in enumerate(ego_pose_future):
+            color = index / ego_future_length * 255
+            ego_path_point = np.array([ego_pose[0], ego_pose[1]])
+            box_theta = ego_pose[2] + np.pi / 2 + coordinate_heading
+            theta = np.pi / 2 + coordinate_heading
+            corner_points = renderer_utils.box_affine_tranformation(self.east_oriented_box,
+                                                                    ego_path_point,
+                                                                    box_theta,
+                                                                    np.array([0, 0]),
+                                                                    theta,
+                                                                    self.local_base_point_idx,
+                                                                    self.resolution)
+            cv.fillPoly(local_map, [corner_points], color=color)
         return local_map
 
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
@@ -105,8 +116,8 @@ class AgentPosesFutureImgRenderer(object):
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         ego_pose = ego_pose_future[timestamp_idx]
-        ego_path_point = np.array([ego_pose.trajectory_point.path_point.x,
-                                   ego_pose.trajectory_point.path_point.y])
+        ego_path_point = np.array(
+            [ego_pose.trajectory_point.path_point.x, ego_pose.trajectory_point.path_point.y])
         box_theta = ego_pose.trajectory_point.path_point.theta + \
             np.pi / 2 - self.local_base_heading + coordinate_heading
         theta = np.pi / 2 - self.local_base_heading + coordinate_heading
@@ -140,16 +151,17 @@ if __name__ == "__main__":
     agent_future_mapping = AgentPosesFutureImgRenderer(config_file)
 
     for frame in offline_frames.learning_data:
-        img = agent_future_mapping.draw_agent_future_trajectory(frame.adc_trajectory_point[-1].timestamp_sec,
-                                                                frame.localization.position.x,
-                                                                frame.localization.position.y,
-                                                                frame.localization.heading,
-                                                                frame.output.adc_future_trajectory_point)
+        img = agent_future_mapping.draw_agent_pose_future_trajectory(frame.adc_trajectory_point[-1].timestamp_sec,
+                                                                     frame.localization.position.x,
+                                                                     frame.localization.position.y,
+                                                                     frame.localization.heading,
+                                                                     frame.output.adc_future_trajectory_point)
         # img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
         #                                                  frame.localization.position.y,
         #                                                  frame.localization.heading,
         #                                                  frame.output.adc_future_trajectory_point, 10)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
+        key = "{}@{:.3f}".format(
+            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]
