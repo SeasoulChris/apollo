@@ -53,9 +53,9 @@ class ObstaclePredictionsImgRenderer(object):
                     path_point_array = np.array(
                         [path_point.x, path_point.y])
                     east_oriented_box = np.array([[box_length / 2, box_length / 2,
-                                                   -box_length / 2, box_length / 2],
-                                                  [box_width, -box_width,
-                                                   -box_width, box_width]]).T
+                                                -box_length / 2, -box_length / 2],
+                                                [box_width / 2, -box_width / 2,
+                                                -box_width / 2, box_width / 2]]).T
 
                     # obstacles are in ego vehicle coordiantes where ego car faces toward
                     # EAST, so rotation to NORTH is done below
@@ -98,9 +98,9 @@ class ObstaclePredictionsImgRenderer(object):
                         max_prob_idx].trajectory_point[timestamp_idx].trajectory_point.path_point
                     path_point_array = np.array([path_point.x, path_point.y])
                     east_oriented_box = np.array([[box_length / 2, box_length / 2,
-                                                   -box_length / 2, box_length / 2],
-                                                  [box_width, -box_width,
-                                                   -box_width, box_width]]).T
+                                                -box_length / 2, -box_length / 2],
+                                                [box_width / 2, -box_width / 2,
+                                                -box_width / 2, box_width / 2]]).T
 
                     # obstacles are in ego vehicle coordiantes where ego car faces toward
                     # EAST, so rotation to NORTH is done below
