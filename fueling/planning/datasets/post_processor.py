@@ -18,7 +18,7 @@ class PostProcessor(BasePipeline):
             # for Titan
             self.src_dir_prefix = 'data/output_data_evaluated'
             self.dst_dir_prefix = 'data/output_data_categorized'
-            # self.src_dir_prefix = 'apollo/data/post_processor'
+            # self.src_dir_prefix = 'titan'
             # self.dst_dir_prefix = 'apollo/data/output_data'
         else:
             self.src_dir_prefix = 'modules/planning/output_data_evaluated'
@@ -44,16 +44,33 @@ class PostProcessor(BasePipeline):
         logging.debug(tag_data_frames.first())
         tag_data_frames = (tag_data_frames
                            # PairedRDD(dst_file_path, ((tag, tag_id), data_frame))
+                           # uncategorized scenarios are in "complete" folder
                            .map(lambda elem: (elem[0].replace(
-                               self.src_dir_prefix, self.dst_dir_prefix), elem[1]))
+                               os.path.join(self.src_dir_prefix, 'complete'), self.dst_dir_prefix), elem[1]))
                            # PairedRDD(dst_file_path/tag/tag_id, data_frame)
                            .map(self._tagged_folder))
         logging.info(tag_data_frames.count())
         logging.debug(tag_data_frames.first())
         logging.debug(tag_data_frames.keys().collect())
+        # write single_frame to each bin to reduce memory usage
+        tagged_folders = tag_data_frames.map(self._write_single_data_frame)
         # collect data according to folder
-        tagged_folders = tag_data_frames.groupByKey().mapValues(list).map(self._write_data_frame)
+        # tagged_folders = tag_data_frames.groupByKey().map(self._write_data_frame)
         logging.info(tagged_folders.count())
+
+    @staticmethod
+    def _write_single_data_frame(folder_data_frame):
+        learning_data = learning_data_pb2.LearningData()
+        dst_dir, data_frames = folder_data_frame
+        # file_count = 0
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
+        # for data_frame in data_frames:
+        # logging.info(data_frames.message_timestamp_sec)
+        file_name = f'{data_frames.message_timestamp_sec}.bin'
+        with open(os.path.join(dst_dir, file_name), 'wb') as bin_f:
+            bin_f.write(learning_data.SerializeToString())
+            # file_count += 1
 
     @staticmethod
     def _write_data_frame(folder_data_frame):
@@ -74,9 +91,10 @@ class PostProcessor(BasePipeline):
                 file_name = f'{file_count}.bin'
                 with open(os.path.join(dst_dir, file_name), 'wb') as bin_f:
                     bin_f.write(learning_data.SerializeToString())
-                txt_file_name = f'{file_count}.txt'
-                proto_utils.write_pb_to_text_file(learning_data.learning_data[0],
-                                                  os.path.join(dst_dir, txt_file_name))
+                # for debug only
+                # txt_file_name = f'{file_count}.txt'
+                # proto_utils.write_pb_to_text_file(learning_data.learning_data[0],
+                #                                   os.path.join(dst_dir, txt_file_name))
                 # clear learning_data
                 learning_data = learning_data_pb2.LearningData()
         if len(learning_data.learning_data):
@@ -85,9 +103,10 @@ class PostProcessor(BasePipeline):
             file_name = f'{file_count}.bin'
             with open(os.path.join(dst_dir, file_name), 'wb') as bin_f:
                 bin_f.write(learning_data.SerializeToString())
-            txt_file_name = f'{file_count}.txt'
-            proto_utils.write_pb_to_text_file(learning_data.learning_data[0],
-                                              os.path.join(dst_dir, txt_file_name))
+            # for debug only
+            # txt_file_name = f'{file_count}.txt'
+            # proto_utils.write_pb_to_text_file(learning_data.learning_data[0],
+            #                                   os.path.join(dst_dir, txt_file_name))
         return file_count
 
     @staticmethod
@@ -97,7 +116,7 @@ class PostProcessor(BasePipeline):
             bin_file, learning_data_pb2.LearningData())
         # get learning data sequence
         learning_data_sequence = offline_features.learning_data
-        logging.info(len(learning_data_sequence))
+        # logging.info(len(learning_data_sequence))
         return learning_data_sequence
 
     @staticmethod
@@ -107,7 +126,7 @@ class PostProcessor(BasePipeline):
         for key in tag_dict:
             logging.debug(key)
             logging.debug(tag_dict[key])
-            logging.info(len(tag_dict[key]))
+            # logging.info(len(tag_dict[key]))
             if len(tag_dict[key]) == 2:
                 # overlap features
                 tag_id = tag_dict[key]['id']
