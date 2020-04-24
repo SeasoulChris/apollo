@@ -12,22 +12,28 @@ py_library(
     ]
 )
 
+py_library(
+    name = "config",
+    srcs = ["config.py"],
+)
+
 py_binary(
     name = "scan_all_topics",
     srcs = ["scan_all_topics.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-	"//fueling/common:logging",
     ]
 )
+
 py_binary(
     name = "scan_all_area_names",
     srcs = ["scan_all_area_names.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-	"//fueling/common:logging",
     ]
 )
 
@@ -36,11 +42,10 @@ py_binary(
     srcs = ["scan_all_region_names.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-	"//fueling/common:logging",
     ]
 )
-
 
 py_binary(
     name = "copy_to_bos",
@@ -50,5 +55,8 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging", 
         "//fueling/data/afs_client:client",
+        "//fueling/data/afs_client:config",
     ]
 )
+
+

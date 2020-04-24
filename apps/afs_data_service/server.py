@@ -31,6 +31,7 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
 
     def Scan(self, request, context):
         """Scan"""
+        print('scanning table {} with where {}'.format(request.table_name, request.where))
         scan = cmm.Scan(table_name=request.table_name,
                         where=request.where,
                         columns=request.columns if request.columns else '*',
@@ -45,7 +46,6 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             json_rets = {}
             for k, v in scan_result.meta.items():
                 json_rets[k] = self.get_value(v)
-            print(json.dumps(json_rets))
             response.records.append(json.dumps(json_rets))
         return response
 
@@ -60,9 +60,8 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             namespace=request.namespace)
         skip_topics = request.skip_topics.split(',')
         for topic, message, data_type, timestamp in messages:
-            print('task_id:{}, topic:{}, message_size: {}, data_type:{}, timestamp:{}'.format(
-                  request.task_id, topic, len(message), data_type, timestamp))
             if request.skip_topics != '' and any(topic.find(x) != -1 for x in skip_topics):
+                print('skipping topic: {}'.format(topic))
                 continue
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
