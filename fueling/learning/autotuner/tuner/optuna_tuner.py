@@ -141,7 +141,14 @@ if __name__ == "__main__":
     # Let us minimize the objective function above.
     print("Running 5 trials...")
     #study = optuna.create_study(study_name='distributed-example', storage='sqlite:///example.db')
-    study = optuna.create_study(sampler=TPESampler())
+    # study = optuna.create_study(sampler=TPESampler())
+    study = optuna.create_study(
+        direction="maximize",
+        study_name="kubernetes",
+        storage="sqlite:///example.db",
+        sampler=TPESampler(),
+        load_if_exists=True,
+    )
     study.optimize(tuner.objective, n_trials=2)
     logging.info(f"Best value: {study.best_value}  (params: {study.best_params})")
     # optuna.visualization.plot_intermediate_values(study)
