@@ -58,6 +58,7 @@ class BaseCostComputation(BasePipeline):
     def run_once(self):
         if not self.init():
             return
+        tic_start = time.perf_counter()
 
         # RDD(scenario_id)
         scenario_id_rdd = self.get_scenarios()
@@ -83,6 +84,7 @@ class BaseCostComputation(BasePipeline):
 
         # config_id -> weight_score
         self.save_weighted_score(config_2_score)
+        logging.info(f"Timer: total run_once - {time.perf_counter() - tic_start:0.04f} sec")
 
     def set_sim_channel(self):
         url = self.FLAGS.get('sim_service_url')
@@ -112,6 +114,7 @@ class BaseCostComputation(BasePipeline):
 
     def run_scenario(self, input):
         """Trigger Simulation with the given configuration and scenario"""
+        tic_start = time.perf_counter()
         (config_id, scenario_id) = input
         logging.info(f"Setting up scenario {scenario_id} with config id {config_id}")
 
@@ -147,6 +150,7 @@ class BaseCostComputation(BasePipeline):
                 logging.info(f"Retry fetching result bag in {t} min...")
                 time.sleep(60 * t)  # sleep time increases from 1min, to 4min
 
+        logging.info(f"Timer: total run_scenario - {time.perf_counter() - tic_start:0.04f} sec")
         return record_absolute_dir
 
     def calculate_individual_score(self, bag_path):

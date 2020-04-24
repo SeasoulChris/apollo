@@ -4,6 +4,7 @@ import glob
 import json
 import os
 import sys
+import time
 
 from absl import flags
 
@@ -66,6 +67,7 @@ class ControlCostComputation(BaseCostComputation):
         return os.WEXITSTATUS(exit_code) == 0
 
     def calculate_individual_score(self, bag_path):
+        tic_start = time.perf_counter()
         logging.info(f"Calculating score for: {bag_path}")
 
         # submit the profiling job
@@ -73,12 +75,14 @@ class ControlCostComputation(BaseCostComputation):
             'ctl_metrics_input_path': bag_path,
             'ctl_metrics_output_path': bag_path,
             'ctl_metrics_simulation_only_test': True,
+            "ctl_metrics_save_report": False,
         }
 
         if not self.run_profiling_locally(options):
             logging.error(f"Fail to submit the control profiling job.")
             self.pause_to_debug()
             return [float('nan'), 0]
+        logging.info(f"Timer: run_profiling_locally - {time.perf_counter() - tic_start: 0.04f} sec")
 
         # extract the profiling score of the individual scenario
         profiling_grading_dir = glob.glob(os.path.join(bag_path, '*/*/*/*grading.json'))
@@ -96,6 +100,8 @@ class ControlCostComputation(BaseCostComputation):
             profiling_score = self.process_profiling_results(grading)
             logging.info(f"Profiling score for individual scenario: "
                          f"score={profiling_score[0]}, sample={profiling_score[1]}")
+
+            logging.info(f"Timer: total calculate_individual_score  - {time.perf_counter() - tic_start: 0.04f} sec")
             return profiling_score
 
     def calculate_weighted_score(self, config_and_scores):

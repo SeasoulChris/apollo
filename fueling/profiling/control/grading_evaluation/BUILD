@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//fueling/common:h5_utils",
         "//fueling/common:logging",
+        "//fueling/common:file_utils",
         "//fueling/common:redis_utils",
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/common:stats_utils",

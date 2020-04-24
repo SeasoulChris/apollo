@@ -7,6 +7,7 @@ import glob
 import os
 import shutil
 import tarfile
+import time
 
 from absl import flags
 import pyspark_utils.helper as spark_helper
@@ -42,6 +43,7 @@ flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
                      'decide whether filtering out all the data without enabling MRAC control')
 flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
                     'select the score weighting method from control_channel_conf.py')
+flags.DEFINE_boolean('ctl_metrics_save_report', True, 'wether to save h5 files')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -49,6 +51,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
     def run(self):
         """Work on actual road test data. Expect a single input directory"""
+        tic_start = time.perf_counter()
 
         if flags.FLAGS.ctl_metrics_simulation_only_test:
             """Control Profiling: works on the 'auto-tuner + simulation' mode"""
@@ -60,19 +63,22 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # RDD(vehicle_type, tasks), the task dirs
             todo_task_dirs = self.to_rdd([
                 os.path.join(origin_dir, task) for task in todo_tasks
-            ]).keyBy(lambda dirs: vehicle_type).cache()
-            logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
+            ]).keyBy(lambda dirs: vehicle_type)
+            if logging.level_debug():
+                logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
             # RDD(target_vehicle_path), the target_vehicle dirs for .conf file
             generated_vehicle_dir = self.to_rdd([
                 os.path.join(target_dir, vehicle_type)
-            ]).cache()
-            logging.info(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
+            ])
+            if logging.level_debug():
+                logging.debug(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
 
             # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
             src_dst_rdd = generated_vehicle_dir.keyBy(
                 lambda path: os.path.join(self.FLAGS.get('ctl_metrics_conf_path'),
                                           os.path.basename(path).lower().replace(' ', '_', 1)))
+
             # Create dst dirs and copy conf file to them.
             src_dst_rdd.values().foreach(file_utils.makedirs)
             src_dst_rdd.foreach(
@@ -254,13 +260,15 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             return
 
         self.process(todo_task_dirs.values(), origin_dir, target_dir, job_email)
+        logging.info(f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Metrics: All Done')
 
     def process(self, todo_tasks, original_prefix, target_prefix, job_email=''):
         """Run the pipeline with given parameters"""
+        tic_start = time.perf_counter()
 
         def _reorg_target_dir(target_task):
-            """Reorgnize RDD key from vehicle/controller/record_prefix to absolute path"""
+            """Reorganize RDD key from vehicle/controller/record_prefix to absolute path"""
             # parameter vehicle_controller_parsed like
             # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
             vehicle_controller_parsed, task = target_task
@@ -276,9 +284,9 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                               .filter(spark_op.filter_value(lambda task: os.path.exists(task)))
                               # PairRDD(target_dir, task)
                               .map(_reorg_target_dir))
-
-        logging.info(F'reorganized_target after _reorg_target_dir:'
-                     F'{reorganized_target.collect()}')
+        if logging.level_debug():
+            logging.debug(F'reorganized_target after _reorg_target_dir:'
+                          F'{reorganized_target.collect()}')
 
         (reorganized_target
          # PairRDD(target_dir, record_file)
@@ -291,8 +299,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
          .flatMapValues(record_utils.read_record(feature_utils.CHANNELS))
          #  # PairRDD(target_dir, messages)
          .groupByKey()
-         # RDD(target, group_id, group of (message)s), divide messages into
-         # groups
+         # RDD(target, group_id, group of messages), divide messages into groups
          .flatMap(self.partition_data)
          # PairRDD(target, grading_result), for each group get the gradings and
          # write h5 files
@@ -307,10 +314,11 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                   grading_utils.output_gradings(grading_results, self.FLAGS)))
 
         reorganized_target_keys = reorganized_target.keys().collect()
-        logging.info(F'reorganized_target: {reorganized_target_keys}')
+
         # Summarize by scanning the target directory
         if not flags.FLAGS.ctl_metrics_simulation_only_test:
             summarize_tasks(reorganized_target_keys, original_prefix, target_prefix, job_email)
+        logging.info(f"Timer: total process() - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""

@@ -72,6 +72,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             return CostComputation.create_init_response(1, "Commit ID not specified.")
         if not request.scenario_id:
             return CostComputation.create_init_response(1, "Scenario(s) not specified.")
+        tic_start = time.perf_counter()
 
         # set callback
         init_sim_event = threading.Event()
@@ -107,6 +108,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             request.dynamic_model)
         init_sim_event.clear()
 
+        logging.info(f"Timer: total init - {time.perf_counter() - tic_start:0.04f} sec")
         return CostComputation.create_init_response(
             status.code, status.message, service_token,
         )
@@ -115,6 +117,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         if not request.token:
             return CostComputation.create_compute_response(
                 exit_code=1, message="Service token not specified.")
+        tic_start = time.perf_counter()
 
         # set callback
         stop_event = threading.Event()
@@ -168,6 +171,8 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
                 exit_code=0, message="Done.", iteration_id=iteration_id)
             for (config_id, weighted_score) in scores.items():
                 response.score[config_id] = float(weighted_score)
+
+            logging.info(f"Timer: total compute - {time.perf_counter() - tic_start:0.04f} sec")
             return response
 
         except Exception as error:

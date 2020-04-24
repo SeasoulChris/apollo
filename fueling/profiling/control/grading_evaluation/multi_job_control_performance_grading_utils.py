@@ -9,6 +9,7 @@ import os
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, WEIGHTED_SCORE
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
+import fueling.common.file_utils as file_utils
 import fueling.common.redis_utils as redis_utils
 from fueling.profiling.common.stats_utils import compute_beyond, compute_count, compute_ending, \
     compute_mean, compute_peak, compute_rms, compute_usage, GradingArguments
@@ -31,10 +32,15 @@ def compute_h5_and_gradings(target_groups, flags):
         logging.warning(F'no valid element in {len(msgs)} items in group {group_id}'
                         F'for task {target}')
         return (target, None)
-    h5_output_file = '{:05d}'.format(group_id)
-    logging.info(F'writing {grading_mtx.shape[0]} messages ({grading_mtx.shape[1]} dimensions) '
-                 F'to h5 file {h5_output_file} for target {target}')
-    h5_utils.write_h5(grading_mtx, target, h5_output_file)
+
+    if flags['ctl_metrics_save_report']:
+        h5_output_file = '{:05d}'.format(group_id)
+        logging.info(F'writing {grading_mtx.shape[0]} messages ({grading_mtx.shape[1]} dimensions) '
+                    F'to h5 file {h5_output_file} for target {target}')
+        h5_utils.write_h5(grading_mtx, target, h5_output_file)
+    else:
+        file_utils.makedirs(target)
+
     GradingResults = namedtuple('grading_results',
                                 ['station_err_std',
                                  'station_err_std_harsh',
