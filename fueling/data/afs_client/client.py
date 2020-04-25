@@ -7,13 +7,11 @@ import sys
 
 import grpc
 
-from cyber_py3.record import RecordWriter
-from fueling.common.record.kinglong.cybertron.python.convert import transfer_localization_estimate
+from fueling.data.afs_client.afs_record_writer import AfsRecordWriter
 import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
 import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
-import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 as cybertron_localization_pose_pb2
+
 
 # print chinese characters
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
@@ -28,15 +26,6 @@ class AfsClient(object):
             ('grpc.max_receive_message_length', 512 * 1024 * 1024)
         ]
         self.respect_existing = True
-
-    def convert_message(self, topic, message):
-        """Check message format"""
-        # TODO(all): This is for demonstration only.  Replace this with real conversion later.
-        if topic == '/localization/100hz/localization_pose':
-            loc = cybertron_localization_pose_pb2.LocalizationEstimate()
-            loc.ParseFromString(message)
-            apollo_loc = transfer_localization_estimate(loc)
-            logging.info(F'localization coordinates after transfer: {apollo_loc.pose.position.x}')
 
     def scan(self, tablename, columns, where):
         """Scan data from table"""
@@ -119,7 +108,6 @@ class AfsClient(object):
     def transfer_messages(self, task_params, message_namespace, skip_topics, topics='*'):
         """Read and transfer afs messages into apollo format, then insert them into bos"""
         task_id, ((start_time, end_time), target_dir) = task_params
-        file_utils.makedirs(target_dir)
         target_file = os.path.join(target_dir, F'{start_time}.record')
         logging.info(F'writing to target file: {target_file}')
         if os.path.exists(target_file) and self.respect_existing:
@@ -138,11 +126,9 @@ class AfsClient(object):
                 with_data=True)
             response = stub.ReadMessages(request)
             # Write message to BOS
-            writer = RecordWriter(0, 0)
-            writer.open(target_file)
-            for msg in response:
-                self.convert_message(msg.topic, msg.message)
-                writer.write_message(msg.topic, msg.message, msg.timestamp)
+            writer = AfsRecordWriter(target_file)
+            for cyber_message in response:
+                writer.write_message(cyber_message)
             writer.close()
         return target_file
 

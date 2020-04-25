@@ -57,6 +57,10 @@ TASK_TO_PURPOSE = {
 # Topics that can be skipped by default
 SKIP_TOPICS = ['PointCloud', 'camera']
 
+# Target paths and paths after on the fly conversions
+TARGET_PATH = 'modules/data/afs-data'
+CONVERT_PATH = 'modules/data/afs-instant-data'
+
 
 def form_target_path(target_dir, task_id, project, map_id, task_purpose):
     """Formed target path will be like target_dir/project/region/map_id/task_purpose/year/task_id"""

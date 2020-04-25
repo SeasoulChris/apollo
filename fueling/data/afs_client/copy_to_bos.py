@@ -68,7 +68,7 @@ class CopyToBosPipeline(BasePipeline):
         afs_client = AfsClient()
         logging.info(F'copying for {task_tbl} {start_date} to {end_date} with {exact_task_id}')
         # output bos directory
-        target_dir = self.our_storage().abs_path('modules/data/planning')
+        target_dir = self.our_storage().abs_path(afs_config.TARGET_PATH)
         # skip topics
         skip_topics = '' if self.FLAGS.get('all_topics') else ','.join(afs_config.SKIP_TOPICS)
         logging.info(F'copying with skipping topics {skip_topics} to {target_dir}')
@@ -98,7 +98,7 @@ class CopyToBosPipeline(BasePipeline):
              # RDD(task_id, (start_time, end_time))
              .map(lambda x: (x[0], (x[1], x[2])))
              # RDD(task_id, ((start_time, end_time), target_dir))
-             .join(filtered_tasks))
+             .join(filtered_tasks)
              # RDD(task_id, ((start_time, end_time), target_dir))
              .repartition(partitions)
              # RDD((messages))
