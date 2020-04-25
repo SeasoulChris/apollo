@@ -17,12 +17,12 @@ class ConversionsCenter(object):
 
     @staticmethod
     def register(conversion):
-        """Add the rule into the processing chain"""
+        """Add the conversion into center"""
         ConversionsCenter.conversions[conversion.topic] = conversion
 
     @staticmethod
     def convert(message):
-        """Convert the message by using conversion that corresponding to the topic"""
+        """Convert the message by using conversion corresponding to the topic"""
         if not message.topic in ConversionsCenter.conversions:
             return None
         return ConversionsCenter.conversions[message.topic].convert(message)
