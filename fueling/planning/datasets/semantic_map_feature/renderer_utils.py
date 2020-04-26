@@ -85,7 +85,14 @@ def img_notblack_stacking(img, target_img):
     Return:
     stacked_img: stacked 3 channel img
     """
-    stacked_img = np.where(img[:, :] == (0, 0, 0), target_img[:, :], img[:, :])
+    stacked_img = np.where(np.repeat(
+        np.expand_dims(
+            (img[:, :] == (0, 0, 0)).all(axis=2),
+            axis=2),
+        repeats=3,
+        axis=2),
+        target_img[:, :],
+        img[:, :])
     return stacked_img
 
 
@@ -100,7 +107,14 @@ def img_replace_white_with_color(img, color):
     Return:
     color_img: colored img
     """
-    colored_img = np.where(img[:, :] == (255, 255, 255), color, img[:, :])
+    colored_img = np.where(np.repeat(
+        np.expand_dims(
+            (img[:, :] == (255, 255, 255)).all(axis=2),
+            axis=2),
+        repeats=3,
+        axis=2),
+        color,
+        img[:, :])
     return colored_img
 
 

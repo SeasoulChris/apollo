@@ -101,9 +101,7 @@ class ChauffeurNetFeatureGenerator(object):
         for i in range(len(output_dirs)):
             key = "{}@{:.3f}".format(frame_num, frame_time_sec)
             filename = key + ".png"
-            print('size {}'.format(imgs_list[i].shape))
             cv.imwrite(os.path.join(output_dirs[i], filename), imgs_list[i])
-        print('\n')
 
     def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
                                     center_x, center_y, center_heading, routing_response,
@@ -163,8 +161,8 @@ class ChauffeurNetFeatureGenerator(object):
         obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(np.expand_dims(
             stacked_img_features[:, :, 2], axis=2), 3, axis=2), (0, 0, 255))
         # draw obstacle future in green color
-        obstacle_predictions_img = renderer_utils.img_replace_white_with_color(np.repeat(np.expand_dims(
-            stacked_img_features[:, :, 3], axis=2), 3, axis=2), (0, 0, 255))
+        obstacle_predictions_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(np.expand_dims(
+            stacked_img_features[:, :, 3], axis=2), 3, axis=2), (0, 255, 0))
         agent_box_img = np.repeat(np.expand_dims(
             stacked_img_features[:, :, 0], axis=2), 3, axis=2)
         agent_pose_history_img = np.repeat(np.expand_dims(
@@ -218,7 +216,7 @@ class ChauffeurNetFeatureGenerator(object):
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/test_set/00006.record.49.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 

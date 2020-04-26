@@ -29,7 +29,7 @@ class AgentPosesHistoryImgRenderer(object):
         self.local_base_heading = None
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
-    def draw_agent_poses_history(self, frame_time_sec, center_x,
+    def draw_agent_poses_history(self, current_timestamp, center_x,
                                  center_y, center_heading, ego_pose_history, coordinate_heading=0., past_motion_dropout=False):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -38,12 +38,11 @@ class AgentPosesHistoryImgRenderer(object):
 
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
-        current_time = frame_time_sec
-        for i in range(len(ego_pose_history) - 1, -1, -1):
+        for i in range(len(ego_pose_history)):
             ego_pose = ego_pose_history[i]
-            relative_time = current_time - ego_pose.timestamp_sec
+            relative_time = current_timestamp - ego_pose.timestamp_sec
             if relative_time > self.max_history_time_horizon:
-                break
+                continue
             color = (1 - relative_time / self.max_history_time_horizon) * 255
             traj_point = tuple(renderer_utils.get_img_idx(
                 renderer_utils.point_affine_transformation(
@@ -53,7 +52,7 @@ class AgentPosesHistoryImgRenderer(object):
                     np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
-            cv.circle(local_map, tuple(traj_point), radius=4, color=color)
+            cv.circle(local_map, tuple(traj_point), radius=2, color=color, thickness=-1)
         return local_map
 
 

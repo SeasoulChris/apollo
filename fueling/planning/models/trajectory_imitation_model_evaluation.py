@@ -88,7 +88,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
     for i, pred_point in enumerate(batched_pred_point):
         # Draw pred_box in blue
         pred_box_img = renderer.draw_agent_box_future_trajectory(
-            pred_point.cpu().numpy(), coordinate_heading[i])
+            pred_point.cpu().numpy(), coordinate_heading[i], solid_box=False)
         pred_box_img = np.repeat(pred_box_img, 3, axis=2)
         pred_box_img = renderer_utils.img_white_gradient_to_color_gradient(
             pred_box_img, (255, 0, 0))

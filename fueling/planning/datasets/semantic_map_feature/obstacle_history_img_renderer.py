@@ -32,16 +32,17 @@ class ObstacleHistoryImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
-            obstacle_trajectory = obstacle.obstacle_trajectory.evaluated_trajectory_point
-            if len(obstacle_trajectory) == 0:
+            if (not obstacle.HasField("obstacle_trajectory")) or \
+                    (len(obstacle.obstacle_trajectory.evaluated_trajectory_point) == 0):
                 continue
+            obstacle_trajectory = obstacle.obstacle_trajectory.evaluated_trajectory_point
             box_length = obstacle.length
             box_width = obstacle.width
-            for i in range(len(obstacle_trajectory) - 1, -1, -1):
+            for i in range(len(obstacle_trajectory)):
                 obstacle_traj_point = obstacle_trajectory[i]
                 relative_time = current_timestamp - obstacle_traj_point.timestamp_sec
                 if relative_time > self.max_history_length:
-                    break
+                    continue
                 color = (1 - relative_time / self.max_history_length) * 255
 
                 path_point = obstacle_traj_point.trajectory_point.path_point
@@ -56,7 +57,8 @@ class ObstacleHistoryImgRenderer(object):
                 corner_points = renderer_utils.box_affine_tranformation(east_oriented_box,
                                                                         path_point_array,
                                                                         np.pi / 2 + path_point.theta + coordinate_heading,
-                                                                        np.array([0, 0]),
+                                                                        np.array(
+                                                                            [0, 0]),
                                                                         np.pi / 2 + coordinate_heading,
                                                                         self.local_base_point_idx,
                                                                         self.resolution)
@@ -85,7 +87,8 @@ if __name__ == "__main__":
     for frame in offline_frames.learning_data:
         img = obstacle_mapping.draw_obstacle_history(
             frame.adc_trajectory_point[-1].timestamp_sec, frame.obstacle)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
+        key = "{}@{:.3f}".format(
+            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]

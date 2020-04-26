@@ -54,10 +54,10 @@ class AgentPosesFutureImgRenderer(object):
                 self.local_base_point_idx,
                 self.resolution))
             cv.circle(local_map, tuple(traj_point),
-                      radius=4, color=color, thickness=-1)
+                      radius=2, color=color, thickness=-1)
         return local_map
 
-    def draw_agent_box_future_trajectory(self, ego_pose_future, coordinate_heading=0.):
+    def draw_agent_box_future_trajectory(self, ego_pose_future, coordinate_heading=0., solid_box=True):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         ego_future_length = len(ego_pose_future)
@@ -73,7 +73,10 @@ class AgentPosesFutureImgRenderer(object):
                                                                     theta,
                                                                     self.local_base_point_idx,
                                                                     self.resolution)
-            cv.fillPoly(local_map, [corner_points], color=color)
+            if solid_box:
+                cv.fillPoly(local_map, [corner_points], color=color)
+            else:
+                cv.polylines(local_map, [corner_points], thickness=1, isClosed=True, color=color)
         return local_map
 
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
