@@ -6,10 +6,14 @@ import google.protobuf.text_format as text_format
 
 
 def write_pb_to_text_file(topic_pb, file_path):
-    """write pb message to file"""
+    """write pb message to text file"""
     with open(file_path, 'w') as f:
         f.write(str(topic_pb))
 
+def write_pb_to_bin_file(topic_pb, file_path):
+    """write pb message to binary file"""
+    with open(file_path, 'wb') as f:
+        f.write(topic_pb.SerializeToString())
 
 def get_pb_from_text_file(filename, pb_value):
     """Get a proto from given text file."""
