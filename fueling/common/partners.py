@@ -33,7 +33,7 @@ partners = {
     'd-kit-sdxk-39': Partner(name='SDXK39', email='qzhenxing@xktech.com',
                              bos_bucket='sdxk-apollo', bos_region='bj'),
     'd-kit-szds-77': Partner(name='SZDS77', email='hummerautosys@gmail.com',
-                             bos_bucket='hummerautosys', bos_region='hkg'),
+                             bos_bucket='hummerautosysbj', bos_region='bj'),
     'd-kit-zkyzdhs-13': Partner(name='ZKYZDHS13', email='gaohongfeinn＠gmail.com',
                                 bos_bucket='drl-coolhigh', bos_region='bj'),
     'd-kit-qdsz-82': Partner(name='QDSZ82', email='1049892376@qq.com',
