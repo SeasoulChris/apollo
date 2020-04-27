@@ -20,8 +20,12 @@ class K8sCostJob(BaseCostJob):
             'node_selector': 'CPU',
             'workers': options.get("workers", 1),
             'cpu': 1,
+            'gpu': 0,
+            'memory': 5, # in GB
+            'disk': 5, # in GB
             'wait': True,
         }
+
         self.client = SparkSubmitterClient(entrypoint, client_flags, options)
         self.client.submit()
 

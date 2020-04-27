@@ -135,16 +135,18 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         def get_num_spark_workers(service_dir):
             request_pb2 = cost_service_pb2.InitRequest()
             proto_utils.get_pb_from_text_file(
-                f"{service_dir}/init_request.pb.txt", request_pb2,
+                os.path.join(service_dir, "init_request.pb.txt"), request_pb2,
             )
             return min(len(request_pb2.scenario_id), MAX_SPARK_WORKERS)
 
         # Save config to a local file
         iteration_id = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         service_dir = self.get_service_dir(request.token)
-        iteration_dir = f"{service_dir}/{iteration_id}"
+        iteration_dir = os.path.join(service_dir, iteration_id)
         file_utils.makedirs(iteration_dir)
-        proto_utils.write_pb_to_text_file(request, f"{iteration_dir}/compute_request.pb.txt")
+        proto_utils.write_pb_to_text_file(
+            request, os.path.join(
+                iteration_dir, "compute_request.pb.txt"))
         if stop_event.is_set():
             return CostComputation.create_compute_response(
                 exit_code=1, message="Request cancelled")
@@ -175,7 +177,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
         # read and return score
         try:
-            with open(f"{iteration_dir}/scores.out") as score_file:
+            with open(os.path.join(iteration_dir, "scores.out")) as score_file:
                 scores = json.loads(score_file.readline())
 
             response = CostComputation.create_compute_response(
