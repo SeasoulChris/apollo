@@ -33,7 +33,6 @@ PREDICTION_TEAM = [
 SIMPlEHDMAP_TEAM = [
     'hukuang@baidu.com',
     'v_panxuechao@baidu.com',
-    'v_wangxitong02@baidu.com',
 ]
 PERCEPTION_TEAM = [
     'chenguang09@baidu.com',
@@ -45,10 +44,8 @@ QA_TEAM = [
 D_KIT_TEAM = [
     'hukuang@baidu.com',
     'machao20@baidu.com',
-    'wufugang@baidu.com',
     'v_lishuanghua@baidu.com',
     'v_panxuechao@baidu.com',
-    'v_wangxitong02@baidu.com',
 ]
 SIMULATION_TEAM = [
     'caoyu05@baidu.com',
