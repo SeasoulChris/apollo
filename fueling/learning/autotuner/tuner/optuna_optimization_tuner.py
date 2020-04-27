@@ -22,7 +22,7 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
-class ControlOptunaOptimizationTuner(BaseTuner):
+class OptunaOptimizationTuner(BaseTuner):
     """Basic functionality of Optuna Tuner for Control Module."""
 
     def __init__(self):
@@ -118,5 +118,5 @@ class ControlOptunaOptimizationTuner(BaseTuner):
 
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
-    tuner = ControlOptunaOptimizationTuner()
+    tuner = OptunaOptimizationTuner()
     tuner.run()

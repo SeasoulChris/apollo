@@ -158,4 +158,4 @@ if __name__ == "__main__":
     figure2.show()
     figure1.write_image(
         f"{flags.FLAGS.visualization_dir}/optimization_history_{tuner.timestamp}.png")
-    figure1.write_image(f"{flags.FLAGS.visualization_dir}/contour_{tuner.timestamp}.png")
+    figure2.write_image(f"{flags.FLAGS.visualization_dir}/contour_{tuner.timestamp}.png")

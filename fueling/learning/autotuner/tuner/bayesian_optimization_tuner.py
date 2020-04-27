@@ -24,7 +24,7 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
-class ControlBayesianOptimizationTuner(BaseTuner):
+class BayesianOptimizationTuner(BaseTuner):
     """Basic functionality for NLP."""
 
     def __init__(self):
@@ -119,5 +119,5 @@ class ControlBayesianOptimizationTuner(BaseTuner):
 
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
-    tuner = ControlBayesianOptimizationTuner()
+    tuner = BayesianOptimizationTuner()
     tuner.run()
