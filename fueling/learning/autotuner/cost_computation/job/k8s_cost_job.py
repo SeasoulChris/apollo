@@ -15,7 +15,14 @@ class K8sCostJob(BaseCostJob):
 
     def submit(self, options):
         entrypoint = "fueling/learning/autotuner/cost_computation/control_cost_computation.py"
-        self.client = SparkSubmitterClient(entrypoint, {}, options)
+
+        client_flags = {
+            'node_selector': 'CPU',
+            'workers': options.get("workers", 1),
+            'cpu': 1,
+            'wait': True,
+        }
+        self.client = SparkSubmitterClient(entrypoint, client_flags, options)
         self.client.submit()
 
     def cancel(self):

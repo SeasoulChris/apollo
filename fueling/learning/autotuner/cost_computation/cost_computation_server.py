@@ -25,6 +25,8 @@ import fueling.common.proto_utils as proto_utils
 
 ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+MAX_SPARK_WORKERS = 10
+
 # Flags
 flags.DEFINE_string(
     "sim_service_url", "localhost:50051", "channel url to sim service"
@@ -130,11 +132,19 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
                 job.cancel()
         context.add_callback(on_rpc_done)
 
+        def get_num_spark_workers(service_dir):
+            request_pb2 = cost_service_pb2.InitRequest()
+            proto_utils.get_pb_from_text_file(
+                f"{service_dir}/init_request.pb.txt", request_pb2,
+            )
+            return min(len(request_pb2.scenario_id), MAX_SPARK_WORKERS)
+
         # Save config to a local file
         iteration_id = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        tmp_dir = f"{self.get_service_dir(request.token)}/{iteration_id}"
-        file_utils.makedirs(tmp_dir)
-        proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/compute_request.pb.txt")
+        service_dir = self.get_service_dir(request.token)
+        iteration_dir = f"{service_dir}/{iteration_id}"
+        file_utils.makedirs(iteration_dir)
+        proto_utils.write_pb_to_text_file(request, f"{iteration_dir}/compute_request.pb.txt")
         if stop_event.is_set():
             return CostComputation.create_compute_response(
                 exit_code=1, message="Request cancelled")
@@ -144,6 +154,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             "sim_service_url": flags.FLAGS.sim_service_url,
             "token": request.token,
             "iteration_id": iteration_id,
+            "workers": get_num_spark_workers(service_dir),
         }
         if request.cost_computation_conf_filename:
             options['cost_computation_conf_filename'] = request.cost_computation_conf_filename
@@ -164,7 +175,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
         # read and return score
         try:
-            with open(f"{tmp_dir}/scores.out") as score_file:
+            with open(f"{iteration_dir}/scores.out") as score_file:
                 scores = json.loads(score_file.readline())
 
             response = CostComputation.create_compute_response(

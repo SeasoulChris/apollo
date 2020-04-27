@@ -54,8 +54,7 @@ function main() {
     bce-platform)
       SUBMIT_SPARK_JOB_TO_K8S="true"
       SIM_SERVICE_URL="simservice.autotuner.svc.cluster.local:50051"
-      ADDITIONAL_FLAGS="--wait --workers=5 \
-          --spark_submitter_service_url=http://spark-submitter-service.default.svc.cluster.local:8000"
+      ADDITIONAL_FLAGS="--spark_submitter_service_url=http://spark-submitter-service.default.svc.cluster.local:8000"
       ;;
     *)
       print_usage
