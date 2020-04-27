@@ -69,8 +69,10 @@ class BaseSpeedLimitImgRenderer(object):
 
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
-        self.GRID = [int(np.round((right_top_x - left_bottom_x + 2 * self.base_map_padding) / self.resolution)),
-                     int(np.round((right_top_y - left_bottom_y + 2 * self.base_map_padding) / self.resolution))]
+        self.GRID = [int(np.round((right_top_x - left_bottom_x +
+                                   2 * self.base_map_padding) / self.resolution)),
+                     int(np.round((right_top_y - left_bottom_y +
+                                   2 * self.base_map_padding) / self.resolution))]
         self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
@@ -91,11 +93,13 @@ class BaseSpeedLimitImgRenderer(object):
             for segment in lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):
                     p0 = renderer_utils.get_img_idx(np.array(
-                        [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                        [segment.line_segment.point[i].x,
+                         segment.line_segment.point[i].y]) - self.base_point,
                         self.base_point_idx,
                         self.resolution)
                     p1 = renderer_utils.get_img_idx(np.array(
-                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                        [segment.line_segment.point[i + 1].x,
+                         segment.line_segment.point[i + 1].y]) - self.base_point,
                         self.base_point_idx,
                         self.resolution)
                     cv.line(self.base_map, tuple(p0), tuple(p1),
@@ -107,11 +111,13 @@ class BaseSpeedLimitImgRenderer(object):
                 for segment in position.segment:
                     for i in range(len(segment.line_segment.point) - 1):
                         p0 = renderer_utils.get_img_idx(np.array(
-                            [segment.line_segment.point[i].x, segment.line_segment.point[i].y]) - self.base_point,
+                            [segment.line_segment.point[i].x,
+                             segment.line_segment.point[i].y]) - self.base_point,
                             self.base_point_idx,
                             self.resolution)
                         p1 = renderer_utils.get_img_idx(np.array(
-                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y]) - self.base_point,
+                            [segment.line_segment.point[i + 1].x,
+                             segment.line_segment.point[i + 1].y]) - self.base_point,
                             self.base_point_idx,
                             self.resolution)
                         cv.line(self.base_map, tuple(p0), tuple(
@@ -120,8 +126,10 @@ class BaseSpeedLimitImgRenderer(object):
 
 if __name__ == '__main__':
     imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
-    mapping = BaseSpeedLimitImgRenderer(config_file, "sunnyvale_with_two_offices")
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
+    mapping = BaseSpeedLimitImgRenderer(
+        config_file, "sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
     cv.imwrite(os.path.join(imgs_dir, mapping.region +
                             "_speedlimit.png"), mapping.base_map)

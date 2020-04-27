@@ -66,9 +66,10 @@ class ChauffeurNetFeatureGenerator(object):
         cv.imwrite(os.path.join(self.imgs_dir, region + "_speedlimit.png"),
                    self.base_speed_limit_mapping.base_map)
 
-    def render_seperated_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
-                                      center_x, center_y, center_heading, routing_response,
-                                      observed_traffic_lights, output_dirs, coordinate_heading=0., past_motion_dropout=False):
+    def render_seperated_img_features(self, frame_num, frame_time_sec, ego_pose_history,
+                                      obstacle, center_x, center_y, center_heading,
+                                      routing_response, observed_traffic_lights, output_dirs,
+                                      coordinate_heading=0., past_motion_dropout=False):
         '''
         For debug purposes, features are drawn seprately
         agent_box_img: 1 channel np.array image
@@ -83,7 +84,8 @@ class ChauffeurNetFeatureGenerator(object):
         agent_box_img = self.agent_box_mapping.draw_agent_box(
             coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
+            frame_time_sec, center_x, center_y, center_heading,
+            ego_pose_history, coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacle_history(
             frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_box_prediction(
@@ -96,16 +98,18 @@ class ChauffeurNetFeatureGenerator(object):
             center_x, center_y, center_heading, coordinate_heading)
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
             center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
-        imgs_list = [agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
+        imgs_list = [agent_box_img, agent_pose_history_img,
+                     obstacle_history_img, obstacle_predictions_img,
                      road_map_img, routing_img, speed_limit_img, traffic_lights_img]
         for i in range(len(output_dirs)):
             key = "{}@{:.3f}".format(frame_num, frame_time_sec)
             filename = key + ".png"
             cv.imwrite(os.path.join(output_dirs[i], filename), imgs_list[i])
 
-    def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history, obstacle,
-                                    center_x, center_y, center_heading, routing_response,
-                                    observed_traffic_lights, coordinate_heading=0., past_motion_dropout=False):
+    def render_stacked_img_features(self, frame_num, frame_time_sec, ego_pose_history,
+                                    obstacle, center_x, center_y, center_heading,
+                                    routing_response, observed_traffic_lights,
+                                    coordinate_heading=0., past_motion_dropout=False):
         '''
         agent_box_img: 1 channel np.array image, [0]
         agent_pose_history_img: 1 channel np.array image, [1]
@@ -122,7 +126,8 @@ class ChauffeurNetFeatureGenerator(object):
         agent_box_img = self.agent_box_mapping.draw_agent_box(
             coordinate_heading)
         agent_pose_history_img = self.agent_pose_history_mapping.draw_agent_poses_history(
-            frame_time_sec, center_x, center_y, center_heading, ego_pose_history, coordinate_heading, past_motion_dropout)
+            frame_time_sec, center_x, center_y, center_heading, ego_pose_history,
+            coordinate_heading, past_motion_dropout)
         obstacle_history_img = self.obstacle_history_mapping.draw_obstacle_history(
             frame_time_sec, obstacle, coordinate_heading)
         obstacle_predictions_img = self.obstacle_predictions_mapping.draw_obstacle_box_prediction(
@@ -136,8 +141,10 @@ class ChauffeurNetFeatureGenerator(object):
         traffic_lights_img = self.traffic_lights_mapping.draw_traffic_lights(
             center_x, center_y, center_heading, observed_traffic_lights, coordinate_heading)
 
-        return np.concatenate([agent_box_img, agent_pose_history_img, obstacle_history_img, obstacle_predictions_img,
-                               road_map_img, routing_img, speed_limit_img, traffic_lights_img], axis=2)
+        return np.concatenate([agent_box_img, agent_pose_history_img,
+                               obstacle_history_img, obstacle_predictions_img,
+                               road_map_img, routing_img, speed_limit_img,
+                               traffic_lights_img], axis=2)
 
     def render_merged_img_feature(self, stacked_img_features):
         '''
@@ -158,11 +165,19 @@ class ChauffeurNetFeatureGenerator(object):
         traffic_lights_img = np.repeat(np.expand_dims(
             stacked_img_features[:, :, 11], 2), 3, axis=2)
         # draw obstacle past in red color
-        obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(np.expand_dims(
-            stacked_img_features[:, :, 2], axis=2), 3, axis=2), (0, 0, 255))
+        obstacle_history_img = renderer_utils.img_white_gradient_to_color_gradient(
+            np.repeat(np.expand_dims(
+                stacked_img_features[:, :, 2],
+                axis=2),
+                3, axis=2),
+            (0, 0, 255))
         # draw obstacle future in green color
-        obstacle_predictions_img = renderer_utils.img_white_gradient_to_color_gradient(np.repeat(np.expand_dims(
-            stacked_img_features[:, :, 3], axis=2), 3, axis=2), (0, 255, 0))
+        obstacle_predictions_img = renderer_utils.img_white_gradient_to_color_gradient(
+            np.repeat(np.expand_dims(
+                stacked_img_features[:, :, 3],
+                axis=2),
+                3, axis=2),
+            (0, 255, 0))
         agent_box_img = np.repeat(np.expand_dims(
             stacked_img_features[:, :, 0], axis=2), 3, axis=2)
         agent_pose_history_img = np.repeat(np.expand_dims(
@@ -201,14 +216,16 @@ class ChauffeurNetFeatureGenerator(object):
                                                                     timestamp_idx,
                                                                     coordinate_heading)
 
-    def render_offroad_mask(self, center_x, center_y, center_heading, coordinate_heading=0.):
+    def render_offroad_mask(self, center_x, center_y, center_heading,
+                            coordinate_heading=0.):
         return self.offroad_mask_mapping.draw_offroad_mask(center_x,
                                                            center_y,
                                                            center_heading,
                                                            coordinate_heading)
 
     def render_obstacle_box_prediction_frame(
-            self, center_x, center_y, center_heading, obstacles, timestamp_idx, coordinate_heading=0.):
+            self, center_x, center_y, center_heading,
+            obstacles, timestamp_idx, coordinate_heading=0.):
         return self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
                                                                                     timestamp_idx,
                                                                                     coordinate_heading)
@@ -216,12 +233,14 @@ class ChauffeurNetFeatureGenerator(object):
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/test_set/00006.record.49.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/"
+              "test_set/00006.record.49.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
     region = "sunnyvale_with_two_offices"
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(config_file,
                                                                    imgs_dir,

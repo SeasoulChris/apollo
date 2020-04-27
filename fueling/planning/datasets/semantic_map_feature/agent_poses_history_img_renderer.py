@@ -30,7 +30,8 @@ class AgentPosesHistoryImgRenderer(object):
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
     def draw_agent_poses_history(self, current_timestamp, center_x,
-                                 center_y, center_heading, ego_pose_history, coordinate_heading=0., past_motion_dropout=False):
+                                 center_y, center_heading, ego_pose_history,
+                                 coordinate_heading=0., past_motion_dropout=False):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         if past_motion_dropout:
@@ -52,14 +53,17 @@ class AgentPosesHistoryImgRenderer(object):
                     np.pi / 2 - self.local_base_heading + coordinate_heading),
                 self.local_base_point_idx,
                 self.resolution))
-            cv.circle(local_map, tuple(traj_point), radius=2, color=color, thickness=-1)
+            cv.circle(local_map, tuple(traj_point),
+                      radius=2, color=color, thickness=-1)
         return local_map
 
 
 if __name__ == "__main__":
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin",
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/"
+              "complete/test_set/00006.record.49.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
@@ -79,7 +83,8 @@ if __name__ == "__main__":
                                                              frame.localization.position.y,
                                                              frame.localization.heading,
                                                              frame.adc_trajectory_point)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
+        key = "{}@{:.3f}".format(
+            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         ego_pos_dict[key] = [frame.localization.position.x,
                              frame.localization.position.y, frame.localization.heading]

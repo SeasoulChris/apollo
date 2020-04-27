@@ -40,9 +40,11 @@ class AgentBoxImgRenderer(object):
         box_theta = np.pi / 2 + coordinate_heading
         theta = 0.
         corner_points = renderer_utils.box_affine_tranformation(self.east_oriented_box,
-                                                                np.array([0, 0]),
+                                                                np.array(
+                                                                    [0, 0]),
                                                                 box_theta,
-                                                                np.array([0, 0]),
+                                                                np.array(
+                                                                    [0, 0]),
                                                                 theta,
                                                                 self.local_base_point_idx,
                                                                 self.resolution)
@@ -51,7 +53,8 @@ class AgentBoxImgRenderer(object):
 
 
 if __name__ == "__main__":
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature " \
+        "/planning_semantic_map_config.pb.txt"
     agentbox_renderer = AgentBoxImgRenderer(config_file)
 
     output_dir = './data_local_agent_box/'

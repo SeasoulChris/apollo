@@ -32,8 +32,7 @@ class ObstacleHistoryImgRenderer(object):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         for obstacle in obstacles:
-            if (not obstacle.HasField("obstacle_trajectory")) or \
-                    (len(obstacle.obstacle_trajectory.evaluated_trajectory_point) == 0):
+            if len(obstacle.obstacle_trajectory.evaluated_trajectory_point) == 0:
                 continue
             obstacle_trajectory = obstacle.obstacle_trajectory.evaluated_trajectory_point
             box_length = obstacle.length
@@ -56,7 +55,8 @@ class ObstacleHistoryImgRenderer(object):
                 # EAST, so rotation to NORTH is done below
                 corner_points = renderer_utils.box_affine_tranformation(east_oriented_box,
                                                                         path_point_array,
-                                                                        np.pi / 2 + path_point.theta + coordinate_heading,
+                                                                        np.pi / 2 + path_point.theta +
+                                                                        coordinate_heading,
                                                                         np.array(
                                                                             [0, 0]),
                                                                         np.pi / 2 + coordinate_heading,
@@ -69,9 +69,11 @@ class ObstacleHistoryImgRenderer(object):
 
 
 if __name__ == "__main__":
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature" \
+        "/planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/"
+              "complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 

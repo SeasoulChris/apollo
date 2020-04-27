@@ -45,7 +45,8 @@ class RoadMapImgRenderer(object):
         else:
             print("Chosen base map not created")
             exit()
-        self.map_base_point = np.array([self.map_base_point_x, self.map_base_point_y])
+        self.map_base_point = np.array(
+            [self.map_base_point_x, self.map_base_point_y])
         self.map_base_point_idx = np.array([0, self.map_size_h])
         self.rough_crop_radius = int(
             math.sqrt(self.local_size_h**2 + self.local_size_w**2))
@@ -54,26 +55,34 @@ class RoadMapImgRenderer(object):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = renderer_utils.get_img_idx(
             center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
-        rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius: center_basemap_idx[1] + self.rough_crop_radius,
-                                        center_basemap_idx[0] - self.rough_crop_radius: center_basemap_idx[0] + self.rough_crop_radius]
+        rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius:
+                                        center_basemap_idx[1] +
+                                        self.rough_crop_radius,
+                                        center_basemap_idx[0] - self.rough_crop_radius:
+                                        center_basemap_idx[0] + self.rough_crop_radius]
         rough_local_map_grid = [
             2 * self.rough_crop_radius, 2 * self.rough_crop_radius]
         center_local_idx = [self.rough_crop_radius, self.rough_crop_radius]
-        rotation_angle = 90 - np.degrees(center_heading) + np.degrees(coordinate_heading)
+        rotation_angle = 90 - \
+            np.degrees(center_heading) + np.degrees(coordinate_heading)
         M = cv.getRotationMatrix2D(
             tuple(center_local_idx), rotation_angle, 1.0)
         rotated = cv.warpAffine(
             rough_local_map, M, tuple(rough_local_map_grid))
-        fine_crop = rotated[center_local_idx[1] - self.local_base_point_h_idx: center_local_idx[1] +
+        fine_crop = rotated[center_local_idx[1] - self.local_base_point_h_idx:
+                            center_local_idx[1] +
                             (self.local_size_h - self.local_base_point_h_idx), center_local_idx[0] -
-                            self.local_base_point_w_idx: center_local_idx[0] + self.local_base_point_w_idx]
+                            self.local_base_point_w_idx:
+                            scenter_local_idx[0] + self.local_base_point_w_idx]
         return fine_crop
 
 
 if __name__ == '__main__':
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/"
+              "00007.record.66.bin.future_status.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
 
@@ -84,10 +93,12 @@ if __name__ == '__main__':
     os.mkdir(output_dir)
     print("Making output directory: " + output_dir)
 
-    roadmap_mapping = RoadMapImgRenderer(config_file, "sunnyvale_with_two_offices")
+    roadmap_mapping = RoadMapImgRenderer(
+        config_file, "sunnyvale_with_two_offices")
     for frame in offline_frames.learning_data:
         img = roadmap_mapping.draw_roadmap(
             frame.localization.position.x, frame.localization.position.y, frame.localization.heading)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
+        key = "{}@{:.3f}".format(
+            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"
         cv.imwrite(os.path.join(output_dir, filename), img)

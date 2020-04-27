@@ -89,7 +89,8 @@ class RoutingImgRenderer(object):
 
 
 if __name__ == "__main__":
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
     with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())

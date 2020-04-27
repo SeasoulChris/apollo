@@ -84,7 +84,8 @@ class DataInspector:
 
             self.instance_timestamps.append(current_time)
 
-            self.message_instance_timestamps.append(instance.message_timestamp_sec)
+            self.message_instance_timestamps.append(
+                instance.message_timestamp_sec)
 
             self.ego_future_timestamps.append(
                 [adc_point.timestamp_sec for adc_point in instance.output.adc_future_trajectory_point])
@@ -102,7 +103,9 @@ class DataInspector:
             # Assuming obs past from learning_data is originally loaded in timestamp
             # ascending order, reverse it here to have newer points in front
             self.obstacles_past_timestamps.append(
-                [[obs_point.timestamp_sec for obs_point in reversed(obstacle.obstacle_trajectory.evaluated_trajectory_point)] for obstacle in instance.obstacle])
+                [[obs_point.timestamp_sec for obs_point in
+                  reversed(obstacle.obstacle_trajectory.evaluated_trajectory_point)]
+                    for obstacle in instance.obstacle])
 
         logging.info('bad_frame_count is {}'.format(bad_frame_count))
 
@@ -121,8 +124,9 @@ class DataInspector:
         # localization message time
         frame_average_current_time_difference = np.mean(np.array(
             self.instance_timestamps) - np.array(self.message_instance_timestamps))
-        logging.info('frame_average_current_time_difference between localization message time and current point GPS time is {}'.format(
-            frame_average_current_time_difference))
+        logging.info("frame_average_current_time_difference between localization message time"
+                     "and current point GPS time is {}".format(
+                         frame_average_current_time_difference))
 
         # Logging instance timestamps when there is no routing
         routing_nonexistances = np.array(
@@ -139,7 +143,8 @@ class DataInspector:
         ego_future_lengths = np.array(
             [len(ego_future) for ego_future in self.ego_future_timestamps])
         if not np.array_equal(ego_future_lengths,
-                              np.ones(ego_future_lengths.shape, dtype=ego_future_lengths.dtype) * int(ego_future_lengths[0])):
+                              np.ones(ego_future_lengths.shape, dtype=ego_future_lengths.dtype) *
+                              int(ego_future_lengths[0])):
             logging.info(
                 'ego_future_length of different instance are NOT the same')
         else:
@@ -186,7 +191,8 @@ class DataInspector:
         ego_past_lengths = np.array([len(ego_past)
                                      for ego_past in self.ego_past_timestamps])
         if not np.array_equal(ego_past_lengths,
-                              np.ones(ego_past_lengths.shape, dtype=ego_past_lengths.dtype) * int(ego_past_lengths[0])):
+                              np.ones(ego_past_lengths.shape, dtype=ego_past_lengths.dtype) *
+                              int(ego_past_lengths[0])):
             logging.info(
                 'ego_past_length of different instances are NOT the same')
         else:
@@ -210,9 +216,12 @@ class DataInspector:
             ego_past_delta_t = np.asarray(ego_past_delta_t)
             ego_past_time_info = np.vstack((ego_past_time_info,
                                             np.asarray([ego_past_delta_t[0],
-                                                        np.mean(ego_past_delta_t),
-                                                        np.max(ego_past_delta_t),
-                                                        np.min(ego_past_delta_t),
+                                                        np.mean(
+                                                            ego_past_delta_t),
+                                                        np.max(
+                                                            ego_past_delta_t),
+                                                        np.min(
+                                                            ego_past_delta_t),
                                                         np.sum(ego_past_delta_t)])))
         ego_past_time_info_average = np.mean(ego_past_time_info, axis=0)
         logging.info(
@@ -245,14 +254,15 @@ class DataInspector:
                         obs_future_delta_t.append(
                             pred_trajectory[j] - pred_trajectory[j - 1])
                     obs_future_delta_t = np.asarray(obs_future_delta_t)
-                    obs_future_time_info = np.vstack((obs_future_time_info, np.asarray([obs_future_delta_t[0],
-                                                                                        np.mean(
-                                                                                            obs_future_delta_t),
-                                                                                        np.max(
-                                                                                            obs_future_delta_t),
-                                                                                        np.min(
-                                                                                            obs_future_delta_t),
-                                                                                        np.sum(obs_future_delta_t)])))
+                    obs_future_time_info = np.vstack((obs_future_time_info,
+                                                      np.asarray([obs_future_delta_t[0],
+                                                                  np.mean(
+                                                          obs_future_delta_t),
+                                                          np.max(
+                                                          obs_future_delta_t),
+                                                          np.min(
+                                                          obs_future_delta_t),
+                                                          np.sum(obs_future_delta_t)])))
         obs_future_time_info_average = np.mean(obs_future_time_info, axis=0)
         logging.info(
             'frame-obs-multimodal-averaged  current_time - obs_future mostly time closed point = {}'.format(
@@ -271,15 +281,20 @@ class DataInspector:
             for obs_trajectory in obs_tracking:
                 if len(obs_trajectory) == 0:
                     continue
-                obs_past_delta_t = [self.instance_timestamps[i] - obs_trajectory[0]]
+                obs_past_delta_t = [
+                    self.instance_timestamps[i] - obs_trajectory[0]]
                 for j in range(1, len(obs_trajectory)):
-                    obs_past_delta_t.append(obs_trajectory[j - 1] - obs_trajectory[j])
+                    obs_past_delta_t.append(
+                        obs_trajectory[j - 1] - obs_trajectory[j])
                 obs_past_delta_t = np.asarray(obs_past_delta_t)
                 obs_past_time_info = np.vstack((obs_past_time_info,
                                                 np.asarray([obs_past_delta_t[0],
-                                                            np.mean(obs_past_delta_t),
-                                                            np.max(obs_past_delta_t),
-                                                            np.min(obs_past_delta_t),
+                                                            np.mean(
+                                                                obs_past_delta_t),
+                                                            np.max(
+                                                                obs_past_delta_t),
+                                                            np.min(
+                                                                obs_past_delta_t),
                                                             np.sum(obs_past_delta_t)])))
         obs_past_time_info_average = np.mean(obs_past_time_info, axis=0)
         logging.info(
@@ -297,7 +312,8 @@ class DataInspector:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='data_inspector data folder')
-    parser.add_argument('data_dir', type=str, help='data_inspector data folder')
+    parser.add_argument('data_dir', type=str,
+                        help='data_inspector data folder')
     args = parser.parse_args()
 
     data_inspector = DataInspector(args.data_dir)

@@ -57,7 +57,8 @@ class AgentPosesFutureImgRenderer(object):
                       radius=2, color=color, thickness=-1)
         return local_map
 
-    def draw_agent_box_future_trajectory(self, ego_pose_future, coordinate_heading=0., solid_box=True):
+    def draw_agent_box_future_trajectory(
+            self, ego_pose_future, coordinate_heading=0., solid_box=True):
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
         ego_future_length = len(ego_pose_future)
@@ -82,7 +83,8 @@ class AgentPosesFutureImgRenderer(object):
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
                                ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
-        It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
+        It uses index to get specific frame in the future rather than timestamp. 
+        Make sure to inspect and clean data before using it
         '''
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -109,7 +111,8 @@ class AgentPosesFutureImgRenderer(object):
     def draw_agent_box_future(self, center_x, center_y, center_heading,
                               ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
-        It uses index to get specific frame in the future rather than timestamp. Make sure to inspect and clean data before using it
+        It uses index to get specific frame in the future rather than timestamp. 
+        Make sure to inspect and clean data before using it
         '''
         local_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -136,9 +139,11 @@ class AgentPosesFutureImgRenderer(object):
 
 
 if __name__ == "__main__":
-    config_file = '/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt'
+    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+        "planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/00007.record.66.bin.future_status.bin",
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/" \
+        "complete/00007.record.66.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
@@ -154,15 +159,10 @@ if __name__ == "__main__":
     agent_future_mapping = AgentPosesFutureImgRenderer(config_file)
 
     for frame in offline_frames.learning_data:
-        img = agent_future_mapping.draw_agent_pose_future_trajectory(frame.adc_trajectory_point[-1].timestamp_sec,
-                                                                     frame.localization.position.x,
-                                                                     frame.localization.position.y,
-                                                                     frame.localization.heading,
-                                                                     frame.output.adc_future_trajectory_point)
-        # img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
-        #                                                  frame.localization.position.y,
-        #                                                  frame.localization.heading,
-        # frame.output.adc_future_trajectory_point, 10)
+        img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
+                                                         frame.localization.position.y,
+                                                         frame.localization.heading,
+        frame.output.adc_future_trajectory_point, 10)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

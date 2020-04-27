@@ -145,7 +145,8 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
             heading_errors.append(heading_error)
             v_errors.append(v_error)
             visualize_rnn_result(
-                output_renderer, img_feature, coordinate_heading, message_timestamp_sec, output_dir, pred, y)
+                output_renderer, img_feature, coordinate_heading,
+                message_timestamp_sec, output_dir, pred, y)
 
         average_displacement_error = 'average displacement error: {}.'.format(
             np.mean(displcement_errors))
@@ -169,9 +170,11 @@ if __name__ == "__main__":
     parser.add_argument('model_file', type=str, help='trained model')
     parser.add_argument('test_set_folder', type=str, help='test data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
-                        type=str, default='/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt',
+                        type=str, default='/fuel/fueling/planning/datasets/'
+                        'semantic_map_feature/planning_semantic_map_config.pb.txt',
                         help='renderer configuration file in proto.txt')
-    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/planning/semantic_map_features',
+    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/'
+                        'planning/semantic_map_features',
                         help='location to store input base img or output img')
     parser.add_argument('-input_data_augmentation', '--input_data_augmentation', type=bool,
                         default=False, help='whether to do input data augmentation')

@@ -27,9 +27,11 @@ if __name__ == "__main__":
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
-                        type=str, default='/fuel/fueling/planning/datasets/semantic_map_feature/planning_semantic_map_config.pb.txt',
+                        type=str, default='/fuel/fueling/planning/datasets/'
+                        'semantic_map_feature/planning_semantic_map_config.pb.txt',
                         help='renderer configuration file in proto.txt')
-    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/planning/semantic_map_features',
+    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/'
+                        'planning/semantic_map_features',
                         help='location to store input base img or output img')
     parser.add_argument('-input_data_augmentation', '--input_data_augmentation', type=bool,
                         default=False, help='whether to do input data augmentation')
