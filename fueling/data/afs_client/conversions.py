@@ -78,7 +78,10 @@ class PerceptionObstaclesConversion(ConversionBase):
         return (apollo_topic, apollo_datatype, apollo_obs)
 
 
-logging.info('registering conversions')
-LocalizationPoseConversion()
-PerceptionObstaclesConversion()
+def register_conversions():
+    """Register all conversions"""
+    if not ConversionsCenter.conversions:
+        logging.info('registering conversions')
+        LocalizationPoseConversion()
+        PerceptionObstaclesConversion()
 
