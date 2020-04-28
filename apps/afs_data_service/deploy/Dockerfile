@@ -44,4 +44,3 @@ COPY entrypoint.sh /home/afs_data_service/entrypoint.sh
 
 WORKDIR /home/afs_data_service
 ENTRYPOINT ["/home/afs_data_service/entrypoint.sh"]
-

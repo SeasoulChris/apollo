@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+"""
+TODO(Data): If we got an Python3 ADB SDK, we can leverage Bazel to build the executable package.
+"""
 
 from concurrent import futures
 import json

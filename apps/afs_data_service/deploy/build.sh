@@ -20,8 +20,9 @@ cp ../proto/* ${SRC_DIR}
 if [ ! -d "./${ADBSDK_DIR}" ]; then
   # wiki: http://wiki.baidu.com/pages/viewpage.action?pageId=1040599879
   # http://agile.baidu.com/#/release/baidu/adu/adbsdk
-  wget -O output.tar.gz --no-check-certificate --header "IREPO-TOKEN:89938b26-fc83-4d84-bfdb-a464a66613bd" \
-       "https://irepo.baidu-int.com/rest/prod/v3/baidu/adu/adbsdk/releases/1.0.3.1/files" 
+  wget -O output.tar.gz --no-check-certificate \
+      --header "IREPO-TOKEN:89938b26-fc83-4d84-bfdb-a464a66613bd" \
+      "https://irepo.baidu-int.com/rest/prod/v3/baidu/adu/adbsdk/releases/1.0.3.1/files" 
   mkdir adbsdk_tmp
   tar zxf output.tar.gz -C adbsdk_tmp
   tar zxf adbsdk_tmp/output/adbsdk*.tar.gz
@@ -40,4 +41,3 @@ sudo cp kube.config ~/.kube/config
 sed -i "s|image: ${REPO}.*|image: ${IMAGE}|g" deploy.yaml
 kubectl apply -f deploy.yaml --validate=false
 sudo mv kube.config.original ~/.kube/config
-
