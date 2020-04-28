@@ -323,7 +323,7 @@ if __name__ == '__main__':
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     dataset = TrajectoryImitationRNNDataset(
         '/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete',
-         config_file, 
+         config_file,
          imgs_dir)
 
     dataset[50]

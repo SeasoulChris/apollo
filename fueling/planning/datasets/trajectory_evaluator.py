@@ -60,7 +60,7 @@ class TrajectoryEvaluator(BasePipeline):
         """Call planning C++ code."""
         map_name = "sunnyvale_with_two_offices"
         command = (
-            'cd /apollo && sudo bash '
+            'cd /apollo && bash '
             'modules/tools/planning/data_pipelines/scripts/'
             'evaluate_trajectory.sh '
             '"{}" "{}"'.format(src_dir, dest_dir))

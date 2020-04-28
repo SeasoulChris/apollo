@@ -63,7 +63,7 @@ class LearningDataGenerator(BasePipeline):
         """Call planning C++ code."""
         map_name = "sunnyvale_with_two_offices"
         command = (
-            'cd /apollo && sudo bash '
+            'cd /apollo && bash '
             'modules/tools/planning/data_pipelines/scripts/'
             'record_to_learning_data.sh '
             '"{}" "{}" "{}"'.format(src_dir, dest_dir, map_name))
