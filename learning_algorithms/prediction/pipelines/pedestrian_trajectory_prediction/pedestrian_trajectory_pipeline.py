@@ -22,7 +22,7 @@ from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model
 
 if __name__ == "__main__":
     # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
@@ -55,4 +55,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name=args.save_path, print_period=50, save_mode=2)
+                          scheduler, epochs=50, save_name=args.save_path, print_period=200, save_mode=2)

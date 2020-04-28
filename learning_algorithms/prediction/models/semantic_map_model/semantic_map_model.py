@@ -3,6 +3,7 @@
 import glob
 import os
 
+import math
 import cv2 as cv
 import torch
 import torch.nn as nn
@@ -116,6 +117,25 @@ class SemanticMapLoss():
     def loss_fn(self, y_pred, y_true):
         loss_func = nn.MSELoss()
         return loss_func(y_pred, y_true)
+
+    def loss_info(self, y_pred, y_true):
+        out = y_pred - y_true
+        out = torch.sqrt(torch.sum(out ** 2, 2))
+        out = torch.mean(out)
+        return out
+
+
+class WeightedSemanticMapLoss():
+    def loss_fn(self, y_pred, y_true):
+        end_direction = y_true[:,-1,:] - y_true[:,-2,:]
+        start_direction = y_true[:,1,:] - y_true[:,0,:]
+        end_theta = torch.atan2(end_direction[:,1], end_direction[:,0])
+        start_theta = torch.atan2(start_direction[:,1], start_direction[:,0])
+        theta_diff = torch.abs(end_theta - start_theta) / (2*math.pi)
+        weight = torch.exp(theta_diff)
+        out = y_pred - y_true
+        weighted_out = weight * torch.mean(torch.sum(out ** 2, 2), 1)
+        return torch.mean(weighted_out)
 
     def loss_info(self, y_pred, y_true):
         out = y_pred - y_true
