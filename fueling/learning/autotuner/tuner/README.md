@@ -112,6 +112,24 @@ For the Bayesian Optimization Tuner, the parameter setting and running process a
    ![](images/gaussian_process_2D.png)
    **Note:** for the case when tuning parameter number >= 3, the visualization is temporarily unavailable.
 
+1. Run optuna based optimization via cluster:
+
+   ```bash
+   cd /apollo-fuel
+   kubectl apply -f fueling/learning/autotuner/config/k8s-manifests.yaml
+   ```
+
+   To monitor all service/apps
+   ```bash
+   kubectl get all
+   ```
+
+   To stop all deployed apps and service
+   ```bash
+   kubectl delete service/autotune-postgres
+   kubectl delete statefulset.apps/autotune-postgres
+   kubectl delete job.batch/autotune-worker
+   ```
 
 ## Tuner Visualization and Results Saving:
 
