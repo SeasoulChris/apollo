@@ -72,6 +72,7 @@ py_binary(
     srcs = ["copy_to_bos.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging", 
         "//fueling/data/afs_client:client",

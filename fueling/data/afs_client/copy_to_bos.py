@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import collections
 import datetime
 import os
 
@@ -9,6 +10,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.data.afs_client.client import AfsClient
+import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.data.afs_client.config as afs_config
@@ -55,6 +57,19 @@ class CopyToBosPipeline(BasePipeline):
         start_date = datetime.datetime.strptime(start_date_str, '%Y%m%d').date()
         return (start_date + datetime.timedelta(days=delta)).strftime('%Y%m%d')
 
+    def send_summary_email(self, completed_dirs):
+        """Send email notification"""
+        if not completed_dirs:
+            logging.info('No need to send summary for empty result')
+            return
+        SummaryTuple = collections.namedtuple('Summary', ['TaskDirectory'])
+        title = F'Transfered AFS data for {len(completed_dirs)} tasks'
+        message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in completed_dirs]
+        try:
+            email_utils.send_email_info(title, message, email_utils.DATA_TEAM)
+        except Exception as error:
+            logging.error('Failed to send summary: {}'.format(error))
+
     def run(self):
         """Run"""
         # get input parameters
@@ -95,11 +110,11 @@ class CopyToBosPipeline(BasePipeline):
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 10)) * 10
         process_tasks = spark_helper.cache_and_log('CopyProcessing', 
              todo_tasks
-             # RDD(task_id, (start_time, end_time))
+             # PairRDD(task_id, (start_time, end_time))
              .map(lambda x: (x[0], (x[1], x[2])))
-             # RDD(task_id, ((start_time, end_time), target_dir))
+             # PairRDD(task_id, ((start_time, end_time), target_dir))
              .join(filtered_tasks)
-             # RDD(task_id, ((start_time, end_time), target_dir))
+             # PairRDD(task_id, ((start_time, end_time), target_dir))
              .repartition(partitions)
              # RDD((messages))
              .map(lambda x: afs_client.transfer_messages(x, message_tbl, skip_topics))
@@ -113,6 +128,8 @@ class CopyToBosPipeline(BasePipeline):
             .map(lambda target_dir: os.path.join(target_dir, MARKER))
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
+
+        self.send_summary_email(process_tasks.collect())
 
 
 if __name__ == '__main__':

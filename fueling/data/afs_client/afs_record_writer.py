@@ -24,6 +24,7 @@ class AfsRecordWriter(object):
         self.converted_message_writer = RecordWriter(0, 0)
         self.writer.open(target_file)
         self.converted_message_writer.open(converted_file)
+        conversions.register_conversions()
         logging.info(F'converted message file: {converted_file}')
 
     def close(self):
