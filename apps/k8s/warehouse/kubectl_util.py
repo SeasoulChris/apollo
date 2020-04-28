@@ -1,10 +1,14 @@
+#!/usr/bin/env python
+"""Kubectl utils."""
 # encoding=utf8
 
 from datetime import datetime
+
 from kubernetes import client, config
 
-class Kubectl:
-    """kubectl key opration"""
+
+class Kubectl(object):
+    """kubectl key operation"""
 
     def __init__(self):
         """init"""
@@ -26,10 +30,9 @@ class Kubectl:
             start_datetimestr = start_datetime.strftime('%Y%d%m %H:%M:%S')
             tz_info = start_datetime.tzinfo
             curr_datetime = datetime.now(tz_info)
-            running_time_in_hours = '{:.2f} Hour'.format(
-                (curr_datetime - start_datetime).seconds / 3600)
-            running_time_in_minutes = '{:.2f} Min'.format(
-                (curr_datetime - start_datetime).seconds / 60)
+            running_time = (curr_datetime - start_datetime).seconds
+            running_time_in_hours = '{:.2f} Hour'.format(running_time / 3600)
+            running_time_in_minutes = '{:.2f} Min'.format(running_time / 60)
             res.append({'name': name,
                         'owner': owner,
                         'nodetype': nodetype,
@@ -62,6 +65,7 @@ class Kubectl:
         """delete deployments"""
         res = self.appsV1Api.delete_namespaced_deployment(name=deployment_name, namespace=namespace)
         return res
+
 
 if __name__ == '__main__':
     kubectl = Kubectl()

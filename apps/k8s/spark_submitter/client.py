@@ -73,7 +73,7 @@ class SparkSubmitterClient(object):
 
         # Submit job.
         service_url = self.client_flags.get('spark_submitter_service_url') or \
-        flags.FLAGS.spark_submitter_service_url or self.get_service_url()
+            flags.FLAGS.spark_submitter_service_url or self.get_service_url()
 
         res = requests.post(service_url, json=json.dumps(arg))
         payload = json.loads(res.json() or '{}')

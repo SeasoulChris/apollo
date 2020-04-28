@@ -10,13 +10,13 @@ RUN pip3 install --no-cache-dir \
         flask \
         flask-socketio \
         gunicorn \
+        kubernetes \
         matplotlib \
         mpld3 \
         protobuf \
         pymongo \
         pytz \
-        redis \
-        kubernetes
+        redis
 
 COPY index.zip /home/warehouse/index.zip
 COPY py_proto /home/warehouse/
