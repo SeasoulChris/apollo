@@ -15,8 +15,8 @@ import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \
-    as visual_utils
+from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
+    plot
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
     extract_latency_feature, extract_planning_trajectory_feature, extract_stage_feature, \
     extract_zigzag_trajectory_feature, output_features
@@ -201,8 +201,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             trajectory_feature.foreach(lambda group: output_features(group, 'trajectory_feature'))
             # PairRDD(target, combined_grading_result), output grading results for each target
             grading_result.foreach(output_grading)
-            # PairRDD(target, planning_trajectory_features), plot histograms for features
-            trajectory_feature.foreach(visual_utils.plot_hist)
+            # PairRDD(target, planning_trajectory_features), feature plots
+            trajectory_feature.foreach(plot)
             self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)
             logging.info(F'Evaluation with report took {time.perf_counter() - tic:0.3f} sec')
         else:

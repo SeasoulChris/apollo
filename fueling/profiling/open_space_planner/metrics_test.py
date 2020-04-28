@@ -46,7 +46,9 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/trajectory_feature.hdf5')))
         self.assertTrue(os.path.exists(grading_output))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/visualization.pdf')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/feature_visualization.pdf')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/feature_timeline_visualization.pdf')))
 
         output_dict = self.parse_grading_output(grading_output)
         self.assertEqual(21, len(output_dict))
@@ -81,7 +83,9 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.open_space_planner_profiling_output_path}/open_space_performance_grading.txt')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.open_space_planner_profiling_output_path}/visualization.pdf')))
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/feature_visualization.pdf')))
+        self.assertFalse(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.open_space_planner_profiling_output_path}/feature_timeline_visualization.pdf')))
 
         self.assertEqual(1, len(result_data))
         _, output = result_data[0]

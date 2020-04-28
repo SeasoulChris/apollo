@@ -18,8 +18,8 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",
-        "//fueling/profiling/control/feature_visualization:control_feature_visualization_utils",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_extraction_utils",
+        "//fueling/profiling/open_space_planner/feature_extraction:feature_visualization_utils",
         "//fueling/profiling/open_space_planner/metrics_utils:evaluation_method_util",
     ],
 )

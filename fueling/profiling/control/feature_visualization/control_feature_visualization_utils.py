@@ -13,7 +13,6 @@ import numpy as np
 import os
 
 from fueling.profiling.conf.control_channel_conf import FEATURE_IDX, FEATURE_NAMES
-import fueling.profiling.conf.open_space_planner_conf as OpenSpaceConf
 from fueling.profiling.proto.control_profiling_pb2 import ControlProfiling
 from fueling.profiling.proto.control_profiling_data_pb2 import ControlFeatures
 import fueling.common.file_utils as file_utils
@@ -107,49 +106,6 @@ def clean_data(data, seq):
         if (scope <= 2 * scope_partial):
             return [0.05 * i, 1 - 0.05 * i]
     return [0.05 * i, 1 - 0.05 * i]
-
-# TODO(Una/Vivian): This is only used in open space planner, and we may need to re-factor this out.
-def plot_hist(data_rdd):
-    dir_data, data = data_rdd
-    pdffile = os.path.join(dir_data, 'visualization.pdf')
-    feature_names = OpenSpaceConf.TRAJECTORY_FEATURE_NAMES
-    with PdfPages(pdffile) as pdf:
-        for i in range(len(feature_names)):
-            data_plot = data[:, i]
-            seq = np.argsort(data_plot)
-            bounds = clean_data(data_plot, seq)
-            logging.info('Processing the plots at Column: {}, Feature: {}'
-                         .format(i, feature_names[i]))
-            length = data_plot.shape[0]
-            plt.figure(figsize=(4, 3))
-            plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
-                     bins=100)
-            plt.xlabel(feature_names[i])
-            plt.ylabel('Sample length')
-            plt.title("Histogram of " + feature_names[i] + " ("
-                      + str(int(round((bounds[1] - bounds[0]) * 100))) + "% data)")
-            xmin, xmax, ymin, ymax = plt.axis()
-            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                     .format(data_plot[seq[int(length * bounds[1] - 1)]],
-                             data_plot[seq[int(length * bounds[0])]]),
-                     color='red', fontsize=8)
-            plt.tight_layout()
-            pdf.savefig()
-            plt.close()
-            plt.figure(figsize=(4, 3))
-            plt.plot(data_plot)
-            plt.ylabel(feature_names[i])
-            plt.xlabel('Sample Number')
-            plt.title("Plot of " + feature_names[i] + " (100% Data)")
-            xmin, xmax, ymin, ymax = plt.axis()
-            plt.text(xmin * 0.9 + xmax * 0.1, ymin * 0.1 + ymax * 0.9,
-                     'Maximum = {0:.3f}, Minimum = {1:.3f}'
-                     .format(data_plot[seq[length - 1]], data_plot[seq[0]]),
-                     color='red', fontsize=8)
-            plt.tight_layout()
-            pdf.savefig()
-            plt.close()
 
 
 def plot_h5_features_hist(data_rdd):

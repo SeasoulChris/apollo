@@ -3,6 +3,7 @@
 """Configs to store the necessary dict or list"""
 TRAJECTORY_FEATURE_NAMES = [
     # from extract_data_from_trajectory_point()
+    'absolute_time',
     'relative_time',
     'kappa',
     'curvature_ratio',

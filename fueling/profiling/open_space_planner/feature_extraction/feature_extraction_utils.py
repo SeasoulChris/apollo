@@ -168,7 +168,7 @@ def find_min_collision_time(msg, vehicle_param):
 
 
 def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boundaries, obstacles,
-                                       min_collision_time):
+                                       min_collision_time, header_time):
     """Extract fields from a single trajectory point"""
     path_point = trajectory_point.path_point
     speed = trajectory_point.v
@@ -221,6 +221,7 @@ def extract_data_from_trajectory_point(trajectory_point, vehicle_param, roi_boun
         # open_space_planner_conf.py if updating this data array.
         # Will need a better way to sync these two pieces.
         data_array = np.array([
+            header_time + trajectory_point.relative_time,
             trajectory_point.relative_time,
             path_point.kappa,
             abs(path_point.kappa) / steer_limit(vehicle_param.max_steer_angle, vehicle_param),
@@ -283,13 +284,14 @@ def calculate_dkappa_ratio(prev_feature, curr_feature, vehicle_param):
 
 
 def extract_data_from_trajectory(trajectory, vehicle_param, roi_boundaries, obstacles,
-                                 min_collision_time):
+                                 min_collision_time, header_time):
     """Extract data from all trajectory points"""
     feature_list = []
     prev_features = None
     for trajectory_point in trajectory:
         features = extract_data_from_trajectory_point(
-            trajectory_point, vehicle_param, roi_boundaries, obstacles, min_collision_time)
+            trajectory_point, vehicle_param, roi_boundaries, obstacles, min_collision_time,
+            header_time)
         if features is None:
             continue
 
@@ -349,9 +351,9 @@ def extract_planning_trajectory_feature(target_group):
     roi_boundaries = extract_roi_boundaries(msgs)
 
     extracted_data = (extract_data_from_trajectory(
-        msg['planning'].trajectory_point, vehicle_param, roi_boundaries, extract_obstacle_polygons(
-            msg),
-        find_min_collision_time(msg, vehicle_param))
+        msg['planning'].trajectory_point, vehicle_param, roi_boundaries,
+            extract_obstacle_polygons(msg), find_min_collision_time(msg, vehicle_param),
+            msg['planning'].header.timestamp_sec)
         for msg in msgs)
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])

@@ -63,6 +63,37 @@ def compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
     return [hit_bound_times, max[0], mean, std_dev, percentile, elem_num]
 
 
+def IQR_outlier_filter(array, lower_q=25, upper_q=75, bar=1.5, side='both'):
+    """
+    Detect outliers in an array based on IQR score. By default, it uses 25% and 75% percentiles to
+    calculate the interquartile range. Outliers are defined as val < (val_lower_q - IQR * bar) and
+    val > (val_upper_q + IQR * bar). User can choose to filter ['lower', 'upper', 'both'] sides.
+    It returns the indices of both the clean data and the outliers
+    """
+    if side not in ['lower', 'upper', 'both']:
+        logging.warning(F"Side should be one of ['lower', 'upper', 'both'], but was {side}")
+        return array
+
+    lower_val = np.percentile(array, lower_q)
+    upper_val = np.percentile(array, upper_q)
+    IQR_filter = (upper_val - lower_val) * bar
+    lower_threshold = lower_val - IQR_filter
+    upper_threshold = upper_val + IQR_filter
+    lower_outlier = np.where(array < lower_threshold)
+    upper_outlier = np.where(array > upper_threshold)
+    upper_clean_array = np.where(array >= lower_threshold)
+    lower_clean_array = np.where(array <= upper_threshold)
+
+    if side == 'lower':
+        return (upper_clean_array, lower_outlier)
+    if side == 'upper':
+        return (lower_clean_array, upper_outlier)
+    else:
+        # 1st argument of concatenate should be a tuple
+        return (np.intersect1d(upper_clean_array, lower_clean_array),
+                np.concatenate((lower_outlier, upper_outlier), axis=None))
+
+
 def compute_rms(grading_mtx, arg, min_sample_size, FEATURE_IDX):
     """Compute the root mean square"""
     grading_mtx = apply_filter(grading_mtx, arg, FEATURE_IDX)
