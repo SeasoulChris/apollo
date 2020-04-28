@@ -15,7 +15,8 @@ RUN pip3 install --no-cache-dir \
         protobuf \
         pymongo \
         pytz \
-        redis
+        redis \
+        kubernetes
 
 COPY index.zip /home/warehouse/index.zip
 COPY py_proto /home/warehouse/
