@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import time
 
 from absl import flags
 import numpy as np
@@ -26,6 +27,8 @@ class OptunaOptimizationTuner(BaseTuner):
     """Basic functionality of Optuna Tuner for Control Module."""
 
     def __init__(self):
+        tic_start = time.perf_counter()
+
         tuner_conf = TunerConfigs()
         user_conf = ControlConf()  # Basic configuration corresponding to user module
 
@@ -54,12 +57,16 @@ class OptunaOptimizationTuner(BaseTuner):
 
         self.init_optimizer_visualizer(self.tuner_param_config_pb.tuner_parameters)
 
+        logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
+
     def init_optimizer_visualizer(self, tuner_parameters):
         self.optimizer = optuna.create_study(sampler=TPESampler())
         self.visualizer = optuna.visualization
 
     def optimize(self, n_iter=0, init_points=0):
+        tic_start_overall = time.perf_counter()
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
+        self.init_points = 0
         self.iter = -1
         self.iteration_records = {}
 
@@ -68,8 +75,12 @@ class OptunaOptimizationTuner(BaseTuner):
 
         self.best_cost = self.optimizer.best_value
         self.best_params = self.optimizer.best_params
+        self.optimize_time = time.perf_counter() - tic_start_overall
+        self.time_efficiency = self.optimize_time / (self.n_iter + self.init_points)
 
     def visualize(self, task_dir):
+        tic_start = time.perf_counter()
+
         self.visual_storage_dir = os.path.join(self.tuner_storage_dir, task_dir)
         if not os.path.isdir(self.visual_storage_dir):
             os.makedirs(self.visual_storage_dir)
@@ -80,7 +91,11 @@ class OptunaOptimizationTuner(BaseTuner):
         figure1.write_image(f"{self.visual_storage_dir}/optimization_history.png")
         figure2.write_image(f"{self.visual_storage_dir}/contour.png")
 
+        logging.info(f"Timer: visualize  - {time.perf_counter() - tic_start: 0.04f} sec")
+
     def objective(self, trial):
+        tic_start = time.perf_counter()
+
         self.iter += 1
         next_point = {}
         for key in self.pbounds:
@@ -112,11 +127,17 @@ class OptunaOptimizationTuner(BaseTuner):
         self.iteration_records.update({f'iter-{self.iter}': {'iteration_id': iteration_id,
                                                              'target': target,
                                                              'config_point': next_point}})
+
+        logging.info(f"Timer: optimize_with_sim_cost  - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info(f"Optimizer iteration: {self.iter}, target: {target}, config point: {next_point}")
 
         return target
 
 if __name__ == "__main__":
+    tic_start = time.perf_counter()
+
     flags.FLAGS(sys.argv)
     tuner = OptunaOptimizationTuner()
     tuner.run()
+
+    logging.info(f"Timer: overall optuna tuning  - {time.perf_counter() - tic_start: 0.04f} sec")

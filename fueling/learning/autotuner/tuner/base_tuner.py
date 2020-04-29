@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import sys
+import time
 import uuid
 
 from absl import flags
@@ -86,6 +87,7 @@ class BaseTuner():
         raise Exception("Not implemented!")
 
     def black_box_function(self, tuner_param_config_pb, algorithm_conf_pb):
+        tic_start = time.perf_counter()
         """black box function for optimizers to implement the sim-tests and generate the costs"""
         config_id = uuid.uuid1().hex
         iteration_id, weighted_score = self.cost_client.compute_cost(
@@ -96,6 +98,7 @@ class BaseTuner():
             }
         )
         logging.info(f"Received score for {iteration_id}")
+        logging.info(f"Timer: sim_cost  - {time.perf_counter() - tic_start: 0.04f} sec")
         return iteration_id, weighted_score[config_id]
 
     def parse_param_to_proto(self, parameter_name):
@@ -183,14 +186,17 @@ class BaseTuner():
         return point
 
     def get_result(self):
-        logging.info(f"Result after: {self.n_iter} steps are {self.best_cost} "
+        logging.info(f"Result after: {self.n_iter + self.init_points} steps are {self.best_cost} "
                      f"with params {self.best_params}")
         return (self.best_cost, self.best_params)
 
     def save_result(self):
+        tic_start = time.perf_counter()
         tuner_param_config_dict = proto_utils.pb_to_dict(self.tuner_param_config_pb)
         self.tuner_results = {'target_max': self.best_cost,
                               'config_max': self.best_params,
+                              'optimize_time': self.optimize_time,
+                              'time_efficiency': self.time_efficiency,
                               'tuner_parameters': tuner_param_config_dict['tuner_parameters'],
                               'iteration_records': self.iteration_records}
 
@@ -206,6 +212,7 @@ class BaseTuner():
             for visual_file in final_visual_file:
                 shutil.copyfile(visual_file, os.path.join(saving_path, os.path.basename(visual_file)))
         logging.info(f"Complete results saved at {saving_path} ")
+        logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def run(self):
         try:
