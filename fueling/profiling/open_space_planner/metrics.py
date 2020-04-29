@@ -33,6 +33,8 @@ flags.DEFINE_string('open_space_planner_profiling_output_path',
                     'output data directory')
 flags.DEFINE_boolean('open_space_planner_profiling_generate_report', True,
                      'whether an email report with feature plot etc. is required')
+flags.DEFINE_boolean('open_space_planner_profiling_debug', False,
+                     'whether feature HDF5 files need to be saved for debugging')
 
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
@@ -193,12 +195,14 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'grading_result_first: {grading_result.first()}')
 
         # 5. plot and visualize features, save grading result
-        if self.FLAGS['open_space_planner_profiling_generate_report']:
+        if self.FLAGS['open_space_planner_profiling_debug']:
             # PairRDD(target, features), save features in h5 file
             stage_feature.foreach(lambda group: output_features(group, 'stage_feature'))
             latency_feature.foreach(lambda group: output_features(group, 'latency_feature'))
             zigzag_feature.foreach(lambda group: output_features(group, 'zigzag_feature'))
             trajectory_feature.foreach(lambda group: output_features(group, 'trajectory_feature'))
+
+        if self.FLAGS['open_space_planner_profiling_generate_report']:
             # PairRDD(target, combined_grading_result), output grading results for each target
             grading_result.foreach(output_grading)
             # PairRDD(target, planning_trajectory_features), feature plots
@@ -216,7 +220,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
         # Uncomment this for dev test
         # recipients = ['caoyu05@baidu.com']
         recipients.append(partner_email)
-        SummaryTuple = namedtuple('Summary', ['Task', 'FeatureHDF5s', 'FeaturePlot', 'Profiling'])
+        SummaryTuple = namedtuple('Summary', ['Task', 'FeaturePlot', 'Profiling'])
         if tasks:
             email_content = []
             attachments = []
@@ -226,21 +230,17 @@ class OpenSpacePlannerMetrics(BasePipeline):
             for task in tasks:
                 source = task.replace(target_prefix, origin_prefix, 1)
                 logging.info(F'task: {task}, source: {source}')
-                features = glob.glob(os.path.join(task, '*.hdf5'))
                 plot = glob.glob(os.path.join(task, '*visualization*'))
                 profiling = glob.glob(os.path.join(task, '*performance_grading*'))
                 email_content.append(SummaryTuple(
                     Task=source,
-                    FeatureHDF5s=len(features),
                     FeaturePlot=len(plot),
                     Profiling=len(profiling),
                 ))
-                if profiling or features or plot:
+                if profiling or plot:
                     tar_filename = F'{os.path.basename(source)}_profiling.tar.gz'
                     tar = tarfile.open(tar_filename, 'w:gz')
                     for report in profiling:
-                        tar.add(report)
-                    for report in features:
                         tar.add(report)
                     for report in plot:
                         tar.add(report)

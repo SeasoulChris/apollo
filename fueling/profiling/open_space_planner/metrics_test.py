@@ -30,6 +30,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
             F'{self.TESTDATA_PATH}/no_obstacle')
         flags.FLAGS.open_space_planner_profiling_output_path = file_utils.fuel_path(
             F'{flags.FLAGS.test_tmpdir}/generated')
+        flags.FLAGS.open_space_planner_profiling_generate_report = True
+        flags.FLAGS.open_space_planner_profiling_debug = True
 
         self.pipeline.init()
         self.pipeline.run()
@@ -68,6 +70,7 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         flags.FLAGS.open_space_planner_profiling_output_path = file_utils.fuel_path(
             F'{flags.FLAGS.test_tmpdir}/generated')
         flags.FLAGS.open_space_planner_profiling_generate_report = False
+        flags.FLAGS.open_space_planner_profiling_debug = False
 
         self.pipeline.init()
         result_data = self.pipeline.run()
