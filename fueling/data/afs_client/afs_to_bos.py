@@ -24,7 +24,7 @@ flags.DEFINE_string('project', 'KingLong', 'copy date for what project')
 flags.DEFINE_bool('all_topics', False, 'whether copy all topics')
 flags.DEFINE_string('task_id', '', 'copy some exact task id')
 
-class CopyToBosPipeline(BasePipeline):
+class AfsToBosPipeline(BasePipeline):
     """Copy AFS data to Bos"""
 
     def get_copy_src(self):
@@ -33,8 +33,11 @@ class CopyToBosPipeline(BasePipeline):
         if task_id:
             exact_date = task_id.split('_')[1][:8]
             return exact_date, exact_date, task_id
-        end_date = self.FLAGS.get('end_date') or datetime.datetime.today().strftime('%Y%m%d')
-        start_date = self.FLAGS.get('start_date') or end_date
+        # By default get two days data to avoid some being missed due to time diff
+        today = datetime.datetime.today()
+        yesterday = today - datetime.timedelta(days = 1)
+        end_date = self.FLAGS.get('end_date') or today.strftime('%Y%m%d')
+        start_date = self.FLAGS.get('start_date') or yesterday.strftime('%Y%m%d')
         return start_date, end_date, task_id
 
     def filter_tasks(self, rdd_item, project, exact_task_id, target_dir):
@@ -133,4 +136,4 @@ class CopyToBosPipeline(BasePipeline):
 
 
 if __name__ == '__main__':
-    CopyToBosPipeline().main()
+    AfsToBosPipeline().main()

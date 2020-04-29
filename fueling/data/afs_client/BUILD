@@ -68,8 +68,8 @@ py_binary(
 )
 
 py_binary(
-    name = "copy_to_bos",
-    srcs = ["copy_to_bos.py"],
+    name = "afs_to_bos",
+    srcs = ["afs_to_bos.py"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",

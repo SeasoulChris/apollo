@@ -4,6 +4,7 @@ py_binary(
     name = "daily_jobs",
     srcs = ["daily_jobs.py"],
     deps = [
+        "//fueling/data/afs_client:afs_to_bos",
         "//fueling/data/pipelines:generate_small_records",
         "//fueling/data/pipelines:index_records",
         "//fueling/data/pipelines:reorg_small_records",
