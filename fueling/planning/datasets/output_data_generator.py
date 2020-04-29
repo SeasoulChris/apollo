@@ -7,14 +7,15 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.planning.datasets.label_generator import LabelGenerator
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 SKIP_EXISTING_DST_FILE = False
 SRC_DIR_PREFIX = 'modules/planning/learning_data'
 DST_DIR_PREFIX = 'modules/planning/output_data'
 # for local test
-# SRC_DIR_PREFIX = 'apollo/data/learning_data2'
-# DST_DIR_PREFIX = 'apollo/data/output_data'
+# SRC_DIR_PREFIX = 'apollo/data/titan'
+# DST_DIR_PREFIX = 'apollo/data/output_data_titan'
 # for apolloTitan
 # SRC_DIR_PREFIX = 'data/learning_data'
 # DST_DIR_PREFIX = 'data/output_data'
@@ -140,8 +141,7 @@ class OutputDataGenerator(BasePipeline):
         # add complete
         dst_dir = os.path.join(os.path.dirname(dst_file), 'complete')
         dst_file = os.path.join(dst_dir, os.path.basename(dst_file))
-        if not os.path.exists(dst_dir):
-            os.makedirs(dst_dir)
+        file_utils.makedirs(dst_dir)
         logging.debug(dst_file)
         logging.debug(dst_dir)
         try:

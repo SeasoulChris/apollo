@@ -160,7 +160,7 @@ class LabelGenerator(object):
     @output: All saved as class variables in observation_dict,
     '''
 
-    def ObserveFeatureSequence(self, feature_sequence, idx_curr, maximum_observation_range=60):
+    def ObserveFeatureSequence(self, feature_sequence, idx_curr, maximum_observation_range=100):
         output_features = learning_data_pb2.LearningOutput()
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
