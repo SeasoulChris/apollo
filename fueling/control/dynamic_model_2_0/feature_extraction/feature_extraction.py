@@ -18,8 +18,10 @@ import fueling.control.features.feature_extraction_rdd_utils as feature_extracti
 SEGMENT_LEN = 100 * 2
 SEGMENT_INTERVAL = 10 * 2  # 90% overlaping
 FINAL_SEGMENT_LEN = 100
-PROD_INPUT_DIR = 'modules/control/data/records/Mkz7/2019-04-25'
-PROD_TARGET_DIR = 'modules/control/DM2/test'
+# PROD_INPUT_DIR = 'modules/control/data/records/Mkz7/2019-04-25'
+# PROD_TARGET_DIR = 'modules/control/DM2/test'
+PROD_INPUT_DIR = 'fueling/control/dynamic_model_2_0/testdata/golden_set/2_3'
+PROD_TARGET_DIR = 'fueling/control/dynamic_model_2_0/testdata/2_3'
 
 
 def write_segment(elem):
@@ -79,6 +81,7 @@ class FeatureExtraction(BasePipeline):
         """Run test."""
         # test data dir (folder/record_files)
         test_data_dirs = '/fuel/apps/local/DM2'
+        test_data_dirs = 'fueling/control/dynamic_model_2_0/testdata/golden_set/2_3'
         all_dirs = glob.glob(os.path.join(test_data_dirs, '*'))
         target_dir = '/fuel/testdata/control/DM2_OUT/0816'
         # RDD(tasks)
@@ -112,7 +115,7 @@ class FeatureExtraction(BasePipeline):
             # PairRDD(target_dir, record_file)
             .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')))
             # PairRDD(target_dir, record_file), filter out unqualified files
-            .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file)))
+            # .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file)))
             # PairRDD(target_dir, message), control and chassis message
             .flatMapValues(record_utils.read_record([record_utils.CHASSIS_CHANNEL,
                                                      record_utils.LOCALIZATION_CHANNEL]))
