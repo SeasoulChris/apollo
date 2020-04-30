@@ -21,6 +21,7 @@ message InitRequest {
   GitInfo git_info = 1;
   repeated uint32 scenario_id = 2;
   DynamicModel dynamic_model = 3;
+  string running_role = 4;
 }
 
 message InitResponse {

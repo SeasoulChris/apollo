@@ -19,6 +19,7 @@ class K8sCostJob(BaseCostJob):
         client_flags = {
             'node_selector': 'CPU',
             'workers': options.get("workers", 1),
+            'role': options.get("role", ""),
             'cpu': 1,
             'gpu': 0,
             'memory': 5,  # in GB

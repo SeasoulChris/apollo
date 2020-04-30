@@ -78,7 +78,6 @@ class BayesianOptimizationTuner(BaseTuner):
         tic_start_overall = time.perf_counter()
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.init_points = init_points if init_points > 0 else self.init_points
-        self.iteration_records = {}
         for i in range(self.n_iter + self.init_points):
             tic_start = time.perf_counter()
 

@@ -157,6 +157,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             "token": request.token,
             "iteration_id": iteration_id,
             "workers": get_num_spark_workers(service_dir),
+            "role": request.running_role,
         }
         if request.cost_computation_conf_filename:
             options['cost_computation_conf_filename'] = request.cost_computation_conf_filename

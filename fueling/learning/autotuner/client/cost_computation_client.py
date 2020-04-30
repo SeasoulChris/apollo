@@ -14,10 +14,10 @@ class CostComputationClient(object):
 
     CHANNEL_URL = "localhost:50052"
 
-    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None):
+    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None, running_role=None):
         self.service_token = None
-        if commit_id and scenario_ids and dynamic_model:
-            self.initialize(commit_id, scenario_ids, dynamic_model)
+        if commit_id and scenario_ids and dynamic_model and running_role:
+            self.initialize(commit_id, scenario_ids, dynamic_model, running_role)
 
     def __enter__(self):
         return self
@@ -32,7 +32,7 @@ class CostComputationClient(object):
     def is_initialized(self):
         return self.service_token is not None
 
-    def construct_init_request(self, commit_id, scenario_ids, dynamic_model):
+    def construct_init_request(self, commit_id, scenario_ids, dynamic_model, running_role):
         # validate inputs
         if not isinstance(scenario_ids, list):
             raise TypeError(
@@ -46,6 +46,7 @@ class CostComputationClient(object):
         request.git_info.commit_id = commit_id
         request.scenario_id.extend(scenario_ids)
         request.dynamic_model = dynamic_model
+        request.running_role = running_role
 
         return request
 
@@ -102,14 +103,14 @@ class CostComputationClient(object):
 
         self.service_token = service_token
 
-    def initialize(self, commit_id, scenario_ids, dynamic_model):
+    def initialize(self, commit_id, scenario_ids, dynamic_model, running_role):
         if self.is_initialized():
             logging.info(f"Service {self.service_token} has been initialized")
             return
 
         logging.info(f"Initializing service for commit {commit_id} with training scenarios "
                      f"{scenario_ids} ...")
-        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model)
+        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model, running_role)
         response = self.send_request('Initialize', request)
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")

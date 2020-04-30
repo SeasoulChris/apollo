@@ -33,6 +33,11 @@ flags.DEFINE_string(
     "/mnt/bos/autotuner",
     "Tuner storage root directory"
 )
+flags.DEFINE_string(
+    "running_role",
+    "root",
+    "Customized role (username) instead of the default role"
+)
 
 
 class BaseTuner():
@@ -70,6 +75,12 @@ class BaseTuner():
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
+        self.iteration_records = {}
+        self.best_cost = 0.0
+        self.best_params = {}
+        self.optimize_time = 0.0
+        self.time_efficiency = 0.0
+
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
     def init_cost_client(self):
@@ -80,6 +91,7 @@ class BaseTuner():
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,
+            flags.FLAGS.running_role,
         )
 
     def init_optimizer_visualizer(self, tuner_parameters):

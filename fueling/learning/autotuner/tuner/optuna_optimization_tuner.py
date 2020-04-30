@@ -68,7 +68,6 @@ class OptunaOptimizationTuner(BaseTuner):
         self.n_iter = n_iter if n_iter > 0 else self.n_iter
         self.init_points = 0
         self.iter = -1
-        self.iteration_records = {}
 
         self.optimizer.optimize(self.objective, n_trials=self.n_iter)
         self.visualize(self.timestamp)
