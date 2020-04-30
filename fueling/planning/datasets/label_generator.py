@@ -171,19 +171,21 @@ class LabelGenerator(object):
         is_jittering = False
         feature_seq_len = len(feature_sequence)
         adc_traj = []
-        total_observed_time_span = 0.0
         # fix data point numbers
         future_start_index = idx_curr + 1
+        future_end_index = feature_seq_len - 1
         # default maximum_observation_time is 8s
         # This goes through all the subsequent features in this sequence
         # of features up to the maximum_observation_time.
         for j in range(future_start_index, feature_seq_len):
-            # logging.info(feature_sequence[j].timestamp_sec )
             # If timespan exceeds max. observation time, then end observing.
             time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
             if time_span > maximum_observation_time:
+                future_end_index = j
                 break
-            total_observed_time_span = time_span
+
+        future_end_index = min(future_end_index, feature_seq_len - 1)
+        for j in range(future_start_index, future_end_index + 1):
             # logging.info(feature_sequence[j].timestamp_sec)
             # timestamp_sec: 0.0
             # trajectory_point {
@@ -209,9 +211,9 @@ class LabelGenerator(object):
             # proto form
             output_features.adc_future_trajectory_point.add().CopyFrom(
                 feature_sequence[j])
-            total_observed_time_span = feature_sequence[j].timestamp_sec - \
-                feature_curr.timestamp_sec
 
+        total_observed_time_span = feature_sequence[future_end_index].timestamp_sec - \
+            feature_curr.timestamp_sec
         # Update the observation_dict:
         dict_val = dict()
         dict_val['adc_traj'] = adc_traj
