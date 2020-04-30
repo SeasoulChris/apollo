@@ -160,7 +160,7 @@ class LabelGenerator(object):
     @output: All saved as class variables in observation_dict,
     '''
 
-    def ObserveFeatureSequence(self, feature_sequence, idx_curr, maximum_observation_range=100):
+    def ObserveFeatureSequence(self, feature_sequence, idx_curr, maximum_observation_time=8.0):
         output_features = learning_data_pb2.LearningOutput()
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
@@ -174,11 +174,16 @@ class LabelGenerator(object):
         total_observed_time_span = 0.0
         # fix data point numbers
         future_start_index = idx_curr + 1
-
+        # default maximum_observation_time is 8s
         # This goes through all the subsequent features in this sequence
         # of features up to the maximum_observation_time.
-        for j in range(future_start_index,
-                       min(future_start_index + maximum_observation_range, len(feature_sequence))):
+        for j in range(future_start_index, feature_seq_len):
+            # logging.info(feature_sequence[j].timestamp_sec )
+            # If timespan exceeds max. observation time, then end observing.
+            time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
+            if time_span > maximum_observation_time:
+                break
+            total_observed_time_span = time_span
             # logging.info(feature_sequence[j].timestamp_sec)
             # timestamp_sec: 0.0
             # trajectory_point {
