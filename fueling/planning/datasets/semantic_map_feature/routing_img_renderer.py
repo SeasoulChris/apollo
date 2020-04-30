@@ -64,6 +64,9 @@ class RoutingImgRenderer(object):
         routing_color_delta = int(255 / len(local_routing))
         for i in range(len(local_routing)):
             color = int(255 - i * routing_color_delta)
+            if not self.lane_dict.__contains__(local_routing[i]):
+                print("local routing lane is not found : " + local_routing[i])
+                continue
             routing_lane = self.lane_dict[local_routing[i]]
             for segment in routing_lane.central_curve.segment:
                 for i in range(len(segment.line_segment.point) - 1):

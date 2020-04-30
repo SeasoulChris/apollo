@@ -35,8 +35,38 @@ class ObstaclePredictionsImgRenderer(object):
         for obstacle in obstacles:
             box_length = obstacle.length
             box_width = obstacle.width
+
+            # if static, drawing it out according to obstacle tracking
+            if obstacle.obstacle_prediction.is_static:
+                if len(obstacle.obstacle_trajectory.evaluated_trajectory_point) == 0:
+                    print("obstacle {} is static without tracking point".format(
+                        obstacle.id))
+                    continue
+                path_point = obstacle.obstacle_trajectory.evaluated_trajectory_point[-1].\
+                    trajectory_point.path_point
+                path_point_array = np.array(
+                    [path_point.x, path_point.y])
+                east_oriented_box = np.array([[box_length / 2, box_length / 2,
+                                               -box_length / 2, -box_length / 2],
+                                              [box_width / 2, -box_width / 2,
+                                               -box_width / 2, box_width / 2]]).T
+                # obstacles are in ego vehicle coordiantes where ego car faces toward
+                # EAST, so rotation to NORTH is done below
+                corner_points = renderer_utils.\
+                    box_affine_tranformation(east_oriented_box,
+                                             path_point_array,
+                                             np.pi / 2 + path_point.theta +
+                                             coordinate_heading,
+                                             np.array(
+                                                 [0, 0]),
+                                             np.pi / 2 + coordinate_heading,
+                                             self.local_base_point_idx,
+                                             self.resolution)
+                cv.fillPoly(local_map, [corner_points], color=255)
+
             if len(obstacle.obstacle_prediction.trajectory) == 0:
                 continue
+
             max_prob_idx = 0
             max_prob = 0
             for i in range(len(obstacle.obstacle_prediction.trajectory)):
@@ -58,7 +88,6 @@ class ObstaclePredictionsImgRenderer(object):
                                                -box_length / 2, -box_length / 2],
                                               [box_width / 2, -box_width / 2,
                                                -box_width / 2, box_width / 2]]).T
-
                 # obstacles are in ego vehicle coordiantes where ego car faces toward
                 # EAST, so rotation to NORTH is done below
                 corner_points = renderer_utils.\
@@ -86,43 +115,73 @@ class ObstaclePredictionsImgRenderer(object):
         for obstacle in obstacles:
             box_length = obstacle.length
             box_width = obstacle.width
-            if obstacle.HasField("obstacle_prediction") and len(
-                    obstacle.obstacle_prediction.trajectory) > 0:
-                max_prob_idx = 0
-                max_prob = 0
-                for i in range(len(obstacle.obstacle_prediction.trajectory)):
-                    trajectory = obstacle.obstacle_prediction.trajectory[i]
-                    if trajectory.probability > max_prob:
-                        max_prob_idx = i
-                        max_prob = trajectory.probability
-                if len(
-                    obstacle.obstacle_prediction.trajectory[max_prob_idx].
-                        trajectory_point) <= timestamp_idx:
-                    # print("timestamp_idx larger than what is available in obstacle prediction")
+
+            # if static, drawing it out according to obstacle tracking
+            if obstacle.obstacle_prediction.is_static:
+                if len(obstacle.obstacle_trajectory.evaluated_trajectory_point) == 0:
+                    print("obstacle {} is static without tracking point".format(
+                        obstacle.id))
                     continue
-                else:
-                    path_point = obstacle.obstacle_prediction.trajectory[
-                        max_prob_idx].trajectory_point[timestamp_idx].trajectory_point.path_point
-                    path_point_array = np.array([path_point.x, path_point.y])
-                    east_oriented_box = np.array([[box_length / 2, box_length / 2,
-                                                   -box_length / 2, -box_length / 2],
-                                                  [box_width / 2, -box_width / 2,
-                                                   -box_width / 2, box_width / 2]]).T
+                path_point = obstacle.obstacle_trajectory.evaluated_trajectory_point[-1].\
+                    trajectory_point.path_point
+                path_point_array = np.array(
+                    [path_point.x, path_point.y])
+                east_oriented_box = np.array([[box_length / 2, box_length / 2,
+                                               -box_length / 2, -box_length / 2],
+                                              [box_width / 2, -box_width / 2,
+                                               -box_width / 2, box_width / 2]]).T
+                # obstacles are in ego vehicle coordiantes where ego car faces toward
+                # EAST, so rotation to NORTH is done below
+                corner_points = renderer_utils.\
+                    box_affine_tranformation(east_oriented_box,
+                                             path_point_array,
+                                             np.pi / 2 + path_point.theta +
+                                             coordinate_heading,
+                                             np.array(
+                                                 [0, 0]),
+                                             np.pi / 2 + coordinate_heading,
+                                             self.local_base_point_idx,
+                                             self.resolution)
+                cv.fillPoly(local_map, [corner_points], color=255)
 
-                    # obstacles are in ego vehicle coordiantes where ego car faces toward
-                    # EAST, so rotation to NORTH is done below
-                    corner_points = renderer_utils.\
-                        box_affine_tranformation(east_oriented_box,
-                                                 path_point_array,
-                                                 np.pi / 2 + path_point.theta +
-                                                 coordinate_heading,
-                                                 np.array(
-                                                     [0, 0]),
-                                                 np.pi / 2 + coordinate_heading,
-                                                 self.local_base_point_idx,
-                                                 self.resolution)
+            if len(obstacle.obstacle_prediction.trajectory) == 0:
+                continue
 
-                    cv.fillPoly(local_map, [corner_points], color=255)
+            max_prob_idx = 0
+            max_prob = 0
+            for i in range(len(obstacle.obstacle_prediction.trajectory)):
+                trajectory = obstacle.obstacle_prediction.trajectory[i]
+                if trajectory.probability > max_prob:
+                    max_prob_idx = i
+                    max_prob = trajectory.probability
+            if len(
+                obstacle.obstacle_prediction.trajectory[max_prob_idx].
+                    trajectory_point) <= timestamp_idx:
+                # print("timestamp_idx larger than what is available in obstacle prediction")
+                continue
+            else:
+                path_point = obstacle.obstacle_prediction.trajectory[
+                    max_prob_idx].trajectory_point[timestamp_idx].trajectory_point.path_point
+                path_point_array = np.array([path_point.x, path_point.y])
+                east_oriented_box = np.array([[box_length / 2, box_length / 2,
+                                               -box_length / 2, -box_length / 2],
+                                              [box_width / 2, -box_width / 2,
+                                               -box_width / 2, box_width / 2]]).T
+
+                # obstacles are in ego vehicle coordiantes where ego car faces toward
+                # EAST, so rotation to NORTH is done below
+                corner_points = renderer_utils.\
+                    box_affine_tranformation(east_oriented_box,
+                                             path_point_array,
+                                             np.pi / 2 + path_point.theta +
+                                             coordinate_heading,
+                                             np.array(
+                                                 [0, 0]),
+                                             np.pi / 2 + coordinate_heading,
+                                             self.local_base_point_idx,
+                                             self.resolution)
+
+                cv.fillPoly(local_map, [corner_points], color=255)
 
         return local_map
 
