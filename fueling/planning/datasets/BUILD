@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@default_deps//:requirements.bzl", "requirement")
+
 py_library(
     name = "semantic_map_dataset",
     srcs = ["semantic_map_dataset.py"],
@@ -87,5 +89,17 @@ py_library(
     deps = [
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
+    ],
+)
+
+py_binary(
+    name = "learning_data_organizer",
+    srcs = ["learning_data_organizer.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
+        requirement("tqdm"),
     ],
 )
