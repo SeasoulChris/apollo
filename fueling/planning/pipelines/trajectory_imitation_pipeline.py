@@ -19,7 +19,7 @@ import fueling.common.proto_utils as proto_utils
 
 if __name__ == "__main__":
     # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3, 4, 5'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
@@ -83,9 +83,9 @@ if __name__ == "__main__":
         logging.info('model {} is not implemnted'.format(args.model_type))
         exit()
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True,
                                                num_workers=4, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=2, shuffle=True,
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=16, shuffle=True,
                                                num_workers=4, drop_last=True)
 
     learning_rate = 3e-4
@@ -95,10 +95,14 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if torch.cuda.is_available():
-        print("Using CUDA to speed up training.")
+        logging.info("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print("Not using CUDA.")
+        logging.info("Not using CUDA.")
+
+    if torch.cuda.device_count() > 1:
+        logging.info("multiple GPUs are used")
+        model = torch.nn.DataParallel(model)
 
     # Model training:
     torch.autograd.set_detect_anomaly(True)
