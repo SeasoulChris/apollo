@@ -28,24 +28,32 @@ class RawDataVisualization():
         self.model_path = args.dm10_model_path
 
     def get_data(self):
-        self.feature = read_h5(self.data_file)
+        """load features"""
+        if self.data_file.endswith('.hdf5'):
+            self.feature = read_h5(self.data_file)
+        else:
+            self.features = np.load(self.data_file, allow_pickle=True)
         self.data_dim = self.feature.shape[0]
         logging.info(self.data_dim)
 
     def imu_location(self):
+        """ imu location """
         imu_acc = self.acc()
         imu_w = self.feature[:, segment_index["w_z"]]
         imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc)
         return (imu_x, imu_y)
 
     def dynamic_model_10_location(self):
+        """ get dynamic model 10 predicted location """
         dm_acc, dm_w = self.dynamic_model_10_output()
         dm_x, dm_y = self.get_location_from_a_and_w(dm_w, dm_acc)
         return (dm_x, dm_y)
 
     def get_location_from_a_and_w(self, ws, accs):
+        """ integration from acceleration and heading angle change rate to x, y"""
         dt = feature_config["delta_t"]
         theta = self.calc_theta(ws, dt)
+        logging.info(f'max steering angle is {max(theta)}')
         s = self.calc_s(accs, dt)
         x = np.zeros((self.data_dim, 1))
         y = np.zeros((self.data_dim, 1))
@@ -55,15 +63,16 @@ class RawDataVisualization():
         y_init = self.feature[0, segment_index['y']]
 
         for idx in range(0, self.data_dim):
-            # s[0] = 0
             x[idx] = x_init + s[idx] * np.cos(theta[idx])
             y[idx] = y_init + s[idx] * np.sin(theta[idx])
             # update current location
             x_init = x[idx]
             y_init = y[idx]
+
         return (x, y)
 
     def dynamic_model_10_output(self):
+        """ dynamic model 1.0 output"""
         # load model parameters
         model_path = self.model_path
         model_norms_path = os.path.join(model_path, 'norms.h5')
@@ -79,7 +88,7 @@ class RawDataVisualization():
         # Initialize the first frame's data
         predicted_a = np.zeros((self.data_dim, 1))
         predicted_w = np.zeros((self.data_dim, 1))
-
+        steerings = []
         for k in range(0, self.data_dim):
             speed = self.feature[k, segment_index["speed"]]
             acc = self.feature[k, segment_index["a_x"]] * \
@@ -89,10 +98,10 @@ class RawDataVisualization():
             throttle = self.feature[k, segment_index["throttle"]]
             brake = self.feature[k, segment_index["brake"]]
             steering = self.feature[k, segment_index["steering"]]
+            steerings.append(steering)
             # time delay ?
             mlp_input = np.array([speed, acc, throttle, brake, steering]).reshape(1, 5)
             predicted_a[k], predicted_w[k] = generate_mlp_output(mlp_input, model, norms)
-        logging.info(mlp_input.shape)
         return (predicted_a, predicted_w)
 
     def calc_theta(self, w, dt):
@@ -110,6 +119,7 @@ class RawDataVisualization():
         return theta
 
     def calc_s(self, acc, dt):
+        """ s = v0 * dt + 0.5 * a * t * t"""
         # initial velocity
         init_normalized_heading = self._normalize_angle(self.feature[0, segment_index["heading"]])
         init_v = (self.feature[0, segment_index["v_x"]] * np.cos(init_normalized_heading) +
@@ -125,9 +135,10 @@ class RawDataVisualization():
 
     @staticmethod
     def _distance_s(acc, dt, v0):
-        return v0 * dt + 1 / 2 * acc * dt * dt
+        return v0 * dt + 0.5 * acc * dt * dt
 
     def acc(self):
+        """ get ground truth acc """
         acc = np.empty((self.data_dim, 1))
         for idx, heading in enumerate(self.feature[:, segment_index["heading"]]):
             normalized_heading = self._normalize_angle(heading)

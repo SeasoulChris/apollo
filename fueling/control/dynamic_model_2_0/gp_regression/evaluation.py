@@ -18,7 +18,7 @@ from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
 
-def evaluation(args, dataset, GaussianProcess):
+def evaluation(args, dataset, GaussianProcess, data_frame_length=100, is_plot=False):
     """Load GP model params from files and make predictions and testset"""
     # get training data
     input_data, gt_data = dataset.get_test_data()
@@ -68,33 +68,33 @@ def evaluation(args, dataset, GaussianProcess):
     variance = predictions.variance
     logging.info(f'mean data shape is {mean.shape}')
     logging.info(f'variance shape is {variance.shape}')
-
-    input_data = input_data.numpy()
-    # Input feature visualization
-    for i in range(len(input_data)):
-        if i % 100 == 0:
-            plt.figure(figsize=(4, 3))
-            plt.title("Dataset Visualization")
-            plt.plot(input_data[:, i, 0], 'o', color='black')
-            plt.plot(input_data[:, i, 1], 'o', color='grey')
-            plt.plot(input_data[:, i, 2], 'o', color='green')
-            plt.plot(input_data[:, i, 3], 'o', color='red')
-            plt.plot(input_data[:, i, 4], 'o', color='blue')
-            plt.plot(input_data[:, i, 5], 'o', color='purple')
-            plt.show()
-    criterion = nn.MSELoss()
-    loss = torch.sqrt(criterion(gt_data, mean))
-    logging.info("RMSE:{}".format(loss))
-    gt_data = gt_data.numpy()
-    mean = mean.detach().numpy()
-    upper = upper.detach().numpy()
-    lower = lower.detach().numpy()
-    plt.figure(figsize=(4, 3))
-    plt.title("Result Visualization")
-    plt.plot(gt_data[:, 0], gt_data[:, 1], 'o', color='blue')
-    plt.plot(mean[:, 0], mean[:, 1], 'o', color='red')
-    plt.plot([gt_data[:, 0], mean[:, 0]], [gt_data[:, 1], mean[:, 1]], 'g:')
-    plt.show()
+    if is_plot:
+        input_data = input_data.numpy()
+        # Input feature visualization
+        for i in range(len(input_data)):
+            if i % data_frame_length == 0:
+                plt.figure(figsize=(4, 3))
+                plt.title("Dataset Visualization")
+                plt.plot(input_data[:, i, 0], 'o', color='black')
+                plt.plot(input_data[:, i, 1], 'o', color='grey')
+                plt.plot(input_data[:, i, 2], 'o', color='green')
+                plt.plot(input_data[:, i, 3], 'o', color='red')
+                plt.plot(input_data[:, i, 4], 'o', color='blue')
+                plt.plot(input_data[:, i, 5], 'o', color='purple')
+                plt.show()
+        criterion = nn.MSELoss()
+        loss = torch.sqrt(criterion(gt_data, mean))
+        logging.info("RMSE:{}".format(loss))
+        gt_data = gt_data.numpy()
+        mean = mean.detach().numpy()
+        upper = upper.detach().numpy()
+        lower = lower.detach().numpy()
+        plt.figure(figsize=(4, 3))
+        plt.title("Result Visualization")
+        plt.plot(gt_data[:, 0], gt_data[:, 1], 'o', color='blue')
+        plt.plot(mean[:, 0], mean[:, 1], 'o', color='red')
+        plt.plot([gt_data[:, 0], mean[:, 0]], [gt_data[:, 1], mean[:, 1]], 'g:')
+        plt.show()
     # save as npy, avoid regenerate result when modifying plots.
     evaluation_result = dict()
     evaluation_result['validation_labels'] = gt_data.numpy()
@@ -103,13 +103,13 @@ def evaluation(args, dataset, GaussianProcess):
     evaluation_result['mean'] = mean.detach().numpy()
     evaluation_result['upper'] = upper.detach().numpy()
     evaluation_result['lower'] = lower.detach().numpy()
-    np.save(os.path.join(args.testing_data_path + 'evaluation_result.npy'), evaluation_result)
+    np.save(os.path.join(args.testing_data_path, 'evaluation_result.npy'), evaluation_result)
     logging.info(f'upper shape: {upper.shape}')
+    return mean.detach().numpy()
 
 
 def evaluation_visualization(file_path):
     evaluation_result = np.load(file_path, allow_pickle=True).item()
-    # with np.load(file_path, allow_pickle=True).item() as evaluation_result:
     validation_labels = evaluation_result['validation_labels']
     mean = evaluation_result['mean']
     logging.info(mean)
@@ -136,7 +136,7 @@ def evaluation_visualization(file_path):
     ax.plot(mean[:, 0], mean[:, 1], 's', color='r', label='Predicted mean')
     ax.legend(fontsize=12, frameon=False)
     ax.grid(True)
-    # time stamp
+    # timestamp
     plt.savefig(os.path.join(os.path.dirname(file_path), "plot.png"))
     plt.show()
 

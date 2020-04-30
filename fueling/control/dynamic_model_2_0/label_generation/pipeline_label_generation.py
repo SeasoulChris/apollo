@@ -22,10 +22,10 @@ import fueling.control.dynamic_model_2_0.label_generation.label_generation as la
 
 
 flags.DEFINE_string('DM20_features',
-                    'modules/control/dynamic_model_2_0/golden_set/features',
+                    'modules/control/dynamic_model_2_0/features',
                     'input data directory')
 flags.DEFINE_string('DM20_labeled_features',
-                    'modules/control/dynamic_model_2_0/labeled_data/golden_set',
+                    'modules/control/dynamic_model_2_0/labeled_data',
                     'output data directory')
 flags.DEFINE_string('DM10_forward_mlp_model',
                     'fueling/control/dynamic_model_2_0/label_generation/mlp_model',
@@ -37,12 +37,13 @@ class PipelineLabelGenerator(BasePipeline):
 
     def run(self):
         """Run."""
-        timestr = time.strftime('%Y-%m-%d')
+        timestr = time.strftime('%Y-%m-%d-%H')
         src_prefix = flags.FLAGS.DM20_features
         dst_prefix = os.path.join(flags.FLAGS.DM20_labeled_features, timestr)
         if self.is_local():
-            self.src_prefix = 'local_test/features'
-            self.dst_prefix = os.path.join('local_test/labeled_data', timestr)
+            logging.info('at local')
+            src_prefix = 'local_test/features'
+            dst_prefix = os.path.join('local_test/labeled_data', timestr)
         model_path = flags.FLAGS.DM10_forward_mlp_model
 
         logging.info(F'src: {src_prefix}, dst: {dst_prefix}, model path: {model_path}')
@@ -73,10 +74,11 @@ class PipelineLabelGenerator(BasePipeline):
         segment = label_generation.generate_segment(hdf5_file)
         input_segment, output_segment = label_generation.generate_gp_data(model_path, segment)
 
-        h5_file_name = os.path.join(
-            dst_dir, F'{os.path.basename(hdf5_file).split(".")[0]}-{os.path.basename(hdf5_file).split(".")[1]}.h5')
-        logging.info(h5_file_name)
-        with h5py.File(h5_file_name, 'w') as h5_file:
+        # replace previous .hdf5 extension as h5
+        dst_h5_file = os.path.join(
+            dst_dir, os.path.basename(hdf5_file).replace('hdf5', 'h5'))
+        logging.info(dst_h5_file)
+        with h5py.File(dst_h5_file, 'w') as h5_file:
             h5_file.create_dataset('input_segment', data=input_segment)
             h5_file.create_dataset('output_segment', data=output_segment)
             logging.info('Successfully labeled {}'.format(hdf5_file))

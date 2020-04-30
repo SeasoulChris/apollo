@@ -173,6 +173,23 @@ class DynamicModel20FeatureExtractor():
                 self.chassis_idx.append(idx)
                 self.pose_idx.append(pose_data_range[0][0])
 
+    def save_as_npy(self):
+        if not self.chassis_data:
+            return
+        features = []
+        logging.info(
+            f'chassis data length is {len(self.chassis_idx)}; pose data length is {len(self.pose_idx)}')
+        for chassis_idx, pose_idx in zip(self.chassis_idx, self.pose_idx):
+            logging.debug(f'chassis index is {chassis_idx} and pose index is {pose_idx}')
+            features.append(
+                self.feature_combine(self.chassis_data[chassis_idx], self.pose_data[pose_idx]))
+        # write to npy
+        dst_dir = os.path.dirname(self.file_name)
+        file_name = f'{os.path.basename(self.file_name)}'
+        dst_file = os.path.join(dst_dir, file_name + '_features.npy')
+        logging.info(f'{len(features)} data points are saved to file {dst_file}')
+        np.save(dst_file, np.array(features))
+
     def extract_features(self, data_length=100):
         """ write paired chassis and localization msgs to hdf5 files"""
         if not self.chassis_data:
@@ -254,8 +271,6 @@ class DynamicModel20FeatureExtractor():
 
                 logging.info(f'figure saved as : {figure_file_path}')
                 plt.savefig(figure_file_path)
-                # plt.show()
-                # plt.pause(3)
                 plt.close(fig)
 
     def plot_time_differences(self, fig, fig_index, data, title, index=None):
@@ -298,15 +313,16 @@ class DynamicModel20FeatureExtractor():
 
 
 if __name__ == '__main__':
-    file_name = 'fueling/control/dynamic_model_2_0/testdata/golden_set/5_3/20190430124347.record.00001.recover'
-    secondary_file = 'fueling/control/dynamic_model_2_0/testdata/golden_set/2_3/20190430115905.record.00001.recover'
     # each folder contained a completed trip, traverse all trip folders
     # for golden set, no more than 2 files in a folder
     file_path = 'fueling/control/dynamic_model_2_0/testdata/golden_set'
     file_list = glob.glob(os.path.join(file_path, '*/*00000.recover'))
     logging.info(f'total {len(file_list)} files: {file_list}')
-    feature_extractor = DynamicModel20FeatureExtractor(
-        file_name, origin_prefix='golden_set', target_prefix='golden_set_features')
-    feature_extractor.extract_data_from_record()
-    feature_extractor.data_pairing()
+    for file_name in file_list:
+        feature_extractor = DynamicModel20FeatureExtractor(
+            file_name, origin_prefix='golden_set', target_prefix='golden_set_features')
+        feature_extractor.extract_data_from_record()
+        feature_extractor.data_pairing()
+        feature_extractor.save_as_npy()
+        feature_extractor.extract_features()
     feature_extractor.visualizer()

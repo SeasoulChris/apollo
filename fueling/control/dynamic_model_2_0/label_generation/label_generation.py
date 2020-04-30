@@ -30,6 +30,8 @@ SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
 PI = 3.14159
 
 # Cache models to avoid the same one got loaded repeatedly
+
+
 class GlobalModels(object):
     """The global pool for models"""
 
@@ -109,12 +111,19 @@ def generate_gp_data(model_path, segment):
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
                                                        1, MLP_DIM_INPUT), model, norms)
         # Calculate the model prediction on current speed and heading
-        predicted_v += predicted_a * feature_config["delta_t"]
+        prev_v = predicted_v  # previous speed
+        predicted_v += predicted_a * feature_config["delta_t"]  # updated speed v = v0 + acc * dt
         predicted_heading += predicted_w * feature_config["delta_t"]
+
         # Calculate the model prediction on current position
-        # TODO(SHU): s = v * dt + 1/2 * a * dt * dt
-        predicted_x += predicted_v * np.cos(predicted_heading) * feature_config["delta_t"]
-        predicted_y += predicted_v * np.sin(predicted_heading) * feature_config["delta_t"]
+        ds = prev_v * feature_config["delta_t"] + 0.5 * predicted_a * \
+            feature_config["delta_t"] * feature_config["delta_t"]
+        # ds = _distance_s(predicted_a, feature_config["delta_t"], prev_v)
+        predicted_x += ds * np.cos(predicted_heading)
+        predicted_y += ds * np.sin(predicted_heading)
+
+    # def _distance_s(acc, dt, v0):
+    #     return v0 * dt + 0.5 * acc * dt * dt
     # The residual error on x and y prediction
     output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["x"]] - predicted_x
@@ -129,20 +138,27 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     Generate MLP model's direct output
     """
     input_mean, input_std, output_mean, output_std = norms
+    # logging.info(
+    # f'input mean: {input_mean}, input_std: {input_std}, output_mean:{output_mean}, output_std:{output_std}')
     # Prediction on acceleration and angular speed by MLP
     output_fnn = np.zeros([1, 2])
+    cur_speed = mlp_input[0, 0]
     # Normalization for MLP model's input/output
     mlp_input[0, :] = (mlp_input[0, :] - input_mean) / input_std
     output_fnn[0, :] = model.predict(mlp_input)
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
     # Update the vehicle speed based on predicted acceleration
-    velocity_fnn = output_fnn[0, 0] * feature_config["delta_t"] + mlp_input[0, 0]
+    velocity_fnn = output_fnn[0, 0] * feature_config["delta_t"] + cur_speed
+    # logging.info(velocity_fnn)
     # If (negative speed under forward gear || positive speed under backward gear ||
     #     neutral gear):
     # Then truncate speed, acceleration, and angular speed to 0
     if gear_status * (velocity_fnn + gear_status * SPEED_EPSILON) <= 0:
+        logging.info(f'output is set as zeros')
         output_fnn[0, 0] = 0.0
         output_fnn[0, 1] = 0.0
+    logging.debug(f'mlp input is {mlp_input}')
+    logging.debug(f'mlp output is {output_fnn[0,0]} and {output_fnn[0,1]}')
 
     return output_fnn[0, 0], output_fnn[0, 1]
 
