@@ -11,3 +11,15 @@ py_binary(
         "//fueling/control/dynamic_model_2_0/label_generation",
     ],
 )
+
+py_binary(
+    name = "dynamic_model_data_visualization",
+    srcs = ["dynamic_model_data_visualization.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:h5_utils",
+        "//fueling/common:logging",
+        "//fueling/control/common:multi_vehicle_plot_utils",
+        "//fueling/control/dynamic_model_2_0/conf:model_conf",
+    ],
+)

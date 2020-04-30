@@ -25,8 +25,26 @@ cali_input_index = {
 }
 
 
-def plot_dynamic_model_feature_hist(fearure, result_file):
-    logging.info('Total Number of Feature Frames %s' % fearure.shape[0])
+def plot(plot_title, plot_points, pdf_file):
+    """Plot points(array) to given pdf file"""
+    plt.figure(figsize=(4, 3))
+    plt.hist(plot_points, bins='auto')
+    plt.title(F'Histogram of the {plot_title}') 
+    pdf_file.savefig()
+    plt.close()
+
+
+def plot_dynamic_mode_2_0_feature_hist(indexed_values, result_file):
+    """Plot DM2.0 feature with a indexed group"""
+    with PdfPages(result_file) as pdf_file:
+        for group in indexed_values:
+            feature_name, feature_values = group
+            plot(feature_name, [v for v in feature_values], pdf_file)
+
+
+def plot_dynamic_model_feature_hist(feature, result_file):
+    """Dynamic model feature plot"""
+    logging.info('Total Number of Feature Frames %s' % feature.shape[0])
     with PdfPages(result_file) as pdf:
         for feature_name in input_index:
             logging.info('feature_name %s' % feature_name)
@@ -34,14 +52,7 @@ def plot_dynamic_model_feature_hist(fearure, result_file):
             if feature_name not in segment_index:
                 continue
             feature_index = segment_index[feature_name]
-            plt.figure(figsize=(4, 3))
-            axes = plt.gca()
-            axes.set_ylim([0, 7000])
-            # plot the distribution of feature_index column of input data
-            plt.hist(fearure[:, feature_index], bins='scott', label='linear')
-            plt.title("Histogram of the Feature Input {}".format(feature_name))
-            pdf.savefig()  # saves the current figure into a pdf page
-            plt.close()
+            plot(feature_name, feature[:, feature_index], pdf)
     return result_file
 
 
@@ -52,11 +63,7 @@ def plot_feature_hist(elem, target_dir):
     result_file = os.path.join(target_dir, vehicle, 'Dataset_Distribution.pdf')
     with PdfPages(result_file) as pdf:
         for j in range(DIM_INPUT):
-            plt.figure(figsize=(4, 3))
-            plt.hist(feature[:, j], bins='auto')
-            plt.title("Histogram of the " + cali_input_index[j])
-            pdf.savefig()  # saves the current figure into a pdf page
-            plt.close()
+            plot(cali_input_index[j], feature[:, j], pdf)
     return result_file
 
 
