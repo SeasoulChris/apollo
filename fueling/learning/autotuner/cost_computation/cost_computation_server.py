@@ -110,7 +110,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             request.dynamic_model)
         init_sim_event.clear()
 
-        logging.info(f"Timer: total init - {time.perf_counter() - tic_start:0.04f} sec")
+        logging.info(f"Timer: total init - {time.perf_counter() - tic_start:0.04f} sec [Token: {service_token}]")
         return CostComputation.create_init_response(
             status.code, status.message, service_token,
         )
@@ -185,7 +185,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             for (config_id, weighted_score) in scores.items():
                 response.score[config_id] = float(weighted_score)
 
-            logging.info(f"Timer: total compute - {time.perf_counter() - tic_start:0.04f} sec")
+            logging.info(f"Timer: total compute - {time.perf_counter() - tic_start:0.04f} sec [Token: {request.token}, Iteration: {iteration_id}]")
             return response
 
         except Exception as error:
@@ -209,7 +209,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
 
 def __main__(argv):
     server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10),
+        futures.ThreadPoolExecutor(max_workers=70),
         compression=grpc.Compression.Gzip)
     cost_service_pb2_grpc.add_CostComputationServicer_to_server(
         CostComputation(), server

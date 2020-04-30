@@ -21,8 +21,8 @@ class K8sCostJob(BaseCostJob):
             'workers': options.get("workers", 1),
             'cpu': 1,
             'gpu': 0,
-            'memory': 5, # in GB
-            'disk': 5, # in GB
+            'memory': 5,  # in GB
+            'disk': 5,  # in GB
             'wait': True,
         }
 
