@@ -24,6 +24,7 @@ class DynamicModelDatasetVisualization(BasePipeline):
         filtered_segment = []
         for idx, column in enumerate(chosen_columns):
             filtered_segment.append((column, column_means[idx]))
+            logging.info(F'column {column}: mean value {column_means[idx]}')
         return filtered_segment
 
 
