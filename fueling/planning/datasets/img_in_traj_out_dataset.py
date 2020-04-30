@@ -29,22 +29,12 @@ class TrajectoryImitationCNNDataset(Dataset):
             # 12 channels is used
             transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
                                  std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
-        self.instances = []
-
+        
         logging.info('Processing directory: {}'.format(data_dir))
-        all_file_paths = file_utils.list_files(data_dir)
+        self.instances = file_utils.list_files(data_dir)
 
-        region = None
-        for file_path in all_file_paths:
-            if 'future_status' not in file_path or 'bin' not in file_path:
-                continue
-            logging.info("loading {} ...".format(file_path))
-            learning_data_frames = learning_data_pb2.LearningData()
-            with open(file_path, 'rb') as file_in:
-                learning_data_frames.ParseFromString(file_in.read())
-            for learning_data_frame in learning_data_frames.learning_data:
-                self.instances.append(learning_data_frame)
-            region = learning_data_frames.learning_data[0].map_name
+        # TODO(Jinyun): add multi-map support
+        region = "sunnyvale_with_two_offices"
 
         self.total_num_data_pt = len(self.instances)
 
@@ -135,36 +125,12 @@ class TrajectoryImitationRNNDataset(Dataset):
         self.img_bitmap_transform = transforms.Compose([
             # Normalized to [0, 1]
             transforms.ToTensor()])
-        self.instances = []
-
-        individual_frame_dirname = os.path.join(data_dir, "individual_frames/")
-        # individual_frame_dirname = "./individual_frames/"
-        if os.path.isdir(individual_frame_dirname):
-            logging.info(individual_frame_dirname +
-                         " directory exists, delete it!")
-            shutil.rmtree(individual_frame_dirname)
-        os.mkdir(individual_frame_dirname)
-        logging.info("Making output directory: " + individual_frame_dirname)
 
         logging.info('Processing directory: {}'.format(data_dir))
-        all_file_paths = file_utils.list_files(data_dir)
+        self.instances = file_utils.list_files(data_dir)
 
-        region = None
-
-        for file_path in all_file_paths:
-            if 'future_status' not in file_path or 'bin' not in file_path:
-                continue
-            logging.info("loading {} ...".format(file_path))
-            learning_data_frames = proto_utils.get_pb_from_bin_file(
-                file_path, learning_data_pb2.LearningData())
-            frames_base_name = os.path.basename(file_path)
-            for frame_num, learning_data_frame in enumerate(learning_data_frames.learning_data):
-                frame_name = os.path.join(
-                    individual_frame_dirname, frames_base_name + "_{}.bin".format(frame_num))
-                proto_utils.write_pb_to_bin_file(
-                    learning_data_frame, frame_name)
-                self.instances.append(frame_name)
-            region = learning_data_frames.learning_data[0].map_name
+        # TODO(Jinyun): add multi-map support
+        region = "sunnyvale_with_two_offices"
 
         self.total_num_data_pt = len(self.instances)
 
