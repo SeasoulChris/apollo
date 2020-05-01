@@ -21,7 +21,6 @@ import fueling.common.logging as logging
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
 # Every 100 frames Input Vector correspond to 1 frame of output.
-# INPUT_LENGTH = feature_config["DELTA_T"] / feature_config["delta_t"]
 INPUT_LENGTH = 100
 DIM_INPUT = feature_config["input_dim"]
 MLP_DIM_INPUT = feature_config["mlp_input_dim"]
@@ -91,12 +90,17 @@ def generate_gp_data(model_path, segment):
     input_segment = np.zeros([INPUT_LENGTH, DIM_INPUT])
     output_segment = np.zeros([DIM_OUTPUT])
     # Initialize the first frame's data
-    predicted_v = segment[0, segment_index["speed"]]
+    # speed from GPS
+    predicted_v = segment[0, segment_index["v_x"]] * np.cos(segment[0, segment_index["heading"]]) +\
+        segment[0, segment_index["v_y"]] * np.sin(segment[0, segment_index["heading"]])
     predicted_heading = segment[0, segment_index["heading"]]
+    logging.info(f'init predicted_heading is {predicted_heading}')
     predicted_w = segment[0, segment_index["w_z"]]
     predicted_x = segment[0, segment_index["x"]]
     predicted_y = segment[0, segment_index["y"]]
-
+    predicted_a_prev = None
+    predicted_w_prev = None
+    prev_v = None
     for k in range(INPUT_LENGTH):
         input_segment[k, input_index["v"]] = segment[k, segment_index["speed"]]
         input_segment[k, input_index["a"]] = segment[k, segment_index["a_x"]] * \
@@ -110,21 +114,25 @@ def generate_gp_data(model_path, segment):
 
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
                                                        1, MLP_DIM_INPUT), model, norms)
-        # Calculate the model prediction on current speed and heading
+
+        if k > 0:
+            # update based on previous output
+            # Calculate the model prediction on current speed and heading
+            # updated speed v(k) = v(k-1) + acc(s) * dt
+            predicted_v += predicted_a_prev * feature_config["delta_t"]
+            predicted_heading += predicted_w_prev * feature_config["delta_t"]
+            # Calculate the model prediction on current position
+            ds = prev_v * feature_config["delta_t"] + 0.5 * predicted_a_prev * \
+                feature_config["delta_t"] * feature_config["delta_t"]
+            predicted_x += ds * np.cos(predicted_heading)
+            predicted_y += ds * np.sin(predicted_heading)
         prev_v = predicted_v  # previous speed
-        predicted_v += predicted_a * feature_config["delta_t"]  # updated speed v = v0 + acc * dt
-        predicted_heading += predicted_w * feature_config["delta_t"]
-
-        # Calculate the model prediction on current position
-        ds = prev_v * feature_config["delta_t"] + 0.5 * predicted_a * \
-            feature_config["delta_t"] * feature_config["delta_t"]
-        # ds = _distance_s(predicted_a, feature_config["delta_t"], prev_v)
-        predicted_x += ds * np.cos(predicted_heading)
-        predicted_y += ds * np.sin(predicted_heading)
-
-    # def _distance_s(acc, dt, v0):
-    #     return v0 * dt + 0.5 * acc * dt * dt
+        predicted_w_prev = predicted_w
+        predicted_a_prev = predicted_a
     # The residual error on x and y prediction
+    logging.info(
+        f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}, {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
+    logging.info(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
     output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["x"]] - predicted_x
     output_segment[output_index["d_y"]] = segment[INPUT_LENGTH -
@@ -138,8 +146,6 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     Generate MLP model's direct output
     """
     input_mean, input_std, output_mean, output_std = norms
-    # logging.info(
-    # f'input mean: {input_mean}, input_std: {input_std}, output_mean:{output_mean}, output_std:{output_std}')
     # Prediction on acceleration and angular speed by MLP
     output_fnn = np.zeros([1, 2])
     cur_speed = mlp_input[0, 0]
@@ -149,9 +155,10 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
     # Update the vehicle speed based on predicted acceleration
     velocity_fnn = output_fnn[0, 0] * feature_config["delta_t"] + cur_speed
-    # logging.info(velocity_fnn)
-    # If (negative speed under forward gear || positive speed under backward gear ||
-    #     neutral gear):
+    # If
+    # 1. negative speed under forward gear
+    # 2. positive speed under backward gear
+    # 3. neutral gear
     # Then truncate speed, acceleration, and angular speed to 0
     if gear_status * (velocity_fnn + gear_status * SPEED_EPSILON) <= 0:
         logging.info(f'output is set as zeros')
@@ -163,9 +170,9 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     return output_fnn[0, 0], output_fnn[0, 1]
 
 
-def get_train_data(args):
+def get_train_data(args, skip_existed_file=False):
     """
-    Generate labeled data from a list of hdf5 files (unlabled data)
+    Generate labeled data from a list of hdf5 files (unlabeled data)
     """
     datasets = glob.glob(os.path.join(args.unlabeled_dataset_path, '*.hdf5'))
     file_utils.makedirs(args.labeled_dataset_path)
@@ -174,7 +181,7 @@ def get_train_data(args):
     for h5_file in datasets:
         pre_file_name = h5_file.split(args.unlabeled_dataset_path)[1].split(path_suffix)[0]
         file_name = os.path.join(args.labeled_dataset_path, pre_file_name + '.h5')
-        if os.path.exists(file_name):
+        if skip_existed_file and os.path.exists(file_name):
             logging.info("File Already Generated: {}".format(file_name))
             continue
         # generated data segment for unhandled file
@@ -190,13 +197,9 @@ if __name__ == '__main__':
     logging.info("running....")
     parser = argparse.ArgumentParser(description='Label')
     parser.add_argument('--unlabeled_dataset_path', type=str,
-                        default="./apollo/data/mbg_1_all/")
-    # parser.add_argument('--unlabeled_dataset_path', type=str,
-    # default="/fuel/fueling/control/dynamic_model_2_0/testdata/train_data/")
+                        default="./apollo/data/test_raw_data/")
     parser.add_argument('--model_path', type=str,
                         default="/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward/")
-    # parser.add_argument('--labeled_dataset_path', type=str,
-    #                     default="/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data/")
     parser.add_argument('--labeled_dataset_path', type=str,
                         default="./apollo/data/labeled_data")
     args = parser.parse_args()

@@ -53,7 +53,6 @@ class RawDataVisualization():
         """ integration from acceleration and heading angle change rate to x, y"""
         dt = feature_config["delta_t"]
         theta = self.calc_theta(ws, dt)
-        logging.info(f'max steering angle is {max(theta)}')
         s = self.calc_s(accs, dt)
         x = np.zeros((self.data_dim, 1))
         y = np.zeros((self.data_dim, 1))
@@ -88,7 +87,6 @@ class RawDataVisualization():
         # Initialize the first frame's data
         predicted_a = np.zeros((self.data_dim, 1))
         predicted_w = np.zeros((self.data_dim, 1))
-        steerings = []
         for k in range(0, self.data_dim):
             speed = self.feature[k, segment_index["speed"]]
             acc = self.feature[k, segment_index["a_x"]] * \
@@ -98,19 +96,22 @@ class RawDataVisualization():
             throttle = self.feature[k, segment_index["throttle"]]
             brake = self.feature[k, segment_index["brake"]]
             steering = self.feature[k, segment_index["steering"]]
-            steerings.append(steering)
             # time delay ?
             mlp_input = np.array([speed, acc, throttle, brake, steering]).reshape(1, 5)
             predicted_a[k], predicted_w[k] = generate_mlp_output(mlp_input, model, norms)
+        logging.debug(f'predicted_a: {predicted_a}')
+        logging.debug(f'predicted_w: {predicted_w}')
+
         return (predicted_a, predicted_w)
 
     def calc_theta(self, w, dt):
         """ from heading rate to heading"""
         # initial heading
-        theta = np.zeros((self.data_dim, 1))
+        theta = np.zeros((self.data_dim,))
         init_heading = self._normalize_angle(self.feature[0, segment_index['heading']])
         # init heading from GPS
         theta[0] = init_heading
+        logging.info(f'init heading is {theta[0]}')
         for idx in range(1, self.data_dim):
             # theta = theta_0 + omega * dt
             theta[idx] = self._normalize_angle(init_heading + w[idx - 1] * dt)
@@ -126,9 +127,7 @@ class RawDataVisualization():
                   self.feature[0, segment_index["v_y"]] * np.sin(init_normalized_heading))
         v0 = init_v
         s = np.zeros((self.data_dim, 1))
-        # logging.info(s.shape)
         for idx in range(1, self.data_dim):
-            # logging.info(f'idx: {idx}; acc is {acc[idx]}')
             s[idx] = self._distance_s(acc[idx - 1], dt, v0)
             v0 = v0 + acc[idx - 1] * dt
         return s
@@ -144,7 +143,6 @@ class RawDataVisualization():
             normalized_heading = self._normalize_angle(heading)
             acc[idx] = (self.feature[idx, segment_index["a_x"]] * np.cos(normalized_heading) +
                         self.feature[idx, segment_index["a_y"]] * np.sin(normalized_heading))
-        # logging.info(acc)
         return acc
 
     @staticmethod
@@ -167,13 +165,19 @@ class RawDataVisualization():
         y_position = self.feature[:, segment_index['y']]
         # location from IMU
         imu_x, imu_y = self.imu_location()
-
         # location from dynamic model
         dm_x, dm_y = self.dynamic_model_10_location()
-        plt.plot(x_position, y_position, 'b.', label='GPS')
-        plt.plot(imu_x, imu_y, 'r.', label='IMU')
-        plt.plot(dm_x, dm_y, 'g.', label="Dynamic model")
-        plt.plot(x_position[0], y_position[0], 'x', markersize=6, color='k')
+        # end pose comparison
+        logging.info(
+            f'GPS endpose is [{x_position[-1]}, {y_position[-1]}]')
+        logging.info(
+            f'Dynamic model 1.0 endpose is [{dm_x[-1]}, {dm_y[-1]}]')
+        logging.info(
+            f'End Pose differences between GPS and dynamic model 1.0 is [{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
+        plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
+        plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')
+        plt.plot(dm_x - x_position[0], dm_y - y_position[0], 'g.', label="Dynamic model")
+        plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory for " + dataset_name)
         plt.grid(True)
