@@ -17,7 +17,7 @@ class LocalCostJob(BaseCostJob):
             logging.error('A job is running')
             return False
 
-        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:control_cost_computation"
+        job_cmd = "bazel run //fueling/learning/autotuner/cost_computation:profiling_cost_computation"
         option_strings = [f"--{name}={value}" for (name, value) in options.items()]
         cmd = f"cd /fuel; {job_cmd} -- {' '.join(option_strings)}"
         logging.info(f"Executing '{cmd}'")

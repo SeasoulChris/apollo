@@ -2,6 +2,31 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
+// Path Flag indicate the flag which will be iteratively updated with the data bag path
+message PathFlag {
+  string flag_name = 1;
+}
+
+// Feature Flag indicate the flag with the string format
+message FeatureFlag {
+  string flag_name = 1;
+  string feature = 2;
+}
+
+// Mode Flag indicate the flag with the boolean format
+message ModeFlag {
+  string flag_name = 1;
+  bool enable = 2;
+}
+
+message CostParams {
+  string profiling_filename = 1;
+  string grading_filename = 2;
+  repeated PathFlag path_flag = 3;
+  repeated FeatureFlag feature_flag = 4;
+  repeated ModeFlag mode_flag = 5;
+}
+
 // Weighting Metrics indicate the statistically-meaningful metrics, such as std, rms, max, min
 // For the i-th metrics, weighting_ratio[i] = weighting_factor[i] / sum(weighting_factor[1: n])
 message WeightingMetrics {
@@ -27,4 +52,9 @@ message CostMetrics {
   repeated FailMetrics fail_metrics = 3;
   // Fail score is the score in case of the fail metrics exist (non-zero)
   double fail_score = 4;
+}
+
+message CostComputationConf {
+  CostParams cost_params = 1;
+  CostMetrics cost_metrics = 2;
 }

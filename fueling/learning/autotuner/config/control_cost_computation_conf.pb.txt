@@ -1,43 +1,64 @@
-weighting_metrics {
-  metrics_name: "station_err_std_harsh"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "speed_err_std_harsh"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "lateral_err_std_harsh"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "heading_err_std_harsh"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "station_err_peak"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "speed_err_peak"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "lateral_err_peak"
-  weighting_factor: 1.0
-}
-weighting_metrics {
-  metrics_name: "heading_err_peak"
-  weighting_factor: 1.0
+cost_params {
+  profiling_filename = "fueling/profiling/control/multi_job_control_profiling_metrics.py"
+  grading_filename = "*/*/*/*grading.json"
+  path_flag {
+    flag_name: "ctl_metrics_input_path"
+  }
+  path_flag {
+    flag_name: "ctl_metrics_output_path"
+  }
+  mode_flag {
+    flag_name: "ctl_metrics_simulation_only_test"
+    enable: true
+  }
+  mode_flag {
+    flag_name: "ctl_metrics_save_report"
+    enable: false
+  }
 }
 
-penalty_metrics {
-  metrics_name: "replan_trajectory_count"
-  penalty_score: 1.0
-}
+cost_metrics {
+  weighting_metrics {
+    metrics_name: "station_err_std_harsh"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "speed_err_std_harsh"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "lateral_err_std_harsh"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "heading_err_std_harsh"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "station_err_peak"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "speed_err_peak"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "lateral_err_peak"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "heading_err_peak"
+    weighting_factor: 1.0
+  }
 
-fail_metrics {
-  metrics_name: "control_error_code_count"
-}
+  penalty_metrics {
+    metrics_name: "replan_trajectory_count"
+    penalty_score: 1.0
+  }
 
-fail_score: 10.0
+  fail_metrics {
+    metrics_name: "control_error_code_count"
+  }
+
+  fail_score: 10.0
+}

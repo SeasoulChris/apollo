@@ -14,7 +14,7 @@ class K8sCostJob(BaseCostJob):
         self.client = None
 
     def submit(self, options):
-        entrypoint = "fueling/learning/autotuner/cost_computation/control_cost_computation.py"
+        entrypoint = "fueling/learning/autotuner/cost_computation/profiling_cost_computation.py"
 
         client_flags = {
             'node_selector': 'CPU',

@@ -29,8 +29,8 @@ py_binary(
 )
 
 py_binary(
-    name = "control_cost_computation",
-    srcs = ["control_cost_computation.py"],
+    name = "profiling_cost_computation",
+    srcs = ["profiling_cost_computation.py"],
     data = [
         "//fueling/learning/autotuner/config",
     ],
