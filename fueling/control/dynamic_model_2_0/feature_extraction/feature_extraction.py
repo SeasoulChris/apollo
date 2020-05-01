@@ -20,23 +20,43 @@ SEGMENT_INTERVAL = 10 * 2
 FINAL_SEGMENT_LEN = 100
 
 
-def write_segment(elem):
+def write_segment(output_data_path, group):
     """Write current data list to hdf5 file"""
-    (folder_path, file_name), data_set = elem
-    h5_utils.write_h5_single_segment(data_set, folder_path, file_name)
+    group_id, data_set = group
+    h5_utils.write_h5_single_segment(data_set, output_data_path, group_id)
+    logging.info(F'written group {group_id} into folder {output_data_path}')
 
 def count_messages_filter(messages_rdd, topic):
     """Count messages from chassis and localization topic"""
     return messages_rdd.filter(lambda message: message.topic == topic).count() >= SEGMENT_LEN // 2
 
-def partition_data(target_msgs):
-    """Divide the messages to groups each of which has exact number of messages"""
-    target, msgs = target_msgs
-    logging.info('partition data for {} messages in target {}'.format(len(msgs), target))
-    msgs = sorted(msgs, key=lambda msgs: msgs.timestamp)
-    msgs_groups = [msgs[idx: idx + SEGMENT_LEN]
-                   for idx in range(0, len(msgs), SEGMENT_INTERVAL)]
-    return [(target, group_id, group) for group_id, group in enumerate(msgs_groups)]
+def split_rdd_into_groups(rdd, group_size, overlapping):
+    """Split RDD into groups with given overlapping"""
+    """([1,2,3,4,5], 3, 1) -> ([1,2,3], [3,4,5])"""
+
+    def slide_window(item_idx, window_size):
+        """Split RDD evenly into windows with given size"""
+        item, idx = item_idx
+        return [(idx - offset, (idx, item)) for offset in range(window_size)]
+
+    step = group_size - overlapping
+    return (rdd
+        # RDD(item, idx)
+        .zipWithIndex() 
+        # RDD((item, idx)s)
+        .flatMap(lambda item_idx: slide_window(item_idx, group_size))
+        # PairRDD(key, (idx, item)), apply overlapping
+        .filter(lambda x: x[0] % step == 0)
+        # PairRDD(key, (idx, item)s)
+        .groupByKey()
+        # PairRDD(key, (item)s)
+        .mapValues(lambda vals: [item for (idx, item) in sorted(vals)]) 
+        # PairRDD(key, (item)s)
+        .sortByKey()
+        # RDD(groups)
+        .values()
+        # RDD(groups)
+        .filter(lambda group: len(group) == group_size))
 
 def get_datapoints(elem):
     """Generate data points from localization and chassis"""
@@ -66,7 +86,8 @@ class FeatureExtraction(BasePipeline):
             .filter(record_utils.is_record_file)
             # RDD(message), control and chassis message
             .flatMap(record_utils.read_record([record_utils.CHASSIS_CHANNEL,
-                                               record_utils.LOCALIZATION_CHANNEL])))
+                                               record_utils.LOCALIZATION_CHANNEL]))
+            .sortBy(lambda message: message.timestamp))
 
         # Check if qualified for extraction 
         if (not count_messages_filter(dir_msgs_rdd, record_utils.CHASSIS_CHANNEL) or
@@ -74,31 +95,27 @@ class FeatureExtraction(BasePipeline):
             logging.info('not qualified for extraction, quit')
             return
 
-        # RDD(messages)
-        (dir_msgs_rdd
-            # PairRDD(target_dir, message)
-            .map(lambda message: (output_data_path, message))
-            # PairRDD(target_dir, (messages))
-            .groupByKey()
-            # PairRDD(target_dir, (segment_id, messages))
-            .flatMap(partition_data)
-            # PairRDD((target_dir, segment_id), messages)
-            .map(lambda args: ((args[0], args[1]), args[2]))
-            # PairRDD((target_dir, segment_id), proto_dict)
+        # RDD((message)s), group of messages
+        (split_rdd_into_groups(dir_msgs_rdd, SEGMENT_LEN, SEGMENT_INTERVAL) 
+            # PairRDD((messages)s, group_id)
+            .zipWithIndex()
+            # PairRDD(group_id, (messages)s)
+            .map(lambda x: (x[1], x[0]))
+            # PairRDD(group_id, (proto)s)
             .mapValues(record_utils.messages_to_proto_dict())
-            # PairRDD((target_dir, segment_id), (chassis_list, pose_list))
+            # PairRDD(group_id, (chassis_list, pose_list)s)
             .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
                                            proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-            # PairRDD((target_dir, group_id), a single message),
+            # PairRDD(group_id, a single message),
             .flatMapValues(pair_cs_pose)
-            # PairRDD((target_dir, group_id), a data point),
+            # PairRDD(group_id, a data point),
             .mapValues(get_datapoints)
-            # PairRDD((target_dir, group_id), data_points)
+            # PairRDD(group_id, (data_point)s)
             .groupByKey()
-            # PairRDD((target_dir, group_id), list of data_points)
+            # PairRDD(group_id, list of data_points)
             .mapValues(list)
-            # Write each data points
-            .foreach(write_segment))
+            # Write each group 
+            .foreach(lambda group: write_segment(output_data_path, group)))
  
         logging.info(F'extracted features to target dir {output_data_path}')
         
