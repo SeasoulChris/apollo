@@ -1,4 +1,4 @@
-FROM apolloauto/fuel-client:20200331_1937
+FROM apolloauto/fuel-client:20200423_1727
 
 WORKDIR /
 # Set up apollo

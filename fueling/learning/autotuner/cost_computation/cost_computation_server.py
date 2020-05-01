@@ -170,7 +170,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         except Exception as error:
             logging.error(f'Job failed: {error}')
             return CostComputation.create_compute_response(
-                exit_code=1, message="Failed to submit job."
+                exit_code=1, message="Failed to submit a job."
             )
         compute_event.clear()
         if stop_event.is_set():

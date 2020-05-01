@@ -94,7 +94,7 @@ class SparkSubmitterClient(object):
 
         # Wait until job finishes.
         if not self.client_flags.get('wait', self.get_default('wait')):
-            return
+            return job_id
         WAIT_INTERVAL_SECONDS = 3
         END_STATUS = {'Completed', 'Error', 'UnexpectedAdmissionError'}
         job_status = None
