@@ -160,7 +160,8 @@ class LabelGenerator(object):
     @output: All saved as class variables in observation_dict,
     '''
 
-    def ObserveFeatureSequence(self, feature_sequence, idx_curr, maximum_observation_time=8.0):
+    def ObserveFeatureSequence(self, feature_sequence, idx_curr,
+                               max_observation_time=8.0, max_dt_interval=5.0):
         output_features = learning_data_pb2.LearningOutput()
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
@@ -178,9 +179,11 @@ class LabelGenerator(object):
         # This goes through all the subsequent features in this sequence
         # of features up to the maximum_observation_time.
         for j in range(future_start_index, feature_seq_len):
+            # dt between future sampling points
+            dt = feature_sequence[j].timestamp_sec - feature_sequence[j - 1].timestamp_sec
             # If timespan exceeds max. observation time, then end observing.
             time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
-            if time_span > maximum_observation_time:
+            if time_span > max_observation_time or dt > max_dt_interval:
                 future_end_index = j
                 break
 
@@ -302,6 +305,7 @@ class LabelGenerator(object):
             self.PlotAgent(feature, ax, c)
         plt.axis('equal')
         fig.savefig(img_fn)
+        logging.info(f'file save at {img_fn}')
         plt.close(fig)
 
     def PlotAgent(self, feature, ax, c):
@@ -351,6 +355,6 @@ if __name__ == '__main__':
     history_data_points = history_result2[key_list[args.key_id]]
     label_gen.Visualize(history_data_points, args.history_img_output_file)
     data_points = result2[key_list[args.key_id]]
-    # logging.info(data_points)
+    logging.debug(data_points)
     label_gen.Visualize(data_points, args.future_img_output_file)
     label_gen.Label()
