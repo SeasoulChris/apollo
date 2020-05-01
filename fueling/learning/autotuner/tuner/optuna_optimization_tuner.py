@@ -99,7 +99,7 @@ class OptunaOptimizationTuner(BaseTuner):
         next_point = {}
         for key in self.pbounds:
             next_point.update(
-                {key: trial.suggest_uniform(key, self.pbounds[key][0],  self.pbounds[key][1])}
+                {key: trial.suggest_uniform(key, self.pbounds[key][0], self.pbounds[key][1])}
             )
         next_point_pb = self.merge_repeated_param(next_point)
 
@@ -131,6 +131,7 @@ class OptunaOptimizationTuner(BaseTuner):
         logging.info(f"Optimizer iteration: {self.iter}, target: {target}, config point: {next_point}")
 
         return target
+
 
 if __name__ == "__main__":
     tic_start = time.perf_counter()

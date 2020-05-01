@@ -33,11 +33,6 @@ flags.DEFINE_string(
     "/mnt/bos/autotuner",
     "Tuner storage root directory"
 )
-flags.DEFINE_string(
-    "running_role",
-    "root",
-    "Customized role (username) instead of the default role"
-)
 
 
 class BaseTuner():
@@ -91,7 +86,6 @@ class BaseTuner():
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,
-            flags.FLAGS.running_role,
         )
 
     def init_optimizer_visualizer(self, tuner_parameters):
@@ -164,9 +158,6 @@ class BaseTuner():
     def set_bounds(self, bounds):
         self.pbounds = bounds
 
-    def set_utility(self, kind, kappa, xi):
-        self.utility = UtilityFunction(kind=kind, kappa=kappa, xi=xi)
-
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
 
@@ -222,7 +213,9 @@ class BaseTuner():
         if saving_path != self.visual_storage_dir:
             final_visual_file = glob.glob(os.path.join(self.visual_storage_dir, '*.png'))
             for visual_file in final_visual_file:
-                shutil.copyfile(visual_file, os.path.join(saving_path, os.path.basename(visual_file)))
+                shutil.copyfile(
+                    visual_file, os.path.join(
+                        saving_path, os.path.basename(visual_file)))
         logging.info(f"Complete results saved at {saving_path} ")
         logging.info(f"Timer: save_result  - {time.perf_counter() - tic_start: 0.04f} sec")
 

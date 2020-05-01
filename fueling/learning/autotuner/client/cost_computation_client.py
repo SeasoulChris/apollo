@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import getpass
 import grpc
 import signal
 
@@ -8,22 +9,34 @@ import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cos
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
+REQUEST_TIMEOUT_IN_SEC = 600
+MAX_RETRIES = 5
+
 
 class CostComputationClient(object):
     """The Python implementation of the Cost Computation GRPC client."""
 
     CHANNEL_URL = "localhost:50052"
 
-    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None, running_role=None):
+    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None):
         self.service_token = None
-        if commit_id and scenario_ids and dynamic_model and running_role:
-            self.initialize(commit_id, scenario_ids, dynamic_model, running_role)
+        self.max_retries = MAX_RETRIES
+        self.request_timeout_in_sec = REQUEST_TIMEOUT_IN_SEC
+
+        if commit_id and scenario_ids and dynamic_model:
+            self.initialize(commit_id, scenario_ids, dynamic_model)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+
+    def set_max_retries(self, retries):
+        self.max_retries = retries
+
+    def set_request_timeout(self, seconds):
+        self.request_timeout_in_sec = seconds
 
     @classmethod
     def set_channel(cls, channel):
@@ -32,7 +45,7 @@ class CostComputationClient(object):
     def is_initialized(self):
         return self.service_token is not None
 
-    def construct_init_request(self, commit_id, scenario_ids, dynamic_model, running_role):
+    def construct_init_request(self, commit_id, scenario_ids, dynamic_model):
         # validate inputs
         if not isinstance(scenario_ids, list):
             raise TypeError(
@@ -46,7 +59,7 @@ class CostComputationClient(object):
         request.git_info.commit_id = commit_id
         request.scenario_id.extend(scenario_ids)
         request.dynamic_model = dynamic_model
-        request.running_role = running_role
+        request.running_role = getpass.getuser()
 
         return request
 
@@ -75,19 +88,31 @@ class CostComputationClient(object):
     def construct_close_request(self):
         return cost_service_pb2.CloseRequest(token=self.service_token)
 
-    def send_request(self, request_name, request_payload):
+    def send_request_with_retry(self, request_name, request_payload):
         with grpc.insecure_channel(CostComputationClient.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
             request_function = getattr(stub, request_name)
-            future = request_function.future(request_payload)
 
-            def cancel_request(unused_signum, unused_frame):
-                print(f'Cancelling {request_name} request...')
-                future.cancel()
-                raise Exception('Request Cancelled.')
+            for retry in range(self.max_retries):
+                try:
+                    if retry > 0:
+                        logging.info(f'Retry {request_name} request. Retry count {retry} ...')
 
-            signal.signal(signal.SIGINT, cancel_request)
-            response = future.result()
+                    future = request_function.future(
+                        request_payload, timeout=self.request_timeout_in_sec)
+
+                    def cancel_request(unused_signum, unused_frame):
+                        print(f'Cancelling {request_name} request ...')
+                        future.cancel()
+                        raise Exception('Request Cancelled.')
+
+                    signal.signal(signal.SIGINT, cancel_request)
+                    response = future.result()
+                except grpc.RpcError as rpc_error:
+                    if retry == (self.max_retries - 1):
+                        raise rpc_error
+                else:
+                    break
 
         status = response.status
         if status.code != 0:
@@ -103,15 +128,15 @@ class CostComputationClient(object):
 
         self.service_token = service_token
 
-    def initialize(self, commit_id, scenario_ids, dynamic_model, running_role):
+    def initialize(self, commit_id, scenario_ids, dynamic_model):
         if self.is_initialized():
             logging.info(f"Service {self.service_token} has been initialized")
             return
 
         logging.info(f"Initializing service for commit {commit_id} with training scenarios "
                      f"{scenario_ids} ...")
-        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model, running_role)
-        response = self.send_request('Initialize', request)
+        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model)
+        response = self.send_request_with_retry('Initialize', request)
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")
 
@@ -122,7 +147,7 @@ class CostComputationClient(object):
 
         logging.info(f"Sending compute request to service {self.service_token} ...")
         request = self.construct_compute_request(configs, cost_config_file)
-        response = self.send_request('ComputeCost', request)
+        response = self.send_request_with_retry('ComputeCost', request)
         logging.info(f"Service {self.service_token} finished computing cost {response.score} for "
                      f"iteration {response.iteration_id}")
         return response.iteration_id, response.score
@@ -133,6 +158,6 @@ class CostComputationClient(object):
 
         logging.info(f"Closing {self.service_token} service ...")
         request = self.construct_close_request()
-        response = self.send_request('Close', request)
+        response = self.send_request_with_retry('Close', request)
         logging.info(f"Service {self.service_token} closed.")
         self.service_token = None

@@ -132,12 +132,12 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
                 job.cancel()
         context.add_callback(on_rpc_done)
 
-        def get_num_spark_workers(service_dir):
+        def get_num_spark_workers_and_role(service_dir):
             request_pb2 = cost_service_pb2.InitRequest()
             proto_utils.get_pb_from_text_file(
                 os.path.join(service_dir, "init_request.pb.txt"), request_pb2,
             )
-            return min(len(request_pb2.scenario_id), MAX_SPARK_WORKERS)
+            return min(len(request_pb2.scenario_id), MAX_SPARK_WORKERS), request_pb2.running_role
 
         # Save config to a local file
         iteration_id = datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
@@ -152,12 +152,13 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
                 exit_code=1, message="Request cancelled")
 
         # submit job
+        workers, role = get_num_spark_workers_and_role(service_dir)
         options = {
             "sim_service_url": flags.FLAGS.sim_service_url,
             "token": request.token,
             "iteration_id": iteration_id,
-            "workers": get_num_spark_workers(service_dir),
-            "role": request.running_role,
+            "workers": workers,
+            "role": role,
         }
         if request.cost_computation_conf_filename:
             options['cost_computation_conf_filename'] = request.cost_computation_conf_filename

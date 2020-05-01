@@ -44,10 +44,17 @@ try:
     client.set_token("tuner-8f6b804fc84f495280d27e6696330db2")
     """
 
-    tic2 = time.perf_counter()
-    iteration_id, score = client.compute_cost(configs)
-    print(f"Compute time: {time.perf_counter() - tic2:0.4f} seconds")
-    print(f"Received score {score} for {iteration_id}")
+    iteration = 3
+    total_time = 0
+    for i in range(iteration):
+        tic = time.perf_counter()
+        iteration_id, score = client.compute_cost(configs)
+        compute_time = time.perf_counter() - tic
+        print(f"Received score {score} for {iteration_id}")
+        print(f"Compute time: {compute_time:0.4f} seconds")
+        total_time += compute_time
+
+    print(f"Average time: {total_time / iteration}")
 except Exception as error:
     print(error)
 finally:
