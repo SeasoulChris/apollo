@@ -190,8 +190,10 @@ class TrajectoryImitationRNNDataset(Dataset):
                                 frame.localization.position.y,
                                 frame.localization.heading,
                                 coordinate_heading)
+
         if self.img_bitmap_transform:
             offroad_mask = self.img_bitmap_transform(offroad_mask)
+        offroad_mask = offroad_mask.repeat(self.ouput_point_num, 1, 1, 1)
 
         ref_coords = [frame.localization.position.x,
                       frame.localization.position.y,

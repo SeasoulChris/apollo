@@ -21,7 +21,7 @@ class OffroadMaskImgRenderer(object):
         """contruct function to init OffroadMaskImgRenderer object"""
         self.map_dir = "/fuel/testdata/planning/semantic_map_features"
         self.base_map = cv.imread(os.path.join(
-            self.map_dir, region + "_offroad_mask.png"))
+            self.map_dir, region + "_offroad_mask.png"), cv.IMREAD_UNCHANGED)
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution  # in meter/pixel
