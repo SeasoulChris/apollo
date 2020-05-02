@@ -14,6 +14,7 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+from fueling.common.partners import partners
 import fueling.common.record_utils as record_utils
 from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
     plot
@@ -25,16 +26,12 @@ from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util i
     zigzag_grading
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
-flags.DEFINE_string('open_space_planner_profiling_input_path',
-                    '/apollo/data/open_space_profiling',
-                    'input data directory')
-flags.DEFINE_string('open_space_planner_profiling_output_path',
-                    '/apollo/data/open_space_profiling_generated',
-                    'output data directory')
+
 flags.DEFINE_boolean('open_space_planner_profiling_generate_report', True,
                      'whether an email report with feature plot etc. is required')
 flags.DEFINE_boolean('open_space_planner_profiling_debug', False,
                      'whether feature HDF5 files need to be saved for debugging')
+
 
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
@@ -85,25 +82,43 @@ def copy_if_needed(src, dst):
     shutil.copyfile(src, dst)
 
 
+def has_vehicle_conf(dir):
+    return os.path.exists(os.path.join(dir, VEHICLE_PARAM_FILE))
+
+
 class OpenSpacePlannerMetrics(BasePipeline):
+
+    def __init__(self):
+        self.error_msg = ''
+        self.partner_email = ''
 
     def run(self):
         tic = time.perf_counter()
         # 1. get record files
-        origin_prefix = flags.FLAGS.open_space_planner_profiling_input_path
-        target_prefix = flags.FLAGS.open_space_planner_profiling_output_path
-        our_storage = self.our_storage()
+        origin_prefix = flags.FLAGS.input_data_path
+        target_prefix = flags.FLAGS.output_data_path
+        job_owner = self.FLAGS.get('job_owner')
+        self.partner_email = partners.get(job_owner).email if self.is_partner_job() else ''
+        logging.info(F'Email address of job owner {job_owner}: {self.partner_email}')
 
         # Access partner's storage if provided.
-        object_storage = self.partner_storage() or our_storage
+        object_storage = self.partner_storage() or self.our_storage()
 
         # This will return absolute path
         src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_prefix))
+        valid_src_dirs = src_dirs.filter(has_vehicle_conf)
+        invalid_src_dirs = (src_dirs
+                            .filter(lambda d: not has_vehicle_conf(d))
+                            .collect())
+        if invalid_src_dirs:
+            logging.warn(F'invalid_src_dirs: {invalid_src_dirs}')
+            self.error_msg = F'No {VEHICLE_PARAM_FILE} found in directory: {invalid_src_dirs}'
         if logging.level_debug():
             logging.debug(F'src_dirs: {src_dirs.collect()}')
+            logging.debug(F'valid_src_dirs: {valid_src_dirs.collect()}')
 
         # Copy over vehicle param config
-        src_dst_rdd = (src_dirs
+        src_dst_rdd = (valid_src_dirs
                        .map(lambda src_dir: (
                             src_dir, src_dir.replace(origin_prefix, target_prefix, 1)))
                        .cache())
@@ -116,7 +131,7 @@ class OpenSpacePlannerMetrics(BasePipeline):
                 os.path.join(src_dst[1], VEHICLE_PARAM_FILE)))
 
         # PairRDD(todo_task_dirs)
-        todo_task_dirs = (src_dirs
+        todo_task_dirs = (valid_src_dirs
                           # PairRDD(target_prefix, src_dir), the map of target dirs and source dirs
                           .keyBy(lambda source: source.replace(origin_prefix, target_prefix, 1))
                           # PairRDD(target_prefix, file)
@@ -129,7 +144,12 @@ class OpenSpacePlannerMetrics(BasePipeline):
         if logging.level_debug():
             logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
         if not todo_task_dirs.collect():
-            logging.info('No data to perform open space planner profilng on.')
+            logging.info('No data to perform open space planner profiling on.')
+            if self.FLAGS['open_space_planner_profiling_generate_report']:
+                return self.email_output(todo_task_dirs.keys().collect(), origin_prefix,
+                                         target_prefix)
+            if self.error_msg:
+                logging.warn(self.error_msg)
             return
         logging.info(F'Preparing record files took {time.perf_counter() - tic:0.3f} sec')
 
@@ -212,20 +232,20 @@ class OpenSpacePlannerMetrics(BasePipeline):
         else:
             results = grading_result.collect()
             logging.info(F'Evaluation alone took {time.perf_counter() - tic:0.3f} sec')
+            if self.error_msg:
+                logging.warn(self.error_msg)
             return results
 
-    def email_output(self, tasks, origin_prefix, target_prefix, partner_email='', error_msg=''):
+    def email_output(self, tasks, origin_prefix, target_prefix):
         title = 'Open Space Planner Profiling Results'
         recipients = email_utils.CONTROL_TEAM + email_utils.SIMULATION_TEAM
         # Uncomment this for dev test
         # recipients = ['caoyu05@baidu.com']
-        recipients.append(partner_email)
+        recipients.append(self.partner_email)
         SummaryTuple = namedtuple('Summary', ['Task', 'FeaturePlot', 'Profiling'])
         if tasks:
             email_content = []
             attachments = []
-            tar_filename = None
-            tar = None
             tasks.sort()
             for task in tasks:
                 source = task.replace(target_prefix, origin_prefix, 1)
@@ -245,11 +265,17 @@ class OpenSpacePlannerMetrics(BasePipeline):
                     for report in plot:
                         tar.add(report)
                     tar.close()
-            attachments.append(tar_filename)
+                    attachments.append(tar_filename)
+            if self.error_msg:
+                email_content.append(SummaryTuple(
+                    Task=self.error_msg,
+                    FeaturePlot=0,
+                    Profiling=0,
+                ))
         else:
             logging.info('todo_task_dirs: None')
-            if error_msg:
-                email_content = error_msg
+            if self.error_msg:
+                email_content = self.error_msg
             else:
                 email_content = 'No profiling results: No raw data.'
             attachments = []

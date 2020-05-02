@@ -2,10 +2,10 @@ cost_params {
   profiling_filename: "fueling/profiling/control/multi_job_control_profiling_metrics.py"
   grading_filename: "*/*/*/*grading.json"
   path_flag {
-    flag_name: "ctl_metrics_input_path"
+    flag_name: "input_data_path"
   }
   path_flag {
-    flag_name: "ctl_metrics_output_path"
+    flag_name: "output_data_path"
   }
   mode_flag {
     flag_name: "ctl_metrics_simulation_only_test"

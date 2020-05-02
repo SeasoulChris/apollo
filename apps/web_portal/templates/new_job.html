@@ -75,7 +75,8 @@
           <div class="invalid-feedback">Input Data Path is required for this job.</div>
         </div>
 
-        {% if job_type == "VIRTUAL_LANE_GENERATION" or job_type == "SENSOR_CALIBRATION" %}
+        {% if job_type == "VIRTUAL_LANE_GENERATION" or job_type == "SENSOR_CALIBRATION" or
+        job_type == "OPEN_SPACE_PLANNER_PROFILING" %}
         <div class="col-md-6 mb-3">
           <label for="output_data_path">Output Data Path</label>
           <input type="text" class="form-control" id="output_data_path" placeholder="" required>
@@ -142,7 +143,8 @@
           "input_data_path": $("#input_data_path").val(),
         },
       };
-      if (job_type === 'VIRTUAL_LANE_GENERATION' || job_type === 'SENSOR_CALIBRATION') {
+      if (job_type === 'VIRTUAL_LANE_GENERATION' || job_type === 'SENSOR_CALIBRATION' ||
+          job_type === 'OPEN_SPACE_PLANNER_PROFILING') {
         job_arg["flags"]["output_data_path"] = $("#output_data_path").val();
       }
       if (job_type === 'VIRTUAL_LANE_GENERATION') {

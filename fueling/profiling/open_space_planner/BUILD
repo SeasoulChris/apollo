@@ -17,6 +17,7 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/common:partners",
         "//fueling/common:record_utils",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_extraction_utils",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_visualization_utils",

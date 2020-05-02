@@ -30,6 +30,20 @@ class ControlProfiling(BaseJob):
         return (entrypoint, client_flags, job_flags)
 
 
+class OpenSpacePlannerProfiling(BaseJob):
+    def parse_arg(self, job_arg):
+        entrypoint = 'fueling/profiling/open_space_planner/metrics.py'
+        client_flags = {
+            'workers': 4, 'cpu': 1, 'disk': 1, 'memory': 1,
+            'partner_storage_writable': True,
+        }
+        job_flags = {
+            'input_data_path': job_arg.flags.get("input_data_path"),
+            'output_data_path': job_arg.flags.get("output_data_path"),
+        }
+        return (entrypoint, client_flags, job_flags)
+
+
 class VehicleCalibration(BaseJob):
     def parse_arg(self, job_arg):
         entrypoint = 'fueling/control/calibration_table/vehicle_calibration.py'

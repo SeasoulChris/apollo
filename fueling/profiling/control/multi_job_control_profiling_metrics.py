@@ -27,9 +27,7 @@ import fueling.profiling.control.feature_extraction.multi_job_control_feature_ex
 import fueling.profiling.control.grading_evaluation.multi_job_control_performance_grading_utils \
     as grading_utils
 
-flags.DEFINE_string('ctl_metrics_input_path', '', 'input data directory')
-flags.DEFINE_string('ctl_metrics_output_path', 'modules/control/tmp/results',
-                    'output data directory')
+
 flags.DEFINE_string('ctl_metrics_todo_tasks', '', 'todo_tasks path')
 flags.DEFINE_string('ctl_metrics_conf_path', '/mnt/bos/modules/control/control_conf',
                     'control conf storage path')
@@ -43,7 +41,7 @@ flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
                      'decide whether filtering out all the data without enabling MRAC control')
 flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
                     'select the score weighting method from control_channel_conf.py')
-flags.DEFINE_boolean('ctl_metrics_save_report', True, 'wether to save h5 files')
+flags.DEFINE_boolean('ctl_metrics_save_report', True, 'whether to save h5 files')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -55,8 +53,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         if flags.FLAGS.ctl_metrics_simulation_only_test:
             """Control Profiling: works on the 'auto-tuner + simulation' mode"""
-            origin_dir = flags.FLAGS.ctl_metrics_input_path
-            target_dir = flags.FLAGS.ctl_metrics_output_path
+            origin_dir = flags.FLAGS.input_data_path
+            target_dir = flags.FLAGS.output_data_path
             todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks.split(',')
             vehicle_type = flags.FLAGS.ctl_metrics_simulation_vehicle
             job_email = ''
@@ -87,8 +85,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
         else:
             """Control Profiling: works on the 'external/internal-user road-test' mode"""
-            original_prefix = self.FLAGS.get('ctl_metrics_input_path') or self.FLAGS.get(
-                'input_data_path', 'modules/control/profiling/multi_job')
+            original_prefix = self.FLAGS.get('input_data_path',
+                'modules/control/profiling/multi_job')
 
             job_owner = self.FLAGS.get('job_owner')
             # Use year as the job_id if data from apollo-platform, to avoid
@@ -98,7 +96,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             job_email = partners.get(job_owner).email if self.is_partner_job() else ''
             logging.info(F'email address of job owner: {job_email}')
 
-            target_prefix = os.path.join(flags.FLAGS.ctl_metrics_output_path, job_owner, job_id)
+            output_prefix = self.FLAGS.get('output_data_path', 'modules/control/tmp/results')
+            target_prefix = os.path.join(output_prefix, job_owner, job_id)
 
             our_storage = self.our_storage()
             target_dir = our_storage.abs_path(target_prefix)
