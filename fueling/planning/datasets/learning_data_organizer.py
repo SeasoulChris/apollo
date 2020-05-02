@@ -42,7 +42,8 @@ class LearningDataOrganizer:
         # List LearningData files and copy into LearningDataFrame .bin
         frames_list = []
         learning_data_file_paths = file_utils.list_files(self.data_dir)
-        for file_path in learning_data_file_paths:
+        logging.info("{} learning_data.bin to deal with in total".format(len(learning_data_file_paths)))
+        for file_path in tqdm(learning_data_file_paths):
             if 'future_status' not in file_path or 'bin' not in file_path:
                 continue
             learning_data_frames = proto_utils.get_pb_from_bin_file(
