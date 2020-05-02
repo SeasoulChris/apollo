@@ -60,7 +60,13 @@ else
   if [ -d "${DATA_VOLUME}" ]; then
     optional_volumes="-v ${DATA_VOLUME}:${DATA_VOLUME} ${optional_volumes}"
   fi
-  
+
+  SIMULATOR="../replay-engine"
+  if [ -d "${SIMULATOR}" ]; then
+    SIMULATOR="$(cd ${SIMULATOR}; pwd)"
+    optional_volumes="-v ${SIMULATOR}:/apollo-simulator ${optional_volumes}"
+  fi
+
   ${DOCKER_RUN} -it -d --privileged \
       --net host \
       --name ${CONTAINER} \
