@@ -13,7 +13,7 @@ from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
 from fueling.planning.models.trajectory_imitation_model \
     import TrajectoryImitationCNNModel, TrajectoryImitationCNNLoss, \
-    TrajectoryImitationRNNModel, TrajectoryImitationRNNLoss
+    TrajectoryImitationRNNModel, TrajectoryImitationRNNLoss, TrajectoryImitationWithEnvRNNLoss
 import fueling.common.proto_utils as proto_utils
 
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                                                       args.input_data_augmentation)
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationRNNLoss()
+        loss = TrajectoryImitationWithEnvRNNLoss()
 
     else:
         logging.info('model {} is not implemnted'.format(args.model_type))

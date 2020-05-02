@@ -118,16 +118,12 @@ class TrajectoryImitationRNNModel(nn.Module):
         )
 
         self.memory_flatener = nn.Sequential(
-            nn.Linear(100 * 100, 500),
-            nn.ReLU(),
-            nn.Linear(500, 256),
-            nn.ReLU(),
+            nn.Linear(100 * 100, 256),
+            nn.ReLU()
         )
 
         self.input_fc_layer = nn.Sequential(
-            nn.Linear(256 + 1000, 500),
-            nn.ReLU(),
-            nn.Linear(500, 256),
+            nn.Linear(256 + 1000, 256),
             nn.ReLU()
         )
 
@@ -145,11 +141,7 @@ class TrajectoryImitationRNNModel(nn.Module):
         )
 
         self.output_fc_layers = nn.Sequential(
-            nn.Linear(self.input_img_size_h * self.input_img_size_w, 1000),
-            nn.ReLU(),
-            nn.Linear(1000, 120),
-            nn.ReLU(),
-            nn.Linear(120, 4),
+            nn.Linear(self.input_img_size_h * self.input_img_size_w, 4),
             nn.ReLU()
         )
 

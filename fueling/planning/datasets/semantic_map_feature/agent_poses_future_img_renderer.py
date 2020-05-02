@@ -102,7 +102,7 @@ class AgentPosesFutureImgRenderer(object):
                 np.pi / 2 - self.local_base_heading + coordinate_heading),
             self.local_base_point_idx,
             self.resolution))
-        if idx[0] < 0 or idx[0] > self.local_size_h or idx[1] < 0 or idx[1] > self.local_size_w:
+        if idx[0] < 0 or idx[0] >= self.local_size_h or idx[1] < 0 or idx[1] >= self.local_size_w:
             # print("draw_agent_pose_future out of canvas bound")
             return local_map
         local_map[idx[1], idx[0]] = 255
