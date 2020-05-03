@@ -10,14 +10,56 @@ tuner_parameters {
     kappa: 3.0
     xi: 1.0
   }
-  n_iter: 20
+  n_iter: 500
   init_points_1D: 0
   opt_max: true
+
+  # MRAC control params
   flag {
-    flag_name: "enable_speed_station_preview"
-    flag_dir: ""
-    enable: false
+    flag_name: "enable_steer_mrac_control"
+    flag_dir: "lat_controller_conf"
+    enable: true
   }
+  parameter {
+    parameter_name: "reference_time_constant"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    min: 0.01
+    max: 0.26
+  }
+  parameter {
+    parameter_name: "adaption_matrix_p"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    min: 0.0001
+    max: 0.1
+  }
+
+  # Lat control params
+  parameter {
+    parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
+    min: 0.01
+    max: 1.0
+  }
+  parameter {
+    parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
+    min: 0.001
+    max: 0.1
+  }
+  parameter {
+    parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
+    min: 0.01
+    max: 1.0
+  }
+  parameter {
+    parameter_name: "matrix_q"
+    parameter_dir: "lat_controller_conf"
+    min: 0.001
+    max: 0.1
+  }
+
+  # Lon control params
   parameter {
     parameter_name: "kp"
     parameter_dir: "lon_controller_conf.low_speed_pid_conf"

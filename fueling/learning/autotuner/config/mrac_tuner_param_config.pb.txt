@@ -10,9 +10,9 @@ tuner_parameters {
     kappa: 3.0
     xi: 1.0
   }
-  n_iter: 25
-  init_points_1D: 5
-  opt_max: false
+  n_iter: 20
+  init_points_1D: 0
+  opt_max: true
   flag {
     flag_name: "enable_steer_mrac_control"
     flag_dir: "lat_controller_conf"
@@ -21,19 +21,32 @@ tuner_parameters {
   parameter {
     parameter_name: "reference_time_constant"
     parameter_dir: "lat_controller_conf.steer_mrac_conf"
-    min: 0.00001
-    max: 10.0
+    min: 0.01
+    max: 0.26
   }
   parameter {
     parameter_name: "adaption_matrix_p"
     parameter_dir: "lat_controller_conf.steer_mrac_conf"
-    min: 0.00001
-    max: 10.0
+    min: 0.0001
+    max: 0.1
   }
 }
 scenarios {
-  id: 11002
-  id: 11008
-  id: 11010
+  # San Mateo (low speed)
+  id: 11014
+  id: 11015
+  id: 11016
+  id: 11017
+  id: 11018
+  id: 11019
+  id: 11020
+  # Gomentum (high speed)
+  # id: 30019
+  # id: 30020
+  # id: 30021
+  # id: 30022
+  # id: 30023
+  # id: 30024
+  # id: 30025
 }
 dynamic_model: ECHO_LINCOLN
