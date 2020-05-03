@@ -6,7 +6,11 @@ dependencies:
 
   - absl-py
   - boto3
+  - conda-forge::gpytorch
   - conda-forge::optuna
+  - conda-forge::opt-einsum
+  - conda-forge::progressbar
+  - graphviz
   - h5py
   - keras-gpu
   - matplotlib
@@ -26,6 +30,7 @@ dependencies:
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
   - torchvision
+  - tqdm
 
   - pip:
     - pyspark-utils
