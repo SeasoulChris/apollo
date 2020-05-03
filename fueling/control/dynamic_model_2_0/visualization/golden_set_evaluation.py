@@ -32,12 +32,29 @@ class GoldenSetEvaluation():
         self.args = args
         self.DM10_xy = None
         self.DM20_dx_dy = None
+        self.echo_lincoln_xy = None
         self.data_frame_length = 100
+        self.raw_data_visualization = None
 
     def load_data(self):
         logging.info(f'load data from {self.features_file_path}')
         self.features = np.load(self.features_file_path, allow_pickle=True)
         logging.info(f'total data points is {len(self.features)}')
+        self.raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
+        self.raw_data_visualization.feature = self.features
+        self.raw_data_visualization.data_dim = self.features.shape[0]
+
+    def get_echo_lincoln_result(self, is_save=True):
+        echo_lincoln_x, echo_lincoln_y = self.raw_data_visualization.echo_lincoln_location()
+        self.echo_lincoln_xy = np.array(list(zip(echo_lincoln_x, echo_lincoln_y))).squeeze()
+        logging.debug(f'Echo Lincoln results\' shape is {self.echo_lincoln_xy}')
+        logging.debug(f'Data points in Echo Lincoln looks like {self.echo_lincoln_xy[0,:]}')
+        if is_save:
+            # write to npy
+            dst_dir = os.path.dirname(self.features_file_path)
+            dst_file = os.path.join(dst_dir, 'Echo_Lincoln_results.npy')
+            logging.info(f'Echo Lincoln results are saved to file {dst_file}')
+            np.save(dst_file, self.echo_lincoln_xy)
 
     def get_DM10_result(self, is_save=True):
         raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
@@ -45,8 +62,8 @@ class GoldenSetEvaluation():
         raw_data_visualization.data_dim = self.features.shape[0]
         DM10_x, DM10_y = raw_data_visualization.dynamic_model_10_location()
         self.DM10_xy = np.array(list(zip(DM10_x, DM10_y))).squeeze()
-        logging.info(f'Dynamic model 1.0 results\' shape is {self.DM10_xy.shape}')
-        logging.info(f'Data points in dynamic model 1.0 looks like {self.DM10_xy[0,:]}')
+        logging.debug(f'Dynamic model 1.0 results\' shape is {self.DM10_xy.shape}')
+        logging.debug(f'Data points in dynamic model 1.0 looks like {self.DM10_xy[0,:]}')
         if is_save:
             # write to npy
             dst_dir = os.path.dirname(self.features_file_path)
@@ -86,12 +103,14 @@ class GoldenSetEvaluation():
     def correction(self, d_value, data_length):
         # pading first (0:99) points with zeros
         padded_d_value = np.pad(d_value, (data_length, 0), 'constant')
-        logging.info(
+        logging.debug(
             f'padded array with shape {padded_d_value.shape} and looks like {padded_d_value[0:data_length+2, ]}')
+
         # composation for dynamic model 1.0 results
-        accumulated_value = np.cumsum(padded_d_value, axis=0)
-        logging.info(
-            f'accumulated array with shape {accumulated_value.shape} and looks like {accumulated_value[0:data_length+2, ]}')
+        accumulated_value = np.cumsum(padded_d_value / 100.0, axis=0)
+        logging.debug(
+            f'accumulated array with shape {accumulated_value.shape} '
+            'and looks like {accumulated_value[0:data_length+2, ]}')
         return accumulated_value
 
     def plot(self):
@@ -106,12 +125,19 @@ class GoldenSetEvaluation():
         if self.DM10_xy is None:
             self.DM10_xy = np.load(self.args.dm10_result_path, allow_pickle=True)
         corrected_xy = self.corrected_DM10_result()
+        # location from echo Lincoln model
+        if self.echo_lincoln_xy is None:
+            logging.info(self.args.echo_lincoln_result_path)
+            self.echo_lincoln_xy = np.load(self.args.echo_lincoln_result_path, allow_pickle=True)
         # shifted position
         plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
         plt.plot(self.DM10_xy[:, 0] - self.DM10_xy[0, 0], self.DM10_xy[:, 1] -
                  self.DM10_xy[0, 1], 'g.', label="Dynamic model 1.0")
         plt.plot(corrected_xy[:, 0] - corrected_xy[0, 0], corrected_xy[:, 1] -
                  corrected_xy[0, 1], 'r.', label="Dynamic model 2.0")
+        plt.plot(self.echo_lincoln_xy[:, 0] - self.echo_lincoln_xy[0, 0],
+                 self.echo_lincoln_xy[:, 1] - self.echo_lincoln_xy[0, 1],
+                 'y.', label="Echo Lincoln")
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
@@ -119,7 +145,7 @@ class GoldenSetEvaluation():
         figure_file = os.path.join(os.path.dirname(self.features_file_path), 'trajectory_plot.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
-        # plt.show()
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -142,6 +168,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-dm20_result',
                         '--dm20_result_path', type=str)
+
+    parser.add_argument('--echo_lincoln_result_path', type=str)
 
     parser.add_argument(
         '-test',
@@ -175,6 +203,7 @@ if __name__ == '__main__':
     npy_file_list = glob.glob(os.path.join(file_path, '*/*recover_features.npy'))
     logging.info(f'total {len(npy_file_list )} files: {npy_file_list }')
     args = parser.parse_args()
+    first_time_run = False
     for npy_file in npy_file_list:
         logging.info(f'processing npy_file: {npy_file}')
         scenario_id = os.path.dirname(npy_file).split('/')[-1]
@@ -182,10 +211,17 @@ if __name__ == '__main__':
         test_data_folder = os.path.join(
             '/fuel/local_test/labeled_data/2020-04-30-19', scenario_id)
         args.testing_data_path = test_data_folder
+        args.dm10_result_path = os.path.join(file_path, scenario_id, 'DM10_results.npy')
+        args.dm20_result_path = os.path.join(file_path, scenario_id, 'DM20_results.npy')
+        args.echo_lincoln_result_path = os.path.join(
+            file_path, scenario_id, 'Echo_Lincoln_results.npy')
+        logging.info(
+            f'model output data path is {args.dm10_result_path} and {args.dm20_result_path}')
         evaluator = GoldenSetEvaluation(npy_file, args)
         evaluator.load_data()
         # if results files (.npy) are provided than skip these two
-        evaluator.get_DM10_result()
-        evaluator.get_DM20_result()
+        if first_time_run:
+            evaluator.get_DM10_result()
+            evaluator.get_DM20_result()
+            evaluator.get_echo_lincoln_result()
         evaluator.plot()
-        # break

@@ -5,15 +5,24 @@ import numpy as np
 
 import fueling.common.logging as logging
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
-
+import fueling.common.file_utils as file_utils
 # first line is initial velocity
 # second line is initial throttle, brake, gear
 
 
-def hdf52txt(hdf5_file, txt_file):
-    data = feature_extraction.generate_segment_from_list(hdf5_file)
+def file2txt(origin_input_file, txt_file):
+    origin_input_file_ext = os.path.splitext(origin_input_file)[1]
+    logging.info(f'original input file type is: {origin_input_file_ext}')
+    if origin_input_file_ext == '.hdf5':
+        data = feature_extraction.generate_segment_from_list([origin_input_file])
+    elif origin_input_file_ext == '.npy':
+        data = np.load(origin_input_file, allow_pickle=True)
+    else:
+        logging.error(f'Original input file format is not supported yet.')
+        return
     data_points = np.size(data, 0)
     init_v = data[0, 14]
+    logging.info(init_v)
     # dimension check
     if np.size(data, 1) > 22:  # gear info is included
         input_data = data[:, [15, 16, 17, 22]]  # (throttle, brake, steering, gear)
@@ -34,7 +43,7 @@ def hdf52txt(hdf5_file, txt_file):
     with open(txt_file, 'r+') as f:
         content = f.read()
         f.seek(0, 0)
-        f.write(str(init_v).join(['\n', content]))  # + '\n' + content)
+        f.write(f'{init_v}\n{content}')
 
 
 def echo_lincoln(input_file, output_file):
@@ -55,23 +64,27 @@ def txt2numpy(txt_file):
     return output_data
 
 
-def echo_lincoln_wrapper(hdf5_file):
-    input_file = hdf5_file + '.txt'
+def echo_lincoln_wrapper(origin_input_file):
+    input_file = origin_input_file + '.txt'
     logging.info(input_file)
-    output_file = hdf5_file + '_out.txt'
+    output_file = input_file + '_out.txt'
     logging.info(output_file)
-    hdf52txt([hdf5_file], input_file)
+    file2txt(origin_input_file, input_file)
+    return echo_lincoln_output(input_file, output_file)  # numpy data
+
+
+def echo_lincoln_output(input_file, output_file):
     echo_lincoln(input_file, output_file)
+    file_utils.makedirs(os.path.dirname(output_file))
     with open(output_file, 'r') as fin:
         data = fin.read().splitlines(True)
     with open(output_file, 'w') as fout:
         fout.writelines(data[1:])
-    print(output_file)
     return txt2numpy(output_file)  # numpy data
 
 
-# # demo
-# if __name__ == '__main__':
-#     FILE = '/apollo/data/hdf52txt/2_3.hdf5'
-#     result = echo_lincoln_wrapper(FILE)
-#     print(result)
+# demo
+if __name__ == '__main__':
+    FILE = '/apollo/data/npy2txt/20190430180054.record.00000.recover_features.npy'
+    result = echo_lincoln_wrapper(FILE)
+    logging.info(result)

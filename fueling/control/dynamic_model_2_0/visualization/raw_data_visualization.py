@@ -12,6 +12,7 @@ from fueling.common.h5_utils import read_h5
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
 from fueling.control.dynamic_model_2_0.label_generation.label_generation import generate_mlp_output
+from fueling.control.utils.echo_lincoln import echo_lincoln_wrapper
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -19,20 +20,25 @@ import fueling.common.logging as logging
 class RawDataVisualization():
     """ visualize feature and label """
 
-    def __init__(self, h5_file, args):
-        self.data_file = h5_file
+    def __init__(self, data_file, args):
+        self.data_file = data_file
         self.feature = None
         self.data_dim = None
         self.training_data_path = args.training_data_path
         self.plot_path = args.plot_path
         self.model_path = args.dm10_model_path
+        # debug
+        self.dm_acc = None
+        self.dm_w = None
+        self.echo_lincoln_acc_w = None
 
     def get_data(self):
         """load features"""
         if self.data_file.endswith('.hdf5'):
             self.feature = read_h5(self.data_file)
         else:
-            self.features = np.load(self.data_file, allow_pickle=True)
+            logging.info('other')
+            self.feature = np.load(self.data_file, allow_pickle=True)
         self.data_dim = self.feature.shape[0]
         logging.info(self.data_dim)
 
@@ -46,8 +52,19 @@ class RawDataVisualization():
     def dynamic_model_10_location(self):
         """ get dynamic model 10 predicted location """
         dm_acc, dm_w = self.dynamic_model_10_output()
+        self.dm_acc = dm_acc
+        self.dm_w = dm_w
         dm_x, dm_y = self.get_location_from_a_and_w(dm_w, dm_acc)
         return (dm_x, dm_y)
+
+    def echo_lincoln_location(self):
+        """ get location of rule based echo_lincoln model """
+        echo_lincoln_acc_w = echo_lincoln_wrapper(self.data_file)
+        self.echo_lincoln_acc_w = echo_lincoln_acc_w
+        logging.info(f'echo_lincoln_acc_w size is {echo_lincoln_acc_w.shape}')
+        echo_lincoln_x, echo_lincoln_y = self.get_location_from_a_and_w(
+            echo_lincoln_acc_w[:, 1], echo_lincoln_acc_w[:, 0])
+        return (echo_lincoln_x, echo_lincoln_y)
 
     def get_location_from_a_and_w(self, ws, accs):
         """ integration from acceleration and heading angle change rate to x, y"""
@@ -167,16 +184,21 @@ class RawDataVisualization():
         imu_x, imu_y = self.imu_location()
         # location from dynamic model
         dm_x, dm_y = self.dynamic_model_10_location()
+        # location for echo lincoln
+        echo_lincoln_x, echo_lincoln_y = self.echo_lincoln_location()
         # end pose comparison
         logging.info(
             f'GPS endpose is [{x_position[-1]}, {y_position[-1]}]')
         logging.info(
             f'Dynamic model 1.0 endpose is [{dm_x[-1]}, {dm_y[-1]}]')
         logging.info(
-            f'End Pose differences between GPS and dynamic model 1.0 is [{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
+            f'End Pose differences between GPS and dynamic model 1.0 is'
+            '[{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
         plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
         plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')
         plt.plot(dm_x - x_position[0], dm_y - y_position[0], 'g.', label="Dynamic model")
+        plt.plot(echo_lincoln_x - x_position[0], echo_lincoln_y -
+                 y_position[0], 'y.', label='Echo-lincoln')
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory for " + dataset_name)
@@ -206,6 +228,16 @@ if __name__ == '__main__':
             h5_file_list.append(file)
             logging.info(file)
     cur_h5_file = h5_file_list[0]
+    cur_h5_file = (f'/fuel/fueling/control/dynamic_model_2_0/testdata'
+                   '/golden_set/5_3/20190430124347.record.00000.recover_features.npy')
     raw_data_evaluation = RawDataVisualization(cur_h5_file, args)
     raw_data_evaluation.get_data()
+    raw_data_evaluation.dynamic_model_10_location()
+    raw_data_evaluation.echo_lincoln_location()
+    plt.plot(raw_data_evaluation.dm_acc, 'b-')
+    plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 0], 'r-')
+    plt.show()
+    plt.plot(raw_data_evaluation.dm_w, 'b-')
+    plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 1], 'r-')
+    plt.show()
     raw_data_evaluation.plot()

@@ -131,7 +131,8 @@ def generate_gp_data(model_path, segment):
         predicted_a_prev = predicted_a
     # The residual error on x and y prediction
     logging.info(
-        f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}, {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
+        f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
+        ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
     logging.info(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
     output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["x"]] - predicted_x

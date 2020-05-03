@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_library(
+py_binary(
     name = "echo_lincoln",
     srcs = ["echo_lincoln.py"],
     deps = [
