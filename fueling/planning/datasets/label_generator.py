@@ -213,16 +213,20 @@ class LabelGenerator(object):
             #####################################################################
             # Update the ADC trajectory:
             # Only update for consecutive (sampling rate = 0.1sec) points.
-            adc_traj.append((feature_sequence[j].trajectory_point.path_point.x,
-                             feature_sequence[j].trajectory_point.path_point.y,
-                             feature_sequence[j].trajectory_point.path_point.z,
-                             feature_sequence[j].trajectory_point.path_point.theta,
-                             feature_sequence[j].trajectory_point.v,
-                             feature_sequence[j].trajectory_point.a,
-                             feature_sequence[j].timestamp_sec))
+            trajectory_point = (feature_sequence[j].timestamp_sec,
+                                feature_sequence[j].trajectory_point.path_point.x,
+                                feature_sequence[j].trajectory_point.path_point.y,
+                                feature_sequence[j].trajectory_point.path_point.z,
+                                feature_sequence[j].trajectory_point.path_point.theta,
+                                feature_sequence[j].trajectory_point.path_point.s,
+                                feature_sequence[j].trajectory_point.path_point.lane_id,
+                                feature_sequence[j].trajectory_point.v,
+                                feature_sequence[j].trajectory_point.a)
+
+            adc_traj.append(trajectory_point)
+
             # proto form
-            output_features.adc_future_trajectory_point.add().CopyFrom(
-                feature_sequence[j])
+            output_features.adc_future_trajectory_point.add().CopyFrom(trajectory_point)
 
         total_observed_time_span = feature_sequence[future_end_index].timestamp_sec - \
             feature_curr.timestamp_sec
