@@ -14,5 +14,5 @@ ADD . /fuel
 WORKDIR /fuel
 
 RUN cat /home/libs/bash.rc >> ~/.bashrc && \
-    ./tools/build_apollo.sh && \
-    bazel build //fueling/learning/autotuner/...
+    ./tools/build.sh //fueling/learning/autotuner/...
+

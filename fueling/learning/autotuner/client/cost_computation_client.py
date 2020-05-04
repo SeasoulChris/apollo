@@ -111,6 +111,8 @@ class CostComputationClient(object):
                 except grpc.RpcError as rpc_error:
                     if retry == (self.max_retries - 1):
                         raise rpc_error
+                    else:
+                        logging.error(rpc_error)
                 else:
                     break
 

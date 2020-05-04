@@ -17,22 +17,27 @@ function deploy() {
   set -e  
   echo "Deploying..."
   DEPLOY_FILE="${DEPLOY_DIR}/costservice_deployment.yaml"
-  sed -i "s|__IMG__|$DEST_REPO|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g" $DEPLOY_FILE
+  IMG="${DEST_REPO}/${IMAGE}"
+  sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g" $DEPLOY_FILE
   kubectl create -f $DEPLOY_FILE
   git checkout -- $DEPLOY_FILE
 }
 
 function build_and_push() {
-  echo 'Start building cost_service image ...'
+  echo 'Building cost_service image ...'
   cd $( dirname "${BASH_SOURCE[0]}" )/../..
 
-  set -e
-  set -x
+  set -ex
   docker build -t ${IMAGE} --network host -f apps/cost_service/docker/Dockerfile .
 
   echo 'Start pushing cost_service image ...'
-  docker tag ${IMAGE} ${DEST_REPO}
-  docker push ${DEST_REPO}
+  TAG="$(date +%Y%m%d_%H%M)"
+  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
+  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
+
+  TAG="latest"
+  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
+  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
 }
 
 function check_cluster() {
@@ -60,12 +65,12 @@ function init_environment() {
 }
 
 function init_settings() {
-  IMAGE="cost_service:latest"
+  IMAGE="cost_service"
   DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
   case "$CLUSTER" in
     az-staging)
       docker login simengineregistry.azurecr.io -u SImEngineRegistry -p dBHhbaaj3gBlFMpIDLWDwdeaUzLrsIL/
-      DEST_REPO="simengineregistry.azurecr.io/${IMAGE}"
+      DEST_REPO="simengineregistry.azurecr.io"
       K8S_NAMESPACE="default"
       REPLICA=1
       ;;
