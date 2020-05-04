@@ -14,11 +14,11 @@ SKIP_EXISTING_DST_FILE = False
 SRC_DIR_PREFIX = 'modules/planning/learning_data'
 DST_DIR_PREFIX = 'modules/planning/output_data'
 # for local test
-# SRC_DIR_PREFIX = 'apollo/data/titan'
+# SRC_DIR_PREFIX = 'apollo/data/titan_test'
 # DST_DIR_PREFIX = 'apollo/data/output_data_titan'
 # for apolloTitan
-# SRC_DIR_PREFIX = 'data/learning_data'
-# DST_DIR_PREFIX = 'data/output_data'
+# SRC_DIR_PREFIX = 'data2/learning_data'
+# DST_DIR_PREFIX = 'data2/output_data'
 
 
 class OutputDataGenerator(BasePipeline):

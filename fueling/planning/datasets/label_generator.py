@@ -31,6 +31,8 @@ class LabelGenerator(object):
         self.planning_tag_dict = dict()
         # history dict for debug purpose
         self.history_adc_trajectory_dict = dict()
+        # parameters
+        self.max_observation_time = None
 
     def LoadPBFiles(self, input_filepath, output_filepath, secondary_filepath=None):
         self.src_filepath = input_filepath
@@ -143,7 +145,8 @@ class LabelGenerator(object):
     @output: the complete observation_dict.
     '''
 
-    def ObserveAllFeatureSequences(self):
+    def ObserveAllFeatureSequences(self, max_observation_time=8.0):
+        self.max_observation_time = max_observation_time
         for idx, feature in enumerate(self.feature_sequence):
             self.ObserveFeatureSequence(self.feature_sequence, idx)
         logging.debug(len(self.feature_dict))
@@ -160,8 +163,7 @@ class LabelGenerator(object):
     @output: All saved as class variables in observation_dict,
     '''
 
-    def ObserveFeatureSequence(self, feature_sequence, idx_curr,
-                               max_observation_time=8.0, max_dt_interval=5.0):
+    def ObserveFeatureSequence(self, feature_sequence, idx_curr, max_dt_interval=5.0):
         output_features = learning_data_pb2.LearningOutput()
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
@@ -181,14 +183,21 @@ class LabelGenerator(object):
         for j in range(future_start_index, feature_seq_len):
             # dt between future sampling points
             dt = feature_sequence[j].timestamp_sec - feature_sequence[j - 1].timestamp_sec
+            if dt > max_dt_interval:
+                # when dt is too large
+                future_end_index = j - 1
+                logging.debug(
+                    f'In {dict_key}, current index is {idx_curr}. At {j}, dt is {dt} greater than {max_dt_interval}. Future trajectory terminated')
+                break
             # If timespan exceeds max. observation time, then end observing.
             time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
-            if time_span > max_observation_time or dt > max_dt_interval:
+            if time_span > self.max_observation_time:
+                # keep the first larger than observation time point when dt is not too large
                 future_end_index = j
                 break
-
         future_end_index = min(future_end_index, feature_seq_len - 1)
         for j in range(future_start_index, future_end_index + 1):
+            logging.debug(f'future trajectory length is {future_end_index - idx_curr}')
             # logging.info(feature_sequence[j].timestamp_sec)
             # timestamp_sec: 0.0
             # trajectory_point {
@@ -223,6 +232,9 @@ class LabelGenerator(object):
         dict_val['adc_traj_len'] = len(adc_traj)
         dict_val['is_jittering'] = is_jittering
         dict_val['total_observed_time_span'] = total_observed_time_span
+        if total_observed_time_span < self.max_observation_time:
+            logging.debug(
+                f'In {dict_key}, current index is {idx_curr}. {total_observed_time_span} is less than {self.max_observation_time}')
         key = "adc@{:.3f}".format(feature_curr.timestamp_sec)
         self.observation_dict[key] = ((output_features), (dict_val))
         return
@@ -234,11 +246,12 @@ class LabelGenerator(object):
                 continue
             observed_val = self.observation_dict["adc@{:.3f}".format(feature.timestamp_sec)]
             key = "adc@{:.3f}".format(feature.timestamp_sec)
+            time_span = observed_val[1]['total_observed_time_span']
+            if time_span < self.max_observation_time:
+                logging.debug(f'drop future trajectory less than {self.max_observation_time}s')
+                continue
             self.label_dict[key] = observed_val[0]  # output_features
             self.future_status_dict[key] = observed_val[1]['adc_traj']
-            logging.debug(len(observed_val[1]['adc_traj']))
-            time_span = observed_val[1]['total_observed_time_span']
-            logging.debug(time_span)
         logging.debug(self.dst_filepath)
         logging.debug("dst file: {}".format(self.dst_filepath + '.future_status.npy'))
         # comment for now to save local disk space
@@ -354,7 +367,10 @@ if __name__ == '__main__':
     key_list = list(history_result2.keys())
     history_data_points = history_result2[key_list[args.key_id]]
     label_gen.Visualize(history_data_points, args.history_img_output_file)
-    data_points = result2[key_list[args.key_id]]
-    logging.debug(data_points)
-    label_gen.Visualize(data_points, args.future_img_output_file)
-    label_gen.Label()
+    if len(result2) == 0:
+        logging.info(f'no data generated')
+    else:
+        data_points = result2[key_list[args.key_id]]
+        logging.debug(data_points)
+        label_gen.Visualize(data_points, args.future_img_output_file)
+        label_gen.Label()
