@@ -130,7 +130,8 @@ class BosClient(BaseStorage):
         maximal_sub_path_len = 256
         if (len(sub_paths) < minimal_path_depth or
             len(sub_paths) > maximal_path_depth or
-                any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len for x in sub_paths)):
+                any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len
+                    for x in sub_paths)):
             raise ValueError('Destination path is either too short or too long')
 
         overwrite_whitelist = ('modules/control/control_conf/mkz7/',)

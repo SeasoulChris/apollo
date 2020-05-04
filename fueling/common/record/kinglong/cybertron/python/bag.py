@@ -82,14 +82,16 @@ class Bag:
         @param topics list: topic list
         @param start_time:
         @param end_time:
-        @return: generator of (topic, message, data_type, timestamp) namedtuples for each message in the bag file
+        @return: generator of (topic, message, data_type, timestamp) namedtuples for each message in
+                 the bag file
         """
         while True:
             message = self.bag.read(topics, start_time, end_time)
             if not message.end:
-                yield PyBagMessage(message.topic, message.data, message.data_type, message.timestamp)
+                yield PyBagMessage(message.topic, message.data, message.data_type,
+                                   message.timestamp)
             else:
-                #print "No message more."
+                # print "No message more."
                 break
 
     def write(self, topic, data, data_class, t=0, raw=True):
@@ -195,7 +197,7 @@ class Bag:
             s += 'end: %.6f\n' % end_stamp
             s += 'size: %d\n' % self.file_size
             s += 'messages: %d\n' % self.messages
-            #s += 'indexed: True\n'
+            # s += 'indexed: True\n'
 
             if self.compress_type == 0:
                 s += 'compression: none\n'
