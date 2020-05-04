@@ -10,7 +10,7 @@ import numpy as np
 
 from fueling.common.h5_utils import read_h5
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
-from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index, imu_scaling
 from fueling.control.dynamic_model_2_0.label_generation.label_generation import generate_mlp_output
 from fueling.control.utils.echo_lincoln import echo_lincoln_wrapper
 import fueling.common.file_utils as file_utils
@@ -31,6 +31,8 @@ class RawDataVisualization():
         self.dm_acc = None
         self.dm_w = None
         self.echo_lincoln_acc_w = None
+        self.imu_acc = None
+        self.imu_w = None
 
     def get_data(self):
         """load features"""
@@ -46,6 +48,8 @@ class RawDataVisualization():
         """ imu location """
         imu_acc = self.acc()
         imu_w = self.feature[:, segment_index["w_z"]]
+        self.imu_acc = imu_acc
+        self.imu_w = imu_w
         imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc)
         return (imu_x, imu_y)
 
@@ -145,6 +149,8 @@ class RawDataVisualization():
         v0 = init_v
         s = np.zeros((self.data_dim, 1))
         for idx in range(1, self.data_dim):
+            if v0 + acc[idx - 1] * dt < 0:
+                acc[idx - 1] = 0
             s[idx] = self._distance_s(acc[idx - 1], dt, v0)
             v0 = v0 + acc[idx - 1] * dt
         return s
@@ -158,8 +164,11 @@ class RawDataVisualization():
         acc = np.empty((self.data_dim, 1))
         for idx, heading in enumerate(self.feature[:, segment_index["heading"]]):
             normalized_heading = self._normalize_angle(heading)
-            acc[idx] = (self.feature[idx, segment_index["a_x"]] * np.cos(normalized_heading) +
-                        self.feature[idx, segment_index["a_y"]] * np.sin(normalized_heading))
+            # TODO(Shu): remove this when scaling is added to feature extraction
+            acc[idx] = imu_scaling["pp7"] * (self.feature[idx, segment_index["a_x"]]
+                                             * np.cos(normalized_heading) +
+                                             self.feature[idx, segment_index["a_y"]]
+                                             * np.sin(normalized_heading))
         return acc
 
     @staticmethod
@@ -229,15 +238,19 @@ if __name__ == '__main__':
             logging.info(file)
     cur_h5_file = h5_file_list[0]
     cur_h5_file = (f'/fuel/fueling/control/dynamic_model_2_0/testdata'
-                   '/golden_set/5_3/20190430124347.record.00000.recover_features.npy')
+                   '/golden_set/3_4/20190430125012.record.00000.recover_features.npy')
     raw_data_evaluation = RawDataVisualization(cur_h5_file, args)
     raw_data_evaluation.get_data()
     raw_data_evaluation.dynamic_model_10_location()
     raw_data_evaluation.echo_lincoln_location()
+    raw_data_evaluation.imu_location()
     plt.plot(raw_data_evaluation.dm_acc, 'b-')
     plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 0], 'r-')
+    logging.info(raw_data_evaluation.imu_acc.shape)
+    plt.plot(raw_data_evaluation.imu_acc, 'y-')
     plt.show()
     plt.plot(raw_data_evaluation.dm_w, 'b-')
     plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 1], 'r-')
+    plt.plot(raw_data_evaluation.imu_w, 'y-')
     plt.show()
     raw_data_evaluation.plot()

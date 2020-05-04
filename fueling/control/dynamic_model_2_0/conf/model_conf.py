@@ -51,3 +51,9 @@ output_index = {
     "d_x": 0,  # the residual error between groud-truth x and predicted x
     "d_y": 1  # the residual error between groud-truth y and predicted y
 }
+
+imu_scaling = {
+    # IMU compensation for localization scaling issue
+    "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
+    "pp7": 1.085  # scaling rate for acceleration and angular speed on pp7
+}

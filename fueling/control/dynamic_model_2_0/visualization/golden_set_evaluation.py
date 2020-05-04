@@ -35,6 +35,7 @@ class GoldenSetEvaluation():
         self.echo_lincoln_xy = None
         self.data_frame_length = 100
         self.raw_data_visualization = None
+        self.imu_xy = None
 
     def load_data(self):
         logging.info(f'load data from {self.features_file_path}')
@@ -43,6 +44,9 @@ class GoldenSetEvaluation():
         self.raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
         self.raw_data_visualization.feature = self.features
         self.raw_data_visualization.data_dim = self.features.shape[0]
+
+    def get_imu_result(self):
+        self.imu_xy = self.raw_data_visualization.imu_location()
 
     def get_echo_lincoln_result(self, is_save=True):
         echo_lincoln_x, echo_lincoln_y = self.raw_data_visualization.echo_lincoln_location()
@@ -131,6 +135,8 @@ class GoldenSetEvaluation():
             self.echo_lincoln_xy = np.load(self.args.echo_lincoln_result_path, allow_pickle=True)
         # shifted position
         plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
+        plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1] -
+                 self.imu_xy[1][0], 'm.', label='IMU')
         plt.plot(self.DM10_xy[:, 0] - self.DM10_xy[0, 0], self.DM10_xy[:, 1] -
                  self.DM10_xy[0, 1], 'g.', label="Dynamic model 1.0")
         plt.plot(corrected_xy[:, 0] - corrected_xy[0, 0], corrected_xy[:, 1] -
@@ -142,7 +148,8 @@ class GoldenSetEvaluation():
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
         plt.grid(True)
-        figure_file = os.path.join(os.path.dirname(self.features_file_path), 'trajectory_plot.png')
+        figure_file = os.path.join(os.path.dirname(
+            self.features_file_path), 'trajectory_plot_scaled_imu.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
         plt.show()
@@ -219,6 +226,7 @@ if __name__ == '__main__':
             f'model output data path is {args.dm10_result_path} and {args.dm20_result_path}')
         evaluator = GoldenSetEvaluation(npy_file, args)
         evaluator.load_data()
+        evaluator.get_imu_result()
         # if results files (.npy) are provided than skip these two
         if first_time_run:
             evaluator.get_DM10_result()
