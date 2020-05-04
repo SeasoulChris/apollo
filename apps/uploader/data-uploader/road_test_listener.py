@@ -75,8 +75,8 @@ class RoadTestTaskListener(Listener):
             records = [f for f in all_files if re.match(record_pattern, f)]
             if len(records) > 0:
                 if len(records) < len(all_files):
-                    self._move_rests_to_other(src,
-                                              [f for f in all_files if f not in records], other_folder)
+                    self._move_rests_to_other(
+                        src, [f for f in all_files if f not in records], other_folder)
                     src_dst_map[other_folder] = 'public-test/{}'.format(
                         self._get_other_dst(other_folder, other_pattern))
                 src_dst_map[src] = 'public-test/{}'.format(self._get_record_dst(records[0]))

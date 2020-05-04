@@ -130,8 +130,10 @@ class SparkSubmitterClient(object):
     def get_env(self):
         return {
             'docker_image': self.client_flags.get('image', self.get_default('image')),
-            'node_selector': self.client_flags.get('node_selector', self.get_default('node_selector')),
-            'log_verbosity': self.client_flags.get('log_verbosity', self.get_default('log_verbosity')),
+            'node_selector': self.client_flags.get('node_selector',
+                                                   self.get_default('node_selector')),
+            'log_verbosity': self.client_flags.get('log_verbosity',
+                                                   self.get_default('log_verbosity')),
         }
 
     def get_job(self):
@@ -157,26 +159,32 @@ class SparkSubmitterClient(object):
 
     def get_driver(self):
         return {
-            'driver_memory': self.client_flags.get('driver_memory', self.get_default('driver_memory')),
+            'driver_memory': self.client_flags.get('driver_memory',
+                                                   self.get_default('driver_memory')),
         }
 
     def get_partner(self):
         # partner_storage_writable could be specifically set to False
-        partner = {'storage_writable': self.client_flags.get('partner_storage_writable', \
-            self.get_default('partner_storage_writable'))}
+        partner = {'storage_writable': self.client_flags.get(
+            'partner_storage_writable', self.get_default('partner_storage_writable'))}
 
         # partner_bos_bucket could be specifically set to None
         if self.client_flags.get('partner_bos_bucket', self.get_default('partner_bos_bucket')):
             partner['bos'] = {
-                'bucket': self.client_flags.get('partner_bos_bucket', self.get_default('partner_bos_bucket')),
-                'access_key': self.client_flags.get('partner_bos_access', self.get_default('partner_bos_access')),
-                'secret_key': self.client_flags.get('partner_bos_secret', self.get_default('partner_bos_secret')),
-                'region': self.client_flags.get('partner_bos_region', self.get_default('partner_bos_region')),
+                'bucket': self.client_flags.get('partner_bos_bucket',
+                                                self.get_default('partner_bos_bucket')),
+                'access_key': self.client_flags.get('partner_bos_access',
+                                                    self.get_default('partner_bos_access')),
+                'secret_key': self.client_flags.get('partner_bos_secret',
+                                                    self.get_default('partner_bos_secret')),
+                'region': self.client_flags.get('partner_bos_region',
+                                                self.get_default('partner_bos_region')),
             }
         return partner
 
     """
-    Use this function instead of directly accessing flags to avoid instant parsing of flags and UnparsedFlagAccessError.
+    Use this function instead of directly accessing flags to avoid instant parsing of flags and
+    UnparsedFlagAccessError.
     e.g dict.get(key[, default]) will parse flags even if not needed when using flags as default
     """
     def get_default(self, flag):

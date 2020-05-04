@@ -19,7 +19,7 @@ from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 flags.DEFINE_boolean('debug', False, 'Start local debug instance.')
 
 
-################################# Web Handlers #################################
+# Web Handlers
 app = flask.Flask(__name__)
 
 
@@ -45,7 +45,7 @@ def submit_job():
     return msg, http_code
 
 
-################################### App Main ###################################
+# App Main
 class ProductionApp(gunicorn.app.base.BaseApplication):
     """A wrapper to run flask app."""
 

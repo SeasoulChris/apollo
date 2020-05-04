@@ -50,10 +50,12 @@ class SparkSubmitJob(flask_restful.Resource):
             job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
 
             # Validate args
-            if arg.worker.count * arg.worker.memory * flags.FLAGS.min_shared_jobs >= flags.FLAGS.total_memory:
-                return json.dumps({'error': 'Too many memory required!'}), HTTPStatus.BAD_REQUEST
-            elif arg.worker.count * arg.worker.cpu * flags.FLAGS.min_shared_jobs >= flags.FLAGS.total_cpu:
-                return json.dumps({'error': 'Too many cpu required!'}), HTTPStatus.BAD_REQUEST
+            if (arg.worker.count * arg.worker.memory * flags.FLAGS.min_shared_jobs >=
+                    flags.FLAGS.total_memory):
+                return json.dumps({'error': 'Too much memory requested!'}), HTTPStatus.BAD_REQUEST
+            elif (arg.worker.count * arg.worker.cpu * flags.FLAGS.min_shared_jobs >=
+                    flags.FLAGS.total_cpu):
+                return json.dumps({'error': 'Too many cpu requested!'}), HTTPStatus.BAD_REQUEST
 
             if flags.FLAGS.debug:
                 self.spark_submit(job_id, arg)

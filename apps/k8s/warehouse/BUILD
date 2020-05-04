@@ -12,6 +12,7 @@ py_library(
     name = "display_util",
     srcs = ["display_util.py"],
     deps = [
+        "//fueling/common:matplotlib_with_agg",
         "//fueling/common:redis_utils",
     ],
 )

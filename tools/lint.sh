@@ -7,7 +7,7 @@
 CMD="pycodestyle --max-line-length 100"
 
 function LintDir {
-  find "$1" -type f -name '*.py' | grep -v '_pb2.py$' | xargs ${CMD} '{}'
+  find "$1" -type f -name '*.py' | grep -v '_pb2.py$' | xargs ${CMD}
 }
 
 PATH_ARG=$1
