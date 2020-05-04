@@ -5,4 +5,5 @@ opt-einsum
 progressbar
 pyro-ppl
 tqdm
+casadi
 -e git+git://github.com/cornellius-gp/gpytorch.git@master#egg=gpytorch

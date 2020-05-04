@@ -103,3 +103,11 @@ py_binary(
         requirement("tqdm"),
     ],
 )
+
+py_binary(
+    name = "trajectory_perturbation_synthesizer",
+    srcs = ["trajectory_perturbation_synthesizer.py"],
+    deps = [
+        requirement("casadi"),
+    ],
+)
