@@ -15,7 +15,6 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.common.training_conf import output_folder
@@ -25,6 +24,7 @@ import fueling.common.email_utils as email_utils
 import fueling.common.redis_utils as redis_utils
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
+
 
 def read_hdf5(hdf5_file_list):
     """

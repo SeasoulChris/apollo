@@ -21,6 +21,7 @@ dependencies:
   - plotly::plotly-orca
   - protobuf
   - psutil
+  - pycodestyle
   - pymongo
   - pyproj
   - pytorch = 1.1  # Need to adapt code to newer version API.
