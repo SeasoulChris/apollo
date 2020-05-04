@@ -39,14 +39,13 @@ def split_rdd_into_groups(rdd, group_size, overlapping):
         item, idx = item_idx
         return [(idx - offset, (idx, item)) for offset in range(window_size)]
 
-    step = group_size - overlapping
     return (rdd
         # RDD(item, idx)
         .zipWithIndex() 
         # RDD((item, idx)s)
         .flatMap(lambda item_idx: slide_window(item_idx, group_size))
         # PairRDD(key, (idx, item)), apply overlapping
-        .filter(lambda x: x[0] % step == 0)
+        .filter(lambda x: x[0] % overlapping == 0)
         # PairRDD(key, (idx, item)s)
         .groupByKey()
         # PairRDD(key, (item)s)
@@ -96,7 +95,7 @@ class FeatureExtraction(BasePipeline):
             return
 
         # RDD((message)s), group of messages
-        (split_rdd_into_groups(dir_msgs_rdd, SEGMENT_LEN, SEGMENT_INTERVAL) 
+        groups = (split_rdd_into_groups(dir_msgs_rdd, SEGMENT_LEN, SEGMENT_INTERVAL) 
             # PairRDD((messages)s, group_id)
             .zipWithIndex()
             # PairRDD(group_id, (messages)s)
@@ -113,12 +112,16 @@ class FeatureExtraction(BasePipeline):
             # PairRDD(group_id, (data_point)s)
             .groupByKey()
             # PairRDD(group_id, list of data_points)
-            .mapValues(list)
-            # Write each group 
-            .foreach(lambda group: write_segment(output_data_path, group)))
- 
+            .mapValues(list))
+
+        logging.info(F'group size: {groups.count()}')
+
+        groups = groups.filter(spark_op.filter_value(lambda msgs: len(msgs) == FINAL_SEGMENT_LEN))
+        logging.info(F'group size after filtering: {groups.count()}')
+
+        groups.foreach(lambda group: write_segment(output_data_path, group))
+
         logging.info(F'extracted features to target dir {output_data_path}')
-        
 
 if __name__ == '__main__':
     FeatureExtraction().main()
