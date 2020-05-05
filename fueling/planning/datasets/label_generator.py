@@ -226,7 +226,9 @@ class LabelGenerator(object):
             adc_traj.append(trajectory_point)
 
             # proto form
-            output_features.adc_future_trajectory_point.add().CopyFrom(trajectory_point)
+            adc_future_trajectory_point = output_features.adc_future_trajectory_point.add()
+            adc_future_trajectory_point.timestamp_sec = feature_sequence[j].timestamp_sec
+            adc_future_trajectory_point.trajectory_point.CopyFrom(feature_sequence[j].trajectory_point)
 
         total_observed_time_span = feature_sequence[future_end_index].timestamp_sec - \
             feature_curr.timestamp_sec
