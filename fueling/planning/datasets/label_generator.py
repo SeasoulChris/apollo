@@ -219,7 +219,6 @@ class LabelGenerator(object):
                                 feature_sequence[j].trajectory_point.path_point.z,
                                 feature_sequence[j].trajectory_point.path_point.theta,
                                 feature_sequence[j].trajectory_point.path_point.s,
-                                feature_sequence[j].trajectory_point.path_point.lane_id,
                                 feature_sequence[j].trajectory_point.v,
                                 feature_sequence[j].trajectory_point.a)
 
@@ -228,7 +227,8 @@ class LabelGenerator(object):
             # proto form
             adc_future_trajectory_point = output_features.adc_future_trajectory_point.add()
             adc_future_trajectory_point.timestamp_sec = feature_sequence[j].timestamp_sec
-            adc_future_trajectory_point.trajectory_point.CopyFrom(feature_sequence[j].trajectory_point)
+            adc_future_trajectory_point.trajectory_point.CopyFrom(
+                feature_sequence[j].trajectory_point)
 
         total_observed_time_span = feature_sequence[future_end_index].timestamp_sec - \
             feature_curr.timestamp_sec
@@ -271,13 +271,16 @@ class LabelGenerator(object):
             # get history trajectory from each learning frame
             adc_traj = []
             for history_adc_trajectory_point in current_learning_data.adc_trajectory_point:
-                adc_traj.append((history_adc_trajectory_point.trajectory_point.path_point.x,
-                                 history_adc_trajectory_point.trajectory_point.path_point.y,
-                                 history_adc_trajectory_point.trajectory_point.path_point.z,
-                                 history_adc_trajectory_point.trajectory_point.path_point.theta,
-                                 history_adc_trajectory_point.trajectory_point.v,
-                                 history_adc_trajectory_point.trajectory_point.a,
-                                 history_adc_trajectory_point.timestamp_sec))
+                adc_traj.append((
+                    history_adc_trajectory_point.timestamp_sec,
+                    history_adc_trajectory_point.trajectory_point.path_point.x,
+                    history_adc_trajectory_point.trajectory_point.path_point.y,
+                    history_adc_trajectory_point.trajectory_point.path_point.z,
+                    history_adc_trajectory_point.trajectory_point.path_point.theta,
+                    history_adc_trajectory_point.trajectory_point.path_point.s,
+                    history_adc_trajectory_point.trajectory_point.v,
+                    history_adc_trajectory_point.trajectory_point.a
+                ))
             self.history_adc_trajectory_dict[key] = adc_traj
         logging.debug(f'history path: {self.dst_filepath }.history_status.npy')
         # comment for now to save local disk space
@@ -288,6 +291,10 @@ class LabelGenerator(object):
         """ merge feature and label """
         features_labels = learning_data_pb2.LearningData()
         learning_data_frame = learning_data_pb2.LearningDataFrame()
+        # skip learning data when no label is generated.
+        if not self.label_dict:
+            logging.info(f'no future labels for entire bin file, skip writing this bin file')
+            return 0
         for key in self.label_dict.keys():
             # write feature to proto
             learning_data_frame = self.feature_dict[key]
@@ -328,11 +335,11 @@ class LabelGenerator(object):
         plt.close(fig)
 
     def PlotAgent(self, feature, ax, c):
-        heading = feature[3]
+        heading = feature[4]
         position = []
-        position.append(feature[0])
-        position.append(feature[1])
-        position.append(feature[2])
+        position.append(feature[1])  # x position
+        position.append(feature[2])  # y position
+        position.append(feature[3])  # z position
         mkz_plotter.plot(position, heading, ax, c)
 
 
@@ -340,7 +347,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='labeling')
     parser.add_argument(
         '--input_file', type=str,
-        default='/apollo/data/learning_based_planning/input/00036.record.6.bin')
+        default='/apollo/data/learning_based_planning/input/00036.record.1.bin')
     parser.add_argument(
         '--secondary_input_file', type=str)
 
