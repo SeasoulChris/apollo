@@ -33,24 +33,27 @@ class RawDataVisualization():
         self.echo_lincoln_acc_w = None
         self.imu_acc = None
         self.imu_w = None
+        self.imu_v = []
 
     def get_data(self):
         """load features"""
         if self.data_file.endswith('.hdf5'):
-            self.feature = read_h5(self.data_file)
+            feature = read_h5(self.data_file)
         else:
             logging.info('other')
-            self.feature = np.load(self.data_file, allow_pickle=True)
+            feature = np.load(self.data_file, allow_pickle=True)
+        self.feature = feature[:, :]
         self.data_dim = self.feature.shape[0]
         logging.info(self.data_dim)
 
     def imu_location(self):
         """ imu location """
-        imu_acc = self.acc()
-        imu_w = self.feature[:, segment_index["w_z"]]
+        imu_acc = imu_scaling["acc"] * self.acc()
+        imu_w = imu_scaling["heading_rate"] * self.feature[:, segment_index["w_z"]]
         self.imu_acc = imu_acc
         self.imu_w = imu_w
-        imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc)
+        self.imu_v = []
+        imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc, self.imu_v)
         return (imu_x, imu_y)
 
     def dynamic_model_10_location(self):
@@ -70,11 +73,11 @@ class RawDataVisualization():
             echo_lincoln_acc_w[:, 1], echo_lincoln_acc_w[:, 0])
         return (echo_lincoln_x, echo_lincoln_y)
 
-    def get_location_from_a_and_w(self, ws, accs):
+    def get_location_from_a_and_w(self, ws, accs, v=[]):
         """ integration from acceleration and heading angle change rate to x, y"""
         dt = feature_config["delta_t"]
         theta = self.calc_theta(ws, dt)
-        s = self.calc_s(accs, dt)
+        s = self.calc_s(accs, dt, v)
         x = np.zeros((self.data_dim, 1))
         y = np.zeros((self.data_dim, 1))
 
@@ -93,6 +96,7 @@ class RawDataVisualization():
 
     def dynamic_model_10_output(self):
         """ dynamic model 1.0 output"""
+        # TODO (Shu): merge this with label generatio
         # load model parameters
         model_path = self.model_path
         model_norms_path = os.path.join(model_path, 'norms.h5')
@@ -118,7 +122,8 @@ class RawDataVisualization():
             brake = self.feature[k, segment_index["brake"]]
             steering = self.feature[k, segment_index["steering"]]
             # time delay ?
-            mlp_input = np.array([speed, acc, throttle, brake, steering]).reshape(1, 5)
+            mlp_input = np.array([speed, imu_scaling["acc"] * acc,
+                                  throttle, brake, steering]).reshape(1, 5)
             predicted_a[k], predicted_w[k] = generate_mlp_output(mlp_input, model, norms)
         logging.debug(f'predicted_a: {predicted_a}')
         logging.debug(f'predicted_w: {predicted_w}')
@@ -140,19 +145,20 @@ class RawDataVisualization():
             init_heading = theta[idx]
         return theta
 
-    def calc_s(self, acc, dt):
+    def calc_s(self, acc, dt, v=[]):
         """ s = v0 * dt + 0.5 * a * t * t"""
         # initial velocity
         init_normalized_heading = self._normalize_angle(self.feature[0, segment_index["heading"]])
-        init_v = (self.feature[0, segment_index["v_x"]] * np.cos(init_normalized_heading) +
-                  self.feature[0, segment_index["v_y"]] * np.sin(init_normalized_heading))
-        v0 = init_v
+        v0 = (self.feature[0, segment_index["v_x"]] * np.cos(init_normalized_heading) +
+              self.feature[0, segment_index["v_y"]] * np.sin(init_normalized_heading))
+        v.append(v0)
         s = np.zeros((self.data_dim, 1))
         for idx in range(1, self.data_dim):
             if v0 + acc[idx - 1] * dt < 0:
                 acc[idx - 1] = 0
             s[idx] = self._distance_s(acc[idx - 1], dt, v0)
             v0 = v0 + acc[idx - 1] * dt
+            v.append(v0)
         return s
 
     @staticmethod
@@ -165,55 +171,84 @@ class RawDataVisualization():
         for idx, heading in enumerate(self.feature[:, segment_index["heading"]]):
             normalized_heading = self._normalize_angle(heading)
             # TODO(Shu): remove this when scaling is added to feature extraction
-            acc[idx] = imu_scaling["pp7"] * (self.feature[idx, segment_index["a_x"]]
-                                             * np.cos(normalized_heading) +
-                                             self.feature[idx, segment_index["a_y"]]
-                                             * np.sin(normalized_heading))
+            acc[idx] = (self.feature[idx, segment_index["a_x"]]
+                        * np.cos(normalized_heading) +
+                        self.feature[idx, segment_index["a_y"]]
+                        * np.sin(normalized_heading))
         return acc
 
     @staticmethod
     def _normalize_angle(theta):
+        # (-pi, pi)
         theta = theta % (2 * math.pi)
         if theta > math.pi:
             theta = theta - 2 * math.pi
         return theta
 
-    def plot(self):
+    def plot(self, imu_only=False):
         """Plot states during the test run"""
         dataset_name = (os.path.basename(self.data_file)).split('.')[0]
         dataset_path = os.path.dirname(self.data_file).replace(
             self.training_data_path, self.plot_path)
-        plt.figure()
-        plt.xlabel('x (m)', fontdict={'size': 12})
-        plt.ylabel('y (m)', fontdict={'size': 12})
-        # location from GPS
-        x_position = self.feature[:, segment_index['x']]
-        y_position = self.feature[:, segment_index['y']]
-        # location from IMU
-        imu_x, imu_y = self.imu_location()
-        # location from dynamic model
-        dm_x, dm_y = self.dynamic_model_10_location()
-        # location for echo lincoln
-        echo_lincoln_x, echo_lincoln_y = self.echo_lincoln_location()
-        # end pose comparison
-        logging.info(
-            f'GPS endpose is [{x_position[-1]}, {y_position[-1]}]')
-        logging.info(
-            f'Dynamic model 1.0 endpose is [{dm_x[-1]}, {dm_y[-1]}]')
-        logging.info(
-            f'End Pose differences between GPS and dynamic model 1.0 is'
-            '[{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
-        plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
-        plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')
-        plt.plot(dm_x - x_position[0], dm_y - y_position[0], 'g.', label="Dynamic model")
-        plt.plot(echo_lincoln_x - x_position[0], echo_lincoln_y -
-                 y_position[0], 'y.', label='Echo-lincoln')
-        plt.plot(0, 0, 'x', markersize=6, color='k')
-        plt.legend(fontsize=12, numpoints=5, frameon=False)
-        plt.title("Trajectory for " + dataset_name)
-        plt.grid(True)
-        plt.savefig(self.plot_path + dataset_name + "plot.png")
-        plt.show()
+        if imu_only:
+            fig = plt.figure(figsize=(12, 8))
+            ax1 = fig.add_subplot(2, 1, 1)
+            ax1.set_xlabel('data points', fontdict={'size': 12})
+            ax1.set_ylabel('heading angle (rad)', fontdict={'size': 12})
+            # ground truth (GPS) heading angle
+            ax1.plot(self.feature[:, segment_index['heading']], 'b.', label='GPS')
+            # imu heading heading angle
+            imu_heading = self.calc_theta(self.imu_w, feature_config["delta_t"])
+            ax1.plot(imu_heading, 'r.', label='IMU')
+            plt.legend(fontsize=12, numpoints=5, frameon=False)
+            plt.title("Heading comparison")
+            plt.grid(True)
+            # speed comparison
+            ax2 = fig.add_subplot(2, 1, 2)
+            ax2.set_xlabel('data points', fontdict={'size': 12})
+            ax2.set_ylabel('speed (m/s)', fontdict={'size': 12})
+            # ground truth (GPS) speed m/s
+            ax2.plot(self.feature[:, segment_index['speed']], 'b.', label='GPS')
+            # imu speed speed
+            ax2.plot(self.imu_v, 'r.', label='IMU')
+            plt.legend(fontsize=12, numpoints=5, frameon=False)
+            plt.title("GPS and IMU comparison")
+            plt.grid(True)
+            plt.savefig(self.plot_path + dataset_name + "imu_plot.png")
+            plt.show()
+        else:
+            plt.figure()
+            plt.xlabel('x (m)', fontdict={'size': 12})
+            plt.ylabel('y (m)', fontdict={'size': 12})
+            # location from GPS
+            x_position = self.feature[:, segment_index['x']]
+            y_position = self.feature[:, segment_index['y']]
+            # location from IMU
+            imu_x, imu_y = self.imu_location()
+            # location from dynamic model
+            dm_x, dm_y = self.dynamic_model_10_location()
+            # location for echo lincoln
+            echo_lincoln_x, echo_lincoln_y = self.echo_lincoln_location()
+            logging.info(imu_x.shape)
+            # end pose comparison
+            logging.info(
+                f'GPS endpose is [{x_position[-1]}, {y_position[-1]}]')
+            logging.info(
+                f'Dynamic model 1.0 endpose is [{dm_x[-1]}, {dm_y[-1]}]')
+            logging.info(
+                f'End Pose differences between GPS and dynamic model 1.0 is'
+                '[{x_position[-1]-dm_x[-1]}, {y_position[-1]-dm_y[-1]}]')
+            plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
+            plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')
+            plt.plot(dm_x - x_position[0], dm_y - y_position[0], 'g.', label="Dynamic model")
+            plt.plot(echo_lincoln_x - x_position[0], echo_lincoln_y -
+                     y_position[0], 'y.', label='Echo-lincoln')
+            plt.plot(0, 0, 'x', markersize=6, color='k')
+            plt.legend(fontsize=12, numpoints=5, frameon=False)
+            plt.title("Trajectory for " + dataset_name)
+            plt.grid(True)
+            plt.savefig(self.plot_path + dataset_name + "plot.png")
+            plt.show()
 
 
 if __name__ == '__main__':
@@ -238,7 +273,7 @@ if __name__ == '__main__':
             logging.info(file)
     cur_h5_file = h5_file_list[0]
     cur_h5_file = (f'/fuel/fueling/control/dynamic_model_2_0/testdata'
-                   '/golden_set/3_4/20190430125012.record.00000.recover_features.npy')
+                   '/golden_set/6_2/20190430122402.record.00000.recover_features.npy')
     raw_data_evaluation = RawDataVisualization(cur_h5_file, args)
     raw_data_evaluation.get_data()
     raw_data_evaluation.dynamic_model_10_location()

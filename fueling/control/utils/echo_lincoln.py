@@ -22,7 +22,9 @@ def file2txt(origin_input_file, txt_file):
         return
     data_points = np.size(data, 0)
     init_v = data[0, 14]
+    init_w = data[0, 0]
     logging.info(init_v)
+    logging.info(init_w)
     # dimension check
     if np.size(data, 1) > 22:  # gear info is included
         input_data = data[:, [15, 16, 17, 22]]  # (throttle, brake, steering, gear)
@@ -43,7 +45,7 @@ def file2txt(origin_input_file, txt_file):
     with open(txt_file, 'r+') as f:
         content = f.read()
         f.seek(0, 0)
-        f.write(f'{init_v}\n{content}')
+        f.write(f'{init_v}\n{init_w}\n{content}')
 
 
 def echo_lincoln(input_file, output_file):

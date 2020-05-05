@@ -55,5 +55,7 @@ output_index = {
 imu_scaling = {
     # IMU compensation for localization scaling issue
     "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
-    "pp7": 1.085  # scaling rate for acceleration and angular speed on pp7
+    "pp7": 1.085,  # scaling rate for acceleration and angular speed on pp7
+    "acc": 0.83,  # scaling rate for acceleration
+    "heading_rate": 0.855  # scaling rate for angular speed
 }

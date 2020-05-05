@@ -67,6 +67,20 @@ def generate_segment(h5_file):
     return segment
 
 
+def gear_position_conversion(raw_gear):
+    gear_status = np.round(raw_gear)
+    # Convert backward gear from 2 to -1 for computation convenience
+    if gear_status == 2:
+        gear_status = -1
+    # Set forward gear as 1
+    elif gear_status == 1:
+        pass
+    # Set neutral gear as 0
+    else:
+        gear_status = 0
+    return gear_status
+
+
 def generate_gp_data(model_path, segment):
     """
     Generate one sample (input_segment, output_segment) from a segment
@@ -103,6 +117,7 @@ def generate_gp_data(model_path, segment):
     prev_v = None
     for k in range(INPUT_LENGTH):
         input_segment[k, input_index["v"]] = segment[k, segment_index["speed"]]
+        # add scaling to acceleration
         input_segment[k, input_index["a"]] = segment[k, segment_index["a_x"]] * \
             np.cos(segment[k, segment_index["heading"]]) + \
             segment[k, segment_index["a_y"]] * \
@@ -112,8 +127,13 @@ def generate_gp_data(model_path, segment):
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
         input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]] / PI
 
+        # gear status
+        if segment.shape[1] > segment_index["gear_position"]:
+            gear_status = gear_position_conversion(segment[k, segment_index["gear_position"]])
+        else:
+            gear_status = 1
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
-                                                       1, MLP_DIM_INPUT), model, norms)
+                                                       1, MLP_DIM_INPUT), model, norms, gear_status)
 
         if k > 0:
             # update based on previous output
@@ -156,13 +176,14 @@ def generate_mlp_output(mlp_input, model, norms, gear_status=1):
     output_fnn[0, :] = output_fnn[0, :] * output_std + output_mean
     # Update the vehicle speed based on predicted acceleration
     velocity_fnn = output_fnn[0, 0] * feature_config["delta_t"] + cur_speed
-    # If
-    # 1. negative speed under forward gear
-    # 2. positive speed under backward gear
-    # 3. neutral gear
-    # Then truncate speed, acceleration, and angular speed to 0
+
     if gear_status * (velocity_fnn + gear_status * SPEED_EPSILON) <= 0:
-        logging.info(f'output is set as zeros')
+        # when
+        # 1. negative speed under forward gear
+        # 2. positive speed under backward gear
+        # 3. neutral gear
+        # truncate speed, acceleration, and angular speed to 0
+        # logging.info(f'output is set as zeros')
         output_fnn[0, 0] = 0.0
         output_fnn[0, 1] = 0.0
     logging.debug(f'mlp input is {mlp_input}')
