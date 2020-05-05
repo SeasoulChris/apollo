@@ -13,7 +13,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 
 
-class LearningDataOrganizer:
+class TrainingDataOrganizer:
     '''
     An orginizer which takes in LearningData, outputs LearningDataFrame and 
         distribute them into training_set, validation_set and testing_set
@@ -27,6 +27,7 @@ class LearningDataOrganizer:
         self.training_set_ratio = 0.8
         self.validation_set_ratio = 0.1
         self.testing_set_ratio = 0.1
+        self.to_be_synthesized_set_ratio = self.training_set_ratio * 0.1
 
         self._organize()
 
@@ -42,7 +43,8 @@ class LearningDataOrganizer:
         # List LearningData files and copy into LearningDataFrame .bin
         frames_list = []
         learning_data_file_paths = file_utils.list_files(self.data_dir)
-        logging.info("{} learning_data.bin to deal with in total".format(len(learning_data_file_paths)))
+        logging.info("{} learning_data.bin to deal with in total".format(
+            len(learning_data_file_paths)))
         for file_path in tqdm(learning_data_file_paths):
             if 'future_status' not in file_path or 'bin' not in file_path:
                 continue
@@ -51,7 +53,7 @@ class LearningDataOrganizer:
             frames_base_name = os.path.basename(file_path)
             for frame_num, learning_data_frame in enumerate(learning_data_frames.learning_data):
                 frame_name = os.path.join(
-                    self.output_dir, frames_base_name + "_{}.bin".format(frame_num))
+                    self.output_dir, frames_base_name + ".frame_num_{}.bin".format(frame_num))
                 proto_utils.write_pb_to_bin_file(
                     learning_data_frame, frame_name)
                 frames_list.append(frame_name)
@@ -60,6 +62,8 @@ class LearningDataOrganizer:
         random.seed(0)
         random.shuffle(frames_list)
         self.frames_total_count = len(frames_list)
+        to_be_synthesized_set_end_idx = int(self.frames_total_count *
+                                            self.to_be_synthesized_set_ratio)
         training_set_end_idx = int(
             self.frames_total_count * self.training_set_ratio)
         validation_set_end_idx = training_set_end_idx + \
@@ -67,13 +71,16 @@ class LearningDataOrganizer:
         if validation_set_end_idx == 0:
             logging.info(
                 'frames num too small, no frame is distributed into validation set')
-        training_set_list = frames_list[:training_set_end_idx]
+        to_be_synthesized_set_list = frames_list[:to_be_synthesized_set_end_idx]
+        training_set_list = frames_list[to_be_synthesized_set_end_idx:training_set_end_idx]
         validation_set_list = frames_list[training_set_end_idx:validation_set_end_idx]
         testing_set_list = frames_list[validation_set_end_idx:]
 
-        set_lists = [training_set_list, validation_set_list, testing_set_list]
+        set_lists = [to_be_synthesized_set_list,
+                     training_set_list, validation_set_list, testing_set_list]
 
-        set_dirs = [os.path.join(self.output_dir, 'training_set/'),
+        set_dirs = [os.path.join(self.output_dir, 'to_be_synthesized_set/'),
+                    os.path.join(self.output_dir, 'training_set/'),
                     os.path.join(self.output_dir, 'validation_set/'),
                     os.path.join(self.output_dir, 'testing_set/')]
         for set_dir in set_dirs:
@@ -88,24 +95,34 @@ class LearningDataOrganizer:
             for frame_file in tqdm(set_list):
                 shutil.move(frame_file, set_dirs[set_idx])
 
-        train_set_files = file_utils.list_files(set_dirs[0])
-        validation_set_files = file_utils.list_files(set_dirs[1])
-        testing_set_files = file_utils.list_files(set_dirs[2])
+        to_be_synthesized_set_files = file_utils.list_files(set_dirs[0])
+        train_set_files = file_utils.list_files(set_dirs[1])
+        validation_set_files = file_utils.list_files(set_dirs[2])
+        testing_set_files = file_utils.list_files(set_dirs[3])
 
         with open(os.path.join(self.output_dir, "frames_distribution_details.txt"), "w") \
                 as output_file:
-            output_file.write("train_set_has {} frames \n".format(len(train_set_files)))
-            output_file.write("validation_set_has {} frames \n".format(len(validation_set_files)))
-            output_file.write("test_set_has {} frames \n".format(len(testing_set_files)))
+            output_file.write(
+                "train_set_has {} frames \n".format(len(train_set_files)))
+            output_file.write("validation_set_has {} frames \n".format(
+                len(validation_set_files)))
+            output_file.write(
+                "test_set_has {} frames \n".format(len(testing_set_files)))
+            output_file.write(
+                "to_besynthesized_set_has {} frames \n"
+                .format(len(to_be_synthesized_set_files)))
 
-        return train_set_files, validation_set_files, testing_set_files
+        return train_set_files, validation_set_files, testing_set_files, to_be_synthesized_set_files
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='learning_data organizer data folder')
+    parser = argparse.ArgumentParser(
+        description='learning_data organizer data folder')
     parser.add_argument('data_dir', type=str,
                         help='organizer data folder')
     parser.add_argument('output_dir', type=str,
                         help='output data folder')
     args = parser.parse_args()
 
-    learning_data_organizer = LearningDataOrganizer(args.data_dir, args.output_dir)
+    learning_data_organizer = TrainingDataOrganizer(
+        args.data_dir, args.output_dir)

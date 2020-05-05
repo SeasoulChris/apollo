@@ -93,10 +93,9 @@ py_library(
 )
 
 py_binary(
-    name = "learning_data_organizer",
-    srcs = ["learning_data_organizer.py"],
+    name = "training_data_organizer",
+    srcs = ["training_data_organizer.py"],
     deps = [
-        "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
@@ -109,5 +108,17 @@ py_binary(
     srcs = ["trajectory_perturbation_synthesizer.py"],
     deps = [
         requirement("casadi"),
+    ],
+)
+
+py_binary(
+    name = "trajectory_perturbation_synthesizer_pipeline",
+    srcs = ["trajectory_perturbation_synthesizer_pipeline.py"],
+    deps = [
+        ":trajectory_perturbation_synthesizer",
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
     ],
 )

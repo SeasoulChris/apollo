@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 
+import time
 import casadi as ca
 import numpy as np
 import math
 
+import fueling.common.logging as logging
 
-class TrajectoryPerturbationSynthesizer:
+
+class TrajectoryPerturbationSynthesizer(object):
     '''
     a synthesizer using optimiaztion to perturbate input trajectory
     '''
 
     def __init__(self):
-        self.past_trajectory = None
-        self.future_trajectory = None
-        self.merged_trajectory = None
         self.splitting_idx = None
         self.perturbate_point_idx = None
-
         self.perturbate_xy_range = [-0.5, 0.5]
         self.perturbate_heading_range = [-np.pi / 3, np.pi / 3]
 
@@ -72,6 +71,7 @@ class TrajectoryPerturbationSynthesizer:
                 ubx_x[i] = trajectory[i][0]
                 lbx_y[i] = trajectory[i][1]
                 ubx_y[i] = trajectory[i][1]
+                continue
             lbx_x[i] = -ca.inf
             ubx_x[i] = ca.inf
             lbx_y[i] = -ca.inf
@@ -90,15 +90,18 @@ class TrajectoryPerturbationSynthesizer:
         return smoothed_xy
 
     def evaluate_trajectory_heading(self, xy_point, original_trajectory):
+        if len(original_trajectory) < 2:
+            return original_trajectory
         state_horizon = original_trajectory.shape[0]
         headings = np.zeros((state_horizon, 1))
-        headings[0] = original_trajectory[0][2]
-        headings[-1] = original_trajectory[-1][2]
+        headings[0] = math.atan2(original_trajectory[1][1] - original_trajectory[0][1],
+                                     original_trajectory[1][0] - original_trajectory[0][0])
+        headings[-1] = math.atan2(original_trajectory[-1][1] - original_trajectory[-2][1],
+                                     original_trajectory[-1][0] - original_trajectory[-2][0])
         for i in range(1, state_horizon - 1):
             headings[i] = math.atan2(original_trajectory[i+1][1] - original_trajectory[i-1][1],
                                      original_trajectory[i+1][0] - original_trajectory[i-1][0])
         trajectory = np.hstack((xy_point, headings))
-        print(trajectory)
         return trajectory
 
     def check_trajectory_curvature(self, smoothed_trajectory):
@@ -107,12 +110,36 @@ class TrajectoryPerturbationSynthesizer:
                                         smoothed_trajectory[i + 1][0])**2 +
                                        (smoothed_trajectory[i][1] -
                                         smoothed_trajectory[i + 1][1])**2)
-            estimated_curvature = math.fabs(
-                smoothed_trajectory[i + 1][2] - smoothed_trajectory[i][2]) / point_distance
+            angle_difference = math.fabs(
+                smoothed_trajectory[i + 1][2] - smoothed_trajectory[i][2])
+            minimal_angle_difference = (
+                angle_difference + np.pi / 2) % np.pi - np.pi / 2
+            estimated_curvature = minimal_angle_difference / point_distance
             if estimated_curvature > self.max_curvature:
-                print(estimated_curvature)
                 return False
         return True
+
+    def visualize_for_debug(self, past_trajectory, future_trajectory,
+                            perturbated_past_trajectory, perturbated_future_trajectory):
+        origin_traj_for_plot = np.vstack(
+            (past_trajectory, future_trajectory))
+        traj_for_plot = np.vstack(
+            (perturbated_past_trajectory, perturbated_future_trajectory))
+
+        import matplotlib.pyplot as plt
+        fig = plt.figure(0)
+        xy_graph = fig.add_subplot(111)
+        xy_graph.plot(
+            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],  linestyle='--', marker='o', color='r')
+        xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
+                      linestyle='--', marker='o', color='g')
+        original_point = xy_graph.scatter(origin_traj_for_plot[self.perturbate_point_idx][0],
+                                          origin_traj_for_plot[self.perturbate_point_idx][1], marker='D', color='r')
+        perturbated_point = xy_graph.scatter(traj_for_plot[self.perturbate_point_idx][0],
+                                             traj_for_plot[self.perturbate_point_idx][1], marker='D', color='g')
+
+        xy_graph.set_aspect('equal')
+        plt.show()
 
     def synthesize_perturbation(self, past_trajectory, future_trajectory):
         '''
@@ -128,30 +155,36 @@ class TrajectoryPerturbationSynthesizer:
         perturbated_past_trajectory: (N_past, 3) numpy array including state (x, y, heading)
         perturbated_future_trajectory: (N_future, 3) numpy array including state (x, y, heading)
         '''
-        self.past_trajectory = past_trajectory
-        self.future_trajectory = future_trajectory
-        self.merged_trajectory = np.vstack(
-            (self.past_trajectory, self.future_trajectory))
+        merged_trajectory = np.vstack(
+            (past_trajectory, future_trajectory))
 
-        self.splitting_idx = self.past_trajectory.shape[0] - 1
+        self.splitting_idx = past_trajectory.shape[0] - 1
         self.perturbate_point_idx = np.random.randint(
-            self.splitting_idx, self.merged_trajectory.shape[0])
+            self.splitting_idx, merged_trajectory.shape[0] - 1)
 
-        perturbated_trajectory = self.perturbate_point(self.merged_trajectory,
+        perturbated_trajectory = self.perturbate_point(merged_trajectory,
                                                        self.perturbate_point_idx)
+
+        normalization_point = np.copy(perturbated_trajectory[0, :])
+
+        perturbated_trajectory -= normalization_point
 
         smoothed_xy = self.ebs_with_fixed_point(perturbated_trajectory,
                                                 [0,
                                                  self.perturbate_point_idx,
-                                                 self.merged_trajectory.shape[0] - 1])
+                                                 merged_trajectory.shape[0] - 1])
 
         smoothed_trajectory = self.evaluate_trajectory_heading(smoothed_xy,
                                                                perturbated_trajectory)
+        smoothed_trajectory += normalization_point
 
         is_valid = self.check_trajectory_curvature(smoothed_trajectory)
 
         perturbated_past_trajectory = smoothed_trajectory[:self.splitting_idx + 1]
         perturbated_future_trajectory = smoothed_trajectory[self.splitting_idx + 1:]
+
+        # self.visualize_for_debug(past_trajectory, future_trajectory,
+        #                          perturbated_past_trajectory, perturbated_future_trajectory)
 
         return is_valid, perturbated_past_trajectory, perturbated_future_trajectory
 
@@ -164,10 +197,12 @@ if __name__ == "__main__":
 
     synthesizer = TrajectoryPerturbationSynthesizer()
 
-    is_valid, past_traj, future_traj = synthesizer.synthesize_perturbation(trajectory[:10], trajectory[10:])
+    is_valid, perturbated_past_trajectory, perturbated_future_trajectory = \
+        synthesizer.synthesize_perturbation(trajectory[:10], trajectory[10:])
 
-    traj_for_plot = np.vstack((past_traj, future_traj))
-    
+    traj_for_plot = np.vstack(
+        (perturbated_past_trajectory, perturbated_future_trajectory))
+
     print(is_valid)
 
     import matplotlib.pyplot as plt
@@ -176,5 +211,3 @@ if __name__ == "__main__":
     xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1])
     xy_graph.set_aspect('equal')
     plt.show()
-
-
