@@ -10,7 +10,7 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - name: oworker
+        - name: coworker
           image: __IMG__
           imagePullPolicy: Always
           command:

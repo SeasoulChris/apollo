@@ -1,4 +1,3 @@
- 
 FROM simengineregistry.azurecr.io/cost_service:20200504_1613
 
 RUN rm -rf /fuel/fueling && \
