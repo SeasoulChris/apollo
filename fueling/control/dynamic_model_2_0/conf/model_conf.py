@@ -33,7 +33,9 @@ feature_config = {
     "delta_t": 0.01,  # updating cycle delta_t for input data
     "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "window_size": 51,  # window_size for savgol_filter
-    "polynomial_order": 3  # polynomial_order for savgol_filter
+    "polynomial_order": 3,  # polynomial_order for savgol_filter
+    "SEGMENT_OVERLAP": 10,  # The overlap between each two groups for augment
+    "MAX_POSE_DELTA": 0.02,  # The maximum gap between pose and chasis timestamp, in seconds
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""

@@ -8,66 +8,79 @@ import pyspark_utils.helper as spark_helper
 import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config as config
+from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message import \
+     InterPolationMessage
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
-SEGMENT_LEN = 100 * 2
-# 90% overlaping
-SEGMENT_INTERVAL = 10 * 2
-FINAL_SEGMENT_LEN = 100
+# The exact length of chasis messages in a group
+SEGMENT_LEN = int(config['DELTA_T'] / config['delta_t'])
 
 
-def write_segment(output_data_path, group):
+def add_valid_groups(valid_groups, group):
+    """Check the group and split/add it into groups if it's valid"""
+    if len(group) < SEGMENT_LEN:
+        return
+    sub_groups = [group[idx : idx + SEGMENT_LEN]
+                  for idx in range(0, len(group), len(group) - config['SEGMENT_OVERLAP'])]
+    for sub_group in sub_groups:
+        if len(sub_group) == SEGMENT_LEN:
+            valid_groups.append(sub_group)
+
+
+def group_task_messages(task_messages):
+    """Match chasis and pose messages and generate groups"""
+    task, messages = task_messages
+    cur_interp_msg, cur_pose_msg, iterp_messages = InterPolationMessage(), None, []
+    logging.info(F'task: {task}, messages len: {len(messages)}')
+
+    # Loop once to get all the interpolate messages
+    for message in messages:
+        topic, message_proto = message
+        if topic == record_utils.CHASSIS_CHANNEL:
+            iterp_messages.append(cur_interp_msg)
+            cur_interp_msg = InterPolationMessage(message_proto)
+        else:
+            cur_pose_msg = message_proto
+        cur_interp_msg.add_pose(cur_pose_msg) 
+
+    # Optional, get the invalid points
+    invalid_interp_pos = [i for i, x in enumerate(iterp_messages) if not x.is_valid()]
+    logging.info(F'invalid points len: {len(invalid_interp_pos)}')
+
+    # Generate valid groups potentially splitted by the invalid points
+    last_pos, valid_groups = 0, []
+    for pos in invalid_interp_pos:
+        if last_pos < pos:
+            add_valid_groups(valid_groups, iterp_messages[last_pos : pos])
+        last_pos = pos + 1 
+    if last_pos < len(iterp_messages):
+        add_valid_groups(valid_groups, iterp_messages[last_pos:])
+    logging.info(F'valid groups len: {len(valid_groups)}')
+
+    return [(task, group_id, group) for group_id, group in enumerate(valid_groups)]
+
+
+def generate_dataset(group):
+    """Generate dataset based on interpolation objects"""
+    # TODO(longtao): do interpolation and extract features here
+    return None
+
+
+def write_segment(output_data_path, task_id_group):
     """Write current data list to hdf5 file"""
-    group_id, data_set = group
+    task, group_id, group = task_id_group
+    output_data_path = os.path.join(output_data_path, task)
+    data_set = generate_dataset(group)
+    if not data_set:
+        logging.info(F'no dataset generated for group {group_id} and folder {output_data_path}')
+        return
     h5_utils.write_h5_single_segment(data_set, output_data_path, group_id)
     logging.info(F'written group {group_id} into folder {output_data_path}')
-
-
-def count_messages_filter(messages_rdd, topic):
-    """Count messages from chassis and localization topic"""
-    return messages_rdd.filter(lambda message: message.topic == topic).count() >= SEGMENT_LEN // 2
-
-
-def split_rdd_into_groups(rdd, group_size, overlapping):
-    """Split RDD into groups with given overlapping"""
-    """([1,2,3,4,5], 3, 1) -> ([1,2,3], [3,4,5])"""
-
-    def slide_window(item_idx, window_size):
-        """Split RDD evenly into windows with given size"""
-        item, idx = item_idx
-        return [(idx - offset, (idx, item)) for offset in range(window_size)]
-
-    return (rdd
-            # RDD(item, idx)
-            .zipWithIndex()
-            # RDD((item, idx)s)
-            .flatMap(lambda item_idx: slide_window(item_idx, group_size))
-            # PairRDD(key, (idx, item)), apply overlapping
-            .filter(lambda x: x[0] % overlapping == 0)
-            # PairRDD(key, (idx, item)s)
-            .groupByKey()
-            # PairRDD(key, (item)s)
-            .mapValues(lambda vals: [item for (idx, item) in sorted(vals)])
-            # PairRDD(key, (item)s)
-            .sortByKey()
-            # RDD(groups)
-            .values()
-            # RDD(groups)
-            .filter(lambda group: len(group) == group_size))
-
-
-def get_datapoints(elem):
-    """Generate data points from localization and chassis"""
-    (chassis, pose_pre) = elem
-    pose = pose_pre.pose
-    time_stamp = chassis.header.timestamp_sec
-    data_point = gen_data_point(pose, chassis)
-    # added time as a dimension
-    return np.hstack((data_point, time_stamp / 10**9))
 
 
 class FeatureExtraction(BasePipeline):
@@ -75,54 +88,36 @@ class FeatureExtraction(BasePipeline):
     def run(self):
         """Run."""
         input_data_path = (self.FLAGS.get('input_data_path') or
-                           'modules/control/data/records/Mkz7/2019-06-04')
+            'modules/control/data/records/Mkz7/2019-06-04')
         output_data_path = self.our_storage().abs_path(self.FLAGS.get('output_data_path') or
-                                                       'modules/control/dynamic_model_2_0/features/2019-06-04')
+            'modules/control/dynamic_model_2_0/features/2019-06-04')
 
         logging.info(F'input_data_path: {input_data_path}, output_data_path: {output_data_path}')
 
-        dir_msgs_rdd = (
+        task_msgs_rdd = spark_helper.cache_and_log('task_msgs_rdd',
             # RDD(files)
             self.to_rdd(self.our_storage().list_files(input_data_path))
             # RDD(record files)
             .filter(record_utils.is_record_file)
-            # RDD(message), control and chassis message
-            .flatMap(record_utils.read_record([record_utils.CHASSIS_CHANNEL,
-                                               record_utils.LOCALIZATION_CHANNEL]))
-            .sortBy(lambda message: message.timestamp))
+            # PairRDD(task, record file)
+            .keyBy(os.path.dirname)
+            # PairRDD(task, message)
+            .flatMapValues(record_utils.read_record([record_utils.CHASSIS_CHANNEL,
+                                                     record_utils.LOCALIZATION_CHANNEL]))
+            # PairRDD(task, (topic, proto))
+            .mapValues(lambda value: (value.topic, record_utils.message_to_proto(value)))
+            # PariRDD(task, (topic, proto)), sort by proto.header.timestamp_sec
+            .sortBy(lambda x: x[1][1].header.timestamp_sec)
+            # PairRDD(task, (sorted messages))
+            .groupByKey())
 
-        # Check if qualified for extraction
-        if (not count_messages_filter(dir_msgs_rdd, record_utils.CHASSIS_CHANNEL) or
-                not count_messages_filter(dir_msgs_rdd, record_utils.LOCALIZATION_CHANNEL)):
-            logging.info('not qualified for extraction, quit')
-            return
-
-        # RDD((message)s), group of messages
-        groups = (split_rdd_into_groups(dir_msgs_rdd, SEGMENT_LEN, SEGMENT_INTERVAL)
-                  # PairRDD((messages)s, group_id)
-                  .zipWithIndex()
-                  # PairRDD(group_id, (messages)s)
-                  .map(lambda x: (x[1], x[0]))
-                  # PairRDD(group_id, (proto)s)
-                  .mapValues(record_utils.messages_to_proto_dict())
-                  # PairRDD(group_id, (chassis_list, pose_list)s)
-                  .mapValues(lambda proto_dict: (proto_dict[record_utils.CHASSIS_CHANNEL],
-                                                 proto_dict[record_utils.LOCALIZATION_CHANNEL]))
-                  # PairRDD(group_id, a single message),
-                  .flatMapValues(pair_cs_pose)
-                  # PairRDD(group_id, a data point),
-                  .mapValues(get_datapoints)
-                  # PairRDD(group_id, (data_point)s)
-                  .groupByKey()
-                  # PairRDD(group_id, list of data_points)
-                  .mapValues(list))
-
-        logging.info(F'group size: {groups.count()}')
-
-        groups = groups.filter(spark_op.filter_value(lambda msgs: len(msgs) == FINAL_SEGMENT_LEN))
-        logging.info(F'group size after filtering: {groups.count()}')
-
-        groups.foreach(lambda group: write_segment(output_data_path, group))
+        groups = spark_helper.cache_and_log('FilteredGroups',
+            # PairRDD(task, (sorted messages))
+            task_msgs_rdd
+            # PairRDD(task, group_id, InterPolationMessages as a group)
+            .flatMap(group_task_messages))
+        
+        groups.foreach(lambda task_id_group: write_segment(output_data_path, task_id_group))
 
         logging.info(F'extracted features to target dir {output_data_path}')
 
