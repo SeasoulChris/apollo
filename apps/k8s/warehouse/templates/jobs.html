@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+<title>Apollo Fuel - Jobs</title>
+<style>
+  .green {color: green;}
+  .red {color: red;}
+  .text_center {text-align: center;}
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">Information</div>
+  <div class="panel-body">
+   <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Namespace</th>
+          <th>Name</th>
+          <th>Owner</th>
+	  <th>Phase</th>
+          <th>Begin Time</th>
+          <th>Duration(hh:mm:ss)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in job_list %}
+	        <tr>
+	          <td>{{ record.namespace }}</td>
+	          <td>{{ record.name }}</td>
+	          <td>{{ record.owner }}</td>
+		  <td>{{ record.phase }}</td>
+	          <td>{{ record.createtion_time }}</td>
+	          <td>{{ record.duration }}</td>
+	        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+

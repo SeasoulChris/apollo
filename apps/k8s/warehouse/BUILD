@@ -25,8 +25,18 @@ py_binary(
         ":display_util",
         ":metrics_util",
         ":records_util",
+	":jobs_util",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
+    ],
+)
+
+py_library(
+    name = "jobs_util",
+    srcs = ["jobs_util.py"],
+    deps = [
+        ":display_util",
+        "//fueling/common:kubectl_utils",
     ],
 )
 
@@ -54,3 +64,4 @@ py_library(
         "//fueling/data/proto:record_meta_pb2",
     ],
 )
+

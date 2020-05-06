@@ -18,6 +18,7 @@ import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
 import apps.k8s.warehouse.display_util as display_util
+import apps.k8s.warehouse.jobs_util as jobs_util
 import apps.k8s.warehouse.metrics_util as metrics_util
 import apps.k8s.warehouse.records_util as records_util
 
@@ -124,8 +125,8 @@ def record_hdl(record_path):
 
 @app.route('/jobs')
 def jobs_hdl():
-    # Call K8S API.
-    return flask.render_template('jobs.html')
+    job_list = jobs_util.get_pods()
+    return flask.render_template('jobs.html', job_list=job_list)
 
 
 @app.route('/bos-ask', methods=['POST'])
@@ -193,3 +194,4 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
+
