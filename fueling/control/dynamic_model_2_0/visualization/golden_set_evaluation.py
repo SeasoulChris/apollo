@@ -2,15 +2,18 @@
 import argparse
 import os
 import glob
+import math
 
 
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
+from scipy.spatial import distance
 import gpytorch
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
@@ -133,17 +136,29 @@ class GoldenSetEvaluation():
         if self.echo_lincoln_xy is None:
             logging.info(self.args.echo_lincoln_result_path)
             self.echo_lincoln_xy = np.load(self.args.echo_lincoln_result_path, allow_pickle=True)
+        # log info of accumulated error
+        xy_position = self.features[:, segment_index['x']:segment_index['y'] + 1]
+        logging.info(f'Ground truth trajectory shape is : {xy_position.shape}')
+        logging.info(f'Dynamic model 1.0 trajectory shape is :{self.DM10_xy.shape}')
+        logging.info(f'Dynamic model 2.0 trajectory shape is :{corrected_xy.shape}')
+        logging.info(f'Echo Lincoln trajectory shape is :{self.echo_lincoln_xy.shape}')
+        DM10_error = self.calc_accumulated_error(xy_position, self.DM10_xy)
+        DM20_error = self.calc_accumulated_error(xy_position, corrected_xy)
+        echo_lincoln_error = self.calc_accumulated_error(xy_position, self.echo_lincoln_xy)
+        logging.info(f'Dynamic model 1.0 accumulated error is :{DM10_error} m')
+        logging.info(f'Dynamic model 2.0 accumulated error is :{DM20_error} m')
+        logging.info(f'Echo_lincoln accumulated error is :{echo_lincoln_error} m')
         # shifted position
         plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
         plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1] -
                  self.imu_xy[1][0], 'm.', label='IMU')
         plt.plot(self.DM10_xy[:, 0] - self.DM10_xy[0, 0], self.DM10_xy[:, 1] -
-                 self.DM10_xy[0, 1], 'g.', label="Dynamic model 1.0")
+                 self.DM10_xy[0, 1], 'g.', label=f"Dynamic model 1.0, error is {DM10_error:.3f} m")
         plt.plot(corrected_xy[:, 0] - corrected_xy[0, 0], corrected_xy[:, 1] -
-                 corrected_xy[0, 1], 'r.', label="Dynamic model 2.0")
+                 corrected_xy[0, 1], 'r.', label=f"Dynamic model 2.0, error is {DM20_error:.3f} m")
         plt.plot(self.echo_lincoln_xy[:, 0] - self.echo_lincoln_xy[0, 0],
                  self.echo_lincoln_xy[:, 1] - self.echo_lincoln_xy[0, 1],
-                 'y.', label="Echo Lincoln")
+                 'y.', label=f"Echo Lincoln, error is {echo_lincoln_error:.3f} m")
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
@@ -153,6 +168,16 @@ class GoldenSetEvaluation():
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
         plt.show()
+
+    def calc_accumulated_error(self, ref_trajectory, actual_trajectory):
+        """ ref_trajectory[num_of_data_points, dim_of point]"""
+        num_points = min(ref_trajectory.shape[0], actual_trajectory.shape[0])
+        # distance (error)
+        ref_coords = ref_trajectory[: num_points, :]
+        actual_coords = actual_trajectory[: num_points, :]
+        errors = distance.cdist(ref_coords, actual_coords, 'euclidean').diagonal()
+        # RMS of distance
+        return math.sqrt(np.mean(np.square(errors)))
 
 
 if __name__ == '__main__':
