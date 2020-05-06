@@ -16,6 +16,11 @@ spec:
           command:
             - "/fuel/apps/optuna/deploy/optuna_entrypoint.sh"
             - "__CLUSTER__"
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           envFrom:
             - secretRef:
                 name: postgres-secrets

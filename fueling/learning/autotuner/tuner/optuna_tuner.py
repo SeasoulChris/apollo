@@ -58,11 +58,6 @@ flags.DEFINE_string(
     "",
     "study name for optuna, this is necessary if running optuna in parallel. Otherwise, generate a random name."
 )
-flags.DEFINE_integer(
-    "n_iterations",
-    5,
-    "number of iteration"
-)
 
 
 class OptunaBaseTuner():
@@ -142,7 +137,7 @@ if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     tuner = OptunaBaseTuner()
 
-    n_iterations = flags.FLAGS.n_iterations
+    n_iterations = tuner.tuner_param_config_pb.tuner_parameters.n_iter
     study_name = flags.FLAGS.study_name or f"autotuner-{tuner.timestamp}"
     logging.info(f"Running {study_name} for {n_iterations} trials...")
 

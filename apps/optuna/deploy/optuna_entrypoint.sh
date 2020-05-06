@@ -21,17 +21,20 @@ function start_service() {
   source /home/libs/bash.rc
   source /apollo/scripts/apollo_base.sh
 
-  LOG_DIR=/tmp/log
+  STUDY_NAME="autotuner-$(date +%Y%m%d_%H%M)"
+  LOG_DIR="/mnt/bos/autotuner/optuna/$STUDY_NAME"
   mkdir -p $LOG_DIR
 
-  # TODO(vivian): allow user to set n_iterations and tuner_param_config_filename
+  LOG_NAME=$LOG_DIR/optuna_$MY_POD_NAME.log
+  echo "Saving log to $LOG_NAME"
+
+  # TODO(vivian): allow user to set worker_number and tuner_param_config_filename
   bazel run //fueling/learning/autotuner/tuner:optuna_tuner -- \
     --cost_computation_service_url=$COST_SERVICE_URL \
     --study_storage_url=$STUDY_STORAGE_URL \
     --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt \
-    --n_iterations=3 \
-    --study_name="autotuner-$(date +%Y%m%d_%H%M)" \
-    2>&1 | tee $LOG_DIR/optuna.log; test ${PIPESTATUS[0]} -eq 0
+    --study_name=$STUDY_NAME \
+    2>&1 | tee $LOG_NAME; test ${PIPESTATUS[0]} -eq 0
 }
 
 function main() {
