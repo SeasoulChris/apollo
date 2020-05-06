@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: __ROLE__-optuna-worker
+  labels:
+    app: optuna-worker
+spec:
+  parallelism: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: oworker
+          image: __IMG__
+          imagePullPolicy: Always
+          command:
+            - "/fuel/apps/optuna/deploy/optuna_entrypoint.sh"
+            - "__CLUSTER__"
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+          securityContext:
+            privileged: true
+      imagePullSecrets:
+        - name: regsecret
+      restartPolicy: Never

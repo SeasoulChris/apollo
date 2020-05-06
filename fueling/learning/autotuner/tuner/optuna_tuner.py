@@ -1,17 +1,3 @@
-"""
-Optuna example that optimizes a simple quadratic function.
-In this example, we optimize a simple quadratic function. We also demonstrate how to continue an
-optimization and to use timeouts.
-We have the following two ways to execute this example:
-(1) Execute this code directly.
-    $ python quadratic_simple.py
-(2) Execute through CLI.
-    $ STUDY_NAME=`optuna create-study --storage sqlite:///example.db`
-    $ optuna study optimize quadratic_simple.py objective --n-trials=100 --study $STUDY_NAME \
-      --storage sqlite:///example.db
-"""
-
-
 import argparse
 import os
 import sys
@@ -39,11 +25,12 @@ from fueling.learning.autotuner.client.cost_computation_client import CostComput
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+import fueling.common.file_utils as file_utils
 
 
 flags.DEFINE_string(
     "tuner_param_config_filename",
-    "",
+    "fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt",
     "File path to tuner parameter config."
 )
 flags.DEFINE_string(
@@ -58,16 +45,31 @@ flags.DEFINE_string(
 )
 flags.DEFINE_string(
     "visualization_dir",
-    "/fuel/fueling/learning/autotuner/tuner",
+    "/mnt/bos/autotuner/optuna",
     "Tuner storage root directory"
+)
+flags.DEFINE_string(
+    "study_storage_url",
+    "postgres:5432",
+    "URL to access RDB"
+)
+flags.DEFINE_string(
+    "study_name",
+    "",
+    "study name for optuna, this is necessary if running optuna in parallel. Otherwise, generate a random name."
+)
+flags.DEFINE_integer(
+    "n_iterations",
+    5,
+    "number of iteration"
 )
 
 
 class OptunaBaseTuner():
-    """Basic functionality for Tuner."""
+    """Basic functionality for Optuna Tuner."""
 
     def __init__(self):
-        logging.info(f"Init OptunaBayesianOptimization Tuner.")
+        logging.info(f"Init OptunaBaseTuner Tuner.")
 
         tuner_conf = TunerConfigs()
         user_conf = ControlConf()  # Basic configuration corresponding to user module
@@ -75,7 +77,7 @@ class OptunaBaseTuner():
         # Read and parse config from a pb file
         try:
             proto_utils.get_pb_from_text_file(
-                flags.FLAGS.tuner_param_config_filename, tuner_conf,
+                file_utils.fuel_path(flags.FLAGS.tuner_param_config_filename), tuner_conf,
             )
             logging.debug(f"Parsed autotune config files {tuner_conf}")
 
@@ -98,11 +100,9 @@ class OptunaBaseTuner():
 
         # Bounded region of parameter space
         self.pbounds = {}
-        tuner_parameters = self.tuner_param_config_pb.tuner_parameters
-        #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
 
         self.init_cost_client()
-        print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
+        logging.info(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
@@ -128,38 +128,47 @@ class OptunaBaseTuner():
     def init_cost_client(self):
         config = self.tuner_param_config_pb
         CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
+        self.cost_client = CostComputationClient()
         self.cost_client = CostComputationClient(
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,
         )
 
+    def close_cost_client(self):
+        self.cost_client.close()
 
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     tuner = OptunaBaseTuner()
-    # Let us minimize the objective function above.
-    print("Running 5 trials...")
-    #study = optuna.create_study(study_name='distributed-example', storage='sqlite:///example.db')
-    # study = optuna.create_study(sampler=TPESampler())
+
+    n_iterations = flags.FLAGS.n_iterations
+    study_name = flags.FLAGS.study_name or f"autotuner-{tuner.timestamp}"
+    logging.info(f"Running {study_name} for {n_iterations} trials...")
+
     study = optuna.create_study(
         direction="maximize",
-        study_name="kubernetes",
-        storage="postgresql://{}:{}@postgres:5432/{}".format(
+        study_name=study_name,
+        storage="postgresql://{}:{}@{}/{}".format(
             os.environ["POSTGRES_USER"],
             os.environ["POSTGRES_PASSWORD"],
+            flags.FLAGS.study_storage_url,
             os.environ["POSTGRES_DB"],
         ),
         sampler=TPESampler(),
         load_if_exists=True,
     )
-    study.optimize(tuner.objective, n_trials=2)
+    study.optimize(tuner.objective, n_trials=n_iterations)
+
     logging.info(f"Best value: {study.best_value}  (params: {study.best_params})")
     # optuna.visualization.plot_intermediate_values(study)
+
+    output_dir = os.path.join(flags.FLAGS.visualization_dir, study_name, tuner.timestamp)
+    file_utils.makedirs(output_dir)
     figure1 = optuna.visualization.plot_optimization_history(study)
+    figure1.write_image(f"{output_dir}/optimization_history.png")
     figure2 = optuna.visualization.plot_contour(study, params=['kp', 'ki'])
+    figure2.write_image(f"{output_dir}/contour.png")
     figure1.show()
-    figure2.show()
-    figure1.write_image(
-        f"{flags.FLAGS.visualization_dir}/optimization_history_{tuner.timestamp}.png")
-    figure2.write_image(f"{flags.FLAGS.visualization_dir}/contour_{tuner.timestamp}.png")
+
+    tuner.close_cost_client()

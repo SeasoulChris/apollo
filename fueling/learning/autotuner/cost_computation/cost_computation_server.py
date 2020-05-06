@@ -25,7 +25,7 @@ import fueling.common.proto_utils as proto_utils
 
 ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
-MAX_SPARK_WORKERS = 10
+MAX_SPARK_WORKERS = 20
 
 # Flags
 flags.DEFINE_string(
@@ -88,7 +88,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         context.add_callback(on_rpc_done)
 
         # Save config to a local file
-        service_token = f"tuner-{uuid.uuid4().hex}"
+        service_token = f"tuner-{request.running_role}-{uuid.uuid4().hex}"
         tmp_dir = self.get_service_dir(service_token)
         file_utils.makedirs(tmp_dir)
         proto_utils.write_pb_to_text_file(request, f"{tmp_dir}/init_request.pb.txt")

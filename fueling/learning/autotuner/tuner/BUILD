@@ -6,11 +6,15 @@ load("@default_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "optuna_tuner",
     srcs = ["optuna_tuner.py"],
+    data = [
+        "//fueling/learning/autotuner/config",
+    ],
     deps = [
-      "//fueling/learning/autotuner/client:cost_computation_client",
-      "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
+      requirement("psycopg2-binary"),
       "//fueling/common:file_utils",
       "//fueling/common:proto_utils",
+      "//fueling/learning/autotuner/client:cost_computation_client",
+      "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
     ]
 )
 
@@ -23,13 +27,14 @@ py_binary(
 )
 
 
-py_binary(
+py_library(
     name = "base_tuner",
     srcs = ["base_tuner.py"],
     data = [
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:cost_computation_client",

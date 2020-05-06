@@ -6,4 +6,5 @@ progressbar
 pyro-ppl
 tqdm
 casadi
+psycopg2-binary
 -e git+git://github.com/cornellius-gp/gpytorch.git@master#egg=gpytorch

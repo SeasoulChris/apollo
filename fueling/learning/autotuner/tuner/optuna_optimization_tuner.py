@@ -20,8 +20,8 @@ from modules.control.proto.pid_conf_pb2 import PidConf
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
 import fueling.common.logging as logging
+import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
-
 
 class OptunaOptimizationTuner(BaseTuner):
     """Basic functionality of Optuna Tuner for Control Module."""
@@ -81,8 +81,7 @@ class OptunaOptimizationTuner(BaseTuner):
         tic_start = time.perf_counter()
 
         self.visual_storage_dir = os.path.join(self.tuner_storage_dir, task_dir)
-        if not os.path.isdir(self.visual_storage_dir):
-            os.makedirs(self.visual_storage_dir)
+        file_utils.makedirs(self.visual_storage_dir)
         figure1 = self.visualizer.plot_optimization_history(self.optimizer)
         figure2 = self.visualizer.plot_contour(self.optimizer, params=self.pbounds.keys())
         figure1.show()

@@ -66,10 +66,10 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
    ```
 
    1. **Run optuna based optimization via cluster:**
-
+      To start optuna workers
       ```bash
-      cd /apollo-fuel
-      kubectl apply -f fueling/learning/autotuner/config/k8s-manifests.yaml
+      cd /apollo-fuel/apps/optuna
+      bash main.sh bce-platform run
       ```
 
       To monitor all service/apps
@@ -77,11 +77,9 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
       kubectl get all
       ```
 
-      To stop all deployed apps and service
+      To stop all optuna workers
       ```bash
-      kubectl delete service/autotune-postgres
-      kubectl delete statefulset.apps/autotune-postgres
-      kubectl delete job.batch/autotune-worker
+      bash main.sh bce-platform stop
       ```
 
 1. Monitor the Optimization process **via the terminal**:

@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./main.sh [ init | build | deploy ] [ bce-platform | bce-staging | az-staging ]
+    ./main.sh [ bce-platform | az-staging ] [ init | build | run | stop ]
     '
 }
 
@@ -10,27 +10,29 @@ function scale_deployment() {
   kubectl scale deployment costservice-deployment -n $K8S_NAMESPACE --replicas=$REPLICA
 }
 
-function deploy() {
-  echo "Deleting the current deployment"
-  kubectl delete deployment costservice-deployment -n $K8S_NAMESPACE
+function delete_worker() {
+  kubectl delete job.batch/$USER-optuna-worker
+}
 
-  set -e  
-  echo "Deploying..."
-  DEPLOY_FILE="${DEPLOY_DIR}/costservice_deployment.yaml"
+function run() {
+  delete_worker
+
+  RUN_FILE="${DEPLOY_DIR}/optuna_worker.yaml"
   IMG="${DEST_REPO}/${IMAGE}"
-  sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g" $DEPLOY_FILE
-  kubectl create -f $DEPLOY_FILE
-  git checkout -- $DEPLOY_FILE
+  sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g;s|__ROLE__|$USER|" $RUN_FILE
+  kubectl apply -f $RUN_FILE
+  git checkout -- $RUN_FILE
 }
 
 function build_and_push() {
-  echo 'Building cost_service image ...'
+  # NOTE: this will be depreicated soon as optuna and cost_service can share the same image
+  echo 'Building optuna image ...'
   cd $( dirname "${BASH_SOURCE[0]}" )/../..
 
   set -ex
-  docker build -t ${IMAGE} --network host -f apps/cost_service/docker/Dockerfile .
+  docker build -t ${IMAGE} --network host -f apps/optuna/docker/Dockerfile .
 
-  echo 'Start pushing cost_service image ...'
+  echo 'Start pushing optuna image ...'
   TAG="$(date +%Y%m%d_%H%M)"
   docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
   docker push "${DEST_REPO}/${IMAGE}:${TAG}"
@@ -58,33 +60,25 @@ function init_environment() {
       --docker-password=apollo@2017
   fi
 
-  SERVICE_FILE="${DEPLOY_DIR}/costservice_service.yaml"
+  SERVICE_FILE="${DEPLOY_DIR}/optuna_init.yaml"
   sed -i "s|__NAMESPACE__|$K8S_NAMESPACE|g" $SERVICE_FILE
   kubectl create -f $SERVICE_FILE
   git checkout -- $SERVICE_FILE
 }
 
 function init_settings() {
-  IMAGE="cost_service"
+  IMAGE="optuna_worker"
   DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
   case "$CLUSTER" in
     az-staging)
       docker login simengineregistry.azurecr.io -u SImEngineRegistry -p dBHhbaaj3gBlFMpIDLWDwdeaUzLrsIL/
       DEST_REPO="simengineregistry.azurecr.io"
       K8S_NAMESPACE="default"
-      REPLICA=1
-      ;;
-    bce-staging)
-      docker login hub.baidubce.com -u apollofuel -p apollo@2017
-      DEST_REPO="hub.baidubce.com/apollofuel/autotuner_staging"
-      K8S_NAMESPACE="default"
-      REPLICA=1
       ;;
     bce-platform)
       docker login hub.baidubce.com -u apollofuel -p apollo@2017
       DEST_REPO="hub.baidubce.com/apollofuel/autotuner"
       K8S_NAMESPACE="autotuner"
-      REPLICA=1
       ;;
     *)
       print_usage
@@ -98,8 +92,8 @@ function main() {
     exit 1
   fi
 
-  ACTION=$1
-  CLUSTER=$2
+  CLUSTER=$1
+  ACTION=$2
   check_cluster
   init_settings
 
@@ -110,9 +104,11 @@ function main() {
     build)
       build_and_push
       ;;
-    deploy)
-      deploy
-      scale_deployment
+    run)
+      run
+      ;;
+    stop)
+      delete_worker
       ;;
     *)
       print_usage
