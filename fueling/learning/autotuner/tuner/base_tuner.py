@@ -38,11 +38,11 @@ flags.DEFINE_string(
 class BaseTuner():
     """Basic functionality for NLP."""
 
-    def __init__(self, tuner_conf, user_conf):
+    def __init__(self, UserConfClass):
+        tic_start = time.perf_counter()
         logging.info(f"Init Optimization Tuner.")
 
-        self.tuner_param_config_pb = tuner_conf
-        self.algorithm_conf_pb = user_conf
+        self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClass)
 
         # Bounded region of parameter space
         self.pbounds = {}
@@ -77,6 +77,37 @@ class BaseTuner():
         self.time_efficiency = 0.0
 
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
+
+        self.init_optimizer_visualizer(self.tuner_param_config_pb.tuner_parameters)
+
+        logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
+
+    def read_configs(self, UserConfClass):
+        tuner_conf = TunerConfigs()
+        user_conf = UserConfClass()  # Basic configuration corresponding to user module
+
+        # Read and parse config from a pb file
+        try:
+            proto_utils.get_pb_from_text_file(
+                flags.FLAGS.tuner_param_config_filename, tuner_conf,
+            )
+            logging.debug(f"Parsed autotune config files {tuner_conf}")
+
+        except Exception as error:
+            logging.error(f"Failed to parse autotune config: {error}")
+            sys.exit(1)
+
+        try:
+            proto_utils.get_pb_from_text_file(
+                tuner_conf.tuner_parameters.default_conf_filename, user_conf,
+            )
+            logging.debug(f"Parsed user config files {user_conf}")
+
+        except Exception as error:
+            logging.error(f"Failed to parse user config: {error}")
+            sys.exit(1)
+
+        return tuner_conf, user_conf
 
     def init_cost_client(self):
         config = self.tuner_param_config_pb

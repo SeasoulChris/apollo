@@ -26,40 +26,9 @@ import fueling.common.proto_utils as proto_utils
 
 
 class BayesianOptimizationTuner(BaseTuner):
-    """Basic functionality for NLP."""
 
     def __init__(self):
-        tic_start = time.perf_counter()
-
-        tuner_conf = TunerConfigs()
-        user_conf = ControlConf()  # Basic configuration corresponding to user module
-
-        # Read and parse config from a pb file
-        try:
-            proto_utils.get_pb_from_text_file(
-                flags.FLAGS.tuner_param_config_filename, tuner_conf,
-            )
-            logging.debug(f"Parsed autotune config files {tuner_conf}")
-
-        except Exception as error:
-            logging.error(f"Failed to parse autotune config: {error}")
-            sys.exit(1)
-
-        try:
-            proto_utils.get_pb_from_text_file(
-                tuner_conf.tuner_parameters.default_conf_filename, user_conf,
-            )
-            logging.debug(f"Parsed user config files {user_conf}")
-
-        except Exception as error:
-            logging.error(f"Failed to parse user config: {error}")
-            sys.exit(1)
-
-        BaseTuner.__init__(self, tuner_conf, user_conf)
-
-        self.init_optimizer_visualizer(self.tuner_param_config_pb.tuner_parameters)
-
-        logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
+        BaseTuner.__init__(self, ControlConf)
 
     def init_optimizer_visualizer(self, tuner_parameters):
         self.utility = UtilityFunction(kind=tuner_parameters.utility.utility_name,
