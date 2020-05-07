@@ -20,9 +20,9 @@ segment_index = {
     "brake": 16,  # chassis.brake_percentage/100.0
     "steering": 17,  # chassis.steering_percentage/100.0
     "mode": 18,  # chassis.driving_mode
-    "x": 19,  # pose.position.x, ENU, ground truth from localization mudule
-    "y": 20,  # pose.position.y, ENU, ground truth from localization mudule
-    "z": 21,  # pose.position.z, ENU, ground truth from localization mudule
+    "x": 19,  # pose.position.x, ENU, ground truth from localization module
+    "y": 20,  # pose.position.y, ENU, ground truth from localization module
+    "z": 21,  # pose.position.z, ENU, ground truth from localization module
     "gear_position": 22  # gear position: 0-neutral, 1-drive, 2-reverse
 }
 
@@ -60,6 +60,6 @@ imu_scaling = {
     # IMU compensation for localization scaling issue
     "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
     "pp7": 1.085,  # scaling rate for acceleration and angular speed on pp7
-    "acc": 0.83,  # scaling rate for acceleration
+    "acc": 0.83,  # scaling rate for acceleration 0.75
     "heading_rate": 0.855  # scaling rate for angular speed
 }
