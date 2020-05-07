@@ -14,7 +14,7 @@ from keras.models import load_model
 import h5py
 import numpy as np
 
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config, input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling, feature_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -118,7 +118,7 @@ def generate_gp_data(model_path, segment):
     for k in range(INPUT_LENGTH):
         input_segment[k, input_index["v"]] = segment[k, segment_index["speed"]]
         # add scaling to acceleration
-        input_segment[k, input_index["a"]] = segment[k, segment_index["a_x"]] * \
+        input_segment[k, input_index["a"]] = imu_scaling["acc"] * segment[k, segment_index["a_x"]] * \
             np.cos(segment[k, segment_index["heading"]]) + \
             segment[k, segment_index["a_y"]] * \
             np.sin(segment[k, segment_index["heading"]])
