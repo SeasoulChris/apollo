@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-warehouse-canary
+  labels:
+    app: warehouse-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: warehouse-canary
+  template:
+    metadata:
+      labels:
+        app: warehouse-canary
+    spec:
+      imagePullSecrets:
+      - name: baidubce
+      nodeSelector:
+        nodezone: czone
+      containers:
+      - name: warehouse-canary
+        image: hub.baidubce.com/apollofuel/warehouse:20200507_1446
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: user
+        - name: MONGO_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: passwd
+        - name: BOS_ASK_ACCESS
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: ak
+        - name: BOS_ASK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: sk
+        - name: REDIS_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: passwd
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: warehouse-canary-service
+spec:
+  selector:
+    app: warehouse-canary
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000

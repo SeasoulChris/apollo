@@ -123,7 +123,7 @@ def record_hdl(record_path):
     return flask.render_template('record.html', record=record)
 
 
-@app.route('/pod_list', methods=['GET'])
+@app.route('/pod_list')
 def pod_list_hdl():
     """Handler of the pod list page"""
     res = kubectl_utils.get_pods()
@@ -134,8 +134,8 @@ def pod_list_hdl():
     return flask.render_template('pod_list.html', pod_list=res)
 
 
-@app.route('/pod_log/<path:pod_name>/<path:namespace>', methods=['GET'])
-def pod_log_hdl(pod_name, namespace):
+@app.route('/pod_log/<path:pod_name>/<path:namespace>')
+def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
     logs = kubectl_utils.logs(pod_name=pod_name, namespace=namespace)
     return flask.render_template('pod_log.html', logs=logs)
