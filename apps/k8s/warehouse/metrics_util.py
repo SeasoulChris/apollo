@@ -27,7 +27,7 @@ def get_display_value(values):
 
 def get_metrics_by_prefix(prefix):
     """Get Redis values by given key prefix, for display purpose"""
-    max_count, range_left, range_right = 50, 0, 10
+    max_count, range_left, range_right = 150, 0, 10
     # ignore some testing keys
     qa_test_prefix = 'BDRP'
     qa_status_prefix = 'q:'
