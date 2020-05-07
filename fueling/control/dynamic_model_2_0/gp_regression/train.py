@@ -32,6 +32,7 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
         output = model(features)
         # train loss
         train_loss = -loss(output, labels)
+        # train_loss_origin = train_loss
         loss_history.append(train_loss.item())
         train_loss.backward(retain_graph=True)
         optimizer.step()
@@ -41,14 +42,16 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
             logging.info(f'   Step: {idx}, training loss: {np.mean(loss_history[-print_period:])}')
     train_loss = np.mean(loss_history)
     logging.info(f'Training loss: {train_loss}')
+    # logging.info(f'Training loss: {train_loss_origin}')
+    return train_loss
 
 
-def valid_dataloader(valid_loader, model, loss, use_cuda=False, analyzer=None):
+def valid_dataloader(valid_loader, model, likelihood, loss, use_cuda=False, analyzer=None):
     loss_history = []
     loss_info_history = []
     for i, (X, y) in enumerate(valid_loader):
         X = torch.transpose(X, 0, 1).type(torch.FloatTensor)
-        pred = model(X)
+        pred = likelihood(model(X))
         valid_loss = -loss(pred, y)
         mean = pred.mean
         loss_history.append(valid_loss.item())
@@ -64,10 +67,10 @@ def valid_dataloader(valid_loader, model, loss, use_cuda=False, analyzer=None):
     logging.info(f'Validation loss: {valid_loss}.')
     logging.info(f'Validation accuracy = {np.mean(loss_info_history)}')
 
-    return np.mean(loss_info_history)
+    return valid_loss
 
 
-def train(args, train_loader, valid_loader, print_period=None, early_stop=None, save_mode=0):
+def train(args, train_loader, valid_loader, print_period=None, early_stop=20, save_mode=0):
     timestr = time.strftime('%Y%m%d-%H%M%S')
     batch_size = args.batch_size
     num_inducing_point = args.num_inducing_point
@@ -124,23 +127,27 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         else:
             likelihood.train()
             model.train()
-        train_dataloader(train_loader, model, loss, optimizer, epoch)
+        train_loss = train_dataloader(train_loader, model, loss, optimizer, epoch)
         with torch.no_grad():
             model.eval()
             likelihood.eval()
-            valid_loss = valid_dataloader(valid_loader, model, loss)
-        scheduler.step(valid_loss)
+            valid_loss = valid_dataloader(valid_loader, model, likelihood, loss)
+        scheduler.step(train_loss)
         if epoch % 10 == 0:
             gpytorch.settings.tridiagonal_jitter(1e-4)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
         is_better_model = False
         if valid_loss < best_valid_loss:
+            logging.info(
+                f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
             num_epoch_valid_loss_not_decreasing = 0
             best_valid_loss = valid_loss
             is_better_model = True
         else:
             num_epoch_valid_loss_not_decreasing += 1
+            logging.info(
+                f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
             # Early stop if enabled and met the criterion
             if early_stop == num_epoch_valid_loss_not_decreasing:
                 logging.info('Reached early-stopping criterion. Stop training.')
@@ -155,15 +162,18 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         offline_epoch_model = os.path.join(args.gp_model_path, timestr,
                                            'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
         if save_mode == 0:
+            # save best model
             if is_better_model:
-                save_model_torch_script(model, test_features, online_model)
+                save_model_torch_script(model, likelihood, test_features, online_model)
                 save_model_state_dict(model, likelihood, offline_model)
         elif save_mode == 1:
+            # save all better models
             if is_better_model:
-                save_model_torch_script(model, test_features, online_epoch_model)
+                save_model_torch_script(model, likelihood, test_features, online_epoch_model)
                 save_model_state_dict(model, likelihood, offline_epoch_model)
         elif save_mode == 2:
-            save_model_torch_script(model, test_features, online_epoch_model)
+            # save all model
+            save_model_torch_script(model, likelihood, test_features, online_epoch_model)
             save_model_state_dict(model, likelihood, offline_epoch_model)
 
     return model, likelihood
@@ -172,22 +182,23 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
 class MeanVarModelWrapper(nn.Module):
     '''for online model saving'''
 
-    def __init__(self, gp):
+    def __init__(self, gp, likelihood):
         super().__init__()
         # TODO(SHU): save likelihood also
         self.gp = gp
+        self.likelihood = likelihood
 
     def forward(self, x):
-        output_dist = self.gp(x)
+        output_dist = self.likelihood(self.gp(x))
         return output_dist.mean, output_dist.variance
 
 
-def save_model_torch_script(model, test_features, file_name):
+def save_model_torch_script(model, likelihood, test_features, file_name):
     '''save to TorchScript'''
     file_dir = os.path.dirname(file_name)
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
-    wrapped_model = MeanVarModelWrapper(model)
+    wrapped_model = MeanVarModelWrapper(model, likelihood)
     with gpytorch.settings.trace_mode(), torch.no_grad():
         pred = wrapped_model(test_features)  # Compute cache
         traced_model = torch.jit.trace(wrapped_model, test_features, check_trace=False)
@@ -229,7 +240,7 @@ if __name__ == "__main__":
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
     parser.add_argument('--kernel_dim', type=int, default=20)
     # optimizer parameters
-    parser.add_argument('-e', '--epochs', type=int, default=10)
+    parser.add_argument('-e', '--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('-b', '--batch_size', type=int, default=512)
 
