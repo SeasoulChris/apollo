@@ -14,11 +14,11 @@ import pymongo
 
 from fueling.common.mongo_utils import Mongo
 from fueling.data.proto.record_meta_pb2 import RecordMeta
+import fueling.common.kubectl_utils as kubectl_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
 import apps.k8s.warehouse.display_util as display_util
-import apps.k8s.warehouse.jobs_util as jobs_util
 import apps.k8s.warehouse.metrics_util as metrics_util
 import apps.k8s.warehouse.records_util as records_util
 
@@ -123,10 +123,22 @@ def record_hdl(record_path):
     return flask.render_template('record.html', record=record)
 
 
-@app.route('/jobs')
-def jobs_hdl():
-    job_list = jobs_util.get_pods()
-    return flask.render_template('jobs.html', job_list=job_list)
+@app.route('/pod_list', methods=['GET'])
+def pod_list_hdl():
+    """Handler of the pod list page"""
+    res = kubectl_utils.get_pods()
+    curr_datetime = datetime.datetime.utcnow().timestamp()
+    for r in res:
+        creation_timestamp = r['creation_timestamp']
+        r['duration_ns'] = (curr_datetime - creation_timestamp) * 1e9
+    return flask.render_template('pod_list.html', pod_list=res)
+
+
+@app.route('/pod_log/<path:pod_name>/<path:namespace>', methods=['GET'])
+def pod_log_hdl(pod_name, namespace):
+    """Handler of the pod log page"""
+    logs = kubectl_utils.logs(pod_name=pod_name, namespace=namespace)
+    return flask.render_template('pod_log.html', logs=logs)
 
 
 @app.route('/bos-ask', methods=['POST'])

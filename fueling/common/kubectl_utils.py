@@ -15,6 +15,7 @@ config.load_kube_config()
 coreV1Api = client.CoreV1Api()
 appsV1Api = client.AppsV1Api()
 
+
 def get_pods(name='', namespace='default'):
     """kubectl get pods"""
     ret = coreV1Api.list_pod_for_all_namespaces(watch=False)
@@ -40,18 +41,21 @@ def get_pods(name='', namespace='default'):
         logging.info(F'{namespace} {name} {owner} {nodetype} {phase} {creation_timestamp}')
     return res
 
+
 def logs(pod_name, namespace='default'):
     """kubectl logs"""
     full_log = coreV1Api.read_namespaced_pod_log(
         name=pod_name, namespace=namespace)
     return full_log
 
+
 def delete_pods(name, namespace='default'):
     """delete pods"""
     res = coreV1Api.delete_namespaced_pod(name=name, namespace=namespace)
     return res
 
-def get_deployments(self):
+
+def get_deployments():
     """get deployments"""
     ret = appsV1Api.list_deployment_for_all_namespaces()
     res = []
@@ -68,7 +72,9 @@ def get_deployments(self):
         logging.info(F'{namespace} {name} {uid} {creation_timestamp}')
     return res
 
+
 def delete_deployments(deployment_name, namespace='default'):
     """delete deployments"""
     res = appsV1Api.delete_namespaced_deployment(name=deployment_name, namespace=namespace)
     return res
+

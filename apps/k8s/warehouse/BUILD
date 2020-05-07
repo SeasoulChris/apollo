@@ -23,20 +23,11 @@ py_binary(
     data = [":resource"],
     deps = [
         ":display_util",
-        ":jobs_util",
         ":metrics_util",
         ":records_util",
+        "//fueling/common:kubectl_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
-    ],
-)
-
-py_library(
-    name = "jobs_util",
-    srcs = ["jobs_util.py"],
-    deps = [
-        ":display_util",
-        "//fueling/common:kubectl_utils",
     ],
 )
 
