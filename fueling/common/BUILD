@@ -130,7 +130,7 @@ py_library(
 
 py_library(
     name = "kubectl_utils",
-    srcs = ["kubctl_utils.py"],
+    srcs = ["kubectl_utils.py"],
     # removed in the k8s environment
     # data = [":kubectl_conf"],
     deps = [
