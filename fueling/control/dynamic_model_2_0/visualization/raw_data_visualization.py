@@ -8,7 +8,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
-from fueling.common.h5_utils import read_h5
+from fueling.common.h5_utils import read_h5, combine_h5_to_npy
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index, imu_scaling
 from fueling.control.dynamic_model_2_0.label_generation.label_generation import generate_mlp_output
@@ -185,7 +185,7 @@ class RawDataVisualization():
             theta = theta - 2 * math.pi
         return theta
 
-    def plot(self, imu_only=False):
+    def plot(self, imu_only=True):
         """Plot states during the test run"""
         dataset_name = (os.path.basename(self.data_file)).split('.')[0]
         dataset_path = os.path.dirname(self.data_file).replace(
@@ -209,6 +209,11 @@ class RawDataVisualization():
             ax2.set_ylabel('speed (m/s)', fontdict={'size': 12})
             # ground truth (GPS) speed m/s
             ax2.plot(self.feature[:, segment_index['speed']], 'b.', label='GPS')
+            ax2.plot(self.feature[:, segment_index["v_x"]] *
+                     np.cos(self.feature[:, segment_index["heading"]]) +
+                     self.feature[:, segment_index["v_y"]] *
+                     np.sin(self.feature[:, segment_index["heading"]]), 'y.', label='GPS velocity')
+
             # imu speed speed
             ax2.plot(self.imu_v, 'r.', label='IMU')
             plt.legend(fontsize=12, numpoints=5, frameon=False)
@@ -257,7 +262,7 @@ if __name__ == '__main__':
     parser.add_argument('-train',
                         '--training_data_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/train_data")
+                        default="/apollo/data/DM20/new_features/2_3")
     parser.add_argument('-plot',
                         '--plot_path',
                         type=str,
@@ -271,21 +276,26 @@ if __name__ == '__main__':
         if file.endswith(".hdf5"):
             h5_file_list.append(file)
             logging.info(file)
-    cur_h5_file = h5_file_list[0]
-    cur_h5_file = (f'/fuel/fueling/control/dynamic_model_2_0/testdata'
-                   '/golden_set/6_2/20190430122402.record.00000.recover_features.npy')
+            logging.info(int(os.path.basename(file).split('.')[0]))
+    # sort w.r.t file ID
+    h5_file_list.sort(key=lambda file: int(os.path.basename(file).split('.')[0]))
+    logging.info(h5_file_list)
+    # combine as combined.npy
+    combine_h5_to_npy(h5_file_list, args.training_data_path)
+    cur_h5_file = (f'/apollo/data/DM20/new_features/2_3/combined.npy')
     raw_data_evaluation = RawDataVisualization(cur_h5_file, args)
     raw_data_evaluation.get_data()
+    logging.info(raw_data_evaluation.feature.shape)
     raw_data_evaluation.dynamic_model_10_location()
     raw_data_evaluation.echo_lincoln_location()
     raw_data_evaluation.imu_location()
-    plt.plot(raw_data_evaluation.dm_acc, 'b-')
+    plt.plot(raw_data_evaluation.dm_acc, 'b-', alpha=0.5)
     plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 0], 'r-')
     logging.info(raw_data_evaluation.imu_acc.shape)
-    plt.plot(raw_data_evaluation.imu_acc, 'y-')
+    plt.plot(raw_data_evaluation.imu_acc, 'y-', alpha=0.5)
     plt.show()
-    plt.plot(raw_data_evaluation.dm_w, 'b-')
+    plt.plot(raw_data_evaluation.dm_w, 'b-', alpha=0.5)
     plt.plot(raw_data_evaluation.echo_lincoln_acc_w[:, 1], 'r-')
-    plt.plot(raw_data_evaluation.imu_w, 'y-')
+    plt.plot(raw_data_evaluation.imu_w, 'y-', alpha=0.5)
     plt.show()
     raw_data_evaluation.plot()
