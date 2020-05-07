@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
-import os
 import glob
 import math
+import os
 
 
 from matplotlib.collections import PatchCollection

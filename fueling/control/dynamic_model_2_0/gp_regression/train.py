@@ -32,7 +32,6 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
         output = model(features)
         # train loss
         train_loss = -loss(output, labels)
-        # train_loss_origin = train_loss
         loss_history.append(train_loss.item())
         train_loss.backward(retain_graph=True)
         optimizer.step()
@@ -42,7 +41,6 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
             logging.info(f'   Step: {idx}, training loss: {np.mean(loss_history[-print_period:])}')
     train_loss = np.mean(loss_history)
     logging.info(f'Training loss: {train_loss}')
-    # logging.info(f'Training loss: {train_loss_origin}')
     return train_loss
 
 
@@ -184,7 +182,6 @@ class MeanVarModelWrapper(nn.Module):
 
     def __init__(self, gp, likelihood):
         super().__init__()
-        # TODO(SHU): save likelihood also
         self.gp = gp
         self.likelihood = likelihood
 

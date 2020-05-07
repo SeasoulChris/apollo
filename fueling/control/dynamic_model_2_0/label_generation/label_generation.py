@@ -14,7 +14,8 @@ from keras.models import load_model
 import h5py
 import numpy as np
 
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling, feature_config, input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 

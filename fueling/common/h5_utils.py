@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """H5 utils."""
+import os
 
 import h5py
 import numpy as np
-import os
+
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
@@ -46,13 +47,15 @@ def read_h5(hdf5_file):
 
 
 def combine_h5_to_npy(hdf5_file_list, dst_dir):
+    """
+    combine a list of sorted h5 files to a numpy array.
+    """
     segment = None
     for hdf5_file in hdf5_file_list:
         if segment is None:
             segment = read_h5(hdf5_file)
         else:
             segment = np.concatenate((segment, read_h5(hdf5_file)), axis=0)
-        # segment.append(read_h5(hdf5_file))
     dst_file = os.path.join(dst_dir, 'combined.npy')
     logging.info(f'{len(hdf5_file_list)} data points are saved to file {dst_file}')
     np.save(dst_file, np.array(segment))
