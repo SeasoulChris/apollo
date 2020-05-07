@@ -70,3 +70,13 @@ py_binary(
         "//fueling/learning/autotuner/tuner:base_tuner",
     ],
 )
+
+py_binary(
+    name = "optuna_super_tuner",
+    srcs = ["optuna_super_tuner.py"],
+    deps = [
+        requirement("psycopg2-binary"),
+        "//fueling/common:logging",
+        "//fueling/learning/autotuner/tuner:optuna_optimization_tuner",
+    ],
+)

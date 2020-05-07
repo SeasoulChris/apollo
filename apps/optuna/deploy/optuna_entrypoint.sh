@@ -29,7 +29,7 @@ function start_service() {
   echo "Saving log to $LOG_NAME"
 
   # TODO(vivian): allow user to set worker_number and tuner_param_config_filename
-  bazel run //fueling/learning/autotuner/tuner:optuna_tuner -- \
+  bazel run //fueling/learning/autotuner/tuner:optuna_super_tuner -- \
     --cost_computation_service_url=$COST_SERVICE_URL \
     --study_storage_url=$STUDY_STORAGE_URL \
     --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt \
@@ -46,7 +46,7 @@ function main() {
   local cluster=$1
   case "$cluster" in
     az-staging)
-      COST_SERVICE_URL="180.76.111.129:50052"
+      COST_SERVICE_URL="40.77.110.196:50052"
       STUDY_STORAGE_URL="40.77.100.63:5432"
       ;;
     bce-platform)
