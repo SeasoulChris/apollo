@@ -36,6 +36,8 @@ feature_config = {
     "polynomial_order": 3,  # polynomial_order for savgol_filter
     "SEGMENT_OVERLAP": 10,  # The overlap between each two groups for augment
     "MAX_POSE_DELTA": 0.02,  # The maximum gap between pose and chasis timestamp, in seconds
+    "COMPENSATE_CHASIS": False,  # Whether compensate chasis with poses
+    "CHASIS_DELTA_T": 0.011,  # The maximum gap between chasis messages, in seconds
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""
