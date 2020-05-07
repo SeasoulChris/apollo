@@ -23,9 +23,9 @@ py_binary(
     data = [":resource"],
     deps = [
         ":display_util",
+        ":jobs_util",
         ":metrics_util",
         ":records_util",
-	":jobs_util",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
     ],
@@ -64,4 +64,3 @@ py_library(
         "//fueling/data/proto:record_meta_pb2",
     ],
 )
-

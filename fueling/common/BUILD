@@ -134,7 +134,7 @@ py_library(
     # removed in the k8s environment
     # data = [":kubectl_conf"],
     deps = [
-	":file_utils",
+        ":file_utils",
         ":logging",
     ],
 )
