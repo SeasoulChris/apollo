@@ -71,7 +71,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             frame_output[0] = feature.timestamp
             frame_output[1] = feature.position.x - OFFSET_X
             frame_output[2] = feature.position.y - OFFSET_Y
-            frame_output[3] = feature.velocity_heading
+            frame_output[3] = feature.theta
             i = 4
             for point in feature.polygon_point:
                 if i >= len(frame_output):
