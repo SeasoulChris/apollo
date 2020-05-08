@@ -123,6 +123,30 @@ def record_hdl(record_path):
     return flask.render_template('record.html', record=record)
 
 
+# TODO(Andrew): Prefer rename to `/jobs` and `jobs_hdl()`, as we not really want to show all pods.
+# We care about fuel-jobs' pods, whose names are like:
+#
+#     job-20200508011528806858-apollo-feature-extraction-1588900530232-driver
+#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-1
+#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-2
+#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-3
+#
+# My expectation for the UE is like:
+# 1. The jobs page shows just job name, which is
+#
+#     job-20200508011528806858-apollo-feature-extraction
+#     <other jobs>...
+#
+# 2. If user clicks it, it expands a sub-list showing all related pods:
+#
+#     job-20200508011528806858-apollo-feature-extraction
+#         job-20200508011528806858-apollo-feature-extraction-1588900530232-driver
+#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-1
+#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-2
+#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-3
+#     <other jobs>...
+#
+# 3. Then user clicks a pod, it jumps to the pod log page below :)
 @app.route('/pod_list')
 def pod_list_hdl():
     """Handler of the pod list page"""
@@ -134,6 +158,11 @@ def pod_list_hdl():
     return flask.render_template('pod_list.html', pod_list=res)
 
 
+# TODO(Andrew):
+# 1. For the log page, it's OK to load and show all logs at once as a start. But in the
+# future it would be every fancy if it updates at realtime! Just like "kubectl logs -f <pod>".
+# 2. We may need to add the filter to the logs. As Spark itself outputs a lot of boring and noisy
+# logs, while we just want to see logs from our Python code.
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""

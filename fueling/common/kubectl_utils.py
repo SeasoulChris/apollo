@@ -8,6 +8,11 @@ from kubernetes import client, config
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
+
+# TODO(Andrew): Prefer Object-oriented API. Just gather them to a `class Kubectl`. And better to
+# have an explicit `init()` function which load the config.
+
+
 # uncomment the next line when test
 # config.load_kube_config(config_file=file_utils.fuel_path('fueling/common/kubectl.conf'))
 # comment the next line when test
@@ -18,11 +23,15 @@ appsV1Api = client.AppsV1Api()
 
 def get_pods(name='', namespace='default'):
     """kubectl get pods"""
+    # TODO(Andrew): Use list_namespaced_pod.
     ret = coreV1Api.list_pod_for_all_namespaces(watch=False)
     res = []
     for item in ret.items:
         itemname = item.metadata.name
         itemnamespace = item.metadata.namespace
+        # TODO(Andrew): pod name is not guaranteed to follow some kind of pattern. So it may crash
+        # with index-out-of-bound. I would prefer to get a list of items' metadata directly. And the
+        # user of this function can parse fields as their wish.
         nodetype = itemname.split('-')[-1]
         owner = itemname.split('-')[2]
         phase = item.status.phase
@@ -32,6 +41,7 @@ def get_pods(name='', namespace='default'):
             continue
         if namespace != '' and namespace != itemnamespace:
             continue
+        # TODO(Andrew): In such case we can simply `yield` items.
         res.append({'name': itemname,
                     'owner': owner,
                     'nodetype': nodetype,
@@ -44,8 +54,7 @@ def get_pods(name='', namespace='default'):
 
 def logs(pod_name, namespace='default'):
     """kubectl logs"""
-    full_log = coreV1Api.read_namespaced_pod_log(
-        name=pod_name, namespace=namespace)
+    full_log = coreV1Api.read_namespaced_pod_log(name=pod_name, namespace=namespace)
     return full_log
 
 
