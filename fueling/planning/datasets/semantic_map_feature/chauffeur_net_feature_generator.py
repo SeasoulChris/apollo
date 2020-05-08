@@ -264,13 +264,17 @@ if __name__ == "__main__":
         print("Making output directory: " + output_dir)
 
     for frame in offline_frames.learning_data:
+        current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
+        current_x = current_path_point.x
+        current_y = current_path_point.y
+        current_theta = current_path_point.theta
         chauffeur_net_feature_generator.render_seperated_img_features(frame.frame_num,
                                                                       frame.adc_trajectory_point[-1].timestamp_sec,
                                                                       frame.adc_trajectory_point,
                                                                       frame.obstacle,
-                                                                      frame.localization.position.x,
-                                                                      frame.localization.position.y,
-                                                                      frame.localization.heading,
+                                                                      current_x,
+                                                                      current_y,
+                                                                      current_theta,
                                                                       frame.routing.local_routing_lane_id,
                                                                       frame.traffic_light_detection.traffic_light,
                                                                       output_dirs)

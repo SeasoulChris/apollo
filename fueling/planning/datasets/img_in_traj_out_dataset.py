@@ -29,7 +29,7 @@ class TrajectoryImitationCNNDataset(Dataset):
             # 12 channels is used
             transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
                                  std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
-        
+
         logging.info('Processing directory: {}'.format(data_dir))
         self.instances = file_utils.list_files(data_dir)
 
@@ -66,14 +66,21 @@ class TrajectoryImitationCNNDataset(Dataset):
                 -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
+        # use adc_trajectory_point rather than localization 
+        # because of the use of synthesizing sometimes
+        current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
+        current_x = current_path_point.x
+        current_y = current_path_point.y
+        current_theta = current_path_point.theta
+
         img = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(frame.frame_num,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
-                                        frame.localization.position.x,
-                                        frame.localization.position.y,
-                                        frame.localization.heading,
+                                        current_x,
+                                        current_y,
+                                        current_theta,
                                         frame.routing.local_routing_lane_id,
                                         frame.traffic_light_detection.traffic_light,
                                         coordinate_heading,
@@ -82,9 +89,9 @@ class TrajectoryImitationCNNDataset(Dataset):
         if self.img_transform:
             img = self.img_transform(img)
 
-        ref_coords = [frame.localization.position.x,
-                      frame.localization.position.y,
-                      frame.localization.heading]
+        ref_coords = [current_x,
+                      current_y,
+                      current_theta]
         pred_points = []
         for pred_point in frame.output.adc_future_trajectory_point:
             # TODO(Jinyun): validate future trajectory points size and deltaT, ouput_point_num
@@ -170,14 +177,21 @@ class TrajectoryImitationRNNDataset(Dataset):
                 -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
+        # use adc_trajectory_point rather than localization 
+        # because of the use of synthesizing sometimes
+        current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
+        current_x = current_path_point.x
+        current_y = current_path_point.y
+        current_theta = current_path_point.theta
+
         img_feature = self.chauffeur_net_feature_generator.\
             render_stacked_img_features(frame.frame_num,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
-                                        frame.localization.position.x,
-                                        frame.localization.position.y,
-                                        frame.localization.heading,
+                                        current_x,
+                                        current_y,
+                                        current_theta,
                                         frame.routing.local_routing_lane_id,
                                         frame.traffic_light_detection.traffic_light,
                                         coordinate_heading,
@@ -186,18 +200,18 @@ class TrajectoryImitationRNNDataset(Dataset):
         transformed_img_feature = self.img_feature_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.\
-            render_offroad_mask(frame.localization.position.x,
-                                frame.localization.position.y,
-                                frame.localization.heading,
+            render_offroad_mask(current_x,
+                                current_y,
+                                current_theta,
                                 coordinate_heading)
 
         if self.img_bitmap_transform:
             offroad_mask = self.img_bitmap_transform(offroad_mask)
         offroad_mask = offroad_mask.repeat(self.ouput_point_num, 1, 1, 1)
 
-        ref_coords = [frame.localization.position.x,
-                      frame.localization.position.y,
-                      frame.localization.heading]
+        ref_coords = [current_x,
+                      current_y,
+                      current_theta]
         pred_points = np.zeros((0, 4))
         pred_pose_dists = torch.rand(
             self.ouput_point_num, 1, self.img_size[1], self.img_size[0])
@@ -223,9 +237,9 @@ class TrajectoryImitationRNNDataset(Dataset):
                 [local_coords[0], local_coords[1], heading_diff, pred_v])))
 
             gt_pose_dist = self.chauffeur_net_feature_generator.\
-                render_gt_pose_dist(frame.localization.position.x,
-                                    frame.localization.position.y,
-                                    frame.localization.heading,
+                render_gt_pose_dist(current_x,
+                                    current_y,
+                                    current_theta,
                                     frame.output.adc_future_trajectory_point,
                                     i,
                                     coordinate_heading)
@@ -234,9 +248,9 @@ class TrajectoryImitationRNNDataset(Dataset):
             pred_pose_dists[i, :, :, :] = gt_pose_dist
 
             gt_pose_box = self.chauffeur_net_feature_generator.\
-                render_gt_box(frame.localization.position.x,
-                              frame.localization.position.y,
-                              frame.localization.heading,
+                render_gt_box(current_x,
+                              current_y,
+                              current_theta,
                               frame.output.adc_future_trajectory_point,
                               i,
                               coordinate_heading)
@@ -245,9 +259,9 @@ class TrajectoryImitationRNNDataset(Dataset):
             pred_boxs[i, :, :, :] = gt_pose_box
 
             pred_obs_box = self.chauffeur_net_feature_generator.\
-                render_obstacle_box_prediction_frame(frame.localization.position.x,
-                                                     frame.localization.position.y,
-                                                     frame.localization.heading,
+                render_obstacle_box_prediction_frame(current_x,
+                                                     current_y,
+                                                     current_theta,
                                                      frame.obstacle,
                                                      i,
                                                      coordinate_heading)
@@ -292,7 +306,7 @@ if __name__ == '__main__':
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     dataset = TrajectoryImitationRNNDataset(
         '/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete',
-         config_file,
-         imgs_dir)
+        config_file,
+        imgs_dir)
 
     dataset[50]
