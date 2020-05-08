@@ -78,5 +78,7 @@ class VirtualLaneGeneration(BaseJob):
             'output_data_path': job_arg.flags.get("output_data_path"),
             'zone_id': job_arg.flags.get("zone_id"),
             'lidar_type': job_arg.flags.get("lidar_type"),
+            'lane_width': job_arg.flags.get("lane_width"),
+            'extra_roi_extension': job_arg.flags.get("extra_roi_extension"),
         }
         return (entrypoint, client_flags, job_flags)

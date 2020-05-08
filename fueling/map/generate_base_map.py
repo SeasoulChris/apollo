@@ -11,6 +11,7 @@ import math
 import os
 
 # Third-party packages
+from absl import flags
 from shapely.geometry import LineString, Point
 import pyspark_utils.helper as spark_helper
 
@@ -26,8 +27,8 @@ import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
 
-LANE_WIDTH = 3.3
-
+flags.DEFINE_float('lane_width', 3.0, 'lane width.')
+flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')
 
 class MapGenSingleLine(BasePipeline):
     """map_gen_single_line pipeline."""
@@ -37,6 +38,8 @@ class MapGenSingleLine(BasePipeline):
         dir_prefix = 'testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
+        self.lane_width = 3.3
+        self.extra_roi_extension = 1.0
 
         if not os.path.exists(dst_prefix):
             logging.warning('target_path: {} not exists'.format(dst_prefix))
@@ -61,6 +64,9 @@ class MapGenSingleLine(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
+        
+        self.lane_width = self.FLAGS.get('lane_width')
+        self.extra_roi_extension = self.FLAGS.get('extra_roi_extension')
 
         if src_prefix == dst_prefix:
             logging.error('The input data path must be different from the output data path!')
@@ -134,8 +140,6 @@ class MapGenSingleLine(BasePipeline):
         path_dup = LineString(points)
         length = int(path.length)
 
-        extra_roi_extension = 1.0
-
         base_map_txt = os.path.join(self.dst_prefix, 'base_map.txt')
         logging.info("base_map_txt_path: {}".format(base_map_txt))
 
@@ -187,7 +191,7 @@ class MapGenSingleLine(BasePipeline):
 
                         point = path.interpolate(i - 1)
                         point2 = path.interpolate(i - 1 + 0.5)
-                        distance = LANE_WIDTH / 2.0
+                        distance = self.lane_width / 2.0
 
                         lp, rp = self.convert(point, point2, distance)
                         left_bound_point.y = lp[1]
@@ -195,7 +199,7 @@ class MapGenSingleLine(BasePipeline):
                         right_bound_point.y = rp[1]
                         right_bound_point.x = rp[0]
 
-                        lp, rp = self.convert(point, point2, distance + extra_roi_extension)
+                        lp, rp = self.convert(point, point2, distance + self.extra_roi_extension)
                         left_edge_point.y = lp[1]
                         left_edge_point.x = lp[0]
                         right_edge_point.y = rp[1]
@@ -206,11 +210,11 @@ class MapGenSingleLine(BasePipeline):
 
                         left_sample = lane.left_sample.add()
                         left_sample.s = 0
-                        left_sample.width = LANE_WIDTH / 2.0
+                        left_sample.width = self.lane_width / 2.0
 
                         right_sample = lane.right_sample.add()
                         right_sample.s = 0
-                        right_sample.width = LANE_WIDTH / 2.0
+                        right_sample.width = self.lane_width / 2.0
 
                 left_bound_point = left_boundary.line_segment.point.add()
                 right_bound_point = right_boundary.line_segment.point.add()
@@ -221,7 +225,7 @@ class MapGenSingleLine(BasePipeline):
 
                 point = path.interpolate(i)
                 point2 = path.interpolate(i + 0.5)
-                distance = LANE_WIDTH / 2.0
+                distance = self.lane_width / 2.0
                 left_point, right_point = self.convert(point, point2, distance)
 
                 central_point.x = point.x
@@ -250,11 +254,11 @@ class MapGenSingleLine(BasePipeline):
 
                 left_sample = lane.left_sample.add()
                 left_sample.s = i % self.lane_length + 1
-                left_sample.width = LANE_WIDTH / 2.0
+                left_sample.width = self.lane_width / 2.0
 
                 right_sample = lane.right_sample.add()
                 right_sample.s = i % self.lane_length + 1
-                right_sample.width = LANE_WIDTH / 2.0
+                right_sample.width = self.lane_width / 2.0
 
         fmap.write(str(base_map))
         fmap.close()

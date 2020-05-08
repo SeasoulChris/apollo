@@ -99,6 +99,19 @@
           <div class="invalid-feedback">Lidar type is required for this job.</div>
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="lane_width">Lane Width</label>
+          <input type="text" class="form-control" id="lane_width" placeholder="" required>
+          <div class="invalid-feedback">Lane Width is required for this job.</div>
+        </div>
+  
+        <div class="col-md-6 mb-3">
+          <label for="extra_roi_extension">Extra ROI Extension</label>
+          <input type="text" class="form-control" id="extra_roi_extension" placeholder="" required>
+          <div class="invalid-feedback">Extra roi extension is required for this job.</div>
+        </div>
+      </div>
       {% endif %}
   
       <hr class="mb-4">
@@ -150,6 +163,8 @@
       if (job_type === 'VIRTUAL_LANE_GENERATION') {
         job_arg["flags"]["zone_id"] = $("#zone_id").val();
         job_arg["flags"]["lidar_type"] = $("#lidar_type").val();
+        job_arg["flags"]["lane_width"] = $("#lane_width").val();
+        job_arg["flags"]["extra_roi_extension"] = $("#extra_roi_extension").val();
       }
       if ($("#bos").is(':checked')) {
         job_arg["partner"]["bos"] = {
