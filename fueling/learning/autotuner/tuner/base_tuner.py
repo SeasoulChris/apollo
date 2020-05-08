@@ -33,7 +33,11 @@ flags.DEFINE_string(
     "/mnt/bos/autotuner",
     "Tuner storage root directory"
 )
-
+flags.DEFINE_string(
+    "running_role_postfix",
+    "",
+    "Optional postfix (e.g., mrac-control) of the running_role"
+)
 
 class BaseTuner():
     """Basic functionality for NLP."""
@@ -117,6 +121,7 @@ class BaseTuner():
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,
+            flags.FLAGS.running_role_postfix,
         )
 
     def init_optimizer_visualizer(self, tuner_parameters):
