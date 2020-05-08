@@ -20,11 +20,12 @@ OFFSET_Y = semantic_map_config['offset_y']
 '''
 [scene, scene, ..., scene]
   scene: [data_pt, data_pt, ..., data_pt]
-    data_pt: [history, future]
+    data_pt: [history, future, id]
       history: [feature, feature, ..., feature]
         feature: [timestamp, x, y, heading, polygon_points]
           polygon_points: x, y, x, y, ..., x, y
       future: [x, y, x, y, ..., x, y]
+      id: [id]
 '''
 class PedestrianTrajectoryDataset(Dataset):
     def RecoverHistory(self, history):
@@ -105,7 +106,16 @@ class PedestrianTrajectoryDataset(Dataset):
         target_obs_pos_rel = np.zeros_like(target_obs_pos_abs)
         target_obs_pos_step = np.zeros_like(target_obs_pos_abs)
         target_obs_future_traj_rel = np.zeros([self.pred_len, 2])
+
+        ego_pos_abs = np.zeros([MAX_OBS_HISTORY_SIZE, 2])
+        ego_pos_rel = np.zeros_like(ego_pos_abs)
+        ego_pos_step = np.zeros_like(ego_pos_abs)
+        ego_history = []
+
         for id, data_pt in enumerate(scene):
+            if data_pt[2][0] == -1:
+                continue
+            # it's target predicting obs
             curr_history = np.array(data_pt[0])
             curr_future = np.array(data_pt[1])
             if self.shifted:
@@ -115,10 +125,10 @@ class PedestrianTrajectoryDataset(Dataset):
             curr_obs_hist_size = curr_history.shape[0]
             curr_hist_start = MAX_OBS_HISTORY_SIZE - curr_obs_hist_size
             curr_obs_polygons = np.zeros([1, MAX_OBS_HISTORY_SIZE, 20, 2])
-            curr_obs_polygons[:, curr_hist_start:, :, :] = (curr_history[:, 4:]).reshape([1, curr_obs_hist_size, 20, 2])
+            curr_obs_polygons[:, curr_hist_start:, :, :] = \
+                (curr_history[:, 4:]).reshape([1, curr_obs_hist_size, 20, 2])
             obs_polygons.append(curr_obs_polygons)
-
-            if id == data_pt_id:  # it's target predicting obs
+            if id == data_pt_id:
                 target_obs_hist_size = np.ones([1, 1]) * curr_obs_hist_size
                 target_obs_polygons = curr_obs_polygons[0]
                 target_obs_pos_abs[curr_hist_start:, :] = curr_history[:, 1:3]
@@ -129,19 +139,48 @@ class PedestrianTrajectoryDataset(Dataset):
                     world_coord[-1] = math.atan2(diff_y, diff_x)
                 # go over history and fill target_obs_pos_rel and step
                 for i in range(curr_hist_start, 20):
-                    target_obs_pos_rel[i, :] = CoordUtils.world_to_relative(target_obs_pos_abs[i, :], world_coord)
+                    target_obs_pos_rel[i, :] = \
+                        CoordUtils.world_to_relative(target_obs_pos_abs[i, :], world_coord)
                     if i > 0:
-                        target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i-1, :]
+                        target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - \
+                                                    target_obs_pos_rel[i-1, :]
                 # go over future trajectory
                 curr_future_traj = curr_future.reshape([self.pred_len, 2])
                 for i in range(self.pred_len):
                     new_coord = CoordUtils.world_to_relative(curr_future_traj[i, :], world_coord)
                     target_obs_future_traj_rel[i, :] = new_coord
 
+        for id, data_pt in enumerate(scene):
+            if data_pt[2][0] != -1:  # This is ego vehicle
+                continue
+            curr_history = np.array(data_pt[0])
+            curr_future = np.array(data_pt[1])
+            if self.shifted:
+                curr_history = self.RecoverHistory(curr_history)
+                curr_future = self.RecoverFuture(curr_future)
+            # get curr_obs_polygons and append to obs_polygons
+            curr_obs_hist_size = curr_history.shape[0]
+            curr_hist_start = MAX_OBS_HISTORY_SIZE - curr_obs_hist_size
+            # curr_obs_polygons = np.zeros([1, MAX_OBS_HISTORY_SIZE, 20, 2])
+            # curr_obs_polygons[:, curr_hist_start:, :, :] = \
+            #     (curr_history[:, 4:]).reshape([1, curr_obs_hist_size, 20, 2])
+            # obs_polygons.append(curr_obs_polygons)
+
+            ego_hist_size = np.ones([1, 1]) * curr_obs_hist_size
+            # ego_polygons = curr_obs_polygons[0]
+            ego_pos_abs[curr_hist_start:, :] = curr_history[:, 1:3]
+            ego_history = curr_history[:, 1:4]
+            # go over history and fill target_obs_pos_rel and step
+            for i in range(curr_hist_start, 20):
+                ego_pos_rel[i, :] = CoordUtils.world_to_relative(ego_pos_abs[i, :], world_coord)
+                if i > 0:
+                    ego_pos_step[i, :] = ego_pos_rel[i, :] - ego_pos_rel[i-1, :]
+
         obs_polygons = np.concatenate(obs_polygons)
-        obs_mapping = ObstacleMapping(map_region, self.base_map[map_region], world_coord, obs_polygons)
+        obs_mapping = ObstacleMapping(map_region, self.base_map[map_region],
+                                      world_coord, obs_polygons, ego_history)
         img = obs_mapping.crop_by_history(target_obs_polygons)
-        # cv.imwrite('/fuel/hehe.png', img)
+        cv.imwrite('/fuel/hehe.png', img)
         origin_img = img.copy()
         if self.img_transform:
             img = self.img_transform(img)
@@ -151,7 +190,9 @@ class PedestrianTrajectoryDataset(Dataset):
                  torch.from_numpy(target_obs_hist_size).float(),
                  torch.from_numpy(target_obs_pos_rel).float(),
                  torch.from_numpy(target_obs_pos_step).float(),
-                 origin_img),
+                 origin_img,
+                 torch.from_numpy(ego_pos_rel).float(),
+                 torch.from_numpy(ego_pos_step).float()),
                 torch.from_numpy(target_obs_future_traj_rel).float())
 
     # Only for test purpose
@@ -160,6 +201,6 @@ class PedestrianTrajectoryDataset(Dataset):
 
 
 if __name__ == '__main__':
-    pedestrian_dataset = PedestrianTrajectoryDataset('/data/kinglong_train_clean/train/')
-    pedestrian_dataset.getitem(10)
+    pedestrian_dataset = PedestrianTrajectoryDataset('/fuel/kinglong_data/train_clean/')
+    pedestrian_dataset.getitem(100)
 

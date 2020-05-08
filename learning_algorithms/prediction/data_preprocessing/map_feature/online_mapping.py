@@ -12,7 +12,8 @@ OFFSET_Y = semantic_map_config['offset_y']
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
 
-    def __init__(self, region, base_map, world_coord, obstacles_history, shift=True):
+    def __init__(self, region, base_map, world_coord,
+                 obstacles_history, ego_history=None, shift=True):
         """contruct function to init ObstacleMapping object"""
         self.shift = shift
         center_point = world_coord[0:2]
@@ -39,6 +40,7 @@ class ObstacleMapping(object):
         self.feature_map = base_map[center_idx[1]-1000:center_idx[1] +
                                     1000, center_idx[0]-1000:center_idx[0]+1000].copy()
         self.draw_obstacles_history()
+        self.draw_ego_history(ego_history)
 
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
@@ -84,6 +86,24 @@ class ObstacleMapping(object):
             return
         for history in self.obstacles_history:
             self.draw_history(self.feature_map, history, (0, 255, 255))
+
+    def draw_ego_history(self, ego_history, color=(0, 255, 255)):
+        # ego_history [(x, y, theta), ..., (x, y, theta)]
+        if ego_history is None:
+            return
+        history_size = len(ego_history)
+        for i in range(history_size):
+            w, l = 2.11, 4.93
+            theta = ego_history[i][2]
+            pos_point = [ego_history[i][0], ego_history[i][1]]
+            points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
+                            [np.sin(theta), np.cos(theta)]]),
+                            np.array([[l/2, l/2, -l/2, -l/2],
+                            [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
+            points = [self.get_trans_point(point) for point in points]
+            print(1/history_size*i)
+            cv.fillPoly(self.feature_map, [np.int32(points)],
+                        color=tuple(c*(1/history_size*i) for c in color))
 
     def crop_area(self, feature_map, world_coord):
         center = tuple(self.get_trans_point(world_coord[0:2]))

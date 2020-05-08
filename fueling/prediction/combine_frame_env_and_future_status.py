@@ -28,11 +28,12 @@ OFFSET_Y = semantic_map_config['offset_y']
 '''
 [scene, scene, ..., scene]
   scene: [obstacle, obstacle, ..., obstacle]
-    obstacle: [history, future_status]
+    obstacle: [history, future_status, id]
       history: [feature, feature, ..., feature]
         feature: [timestamp, x, y, heading, polygon_points]
           polygon_points: x, y, x, y, ..., x, y # 20 (x,y)
       future_status: [x, y, x, y, ... x, y]
+      id: [obstacle_id]
 '''
 
 
@@ -61,8 +62,43 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
         #     return
         logging.info('Processed {}/{} tasks'.format(result.reduce(operator.add), result.count()))
 
-    @staticmethod
-    def process_dir(frame_env_dir):
+    def GetObstacleOutput(self, obstacle_history, label_dict_merged):
+        if len(obstacle_history.feature) == 0:
+            return None
+        obstacle_output = [[], [], []]
+        for feature in obstacle_history.feature:
+            frame_output = [0 for i in range(4 + 20 * 2)]
+            frame_output[0] = feature.timestamp
+            frame_output[1] = feature.position.x - OFFSET_X
+            frame_output[2] = feature.position.y - OFFSET_Y
+            frame_output[3] = feature.velocity_heading
+            i = 4
+            for point in feature.polygon_point:
+                if i >= len(frame_output):
+                    break
+                frame_output[i] = point.x - OFFSET_X
+                i += 1
+                frame_output[i] = point.y - OFFSET_Y
+                i += 1
+            obstacle_output[0].append(frame_output)
+        obstacle_output[0] = obstacle_output[0][::-1]
+
+        obstacle_id = obstacle_history.feature[0].id
+        obstacle_ts = obstacle_history.feature[0].timestamp
+        obstacle_type = obstacle_history.feature[0].type
+        obstacle_output[2].append(obstacle_id)
+        key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
+        if obstacle_type == TARGET_OBSTACLE_TYPE and \
+           key in label_dict_merged and \
+           len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
+            for i in range(1, TARGET_NUM_FUTURE_POINT + 1):
+                x = label_dict_merged[key][i][0]
+                y = label_dict_merged[key][i][1]
+                obstacle_output[1].append(x - OFFSET_X)
+                obstacle_output[1].append(y - OFFSET_Y)
+        return obstacle_output
+
+    def process_dir(self, frame_env_dir):
         logging.info(frame_env_dir)
         label_dir = frame_env_dir.replace('frame_envs', 'labels', 1)
         output_dir = frame_env_dir.replace('frame_envs', 'train', 1)
@@ -113,39 +149,17 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
             logging.info('dealing with frame env file {}'.format(frame_env_filepath))
             for frame_env in frame_envs.frame_env:
                 scene_output = []
-                for obstacle_history in frame_env.obstacles_history:
-                    if len(obstacle_history.feature) == 0:
-                        continue
-                    obstacle_output = [[], []]
-                    for feature in obstacle_history.feature:
-                        frame_output = [0 for i in range(4 + 20 * 2)]
-                        frame_output[0] = feature.timestamp
-                        frame_output[1] = feature.position.x - OFFSET_X
-                        frame_output[2] = feature.position.y - OFFSET_Y
-                        frame_output[3] = feature.velocity_heading
-                        i = 4
-                        for point in feature.polygon_point:
-                            if i >= len(frame_output):
-                                break
-                            frame_output[i] = point.x - OFFSET_X
-                            i += 1
-                            frame_output[i] = point.y - OFFSET_Y
-                            i += 1
-                        obstacle_output[0].append(frame_output)
-                    obstacle_output[0] = obstacle_output[0][::-1]
+                if frame_env.ego_history is None:
+                    continue
+                ego_output = self.GetObstacleOutput(frame_env.ego_history, label_dict_merged)
+                if ego_output is None:
+                    continue
+                scene_output.append(ego_output)
 
-                    obstacle_id = obstacle_history.feature[0].id
-                    obstacle_ts = obstacle_history.feature[0].timestamp
-                    obstacle_type = obstacle_history.feature[0].type
-                    key = '{}@{:.3f}'.format(obstacle_id, obstacle_ts)
-                    if obstacle_type == TARGET_OBSTACLE_TYPE and \
-                       key in label_dict_merged and \
-                       len(label_dict_merged[key]) > TARGET_NUM_FUTURE_POINT:
-                        for i in range(1, TARGET_NUM_FUTURE_POINT + 1):
-                            x = label_dict_merged[key][i][0]
-                            y = label_dict_merged[key][i][1]
-                            obstacle_output[1].append(x - OFFSET_X)
-                            obstacle_output[1].append(y - OFFSET_Y)
+                for obstacle_history in frame_env.obstacles_history:
+                    obstacle_output = self.GetObstacleOutput(obstacle_history, label_dict_merged)
+                    if obstacle_output is None:
+                        continue
                     scene_output.append(obstacle_output)
 
                 has_label = False
@@ -167,6 +181,7 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
                     continue
 
                 data_output.append(scene_output)
+
             logging.info('So far, data_output length = {}'.format(len(data_output)))
 
         output_file_path = os.path.join(output_dir, 'training_data.npy')

@@ -104,7 +104,6 @@ class CleanTrainingDataPipeline(BasePipeline):
     '''
     @param training_data_dir: end dir containing training_data.npy
     '''
-
     def CleanTrainingData(self, training_data_filepath, cleaned_training_data_filepath):
         count = Counter()
         file_content = np.load(training_data_filepath, allow_pickle=True).tolist()
@@ -125,6 +124,7 @@ class CleanTrainingDataPipeline(BasePipeline):
                     cleaned_data_pt.append(data_pt[1])
                     count[turn_type] += 1
                     num_valid_label += 1
+                cleaned_data_pt.append(data_pt[2])
                 cleaned_scene.append(cleaned_data_pt)
             if num_valid_label > 0:
                 cleaned_content.append(cleaned_scene)
