@@ -34,10 +34,10 @@ feature_config = {
     "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "window_size": 51,  # window_size for savgol_filter
     "polynomial_order": 3,  # polynomial_order for savgol_filter
-    "SEGMENT_OVERLAP": 10,  # The overlap between each two groups for augment
+    "SEGMENT_OVERLAP": 0,  # The overlap between each two groups for augment
     "MAX_POSE_DELTA": 0.02,  # The maximum gap between pose and chasis timestamp, in seconds
-    "COMPENSATE_CHASIS": False,  # Whether compensate chasis with poses
-    "CHASIS_DELTA_T": 0.011,  # The maximum gap between chasis messages, in seconds
+    "COMPENSATE_CHASIS": True,  # Whether compensate chasis with poses
+    "CHASIS_DELTA_T": 0.011,  # The max gap between chasis messages, in seconds
     "CHASIS_DELTA_TOLERANCE_RATE": 0.25,  # Discard task if more than this rate of chasis have gaps
 }
 

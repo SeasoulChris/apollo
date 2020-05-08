@@ -55,6 +55,7 @@ class InterPolationMessageList(object):
     def __init__(self):
         """Init"""
         self.interp_messages = [] 
+        self.invalid_messages_count = 0
 
 
     def add_message(self, message):
@@ -64,7 +65,24 @@ class InterPolationMessageList(object):
     
     def find_invalid_points(self):
         """Find invalid points from the list"""
-        return [i for i, x in enumerate(self.interp_messages) if not x.is_valid()]
+        # Set message invalid if its chasis time is too far away from last one
+        invalid_intervals_count = 0
+        for pos in range(1, len(self.interp_messages)):
+            if (not self.interp_messages[pos].chasis_msg or
+                not self.interp_messages[pos - 1].chasis_msg):
+                continue
+            if (self.interp_messages[pos].chasis_msg.header.timestamp_sec -
+                    self.interp_messages[pos - 1].chasis_msg.header.timestamp_sec >
+                    config['CHASIS_DELTA_T']):
+                invalid_intervals_count += 1
+                self.interp_messages[pos].chasis_msg = None
+        logging.info(F'{invalid_intervals_count}/{len(self.interp_messages)} chasis have gaps')
+
+        invalid_messages = [i for i, x in enumerate(self.interp_messages) if not x.is_valid()]
+        self.invalid_messages_count = len(invalid_messages)
+        logging.info(F'{self.invalid_messages_count}/{len(self.interp_messages)} invalid messages')
+
+        return invalid_messages 
 
 
     def generate_valid_groups(self, invalid_points):
@@ -81,18 +99,7 @@ class InterPolationMessageList(object):
 
     def is_valid(self):
         """Check if the list itself is valid"""
-        # One of the crateria is the interval between chasis cannot be over CHASIS_DELTA_T 
-        invalid_intervals_count = 0
-        for pos in range(1, len(self.interp_messages)):
-            if (not self.interp_messages[pos].chasis_msg or
-                not self.interp_messages[pos - 1].chasis_msg):
-                continue
-            if (self.interp_messages[pos].chasis_msg.header.timestamp_sec -
-                    self.interp_messages[pos - 1].chasis_msg.header.timestamp_sec >
-                    config['CHASIS_DELTA_T']):
-                invalid_intervals_count += 1
-        logging.info(F'{invalid_intervals_count}/{len(self.interp_messages)} chasis have gaps') 
-        return (float(invalid_intervals_count) / len(self.interp_messages) >
+        return (float(self.invalid_messages_count) / len(self.interp_messages) <
                 config['CHASIS_DELTA_TOLERANCE_RATE'])
 
 

@@ -4,6 +4,7 @@ py_library(
     name = "interpolation_message",
     srcs = ["interpolation_message.py"],
     deps = [
+        "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
         "//fueling/control/dynamic_model_2_0/feature_extraction:feature_extraction_utils",
     ],
