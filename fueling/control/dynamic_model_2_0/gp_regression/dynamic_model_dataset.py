@@ -31,9 +31,9 @@ class DynamicModelDataset(Dataset):
         # list of feature = (input_tensor, output_tensor)
         self.features = []
 
-        h5_files = file_utils.list_files(data_dir)
+        h5_files = file_utils.list_files(data_dir, '.h5')
         for idx, h5_file in enumerate(h5_files):
-            # logging.info(f'h5_file: {h5_file}')
+            logging.debug(f'h5_file: {h5_file}')
             with h5py.File(h5_file, 'r') as model_norms_file:
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))

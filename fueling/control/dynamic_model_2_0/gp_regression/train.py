@@ -86,8 +86,10 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
         # pre_features = train_loader[0].features
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         inducing_points = features[:, inducing_point_num, :]
+        # save inducing point for reload model
+        np.save(os.path.join(args.validation_data_path, 'inducing_points.npy'), inducing_points)
         break
-
+    return
     # for saving on-line model
     for idx, (test_features, test_labels) in enumerate(valid_loader):
         test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
@@ -222,12 +224,12 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training_dataset")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/validation_dataset")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/valid")
     parser.add_argument(
         '--gp_model_path',
         type=str,

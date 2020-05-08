@@ -39,3 +39,15 @@ py_binary(
         "//fueling/control/dynamic_model_2_0/label_generation",
     ],
 )
+
+py_binary(
+    name = "validation_visualization",
+    srcs = ["validation_visualization.py"],
+    deps = [
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+        "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
+        "//fueling/control/dynamic_model_2_0/gp_regression:evaluation",
+        "//fueling/control/dynamic_model_2_0/gp_regression:gp_model",
+    ],
+)
