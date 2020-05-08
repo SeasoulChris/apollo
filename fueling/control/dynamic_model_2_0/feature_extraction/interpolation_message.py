@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config as config
+import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as utils
 
 # The exact length of chasis messages in a group
@@ -81,6 +82,7 @@ class InterPolationMessageList(object):
     def is_valid(self):
         """Check if the list itself is valid"""
         # One of the crateria is the interval between chasis cannot be over CHASIS_DELTA_T 
+        invalid_intervals_count = 0
         for pos in range(1, len(self.interp_messages)):
             if (not self.interp_messages[pos].chasis_msg or
                 not self.interp_messages[pos - 1].chasis_msg):
@@ -88,8 +90,10 @@ class InterPolationMessageList(object):
             if (self.interp_messages[pos].chasis_msg.header.timestamp_sec -
                     self.interp_messages[pos - 1].chasis_msg.header.timestamp_sec >
                     config['CHASIS_DELTA_T']):
-                return False
-        return True
+                invalid_intervals_count += 1
+        logging.info(F'{invalid_intervals_count}/{len(self.interp_messages)} chasis have gaps') 
+        return (float(invalid_intervals_count) / len(self.interp_messages) >
+                config['CHASIS_DELTA_TOLERANCE_RATE'])
 
 
     def compensate_chasis(self):

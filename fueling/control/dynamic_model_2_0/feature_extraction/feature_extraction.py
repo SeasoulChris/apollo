@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import glob
 import os
 
 import numpy as np
@@ -50,6 +49,7 @@ def group_task_messages(task_messages):
 
     # Generate valid groups potentially splitted by the invalid points
     valid_groups = interp_messages_list.generate_valid_groups(invalid_interp_pos)
+    logging.info(F'how many valid groups: {len(valid_groups)}')
 
     return [(task, group_id, group) for group_id, group in enumerate(valid_groups)]
 
@@ -70,7 +70,7 @@ def write_segment(output_data_path, task_id_group):
     if not task_id_group:
         return
     task, group_id, group = task_id_group
-    output_data_path = os.path.join(output_data_path, task)
+    output_data_path = os.path.join(output_data_path, os.path.basename(task))
     data_set = generate_dataset(group)
     if not data_set:
         logging.info(F'no dataset generated for group {group_id} and folder {output_data_path}')

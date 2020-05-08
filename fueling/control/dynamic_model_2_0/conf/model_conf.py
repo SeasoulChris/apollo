@@ -38,6 +38,7 @@ feature_config = {
     "MAX_POSE_DELTA": 0.02,  # The maximum gap between pose and chasis timestamp, in seconds
     "COMPENSATE_CHASIS": False,  # Whether compensate chasis with poses
     "CHASIS_DELTA_T": 0.011,  # The maximum gap between chasis messages, in seconds
+    "CHASIS_DELTA_TOLERANCE_RATE": 0.25,  # Discard task if more than this rate of chasis have gaps
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""
