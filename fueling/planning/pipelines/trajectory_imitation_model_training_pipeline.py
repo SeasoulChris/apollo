@@ -19,7 +19,7 @@ import fueling.common.proto_utils as proto_utils
 
 if __name__ == "__main__":
     # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3, 4, 5'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2, 3'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')

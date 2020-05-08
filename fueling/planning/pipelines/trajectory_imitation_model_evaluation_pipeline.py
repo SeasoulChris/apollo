@@ -214,6 +214,10 @@ if __name__ == "__main__":
                                               num_workers=4,
                                               drop_last=True)
     model_state_dict = torch.load(args.model_file)
+
+    # added because model was trained using nn.DataParallel
+    model = torch.nn.DataParallel(model)
+
     model.load_state_dict(model_state_dict)
 
     # CUDA setup:
