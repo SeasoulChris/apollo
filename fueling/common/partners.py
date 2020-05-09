@@ -36,6 +36,8 @@ partners = {
                              bos_bucket='hummerautosysbj', bos_region='bj'),
     'd-kit-zkyzdhs-13': Partner(name='ZKYZDHS13', email='gaohongfeinn＠gmail.com',
                                 bos_bucket='drl-coolhigh', bos_region='bj'),
+    'd-kit-qdsz-82': Partner(name='QDSZ82', email='1049892376@qq.com',
+                             bos_bucket='guliduo', bos_region='bj'),
     'd-kit-chkj-70': Partner(name='CHKJ70', email='cuishan@coohigh.com.cn',
                              bos_bucket='coolhigh-test', bos_region='bj'),
 }
