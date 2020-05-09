@@ -7,14 +7,18 @@ import os
 
 from absl import app as absl_app
 from absl import flags
+from collections import defaultdict as df
+from datetime import timezone
 import flask
 import flask_socketio
 import gunicorn.app.base
 import pymongo
 
+from fueling.common.kubectl_utils import Kubectl
 from fueling.common.mongo_utils import Mongo
 from fueling.data.proto.record_meta_pb2 import RecordMeta
-import fueling.common.kubectl_utils as kubectl_utils
+# uncomment below for testing
+# import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
@@ -37,6 +41,11 @@ app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 socketio = flask_socketio.SocketIO(app)
 
+# apply the kubenetes config file
+# uncomment below for testing
+# kubectl = Kubectl(file_utils.fuel_path('apps/k8s/warehouse/kubectl.conf'))
+# comment below for testing
+kubectl = Kubectl()
 
 @app.route('/')
 @app.route('/tasks/<prefix>/<int:page_idx>')
@@ -147,15 +156,48 @@ def record_hdl(record_path):
 #     <other jobs>...
 #
 # 3. Then user clicks a pod, it jumps to the pod log page below :)
-@app.route('/pod_list')
-def pod_list_hdl():
+@app.route('/jobs')
+def jobs_hdl():
     """Handler of the pod list page"""
-    res = kubectl_utils.get_pods()
-    curr_datetime = datetime.datetime.utcnow().timestamp()
-    for r in res:
-        creation_timestamp = r['creation_timestamp']
-        r['duration_ns'] = (curr_datetime - creation_timestamp) * 1e9
-    return flask.render_template('pod_list.html', pod_list=res)
+    res = kubectl.get_pods()
+    jobs_dict = {}
+    curr_datetime = datetime.datetime.now(timezone.utc)
+    for pod in res:
+        namespace = pod.metadata.namespace
+        podname = pod.metadata.name
+        phase = pod.status.phase
+        creation_timestamp = pod.metadata.creation_timestamp.replace(tzinfo=timezone.utc)
+        duration_ns = (curr_datetime - creation_timestamp).seconds * 1e9
+        if pod.metadata.owner_references is not None:
+            appname = pod.metadata.owner_references[0].name
+            appuid = pod.metadata.owner_references[0].uid
+            if appuid not in jobs_dict:
+                jobs_dict[appuid] = {}
+                jobs_dict[appuid]['namespace'] = namespace
+                jobs_dict[appuid]['name'] = appname
+                jobs_dict[appuid]['pods'] = []
+            jobs_dict[appuid]['pods'].append(({
+                'podname': podname,
+                'phase': phase,
+                'creation_timestamp': creation_timestamp.timestamp(),
+                'duration_ns': duration_ns
+            }))
+        else:
+            poduid = pod.metadata.uid
+            if poduid not in jobs_dict:
+                jobs_dict[poduid] = {}
+                jobs_dict[poduid]['namespace'] = namespace
+                jobs_dict[poduid]['name'] = podname
+                jobs_dict[poduid]['pods'] = []
+            jobs_dict[poduid]['pods'].append({
+                'podname': podname,
+                'phase': phase,
+                'creation_timestamp': creation_timestamp.timestamp(),
+                'duration_ns': duration_ns
+            })
+
+
+    return flask.render_template('jobs.html', jobs_dict=jobs_dict)
 
 
 # TODO(Andrew):
@@ -166,7 +208,7 @@ def pod_list_hdl():
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
-    logs = kubectl_utils.logs(pod_name=pod_name, namespace=namespace)
+    logs = kubectl.logs(pod_name=pod_name, namespace=namespace)
     return flask.render_template('pod_log.html', logs=logs)
 
 
@@ -235,4 +277,6 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
+
+
 

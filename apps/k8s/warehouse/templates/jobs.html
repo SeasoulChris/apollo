@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block head %}
+<title>Apollo Fuel - Jobs</title>
+<style>
+   @charset "utf-8";
+   body {
+   margin: 0;
+   padding: 0
+   }
+   img {
+   font-size: 0;
+   line-height: 0;
+   border: 0;
+   vertical-align: middle
+   }
+   * {
+   outline: 0;
+   -webkit-tap-highlight-color: transparent;
+   -webkit-tap-highlight-color: transparent;
+   box-sizing: border-box;
+   }
+   .head {
+   color: #333;
+   background-color: #f5f5f5;
+   border-color: #ddd;
+   padding: 10px 15px;
+   border-bottom: 0;
+   cursor: pointer;
+   }
+   .head img {
+   float: right;
+   width: 14px;
+   margin-top: 6px;
+   }
+   .item {
+   margin-bottom: 0;
+   border-radius: 4px;
+   background-color: #fff;
+   border: 1px solid transparent;
+   -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+   box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+   border-color: #ddd;
+   }
+   .item+.item {
+   margin-top: 5px;
+   }
+   .ctx .p1 {
+   font-weight: 700;
+   }
+   .hide {
+   display: none;
+   }
+   .content {
+   overflow: hidden;
+   padding: 15px;
+   border-top: 1px solid #ddd;
+   font-size: 12px;
+   }
+   .ctx {
+   overflow: hidden;
+   height: 0;
+   transition: height 0.3s ease;
+   -webkit-transition: height 0.3s ease;
+   }
+   table{
+   table-layout: fixed;
+   word-break: break-all;
+   word-wrap: break-word; 
+   padding: 15px;
+   }
+</style>
+{% endblock %}
+{% block body %}
+<div class="panel panel-default">
+   <div class="panel-heading">Apps</div>
+   <div class="panel-body">
+      <div class="nav">
+         {% for job_id in jobs_dict %}
+         <div class="item">
+            <div class="head">{{ jobs_dict[job_id].name }}<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
+            <div class="ctx hide" job_id="{{ job_id }}" open="0">
+               <div class="content">
+                  <table class="table table-striped">
+                     <thead>
+                        <tr>
+                           <th width="40%">Name</th>
+                           <th>Phase</th>
+                           <th>Begin Time</th>
+                           <th>Duration(hh:mm:ss)</th>
+                           <th>Logs</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {% for pod in jobs_dict[job_id].pods %}
+                        <tr>
+                           <td>{{ pod.podname }}</td>
+                           <td>{{ pod.phase }}</td>
+                           <td>{{ pod.creation_timestamp | timestamp_to_time }}</td>
+                           <td>{{ pod.duration_ns | ns_to_duration }}</td>
+                           <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=jobs_dict[job_id].namespace) }}">View</a></td>
+                        </tr>
+                        {% endfor %}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
+         {% endfor %}
+      </div>
+   </div>
+</div>
+<script>
+   var head = document.querySelectorAll(".head");
+   var ctx = document.querySelectorAll(".ctx");
+   var transitions = {
+       "transition": "transitionend",
+       "WebkitTransition": "webkitTransitionEnd"
+   }
+   
+   for (var key in transitions) {
+       for (var i = 0, l = ctx.length; i < l; i++) {
+           ctx[i].addEventListener(transitions[key], function () {
+               if (this.getAttribute("open") == "0") {
+                   this.setAttribute("class", "ctx hide");
+               }
+           })
+       }
+   }
+   
+   for (var i = 0; i < head.length; i++) {
+       head[i].addEventListener("click", function () {
+           job_id = this.nextElementSibling.getAttribute("job_id");
+           for (var j = 0, l = ctx.length; j < l; j++) {
+               if ((ctx[j].getAttribute("job_id") == job_id) && (ctx[j].getAttribute("class").indexOf("hide") != -1)) {
+                   ctx[j].setAttribute("open", "1");
+                   ctx[j].setAttribute("class", "ctx");
+                   c_h = ctx[j].querySelector(".content").clientHeight;
+                   this.querySelector("img").setAttribute("src",
+                       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAaVBMVEUAAACZmZmhoaGZmZmZmZmZmZmVlZWZmZmZmZmZmZmYmJiYmJiYmJiWlpaYmJiZmZmZmZmZmZmYmJiZmZmZmZmZmZmYmJiZmZmZmZmZmZmYmJiYmJiYmJiYmJiYmJiZmZmZmZmZmZmZmZmphJNhAAAAInRSTlMA9wb63csR7ea0NCshGgryzcbDvayZkIV6YVhPRj6komtpKIkVQgAAAINJREFUGNNtydcWgyAQRdFBUMAae0+5//+RIS6jYzkvXGYT6y0+dFsPoL+DQcJCDlcYJTrqIMczTAKte1qI6QizQLOMBmLmEGao11kjCxlovLbPEzr670ij8jbxKpiVYgPrYCcLEy+gUDpgpSVUQpQoFCnRkfIfPeAHdC5wV8oZMPKLL5vkB7iLrZPSAAAAAElFTkSuQmCC"
+                   )
+                   ctx[j].style.height = c_h + "px";
+               } else {
+                   ctx[j].setAttribute("open", "0")
+                   ctx[j].previousElementSibling.querySelector("img").setAttribute("src",
+                       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg=="
+                   )
+                   ctx[j].style.height = 0;
+               }
+           }
+       })
+   }
+</script>
+{% endblock %}

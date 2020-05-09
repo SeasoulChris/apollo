@@ -131,16 +131,5 @@ py_library(
 py_library(
     name = "kubectl_utils",
     srcs = ["kubectl_utils.py"],
-    # removed in the k8s environment
-    # data = [":kubectl_conf"],
-    deps = [
-        ":file_utils",
-        ":logging",
-    ],
 )
 
-# removed in the k8s environment
-#filegroup(
-#    name = "kubectl_conf",
-#    srcs = ["kubectl.conf"],
-#)
