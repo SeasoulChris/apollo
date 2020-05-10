@@ -5,8 +5,9 @@
 from kubernetes import client, config
 
 
-class Kubectl:
+class Kubectl(object):
     """kubectl basic operations"""
+
     def __init__(self, config_file=None):
         """init"""
         config.load_kube_config(config_file)
@@ -14,29 +15,35 @@ class Kubectl:
         self.appsV1Api = client.AppsV1Api()
 
     def get_pods(self, namespace='default'):
-        """kubectl get pods"""
-        ret = self.coreV1Api.list_namespaced_pod(namespace=namespace)
-        for item in ret.items:
-            yield item
+        """kubectl get pods
+        return type: list[V1Pod]
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Pod.md
+        """
+        return self.coreV1Api.list_namespaced_pod(namespace=namespace).items
 
     def logs(self, pod_name, namespace='default'):
         """kubectl logs"""
-        full_log = self.coreV1Api.read_namespaced_pod_log(name=pod_name, namespace=namespace)
-        return full_log
+        return self.coreV1Api.read_namespaced_pod_log(name=pod_name, namespace=namespace)
 
     def delete_pods(self, name, namespace='default'):
-        """delete pods"""
-        res = self.coreV1Api.delete_namespaced_pod(name=name, namespace=namespace)
-        return res
+        """delete pods
+        return type: V1Status
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Status.md
+        """
+        return self.coreV1Api.delete_namespaced_pod(name=name, namespace=namespace)
 
     def get_deployments(self):
-        """get deployments"""
-        ret = self.appsV1Api.list_deployment_for_all_namespaces()
-        for item in ret.items:
-            yield item
+        """get deployments
+        return type: list[V1Deployment]
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Deployment.md
+        """
+        return self.appsV1Api.list_deployment_for_all_namespaces().items
 
     def delete_deployments(self, deployment_name, namespace='default'):
-        """delete deployments"""
-        res = self.appsV1Api.delete_namespaced_deployment(name=deployment_name, namespace=namespace)
-        return res
+        """delete deployments
+        return type: V1Status
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Status.md
+        """
+        return self.appsV1Api.delete_namespaced_deployment(name=deployment_name,
+                                                           namespace=namespace)
 

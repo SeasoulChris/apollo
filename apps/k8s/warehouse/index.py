@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 """Serve data imported in MongoDB."""
 
+from datetime import timezone
 import collections
 import datetime
 import os
 
 from absl import app as absl_app
 from absl import flags
-from collections import defaultdict as df
-from datetime import timezone
 import flask
 import flask_socketio
 import gunicorn.app.base
@@ -46,6 +45,7 @@ socketio = flask_socketio.SocketIO(app)
 # kubectl = Kubectl(file_utils.fuel_path('apps/k8s/warehouse/kubectl.conf'))
 # comment below for testing
 kubectl = Kubectl()
+
 
 @app.route('/')
 @app.route('/tasks/<prefix>/<int:page_idx>')
@@ -132,30 +132,17 @@ def record_hdl(record_path):
     return flask.render_template('record.html', record=record)
 
 
-# TODO(Andrew): Prefer rename to `/jobs` and `jobs_hdl()`, as we not really want to show all pods.
-# We care about fuel-jobs' pods, whose names are like:
-#
-#     job-20200508011528806858-apollo-feature-extraction-1588900530232-driver
-#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-1
-#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-2
-#     job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-3
-#
-# My expectation for the UE is like:
-# 1. The jobs page shows just job name, which is
-#
-#     job-20200508011528806858-apollo-feature-extraction
-#     <other jobs>...
-#
-# 2. If user clicks it, it expands a sub-list showing all related pods:
-#
-#     job-20200508011528806858-apollo-feature-extraction
-#         job-20200508011528806858-apollo-feature-extraction-1588900530232-driver
-#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-1
-#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-2
-#         job-20200508011528806858-apollo-feature-extraction-1588900530232-exec-3
-#     <other jobs>...
-#
-# 3. Then user clicks a pod, it jumps to the pod log page below :)
+# TODO(Andrew):
+# 1. Filter the items, only show fuel jobs like job-<job_id>-<job_name>-<timestamp>-driver.
+#    We don't want to expose long-run deployments like warehouse and simulation services.
+#    It's also risky if we allow users to kill pods in the future.
+# 2. Reverse the job list, because people always care more about recent jobs.
+#    Show more information in job title bar, such as the phase.
+#    so that people know the job status without expanding the job panel.
+#    If it makes the title bar too long, just remove the -<timestamp>-driver part from job name :)
+# 3. As you already know, besides Logs button, we can also add Info button,
+#    which shows result of kubectl describe pod <name>. And Stop button,
+#    which triggers kubectl delete pod <name>.
 @app.route('/jobs')
 def jobs_hdl():
     """Handler of the pod list page"""
@@ -195,7 +182,6 @@ def jobs_hdl():
                 'creation_timestamp': creation_timestamp.timestamp(),
                 'duration_ns': duration_ns
             })
-
 
     return flask.render_template('jobs.html', jobs_dict=jobs_dict)
 
@@ -277,6 +263,4 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
-
-
 
