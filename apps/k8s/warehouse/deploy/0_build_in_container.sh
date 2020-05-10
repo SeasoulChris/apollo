@@ -8,4 +8,4 @@ cp -r /apollo/py_proto ./
 
 # Build the app.
 bazel build //apps/k8s/warehouse:index
-cp /fuel/bazel-bin/apps/k8s/warehouse/index.zip ./
+cp -f /fuel/bazel-bin/apps/k8s/warehouse/index.zip ./
