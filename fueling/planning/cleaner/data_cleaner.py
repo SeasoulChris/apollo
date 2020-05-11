@@ -30,7 +30,7 @@ class CleanPlanningRecords(BasePipeline):
         self.RUN_IN_DRIVER = False
         now = datetime.now() - timedelta(hours=7)
         dt_string = now.strftime("%Y%m%d_%H%M%S")
-        self.dst_prefix = '/mnt/bos/modules/planning/cleaned_data_temp/cleaned_data_' + dt_string + "/"
+        self.dst_prefix = '/mnt/bos/modules/planning/temp/cleaned_data/batch_' + dt_string + "/"
         self.topics = [
             '/apollo/canbus/chassis',
             '/apollo/localization/pose',
@@ -69,16 +69,17 @@ class CleanPlanningRecords(BasePipeline):
     def run(self):
         """Run prod."""
         date_tasks = [
-            'small-records/2019/2019-11-01/',
-            'small-records/2019/2019-11-02/',
-            'small-records/2019/2019-11-03/',
-            'small-records/2019/2019-11-04/',
-            'small-records/2019/2019-11-05/',
-            'small-records/2019/2019-11-06/',
-            'small-records/2019/2019-11-07/',
-            'small-records/2019/2019-11-08/',
-            'small-records/2019/2019-11-09/',
-            'small-records/2019/2019-11-10/',
+            #'small-records/2019/2019-11-01/',
+            #'small-records/2019/2019-11-02/',
+            #'small-records/2019/2019-11-03/',
+            #'small-records/2019/2019-11-04/',
+            #'small-records/2019/2019-11-05/',
+            #'small-records/2019/2019-11-06/',
+            #'small-records/2019/2019-11-07/',
+            #'small-records/2019/2019-11-08/',
+            #'small-records/2019/2019-11-09/',
+            #'small-records/2019/2019-11-10/',
+
             # 'small-records/2019/2019-11-11/',
             # 'small-records/2019/2019-11-12/',
             # 'small-records/2019/2019-11-13/',
@@ -102,7 +103,7 @@ class CleanPlanningRecords(BasePipeline):
         ]
 
         individual_tasks = [
-            'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
+            # 'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
             # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
         ]
         prefix = "/mnt/bos/"
