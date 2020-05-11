@@ -77,11 +77,17 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     }
     task_records = collections.defaultdict(list)
     for doc in mongo_col.find(query, kFields):
-        task_records[doc['dir']].append(proto_utils.dict_to_pb(doc, RecordMeta()))
-    tasks = [records_util.CombineRecords(records) for records in task_records.values()]
+        task_records[doc['dir']].append(
+            proto_utils.dict_to_pb(doc, RecordMeta()))
+    tasks = [records_util.CombineRecords(records)
+             for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
-        'records.html', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
+        'records.html',
+        page_count=page_count,
+        prefix=prefix,
+        current_page=page_idx,
+        records=tasks,
         is_tasks=True)
 
 
@@ -89,10 +95,14 @@ def tasks_hdl(prefix='small-records', page_idx=1):
 def task_hdl(task_path):
     """Handler of the task detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'task')
-    docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
+    docs = Mongo().record_collection().find(
+        {'dir': os.path.join('/', task_path)})
     records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
-    return flask.render_template('record.html', record=task, sub_records=records)
+    return flask.render_template(
+        'record.html',
+        record=task,
+        sub_records=records)
 
 
 @app.route('/records')
@@ -120,14 +130,18 @@ def records_hdl(page_idx=1):
     records = [proto_utils.dict_to_pb(doc, RecordMeta())
                for doc in docs.sort(kSort).skip(offset).limit(PAGE_SIZE)]
     return flask.render_template(
-        'records.html', page_count=page_count, current_page=page_idx, records=records)
+        'records.html',
+        page_count=page_count,
+        current_page=page_idx,
+        records=records)
 
 
 @app.route('/record/<path:record_path>')
 def record_hdl(record_path):
     """Handler of the record detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'record')
-    doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
+    doc = Mongo().record_collection().find_one(
+        {'path': os.path.join('/', record_path)})
     record = proto_utils.dict_to_pb(doc, RecordMeta())
     return flask.render_template('record.html', record=record)
 
@@ -152,38 +166,54 @@ def jobs_hdl():
     for pod in res:
         namespace = pod.metadata.namespace
         podname = pod.metadata.name
+        if not podname.startswith('job-'):
+            continue
         phase = pod.status.phase
-        creation_timestamp = pod.metadata.creation_timestamp.replace(tzinfo=timezone.utc)
+        creation_timestamp = pod.metadata.creation_timestamp.replace(
+            tzinfo=timezone.utc)
         duration_ns = (curr_datetime - creation_timestamp).seconds * 1e9
+        # executors
         if pod.metadata.owner_references is not None:
-            appname = pod.metadata.owner_references[0].name
             appuid = pod.metadata.owner_references[0].uid
             if appuid not in jobs_dict:
                 jobs_dict[appuid] = {}
-                jobs_dict[appuid]['namespace'] = namespace
-                jobs_dict[appuid]['name'] = appname
                 jobs_dict[appuid]['pods'] = []
+            # executors' info
             jobs_dict[appuid]['pods'].append(({
                 'podname': podname,
                 'phase': phase,
                 'creation_timestamp': creation_timestamp.timestamp(),
                 'duration_ns': duration_ns
             }))
+        # drivers
         else:
             poduid = pod.metadata.uid
             if poduid not in jobs_dict:
                 jobs_dict[poduid] = {}
-                jobs_dict[poduid]['namespace'] = namespace
-                jobs_dict[poduid]['name'] = podname
                 jobs_dict[poduid]['pods'] = []
+            for env in pod.spec.containers[0].env:
+                if env.name == 'PYSPARK_APP_ARGS':
+                    for v in env.value.split(' '):
+                        arg_type, arg_value = v.split('=')
+                        if arg_type == '--job_owner':
+                            jobs_dict[poduid]['owner'] = arg_value
+                        elif arg_type == '--job_id':
+                            jobs_dict[poduid]['job_id'] = arg_value
+            # drivers' info
+            jobs_dict[poduid]['namespace'] = namespace
+            jobs_dict[poduid]['name'] = podname
+            jobs_dict[poduid]['creation_timestamp'] = creation_timestamp.timestamp()
+            jobs_dict[poduid]['phase'] = phase
             jobs_dict[poduid]['pods'].append({
                 'podname': podname,
                 'phase': phase,
                 'creation_timestamp': creation_timestamp.timestamp(),
                 'duration_ns': duration_ns
             })
-
-    return flask.render_template('jobs.html', jobs_dict=jobs_dict)
+    sorted_job_list = sorted(list(jobs_dict.items()),
+        key=lambda x: x[1]['creation_timestamp'],
+        reverse=True)
+    return flask.render_template('jobs.html', jobs_list=sorted_job_list)
 
 
 # TODO(Andrew):
@@ -203,7 +233,9 @@ def bos_ask():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'bos-ask')
     if flask.request.form.get('pin') != 'woyouyitouxiaomaolv':
         return ''
-    return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
+    return '{}{}'.format(
+        os.environ.get('BOS_ASK_ACCESS'),
+        os.environ.get('BOS_ASK_SECRET'))
 
 
 @app.route('/metrics', methods=['GET'])
@@ -212,7 +244,10 @@ def metrics_hdl():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
     prefix = flask.request.args.get('prefix') or ''
     metrics = metrics_util.get_metrics_by_prefix(prefix)
-    return flask.render_template('metrics.html', prefix=prefix, metrics=metrics)
+    return flask.render_template(
+        'metrics.html',
+        prefix=prefix,
+        metrics=metrics)
 
 
 @app.route('/metrics_ajax')
@@ -235,7 +270,9 @@ def plot_img():
     """Handler of profiling plot request"""
     redis_key = flask.request.args.get('key')
     plot_type = flask.request.args.get('type')
-    return flask.render_template('plot.html', data={'key': redis_key, 'type': plot_type})
+    return flask.render_template(
+        'plot.html', data={
+            'key': redis_key, 'type': plot_type})
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):

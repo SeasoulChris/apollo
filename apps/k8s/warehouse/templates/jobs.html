@@ -26,6 +26,8 @@
    padding: 10px 15px;
    border-bottom: 0;
    cursor: pointer;
+   display: -moz-box;
+   display: -webkit-box;
    }
    .head img {
    float: right;
@@ -75,29 +77,34 @@
    <div class="panel-heading">Apps</div>
    <div class="panel-body">
       <div class="nav">
-         {% for job_id in jobs_dict %}
+         {% for job_id, job_info in jobs_list %}
          <div class="item">
-            <div class="head">{{ jobs_dict[job_id].name }}<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
+            <div class="head">
+		    <div style="width: 75%;">{{ job_info.name }} {{ job_info.owner }} {{ job_info.job_id }}</div>
+              <div style="width: 5%; text-align: right">{{ job_info.phase }}</div>
+              <div style="width: 15%; text-align: right">{{ job_info.creation_timestamp | timestamp_to_time }}</div>
+              <div style="width: 5%; text-align: right"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
+            </div>
             <div class="ctx hide" job_id="{{ job_id }}" open="0">
                <div class="content">
                   <table class="table table-striped">
                      <thead>
                         <tr>
-                           <th width="40%">Name</th>
-                           <th>Phase</th>
-                           <th>Begin Time</th>
-                           <th>Duration(hh:mm:ss)</th>
-                           <th>Logs</th>
+                           <th style="width: 60%">Name</th>
+                           <th style="width: 10%;">Phase</th>
+                           <th style="width: 15%;">Begin Time</th>
+                           <th style="width: 10%;">Duration</th>
+                           <th style="width: 5%;">Logs</th>
                         </tr>
                      </thead>
                      <tbody>
-                        {% for pod in jobs_dict[job_id].pods %}
+                        {% for pod in job_info.pods %}
                         <tr>
                            <td>{{ pod.podname }}</td>
                            <td>{{ pod.phase }}</td>
                            <td>{{ pod.creation_timestamp | timestamp_to_time }}</td>
                            <td>{{ pod.duration_ns | ns_to_duration }}</td>
-                           <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=jobs_dict[job_id].namespace) }}">View</a></td>
+                           <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}">View</a></td>
                         </tr>
                         {% endfor %}
                      </tbody>
@@ -151,3 +158,4 @@
    }
 </script>
 {% endblock %}
+

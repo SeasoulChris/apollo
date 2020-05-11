@@ -24,6 +24,13 @@ class Kubectl(object):
         """
         return self.coreV1Api.list_namespaced_pod(namespace=namespace).items
 
+    def describe_pod(self, name, namespace='default'):
+        """describe pod details
+        return type: V1Pod
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Pod.md
+        """
+        return self.coreV1Api.read_namespaced_pod(name=name, namespace=namespace)
+
     def logs(self, pod_name, namespace='default'):
         """kubectl logs"""
         return self.coreV1Api.read_namespaced_pod_log(name=pod_name, namespace=namespace)
