@@ -41,7 +41,7 @@ def list_files(dir_path):
     return [os.path.join(root, f) for root, _, files in os.walk(dir_path) for f in files]
 
 
-def list_files(dir_path, suffix):
+def list_files_with_suffix(dir_path, suffix):
     """List all sub-files with suffix in given dir_path."""
     return [os.path.join(root, f) for root, _, files
             in os.walk(dir_path) for f in files if f.endswith(suffix)]
