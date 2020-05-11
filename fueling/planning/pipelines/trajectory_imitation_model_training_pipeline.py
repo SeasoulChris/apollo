@@ -77,7 +77,7 @@ if __name__ == "__main__":
                                                       args.input_data_augmentation)
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationWithEnvRNNLoss()
+        loss = TrajectoryImitationRNNLoss()
 
     else:
         logging.info('model {} is not implemnted'.format(args.model_type))

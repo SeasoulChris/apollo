@@ -29,6 +29,10 @@ class AgentPosesHistoryImgRenderer(object):
         self.local_base_heading = None
         self.max_history_time_horizon = config.max_ego_past_horizon  # second
 
+        self.current_pose_img = np.zeros(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        self.current_pose_img[self.local_base_point_idx[1], self.local_base_point_idx[0]] = 255
+
     def draw_agent_poses_history(self, current_timestamp, center_x,
                                  center_y, center_heading, ego_pose_history,
                                  coordinate_heading=0., past_motion_dropout=False):
@@ -56,6 +60,9 @@ class AgentPosesHistoryImgRenderer(object):
             cv.circle(local_map, tuple(traj_point),
                       radius=2, color=color, thickness=-1)
         return local_map
+
+    def draw_agent_current_pose(self):
+        return self.current_pose_img
 
 
 if __name__ == "__main__":

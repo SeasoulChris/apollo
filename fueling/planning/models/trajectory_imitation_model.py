@@ -11,7 +11,6 @@ from torch.utils.data import Dataset
 from torchvision import models
 
 from fueling.common.coord_utils import CoordUtils
-
 '''
 ========================================================================
 Model definition
@@ -105,12 +104,6 @@ class TrajectoryImitationRNNModel(nn.Module):
         # f. use argmax to update M_k by P_k
         # g. feed M_k and B_k to next iteration
 
-        self.M_B_0 = torch.zeros(
-            2, self.input_img_size_h, self.input_img_size_w)
-        nn.init.xavier_normal_(
-            self.M_B_0[1, :, :], gain=nn.init.calculate_gain('relu'))
-        self.M_B_0 = nn.Parameter(self.M_B_0, requires_grad=True)
-
         self.memory_encoder = nn.Sequential(
             nn.Conv2d(in_channels=2, out_channels=1, kernel_size=121,
                       padding=10),  # size self.input_img_size_h to 100
@@ -146,9 +139,10 @@ class TrajectoryImitationRNNModel(nn.Module):
         )
 
     def forward(self, X):
-        img_feature = X
+        img_feature = X[0]
         batch_size = img_feature.size(0)
-        M_B_k = self.M_B_0.repeat(batch_size, 1, 1, 1)
+        M_B_k = torch.cat((X[1], X[2]), dim=1)
+        M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         img_feature_encoding = self.feature_net(
             self.feature_compression_layer(img_feature))
@@ -197,7 +191,7 @@ class TrajectoryImitationRNNModel(nn.Module):
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
             for i in range(batch_size):
-                M_k_next[i, arg_max_row_index, arg_max_col_index] = 1
+                M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
 
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 

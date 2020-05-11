@@ -230,6 +230,12 @@ class ChauffeurNetFeatureGenerator(object):
                                                                                     timestamp_idx,
                                                                                     coordinate_heading)
 
+    def render_initial_agent_states(self, coordinate_heading=0.):
+        agent_box_img = self.agent_box_mapping.draw_agent_box(
+            coordinate_heading)
+        agent_pose_img = self.agent_pose_history_mapping.draw_agent_current_pose()
+        return agent_box_img, agent_pose_img
+
 
 if __name__ == "__main__":
     offline_frames = learning_data_pb2.LearningData()

@@ -66,7 +66,7 @@ class TrajectoryImitationCNNDataset(Dataset):
                 -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
-        # use adc_trajectory_point rather than localization 
+        # use adc_trajectory_point rather than localization
         # because of the use of synthesizing sometimes
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
@@ -177,7 +177,7 @@ class TrajectoryImitationRNNDataset(Dataset):
                 -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
             past_motion_dropout = np.random.uniform(0, 1) > 0.5
 
-        # use adc_trajectory_point rather than localization 
+        # use adc_trajectory_point rather than localization
         # because of the use of synthesizing sometimes
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
@@ -273,10 +273,21 @@ class TrajectoryImitationRNNDataset(Dataset):
         if pred_points.shape[0] < self.ouput_point_num:
             return self.__getitem__(idx - 1)
 
+        # draw agent current pose and box for hidden state intialization
+        agent_current_box_img, agent_current_pose_img = self.chauffeur_net_feature_generator.\
+            render_initial_agent_states(coordinate_heading)
+        if self.img_bitmap_transform:
+            agent_current_box_img = self.img_bitmap_transform(
+                agent_current_box_img)
+            agent_current_pose_img = self.img_bitmap_transform(
+                agent_current_pose_img)
+
         if self.evaluate_mode:
             merged_img_feature = self.chauffeur_net_feature_generator.render_merged_img_feature(
                 img_feature)
-            return (transformed_img_feature,
+            return ((transformed_img_feature,
+                     agent_current_pose_img,
+                     agent_current_box_img),
                     (pred_pose_dists,
                      pred_boxs,
                      torch.from_numpy(pred_points).float(),
@@ -286,7 +297,9 @@ class TrajectoryImitationRNNDataset(Dataset):
                     coordinate_heading,
                     frame.message_timestamp_sec)
 
-        return (transformed_img_feature,
+        return ((transformed_img_feature,
+                 agent_current_pose_img,
+                 agent_current_box_img),
                 (pred_pose_dists,
                  pred_boxs,
                  torch.from_numpy(pred_points).float(),
