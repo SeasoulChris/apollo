@@ -180,7 +180,7 @@ class PedestrianTrajectoryDataset(Dataset):
         obs_mapping = ObstacleMapping(map_region, self.base_map[map_region],
                                       world_coord, obs_polygons, ego_history)
         img = obs_mapping.crop_by_history(target_obs_polygons)
-        cv.imwrite('/fuel/hehe.png', img)
+        # cv.imwrite('/fuel/hehe.png', img)
         origin_img = img.copy()
         if self.img_transform:
             img = self.img_transform(img)

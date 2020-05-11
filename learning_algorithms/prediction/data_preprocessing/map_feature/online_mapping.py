@@ -101,7 +101,6 @@ class ObstacleMapping(object):
                             np.array([[l/2, l/2, -l/2, -l/2],
                             [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
             points = [self.get_trans_point(point) for point in points]
-            print(1/history_size*i)
             cv.fillPoly(self.feature_map, [np.int32(points)],
                         color=tuple(c*(1/history_size*i) for c in color))
 
