@@ -112,8 +112,14 @@ class FeatureExtraction(BasePipeline):
             task_msgs_rdd
             # PairRDD(task, group_id, InterPolationMessages as a group)
             .flatMap(group_task_messages))
-        
-        groups.foreach(lambda task_id_group: write_segment(output_data_path, task_id_group))
+
+        partitions = int(os.environ.get('APOLLO_EXECUTORS', 15))
+        # PairRDD(task, group_id, InterPolationMessages as a group)
+        (groups
+            # PairRDD(task, group_id, InterPolationMessages as a group) repartitioned
+            .repartition(partitions)
+            # Executing each one (task, id, group)
+            .foreach(lambda task_id_group: write_segment(output_data_path, task_id_group)))
 
         logging.info(F'extracted features to target dir {output_data_path}')
 

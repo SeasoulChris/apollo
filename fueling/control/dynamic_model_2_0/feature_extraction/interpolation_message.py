@@ -99,6 +99,8 @@ class InterPolationMessageList(object):
 
     def is_valid(self):
         """Check if the list itself is valid"""
+        if not self.interp_messages:
+            return False
         return (float(self.invalid_messages_count) / len(self.interp_messages) <
                 config['CHASIS_DELTA_TOLERANCE_RATE'])
 
