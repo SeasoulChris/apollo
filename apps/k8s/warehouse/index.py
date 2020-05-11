@@ -34,6 +34,7 @@ PORT = 8000
 WORKERS = 5
 PAGE_SIZE = 30
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
+TIMEZONE = 'America/Los_Angeles'
 
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
@@ -83,10 +84,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
              for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
-        'records.html',
-        page_count=page_count,
-        prefix=prefix,
-        current_page=page_idx,
+        'records.html', page_count=page_count, prefix=prefix, current_page=page_idx,
         records=tasks,
         is_tasks=True)
 
@@ -100,9 +98,7 @@ def task_hdl(task_path):
     records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
     return flask.render_template(
-        'record.html',
-        record=task,
-        sub_records=records)
+        'record.html', record=task, sub_records=records)
 
 
 @app.route('/records')
@@ -130,10 +126,7 @@ def records_hdl(page_idx=1):
     records = [proto_utils.dict_to_pb(doc, RecordMeta())
                for doc in docs.sort(kSort).skip(offset).limit(PAGE_SIZE)]
     return flask.render_template(
-        'records.html',
-        page_count=page_count,
-        current_page=page_idx,
-        records=records)
+        'records.html', page_count=page_count, current_page=page_idx, records=records)
 
 
 @app.route('/record/<path:record_path>')
@@ -191,14 +184,16 @@ def jobs_hdl():
             if poduid not in jobs_dict:
                 jobs_dict[poduid] = {}
                 jobs_dict[poduid]['pods'] = []
+            # extract job_owner for future filtering
             for env in pod.spec.containers[0].env:
                 if env.name == 'PYSPARK_APP_ARGS':
                     for v in env.value.split(' '):
-                        arg_type, arg_value = v.split('=')
-                        if arg_type == '--job_owner':
-                            jobs_dict[poduid]['owner'] = arg_value
-                        elif arg_type == '--job_id':
-                            jobs_dict[poduid]['job_id'] = arg_value
+                        if '=' in v:
+                            arg_type, arg_value = v.split('=')
+                            if arg_type == '--job_owner':
+                                jobs_dict[poduid]['owner'] = arg_value
+                            elif arg_type == '--job_id':
+                                jobs_dict[poduid]['job_id'] = arg_value
             # drivers' info
             jobs_dict[poduid]['namespace'] = namespace
             jobs_dict[poduid]['name'] = podname
@@ -211,8 +206,8 @@ def jobs_hdl():
                 'duration_ns': duration_ns
             })
     sorted_job_list = sorted(list(jobs_dict.items()),
-        key=lambda x: x[1]['creation_timestamp'],
-        reverse=True)
+                             key=lambda x: x[1]['creation_timestamp'],
+                             reverse=True)
     return flask.render_template('jobs.html', jobs_list=sorted_job_list)
 
 
@@ -245,9 +240,7 @@ def metrics_hdl():
     prefix = flask.request.args.get('prefix') or ''
     metrics = metrics_util.get_metrics_by_prefix(prefix)
     return flask.render_template(
-        'metrics.html',
-        prefix=prefix,
-        metrics=metrics)
+        'metrics.html', prefix=prefix, metrics=metrics)
 
 
 @app.route('/metrics_ajax')
@@ -270,9 +263,7 @@ def plot_img():
     """Handler of profiling plot request"""
     redis_key = flask.request.args.get('key')
     plot_type = flask.request.args.get('type')
-    return flask.render_template(
-        'plot.html', data={
-            'key': redis_key, 'type': plot_type})
+    return flask.render_template('plot.html', data={'key': redis_key, 'type': plot_type})
 
 
 class FlaskApp(gunicorn.app.base.BaseApplication):
