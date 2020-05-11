@@ -89,6 +89,8 @@ class BasePipeline(object):
             if flags.FLAGS.cpu > 1:
                 spark_conf.setMaster(F'local[{flags.FLAGS.cpu}]')
             BasePipeline.SPARK_CONTEXT = SparkContext.getOrCreate(spark_conf)
+            # Mute general Spark INFO logs.
+            BasePipeline.SPARK_CONTEXT.setLogLevel('WARN')
         FLAGS = flags.FLAGS
         if not FLAGS.job_id:
             FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')

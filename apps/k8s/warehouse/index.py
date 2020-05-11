@@ -208,6 +208,8 @@ def jobs_hdl():
 # future it would be every fancy if it updates at realtime! Just like "kubectl logs -f <pod>".
 # 2. We may need to add the filter to the logs. As Spark itself outputs a lot of boring and noisy
 # logs, while we just want to see logs from our Python code.
+# 3. Currently we use <pre>...</pre> to show the logs so that it respects basic paragraphing. Later
+# We may need to use tools like https://pypi.org/project/ansi2html to get better styled result.
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
