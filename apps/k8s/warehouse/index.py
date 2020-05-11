@@ -34,7 +34,6 @@ PORT = 8000
 WORKERS = 5
 PAGE_SIZE = 30
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
-TIMEZONE = 'America/Los_Angeles'
 
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
@@ -82,8 +81,7 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
-        'records.html', page_count=page_count, prefix=prefix, current_page=page_idx,
-        records=tasks,
+        'records.html', page_count=page_count, prefix=prefix, current_page=page_idx, records=tasks,
         is_tasks=True)
 
 
@@ -222,9 +220,7 @@ def bos_ask():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'bos-ask')
     if flask.request.form.get('pin') != 'woyouyitouxiaomaolv':
         return ''
-    return '{}{}'.format(
-        os.environ.get('BOS_ASK_ACCESS'),
-        os.environ.get('BOS_ASK_SECRET'))
+    return '{}{}'.format(os.environ.get('BOS_ASK_ACCESS'), os.environ.get('BOS_ASK_SECRET'))
 
 
 @app.route('/metrics', methods=['GET'])
