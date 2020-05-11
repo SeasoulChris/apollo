@@ -78,10 +78,8 @@ def tasks_hdl(prefix='small-records', page_idx=1):
     }
     task_records = collections.defaultdict(list)
     for doc in mongo_col.find(query, kFields):
-        task_records[doc['dir']].append(
-            proto_utils.dict_to_pb(doc, RecordMeta()))
-    tasks = [records_util.CombineRecords(records)
-             for records in task_records.values()]
+        task_records[doc['dir']].append(proto_utils.dict_to_pb(doc, RecordMeta()))
+    tasks = [records_util.CombineRecords(records) for records in task_records.values()]
     tasks.sort(key=lambda task: task.dir, reverse=True)
     return flask.render_template(
         'records.html', page_count=page_count, prefix=prefix, current_page=page_idx,
@@ -93,12 +91,10 @@ def tasks_hdl(prefix='small-records', page_idx=1):
 def task_hdl(task_path):
     """Handler of the task detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'task')
-    docs = Mongo().record_collection().find(
-        {'dir': os.path.join('/', task_path)})
+    docs = Mongo().record_collection().find({'dir': os.path.join('/', task_path)})
     records = [proto_utils.dict_to_pb(doc, RecordMeta()) for doc in docs]
     task = records_util.CombineRecords(records)
-    return flask.render_template(
-        'record.html', record=task, sub_records=records)
+    return flask.render_template('record.html', record=task, sub_records=records)
 
 
 @app.route('/records')
@@ -133,8 +129,7 @@ def records_hdl(page_idx=1):
 def record_hdl(record_path):
     """Handler of the record detail page."""
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'record')
-    doc = Mongo().record_collection().find_one(
-        {'path': os.path.join('/', record_path)})
+    doc = Mongo().record_collection().find_one({'path': os.path.join('/', record_path)})
     record = proto_utils.dict_to_pb(doc, RecordMeta())
     return flask.render_template('record.html', record=record)
 
@@ -162,8 +157,7 @@ def jobs_hdl():
         if not podname.startswith('job-'):
             continue
         phase = pod.status.phase
-        creation_timestamp = pod.metadata.creation_timestamp.replace(
-            tzinfo=timezone.utc)
+        creation_timestamp = pod.metadata.creation_timestamp.replace(tzinfo=timezone.utc)
         duration_ns = (curr_datetime - creation_timestamp).seconds * 1e9
         # executors
         if pod.metadata.owner_references is not None:
@@ -206,8 +200,8 @@ def jobs_hdl():
                 'duration_ns': duration_ns
             })
     sorted_job_list = sorted(list(jobs_dict.items()),
-                             key=lambda x: x[1]['creation_timestamp'],
-                             reverse=True)
+        key=lambda x: x[1]['creation_timestamp'],
+        reverse=True)
     return flask.render_template('jobs.html', jobs_list=sorted_job_list)
 
 
@@ -239,8 +233,7 @@ def metrics_hdl():
     redis_utils.redis_incr(METRICS_PV_PREFIX + 'metrics')
     prefix = flask.request.args.get('prefix') or ''
     metrics = metrics_util.get_metrics_by_prefix(prefix)
-    return flask.render_template(
-        'metrics.html', prefix=prefix, metrics=metrics)
+    return flask.render_template('metrics.html', prefix=prefix, metrics=metrics)
 
 
 @app.route('/metrics_ajax')
