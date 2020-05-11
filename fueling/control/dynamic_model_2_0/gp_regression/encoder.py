@@ -16,10 +16,11 @@ class Encoder(nn.Module):
         self.conv1 = nn.Conv1d(u_dim, 200, u_dim, stride=3)
         self.conv2 = nn.Conv1d(200, 100, u_dim, stride=3)
         self.conv3 = nn.Conv1d(100, 100, u_dim, stride=3)
-        self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
 
     def forward(self, data):
         """Define forward computation and activation functions"""
+        logging.debug(data[0, 0, :])
         # original data shape: [sequency/window_size, batch_size, channel]
         logging.debug("Original data shape: {}".format(data.shape))
         # conv_input shape: [batch_size, channel, sequency/window_size]
@@ -27,18 +28,17 @@ class Encoder(nn.Module):
         logging.debug("Conv1 input data shape: {}".format(conv_input.shape))
 
         conv1_input = conv_input.detach()
-        tmp = self.conv1(conv1_input).detach()
-
-        conv2_input = self.relu(tmp)
+        conv2_input = self.conv1(conv1_input).detach()
         logging.debug("Conv2 input data shape: {}".format(conv2_input.shape))
 
-        conv3_input = self.relu(self.conv2(conv2_input))
+        conv3_input = self.conv2(conv2_input).detach()
         logging.debug("Conv3 input data shape: {}".format(conv3_input.shape))
 
-        fc_input = self.relu(self.conv3(conv3_input))
+        fc_input = self.conv3(conv3_input).detach()
         logging.debug("Fully-connected layer input data shape: {}".format(fc_input.shape))
 
-        data = self.fc(fc_input.view(fc_input.shape[0], -1))
+        data = self.fc(self.tanh(fc_input.view(fc_input.shape[0], -1)))
+        logging.debug(data)
 
         # encodered data shape: [batch_size, kernel_dim]
         logging.debug("Encoded data shape: {}".format(data.shape))

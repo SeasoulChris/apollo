@@ -31,7 +31,10 @@ class GPModel(ApproximateGP):
         self.warping = encoder_net_model
 
     def forward(self, input_data):
+        logging.debug(f'input data is {input_data[0, 0,:]}')
         input_data = self.warping(input_data)
+        logging.debug(f'input data is {input_data}')
         mean_x = self.mean_module(input_data)
+        logging.info(f'input data mean value is {mean_x}')
         covar_x = self.covar_module(input_data)
         return MultivariateNormal(mean_x, covar_x)
