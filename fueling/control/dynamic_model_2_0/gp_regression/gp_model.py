@@ -24,6 +24,7 @@ class GPModel(ApproximateGP):
         variational_strategy = MultitaskVariationalStrategy(VariationalStrategy(
             self, inducing_points, variational_distribution, learn_inducing_locations=True
         ), num_tasks=num_tasks)
+
         super(GPModel, self).__init__(variational_strategy)
         self.mean_module = gpytorch.means.ConstantMean(batch_shape=torch.Size([num_tasks]))
         # kernel
@@ -31,10 +32,10 @@ class GPModel(ApproximateGP):
         self.warping = encoder_net_model
 
     def forward(self, input_data):
-        logging.debug(f'input data is {input_data[0, 0,:]}')
+        logging.debug(f'input data is {input_data[-1, -1,:]}')
         input_data = self.warping(input_data)
         logging.debug(f'input data is {input_data}')
         mean_x = self.mean_module(input_data)
-        logging.info(f'input data mean value is {mean_x}')
+        logging.debug(f'input data mean value is {mean_x[:, 0]}')
         covar_x = self.covar_module(input_data)
         return MultivariateNormal(mean_x, covar_x)

@@ -186,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('-train',
                         '--training_data_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0417/train")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
     parser.add_argument('-plot',
                         '--plot_path',
                         type=str,
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         '-md',
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200420-214841")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200511-231316")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)

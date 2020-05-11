@@ -15,6 +15,7 @@ import torch.nn as nn
 
 
 from fueling.common import file_utils
+from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
@@ -33,13 +34,13 @@ class ValidationVisualization():
         self.model_path = args.gp_model_path
         self.validation_data_path = args.validation_data_path
         self.inducing_point_file = os.path.join(self.validation_data_path, 'inducing_points.npy')
-        self.dst_file_path = args.eval_result_path
-        self.evaluation_result_file = None
+        self.dst_file_path = args.validation_result_path
+        self.validation_result_file = None
 
         # parameters
         self.kernel_dim = args.kernel_dim
-        self.input_dim = None
-        self.output_dim = None
+        self.input_dim = feature_config["input_dim"]
+        self.output_dim = feature_config["output_dim"]
 
     def load_model(self):
         """
@@ -59,26 +60,38 @@ class ValidationVisualization():
             num_tasks=self.output_dim)
         self.likelihood.load_state_dict(likelihood_state_dict)
 
-    def load_data(self, test_features, test_labels):
+    def load_data(self):
         """
         validation data and inducint points
         """
         # features: [num_of_data_points * window_size * input_channel]
         # labels: [same num_of_data_points * output_channel]
-        self.input_dim = test_features.shape[-1]
-        self.output_dim = test_labels.shape[-1]
         # get inducing points
         self.inducing_points = torch.from_numpy(
             np.load(self.inducing_point_file, allow_pickle=True))
+        logging.debug(f'inducing points are {self.inducing_points}')
 
-    def evaluation(self, test_x, test_y, set_id, train_y=None):
+    def predict(self, input_x):
         """
-            result for each validation batch
+        make prediction at each point
+        """
+        logging.debug(f'updated_input is {input_x}')
+        self.model.eval()
+        self.likelihood.eval()
+        # input shape is [100, 1, 6] single data point
+        updated_input = torch.transpose(input_x.unsqueeze(0), 0, 1).type(torch.FloatTensor)
+        logging.debug(f'updated_input shape is {updated_input.shape}')
+        predictions = self.likelihood(self.model(updated_input))
+        logging.debug(f'variance is {predictions.variance.detach().numpy()}')
+        return predictions.mean.detach().numpy()
+
+    def get_validation_result(self, test_x, test_y, set_id, train_y=None, save_dict=True):
+        """
+        result for each validation batch
         """
         self.model.eval()
         self.likelihood.eval()
         test_x = torch.transpose(test_x, 0, 1).type(torch.FloatTensor)
-        logging.info(test_x.shape)
         # make prediction with input with uncertainty
         predictions = self.likelihood(self.model(test_x))
         lower, upper = predictions.confidence_region()
@@ -86,30 +99,34 @@ class ValidationVisualization():
         variance = predictions.variance
         logging.info(f'mean data shape is {mean.shape}')
         logging.info(f'variance shape is {variance.shape}')
-        evaluation_result = dict()
-        evaluation_result['validation_labels'] = test_y.numpy()
-        if train_y.numpy().any():
-            evaluation_result['training_labels'] = train_y.numpy()
-        evaluation_result['mean'] = mean.detach().numpy()
-        evaluation_result['upper'] = upper.detach().numpy()
-        evaluation_result['lower'] = lower.detach().numpy()
-        np.save(os.path.join(args.validation_data_path,
-                             f'{set_id}_evaluation_result.npy'), evaluation_result)
+        if save_dict:
+            # save result to npy for visualization
+            validation_result = dict()
+            validation_result['validation_labels'] = test_y.numpy()
+            if train_y.numpy().any():
+                validation_result['training_labels'] = train_y.numpy()
+            validation_result['mean'] = mean.detach().numpy()
+            validation_result['variance'] = variance.detach().numpy()
+            validation_result['upper'] = upper.detach().numpy()
+            validation_result['lower'] = lower.detach().numpy()
+            np.save(os.path.join(args.validation_data_path,
+                                 f'{set_id}_validation_result.npy'), validation_result)
         return mean.detach().numpy()
 
-    def evaluation_visualization(self):
+    def visualize(self):
         # get data from .npy file
-        logging.info(self.evaluation_result_file)
-        evaluation_result = np.load(self.evaluation_result_file, allow_pickle=True).item()
+        logging.info(self.validation_result_file)
+        validation_result = np.load(self.validation_result_file, allow_pickle=True).item()
+
         # ground truth
-        validation_labels = evaluation_result['validation_labels']
+        validation_labels = validation_result['validation_labels']
         # predicted mean value
-        mean = evaluation_result['mean']
+        mean = validation_result['mean']
         # confidence region
-        upper = evaluation_result['upper']
-        lower = evaluation_result['lower']
+        upper = validation_result['upper']
+        lower = validation_result['lower']
         # training data
-        training_labels = evaluation_result['training_labels']
+        training_labels = validation_result['training_labels']
 
         # plot
         fig, ax = plt.subplots(1)
@@ -119,7 +136,6 @@ class ValidationVisualization():
         # confidence region
         confidence_regions = []
         for idx in range(0, validation_labels.shape[0]):
-            logging.info(f'rectangle number is {idx}')
             rect = Rectangle((lower[idx, 0], lower[idx, 1]), upper[idx, 0] -
                              lower[idx, 0], upper[idx, 1] - lower[idx, 1])
             confidence_regions.append(rect)
@@ -141,19 +157,27 @@ class ValidationVisualization():
         plt.savefig(os.path.join(self.dst_file_path, "plot.png"))
         plt.show()
 
-    def validation(self, test_features, test_labels, set_id, train_labels):
-        self.load_data(test_features, test_labels)
+    def validate(self, test_features, test_labels, set_id, train_labels=None, is_plot=True):
+        self.load_data()
         logging.info(self.inducing_point_file)
         logging.info(self.inducing_points.shape)
         self.load_model()
-        # # check if evaluation result exists
+        # check if validation result exists
         logging.info(f'Validating set {set_id}')
-        self.evaluation_result_file = os.path.join(args.validation_data_path,
-                                                   f'{set_id}_evaluation_result.npy')
-        if not os.path.exists(self.evaluation_result_file):
-            self.evaluation(test_features, test_labels, set_id, train_labels)
-            logging.info(f'Evaluation results are saved at {self.evaluation_result_file}')
-        self.evaluation_visualization()
+        self.validation_result_file = os.path.join(args.validation_data_path,
+                                                   f'{set_id}_validation_result.npy')
+        if not os.path.exists(self.validation_result_file):
+            self.get_validation_result(test_features, test_labels, set_id, train_labels)
+        logging.info(f'Validation results are saved at {self.validation_result_file}')
+        if is_plot:
+            self.visualize()
+
+    def make_prediction(self, input_x):
+        self.load_data()
+        logging.info(self.inducing_point_file)
+        logging.info(self.inducing_points.shape)
+        self.load_model()
+        return self.predict(input_x)
 
 
 if __name__ == '__main__':
@@ -163,27 +187,27 @@ if __name__ == '__main__':
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training_dataset")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/validation_dataset")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/valid")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200506-235229")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200512-203124")
     parser.add_argument(
-        '--eval_result_path',
+        '--validation_result_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_results")
 
     # model parameters
     parser.add_argument('--kernel_dim', type=int, default=20)
-    parser.add_argument('-b', '--batch_size', type=int, default=512)
+    parser.add_argument('-b', '--batch_size', type=int, default=256)
 
     args = parser.parse_args()
-    validation = ValidationVisualization(args)
+    validator = ValidationVisualization(args)
 
     # setup data-loader
     train_dataset = DynamicModelDataset(args.training_data_path)
@@ -199,9 +223,18 @@ if __name__ == '__main__':
         train_labels = y
         break
 
+    validator.load_data()
+    logging.info(validator.inducing_point_file)
+    logging.info(validator.inducing_points.shape)
+    validator.load_model()
+
     for i, (X, y) in enumerate(valid_loader):
         logging.info(
             f'validation data batch: {i}, input size is {X.size()}, output size is {y.size()}')
-        validation.validation(X, y, i, train_labels)
+        for x_data_point, y_data_point in zip(X, y):
+            logging.info(f'Model input is {x_data_point[0,:]}')
+            logging.info(
+                f'Model prediction is {validator.predict(x_data_point)} and ground truth is {y_data_point}')
+        validator.validate(X, y, i, train_labels)
         # break for single batch test
         break

@@ -28,16 +28,16 @@ class Encoder(nn.Module):
         logging.debug("Conv1 input data shape: {}".format(conv_input.shape))
 
         conv1_input = conv_input.detach()
-        conv2_input = self.conv1(conv1_input).detach()
+        conv2_input = self.tanh(self.conv1(conv1_input).detach())
         logging.debug("Conv2 input data shape: {}".format(conv2_input.shape))
 
-        conv3_input = self.conv2(conv2_input).detach()
+        conv3_input = self.tanh(self.conv2(conv2_input).detach())
         logging.debug("Conv3 input data shape: {}".format(conv3_input.shape))
 
-        fc_input = self.conv3(conv3_input).detach()
+        fc_input = self.tanh(self.conv3(conv3_input).detach())
         logging.debug("Fully-connected layer input data shape: {}".format(fc_input.shape))
 
-        data = self.fc(self.tanh(fc_input.view(fc_input.shape[0], -1)))
+        data = self.fc(fc_input.view(fc_input.shape[0], -1))
         logging.debug(data)
 
         # encodered data shape: [batch_size, kernel_dim]

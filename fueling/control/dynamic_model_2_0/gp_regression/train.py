@@ -52,6 +52,7 @@ def valid_dataloader(valid_loader, model, likelihood, loss, use_cuda=False, anal
         pred = likelihood(model(X))
         valid_loss = -loss(pred, y)
         mean = pred.mean
+        logging.info(f'validation batch {i} mean is {mean[0,:]}')
         loss_history.append(valid_loss.item())
         # TODO(SHU): add a loss wrapper
         criterion = nn.MSELoss()
@@ -116,7 +117,7 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                                   verbose=False, threshold=0.0001, threshold_mode='rel',
-                                  cooldown=0, min_lr=0, eps=1e-08)
+                                  cooldown=0, min_lr=0.1, eps=1e-08)
 
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
@@ -239,9 +240,9 @@ if __name__ == "__main__":
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
     parser.add_argument('--kernel_dim', type=int, default=20)
     # optimizer parameters
-    parser.add_argument('-e', '--epochs', type=int, default=100)
+    parser.add_argument('-e', '--epochs', type=int, default=300)
     parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('-b', '--batch_size', type=int, default=512)
+    parser.add_argument('-b', '--batch_size', type=int, default=256)
 
     # argument to use cuda or not for training
     parser.add_argument('--use_cuda', type=bool, default=False)
