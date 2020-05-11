@@ -99,7 +99,6 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
-        requirement("tqdm"),
     ],
 )
 

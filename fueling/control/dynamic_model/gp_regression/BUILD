@@ -84,10 +84,6 @@ py_library(
         ":deep_encoding_net",
         ":model_conf",
         ":predict",
-        requirement("graphviz"),
-        requirement("tqdm"),
-        requirement("opt-einsum"),
-        requirement("progressbar"),
         requirement("pyro-ppl"),
     ],
 )

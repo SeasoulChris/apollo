@@ -21,12 +21,11 @@ load("@bazel_federation//setup:rules_cc.bzl", "rules_cc_setup")
 rules_cc_setup()
 
 # Python rules from latest code to have python3 supported.
-git_repository(
+http_archive(
     name = "rules_python",
-    remote = "https://github.com/michael4338/rules_python",
-    #branch = "master",  # To update the repo, enable this and disable the commit ID.
-    commit = "8e9004ee8360d541abfcbecb60ba8a6902a53047",
-    shallow_since = "1582668835 -0800",
+    url = "file:///home/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz",
+    sha256 = "701b8d84d05c8b867d510d1778bbe12cc6ac79d09274c6bd71db77f053c16bca",
+    strip_prefix = "rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047",
 )
 load("@rules_python//python:repositories.bzl", "py_repositories")
 py_repositories()
@@ -62,3 +61,17 @@ http_archive(
     sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
     strip_prefix = "gflags-2.2.2",
 )
+
+http_archive(
+    name = "com_google_glog",
+    url = "file:///home/libs/glog-0.4.0.tar.gz",
+    sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
+    strip_prefix = "glog-0.4.0",
+)
+
+# TODO(xiaoxq): We'll refer apollo as dependency soon.
+# Import apollo.
+#local_repository(
+#    name = "apollo",
+#    path = "/apollo",
+#)

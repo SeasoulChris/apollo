@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_binary(
     name = "raw_data_visualization",
     srcs = ["raw_data_visualization.py"],

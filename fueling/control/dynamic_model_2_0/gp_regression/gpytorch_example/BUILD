@@ -1,13 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "gp_model_example",
     srcs = ["gp_model_example.py"],
     deps = [
         "//fueling/common:logging",
-        requirement("gpytorch"),
     ],
 )
 

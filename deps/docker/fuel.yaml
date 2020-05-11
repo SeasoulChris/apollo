@@ -10,13 +10,14 @@ dependencies:
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar
+  - conda-forge::python-kubernetes
   - graphviz
   - h5py
   - keras-gpu
   - matplotlib
   - numpy
   - opencv
-  - pillow = 6.1   # To be compatible with torchvision
+  - pillow = 6.1  # To be compatible with torchvision
   - plotly
   - plotly::plotly-orca
   - protobuf

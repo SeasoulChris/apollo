@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "encoder",
     srcs = ["encoder.py"],
@@ -46,7 +44,6 @@ py_library(
         ":encoder",
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
-        requirement("gpytorch"),
     ],
 )
 

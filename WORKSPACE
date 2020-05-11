@@ -21,12 +21,11 @@ load("@bazel_federation//setup:rules_cc.bzl", "rules_cc_setup")
 rules_cc_setup()
 
 # Python rules from latest code to have python3 supported.
-git_repository(
+http_archive(
     name = "rules_python",
-    remote = "https://github.com/bazelbuild/rules_python",
-    # branch = "master",  # To update the repo, enable this and disable the commit ID.
-    commit = "38f86fb55b698c51e8510c807489c9f4e047480e",
-    shallow_since = "1575517988 -0500",
+    url = "file:///home/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz",
+    sha256 = "701b8d84d05c8b867d510d1778bbe12cc6ac79d09274c6bd71db77f053c16bca",
+    strip_prefix = "rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047",
 )
 load("@rules_python//python:repositories.bzl", "py_repositories")
 py_repositories()
@@ -38,6 +37,7 @@ load("@rules_python//python:pip.bzl", "pip3_import")
 pip3_import(
    name = "default_deps",
    requirements = "//deps:default.txt",
+   timeout = 1000,
 )
 load("@default_deps//:requirements.bzl", "pip_install")
 pip_install()
