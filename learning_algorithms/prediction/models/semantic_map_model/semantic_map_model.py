@@ -313,6 +313,65 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
 
         return pred_traj
 
+
+class SemanticMapSelfLSTMEgoAttentionModel(nn.Module):
+    def __init__(self, pred_len, observation_len,
+                 embed_size=64, hidden_size=128,
+                 cnn_net=models.mobilenet_v2, pretrained=True):
+        super(SemanticMapSelfLSTMEgoAttentionModel, self).__init__()
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
+        self.pred_len = pred_len
+        self.observation_len = observation_len
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+
+        self.disp_embed = torch.nn.Sequential(
+            nn.Linear(2, embed_size),
+            nn.ReLU(),
+        )
+
+        self.h0, self.c0 = generate_lstm_states(hidden_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size,
+                            num_layers=1, batch_first=True)
+
+        self.pred_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size*2 + self.cnn_out_size, 2),
+        )
+
+    def forward(self, X):
+        img = X[0]
+        obs_pos_rel = X[3]
+        obs_pos_step = X[4]
+        ego_pos_rel = X[6]
+        ego_pos_step = X[7]
+        N = obs_pos_rel.size(0)
+        obs_ht, obs_ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
+        ego_ht, ego_ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
+
+        img_embedding = self.cnn(img)
+        img_embedding = img_embedding.view(img_embedding.size(0), -1)
+        pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
+
+        for t in range(1, self.observation_len + self.pred_len):
+            if t < self.observation_len:
+                curr_obs_pos_step = obs_pos_step[:, t, :].float()
+                curr_obs_pos = obs_pos_rel[:, t, :].float()
+                curr_ego_pos_step = ego_pos_step[:, t, :].float()
+            else:
+                pred_input = torch.cat((obs_ht.view(N, -1), ego_ht.view(N, -1), img_embedding), 1)
+                curr_obs_pos_step = self.pred_layer(pred_input).float().clone()
+                curr_obs_pos = curr_obs_pos + curr_obs_pos_step
+                pred_traj[:, t - self.observation_len, :] = curr_obs_pos.clone()
+
+            obs_disp_embedding = self.disp_embed(curr_obs_pos_step.clone()).view(N, 1, -1)
+            ego_disp_embedding = self.disp_embed(curr_ego_pos_step.clone()).view(N, 1, -1)
+            _, (obs_ht, obs_ct) = self.lstm(obs_disp_embedding, (obs_ht, obs_ct))
+            _, (ego_ht, ego_ct) = self.lstm(ego_disp_embedding, (ego_ht, ego_ct))
+
+        return pred_traj
+
+
 class SemanticMapSelfLSTMMultiModal(nn.Module):
     def __init__(self, pred_len, observation_len,
                  embed_size=64, hidden_size=128, num_modes=2,
