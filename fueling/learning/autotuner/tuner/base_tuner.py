@@ -16,6 +16,7 @@ from fueling.learning.autotuner.client.cost_computation_client import CostComput
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+import fueling.common.file_utils as file_utils
 
 
 flags.DEFINE_string(
@@ -87,20 +88,21 @@ class BaseTuner():
         logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def read_configs(self, UserConfClass):
-        tuner_conf = TunerConfigs()
-        user_conf = UserConfClass()  # Basic configuration corresponding to user module
+        tuner_config_filename = flags.FLAGS.tuner_param_config_filename
+        if not file_utils.file_exists(tuner_config_filename):
+            raise Exception(f"No such config file found: {tuner_config_filename}")
 
         # Read and parse config from a pb file
+        tuner_conf = TunerConfigs()
         try:
-            proto_utils.get_pb_from_text_file(
-                flags.FLAGS.tuner_param_config_filename, tuner_conf,
-            )
+            proto_utils.get_pb_from_text_file(tuner_config_filename, tuner_conf)
             logging.debug(f"Parsed autotune config files {tuner_conf}")
 
         except Exception as error:
             logging.error(f"Failed to parse autotune config: {error}")
             sys.exit(1)
 
+        user_conf = UserConfClass()  # Basic configuration corresponding to user module
         try:
             proto_utils.get_pb_from_text_file(
                 tuner_conf.tuner_parameters.default_conf_filename, user_conf,

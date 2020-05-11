@@ -23,6 +23,7 @@ class CostComputationClient(object):
         self.service_token = None
         self.max_retries = MAX_RETRIES
         self.request_timeout_in_sec = REQUEST_TIMEOUT_IN_SEC
+
         running_role = (f"{getpass.getuser()}-{running_role_postfix}" if running_role_postfix
                         else getpass.getuser())[:18]  # too long string may induce job-failing
 

@@ -21,19 +21,24 @@ function start_service() {
   source /home/libs/bash.rc
   source /apollo/scripts/apollo_base.sh
 
-  STUDY_NAME="autotuner-$(date +%Y%m%d_%H%M)"
-  LOG_DIR="/mnt/bos/autotuner/optuna/$STUDY_NAME"
+  echo "Study Name: $STUDY_NAME. Config File: $CONFIG_FILE. Worker Count: $WORKER_COUNT"
+  # where images/logs/config are stored
+  OUT_DIR="/mnt/bos/autotuner/$STUDY_NAME"
+  LOG_DIR="$OUT_DIR/logs"
   mkdir -p $LOG_DIR
 
-  LOG_NAME=$LOG_DIR/optuna_$MY_POD_NAME.log
+  LOG_NAME=$LOG_DIR/$MY_POD_NAME.log
   echo "Saving log to $LOG_NAME"
 
-  # TODO(vivian): allow user to set worker_number and tuner_param_config_filename
   bazel run //fueling/learning/autotuner/tuner:optuna_super_tuner -- \
+    --running_role_postfix=$ROLE \
     --cost_computation_service_url=$COST_SERVICE_URL \
+    --tuner_param_config_filename=$CONFIG_FILE \
+    --tuner_storage_dir=$OUT_DIR \
     --study_storage_url=$STUDY_STORAGE_URL \
-    --tuner_param_config_filename=fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt \
     --study_name=$STUDY_NAME \
+    --n_coworkers=$WORKER_COUNT \
+
     2>&1 | tee $LOG_NAME; test ${PIPESTATUS[0]} -eq 0
 }
 
@@ -46,7 +51,7 @@ function main() {
   local cluster=$1
   case "$cluster" in
     az-staging)
-      COST_SERVICE_URL="40.77.110.196:50052"
+      COST_SERVICE_URL="180.76.111.129:50052"
       STUDY_STORAGE_URL="40.77.100.63:5432"
       ;;
     bce-platform)

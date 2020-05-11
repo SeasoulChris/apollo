@@ -3,6 +3,7 @@
 
 import errno
 import os
+import time
 
 import fueling.common.logging as logging
 
@@ -45,6 +46,19 @@ def list_files_with_suffix(dir_path, suffix):
     """List all sub-files with suffix in given dir_path."""
     return [os.path.join(root, f) for root, _, files
             in os.walk(dir_path) for f in files if f.endswith(suffix)]
+
+
+def file_exists(filename):
+    """Check if specified file is existing, with retry in case the mounted dir has network delay."""
+    for t in range(5):
+        if os.path.exists(filename):
+            return True
+        elif t == 4:
+            return False
+        else:
+            sleep_time_in_min = t + 1
+            logging.info(f"Retry checking {filename} in {sleep_time_in_min} min...")
+            time.sleep(60 * sleep_time_in_min)
 
 
 def fuel_path(path):

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: optuna-worker
 spec:
-  parallelism: 2
+  parallelism: __WORKER_COUNT__
   template:
     spec:
       restartPolicy: Never
@@ -21,6 +21,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: STUDY_NAME
+              value: __STUDY_NAME__
+            - name: CONFIG_FILE
+              value: __CONFIG_FILE__
+            - name: WORKER_COUNT
+              value: "__WORKER_COUNT__"
+            - name: ROLE
+              value: __ROLE__
           envFrom:
             - secretRef:
                 name: postgres-secrets

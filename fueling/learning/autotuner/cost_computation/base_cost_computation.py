@@ -18,6 +18,7 @@ import fueling.common.logging as logging
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.common.proto_utils as proto_utils
+import fueling.common.file_utils as file_utils
 
 # Flags
 flags.DEFINE_string("token", None, "Sim service token.")
@@ -139,16 +140,8 @@ class BaseCostComputation(BasePipeline):
             raise Exception(f"Failed to run scenario {scenario_id}")
 
         record_absolute_dir = f"{self.get_absolute_iter_dir()}/{job_id}"
-        # Retry in case the BOS dir mounted has network delay
-        for t in range(1, 6):
-            if os.path.exists(f"{record_absolute_dir}/{record_filename}"):
-                logging.info(f"Found result bag {record_filename}")
-                break
-            elif t == 5:
-                raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
-            else:
-                logging.info(f"Retry fetching result bag in {t} min...")
-                time.sleep(60 * t)  # sleep time increases from 1min, to 4min
+        if not file_utils.file_exists(f"{record_absolute_dir}/{record_filename}"):
+            raise Exception(f"No bag found after running scenario: {record_absolute_dir}")
 
         logging.info(f"Timer: total run_scenario - {time.perf_counter() - tic_start:0.04f} sec")
         return record_absolute_dir

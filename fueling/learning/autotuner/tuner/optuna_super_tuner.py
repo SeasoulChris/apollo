@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import math
 
 
 from absl import flags
@@ -21,16 +22,23 @@ flags.DEFINE_string(
     "",
     "study name for optuna, this is necessary if running optuna in parallel. Otherwise, generate a random name."
 )
+flags.DEFINE_integer(
+    "n_coworkers",
+    1,
+    "number of optuna workers running in parallel (including itself)"
+)
 
 
 class OptunaSuperTuner(OptunaOptimizationTuner):
     """Super Optuna tuner that spawns multiple tuners on a distributed system"""
 
     def init_optimizer_visualizer(self, tuner_parameters):
-        n_iterations = self.tuner_param_config_pb.tuner_parameters.n_iter
         study_name = flags.FLAGS.study_name or f"autotuner-{tuner.timestamp}"
-        logging.info(f"Running {study_name} for {n_iterations} trials...")
 
+        overall_iterations = self.tuner_param_config_pb.tuner_parameters.n_iter
+        self.n_iter = math.ceil(overall_iterations / flags.FLAGS.n_coworkers)
+
+        logging.info(f"Running {study_name} for {self.n_iter} trials...")
         self.visualizer = optuna.visualization
         self.optimizer = optuna.create_study(
             direction="maximize",
