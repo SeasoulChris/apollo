@@ -47,6 +47,7 @@ D_KIT_TEAM = [
     'machao20@baidu.com',
     'v_lishuanghua@baidu.com',
     'v_panxuechao@baidu.com',
+    'v_zhangheyi@baidu.com',
     'wangxitong01@baidu.com',
 ]
 SIMULATION_TEAM = [
