@@ -135,15 +135,8 @@ practices are:
 
 ### Debug
 
-1. Monitor jobs with general `kubectl` commands.
-
-   * `kubectl get pods`, you'll find running PODs in the cluster.
-   * `kubectl logs -f <POD>`, you'll see all logs on that POD. Generally you may
-     need to check the `driver` logs often, and sometimes check the `exec` logs
-     to debug the executor code.
-   * Please study this
-     [Cheet Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet) to
-     get more from the cluster!
+1. Goto [usa-data.baidu.com](http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:warehouse-service:8000/proxy/jobs)
+   to find your job, and explore around to find the pods and logs.
 
 1. Please request resources carefully, as it may block other teammates' work.
 
