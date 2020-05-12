@@ -19,7 +19,7 @@ import fueling.common.file_utils as file_utils
 flags.DEFINE_string('role', '', 'Running as another role instead of the job submitter.')
 
 # Env.
-flags.DEFINE_string('image', 'hub.baidubce.com/apollofuel/spark:bazel2', 'Docker image.')
+flags.DEFINE_string('image', 'hub.baidubce.com/apollofuel/spark:latest', 'Docker image.')
 flags.DEFINE_enum('node_selector', 'CPU', ['CPU', 'GPU', 'ANY'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
