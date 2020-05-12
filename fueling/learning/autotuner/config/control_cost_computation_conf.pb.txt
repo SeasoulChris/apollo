@@ -19,6 +19,22 @@ cost_params {
 
 cost_metrics {
   weighting_metrics {
+    metrics_name: "station_err_std"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "speed_err_std"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "lateral_err_std"
+    weighting_factor: 3.0
+  }
+  weighting_metrics {
+    metrics_name: "heading_err_std"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
     metrics_name: "station_err_std_harsh"
     weighting_factor: 1.0
   }
@@ -28,7 +44,7 @@ cost_metrics {
   }
   weighting_metrics {
     metrics_name: "lateral_err_std_harsh"
-    weighting_factor: 1.0
+    weighting_factor: 4.0
   }
   weighting_metrics {
     metrics_name: "heading_err_std_harsh"
@@ -44,7 +60,7 @@ cost_metrics {
   }
   weighting_metrics {
     metrics_name: "lateral_err_peak"
-    weighting_factor: 1.0
+    weighting_factor: 4.0
   }
   weighting_metrics {
     metrics_name: "heading_err_peak"
