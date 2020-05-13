@@ -39,6 +39,7 @@ feature_config = {
     "COMPENSATE_CHASIS": True,  # Whether compensate chasis with poses
     "CHASIS_DELTA_T": 0.011,  # The max gap between chasis messages, in seconds
     "CHASIS_DELTA_TOLERANCE_RATE": 0.25,  # Discard task if more than this rate of chasis have gaps
+    "SAMPLE_SIZE": 6000,  # Maximum data points for each category
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""

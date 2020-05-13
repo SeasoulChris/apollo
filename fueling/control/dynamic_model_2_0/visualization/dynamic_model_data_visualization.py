@@ -9,28 +9,16 @@ import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index
 import fueling.common.logging as logging
 import fueling.control.common.multi_vehicle_plot_utils as plot_utils
+import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
+       feature_utils
 
-flags.DEFINE_integer('percentile', '50', 'percentile of the data.')
+flags.DEFINE_integer('percentile', 50, 'percentile of the data.')
 
 
 class DynamicModelDatasetVisualization(BasePipeline):
     """Dynamic model 2.0 dataset visualization"""
-
-    def filter_dimensions(self, segment):
-        """From segment(M, N) to segment(m, n) according to config"""
-        chosen_columns = ['speed', 'throttle', 'brake', 'steering']
-        chosen_column_idxs = [segment_index[column] for column in chosen_columns]
-        column_percentile = np.percentile(segment[:, chosen_column_idxs],
-                                          self.FLAGS.get('percentile'), axis=0)
-        filtered_segment = []
-        for idx, column in enumerate(chosen_columns):
-            filtered_segment.append((column, column_percentile[idx]))
-            logging.info(F'column {column}: percentile value {column_percentile[idx]}')
-        return filtered_segment
-
 
     def run(self):
         """Run."""
@@ -47,7 +35,7 @@ class DynamicModelDatasetVisualization(BasePipeline):
             # RDD(segments), each segment is (100 x 22) as defined in current config
             .map(read_h5)
             # PairRDD(index, value), the value is a certain result aggregated from 100
-            .flatMap(self.filter_dimensions)
+            .flatMap(lambda x: feature_utils.filter_dimensions(x, self.FLAGS.get('percentile')))
             # PairRDD(index, (values))
             .groupByKey())
 

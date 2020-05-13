@@ -13,6 +13,9 @@ py_library(
 py_library(
     name = "feature_extraction_utils",
     srcs = ["feature_extraction_utils.py"],
+    deps = [
+        "//fueling/control/dynamic_model_2_0/conf:model_conf",
+    ]
 )
 
 py_binary(

@@ -18,7 +18,7 @@ py_binary(
         "//fueling/common:h5_utils",
         "//fueling/common:logging",
         "//fueling/control/common:multi_vehicle_plot_utils",
-        "//fueling/control/dynamic_model_2_0/conf:model_conf",
+        "//fueling/control/dynamic_model_2_0/feature_extraction:feature_extraction_utils",
     ],
 )
 
