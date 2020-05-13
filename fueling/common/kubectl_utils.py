@@ -10,7 +10,10 @@ class Kubectl(object):
 
     def __init__(self, config_file=None):
         """init"""
-        config.load_kube_config(config_file)
+        if config_file:            
+            config.load_kube_config(config_file)
+        else:
+            config.load_incluster_config()
         self.coreV1Api = client.CoreV1Api()
         self.appsV1Api = client.AppsV1Api()
 
