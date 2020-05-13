@@ -12,8 +12,13 @@ from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
 from fueling.planning.models.trajectory_imitation_model \
-    import TrajectoryImitationCNNModel, TrajectoryImitationCNNLoss, \
-    TrajectoryImitationRNNModel, TrajectoryImitationRNNLoss, TrajectoryImitationWithEnvRNNLoss
+    import TrajectoryImitationCNNModel, \
+    TrajectoryImitationRNNModel,\
+    TrajectoryImitationRNNMoreConvModel,\
+    TrajectoryImitationRNNUnetResnet18Model,\
+    TrajectoryImitationCNNLoss, \
+    TrajectoryImitationRNNLoss, \
+    TrajectoryImitationWithEnvRNNLoss
 import fueling.common.proto_utils as proto_utils
 
 
