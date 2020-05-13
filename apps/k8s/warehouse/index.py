@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Serve data imported in MongoDB."""
 
+from collections import defaultdict
 from datetime import timezone
 import collections
 import datetime
@@ -34,6 +35,7 @@ PORT = 8000
 WORKERS = 5
 PAGE_SIZE = 30
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
+TIMEZONE = 'America/Los_Angeles'
 
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
@@ -203,6 +205,23 @@ def jobs_hdl():
     return flask.render_template('jobs.html', jobs_list=sorted_job_list)
 
 
+@app.route('/pod_describe/<path:pod_name>/<path:namespace>')
+def pod_describe_hdl(pod_name, namespace='default'):
+    """Handler of the pod info page"""
+    return flask.render_template('pod_describe.html',
+                                 pod_info=str(kubectl.describe_pod(pod_name, namespace)))
+
+
+@app.route('/pod_delete', methods=['POST'])
+def pod_delete_hdl():
+    """Handler of the pod delete action"""
+    pod_name = flask.request.form.get('pod_name', '')
+    namespace = flask.request.form.get('namespace', '')
+    if pod_name and namespace:
+        return str(kubectl.delete_pod(pod_name, namespace))
+    else:
+        return 'illegal pod name/namespace'
+
 # TODO(Andrew):
 # 1. For the log page, it's OK to load and show all logs at once as a start. But in the
 # future it would be every fancy if it updates at realtime! Just like "kubectl logs -f <pod>".
@@ -213,7 +232,7 @@ def jobs_hdl():
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
-    logs = kubectl.logs(pod_name=pod_name, namespace=namespace)
+    logs = kubectl.logs(pod_name, namespace)
     return flask.render_template('pod_log.html', logs=logs)
 
 
@@ -282,4 +301,5 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
+
 

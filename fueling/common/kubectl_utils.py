@@ -10,10 +10,7 @@ class Kubectl(object):
 
     def __init__(self, config_file=None):
         """init"""
-        if config_file:
-            config.load_kube_config(config_file)
-        else:
-            config.load_incluster_config()
+        config.load_kube_config(config_file)
         self.coreV1Api = client.CoreV1Api()
         self.appsV1Api = client.AppsV1Api()
 
@@ -31,11 +28,11 @@ class Kubectl(object):
         """
         return self.coreV1Api.read_namespaced_pod(name=name, namespace=namespace)
 
-    def logs(self, pod_name, namespace='default'):
+    def logs(self, name, namespace='default'):
         """kubectl logs"""
-        return self.coreV1Api.read_namespaced_pod_log(name=pod_name, namespace=namespace)
+        return self.coreV1Api.read_namespaced_pod_log(name=name, namespace=namespace)
 
-    def delete_pods(self, name, namespace='default'):
+    def delete_pod(self, name, namespace='default'):
         """delete pods
         return type: V1Status
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Status.md
@@ -56,4 +53,3 @@ class Kubectl(object):
         """
         return self.appsV1Api.delete_namespaced_deployment(name=deployment_name,
                                                            namespace=namespace)
-

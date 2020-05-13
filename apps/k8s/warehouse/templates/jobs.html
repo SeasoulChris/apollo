@@ -74,13 +74,13 @@
 {% endblock %}
 {% block body %}
 <div class="panel panel-default">
-   <div class="panel-heading">Jobs</div>
+   <div class="panel-heading">Apps</div>
    <div class="panel-body">
       <div class="nav">
          {% for job_id, job_info in jobs_list %}
          <div class="item">
             <div class="head">
-		    <div style="width: 75%;">{{ job_info.name }} {{ job_info.owner }} {{ job_info.job_id }}</div>
+              <div style="width: 75%;">{{ job_info.name }}</div>
               <div style="width: 5%; text-align: right">{{ job_info.phase }}</div>
               <div style="width: 15%; text-align: right">{{ job_info.creation_timestamp | timestamp_to_time }}</div>
               <div style="width: 5%; text-align: right"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAOCAMAAADt5EdyAAAAdVBMVEUAAACZmZmZmZmZmZmZmZmZmZmZmZmZmZmYmJiYmJiYmJiUlJSampqWlpaUlJSZmZmZmZmZmZmYmJiZmZmZmZmYmJiampqZmZmYmJiXl5eYmJiYmJiYmJiYmJiXl5eZmZmZmZmYmJiXl5eVlZWZmZmVlZWZmZmeopVCAAAAJnRSTlMA+uPL9PDrxKw0JRIMCAT42r+0o5mQhHppYVhPPiwYz828R0YeHdDVMpMAAACDSURBVBjTbclXDoMwAATRtU3vvUP63v+IiUgxwbyvkQa5CmEKlQvFs7kixROWjG60Hy6zBXhI5jG24gvlHS+BZLFdSUEZYBU49BI9PDozPmaHJb5K2j5+fJsV3qp1aJPFeo2a1oQ/t5QNgIbpFTujYIuWYoRhEPQoBhzoSfY41FkdtCdWvgi2uS1VaQAAAABJRU5ErkJggg==" alt=""></div>
@@ -90,11 +90,13 @@
                   <table class="table table-striped">
                      <thead>
                         <tr>
-                           <th style="width: 60%">Name</th>
+                           <th style="width: 35%">Name</th>
                            <th style="width: 10%;">Phase</th>
                            <th style="width: 15%;">Begin Time</th>
                            <th style="width: 10%;">Duration</th>
-                           <th style="width: 5%;">Logs</th>
+                           <th style="width: 10%;">Delete</th>
+                           <th style="width: 10%;">Describe</th>
+                           <th style="width: 10%;">Logs</th>
                         </tr>
                      </thead>
                      <tbody>
@@ -104,7 +106,9 @@
                            <td>{{ pod.phase }}</td>
                            <td>{{ pod.creation_timestamp | timestamp_to_time }}</td>
                            <td>{{ pod.duration_ns | ns_to_duration }}</td>
-                           <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}">View</a></td>
+                           <td><a href="javascript:void(0);" onclick="delete_pod('{{ pod.podname }}', '{{ job_info.namespace }}')">Delete</a></td>
+                           <td><a href="{{ url_for('pod_describe_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}" target="_blank">Desc</a></td>
+                           <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}" target="_blank">Logs</a></td>
                         </tr>
                         {% endfor %}
                      </tbody>
@@ -124,6 +128,7 @@
        "WebkitTransition": "webkitTransitionEnd"
    }
    
+
    for (var key in transitions) {
        for (var i = 0, l = ctx.length; i < l; i++) {
            ctx[i].addEventListener(transitions[key], function () {
@@ -156,5 +161,25 @@
            }
        })
    }
+
+   function delete_pod(name, namespace){
+   	if(confirm('Confirm delete?')){
+   		$.ajax({
+        url:"/pod_delete", 
+        async:false,
+        data:{"pod_name": name, "namespace": namespace},
+        type: "POST",
+        success:function(req){
+          console.log(req);
+        },
+        error:function(){
+          console.log('Error in deleting ' + name);
+        }
+      });
+   	  }
+   }
 </script>
 {% endblock %}
+
+
+
