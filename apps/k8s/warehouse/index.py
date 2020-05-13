@@ -216,7 +216,7 @@ def pod_delete_hdl():
     """Handler of the pod delete action"""
     pod_name = flask.request.form.get('pod_name', '')
     namespace = flask.request.form.get('namespace', '')
-    if pod_name and namespace:
+    if pod_name and namespace and pod_name.startswith('job-'):
         return str(kubectl.delete_pod(pod_name, namespace))
     else:
         return 'illegal pod name/namespace'
@@ -300,5 +300,4 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
-
 
