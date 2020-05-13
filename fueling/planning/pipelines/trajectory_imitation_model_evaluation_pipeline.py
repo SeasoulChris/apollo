@@ -7,6 +7,7 @@ import shutil
 import cv2 as cv
 import numpy as np
 import torch
+from tqdm import tqdm
 
 from modules.planning.proto import planning_semantic_map_config_pb2
 
@@ -82,10 +83,11 @@ def calculate_rnn_displacement_error(pred, y):
 
 
 def visualize_rnn_result(renderer, img_feature, coordinate_heading,
-                         message_timestamp_sec, output_dir, pred, y):
+                         message_timestamp_sec, pred_points_dir, pos_dists_dir,
+                         pos_boxs_dir, pred, y):
 
-    batched_pred_point = pred[2]
-    for i, pred_point in enumerate(batched_pred_point):
+    batched_pred_points = pred[2]
+    for i, pred_point in enumerate(batched_pred_points):
         # Draw pred_box in blue
         pred_box_img = renderer.draw_agent_box_future_trajectory(
             pred_point.cpu().numpy(), coordinate_heading[i], solid_box=False)
@@ -115,8 +117,38 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
         merged_img = renderer_utils.img_notblack_stacking(
             pred_pose_img, merged_img)
 
-        cv.imwrite(os.path.join(output_dir, "{:.3f}".format(
-            message_timestamp_sec[i]) + ".png"), merged_img)
+        cv.imwrite(os.path.join(pred_points_dir, "{:.3f}.png".format(
+            message_timestamp_sec[i])), merged_img)
+
+    batched_pred_pos_dists = pred[0]
+    for i, pred_pos_dist in enumerate(batched_pred_pos_dists):
+        # Draw out pred_pos_dist in a sub folder
+        pred_pos_dist_sub_dir = os.path.join(pos_dists_dir, '{:.3f}/'.
+                                         format(message_timestamp_sec[i]))
+        os.mkdir(pred_pos_dist_sub_dir)
+        for t, single_frame_pos in enumerate(pred_pos_dist):
+            origianl_shape = single_frame_pos.shape
+            cv.imwrite(os.path.join(pred_pos_dist_sub_dir,
+                                    "pos_dist @ {} deltaT.png".format(t)),
+                       single_frame_pos.view(origianl_shape[1],
+                                             origianl_shape[2],
+                                             origianl_shape[0]).
+                       cpu().numpy())
+
+    batched_pred_boxs = pred[1]
+    for i, pred_box in enumerate(batched_pred_boxs):
+        # Draw out pred_pos_dist in a sub folder
+        pred_boxs_sub_dir = os.path.join(pos_boxs_dir, '{:.3f}/'.
+                                         format(message_timestamp_sec[i]))
+        os.mkdir(pred_boxs_sub_dir)
+        for t, single_frame_box in enumerate(pred_box):
+            origianl_shape = single_frame_box.shape
+            cv.imwrite(os.path.join(pred_boxs_sub_dir,
+                                    "pred_box @ {} deltaT.png".format(t)),
+                       single_frame_box.view(origianl_shape[1],
+                                             origianl_shape[2],
+                                             origianl_shape[0]).
+                       cpu().numpy())
 
 
 def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
@@ -135,8 +167,14 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
             shutil.rmtree(output_dir)
         os.mkdir(output_dir)
         print("Making output directory: " + output_dir)
+        pred_points_dir = os.path.join(output_dir, 'pred_points/')
+        os.mkdir(pred_points_dir)
+        pos_dists_dir = os.path.join(output_dir, 'pred_pos_dists/')
+        os.mkdir(pos_dists_dir)
+        pos_boxs_dir = os.path.join(output_dir, 'pred_boxs/')
+        os.mkdir(pos_boxs_dir)
 
-        for X, y, img_feature, coordinate_heading, message_timestamp_sec in test_loader:
+        for X, y, img_feature, coordinate_heading, message_timestamp_sec in tqdm(test_loader):
             X, y = cuda(X), cuda(y)
             pred = model(X)
             displacement_error, heading_error, v_error = \
@@ -146,7 +184,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
             v_errors.append(v_error)
             visualize_rnn_result(
                 output_renderer, img_feature, coordinate_heading,
-                message_timestamp_sec, output_dir, pred, y)
+                message_timestamp_sec, pred_points_dir, pos_dists_dir, pos_boxs_dir, pred, y)
 
         average_displacement_error = 'average displacement error: {}.'.format(
             np.mean(displcement_errors))
