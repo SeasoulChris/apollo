@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Serve data imported in MongoDB."""
 
-from collections import defaultdict
 from datetime import timezone
 import collections
 import datetime
