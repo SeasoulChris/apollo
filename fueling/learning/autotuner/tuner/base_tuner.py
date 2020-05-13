@@ -40,6 +40,7 @@ flags.DEFINE_string(
     "Optional postfix (e.g., mrac-control) of the running_role"
 )
 
+
 class BaseTuner():
     """Basic functionality for NLP."""
 
@@ -261,8 +262,10 @@ class BaseTuner():
         try:
             self.optimize()
             self.get_result()
-            self.save_result()
+        except Exception as error:
+            logging.error(error)
         finally:
+            self.save_result()
             self.cleanup()
 
     def cleanup(self):

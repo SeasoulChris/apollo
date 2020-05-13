@@ -14,6 +14,7 @@ import pyspark_utils.op as spark_op
 # Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
+from fueling.learning.autotuner.common.utils import run_with_retry
 import fueling.common.logging as logging
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
@@ -124,7 +125,9 @@ class BaseCostComputation(BasePipeline):
         record_filename = f"{job_id}.record"
 
         self.set_sim_channel()
-        status = SimClient.run_scenario(
+        status = run_with_retry(
+            3,  # max retries
+            SimClient.run_scenario,
             self.FLAGS.get("token"),
             self.FLAGS.get("iteration_id"),
             scenario_id,

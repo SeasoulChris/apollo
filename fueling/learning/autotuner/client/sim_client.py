@@ -8,6 +8,8 @@ import fueling.learning.autotuner.proto.git_info_pb2 as git_info_pb2
 import fueling.learning.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 import fueling.common.logging as logging
 
+REQUEST_TIMEOUT_IN_SEC = 600
+
 
 class SimClient(object):
     CHANNEL_URL = "localhost:50051"
@@ -18,7 +20,7 @@ class SimClient(object):
 
     @classmethod
     def initialize(cls, service_token, git_info, num_workers, dynamic_model):
-        with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
+        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
             init_param = sim_service_pb2.InitParam(
                 git_info=git_info,
@@ -33,7 +35,7 @@ class SimClient(object):
     def run_scenario(
         cls, service_token, iteration_id, scenario_id, config, record_output_path, record_output_file
     ):
-        with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
+        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
 
             job_info = sim_service_pb2.JobInfo(
@@ -46,12 +48,12 @@ class SimClient(object):
             )
 
             logging.info(f"Running scenario {scenario_id} for {record_output_file} ...")
-            status = stub.RunScenario(job_info)
+            status = stub.RunScenario(job_info, timeout=REQUEST_TIMEOUT_IN_SEC)
         return status
 
     @classmethod
     def close(cls, service_token_str):
-        with grpc.insecure_channel(cls.CHANNEL_URL) as channel:
+        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
             stub = sim_service_pb2_grpc.SimServiceStub(channel)
             token = sim_service_pb2.Token(token=service_token_str)
 

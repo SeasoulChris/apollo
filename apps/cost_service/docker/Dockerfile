@@ -1,4 +1,4 @@
-FROM apolloauto/fuel-client:20200423_1727
+FROM apolloauto/fuel-client:20200511_1151
 
 WORKDIR /
 

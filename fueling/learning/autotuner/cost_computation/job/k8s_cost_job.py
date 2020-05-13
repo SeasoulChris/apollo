@@ -24,7 +24,7 @@ class K8sCostJob(BaseCostJob):
     def __init__(self):
         self.cancel_job = False
 
-    def submit(self, options):
+    def run(self, options):
         entrypoint = "fueling/learning/autotuner/cost_computation/profiling_cost_computation.py"
 
         client_flags = {
@@ -40,7 +40,8 @@ class K8sCostJob(BaseCostJob):
         client = SparkSubmitterClient(entrypoint, client_flags, options)
         spark_job_id = client.submit()
         cost_job_info = f"{options['role']}/{options['token']}/{options['iteration_id']}"
-        self.wait(cost_job_info, spark_job_id)
+        success = self.wait(cost_job_info, spark_job_id)
+        return success
 
     def wait(self, cost_job_info, spark_job_id):
         """Wait until the given job finishes"""
@@ -52,7 +53,7 @@ class K8sCostJob(BaseCostJob):
         while job_status not in JOB_END_STATUS:
             if self.cancel_job:
                 logging.warn(f"Cancelled spark job {spark_job_id} for {cost_job_info}.")
-                return
+                return True
 
             time.sleep(WAIT_INTERVAL_SECONDS)
 
@@ -62,8 +63,10 @@ class K8sCostJob(BaseCostJob):
                 continue
 
             job_status = json.loads(res.json() or '{}').get('status')
-            if job_status == "Preparing" and is_up:
-                """Preparing status happens when the pod is not found"""
+            if job_status == "Preparing" and prev_job_status == "Preparing" and is_up:
+                # Preparing status happens when the pod is not found.
+                # Checking twice (previous and current status), in case the error
+                # is due to a network issue.
                 raise Exception(f"Job {spark_job_id} from {cost_job_info} is killed unexpectedly.")
 
             if job_status != "Preparing":
@@ -76,6 +79,9 @@ class K8sCostJob(BaseCostJob):
                 logging.info(log_msg)
 
             prev_job_status = job_status
+
+        logging.info(f'{cost_job_info} with spark job {spark_job_id} done with status {job_status}.')
+        return job_status == 'Completed'
 
     def cancel(self):
         # TODO(vivian): delete the spark driver

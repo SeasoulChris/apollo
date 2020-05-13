@@ -4,13 +4,14 @@ import getpass
 import grpc
 import signal
 
+from fueling.learning.autotuner.common.utils import run_with_retry
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cost_service_pb2_grpc
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
-REQUEST_TIMEOUT_IN_SEC = 600
-MAX_RETRIES = 5
+REQUEST_TIMEOUT_IN_SEC = 30 * 60
+MAX_RETRIES = 3
 
 
 class CostComputationClient(object):
@@ -112,6 +113,7 @@ class CostComputationClient(object):
 
                     signal.signal(signal.SIGINT, cancel_request)
                     response = future.result()
+
                 except grpc.RpcError as rpc_error:
                     if retry == (self.max_retries - 1):
                         raise rpc_error
@@ -153,7 +155,11 @@ class CostComputationClient(object):
 
         logging.info(f"Sending compute request to service {self.service_token} ...")
         request = self.construct_compute_request(configs, cost_config_file)
-        response = self.send_request_with_retry('ComputeCost', request)
+        response = run_with_retry(
+            self.max_retries,
+            self.send_request_with_retry,
+            'ComputeCost',
+            request)
         logging.info(f"Service {self.service_token} finished computing cost {response.score} for "
                      f"iteration {response.iteration_id}")
         return response.iteration_id, response.score

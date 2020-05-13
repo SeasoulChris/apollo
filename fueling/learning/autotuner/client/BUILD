@@ -5,6 +5,7 @@ py_library(
     srcs = ["cost_computation_client.py"],
     deps = [
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
+        "//fueling/learning/autotuner/common:utils",
         "//fueling/common:logging",
     ],
 )

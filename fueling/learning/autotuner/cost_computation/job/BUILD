@@ -21,7 +21,8 @@ py_library(
     srcs = ["k8s_cost_job.py"],
     deps = [
         ":base_cost_job",
-        "//fueling/common:logging",
         "//apps/k8s/spark_submitter:client",
+        "//fueling/common:logging",
+        "//fueling/learning/autotuner/common:utils",
     ]
 )

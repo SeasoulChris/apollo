@@ -11,6 +11,7 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/learning/autotuner/client:sim_client",
+        "//fueling/learning/autotuner/common:utils",
         "//fueling/learning/autotuner/proto:cost_computation_service_pb2",
    ],
 )

@@ -166,11 +166,16 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         compute_event.set()
         try:
             job = self.CostJob()
-            job.submit(options)
+            if not job.run(options):
+                logging.error(f"failed to run job. [Token: {request.token}, Iteration: {iteration_id}]")
+                return CostComputation.create_compute_response(
+                    exit_code=1, message="failed to compute cost.",
+                    iteration_id=iteration_id
+                )
         except Exception as error:
             logging.error(f'Job failed: {error}')
             return CostComputation.create_compute_response(
-                exit_code=1, message="Failed to submit a job."
+                exit_code=2, message="Failed to submit a job."
             )
         compute_event.clear()
         if stop_event.is_set():

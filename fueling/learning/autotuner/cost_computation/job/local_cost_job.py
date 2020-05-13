@@ -12,7 +12,7 @@ class LocalCostJob(BaseCostJob):
     def __init__(self):
         self.process = None
 
-    def submit(self, options):
+    def run(self, options):
         if self.process:
             logging.error('A job is running')
             return False
