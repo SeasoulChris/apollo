@@ -83,7 +83,7 @@ def interpolate_pose(pose_left, pose_right, time_in_between):
 
 def filter_dimensions(segment, percentile):
     """From segment(M, N) to segment(m, n) according to config"""
-    chosen_columns = ['speed', 'steering', 'throttle', 'brake']
+    chosen_columns = ['speed', 'throttle', 'steering', 'brake']
     chosen_column_idxs = [segment_index[column] for column in chosen_columns]
     column_percentile = np.percentile(segment[:, chosen_column_idxs], percentile, axis=0)
     return [(column, column_percentile[idx]) for idx, column in enumerate(chosen_columns)]

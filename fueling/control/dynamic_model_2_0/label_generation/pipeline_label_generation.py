@@ -112,7 +112,7 @@ class PipelineLabelGenerator(BasePipeline):
 
     def calculate_category_id(self, segment):
         """Calculate category id by given segment"""
-        # Get a list of values corresponding to 'speed', 'throttle', 'brake', 'steering'
+        # Get a list of values corresponding to 'speed', 'throttle', 'steering', 'brake'
         features = feature_utils_2_0.filter_dimensions(segment, self.FLAGS.get('percentile'))
         funcs = [feature_utils.gen_speed_key,
                  feature_utils.gen_throttle_key,
