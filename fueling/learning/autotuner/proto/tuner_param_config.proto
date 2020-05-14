@@ -10,6 +10,7 @@ message Parameter {
   string parameter_dir = 2;
   double min = 3;
   double max = 4;
+  double constant = 5;   // if min and max are set, then override constant in code
 }
 
 message Flag {

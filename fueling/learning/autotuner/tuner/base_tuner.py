@@ -50,15 +50,19 @@ class BaseTuner():
 
         self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClass)
 
-        # Bounded region of parameter space
+        # Bounded region or desired constant value of parameter space
         self.pbounds = {}
+        self.pconstants = {}
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
         #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
         for parameter in tuner_parameters.parameter:
             if parameter.parameter_dir:
                 parameter.parameter_name = parameter.parameter_dir + "." + parameter.parameter_name
             parameter = self.separate_repeated_param(parameter)
-            self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
+            if (parameter.min != parameter.max):
+                self.pbounds.update({parameter.parameter_name: (parameter.min, parameter.max)})
+            else:
+                self.pconstants.update({parameter.parameter_name: parameter.constant})
 
         self.n_iter = tuner_parameters.n_iter
 
@@ -165,7 +169,8 @@ class BaseTuner():
         """Seqarate the repeated messages by adding the surffix '___digit' to their names"""
         _, _, _, is_repeated = self.parse_param_to_proto(parameter.parameter_name)
         if is_repeated:
-            repeated_keys = [key for key in self.pbounds if parameter.parameter_name in key]
+            repeated_keys = ([key for key in self.pbounds if parameter.parameter_name in key] +
+                             [key for key in self.pconstants if parameter.parameter_name in key])
             parameter.parameter_name += ('___' + str(len(repeated_keys)))
         return parameter
 

@@ -54,11 +54,11 @@ class OptunaOptimizationTuner(BaseTuner):
         self.visual_storage_dir = os.path.join(self.tuner_storage_dir, task_dir)
         file_utils.makedirs(self.visual_storage_dir)
         figure1 = self.visualizer.plot_optimization_history(self.optimizer)
-        figure2 = self.visualizer.plot_contour(self.optimizer, params=self.pbounds.keys())
+        # figure2 = self.visualizer.plot_contour(self.optimizer, params=self.pbounds.keys())
         figure1.show()
-        figure2.show()
+        # figure2.show()
         figure1.write_image(f"{self.visual_storage_dir}/optimization_history.png")
-        figure2.write_image(f"{self.visual_storage_dir}/contour.png")
+        # figure2.write_image(f"{self.visual_storage_dir}/contour.png")
 
         logging.info(f"Timer: visualize  - {time.perf_counter() - tic_start: 0.04f} sec")
 
@@ -71,6 +71,8 @@ class OptunaOptimizationTuner(BaseTuner):
             next_point.update(
                 {key: trial.suggest_uniform(key, self.pbounds[key][0], self.pbounds[key][1])}
             )
+        for key in self.pconstants:
+            next_point.update({key: self.pconstants[key]})
         next_point_pb = self.merge_repeated_param(next_point)
 
         for proto in next_point_pb:

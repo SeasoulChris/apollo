@@ -54,6 +54,8 @@ class BayesianOptimizationTuner(BaseTuner):
                 next_point = self.config_sanity_check(self.init_params[i])
             else:
                 next_point = self.config_sanity_check(self.optimizer.suggest(self.utility))
+            for key in self.pconstants:
+                next_point.update({key: self.pconstants[key]})
 
             next_point_pb = self.merge_repeated_param(next_point)
 
