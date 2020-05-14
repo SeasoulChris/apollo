@@ -105,6 +105,9 @@ class CleanPlanningRecords(BasePipeline):
         individual_tasks = [
             # 'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
             # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
+            'modules/planning/temp/converted_data_with_routing/batch_20200513_172433/MKZ173_20200121122216',
+            'modules/planning/temp/converted_data_with_routing/batch_20200513_172433/MKZ170_20200121120310',
+            'modules/planning/temp/converted_data_with_routing/batch_20200513_172433/MKZ167_20200121131624'
         ]
         prefix = "/mnt/bos/"
 
