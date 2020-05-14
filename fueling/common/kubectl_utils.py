@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Kubectl utils."""
 
+import fnmatch
 
 from kubernetes import client, config
 
@@ -23,6 +24,11 @@ class Kubectl(object):
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Pod.md
         """
         return self.coreV1Api.list_namespaced_pod(namespace=namespace).items
+
+    def get_pods_by_pattern(self, pattern, namespace='default'):
+        """Similar to get_pods() but filter by fnmatch-style pattern."""
+        return [pod for pod in self.get_pods(namespace)
+                if fnmatch.fnmatch(pod.metadata.name, pattern)]
 
     def describe_pod(self, name, namespace='default'):
         """describe pod details

@@ -12,6 +12,7 @@ from absl.testing import absltest
 from pyspark import SparkConf, SparkContext
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
+from fueling.common.kubectl_utils import Kubectl
 from fueling.common.storage.bazel_filesystem import BazelFilesystem
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
@@ -26,6 +27,7 @@ flags.DEFINE_string(
     'output_data_path',
     None,
     'Output data path which is commonly used by pipelines.')
+flags.DEFINE_boolean('auto_delete_driver_pod', False, 'Auto-delete driver pod when finish.')
 
 
 # Pipeline lifecycle:
@@ -115,6 +117,15 @@ class BasePipeline(object):
             self.run()
         finally:
             self.stop()
+
+        if flags.FLAGS.auto_delete_driver_pod:
+            kubectl = Kubectl()
+            driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
+            driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
+            if len(driver_pod) == 1:
+                kubectl.delete_pod(driver_pod[0].metadata.name)
+            else:
+                logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
 
     def main(self):
         """Kick off everything."""

@@ -102,7 +102,12 @@ class SparkSubmitterClient(object):
             time.sleep(WAIT_INTERVAL_SECONDS)
             res = requests.get(service_url, params={'job_id': job_id})
             if res.ok:
-                job_status = json.loads(res.json() or '{}').get('status')
+                new_job_status = json.loads(res.json() or '{}').get('status')
+                if job_status is not None and new_job_status == 'Preparing':
+                    # The job is actually deleted if it ever started while now disappeared.
+                    logging.info('Job {} is Deleted'.format(job_id))
+                    break
+                job_status = new_job_status
                 logging.info('Job {} is {}...'.format(job_id, job_status))
             else:
                 logging.error('Failed to get job status.')
