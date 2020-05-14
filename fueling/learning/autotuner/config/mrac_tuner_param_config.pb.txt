@@ -7,10 +7,10 @@ tuner_parameters {
   default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
   utility {
     utility_name: "ucb"
-    kappa: 3.0
+    kappa: 1.0
     xi: 1.0
   }
-  n_iter: 20
+  n_iter: 200
   init_points_1D: 0
   opt_max: true
   flag {
@@ -18,6 +18,7 @@ tuner_parameters {
     flag_dir: "lat_controller_conf"
     enable: true
   }
+  # Tuning Parameters
   parameter {
     parameter_name: "reference_time_constant"
     parameter_dir: "lat_controller_conf.steer_mrac_conf"
@@ -29,6 +30,27 @@ tuner_parameters {
     parameter_dir: "lat_controller_conf.steer_mrac_conf"
     min: 0.0001
     max: 0.1
+  }
+  # Constant Parameters
+  parameter {
+    parameter_name: "adaption_state_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "adaption_desired_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "adaption_nonlinear_gain"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 1.0
+  }
+  parameter {
+    parameter_name: "clamping_time_constant"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 0.01
   }
 }
 scenarios {
