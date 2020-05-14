@@ -52,7 +52,6 @@
                     this_response = response.substring(last_response_len);
                     last_response_len = response.length;
                 }
-                console.log(this_response);
                 $("#log-container pre").append(this_response);
                 $("#log-container").scrollTop($("#log-container pre").height() - $("#log-container").height() + 10);
             }
