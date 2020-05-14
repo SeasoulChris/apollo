@@ -4,14 +4,25 @@
 
 <title>Apollo Fuel - Describe Pod </title>
 <style>
-  .green {color: green;}
-  .red {color: red;}
-  .text_center {text-align: center;}
+   pre {
+     white-space: pre-wrap;
+     word-wrap: break-word;
+   }
 </style>
 {% endblock %}
 
 {% block body %}
 
-<pre>{{ pod_info }}</pre>
+<div class="panel panel-default">
+   <div class="panel-heading">describe - {{ pod_name }}</div>
+   <div class="panel-body">
+      <div id="log-container">
+         <pre>{{ pod_info }}</pre>
+      </div>
+   </div>
+</div>
+
+
 
 {% endblock %}
+

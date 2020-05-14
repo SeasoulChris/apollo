@@ -207,7 +207,7 @@ def jobs_hdl():
 @app.route('/pod_describe/<path:pod_name>/<path:namespace>')
 def pod_describe_hdl(pod_name, namespace='default'):
     """Handler of the pod info page"""
-    return flask.render_template('pod_describe.html',
+    return flask.render_template('pod_describe.html', pod_name=pod_name,
                                  pod_info=str(kubectl.describe_pod(pod_name, namespace)))
 
 
@@ -221,6 +221,7 @@ def pod_delete_hdl():
     else:
         return 'illegal pod name/namespace'
 
+
 # TODO(Andrew):
 # 1. For the log page, it's OK to load and show all logs at once as a start. But in the
 # future it would be every fancy if it updates at realtime! Just like "kubectl logs -f <pod>".
@@ -231,8 +232,13 @@ def pod_delete_hdl():
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
-    logs = kubectl.logs(pod_name, namespace)
-    return flask.render_template('pod_log.html', logs=logs)
+    return flask.render_template('pod_log.html', pod_name=pod_name, namespace=namespace)
+
+
+@app.route('/pod_log_streaming/<path:pod_name>/<path:namespace>')
+def pod_log_streaming_hdl(pod_name, namespace='default'):
+    return flask.Response(flask.stream_with_context(kubectl.logs(pod_name, namespace)),
+                          mimetype="text/plain")
 
 
 @app.route('/bos-ask', methods=['POST'])
@@ -300,5 +306,6 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
+
 
 

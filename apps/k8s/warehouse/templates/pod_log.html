@@ -4,14 +4,68 @@
 
 <title>Apollo Fuel - Pod Log</title>
 <style>
-  .green {color: green;}
-  .red {color: red;}
-  .text_center {text-align: center;}
+   #log-container {
+    height: 800px;
+    overflow-x: scroll;
+    padding: 10px;
+   }
+   .logs {
+       background-color: black;
+       color: aliceblue;
+       font-size: 18px;
+   }
+   pre {
+     white-space: pre-wrap;
+     word-wrap: break-word;
+   }
 </style>
 {% endblock %}
 
 {% block body %}
+<a type="hidden" id="pod_log_streaming_url" href="{{ url_for('pod_log_streaming_hdl', pod_name=pod_name, namespace=namespace) }}"></a>
+<div class="panel panel-default">
+   <div class="panel-heading">logs - {{ pod_name }}</div>
+   <div class="panel-body">
+      <div id="log-container">
+         <pre class="logs"></pre>
+      </div>
+   </div>
+</div>
 
-<pre>{{ logs }}</pre>
-
+<script type="text/javascript">
+    var last_response_len = false;
+    var logs = $("#log-container");
+    $.ajax({
+    	url:$("#pod_log_streaming_url").attr('href'), 
+    	async: false,
+        xhrFields: {
+            onprogress: function(e)
+            {
+                var this_response, response = e.currentTarget.response;
+                if(last_response_len === false)
+                {
+                    this_response = response;
+                    last_response_len = response.length;
+                }
+                else
+                {
+                    this_response = response.substring(last_response_len);
+                    last_response_len = response.length;
+                }
+                console.log(this_response);
+                $("#log-container pre").append(this_response);
+                $("#log-container").scrollTop($("#log-container pre").height() - $("#log-container").height() + 10);
+            }
+        }
+    })
+    .done(function(data)
+    {
+        console.log('Complete response = ' + data);
+    })
+    .fail(function(data)
+    {
+        console.log('Error: ', data);
+    });
+    console.log('Request Sent');
+</script>
 {% endblock %}
