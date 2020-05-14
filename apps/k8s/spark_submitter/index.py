@@ -84,7 +84,6 @@ class SparkSubmitJob(flask_restful.Resource):
             'REDIS_PASSWD': 'redis-secret:passwd',
         }
         ENVS = {
-            'APOLLO_CONDA_ENV': arg.env.conda_env,
             'APOLLO_EXECUTORS': arg.worker.count,
             'LOG_VERBOSITY': Env.LogVerbosity.Name(arg.env.log_verbosity),
         }
