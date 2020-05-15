@@ -12,6 +12,7 @@ py_binary(
         "msg_freq_analyzer.py",
         "routing_update_analyzer.py",
     ],
+    data = ["//fueling/planning/analytics:analytics"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",

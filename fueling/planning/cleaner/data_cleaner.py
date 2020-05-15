@@ -2,9 +2,16 @@
 """Clean records."""
 
 import os
+import sys
 from datetime import datetime, timedelta
 import time
 import resource
+from os import path
+
+sys.path.append('fueling/planning/analytics/planning_analytics.zip')
+sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
+
+from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
 
 from cyber_py3.record import RecordReader, RecordWriter
 import fueling.common.file_utils as file_utils
@@ -13,7 +20,6 @@ import fueling.common.record_utils as record_utils
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
-from fueling.planning.cleaner.analyzer_routing import RoutingAnalyzer
 from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
 from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
 from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
@@ -27,7 +33,7 @@ class CleanPlanningRecords(BasePipeline):
 
     def __init__(self):
         self.IS_TEST_DATA = False
-        self.RUN_IN_DRIVER = False
+        self.RUN_IN_DRIVER = True
         now = datetime.now() - timedelta(hours=7)
         dt_string = now.strftime("%Y%m%d_%H%M%S")
         self.dst_prefix = '/mnt/bos/modules/planning/temp/cleaned_data/batch_' + dt_string + "/"
@@ -42,6 +48,8 @@ class CleanPlanningRecords(BasePipeline):
             '/apollo/routing_response',
             '/apollo/routing_response_history',
         ]
+        self.map_file = '/mnt/bos/code/baidu/adu-lab/apollo-map/yizhuangdaluwang/sim_map.bin'
+
         self.cnt = 1
         self.msgs = list()
         self.topic_descs = {}
@@ -69,16 +77,16 @@ class CleanPlanningRecords(BasePipeline):
     def run(self):
         """Run prod."""
         date_tasks = [
-            #'small-records/2019/2019-11-01/',
-            #'small-records/2019/2019-11-02/',
-            #'small-records/2019/2019-11-03/',
-            #'small-records/2019/2019-11-04/',
-            #'small-records/2019/2019-11-05/',
-            #'small-records/2019/2019-11-06/',
-            #'small-records/2019/2019-11-07/',
-            #'small-records/2019/2019-11-08/',
-            #'small-records/2019/2019-11-09/',
-            #'small-records/2019/2019-11-10/',
+            # 'small-records/2019/2019-11-01/',
+            # 'small-records/2019/2019-11-02/',
+            # 'small-records/2019/2019-11-03/',
+            # 'small-records/2019/2019-11-04/',
+            # 'small-records/2019/2019-11-05/',
+            # 'small-records/2019/2019-11-06/',
+            # 'small-records/2019/2019-11-07/',
+            # 'small-records/2019/2019-11-08/',
+            # 'small-records/2019/2019-11-09/',
+            # 'small-records/2019/2019-11-10/',
 
             # 'small-records/2019/2019-11-11/',
             # 'small-records/2019/2019-11-12/',
@@ -147,7 +155,7 @@ class CleanPlanningRecords(BasePipeline):
         self.msgs = list()
         self.topic_descs = dict()
 
-        self.routing_analyzer = RoutingAnalyzer()
+        self.routing_analyzer = RouteAnalyzer(self.map_file)
         self.hmi_analyzer = HmiAnalyzer()
 
         self.localization_analyzer = LocalizationAnalyzer()
@@ -194,11 +202,11 @@ class CleanPlanningRecords(BasePipeline):
                 if self.routing_analyzer.get_routing_response_msg() is not None:
                     self.write_msgs(task_folder)
 
-                self.routing_analyzer.update(msg)
+                self.routing_analyzer.set(msg)
 
             if msg.topic == '/apollo/routing_response_history':
                 if self.routing_analyzer.get_routing_response_msg() is None:
-                    self.routing_analyzer.update(msg)
+                    self.routing_analyzer.set(msg)
 
             if msg.topic == "/apollo/hmi/status":
                 self.hmi_analyzer.update(msg)
