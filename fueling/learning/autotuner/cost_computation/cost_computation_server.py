@@ -159,6 +159,7 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             "iteration_id": iteration_id,
             "workers": workers,
             "role": role,
+            "auto_delete_driver_pod": True
         }
         if request.cost_computation_conf_filename:
             options['cost_computation_conf_filename'] = request.cost_computation_conf_filename
