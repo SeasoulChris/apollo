@@ -245,8 +245,13 @@ def pod_log_streaming_hdl(pod_name, namespace='default'):
         for log in generator:
             log = log.decode('utf-8')
             if 'INFO' in log:
+                # green
                 log = log.replace('INFO', '\033[32m INFO \033[0m')
+            elif 'WARNING' in log:
+                # yellow
+                log = log.replace('WARNING', '\033[33m WARNING \033[0m')
             elif 'ERROR' in log:
+                # red
                 log = log.replace('ERROR', '\033[31m ERROR \033[0m')
             yield conv.convert(ansi=log, full=False)
     return flask.Response(flask.stream_with_context(
@@ -318,6 +323,5 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
-
 
 
