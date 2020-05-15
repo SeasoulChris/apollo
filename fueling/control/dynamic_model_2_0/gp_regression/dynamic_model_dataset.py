@@ -37,11 +37,15 @@ class DynamicModelDataset(Dataset):
             with h5py.File(h5_file, 'r') as model_norms_file:
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))
+                if np.isnan(np.sum(input_segment)):
+                    logging.error(f'file {h5_file} contains NAN data in input segment')
                 # Smoothing noisy acceleration data
                 input_segment[:, input_index["a"]] = savgol_filter(
                     input_segment[:, input_index["a"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
                 # Get output data
                 output_segment = np.array(model_norms_file.get('output_segment'))
+                if np.isnan(np.sum(output_segment)):
+                    logging.error(f'file {h5_file} contains NAN data in output segment')
                 self.features.append((input_segment, output_segment))
 
     def __len__(self):

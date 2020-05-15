@@ -21,6 +21,7 @@ py_library(
     name = "dynamic_model_dataset",
     srcs = ["dynamic_model_dataset.py"],
     deps = [
+        "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],

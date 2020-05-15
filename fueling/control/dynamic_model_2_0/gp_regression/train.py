@@ -26,6 +26,10 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
     loss_history = []
     logging.info(f'Epoch: {epoch}:')
     for idx, (features, labels) in enumerate(train_loader):
+        # check NAN
+        if torch.isnan(features).any() or torch.isnan(labels).any():
+            logging.error(f'NAN happens')
+            continue
         # **[window_size, batch_size, channel]
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         optimizer.zero_grad()
@@ -48,11 +52,13 @@ def valid_dataloader(valid_loader, model, likelihood, loss, use_cuda=False, anal
     loss_history = []
     loss_info_history = []
     for i, (X, y) in enumerate(valid_loader):
+        # logging.info(X)
+        # logging.info(y)
         X = torch.transpose(X, 0, 1).type(torch.FloatTensor)
         pred = likelihood(model(X))
         valid_loss = -loss(pred, y)
         mean = pred.mean
-        logging.info(f'validation batch {i} mean is {mean[0,:]}')
+        # logging.info(f'validation batch {i} mean is {mean[0,:]}')
         loss_history.append(valid_loss.item())
         # TODO(SHU): add a loss wrapper
         criterion = nn.MSELoss()
@@ -83,14 +89,16 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
     logging.info(f'step size is: {step_size}')
     inducing_point_num = torch.arange(0, batch_size, step=step_size)
     logging.info(f'inducing point indices are {inducing_point_num}')
+    logging.info(train_loader)
     for idx, (features, labels) in enumerate(train_loader):
+        logging.info(features)
+        logging.info(labels)
         # pre_features = train_loader[0].features
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         inducing_points = features[:, inducing_point_num, :]
         # save inducing point for reload model
         np.save(os.path.join(args.validation_data_path, 'inducing_points.npy'), inducing_points)
         break
-    return
     # for saving on-line model
     for idx, (test_features, test_labels) in enumerate(valid_loader):
         test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
@@ -225,12 +233,12 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/valid")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
@@ -242,7 +250,7 @@ if __name__ == "__main__":
     # optimizer parameters
     parser.add_argument('-e', '--epochs', type=int, default=300)
     parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('-b', '--batch_size', type=int, default=256)
+    parser.add_argument('-b', '--batch_size', type=int, default=512)
 
     # argument to use cuda or not for training
     parser.add_argument('--use_cuda', type=bool, default=False)

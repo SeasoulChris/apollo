@@ -2,7 +2,7 @@
 
 IMAGE="apolloauto/fuel-client:20200519_1105"
 # Change container name if the host machine is shared by multiple users.
-CONTAINER="fuel"
+CONTAINER="fuel_0515"
 
 # Goto fuel root
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
