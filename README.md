@@ -41,6 +41,9 @@ Generally you need a BUILD target for each python file, which could be one of
 * `py_binary(name="bin_target", ...)`
 * `py_test(name="test_target", ...)`
 
+1. Goto [fueling/demo](https://github.com/ApolloAuto/apollo-fuel/tree/master/fueling/demo)
+   to check our demos.
+
 1. To build any target:
 
    ```bash
@@ -76,11 +79,11 @@ practices are:
 1. Put all Python modules in ./fueling/ folder, and import them with full path
    like `import fueling.common.file_utils`.
 1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your
-   own `run_test()` and `run_prod()` functions. Generally they should share most
-   procedures and only differ in input and output locations or scale.
-1. Put all test data in ./testdata/module/... folder, make sure your job works
-   perfectly at local. And when it is submited to a cluster, the huge test files
-   are efficiently ignored.
+   own `run()` function. Make sure that `bazel build //path/to/your:target`
+   passes.
+1. Inherit the `fueling.common.base_pipeline.BasePipelineTest` and implement
+   your own `test_xxx` functions. Make sure that
+   `bazel test //path/to/your:target_test` passes.
 1. Comment intensively and accurately. Every RDD should be well described with
    the pattern.
 
