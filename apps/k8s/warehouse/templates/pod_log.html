@@ -35,9 +35,7 @@
 <script type="text/javascript">
     var last_response_len = false;
     var logs = $("#log-container");
-    $.ajax({
-    	url:$("#pod_log_streaming_url").attr('href'), 
-    	async: false,
+    $.ajax($("#pod_log_streaming_url").attr('href'), {
         xhrFields: {
             onprogress: function(e)
             {
