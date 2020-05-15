@@ -6,6 +6,7 @@ RUN apt update && \
 
 RUN pip3 install --no-cache-dir \
         absl-py \
+        ansi2html \
         eventlet \
         flask \
         flask-socketio \

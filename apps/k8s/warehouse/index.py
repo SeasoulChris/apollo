@@ -8,6 +8,7 @@ import os
 
 from absl import app as absl_app
 from absl import flags
+from ansi2html import Ansi2HTMLConverter
 import flask
 import flask_socketio
 import gunicorn.app.base
@@ -41,6 +42,7 @@ app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 socketio = flask_socketio.SocketIO(app)
 
+conv = Ansi2HTMLConverter()
 # apply the kubenetes config file
 # uncomment below for testing
 # kubectl = Kubectl(file_utils.fuel_path('apps/k8s/warehouse/kubectl.conf'))
@@ -237,8 +239,18 @@ def pod_log_hdl(pod_name, namespace='default'):
 
 @app.route('/pod_log_streaming/<path:pod_name>/<path:namespace>')
 def pod_log_streaming_hdl(pod_name, namespace='default'):
-    return flask.Response(flask.stream_with_context(kubectl.logs(pod_name, namespace)),
-                          mimetype="text/plain")
+    """Handler of the pod streaming log"""
+    def decorate_logs(generator):
+        """decorate logs"""
+        for log in generator:
+            log = log.decode('utf-8')
+            if 'INFO' in log:
+                log = log.replace('INFO', '\033[32m INFO \033[0m')
+            elif 'ERROR' in log:
+                log = log.replace('ERROR', '\033[31m ERROR \033[0m')
+            yield conv.convert(ansi=log, full=False)
+    return flask.Response(flask.stream_with_context(
+        decorate_logs(kubectl.logs(pod_name, namespace))), mimetype="text/plain")
 
 
 @app.route('/bos-ask', methods=['POST'])
@@ -306,5 +318,6 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
+
 
 

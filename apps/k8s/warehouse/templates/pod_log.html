@@ -3,20 +3,21 @@
 {% block head %}
 
 <title>Apollo Fuel - Pod Log</title>
+<link href="{{ url_for('static',filename='styles/ansi2html.css') }}" rel="stylesheet" type="text/css"/>
 <style>
    #log-container {
     height: 800px;
     overflow-x: scroll;
     padding: 10px;
    }
-   .logs {
-       background-color: black;
-       color: aliceblue;
-       font-size: 18px;
-   }
    pre {
      white-space: pre-wrap;
      word-wrap: break-word;
+     padding: 0; 
+     margin: 0;
+     font-weight: normal; 
+     color: #AAAAAA; 
+     background-color: #000000;
    }
 </style>
 {% endblock %}
@@ -27,7 +28,7 @@
    <div class="panel-heading">logs - {{ pod_name }}</div>
    <div class="panel-body">
       <div id="log-container">
-         <pre class="logs"></pre>
+           <pre></pre>
       </div>
    </div>
 </div>
