@@ -56,3 +56,12 @@ py_binary(
         ":gp_model",
     ],
 )
+
+py_binary(
+    name = "file_split",
+    srcs = ["file_split.py"],
+    deps = [
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+    ],
+)
