@@ -5,16 +5,23 @@ dependencies:
   - pyspark = 2.4.4  # Align with pre-built server image.
 
   - absl-py
+  - ansi2html
   - boto3
+  - conda-forge::eventlet
+  - conda-forge::flask-restful
   - conda-forge::gpytorch
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar
   - conda-forge::python-kubernetes
+  - flask
+  - flask-socketio
   - graphviz
+  - gunicorn
   - h5py
   - keras-gpu
   - matplotlib
+  - mpld3
   - numpy
   - opencv
   - pillow = 6.1  # To be compatible with torchvision
@@ -26,6 +33,7 @@ dependencies:
   - pymongo
   - pyproj
   - pytorch = 1.1  # Need to adapt code to newer version API.
+  - pytz
   - redis-py
   - requests
   - scikit-learn

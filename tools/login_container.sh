@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IMAGE="apolloauto/fuel-client:20200511_1151"
+IMAGE="apolloauto/fuel-client:20200516_1300"
 # Change container name if the host machine is shared by multiple users.
 CONTAINER="fuel"
 
