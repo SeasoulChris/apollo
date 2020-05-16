@@ -9,8 +9,6 @@ import os
 from absl import app as absl_app
 from absl import flags
 from ansi2html import Ansi2HTMLConverter
-from ansi.colour import fg as ansi_fg, bg as ansi_bg
-from ansi.colour.fx import reset as ansi_reset
 import flask
 import flask_socketio
 import gunicorn.app.base
@@ -246,16 +244,6 @@ def pod_log_streaming_hdl(pod_name, namespace='default'):
         """decorate logs"""
         for log in generator:
             log = log.decode('utf-8')
-            if 'INFO' in log:
-                # green
-                log = log.replace('INFO', ''.join(map(str, [ansi_fg.green, 'INFO', ansi_reset])))
-            elif 'WARNING' in log:
-                # yellow
-                log = log.replace('WARNING', ''.join(map(str, [ansi_fg.yellow, 'WARNING',
-                                                               ansi_reset])))
-            elif 'ERROR' in log:
-                # red
-                log = log.replace('ERROR', ''.join(map(str, [ansi_fg.red, 'ERROR', ansi_reset])))
             yield conv.convert(ansi=log, full=False)
     return flask.Response(flask.stream_with_context(
         decorate_logs(kubectl.logs(pod_name, namespace))), mimetype="text/plain")
