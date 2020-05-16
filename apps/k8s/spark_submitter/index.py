@@ -158,10 +158,10 @@ class SparkSubmitJob(flask_restful.Resource):
                 'driver_memory': arg.driver.driver_memory,
             })
 
-        # Select nodes.
-        if arg.env.node_selector in {Env.NodeSelector.CPU, Env.NodeSelector.GPU}:
-            confs += '--conf spark.kubernetes.node.selector.computetype={} '.format(
-                Env.NodeSelector.Name(arg.env.node_selector))
+        # TODO(xiaoxq): Select nodes.
+        # if arg.env.node_selector != Env.NodeSelector.ANY:
+        #    confs += '--conf spark.kubernetes.node.selector.xxx={} '.format(
+        #        Env.NodeSelector.Name(arg.env.node_selector))
 
         # Envs.
         for key, value in ENVS.items():

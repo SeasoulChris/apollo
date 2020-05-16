@@ -38,9 +38,7 @@ message Env {
   optional string docker_image = 1 [default = "hub.baidubce.com/apollofuel/spark:latest"];
 
   enum NodeSelector {
-    CPU = 0;
-    GPU = 1;
-    ANY = 2;
+    ANY = 0;
   }
   optional NodeSelector node_selector = 3;
 
