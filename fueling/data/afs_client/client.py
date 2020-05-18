@@ -20,7 +20,7 @@ class AfsClient(object):
 
     def __init__(self):
         """init common variables"""
-        self.SERVER_URL = '180.76.53.252:50053'
+        self.SERVER_URL = '180.76.165.129:50053'
         self.GRPC_OPTIONS = [
             ('grpc.max_send_message_length', 512 * 1024 * 1024),
             ('grpc.max_receive_message_length', 512 * 1024 * 1024)
@@ -148,3 +148,24 @@ class AfsClient(object):
                 topics.append((msg.topic, msg.message_size))
                 logging.info((msg.topic, msg.message_size))
         return topics
+
+    def get_logs(self, log_table, task_target, log_names):
+        """Get logs of tasks"""
+        task_id, log_dir = task_target
+        task_parts = task_id.split('_')
+        vehicle_id, log_date = task_parts[0], task_parts[1][:8]
+        logging.info(F'task_id: {task_id}, target log dir: {log_dir}')
+        with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
+            stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
+            request = afs_data_service_pb2.GetLogsRequest(
+                task_id=task_id,
+                log_table_name=log_table,
+                vehicle_id=vehicle_id,
+                log_date=log_date,
+                log_names=log_names)
+            response = stub.GetLogs(request)
+            for log in response:
+                log_file_path = os.path.join(log_dir, os.path.basename(log.log_file_name))
+                logging.info(F'writing log file: {log_file_path}')
+                with open(log_file_path, 'w') as log_file:
+                    log_file.write(log.log_content)

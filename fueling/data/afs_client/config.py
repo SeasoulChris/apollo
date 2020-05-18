@@ -8,12 +8,17 @@ KINGLONG = "KingLong"
 PILOT = "Pilot"
 
 PROJ_TO_TABLE = {
-    KINGLONG: ('kinglong/auto_car/cyberecord',
-               'kinglong/auto_car',
-               'kinglong/auto_car/task_keydata'),
-    PILOT: ('auto_car/cyberecord',
-            'auto_car',
-            'auto_car/task_keydata'),
+    # Tables for "scan", "record", "keydata", "log" respectively
+    KINGLONG: (
+        'kinglong/auto_car/cyberecord',
+        'kinglong/auto_car',
+        'kinglong/auto_car/task_keydata',
+        '/kinglong/auto_car'),
+    PILOT: (
+        'auto_car/cyberecord',
+        'auto_car',
+        'auto_car/task_keydata',
+        '/operation/auto_car'),
 }
 
 # Maps (capture place/areas)
@@ -57,9 +62,13 @@ TASK_TO_PURPOSE = {
 # Topics that can be skipped by default
 SKIP_TOPICS = ['PointCloud', 'camera']
 
+# Logs names we need to retrieve
+LOG_NAMES = 'planning.log,prediction.log'
+
 # Target paths and paths after on the fly conversions
 TARGET_PATH = 'modules/data/afs-data'
 CONVERT_PATH = 'modules/data/afs-instant-data'
+LOG_PATH = 'modules/data/afs-logs'
 
 
 def form_target_path(target_dir, task_id, project, map_id, task_purpose):

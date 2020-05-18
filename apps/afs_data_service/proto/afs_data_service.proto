@@ -5,6 +5,7 @@ package afs_data_service;
 service AfsDataTransfer {
   rpc Scan(ScanRequest) returns (ScanResponse) {}
   rpc ReadMessages(ReadMessagesRequest) returns (stream ReadMessagesResponse) {}
+  rpc GetLogs(GetLogsRequest) returns (stream GetLogsResponse) {}
 }
 
 message ScanRequest {
@@ -44,4 +45,18 @@ message ReadMessagesResponse {
   uint32 message_size = 3;
   string data_type = 4;
   uint64 timestamp = 5;
+}
+
+message GetLogsRequest {
+  string log_table_name = 1;
+  string task_id = 2;
+  string vehicle_id = 3;
+  string log_date = 4;
+  // Get log if any name of log_names matches part of the log file path
+  string log_names = 5;
+}
+
+message GetLogsResponse {
+  string log_file_name = 1;
+  string log_content = 2;
 }
