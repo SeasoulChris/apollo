@@ -5,6 +5,7 @@ py_library(
     srcs = ["client.py"],
     deps = [
         "//apps/afs_data_service/proto:afs_data_service_pb2", 
+        "//fueling/common:file_utils",
         "//fueling/common:logging", 
         "//fueling/data/afs_client:afs_record_writer",
     ]

@@ -10,6 +10,7 @@ import grpc
 from fueling.data.afs_client.afs_record_writer import AfsRecordWriter
 import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
 import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
+import fueling.common.file_utils as file_utils 
 import fueling.common.logging as logging
 
 
@@ -154,6 +155,7 @@ class AfsClient(object):
         task_id, log_dir = task_target
         task_parts = task_id.split('_')
         vehicle_id, log_date = task_parts[0], task_parts[1][:8]
+        file_utils.makedirs(log_dir)
         logging.info(F'task_id: {task_id}, target log dir: {log_dir}')
         with grpc.insecure_channel(self.SERVER_URL, self.GRPC_OPTIONS) as channel:
             stub = afs_data_service_pb2_grpc.AfsDataTransferStub(channel)
