@@ -13,6 +13,7 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
+import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
 from fueling.planning.models.trajectory_imitation_model import TrajectoryImitationCNNModel, TrajectoryImitationRNNModel
@@ -125,7 +126,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
         # Draw out pred_pos_dist in a sub folder
         pred_pos_dist_sub_dir = os.path.join(pos_dists_dir, '{:.3f}/'.
                                          format(message_timestamp_sec[i]))
-        os.mkdir(pred_pos_dist_sub_dir)
+        file_utils.makedirs(pred_pos_dist_sub_dir)
         for t, single_frame_pos in enumerate(pred_pos_dist):
             origianl_shape = single_frame_pos.shape
             cv.imwrite(os.path.join(pred_pos_dist_sub_dir,
@@ -140,7 +141,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
         # Draw out pred_pos_dist in a sub folder
         pred_boxs_sub_dir = os.path.join(pos_boxs_dir, '{:.3f}/'.
                                          format(message_timestamp_sec[i]))
-        os.mkdir(pred_boxs_sub_dir)
+        file_utils.makedirs(pred_boxs_sub_dir)
         for t, single_frame_box in enumerate(pred_box):
             origianl_shape = single_frame_box.shape
             cv.imwrite(os.path.join(pred_boxs_sub_dir,
@@ -165,14 +166,14 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
-        os.mkdir(output_dir)
+        file_utils.makedirs(output_dir)
         print("Making output directory: " + output_dir)
         pred_points_dir = os.path.join(output_dir, 'pred_points/')
-        os.mkdir(pred_points_dir)
+        file_utils.makedirs(pred_points_dir)
         pos_dists_dir = os.path.join(output_dir, 'pred_pos_dists/')
-        os.mkdir(pos_dists_dir)
+        file_utils.makedirs(pos_dists_dir)
         pos_boxs_dir = os.path.join(output_dir, 'pred_boxs/')
-        os.mkdir(pos_boxs_dir)
+        file_utils.makedirs(pos_boxs_dir)
 
         for X, y, img_feature, coordinate_heading, message_timestamp_sec in tqdm(test_loader):
             X, y = cuda(X), cuda(y)

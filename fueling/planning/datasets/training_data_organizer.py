@@ -33,7 +33,7 @@ class TrainingDataOrganizer:
             logging.info(output_dir +
                          " directory exists, delete it!")
             shutil.rmtree(output_dir)
-        os.mkdir(output_dir)
+        file_utils.makedirs(output_dir)
         logging.info("Making output directory: " + output_dir)
 
         # List LearningData files and copy into LearningDataFrame .bin
@@ -106,7 +106,7 @@ class TrainingDataOrganizer:
                 logging.info(set_dir +
                              " directory exists, delete it!")
                 shutil.rmtree(set_dir)
-            os.mkdir(set_dir)
+            file_utils.makedirs(set_dir)
             logging.info("Making output sub folders: " + set_dir)
 
         for set_idx, set_list in enumerate(set_lists):
