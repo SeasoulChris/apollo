@@ -42,7 +42,7 @@ app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 socketio = flask_socketio.SocketIO(app)
 
-conv = Ansi2HTMLConverter()
+
 # apply the kubenetes config file
 # uncomment below for testing
 # kubectl = Kubectl(file_utils.fuel_path('apps/k8s/warehouse/kubectl.conf'))
@@ -242,12 +242,20 @@ def pod_log_streaming_hdl(pod_name, namespace='default'):
     """Handler of the pod streaming log"""
     def decorate_logs(generator):
         """decorate logs"""
+        conv = Ansi2HTMLConverter()
         for log in generator:
             log = log.decode('utf-8')
             yield conv.convert(ansi=log, full=False)
-    return flask.Response(flask.stream_with_context(
-        decorate_logs(kubectl.logs(pod_name, namespace))), mimetype="text/plain")
-
+    logs_generator = None
+    try:
+        logs_generator = kubectl.logs(pod_name, namespace)
+    except:
+        pass
+    if logs_generator:
+        return flask.Response(flask.stream_with_context(
+            decorate_logs(logs_generator)), mimetype="text/plain")
+    else:
+        return 'pod does not exist or has been deleted'
 
 @app.route('/bos-ask', methods=['POST'])
 def bos_ask():
@@ -314,5 +322,4 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
-
 
