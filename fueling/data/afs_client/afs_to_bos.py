@@ -135,7 +135,7 @@ class AfsToBosPipeline(BasePipeline):
             .foreach(file_utils.touch))
 
         # Download logs at last if necessary
-        if self.FLAGS.get('download_logs'):
+        if self.FLAGS.get('download_logs') and afs_config.LOG_NAMES:
             # PairRDD(task_id, target_dir)
             (filtered_tasks
                 # PairRDD(task_id, log_dir)
@@ -143,7 +143,7 @@ class AfsToBosPipeline(BasePipeline):
                     afs_config.TARGET_PATH, afs_config.LOG_PATH, 1))
                 # PairRDD(task_id, log_dir)
                 .foreach(lambda task_target: afs_client.get_logs(
-                    log_tbl, task_target, afs_config.LOG_NAMES)))
+                    log_tbl, task_target, ','.join(afs_config.LOG_NAMES))))
 
         self.send_summary_email(process_tasks.collect())
 

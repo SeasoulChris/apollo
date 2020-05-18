@@ -63,7 +63,7 @@ TASK_TO_PURPOSE = {
 SKIP_TOPICS = ['PointCloud', 'camera']
 
 # Logs names we need to retrieve
-LOG_NAMES = 'planning.log,prediction.log'
+LOG_NAMES = ['planning.log', 'prediction.log']
 
 # Target paths and paths after on the fly conversions
 TARGET_PATH = 'modules/data/afs-data'
