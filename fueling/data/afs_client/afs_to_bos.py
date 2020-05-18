@@ -70,8 +70,7 @@ class AfsToBosPipeline(BasePipeline):
         title = F'Transfered AFS data for {len(completed_dirs)} tasks'
         message = [SummaryTuple(TaskDirectory=task_dir) for task_dir in completed_dirs]
         try:
-            #email_utils.send_email_info(title, message, email_utils.DATA_TEAM)
-            email_utils.send_email_info(title, message, ['longtaolin@baidu.com'])
+            email_utils.send_email_info(title, message, email_utils.DATA_TEAM)
         except Exception as error:
             logging.error('Failed to send summary: {}'.format(error))
 
@@ -113,7 +112,6 @@ class AfsToBosPipeline(BasePipeline):
              # PairRDD(task_id, target_dir)
              .filter(spark_op.not_none))
 
-        '''
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 10)) * 10
         process_tasks = spark_helper.cache_and_log('CopyProcessing', 
              todo_tasks
@@ -135,7 +133,6 @@ class AfsToBosPipeline(BasePipeline):
             .map(lambda target_dir: os.path.join(target_dir, MARKER))
             # Make target_dir/COMPLETE files.
             .foreach(file_utils.touch))
-        '''
 
         # Download logs at last if necessary
         if self.FLAGS.get('download_logs'):
@@ -148,7 +145,7 @@ class AfsToBosPipeline(BasePipeline):
                 .foreach(lambda task_target: afs_client.get_logs(
                     log_tbl, task_target, afs_config.LOG_NAMES)))
 
-        #self.send_summary_email(process_tasks.collect())
+        self.send_summary_email(process_tasks.collect())
 
 
 if __name__ == '__main__':
