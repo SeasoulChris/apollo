@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-bazel run //fueling/planning/datasets:trajectory_evaluator  -- --cloud --memory=80 --disk=80
+bazel run //fueling/planning/datasets:trajectory_evaluator -- --cloud --memory=50 --disk=100 --workers=8

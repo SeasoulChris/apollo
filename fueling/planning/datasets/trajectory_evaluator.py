@@ -10,7 +10,7 @@ import fueling.common.logging as logging
 class TrajectoryEvaluator(BasePipeline):
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/output_data/test/',
+            'modules/planning/output_data/',
         ]
 
     def run_test(self):
@@ -35,7 +35,6 @@ class TrajectoryEvaluator(BasePipeline):
         """Run"""
         records_rdd = BasePipeline.SPARK_CONTEXT.union([
             self.to_rdd(self.our_storage().list_files(prefix))
-                .filter(record_utils.is_record_file)
                 .map(os.path.dirname)
                 .distinct()
             for prefix in self.src_dir_prefixs])

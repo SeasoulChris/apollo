@@ -7,13 +7,12 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
-
 class LearningDataGenerator(BasePipeline):
     """Records to feature proto pipeline."""
 
     def __init__(self):
         self.src_dir_prefixs = [
-            'modules/planning/cleaned_data/test/',
+            'modules/planning/cleaned_data/',
         ]
 
     def run_test(self):
@@ -29,7 +28,6 @@ class LearningDataGenerator(BasePipeline):
                     src_dirs_set.add(root)
 
         processed_dirs = self.to_rdd(src_dirs_set).map(self.process_dir)
-
         logging.info('Processed {}/{} folders'.format(processed_dirs.count(),
                                                       len(src_dirs_set)))
         return 0
@@ -44,8 +42,7 @@ class LearningDataGenerator(BasePipeline):
             for prefix in self.src_dir_prefixs])
 
         processed_dirs = records_rdd.map(self.process_dir)
-
-        logging.info('Processed {} folders'.format(processed_dir.count()))
+        logging.info('Processed {} folders'.format(processed_dirs.count()))
 
     def process_dir(self, src_dir):
         """ Process Records """
