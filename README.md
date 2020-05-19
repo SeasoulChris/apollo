@@ -14,12 +14,11 @@
    - apollo-bazel2.x
    - apollo-fuel
 
-1. Then go to the apollo-fuel repo, start a container, build everything.
+1. Then go to the apollo-fuel repo, start a container.
 
    ```bash
    cd apollo-fuel
    ./tools/login_container.sh
-   ./tools/build.sh
    ```
 
    Now you should be in `/fuel` which maps to apollo-fuel, and there is also `/apollo` which maps to
@@ -40,6 +39,18 @@ Generally you need a BUILD target for each python file, which could be one of
 * `py_library(name="lib_target", ...)`
 * `py_binary(name="bin_target", ...)`
 * `py_test(name="test_target", ...)`
+
+1. Simply build everything:
+
+   ```bash
+   ./tools/build.sh
+   ```
+
+   *If keep encountering pip-fetching-timeout issue, you can try building with pre-fetched cache*
+
+   ```bash
+   ./tools/build_local.sh
+   ```
 
 1. Goto [fueling/demo](https://github.com/ApolloAuto/apollo-fuel/tree/master/fueling/demo)
    to check our demos.
@@ -73,27 +84,22 @@ Generally you need a BUILD target for each python file, which could be one of
 
 ## Develop pipeline jobs
 
-We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good
-practices are:
+We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good practices are:
 
-1. Put all Python modules in ./fueling/ folder, and import them with full path
-   like `import fueling.common.file_utils`.
-1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your
-   own `run()` function. Make sure that `bazel build //path/to/your:target`
-   passes.
-1. Inherit the `fueling.common.base_pipeline.BasePipelineTest` and implement
-   your own `test_xxx` functions. Make sure that
-   `bazel test //path/to/your:target_test` passes.
-1. Comment intensively and accurately. Every RDD should be well described with
-   the pattern.
+1. Put all Python modules in ./fueling/ folder, and import them with full path like
+   `import fueling.common.file_utils`.
+1. Inherit the `fueling.common.base_pipeline.BasePipeline` and implement your own `run()` function.
+   Make sure that `bazel build //path/to/your:target` passes.
+1. Inherit the `fueling.common.base_pipeline.BasePipelineTest` and implement your own `test_xxx`
+   functions. Make sure that `bazel test //path/to/your:target_test` passes.
+1. Comment intensively and accurately. Every RDD should be well described with the pattern.
 
    ```python
    # RDD(element_type), other comments if any.
    # PairRDD(key_type, value_type), other comments if any.
    ```
 
-1. Import only what you need in each file. And split them into sections in
-   order:
+1. Import only what you need in each file. And split them into sections in order:
 
    ```python
    import standard_packages
@@ -105,34 +111,33 @@ practices are:
    import fueling_packages
    ```
 
-   * It's OK to use `from package import Type` and `import package as alias`
-     statements.
+   * It's OK to use `from package import Type` and `import package as alias` statements.
    * Each section should be in alphabetical order.
 
-1. Always try to use **absolute file paths**, as apollo-fuel integrates multiple
-   upstream environments which have their own well-known working directories,
-   such as `/apollo`, `/mnt/bos`, `/opt/spark/work-dir`, etc. To avoid relative
-   path mistakes, we enforce providing absolute file paths whenever possible.
 1. Python script and package name convention: **lower_case_with_underscores**.
 1. Filter early, filter often.
 1. Cascade simple transformations, instead of making a huge complicate one.
-1. All transformations should be repeatable and consistant. The process and even
-   the executor could fail any time, then the Spark will try to re-allocate the
-   task to other peers. So be careful about letting flatMap() and
-   flatMapValues() work with "yield" mappers. Because it's stateful, if a task
-   failed unexpectedly, the pipeline have no idea about how to recover.
-1. Reading record header is much faster than reading record, if you can do
-   significatnt filtering on records according to its header, do it.
+1. All transformations should be repeatable and consistant. The process and even the executor could
+   fail any time, then the Spark will try to re-allocate the task to other peers. So be careful
+   about letting `flatMap()` and `flatMapValues()` work with "yield" mappers. Because it's stateful,
+   if a task failed unexpectedly, the pipeline have no idea about how to recover.
+1. Reading record header is much faster than reading record, if you can do significant filtering on
+   records according to its header, do it.
 1. Use `absl.flags` for script argument. refer to
-   [Flags And Logging guide](docs/flags-and-logging-guide.md) for more
-   information.
-1. For Apollo data access, we use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya)
-   to mount Apollo's BOS storage at `/mnt/bos`, which can be used as a POSIX
-   file system. But if you want to list many files under a folder, a better way
-   is to call [`a_BasePipeline_instance.our_storage().list_files(...)`](fueling/common/bos_client.py#L74)
-   which leverages [boto3](https://cloud.baidu.com/doc/BOS/s/ojwvyq973#aws-sdk-for-python)
-   to do efficient S3-style queries. Please read these documents carefully,
-   which will improve your pipeline a lot.
+   [Flags And Logging guide](docs/flags-and-logging-guide.md) for more information.
+1. Refer to files:
+
+   1) Use bazel [filegroup](https://docs.bazel.build/versions/master/be/general.html#filegroup) to
+      bind data files which are hosted in Fuel. Find example usage in fueling/demo.
+   1) Use absolute path like `/apollo/...` to refer to files in Apollo.
+   1) Goto next tip for cloud data usage.
+
+1. We use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya) to mount Apollo's BOS storage at
+   `/mnt/bos`, which can be used as a POSIX file system. But if you want to list many files under a
+   folder, a better way is to call
+   [`a_BasePipeline_instance.our_storage().list_files(...)`](fueling/common/bos_client.py#L74) which
+   leverages [boto3](https://cloud.baidu.com/doc/BOS/s/ojwvyq973#aws-sdk-for-python) to do efficient
+   S3-style queries. Please read these documents carefully, which will improve your pipeline a lot.
 1. To learn more about PySpark APIs, please go to
    [Spark Docs](https://spark.apache.org/docs/latest/api/python/pyspark.html).
 

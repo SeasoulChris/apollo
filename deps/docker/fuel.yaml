@@ -7,6 +7,8 @@ dependencies:
   - absl-py
   - ansi2html
   - boto3
+  - conda-forge::bayesian-optimization
+  - conda-forge::casadi
   - conda-forge::eventlet
   - conda-forge::flask-restful
   - conda-forge::gpytorch

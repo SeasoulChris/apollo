@@ -1,7 +1,0 @@
-bayesian-optimization
-liegroups
-pyro-ppl
-casadi
-psycopg2-binary
-threadpoolctl
-future

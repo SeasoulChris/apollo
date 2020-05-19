@@ -38,6 +38,9 @@ pip3_import(
    name = "default_deps",
    requirements = "//deps:default.txt",
    timeout = 1000,
+   extra_pip_args = [
+       # EXTRA_PIP_ARGS
+   ],
 )
 load("@default_deps//:requirements.bzl", "pip_install")
 pip_install()

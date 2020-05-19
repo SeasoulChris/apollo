@@ -17,4 +17,8 @@ pushd /apollo
   bazel build -c opt //cyber/py_wrapper:_cyber_record_py3.so
 popd
 
+if [ -f "WORKSPACE.bazel" ]; then
+  echo "###### You are building with local pip-cache! ######"
+fi
+
 bazel build ${TARGET}
