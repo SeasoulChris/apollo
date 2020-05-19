@@ -187,16 +187,16 @@ if __name__ == '__main__':
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/valid")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200512-203124")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200518-204852")
     parser.add_argument(
         '--validation_result_path',
         type=str,

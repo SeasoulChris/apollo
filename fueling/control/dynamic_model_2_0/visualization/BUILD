@@ -28,6 +28,7 @@ py_binary(
     data = ["//fueling/control/dynamic_model_2_0/testdata/golden_set/2_3:golden_set_data"],
     deps = [
         ":raw_data_visualization",
+        ":validation_visualization",
         "//fueling/common:h5_utils",
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",

@@ -9,6 +9,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 from scipy.spatial import distance
 import gpytorch
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -20,6 +21,8 @@ from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.evaluation import evaluation
 from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization import RawDataVisualization
+from fueling.control.dynamic_model_2_0.visualization.validation_visualization import ValidationVisualization
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 
@@ -79,11 +82,47 @@ class GoldenSetEvaluation():
             np.save(dst_file, self.DM10_xy)
 
     def get_DM20_result(self, is_save=True):
-        """ load dynamic model 2.0,
+        """ To retired
+            load dynamic model 2.0,
             make prediction,
             and generate pose correction for each point (100:)"""
         dataset = GPDataSet(self.args)
         self.DM20_dx_dy = evaluation(self.args, dataset, GPModel, is_plot=False)
+        logging.info(f'Dynamic model 2.0 results\' shape is {self.DM20_dx_dy.shape}')
+        logging.info(f'Data points in dynamic model 2.0 looks like {self.DM20_dx_dy[0,:]}')
+        if is_save:
+            # write to npy
+            dst_dir = os.path.dirname(self.features_file_path)
+            dst_file = os.path.join(dst_dir, 'DM20_results.npy')
+            logging.info(f'Dynamic model 2.0 results are saved to file {dst_file}')
+            np.save(dst_file, self.DM20_dx_dy)
+
+    def get_DM20_result_dataloader(self, is_save=True):
+        """load dynamic model 2.0,
+            make prediction,
+            and generate pose correction for each point (100:)"""
+
+        DM20 = ValidationVisualization(self.args)
+        # get inducing points for model initialization
+        DM20.load_data()
+        DM20.load_model()
+        # make prediction for each h5 files
+        logging.info(self.args.testing_data_path)
+        h5_files = file_utils.list_files_with_suffix(self.args.testing_data_path, '.h5')
+        logging.info(len(h5_files))
+        h5_files.sort()
+        for idx, h5_file in enumerate(h5_files):
+            logging.debug(f'h5_file: {h5_file}')
+            with h5py.File(h5_file, 'r') as model_norms_file:
+                # Get input data
+                input_segment = torch.from_numpy(
+                    np.array(model_norms_file.get('input_segment'))).float()
+                predict_result = torch.from_numpy(DM20.predict(input_segment)).float()
+                # dimension: 1 * output_dim
+                if idx == 0:
+                    self.DM20_dx_dy = predict_result
+                else:
+                    self.DM20_dx_dy = torch.cat((self.DM20_dx_dy, predict_result), 0)
         logging.info(f'Dynamic model 2.0 results\' shape is {self.DM20_dx_dy.shape}')
         logging.info(f'Data points in dynamic model 2.0 looks like {self.DM20_dx_dy[0,:]}')
         if is_save:
@@ -186,7 +225,14 @@ if __name__ == '__main__':
     parser.add_argument('-train',
                         '--training_data_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/2019-08-19/train")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
+    parser.add_argument('-v',
+                        '--validation_data_path',
+                        type=str,
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
+    parser.add_argument('--validation_result_path',
+                        type=str,
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_results")
     parser.add_argument('-plot',
                         '--plot_path',
                         type=str,
@@ -212,7 +258,7 @@ if __name__ == '__main__':
         '-md',
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200511-231316")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200518-204852")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
@@ -235,7 +281,7 @@ if __name__ == '__main__':
     npy_file_list = glob.glob(os.path.join(file_path, '*/*recover_features.npy'))
     logging.info(f'total {len(npy_file_list )} files: {npy_file_list }')
     args = parser.parse_args()
-    first_time_run = False
+    first_time_run = True
     for npy_file in npy_file_list:
         logging.info(f'processing npy_file: {npy_file}')
         scenario_id = os.path.dirname(npy_file).split('/')[-1]
@@ -255,6 +301,6 @@ if __name__ == '__main__':
         # if results files (.npy) are provided than skip these two
         if first_time_run:
             evaluator.get_DM10_result()
-            evaluator.get_DM20_result()
+            evaluator.get_DM20_result_dataloader()
             evaluator.get_echo_lincoln_result()
         evaluator.plot()
