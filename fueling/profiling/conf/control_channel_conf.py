@@ -136,9 +136,21 @@ FEATURE_NAMES = [
 
 
 WEIGHTED_SCORE = {
-    # Dimensions with responding weighting factors for MRAC control profiling
-    "MRAC_SCORE": {"lateral_err_std_harsh": 0.5,
-                   "lateral_err_peak": 0.5, }
+    # Dimensions with responding weighting factors for control profiling
+    "weighting_metrics": {"station_err_std": 1.0,
+                          "speed_err_std": 1.0,
+                          "lateral_err_std": 3.0,
+                          "heading_err_std": 1.0,
+                          "station_err_std_harsh": 1.0,
+                          "speed_err_std_harsh": 1.0,
+                          "lateral_err_std_harsh": 4.0,
+                          "heading_err_std_harsh": 1.0,
+                          "station_err_peak": 1.0,
+                          "speed_err_peak": 1.0,
+                          "lateral_err_peak": 4.0,
+                          "heading_err_peak": 1.0,},
+    "penalty_metrics": {"replan_trajectory_count": 1.0,},
+    "fail_metrics": {"control_error_code_count": 10.0,},
 }
 
 

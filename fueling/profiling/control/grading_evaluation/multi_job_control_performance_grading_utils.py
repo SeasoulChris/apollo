@@ -466,17 +466,27 @@ def output_gradings(target_grading, flags):
         logging.warning(F'No grading results written to {grading_output_path}')
     else:
         grading_dict = grading._asdict()
-        score_dict = WEIGHTED_SCORE[flags['ctl_metrics_weighted_score']]
         score = 0.0
-        sample = 0.0
-        for key, weighting in score_dict.items():
+        weights = 0.0
+        sample = grading_dict['total_time_usage'][1]
+        # Parse and compute the weighting metrics from control profiling results
+        weighting_dict = WEIGHTED_SCORE['weighting_metrics']
+        for key, weighting in weighting_dict.items():
             if 'peak' in key:
                 score += grading_dict[key][0][0] * weighting
             else:
                 score += grading_dict[key][0] * weighting
-            sample = (grading_dict[key][1] if grading_dict[key][1] > sample else sample)
-        if grading_dict['control_error_code_count'][0] > 0.0:
-            score = feature_utils.FAIL_SCORE
+            weights += weighting
+        score /= weights
+        # Parse and compute the penalty metrics from control profiling results
+        penalty_dict = WEIGHTED_SCORE['penalty_metrics']
+        for key, penalty_score in penalty_dict.items():
+            score += grading_dict[key][0] * grading_dict[key][1] * penalty_score
+        # Parse and compute the fail metrics from control profiling results
+        fail_dict = WEIGHTED_SCORE['fail_metrics']
+        for key, fail_score in fail_dict.items():
+            if grading_dict[key][0] > 0:
+                score = fail_score
         grading_dict.update({'weighted_score': (score, sample)})
         logging.info(F'writing grading output {grading_dict} to {grading_output_path}')
         with open(grading_output_path, 'w') as grading_file:
