@@ -11,7 +11,12 @@ import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
 REQUEST_TIMEOUT_IN_SEC = 30 * 60
+
 MAX_RETRIES = 3
+
+CHANNEL_OPTIONS = [
+    ('grpc.keepalive_timeout_ms', 60000),
+]
 
 
 class CostComputationClient(object):
@@ -94,7 +99,11 @@ class CostComputationClient(object):
         return cost_service_pb2.CloseRequest(token=self.service_token)
 
     def send_request_with_retry(self, request_name, request_payload):
-        with grpc.insecure_channel(CostComputationClient.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
+        with grpc.insecure_channel(
+                target=CostComputationClient.CHANNEL_URL,
+                compression=grpc.Compression.Gzip,
+                options=CHANNEL_OPTIONS) as channel:
+
             stub = cost_service_pb2_grpc.CostComputationStub(channel)
             request_function = getattr(stub, request_name)
 

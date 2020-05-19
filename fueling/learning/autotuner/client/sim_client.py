@@ -10,6 +10,10 @@ import fueling.common.logging as logging
 
 REQUEST_TIMEOUT_IN_SEC = 600
 
+CHANNEL_OPTIONS = [
+    ('grpc.keepalive_timeout_ms', 60000),
+]
+
 
 class SimClient(object):
     CHANNEL_URL = "localhost:50051"
@@ -19,44 +23,47 @@ class SimClient(object):
         cls.CHANNEL_URL = channel_url
 
     @classmethod
-    def initialize(cls, service_token, git_info, num_workers, dynamic_model):
-        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
-            stub = sim_service_pb2_grpc.SimServiceStub(channel)
-            init_param = sim_service_pb2.InitParam(
-                git_info=git_info,
-                num_workers=num_workers, token=service_token, dynamic_model=dynamic_model
-            )
+    def send_request(cls, request_name, request_payload):
+        with grpc.insecure_channel(
+                target=cls.CHANNEL_URL,
+                compression=grpc.Compression.Gzip,
+                options=CHANNEL_OPTIONS) as channel:
 
-            logging.info(f"Initializing service {service_token}  ...")
-            status = stub.Initialize(init_param)
+            stub = sim_service_pb2_grpc.SimServiceStub(channel)
+            request_function = getattr(stub, request_name)
+            status = request_function(request_payload, timeout=REQUEST_TIMEOUT_IN_SEC)
+
         return status
+
+    @classmethod
+    def initialize(cls, service_token, git_info, num_workers, dynamic_model):
+        logging.info(f"Initializing service {service_token}  ...")
+        init_param = sim_service_pb2.InitParam(
+            git_info=git_info,
+            num_workers=num_workers, token=service_token, dynamic_model=dynamic_model
+        )
+
+        return cls.send_request('Initialize', init_param)
 
     @classmethod
     def run_scenario(
         cls, service_token, iteration_id, scenario_id, config, record_output_path, record_output_file
     ):
-        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
-            stub = sim_service_pb2_grpc.SimServiceStub(channel)
+        logging.info(f"Running scenario {scenario_id} for {record_output_file} ...")
+        job_info = sim_service_pb2.JobInfo(
+            token=service_token,
+            scenario=scenario_id,
+            model_config=config,
+            record_output_path=record_output_path,
+            record_output_file=record_output_file,
+            iteration_id=iteration_id,
+        )
 
-            job_info = sim_service_pb2.JobInfo(
-                token=service_token,
-                scenario=scenario_id,
-                model_config=config,
-                record_output_path=record_output_path,
-                record_output_file=record_output_file,
-                iteration_id=iteration_id,
-            )
-
-            logging.info(f"Running scenario {scenario_id} for {record_output_file} ...")
-            status = stub.RunScenario(job_info, timeout=REQUEST_TIMEOUT_IN_SEC)
-        return status
+        return cls.send_request('RunScenario', job_info)
 
     @classmethod
     def close(cls, service_token_str):
-        with grpc.insecure_channel(cls.CHANNEL_URL, compression=grpc.Compression.Gzip) as channel:
-            stub = sim_service_pb2_grpc.SimServiceStub(channel)
-            token = sim_service_pb2.Token(token=service_token_str)
+        logging.info(f"Tearing down service {service_token_str} ...")
+        token = sim_service_pb2.Token(token=service_token_str)
 
-            logging.info(f"Tearing down service {service_token_str} ...")
-            status = stub.TearDown(token)
-        return status
+        return cls.send_request('TearDown', token)
