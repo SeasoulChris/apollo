@@ -40,4 +40,6 @@ partners = {
                              bos_bucket='guliduo', bos_region='bj'),
     'd-kit-chkj-70': Partner(name='CHKJ70', email='cuishan@coohigh.com.cn',
                              bos_bucket='coolhigh-test', bos_region='bj'),
+    'd-kit-nxkj-84': Partner(name='NXKJ84', email='tony.hong@tech-nx.com',
+                             bos_bucket='nx-tech', bos_region='gz'),
 }
