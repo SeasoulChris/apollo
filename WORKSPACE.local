@@ -36,7 +36,7 @@ pip_repositories()
 load("@rules_python//python:pip.bzl", "pip3_import")
 pip3_import(
    name = "default_deps",
-   requirements = "//deps/docker:default.txt",
+   requirements = "//deps:default.txt",
    timeout = 1000,
    extra_pip_args = ["--no-index", "--find-links=file:///home/libs/"],
 )
