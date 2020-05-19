@@ -12,6 +12,9 @@ RUN /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
     /usr/local/miniconda/bin/conda clean -a -y && \
     chmod -R 777 /usr/local/miniconda/envs/fuel
 
+COPY default.txt /home/libs/default.txt
+RUN /usr/bin/pip3 download -r /home/libs/default.txt -d /home/libs
+
 ADD https://github.com/michael4338/rules_python/archive/8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz \
     /home/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz
 RUN chmod a+r /home/libs/*
