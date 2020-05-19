@@ -1,3 +1,4 @@
+import getpass
 import time
 
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
@@ -14,7 +15,7 @@ from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
 
 # settings
 commit_id = "c693dd9e2e7910b041416021fcdb648cc4d8934d"
-scenario_ids = [11008, 11010]
+scenario_ids = [11014, 11015, 11016, 11017, 11018, 11019, 11020, 30019, 30020, 30021, 30022, 30023, 30024, 30025]
 dynamic_model = DynamicModel.ECHO_LINCOLN
 configs = {  # map of config_id to path_to_config pairs
     "config_id1": {
@@ -38,7 +39,7 @@ client = CostComputationClient()
 try:
     tic1 = time.perf_counter()
 
-    client.initialize(commit_id, scenario_ids, dynamic_model)
+    client.initialize(commit_id, scenario_ids, dynamic_model, getpass.getuser())
     print(f"Initialization time: {time.perf_counter() - tic1:0.4f} seconds")
     """
     client.set_token("tuner-8f6b804fc84f495280d27e6696330db2")
