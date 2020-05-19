@@ -38,8 +38,10 @@ class K8sCostJob(BaseCostJob):
         }
 
         client = SparkSubmitterClient(entrypoint, client_flags, options)
-        spark_job_id = client.submit()
         cost_job_info = f"{options['role']}/{options['token']}/{options['iteration_id']}"
+        spark_job_id = client.submit()
+        if not spark_job_id:
+            raise Exception(f"Failed to submit spark job: {cost_job_info}.")
         success = self.wait(cost_job_info, spark_job_id)
         return success
 

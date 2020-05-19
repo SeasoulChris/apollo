@@ -21,6 +21,10 @@ function start_service() {
   source /home/libs/bash.rc
   source /apollo/scripts/apollo_base.sh
 
+  # GRPC setting
+  export GRPC_VERBOSITY=INFO
+  export GRPC_TRACE=client_channel_call,client_channel_routing,connectivity_state,server_channel
+
   LOG_DIR=/tmp/log
   mkdir -p $LOG_DIR
 
