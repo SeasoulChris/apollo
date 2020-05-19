@@ -55,7 +55,8 @@ class LocalizationPoseConversion(ConversionBase):
         cyber_loc = cyber_localization_pose_pb2.LocalizationEstimate()
         cyber_loc.ParseFromString(message.message)
         apollo_loc = transfer_localization_estimate(cyber_loc)
-        logging.info(F'localization coordinates after transfer: {apollo_loc.pose.position.x}')
+        logging.log_every_n(logging.INFO,
+            F'transferred localization: {apollo_loc.pose.position.x}', 1000)
         return (apollo_topic, apollo_datatype, apollo_loc)
 
 
@@ -73,7 +74,7 @@ class PerceptionObstaclesConversion(ConversionBase):
         cyber_obs = cyber_perception_obstacle_pb2.PerceptionObstacles()
         cyber_obs.ParseFromString(message.message)
         apollo_obs = transfer_perception_obstacles(cyber_obs.perception_obstacle)
-        logging.info(F'transfered perception obstacle')
+        logging.log_every_n(logging.INFO, F'transfered perception obstacle', 1000)
         apollo_obs.header.timestamp_sec = cyber_obs.header.timestamp_sec
         return (apollo_topic, apollo_datatype, apollo_obs)
 
