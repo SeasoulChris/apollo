@@ -6,6 +6,7 @@ import time
 
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import MultiStepLR, ReduceLROnPlateau
+import matplotlib.pyplot as plt
 import numpy as np
 import gpytorch
 import torch
@@ -22,9 +23,24 @@ INPUT_DIM = feature_config["input_dim"]
 OUTPUT_DIM = feature_config["output_dim"]
 
 
-def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=None):
+def accuracy(ground_truth, model_output, accuracy_history):
+    criterion = nn.MSELoss()
+    accuracy_info = torch.sqrt(criterion(ground_truth, model_output))
+    if accuracy_info is not None:
+        accuracy_history.append(accuracy_info.item())
+
+
+def result_tracing(data_loader, model, likelihood):
+    accuracies = []
+    for idx, (features, labels) in enumerate(data_loader):
+        features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
+        pred = likelihood(model(features))
+        accuracy(labels, pred.mean, accuracies)
+    return np.mean(accuracies)
+
+
+def train_over_dataloader(train_loader, model, loss, optimizer, print_period=None):
     loss_history = []
-    logging.info(f'Epoch: {epoch}:')
     for idx, (features, labels) in enumerate(train_loader):
         # check NAN
         if torch.isnan(features).any() or torch.isnan(labels).any():
@@ -36,6 +52,8 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
         output = model(features)
         # train loss
         train_loss = -loss(output, labels)
+        logging.debug(f'output is {output.mean}')
+        logging.debug(f'labels are {labels}')
         loss_history.append(train_loss.item())
         train_loss.backward(retain_graph=True)
         optimizer.step()
@@ -43,39 +61,37 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
             continue
         if idx > 0 and idx % print_period == 0:
             logging.info(f'   Step: {idx}, training loss: {np.mean(loss_history[-print_period:])}')
+
     train_loss = np.mean(loss_history)
     logging.info(f'Training loss: {train_loss}')
     return train_loss
 
 
-def valid_dataloader(valid_loader, model, likelihood, loss, use_cuda=False, analyzer=None):
+def valid_and_trace(valid_loader, model, likelihood, loss, use_cuda=False, analyzer=None):
     loss_history = []
     loss_info_history = []
+    valid_accuracy = []
     for i, (X, y) in enumerate(valid_loader):
-        # logging.info(X)
-        # logging.info(y)
         X = torch.transpose(X, 0, 1).type(torch.FloatTensor)
         pred = likelihood(model(X))
         valid_loss = -loss(pred, y)
         mean = pred.mean
-        # logging.info(f'validation batch {i} mean is {mean[0,:]}')
+        logging.debug(f'validation batch {i} mean is {mean[0,:]}')
         loss_history.append(valid_loss.item())
         # TODO(SHU): add a loss wrapper
-        criterion = nn.MSELoss()
-        valid_loss_info = torch.sqrt(criterion(y, mean))
-        if valid_loss_info is not None:
-            loss_info_history.append(valid_loss_info.item())
+        # accuracy
+        accuracy(y, mean, valid_accuracy)
         if analyzer is not None:
             analyzer.process(X, y, pred)
 
     valid_loss = np.mean(loss_history)
     logging.info(f'Validation loss: {valid_loss}.')
-    logging.info(f'Validation accuracy = {np.mean(loss_info_history)}')
+    logging.info(f'Validation accuracy = {np.mean(valid_accuracy)}')
 
-    return valid_loss
+    return valid_loss, np.mean(valid_accuracy)
 
 
-def train(args, train_loader, valid_loader, print_period=None, early_stop=20, save_mode=0):
+def train(args, train_loader, valid_loader, print_period=None, early_stop=None, save_mode=0):
     timestr = time.strftime('%Y%m%d-%H%M%S')
     batch_size = args.batch_size
     num_inducing_point = args.num_inducing_point
@@ -93,7 +109,6 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
     for idx, (features, labels) in enumerate(train_loader):
         logging.info(features)
         logging.info(labels)
-        # pre_features = train_loader[0].features
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         inducing_points = features[:, inducing_point_num, :]
         # save inducing point for reload model
@@ -129,21 +144,33 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
 
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
+    # loss curve
+    train_losses = []
+    train_accuracies = []
+    valid_losses = []
+    valid_accuracies = []
     for epoch in range(1, epochs + 1):
+        running_loss = 0.0
         if use_cuda:
             likelihood.train().cuda
             model.train().cuda
         else:
             likelihood.train()
             model.train()
-        train_loss = train_dataloader(train_loader, model, loss, optimizer, epoch)
+        train_loss = train_over_dataloader(train_loader, model, loss, optimizer)
         with torch.no_grad():
             model.eval()
             likelihood.eval()
-            valid_loss = valid_dataloader(valid_loader, model, likelihood, loss)
+            valid_loss, valid_accuracy = valid_and_trace(valid_loader, model, likelihood, loss)
+            train_accuracy = result_tracing(train_loader, model, likelihood)
         scheduler.step(train_loss)
         if epoch % 10 == 0:
             gpytorch.settings.tridiagonal_jitter(1e-4)
+        # loss and accuracy for each epoch
+        train_losses.append(train_loss)
+        train_accuracies.append(train_accuracy)
+        valid_losses.append(valid_loss)
+        valid_accuracies.append(valid_accuracy)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
         is_better_model = False
@@ -184,6 +211,27 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=20, sa
             # save all model
             save_model_torch_script(model, likelihood, test_features, online_epoch_model)
             save_model_state_dict(model, likelihood, offline_epoch_model)
+    # plot loss curve
+    fig, axs = plt.subplots(figsize=[12, 4])
+    fig = plt.figure(figsize=(12, 8))
+    ax1 = fig.add_subplot(2, 1, 1)
+    ax1.set_xlabel('epoch', fontdict={'size': 12})
+    ax1.set_ylabel('loss', fontdict={'size': 12})
+    ax1.plot(train_losses, label=f"training loss")
+    ax1.plot(valid_losses, 'r.', label=f"validation loss")
+    plt.legend(fontsize=12, numpoints=5, frameon=False)
+    plt.title("Losses comparison")
+    plt.grid(True)
+    # plot accuracy curve
+    ax2 = fig.add_subplot(2, 1, 2)
+    ax2.set_xlabel('epoch', fontdict={'size': 12})
+    ax2.set_ylabel('accuracy', fontdict={'size': 12})
+    ax2.plot(train_accuracies, label=f"training accuracy")
+    ax2.plot(valid_accuracies, label=f"validation accuracy")
+    plt.legend(fontsize=12, numpoints=5, frameon=False)
+    plt.grid(True)
+    plt.savefig(args.gp_model_path + timestr + "loss_and_accuracy_curve.png")
+    plt.show()
 
     return model, likelihood
 
@@ -233,22 +281,22 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/gp_model_output")
 
     # model parameters
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
     parser.add_argument('--kernel_dim', type=int, default=20)
     # optimizer parameters
-    parser.add_argument('-e', '--epochs', type=int, default=300)
+    parser.add_argument('-e', '--epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('-b', '--batch_size', type=int, default=512)
 
