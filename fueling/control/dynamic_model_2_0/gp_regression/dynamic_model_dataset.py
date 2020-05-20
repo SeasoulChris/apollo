@@ -132,6 +132,7 @@ class DynamicModelDataset(Dataset):
 
         # standard deviation
         data_length = 0
+
         input_segment_std = np.zeros((1, INPUT_DIM))
         for i, dataset in enumerate(self.datasets):
             input_segment = dataset[0]  # dataset[0] : input
@@ -139,11 +140,13 @@ class DynamicModelDataset(Dataset):
             input_segment_std += np.mean(value, axis=0)
         input_segment_std = np.sqrt(input_segment_std / len(self.datasets))
 
+
         # save mean and standard deviation to npy file
         self.standardization_factors['mean'] = input_segment_mean
         self.standardization_factors['std'] = input_segment_std
         np.save(self.standardization_factors_file, self.standardization_factors)
         return input_segment_mean, input_segment_std
+
 
     def standardize(self, inputs):
         """Standardize given data"""
@@ -158,3 +161,4 @@ class DynamicModelDataset(Dataset):
         input_min = self.normalization_factors['min']
         inputs_normalized = (inputs - input_min) / (input_max - input_min)
         return inputs_normalized
+
