@@ -63,9 +63,9 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
             end_time_s=request.end_time_second,
             namespace=request.namespace)
         skip_topics = request.skip_topics.split(',')
+        logging.info('read messages for {} with skipping {}'.format(request.task_id, skip_topics))
         for topic, message, data_type, timestamp in messages:
             if request.skip_topics != '' and any(topic.find(x) != -1 for x in skip_topics):
-                logging.info('skipping topic: {}'.format(topic))
                 continue
             response = afs_data_service_pb2.ReadMessagesResponse()
             response.topic = topic
