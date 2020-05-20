@@ -128,15 +128,15 @@ class BosClient(BaseStorage):
         maximal_path_depth = 10
         minimal_sub_path_len = 1
         maximal_sub_path_len = 256
-        if (len(sub_paths) < minimal_path_depth or
-            len(sub_paths) > maximal_path_depth or
-                any(len(x) > maximal_sub_path_len or len(x) < minimal_sub_path_len
-                    for x in sub_paths)):
+        if (len(sub_paths) < minimal_path_depth
+            or len(sub_paths) > maximal_path_depth
+            or any(len(x) > maximal_sub_path_len
+                   or len(x) < minimal_sub_path_len for x in sub_paths)):
             raise ValueError('Destination path is either too short or too long')
 
         overwrite_whitelist = ('modules/control/control_conf/mkz7/',)
-        if (self.file_exists(remote_path) and
-                not any(remote_path.startswith(x) for x in overwrite_whitelist)):
+        if (self.file_exists(remote_path)
+                and not any(remote_path.startswith(x) for x in overwrite_whitelist)):
             raise ValueError('Destination already exists')
 
         # Actually upload
