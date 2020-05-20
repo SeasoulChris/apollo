@@ -17,7 +17,7 @@ py_library(
     ],
 )
 
-py_library(
+py_binary(
     name = "dynamic_model_dataset",
     srcs = ["dynamic_model_dataset.py"],
     deps = [
