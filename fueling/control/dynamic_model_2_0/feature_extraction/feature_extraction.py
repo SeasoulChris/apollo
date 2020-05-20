@@ -8,14 +8,14 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message import \
-     InterPolationMessage, InterPolationMessageList
+    InterPolationMessage, InterPolationMessageList
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
-       feature_utils
+    feature_utils
 
 
 def group_task_messages(task_messages):
@@ -33,7 +33,7 @@ def group_task_messages(task_messages):
             cur_interp_msg = InterPolationMessage(message_proto)
         else:
             cur_pose_msg = message_proto
-        cur_interp_msg.add_pose(cur_pose_msg) 
+        cur_interp_msg.add_pose(cur_pose_msg)
 
     # Check if the list itself is valid, quit immediately if not
     if not interp_messages_list.is_valid():
@@ -83,14 +83,17 @@ class FeatureExtraction(BasePipeline):
 
     def run(self):
         """Run."""
-        input_data_path = (self.FLAGS.get('input_data_path') or
-            'modules/control/data/records/Mkz7/2019-06-04')
-        output_data_path = self.our_storage().abs_path(self.FLAGS.get('output_data_path') or
-            'modules/control/dynamic_model_2_0/features/2019-06-04')
+        input_data_path = (
+            self.FLAGS.get('input_data_path')
+            or 'modules/control/data/records/Mkz7/2019-06-04')
+        output_data_path = self.our_storage().abs_path(
+            self.FLAGS.get('output_data_path')
+            or 'modules/control/dynamic_model_2_0/features/2019-06-04')
 
         logging.info(F'input_data_path: {input_data_path}, output_data_path: {output_data_path}')
 
-        task_msgs_rdd = spark_helper.cache_and_log('task_msgs_rdd',
+        task_msgs_rdd = spark_helper.cache_and_log(
+            'task_msgs_rdd',
             # RDD(files)
             self.to_rdd(self.our_storage().list_files(input_data_path))
             # RDD(record files)
@@ -107,7 +110,8 @@ class FeatureExtraction(BasePipeline):
             # PairRDD(task, (sorted messages))
             .groupByKey())
 
-        groups = spark_helper.cache_and_log('FilteredGroups',
+        groups = spark_helper.cache_and_log(
+            'FilteredGroups',
             # PairRDD(task, (sorted messages))
             task_msgs_rdd
             # PairRDD(task, group_id, InterPolationMessages as a group)

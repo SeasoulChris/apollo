@@ -11,37 +11,35 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index
 def chassis_msg_to_data(chassis):
     """Extract numpy array from proto"""
     return np.array([
-               chassis.speed_mps,  # 14 speed
-               chassis.throttle_percentage / 100,  # 15 throttle
-               chassis.brake_percentage / 100,  # 16 brake
-               chassis.steering_percentage / 100,  # 17
-               chassis.driving_mode,  # 18
-               chassis.gear_location,  # 22
-           ])
+        chassis.speed_mps,  # 14 speed
+        chassis.throttle_percentage / 100,  # 15 throttle
+        chassis.brake_percentage / 100,  # 16 brake
+        chassis.steering_percentage / 100,  # 17
+        chassis.driving_mode,  # 18
+        chassis.gear_location, ])  # 22
 
 
 def localization_msg_to_data(pose):
     """Extract numpy array from proto"""
     pose = pose.pose
     return np.array([
-               pose.heading,  # 0
-               pose.orientation.qx,  # 1
-               pose.orientation.qy,  # 2
-               pose.orientation.qz,  # 3
-               pose.orientation.qw,  # 4
-               pose.linear_velocity.x,  # 5
-               pose.linear_velocity.y,  # 6
-               pose.linear_velocity.z,  # 7
-               pose.linear_acceleration.x,  # 8
-               pose.linear_acceleration.y,  # 9
-               pose.linear_acceleration.z,  # 10
-               pose.angular_velocity.x,  # 11
-               pose.angular_velocity.y,  # 12
-               pose.angular_velocity.z,  # 13
-               pose.position.x,  # 19
-               pose.position.y,  # 20
-               pose.position.z,  # 21
-           ])
+        pose.heading,  # 0
+        pose.orientation.qx,  # 1
+        pose.orientation.qy,  # 2
+        pose.orientation.qz,  # 3
+        pose.orientation.qw,  # 4
+        pose.linear_velocity.x,  # 5
+        pose.linear_velocity.y,  # 6
+        pose.linear_velocity.z,  # 7
+        pose.linear_acceleration.x,  # 8
+        pose.linear_acceleration.y,  # 9
+        pose.linear_acceleration.z,  # 10
+        pose.angular_velocity.x,  # 11
+        pose.angular_velocity.y,  # 12
+        pose.angular_velocity.z,  # 13
+        pose.position.x,  # 19
+        pose.position.y,  # 20
+        pose.position.z, ])  # 21
 
 
 def feature_combine(chassis_data, pose_data):
@@ -69,8 +67,8 @@ def interpolate_pose(pose_left, pose_right, time_in_between):
     time_right, data_right = pose_right.header.timestamp_sec, localization_msg_to_data(pose_right)
     interp_pose = np.array([0.0] * len(data_left))
     rotation_indexes = [1, 2, 3, 4]
-    rot_left = [data_left[x] for x in rotation_indexes] 
-    rot_right = [data_right[x] for x in rotation_indexes] 
+    rot_left = [data_left[x] for x in rotation_indexes]
+    rot_right = [data_right[x] for x in rotation_indexes]
     rotation = rotation_interp(time_left, time_right, rot_left, rot_right, time_in_between)
     for index in range(len(data_left)):
         if index not in rotation_indexes:
