@@ -11,7 +11,6 @@ dependencies:
   - conda-forge::casadi
   - conda-forge::eventlet
   - conda-forge::flask-restful
-  # - conda-forge::gpytorch  # It's downgraded to a very early version due to pytorch lock.
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar

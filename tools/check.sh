@@ -46,3 +46,5 @@ ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/common
 # TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/streaming
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/learning_algorithms
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling  # Finally
+
+echo "######################### All check passed! #########################"

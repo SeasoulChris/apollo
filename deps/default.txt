@@ -1,5 +1,9 @@
 bayesian-optimization
-liegroups
-pyro-ppl
 casadi
+gpytorch >= 1.1
+liegroups
 psycopg2-binary
+pyro-ppl
+
+# To use this version, please add requirement("torch") into your deps.
+torch >= 1.5

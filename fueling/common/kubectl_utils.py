@@ -41,8 +41,9 @@ class Kubectl(object):
         """kubectl logs
         return a generator of the logs
         """
-        return self.coreV1Api.read_namespaced_pod_log(name=name, namespace=namespace, follow=True,
-                                            _preload_content=False, _request_timeout=10).stream()
+        return self.coreV1Api.read_namespaced_pod_log(
+            name=name, namespace=namespace, follow=True,
+            _preload_content=False, _request_timeout=10).stream()
 
     def delete_pod(self, name, namespace='default'):
         """delete pods
