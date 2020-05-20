@@ -84,7 +84,7 @@ function init_settings() {
       docker login hub.baidubce.com -u apollofuel -p apollo@2017
       DEST_REPO="hub.baidubce.com/apollofuel/autotuner"
       K8S_NAMESPACE="autotuner"
-      REPLICA=1
+      REPLICA=2
       ;;
     *)
       print_usage

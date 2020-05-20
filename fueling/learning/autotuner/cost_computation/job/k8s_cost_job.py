@@ -16,7 +16,7 @@ from fueling.learning.autotuner.cost_computation.job.base_cost_job import BaseCo
 SERVICE_URL = "http://spark-submitter-service.default.svc.cluster.local:8000"
 
 JOB_END_STATUS = {'Completed', 'Error', 'UnexpectedAdmissionError', 'Terminating'}
-
+JOB_SUCCESS_STATUS = {'Completed', 'Terminating'}
 WAIT_INTERVAL_SECONDS = 3
 
 
@@ -77,7 +77,7 @@ class K8sCostJob(BaseCostJob):
             prev_job_status = job_status
 
         logging.info(f'{cost_job_info} with spark job {spark_job_id} done with status {job_status}.')
-        return job_status == 'Completed'
+        return job_status in JOB_SUCCESS_STATUS
 
     def cancel(self):
         # TODO(vivian): delete the spark driver
