@@ -88,13 +88,13 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
         log_files = self.adb_client.path_ls(log_path)
         if log_files.success:
             for log_file_path in log_files.paths:
-                if (log_file_path.type != 'd' and
-                    any(log_file_path.path.find(x) != -1 for x in log_names)):
+                if (log_file_path.type != 'd'
+                        and any(log_file_path.path.find(x) != -1 for x in log_names)):
                     response.log_file_name = log_file_path.path
                     response.log_content = self._retrieve_file_content(log_file_path.path)
                     logging.info('got log for: {}'.format(log_file_path.path))
                     yield response
-            
+
     def _get_value(self, data):
         """get scan result meta column value"""
         if data.HasField('int'):

@@ -25,7 +25,9 @@ flags.DEFINE_bool('all_topics', False, 'whether copy all topics')
 flags.DEFINE_string('task_id', '', 'copy some exact task id')
 flags.DEFINE_bool('download_logs', False, 'whether download logs')
 
+
 class AfsToBosPipeline(BasePipeline):
+
     """Copy AFS data to Bos"""
 
     def get_copy_src(self):
@@ -36,7 +38,7 @@ class AfsToBosPipeline(BasePipeline):
             return exact_date, exact_date, task_id
         # By default get two days data to avoid some being missed due to time diff
         today = datetime.datetime.today()
-        yesterday = today - datetime.timedelta(days = 1)
+        yesterday = today - datetime.timedelta(days=1)
         end_date = self.FLAGS.get('end_date') or today.strftime('%Y%m%d')
         start_date = self.FLAGS.get('start_date') or yesterday.strftime('%Y%m%d')
         return start_date, end_date, task_id
@@ -50,9 +52,9 @@ class AfsToBosPipeline(BasePipeline):
             return (task_id, target_dir) if task_id == exact_task_id else None
         target_complete_file = os.path.join(target_dir, MARKER)
         if os.path.exists(target_complete_file):
-            return None 
-        if (not map_id in afs_config.MAP_TO_REGION or 
-            not int(task_purpose) in afs_config.TASK_TO_PURPOSE):
+            return None
+        if (map_id not in afs_config.MAP_TO_REGION
+                or int(task_purpose) not in afs_config.TASK_TO_PURPOSE):
             return None
         return (task_id, target_dir)
 
@@ -82,8 +84,8 @@ class AfsToBosPipeline(BasePipeline):
             logging.fatal(F'specified project {project} does not exist')
         task_tbl, message_tbl, keydata_tbl, log_tbl = afs_config.PROJ_TO_TABLE[project]
         start_date, end_date, exact_task_id = self.get_copy_src()
-        interval = (datetime.datetime.strptime(end_date, '%Y%m%d').date() -
-                    datetime.datetime.strptime(start_date, '%Y%m%d').date())
+        interval = (datetime.datetime.strptime(end_date, '%Y%m%d').date()
+                    - datetime.datetime.strptime(start_date, '%Y%m%d').date())
         afs_client = AfsClient()
         logging.info(F'copying for {task_tbl} {start_date} to {end_date} with {exact_task_id}')
         # output bos directory
@@ -92,41 +94,44 @@ class AfsToBosPipeline(BasePipeline):
         skip_topics = '' if self.FLAGS.get('all_topics') else ','.join(afs_config.SKIP_TOPICS)
         logging.info(F'copying with skipping topics {skip_topics} to {target_dir}')
 
-        todo_tasks = spark_helper.cache_and_log('CopyPreparing',
+        todo_tasks = spark_helper.cache_and_log(
+            'CopyPreparing',
             # RDD(days)
             self.to_rdd([self.get_date(start_date, i) for i in range(interval.days + 1)])
             # PairRDD(task_id, start_time, end_time)
             .flatMap(lambda x: afs_client.scan_tasks(task_tbl, x)))
 
-        filtered_tasks = spark_helper.cache_and_log('CopyPreparing-Filter',
-             # PairRDD(task_id, start_time, end_time)
-             todo_tasks
-             # RDD(task_id)
-             .map(lambda x: x[0])
-             # RDD(task_id)
-             .distinct()
-             # PairRDD(task_id, capture_place, region_id, task_purpose)
-             .flatMap(lambda x: afs_client.scan_keydata(keydata_tbl, x))
-             # PairRDD(task_id, target_dir)
-             .map(lambda x: self.filter_tasks(x, project, exact_task_id, target_dir))
-             # PairRDD(task_id, target_dir)
-             .filter(spark_op.not_none))
+        filtered_tasks = spark_helper.cache_and_log(
+            'CopyPreparing-Filter',
+            # PairRDD(task_id, start_time, end_time)
+            todo_tasks
+            # RDD(task_id)
+            .map(lambda x: x[0])
+            # RDD(task_id)
+            .distinct()
+            # PairRDD(task_id, capture_place, region_id, task_purpose)
+            .flatMap(lambda x: afs_client.scan_keydata(keydata_tbl, x))
+            # PairRDD(task_id, target_dir)
+            .map(lambda x: self.filter_tasks(x, project, exact_task_id, target_dir))
+            # PairRDD(task_id, target_dir)
+            .filter(spark_op.not_none))
 
         partitions = int(os.environ.get('APOLLO_EXECUTORS', 10)) * 10
-        process_tasks = spark_helper.cache_and_log('CopyProcessing', 
-             todo_tasks
-             # PairRDD(task_id, (start_time, end_time))
-             .map(lambda x: (x[0], (x[1], x[2])))
-             # PairRDD(task_id, ((start_time, end_time), target_dir))
-             .join(filtered_tasks)
-             # PairRDD(task_id, ((start_time, end_time), target_dir))
-             .repartition(partitions)
-             # RDD((messages))
-             .map(lambda x: afs_client.transfer_messages(x, message_tbl, skip_topics))
-             # RDD(completed dirs)
-             .map(os.path.dirname)
-             # RDD(completed dirs)
-             .distinct())
+        process_tasks = spark_helper.cache_and_log(
+            'CopyProcessing',
+            todo_tasks
+            # PairRDD(task_id, (start_time, end_time))
+            .map(lambda x: (x[0], (x[1], x[2])))
+            # PairRDD(task_id, ((start_time, end_time), target_dir))
+            .join(filtered_tasks)
+            # PairRDD(task_id, ((start_time, end_time), target_dir))
+            .repartition(partitions)
+            # RDD((messages))
+            .map(lambda x: afs_client.transfer_messages(x, message_tbl, skip_topics))
+            # RDD(completed dirs)
+            .map(os.path.dirname)
+            # RDD(completed dirs)
+            .distinct())
 
         (process_tasks
             # RDD(target_dir/COMPLETE)

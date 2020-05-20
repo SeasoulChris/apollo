@@ -7,7 +7,7 @@ from cyber_py3.record import RecordWriter
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.data.afs_client.config as afs_config
-import fueling.data.afs_client.conversions as conversions 
+import fueling.data.afs_client.conversions as conversions
 
 
 class AfsRecordWriter(object):
@@ -39,17 +39,16 @@ class AfsRecordWriter(object):
         self.converted_message_writer.close()
 
     def write_message(self, cyber_message):
-        """Write message into record file""" 
-        if not cyber_message.topic in self.channels:
+        """Write message into record file"""
+        if cyber_message.topic not in self.channels:
             self.channels[cyber_message.topic] = cyber_message.data_type
-        self.writer.write_message(cyber_message.topic,
-            cyber_message.message, cyber_message.timestamp)
+        self.writer.write_message(
+            cyber_message.topic, cyber_message.message, cyber_message.timestamp)
         apollo_params = conversions.ConversionsCenter.convert(cyber_message)
         if not apollo_params:
-            return  
+            return
         apollo_topic, apollo_datatype, apollo_message = apollo_params
-        if not apollo_topic in self.converted_channels:
+        if apollo_topic not in self.converted_channels:
             self.converted_channels[apollo_topic] = apollo_datatype
-        self.converted_message_writer.write_message(apollo_topic,
-            apollo_message.SerializeToString(), cyber_message.timestamp) 
-
+        self.converted_message_writer.write_message(
+            apollo_topic, apollo_message.SerializeToString(), cyber_message.timestamp)

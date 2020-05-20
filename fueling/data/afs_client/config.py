@@ -50,13 +50,13 @@ TASK_TO_PURPOSE = {
     2: 'collection',
     3: 'dailybuild',
     4: 'roadtest',
-#    5: 'calibration',
+    # 5: 'calibration',
     6: 'operation',
-#    7: 'mapcollection',
+    # 7: 'mapcollection',
     8: 'prerelease',
     9: 'prepublish',
     10: 'publish',
-#    11: 'mapchecking'
+    # 11: 'mapchecking'
 }
 
 # Topics that can be skipped by default
@@ -78,6 +78,5 @@ def form_target_path(target_dir, task_id, project, map_id, task_purpose):
                         MAP_TO_REGION.get(map_id, 'other'),
                         map_id,
                         TASK_TO_PURPOSE.get(int(task_purpose), task_purpose),
-                        task_id.split('_')[1][:4], # Something like MKZ167_20200121131624
+                        task_id.split('_')[1][:4],  # Something like MKZ167_20200121131624
                         task_id)
-

@@ -10,13 +10,16 @@ import grpc
 from fueling.data.afs_client.afs_record_writer import AfsRecordWriter
 import apps.afs_data_service.proto.afs_data_service_pb2 as afs_data_service_pb2
 import apps.afs_data_service.proto.afs_data_service_pb2_grpc as afs_data_service_pb2_grpc
-import fueling.common.file_utils as file_utils 
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
 
 # print chinese characters
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+
 class AfsClient(object):
+
     """Afs client."""
 
     def __init__(self):

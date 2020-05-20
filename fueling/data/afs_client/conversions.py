@@ -4,10 +4,10 @@
 from fueling.common.record.kinglong.cybertron.python.convert import transfer_localization_estimate
 from fueling.common.record.kinglong.cybertron.python.convert import transfer_perception_obstacles
 import fueling.common.logging as logging
-import fueling.common.record.kinglong.proto.modules.localization_pose_pb2\
-       as cyber_localization_pose_pb2
-import fueling.common.record.kinglong.proto.modules.perception_obstacle_pb2\
-       as cyber_perception_obstacle_pb2
+import fueling.common.record.kinglong.proto.modules.localization_pose_pb2 \
+    as cyber_localization_pose_pb2
+import fueling.common.record.kinglong.proto.modules.perception_obstacle_pb2 \
+    as cyber_perception_obstacle_pb2
 
 
 class ConversionsCenter(object):
@@ -23,7 +23,7 @@ class ConversionsCenter(object):
     @staticmethod
     def convert(message):
         """Convert the message by using conversion corresponding to the topic"""
-        if not message.topic in ConversionsCenter.conversions:
+        if message.topic not in ConversionsCenter.conversions:
             return None
         return ConversionsCenter.conversions[message.topic].convert(message)
 
@@ -55,8 +55,8 @@ class LocalizationPoseConversion(ConversionBase):
         cyber_loc = cyber_localization_pose_pb2.LocalizationEstimate()
         cyber_loc.ParseFromString(message.message)
         apollo_loc = transfer_localization_estimate(cyber_loc)
-        logging.log_every_n(logging.INFO,
-            F'transferred localization: {apollo_loc.pose.position.x}', 1000)
+        logging.log_every_n(
+            logging.INFO, F'transferred localization: {apollo_loc.pose.position.x}', 1000)
         return (apollo_topic, apollo_datatype, apollo_loc)
 
 
@@ -85,4 +85,3 @@ def register_conversions():
         logging.info('registering conversions')
         LocalizationPoseConversion()
         PerceptionObstaclesConversion()
-
