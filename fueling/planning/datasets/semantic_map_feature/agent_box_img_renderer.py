@@ -51,11 +51,6 @@ class AgentBoxImgRenderer(object):
         cv.fillPoly(local_map, [corner_points], color=(255))
         return local_map
 
-    def draw_agent_pose(self, coordinate_heading=0.):
-        local_map = np.zeros(
-            [self.local_size_h, self.local_size_w, 1], dtype=np.uint8)
-
-
 if __name__ == "__main__":
     config_file = "/fuel/fueling/planning/datasets/semantic_map_feature " \
         "/planning_semantic_map_config.pb.txt"
