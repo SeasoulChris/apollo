@@ -34,16 +34,38 @@ POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 class DynamicModelDataset(Dataset):
     """ data preparation for dynamic model """
 
-    def __init__(self, data_dir, is_normalize=False, is_standardize=True):
+    def __init__(self, data_dir, factor_file=None, is_normalize=False, is_standardize=True):
         super().__init__()
         self.data_dir = data_dir
-        self.standardization_factors = dict()
-        self.normalization_factors = dict()
-        self.get_datasets()
-        self.set_standardization_factors()
-        self.set_normalization_factor()
         self.is_normalize = is_normalize
         self.is_standardize = is_standardize
+
+        self.get_datasets()
+
+        if not factor_file:
+            self.standardization_factors = dict()
+            self.normalization_factors = dict()
+            self.standardization_factors_file = os.path.join(
+                self.data_dir, 'standardization_factors.npy')
+            self.normalization_factors_file = os.path.join(
+                self.data_dir, 'normalization_factors.npy')
+            self.set_standardization_factors()
+            self.set_normalization_factors()
+        else:
+           # for validation and test data, use same normalization factors as training data set.
+            # for processed training data (factors already saved) load factor directly
+            # factor_file path is training data path
+            self.standardization_factors_file = os.path.join(
+                factor_file, 'standardization_factors.npy')
+            self.normalization_factors_file = os.path.join(
+                factor_file, 'normalization_factors.npy')
+            # load training data factors
+            self.standardization_factors = np.load(
+                self.standardization_factors_file, allow_pickle=True).item()
+            self.normalization_factors = np.load(
+                self.normalization_factors_file, allow_pickle=True).item()
+            logging.info(
+                f'loading normalization factors from {self.normalization_factors_file} as {self.normalization_factors}')
 
     def get_datasets(self):
         """Extract datasets from data path"""
@@ -86,7 +108,7 @@ class DynamicModelDataset(Dataset):
         """ for debuging """
         return self.__getitem__(idx)
 
-    def set_normalization_factor(self):
+    def set_normalization_factors(self):
         """Compute min and max value of input data for each feature"""
         input_max = np.full((1, INPUT_DIM), np.NINF)
         input_min = np.full((1, INPUT_DIM), np.Inf)
@@ -96,8 +118,7 @@ class DynamicModelDataset(Dataset):
         # save min and max to npy file
         self.normalization_factors['max'] = input_max
         self.normalization_factors['min'] = input_min
-        np.save(os.path.join(self.data_dir, 'normalization_factors.npy'),
-                self.normalization_factors)
+        np.save(self.normalization_factors_file, self.normalization_factors)
         return input_max, input_min
 
     def set_standardization_factors(self):
@@ -122,8 +143,7 @@ class DynamicModelDataset(Dataset):
         # save mean and standard deviation to npy file
         self.standardization_factors['mean'] = input_segment_mean
         self.standardization_factors['std'] = input_segment_std
-        np.save(os.path.join(self.data_dir, 'standardization_factors.npy'),
-                self.standardization_factors)
+        np.save(self.standardization_factors_file, self.standardization_factors)
         return input_segment_mean, input_segment_std
 
     def standardize(self, inputs):
@@ -143,6 +163,7 @@ class DynamicModelDataset(Dataset):
 
 if __name__ == '__main__':
     dynamic_model_dataset = DynamicModelDataset(
+        '/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/test',
         '/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/train')
     logging.info(f'dataset length {len(dynamic_model_dataset.datasets)}')
     logging.info(f'dateset is {dynamic_model_dataset.getitem(10)}')
