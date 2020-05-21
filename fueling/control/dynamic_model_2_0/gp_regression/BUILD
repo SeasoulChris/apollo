@@ -17,7 +17,7 @@ py_library(
     ],
 )
 
-py_binary(
+py_library(
     name = "dynamic_model_dataset",
     srcs = ["dynamic_model_dataset.py"],
     deps = [
@@ -25,6 +25,15 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
+)
+
+py_binary(
+    name = "dynamic_model_dataset_test",
+    srcs = ["dynamic_model_dataset_test.py"],
+    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
+    deps = [
+        ":dynamic_model_dataset",
+    ]
 )
 
 py_binary(
