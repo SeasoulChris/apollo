@@ -1,10 +1,11 @@
+# !/usr/bin/env python
+
 """
 A simple demo PySpark job to stat messages by channel.
 
 Run with:
     bazel run //fueling/demo:count_msg_by_channel
 """
-#!/usr/bin/env python
 
 # Standard packages
 import pprint

@@ -30,20 +30,20 @@ ${RUNNER} bazel test $(bazel query //... \
 )
 
 echo "######################### Lint #########################"
+${RUNNER} bash /fuel/tools/lint.sh /fuel/apps
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/common
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/data
+${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/demo
+${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/streaming
 
-# TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/apps
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/control
-# TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/demo
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/learning
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/map
-# TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/perception
+# TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/perception
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/planning
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/prediction
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/profiling
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/simulation
-# TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/streaming
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/learning_algorithms
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling  # Finally
 

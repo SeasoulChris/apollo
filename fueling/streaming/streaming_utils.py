@@ -53,8 +53,8 @@ def get_todo_records(root_dir, target_dir=None):
         task_file_path = os.path.join(records_path, task_file)
         with open(task_file_path) as read_task_file:
             records = list_records_for_task(task_file_path)
-            if records and all(record_utils.is_record_file(record) and
-                               is_serialization_completed(root_dir, record) for record in records):
+            if records and all(record_utils.is_record_file(record)
+               and is_serialization_completed(root_dir, record) for record in records):
                 module_target = os.path.dirname(
                     locate_target_record(root_dir, target_dir, records[0]))
                 if os.path.exists(os.path.join(module_target, 'COMPLETE')):

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
+
 """
 A demo PySpark job with pytorch distributed data parallel training.
 
@@ -122,7 +123,7 @@ class PytorchTraining(BasePipeline):
             last_data_piece, last_label_piece = None, None
             for i, data in enumerate(trainloader, 0):
                 # get the inputs; data is a list of [inputs, labels]
-                #inputs, labels = data
+                # inputs, labels = data
                 inputs, labels = data[0].to(device_ids[0]), data[1].to(device_ids[0])
                 last_data_piece, last_label_piece = inputs, labels
                 # zero the parameter gradients

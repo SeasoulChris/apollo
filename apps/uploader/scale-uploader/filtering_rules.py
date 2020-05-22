@@ -63,8 +63,8 @@ class EvenIntervalRule(BaseRule):
             filtered_frames.append(frames[idx])
             next_idx = idx + 1
             while next_idx + 1 < len(frames_in_float) and \
-                (abs(self._interval - (frames_in_float[next_idx + 1] - frames_in_float[idx])) <
-                 abs(self._interval - (frames_in_float[next_idx] - frames_in_float[idx]))):
+                (abs(self._interval - (frames_in_float[next_idx + 1] - frames_in_float[idx]))
+                 < abs(self._interval - (frames_in_float[next_idx] - frames_in_float[idx]))):
                 next_idx += 1
             idx = next_idx
         return filtered_frames
@@ -90,8 +90,8 @@ class MovingCarRule(BaseRule):
             ypos = float(next(gps_info for gps_info in gps_data if gps_info.find('"y":') != -1)
                          .split(':')[1].strip(', \n'))
             if self._pre_xpos and self._pre_ypos:
-                if math.sqrt((xpos - self._pre_xpos)**2 +
-                             (ypos - self._pre_ypos)**2) > self._distance:
+                if math.sqrt((xpos - self._pre_xpos)**2
+                             + (ypos - self._pre_ypos)**2) > self._distance:
                     filtered_frames.append(frame)
             else:
                 filtered_frames.append(frame)

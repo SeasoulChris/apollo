@@ -20,7 +20,8 @@ def build_file_handles(topic_file_paths):
     """Build a map between topic file and its handle"""
     handles = {}
     for topic_file in topic_file_paths:
-        def func(file_path): return open(file_path, 'w+')
+        def func(file_path):
+            return open(file_path, 'w+')
         handles[os.path.basename(topic_file)] = streaming_utils.retry(func, [topic_file], 3)
     return handles
 

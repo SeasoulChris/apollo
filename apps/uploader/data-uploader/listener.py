@@ -99,5 +99,5 @@ class DiskManagement(object):
         valid_mount_cols = 4
         mount_info = utils.check_output('lsblk | grep {}'.format(disk_label.split('/')[-1]))
         return (len(mount_info) == 1 and len(mount_info[0].split()) >= valid_mount_cols and (
-            mount_info[0].split()[valid_mount_cols - 1].endswith(b'T') or
-            mount_info[0].split()[valid_mount_cols - 1].endswith(b'G')))
+            mount_info[0].split()[valid_mount_cols - 1].endswith(b'T')
+            or mount_info[0].split()[valid_mount_cols - 1].endswith(b'G')))

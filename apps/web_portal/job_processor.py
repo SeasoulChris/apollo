@@ -70,8 +70,8 @@ class JobProcessor(object):
             if not self.partner_account.bos_bucket:
                 logging.error('User requested to use BOS while does not have it on profile.')
                 return False
-            if (set(bos.access_key) > self.BOS_KEY_CHARSET or
-                    set(bos.secret_key) > self.BOS_KEY_CHARSET):
+            if (set(bos.access_key) > self.BOS_KEY_CHARSET
+                    or set(bos.secret_key) > self.BOS_KEY_CHARSET):
                 logging.error('User provided invalid information.')
                 return False
             client_flags.update({

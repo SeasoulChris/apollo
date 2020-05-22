@@ -200,7 +200,8 @@ def jobs_hdl():
                 'creation_timestamp': creation_timestamp.timestamp(),
                 'duration_ns': duration_ns
             })
-    sorted_job_list = sorted(list(jobs_dict.items()),
+    sorted_job_list = sorted(
+        list(jobs_dict.items()),
         key=lambda x: x[1]['creation_timestamp'],
         reverse=True)
     return flask.render_template('jobs.html', jobs_list=sorted_job_list)
@@ -249,13 +250,14 @@ def pod_log_streaming_hdl(pod_name, namespace='default'):
     logs_generator = None
     try:
         logs_generator = kubectl.logs(pod_name, namespace)
-    except:
+    except Exception as ex:
         pass
     if logs_generator:
         return flask.Response(flask.stream_with_context(
             decorate_logs(logs_generator)), mimetype="text/plain")
     else:
         return 'pod does not exist or has been deleted'
+
 
 @app.route('/bos-ask', methods=['POST'])
 def bos_ask():
@@ -322,4 +324,3 @@ def main(argv):
 
 if __name__ == '__main__':
     absl_app.run(main)
-
