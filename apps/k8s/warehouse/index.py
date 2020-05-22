@@ -249,7 +249,7 @@ def pod_log_streaming_hdl(pod_name, namespace='default'):
             yield conv.convert(ansi=log, full=False)
     logs_generator = None
     try:
-        logs_generator = kubectl.logs(pod_name, namespace)
+        logs_generator = kubectl.log_stream(pod_name, namespace)
     except Exception as ex:
         pass
     if logs_generator:

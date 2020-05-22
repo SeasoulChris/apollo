@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//apps/k8s/spark_submitter:client",
         "//fueling/common:kubectl_utils",
+        "//fueling/common:mongo_utils",
         "//fueling/common/storage:bazel_filesystem",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",

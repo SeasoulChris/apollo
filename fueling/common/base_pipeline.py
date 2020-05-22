@@ -13,6 +13,7 @@ from pyspark import SparkConf, SparkContext
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.common.kubectl_utils import Kubectl
+from fueling.common.mongo_utils import Mongo
 from fueling.common.storage.bazel_filesystem import BazelFilesystem
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
@@ -118,14 +119,24 @@ class BasePipeline(object):
         finally:
             self.stop()
 
-        if flags.FLAGS.auto_delete_driver_pod:
-            kubectl = Kubectl()
-            driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
-            driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
-            if len(driver_pod) == 1:
-                kubectl.delete_pod(driver_pod[0].metadata.name)
-            else:
-                logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
+        kubectl = Kubectl()
+        driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
+        driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
+        if len(driver_pod) == 1:
+            pod_name = driver_pod[0].metadata.name
+            pod_namespace = driver_pod[0].metadata.namespace
+            pod_log = kubectl.logs(pod_name, pod_namespace)
+            Mongo().job_log_collection().insert_one(
+                {'logs': pod_log,
+                 'job_id': flags.FLAGS.job_id,
+                 'pod_name': pod_name,
+                 'date': datetime.now()})
+            logging.info(F'Save driver log success')
+            if flags.FLAGS.auto_delete_driver_pod:
+                kubectl.delete_pod(pod_name)
+        else:
+            logging.info(
+                F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
 
     def main(self):
         """Kick off everything."""

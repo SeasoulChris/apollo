@@ -50,6 +50,10 @@ class Mongo(object):
         """Get job collection."""
         return self.collection('jobs')
 
+    def job_log_collection(self):
+        """Get job log collection."""
+        return self.collection('job_logs')
+
 
 if __name__ == '__main__':
     def main(argv):

@@ -38,6 +38,12 @@ class Kubectl(object):
         return self.coreV1Api.read_namespaced_pod(name=name, namespace=namespace)
 
     def logs(self, name, namespace='default'):
+        """ kubectl logs
+        return a string
+        """
+        return self.coreV1Api.read_namespaced_pod_log(name=name, namespace=namespace)
+
+    def log_stream(self, name, namespace='default'):
         """kubectl logs
         return a generator of the logs
         """
