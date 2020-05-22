@@ -9,7 +9,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common/storage:bos_client",
-        #requirement("pyquaternion"),
+        "//fueling/streaming:streaming_utils",
+        requirement("pypcd"),
     ],
 )
 
@@ -24,10 +25,10 @@ py_library(
     ],
 )
 
-#py_test(
-#    name = "populate_frames_test",
-#    srcs = ["populate_frames_test.py"],
-#    deps = [
-#        ":populate_frames",
-#    ]
-#)
+py_test(
+    name = "populate_frames_test",
+    srcs = ["populate_frames_test.py"],
+    deps = [
+        ":populate_frames",
+    ]
+)

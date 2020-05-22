@@ -31,10 +31,10 @@ ${RUNNER} bazel test $(bazel query //... \
 
 echo "######################### Lint #########################"
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/common
+${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/data
 
 # TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/apps
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/control
-# TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/data
 # TODO(longtao): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/demo
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/learning
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/map

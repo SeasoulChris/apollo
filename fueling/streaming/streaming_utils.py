@@ -43,6 +43,8 @@ def get_todo_records(root_dir, target_dir=None):
     todo_records = []
     todo_tasks = []
     records_path = get_streaming_records(root_dir)
+    if not os.path.exists(records_path):
+        return todo_records, todo_tasks
     for task_file in os.listdir(records_path):
         if target_dir is not None:
             target_path = os.path.join(os.path.join(root_dir, target_dir), task_file)

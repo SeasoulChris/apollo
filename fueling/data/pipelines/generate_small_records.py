@@ -79,7 +79,9 @@ class GenerateSmallRecords(BasePipeline):
         dst_files = self.to_rdd(storage.list_files(dst_prefix)).cache()
         # Only process those COMPLETE folders.
 
-        def is_marker(path): return path.endswith(MARKER)
+        def is_marker(path):
+            return path.endswith(MARKER)
+
         # PairRDD(src_dir, src_record)
         src_dir_and_records = spark_op.filter_keys(
             # PairRDD(src_dir, src_record)
@@ -134,7 +136,9 @@ class GenerateSmallRecords(BasePipeline):
                                                     # RDD(todo_src_record)
                                                     todo_records
                                                     # PairRDD(src_record, dst_record)
-                                                    .map(spark_op.value_by(lambda path: path.replace(src_prefix, dst_prefix, 1)))
+                                                    .map(spark_op.value_by(
+                                                        lambda path: path.replace(
+                                                            src_prefix, dst_prefix, 1)))
                                                     # RDD(dst_record)
                                                     .map(spark_op.do_tuple(self.process_file))
                                                     # RDD(dst_record)

@@ -39,7 +39,9 @@ class ReorgSmallRecords(BasePipeline):
         # RDD(dst_file)
         dst_files = self.to_rdd(storage.list_files(dst_prefix)).cache()
 
-        def is_complete_marker(path): return path.endswith(MARKER)
+        def is_complete_marker(path):
+            return path.endswith(MARKER)
+
         # RDD(src_dir)
         todo_src_dirs = src_files.filter(is_complete_marker).map(os.path.dirname)
 

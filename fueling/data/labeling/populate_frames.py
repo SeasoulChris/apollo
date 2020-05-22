@@ -74,13 +74,13 @@ def create_dataframe(sql_context, msgs_rdd, topics):
 
 def get_next_message(msg, msg_map, msgs_iterator):
     """Judiciously decide what the next message is"""
-    if (msg is not None and
-            msg_map['{}-{}'.format(msg.topic, msg.timestamp)] > 0 and
-            msg.topic != WANTED_CHANNELS['lidar-128']):
+    if (msg is not None
+            and msg_map['{}-{}'.format(msg.topic, msg.timestamp)] > 0
+            and msg.topic != WANTED_CHANNELS['lidar-128']):
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
         return msg
-    msg = msgs_iterator.next(lambda x: x.topic in WANTED_CHANNELS.values() and
-                             '{}-{}'.format(x.topic, x.timestamp) in msg_map)
+    msg = msgs_iterator.next(lambda x: x.topic in WANTED_CHANNELS.values()
+                             and '{}-{}'.format(x.topic, x.timestamp) in msg_map)
     if msg is not None:
         msg_map['{}-{}'.format(msg.topic, msg.timestamp)] -= 1
     return msg
@@ -186,7 +186,8 @@ def mark_complete(todo_tasks, target_dir, root_dir):
         task_path = os.path.join(root_dir, target_dir, os.path.basename(task))
         if not os.path.exists(task_path):
             logging.warning(
-                'No data generated for task: {}, check if there are qualified frames'.format(task_path))
+                'No data generated for task: {}, check if there are qualified frames'.format(
+                    task_path))
             continue
         streaming_utils.write_to_file(
             os.path.join(task_path, 'COMPLETE'), 'w', '{:.6f}'.format(time.time()))
@@ -205,21 +206,12 @@ class PopulateFramesPipeline(BasePipeline):
         _, todo_tasks = streaming_utils.get_todo_records(root_dir, target_dir)
         logging.info('ToDo tasks: {}'.format(todo_tasks))
 
-        # TODO: Just show case for email notification, to be updated as something more useful
-        notification = namedtuple('Notification', ['todo_tasks', 'root_dir', 'target_dir'])
-        message = [notification(task, root_dir, target_dir) for task in todo_tasks]
-        email_utils.send_email_info('Frame Population Job Running', message, email_utils.DATA_TEAM)
-
         self.run_internal(todo_tasks, root_dir, target_dir)
 
         logging.info('Task done, marking COMPLETE')
         mark_complete(todo_tasks, target_dir, root_dir)
 
         logging.info('Labeling: All Done, TEST.')
-
-        # TODO: Just show case for email notification, to be updated as something more useful
-        email_utils.send_email_info('Frame Population Job Completed', {'Success': 100, 'Fail': 200},
-                                    email_utils.DATA_TEAM)
 
     def run(self):
         """Run prod."""

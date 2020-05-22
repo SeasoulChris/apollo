@@ -72,8 +72,10 @@ class RecordParser(object):
             for jerk, cnt in jerk_cnt.items():
                 speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
-        record.stat.planning_stat.stability.imu_stability_score = parser._imu_stability_grader.get_score()
-        record.stat.planning_stat.stability.planning_stability_score = parser._planning_stability_grader.get_score()
+        record.stat.planning_stat.stability.imu_stability_score = \
+            parser._imu_stability_grader.get_score()
+        record.stat.planning_stat.stability.planning_stability_score = \
+            parser._planning_stability_grader.get_score()
         return record
 
     def __init__(self, record_file):
@@ -106,8 +108,8 @@ class RecordParser(object):
         if len(self.record.channels) == 0:
             logging.error(f'No message found in record {self.record.path}')
             return False
-        if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL) and
-                not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
+        if (self.record.channels.get(record_utils.GNSS_ODOMETRY_CHANNEL)
+                and not self.record.channels.get(record_utils.LOCALIZATION_CHANNEL)):
             logging.info('Get pose from GPS as the localization channel is missing.')
             self._get_pose_from_gps = True
         return True
@@ -145,8 +147,8 @@ class RecordParser(object):
             # DrivingMode doesn't change.
             return
         # Save disengagement.
-        if (self._current_driving_mode == Chassis.COMPLETE_AUTO_DRIVE and
-                chassis.driving_mode == Chassis.EMERGENCY_MODE):
+        if (self._current_driving_mode == Chassis.COMPLETE_AUTO_DRIVE
+                and chassis.driving_mode == Chassis.EMERGENCY_MODE):
             logging.info('Disengagement found at {}'.format(timestamp))
             disengagement = self.record.disengagements.add(time=timestamp)
             pos = self._last_position
@@ -179,9 +181,10 @@ class RecordParser(object):
                 self.record.stat.mileages[driving_mode] = meters
 
         # Sample driving path.
-        if (self._last_position_sampled is None or
-                (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC and
-                 pose_distance_m(self._last_position_sampled, position) > POS_SAMPLE_MIN_DISTANCE_METER)):
+        if (self._last_position_sampled is None
+            or (time_sec - self._last_position_sampled_time > POS_SAMPLE_MIN_DURATION_SEC
+                and pose_distance_m(self._last_position_sampled, position)
+                > POS_SAMPLE_MIN_DISTANCE_METER)):
             try:
                 lat, lon = CoordUtils.utm_to_latlon(position.x, position.y)
                 self.record.stat.driving_path.add(lat=lat, lon=lon)

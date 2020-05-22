@@ -7,7 +7,8 @@ import os
 import sys
 
 from google.protobuf.json_format import MessageToJson
-from pyquaternion import Quaternion as PyQuaternion
+from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
 import cv2
 import numpy as np
 import pypcd
@@ -247,6 +248,14 @@ def quaternion_to_euler(qtnx, qtny, qtnz, qtnw):
     return [yaw, pitch, roll]
 
 
+def rotation_interp(time_left, time_right, rotation_left, rotation_right, time_in_between):
+    """Rotation interpolation, rotation is in Quaternion format"""
+    times = [time_left, time_right]
+    rotations = R.from_quat([rotation_left, rotation_right])
+    slerp = Slerp(times, rotations)
+    return slerp(time_in_between).as_quat()
+
+
 def get_interp_pose(timestamp, pose_left, pose_right):
     """Get mean value of two poses"""
     timestamp = float(timestamp)
@@ -272,20 +281,21 @@ def get_interp_pose(timestamp, pose_left, pose_right):
         (sensor_pose_right.position.y - sensor_pose_left.position.y) * interp_in_time
     sensor_pose_interp.position.z = sensor_pose_left.position.z + \
         (sensor_pose_right.position.z - sensor_pose_left.position.z) * interp_in_time
-    pyqt_left = PyQuaternion(w=sensor_pose_left.orientation.qw,
-                             x=sensor_pose_left.orientation.qx,
-                             y=sensor_pose_left.orientation.qy,
-                             z=sensor_pose_left.orientation.qz)
-    pyqt_right = PyQuaternion(w=sensor_pose_right.orientation.qw,
-                              x=sensor_pose_right.orientation.qx,
-                              y=sensor_pose_right.orientation.qy,
-                              z=sensor_pose_right.orientation.qz)
-    pyqt_interp = PyQuaternion.slerp(pyqt_left, pyqt_right, amount=interp_in_time)
+    pyqt_left = [sensor_pose_left.orientation.qw,
+                 sensor_pose_left.orientation.qx,
+                 sensor_pose_left.orientation.qy,
+                 sensor_pose_left.orientation.qz]
+    pyqt_right = [sensor_pose_right.orientation.qw,
+                  sensor_pose_right.orientation.qx,
+                  sensor_pose_right.orientation.qy,
+                  sensor_pose_right.orientation.qz]
+    pyqt_interp = rotation_interp(
+        float(pose_left.timestamp), float(pose_right.timestamp), pyqt_left, pyqt_right, timestamp)
     sensor_pose_interp.orientation = Quaternion()
-    sensor_pose_interp.orientation.qx = pyqt_interp.x
-    sensor_pose_interp.orientation.qy = pyqt_interp.y
-    sensor_pose_interp.orientation.qz = pyqt_interp.z
-    sensor_pose_interp.orientation.qw = pyqt_interp.w
+    sensor_pose_interp.orientation.qw = pyqt_interp[0]
+    sensor_pose_interp.orientation.qx = pyqt_interp[1]
+    sensor_pose_interp.orientation.qy = pyqt_interp[2]
+    sensor_pose_interp.orientation.qz = pyqt_interp[3]
     return sensor_pose_interp
 
 
@@ -602,8 +612,8 @@ class FramePopulator(object):
         self._pre_frame_time = float(lidar_msg.message.timestamp)
         # Car Not Moving rule
         if self._pre_pose_x and self._pre_pose_y:
-            distance = math.sqrt((float(lidar_pose.position.x) - self._pre_pose_x) ** 2 +
-                                 (float(lidar_pose.position.y) - self._pre_pose_y) ** 2)
+            distance = math.sqrt((float(lidar_pose.position.x) - self._pre_pose_x) ** 2
+                                 + (float(lidar_pose.position.y) - self._pre_pose_y) ** 2)
             if distance < min_distance:
                 logging.warning(
                     'filtered out by car not moving rule, distance: {}'.format(distance))
