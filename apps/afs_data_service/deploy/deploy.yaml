@@ -5,7 +5,7 @@ metadata:
   labels:
     app: afs-data-service
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       app: afs-data-service
@@ -18,7 +18,7 @@ spec:
       - name: baidubce
       containers:
       - name: afs-data-service
-        image: hub.baidubce.com/apollofuel/afs-data-service:20200519_1651
+        image: hub.baidubce.com/apollofuel/afs-data-service:20200522_2240
         imagePullPolicy: Always
         securityContext:
           privileged: true

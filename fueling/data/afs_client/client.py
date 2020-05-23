@@ -24,7 +24,7 @@ class AfsClient(object):
 
     def __init__(self):
         """init common variables"""
-        self.SERVER_URL = '180.76.165.129:50053'
+        self.SERVER_URL = '180.76.160.238:50053'
         self.GRPC_OPTIONS = [
             ('grpc.max_send_message_length', 512 * 1024 * 1024),
             ('grpc.max_receive_message_length', 512 * 1024 * 1024)

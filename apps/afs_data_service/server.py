@@ -122,7 +122,8 @@ class AfsDataTransfer(afs_data_service_pb2_grpc.AfsDataTransferServicer):
 
 
 def __main__(argv):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    MAX_WORKERS = 20
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS))
     afs_data_service_pb2_grpc.add_AfsDataTransferServicer_to_server(
         AfsDataTransfer(), server)
     server.add_insecure_port('[::]:50053')
