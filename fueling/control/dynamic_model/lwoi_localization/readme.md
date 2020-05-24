@@ -59,11 +59,11 @@ So far the lwoi_localization package only supports the NCLT data downloading and
       - `testdata/control/lwoi_localization/data/nclt/BLANK.txt`
 
 
-## Run the trainning and test codes
+## Run the training and test codes
 
 The Main Codes are included in the lwoi_main.py.
 
-1. Simply run the codes to process data, learning model, test resuls :
+1. Simply run the codes to process data, learning model, test results :
 
       ```bash
       $ python /fuel/fueling/control/dynamic_model/lwoi_localization/main_lwoi.py
@@ -153,3 +153,46 @@ The Main Codes are included in the lwoi_main.py.
    ERROR: ld.so: object 'libcaffe2_gpu.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.`
 
    Please just ignore them temporarily since they will not interfere with the operation of the codes.
+
+
+## Model input/output analyses
+The data fron NCLT assumes that robot poses are represented in a local coordinate frame aligned with the cardinal directions, with x pointing north,
+y east, and z down. 
+
+The ground truth data frequency is 100Hz which includes:
+
+- measurement time
+- x position
+- y position
+- z position
+- latitudinal angle
+- longitudinal angle
+- altitudinal angle
+
+There are two Gaussian Process Regression models. One is for Odometer (GpOdoFog) and the other is IMU (GpImu).
+
+### GPImu model
+The input dimension is 100 by 6, where 100 is the window size and six is number of input channels. The six channels are:
+
+
+- roll rate
+- pitch rate
+- yaw rate
+- acceleration in x-direction
+- acceleration in y-direction
+- acceleration in z-direction
+
+
+All these inputs come from IMU measurements. IMU frequency is 100Hz.
+
+The output freuency is 1Hz and its dimension is nine, where nine is the output channels.  The nine channels are
+
+- roll rate
+- pitch rate
+- yaw rate
+- acceleration in x-direction
+- acceleration in y-direction
+- acceleration in z-direction
+- velocity in x-direction
+- velocity in y-direction
+- velocity in z-direction
