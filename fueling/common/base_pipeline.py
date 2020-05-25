@@ -4,6 +4,7 @@
 from datetime import datetime
 from datetime import timezone
 import dateutil.parser
+import json
 import os
 import sys
 import traceback
@@ -135,7 +136,7 @@ class BasePipeline(object):
                                   .replace(tzinfo=timezone.utc))
             Mongo().job_log_collection().insert_one(
                 {'logs': pod_log,
-                 'desc': str(pod_desc),
+                 'desc': json.dumps(pod_desc),
                  'phase': phase,
                  'job_id': flags.FLAGS.job_id,
                  'pod_name': pod_name,
