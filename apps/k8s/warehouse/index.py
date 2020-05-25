@@ -241,12 +241,17 @@ def pod_log_hdl(pod_name, namespace='default'):
 @app.route('/pod_log_streaming/<path:pod_name>/<path:namespace>')
 def pod_log_streaming_hdl(pod_name, namespace='default'):
     """Handler of the pod streaming log"""
+    conv = Ansi2HTMLConverter()
     def decorate_logs(generator):
         """decorate logs"""
-        conv = Ansi2HTMLConverter()
         for log in generator:
             log = log.decode('utf-8')
             yield conv.convert(ansi=log, full=False)
+    mongologs = Mongo().job_log_collection().find_one({'pod_name': pod_name,
+                                                       'namespace': namespace})
+    if mongologs:
+        mongologstext = mongologs['logs'] + '\ncurrent log is loaded from database.'
+        return conv.convert(ansi=mongologstext, full=False)
     logs_generator = None
     try:
         logs_generator = kubectl.log_stream(pod_name, namespace)

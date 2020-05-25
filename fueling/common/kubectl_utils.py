@@ -17,6 +17,7 @@ class Kubectl(object):
             config.load_incluster_config()
         self.coreV1Api = client.CoreV1Api()
         self.appsV1Api = client.AppsV1Api()
+        self.apiClient = client.ApiClient()
 
     def get_pods(self, namespace='default'):
         """kubectl get pods
@@ -30,12 +31,16 @@ class Kubectl(object):
         return [pod for pod in self.get_pods(namespace)
                 if fnmatch.fnmatch(pod.metadata.name, pattern)]
 
-    def describe_pod(self, name, namespace='default'):
+    def describe_pod(self, name, namespace='default', tojson=False):
         """describe pod details
-        return type: V1Pod
+        return type: V1Pod if not tojson else json
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Pod.md
         """
-        return self.coreV1Api.read_namespaced_pod(name=name, namespace=namespace)
+        descinfo = self.coreV1Api.read_namespaced_pod(name=name, namespace=namespace)
+        if not tojson:
+            return descinfo
+        else:
+            return self.apiClient.sanitize_for_serialization(descinfo)
 
     def logs(self, name, namespace='default'):
         """ kubectl logs
