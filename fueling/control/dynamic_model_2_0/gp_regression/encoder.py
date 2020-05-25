@@ -17,6 +17,7 @@ class Encoder(nn.Module):
 
     def forward(self, data):
         """Define forward computation and activation functions"""
+        logging.debug(data[0, 0, :])
         logging.debug(data[0, -1, :])
         # original data shape: [sequency/window_size, batch_size, channel]
         # conv_input shape: [batch_size, channel, sequency/window_size]
@@ -28,4 +29,5 @@ class Encoder(nn.Module):
         data = F.relu(self.conv2(data))
         data = self.fc(data.view(data.shape[0], -1))
         logging.debug(data.shape)
+        logging.debug(data[-1, :])
         return data

@@ -35,8 +35,35 @@ def result_tracing(data_loader, model, likelihood):
     for idx, (features, labels) in enumerate(data_loader):
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         pred = likelihood(model(features))
+        logging.info(f'features {features[0, 0, :]}')
+        # logging.info(f'label {labels[0, :]}')
+        # logging.info(f'predict {pred.mean[0, :]}')
         accuracy(labels, pred.mean, accuracies)
     return np.mean(accuracies)
+
+
+def train_loop(train_loader, model, loss, optimizer):
+    loss_history = []
+    for x_batch, y_batch in train_loader:
+        # logging.info(f'input batch shape is {x_batch.shape}')
+        # logging.info(f'output batch shape is {y_batch.shape}')
+        # **[window_size, batch_size, channel]
+        x_batch = torch.transpose(x_batch, 0, 1)
+        # logging.info(f'transposed input shape is {x_batch.shape}')
+        # training process
+        optimizer.zero_grad()
+        output = model(x_batch)
+        logging.info('waiting....')
+        # train loss
+        # logging.info(f'y_batch shape is {y_batch.shape}')
+        train_loss = -loss(output, y_batch)
+        train_loss.backward()
+        optimizer.step()
+        # logging.info(f'Training loss: {train_loss}')
+        loss_history.append(train_loss.item())
+    train_loss = np.mean(loss_history)
+    logging.info(f'Training loss: {train_loss}')
+    return train_loss
 
 
 def train_over_dataloader(train_loader, model, loss, optimizer, print_period=None):
@@ -62,9 +89,30 @@ def train_over_dataloader(train_loader, model, loss, optimizer, print_period=Non
         if idx > 0 and idx % print_period == 0:
             logging.info(f'   Step: {idx}, training loss: {np.mean(loss_history[-print_period:])}')
 
-    train_loss = np.mean(loss_history)
-    logging.info(f'Training loss: {train_loss}')
-    return train_loss
+    mean_train_loss = np.mean(loss_history)
+    logging.info(f'Training loss: {mean_train_loss}')
+    return mean_train_loss
+
+
+def valid_loop(valid_loader, model, likelihood, loss):
+    loss_history = []
+    for x_batch, y_batch in valid_loader:
+        logging.info(f'input batch shape is {x_batch.shape}')
+        logging.info(f'output batch shape is {y_batch.shape}')
+        # **[window_size, batch_size, channel]
+        x_batch = torch.transpose(x_batch, 0, 1)
+        logging.info(f'transposed input shape is {x_batch.shape}')
+        # cross validation process
+        pred = likelihood(model(x_batch))
+        logging.info('waiting....')
+        # validation loss
+        logging.info(f'predicted mean value shape is {pred.mean.shape}')
+        valid_loss = -loss(pred, y_batch)
+        logging.info(f'Validation loss: {valid_loss}')
+        loss_history.append(valid_loss.item())
+    mean_valid_loss = np.mean(loss_history)
+    logging.info(f'Validation loss: {mean_valid_loss}')
+    return mean_valid_loss
 
 
 def valid_and_trace(valid_loader, model, likelihood, loss, use_cuda=False, analyzer=None):
@@ -157,60 +205,62 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         else:
             likelihood.train()
             model.train()
-        train_loss = train_over_dataloader(train_loader, model, loss, optimizer)
+        # train_loss = train_over_dataloader(train_loader, model, loss, optimizer)
+        train_loss = train_loop(train_loader, model, loss, optimizer)
         with torch.no_grad():
             model.eval()
             likelihood.eval()
-            valid_loss, valid_accuracy = valid_and_trace(valid_loader, model, likelihood, loss)
-            train_accuracy = result_tracing(train_loader, model, likelihood)
+            valid_loss = valid_loop(valid_loader, model, likelihood, loss)
+            # valid_loss, valid_accuracy = valid_and_trace(valid_loader, model, likelihood, loss)
+            # train_accuracy = result_tracing(train_loader, model, likelihood)
         scheduler.step(train_loss)
         if epoch % 10 == 0:
             gpytorch.settings.tridiagonal_jitter(1e-4)
         # loss and accuracy for each epoch
         train_losses.append(train_loss)
-        train_accuracies.append(train_accuracy)
+        # train_accuracies.append(train_accuracy)
         valid_losses.append(valid_loss)
-        valid_accuracies.append(valid_accuracy)
+        # valid_accuracies.append(valid_accuracy)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
-        is_better_model = False
-        if valid_loss < best_valid_loss:
-            logging.info(
-                f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
-            num_epoch_valid_loss_not_decreasing = 0
-            best_valid_loss = valid_loss
-            is_better_model = True
-        else:
-            num_epoch_valid_loss_not_decreasing += 1
-            logging.info(
-                f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
-            # Early stop if enabled and met the criterion
-            if early_stop == num_epoch_valid_loss_not_decreasing:
-                logging.info('Reached early-stopping criterion. Stop training.')
-                logging.info('Best validation loss = {}'.format(best_valid_loss))
-                break
+        # is_better_model = False
+        # if valid_loss < best_valid_loss:
+        #     logging.info(
+        #         f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
+        #     num_epoch_valid_loss_not_decreasing = 0
+        #     best_valid_loss = valid_loss
+        #     is_better_model = True
+        # else:
+        #     num_epoch_valid_loss_not_decreasing += 1
+        #     logging.info(
+        #         f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
+        #     # Early stop if enabled and met the criterion
+        #     if early_stop == num_epoch_valid_loss_not_decreasing:
+        #         logging.info('Reached early-stopping criterion. Stop training.')
+        #         logging.info('Best validation loss = {}'.format(best_valid_loss))
+        #         break
 
-        # Save model according to the specified mode.
-        online_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pt')
-        offline_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pth')
-        online_epoch_model = os.path.join(args.gp_model_path, timestr,
-                                          'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss))
-        offline_epoch_model = os.path.join(args.gp_model_path, timestr,
-                                           'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
-        if save_mode == 0:
-            # save best model
-            if is_better_model:
-                save_model_torch_script(model, likelihood, test_features, online_model)
-                save_model_state_dict(model, likelihood, offline_model)
-        elif save_mode == 1:
-            # save all better models
-            if is_better_model:
-                save_model_torch_script(model, likelihood, test_features, online_epoch_model)
-                save_model_state_dict(model, likelihood, offline_epoch_model)
-        elif save_mode == 2:
-            # save all model
-            save_model_torch_script(model, likelihood, test_features, online_epoch_model)
-            save_model_state_dict(model, likelihood, offline_epoch_model)
+        # # Save model according to the specified mode.
+        # online_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pt')
+        # offline_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pth')
+        # online_epoch_model = os.path.join(args.gp_model_path, timestr,
+        #                                   'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss))
+        # offline_epoch_model = os.path.join(args.gp_model_path, timestr,
+        #                                    'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
+        # if save_mode == 0:
+        #     # save best model
+        #     if is_better_model:
+        #         save_model_torch_script(model, likelihood, test_features, online_model)
+        #         save_model_state_dict(model, likelihood, offline_model)
+        # elif save_mode == 1:
+        #     # save all better models
+        #     if is_better_model:
+        #         save_model_torch_script(model, likelihood, test_features, online_epoch_model)
+        #         save_model_state_dict(model, likelihood, offline_epoch_model)
+        # elif save_mode == 2:
+        #     # save all model
+        #     save_model_torch_script(model, likelihood, test_features, online_epoch_model)
+        #     save_model_state_dict(model, likelihood, offline_epoch_model)
     # plot loss curve
     fig, axs = plt.subplots(figsize=[12, 4])
     fig = plt.figure(figsize=(12, 8))
@@ -222,14 +272,14 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
     plt.legend(fontsize=12, numpoints=5, frameon=False)
     plt.title("Losses comparison")
     plt.grid(True)
-    # plot accuracy curve
-    ax2 = fig.add_subplot(2, 1, 2)
-    ax2.set_xlabel('epoch', fontdict={'size': 12})
-    ax2.set_ylabel('accuracy', fontdict={'size': 12})
-    ax2.plot(train_accuracies, label=f"training accuracy")
-    ax2.plot(valid_accuracies, label=f"validation accuracy")
-    plt.legend(fontsize=12, numpoints=5, frameon=False)
-    plt.grid(True)
+    # # plot accuracy curve
+    # ax2 = fig.add_subplot(2, 1, 2)
+    # ax2.set_xlabel('epoch', fontdict={'size': 12})
+    # ax2.set_ylabel('accuracy', fontdict={'size': 12})
+    # ax2.plot(train_accuracies, label=f"training accuracy")
+    # ax2.plot(valid_accuracies, label=f"validation accuracy")
+    # plt.legend(fontsize=12, numpoints=5, frameon=False)
+    # plt.grid(True)
     plt.savefig(args.gp_model_path + timestr + "loss_and_accuracy_curve.png")
     plt.show()
 
@@ -281,16 +331,16 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/gp_model_output")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/gp_model_output")
 
     # model parameters
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
@@ -298,7 +348,7 @@ if __name__ == "__main__":
     # optimizer parameters
     parser.add_argument('-e', '--epochs', type=int, default=50)
     parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('-b', '--batch_size', type=int, default=512)
+    parser.add_argument('-b', '--batch_size', type=int, default=1024)
 
     # argument to use cuda or not for training
     parser.add_argument('--use_cuda', type=bool, default=False)
