@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from torchvision import models
 
 from fueling.common.coord_utils import CoordUtils
+import fueling.common.logging as logging
 
 '''
 ========================================================================
@@ -445,6 +446,7 @@ class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
 
+
 class TrajectoryImitationRNNTest(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
@@ -563,6 +565,9 @@ class TrajectoryImitationRNNLoss():
 
         pos_reg_loss = nn.L1Loss()(pred_points, true_points)
 
+        logging.info("pos_dist_loss is {}, box_loss is {}, pos_reg_loss is {}".format(
+            pos_dist_loss, box_loss, pos_reg_loss))
+            
         return pos_dist_loss + box_loss + pos_reg_loss
 
     def loss_info(self, y_pred, y_true):
