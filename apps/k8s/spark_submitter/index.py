@@ -159,7 +159,7 @@ class SparkSubmitJob(flask_restful.Resource):
                 'driver_memory': arg.driver.driver_memory,
             })
 
-        # Use node-selector "FOR_FUEL" by default if it's not specified
+        # Use node-selector for different types of jobs
         if arg.env.node_selector != Env.NodeSelector.ANY:
             confs += '--conf spark.kubernetes.node.selector.{}=YES '.format(
                 Env.NodeSelector.Name(arg.env.node_selector))
