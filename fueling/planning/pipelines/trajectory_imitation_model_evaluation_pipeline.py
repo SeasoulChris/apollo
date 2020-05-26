@@ -15,8 +15,14 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
-from fueling.planning.datasets.img_in_traj_out_dataset import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
-from fueling.planning.models.trajectory_imitation_model import TrajectoryImitationCNNModel, TrajectoryImitationRNNModel
+from fueling.planning.datasets.img_in_traj_out_dataset import \
+    TrajectoryImitationCNNDataset, \
+    TrajectoryImitationRNNDataset
+from fueling.planning.models.trajectory_imitation_model import \
+    TrajectoryImitationCNNModel, \
+    TrajectoryImitationRNNModel, \
+    TrajectoryImitationRNNMoreConvModel, \
+    TrajectoryImitationRNNUnetResnet18Model
 from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
@@ -84,8 +90,8 @@ def calculate_rnn_displacement_error(pred, y):
 
 
 def visualize_rnn_result(renderer, img_feature, coordinate_heading,
-                         message_timestamp_sec, pred_points_dir, pos_dists_dir,
-                         pos_boxs_dir, pred, y):
+                         message_timestamp_sec, pred_points_dir, explicit_memory_dir,
+                         pos_dists_dir, pos_boxs_dir, pred, y):
 
     batched_pred_points = pred[2]
     for i, pred_point in enumerate(batched_pred_points):
@@ -121,35 +127,51 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
         cv.imwrite(os.path.join(pred_points_dir, "{:.3f}.png".format(
             message_timestamp_sec[i])), merged_img)
 
+    batched_explicit_memory = pred[3]
+    for i, M_B in enumerate(batched_explicit_memory):
+        position_memory_mat = M_B[0].cpu().numpy() * 255
+        box_memory_mat = M_B[1].cpu().numpy() * 255
+        visual_mat = np.concatenate(
+            (position_memory_mat, box_memory_mat), axis=1)
+        cv.imwrite(os.path.join(explicit_memory_dir,
+                                "final_explicit_memory @ {:.3f}.png".
+                                format(message_timestamp_sec[i])),
+                   visual_mat)
+
     batched_pred_pos_dists = pred[0]
     for i, pred_pos_dist in enumerate(batched_pred_pos_dists):
-        # Draw out pred_pos_dist in a sub folder
-        pred_pos_dist_sub_dir = os.path.join(pos_dists_dir, '{:.3f}/'.
-                                         format(message_timestamp_sec[i]))
-        file_utils.makedirs(pred_pos_dist_sub_dir)
+        origianl_shape = pred_pos_dist[0].shape
+        last_mat = np.zeros((origianl_shape[1],
+                             0,
+                             origianl_shape[0]))
         for t, single_frame_pos in enumerate(pred_pos_dist):
-            origianl_shape = single_frame_pos.shape
-            cv.imwrite(os.path.join(pred_pos_dist_sub_dir,
-                                    "pos_dist @ {} deltaT.png".format(t)),
-                       single_frame_pos.view(origianl_shape[1],
-                                             origianl_shape[2],
-                                             origianl_shape[0]).
-                       cpu().numpy())
+            # original img pixel range is from 0 to 1,
+            # multiply by 255 to better visualize it
+            cur_mat = single_frame_pos.view(origianl_shape[1],
+                                            origianl_shape[2],
+                                            origianl_shape[0]).cpu().numpy() * 255
+            last_mat = np.concatenate((last_mat, cur_mat), axis=1)
+        cv.imwrite(os.path.join(pos_dists_dir,
+                                "pred_pos_dists @ {:.3f}.png".
+                                format(message_timestamp_sec[i])),
+                   last_mat)
 
     batched_pred_boxs = pred[1]
     for i, pred_box in enumerate(batched_pred_boxs):
-        # Draw out pred_pos_dist in a sub folder
-        pred_boxs_sub_dir = os.path.join(pos_boxs_dir, '{:.3f}/'.
-                                         format(message_timestamp_sec[i]))
-        file_utils.makedirs(pred_boxs_sub_dir)
+        origianl_shape = pred_box[0].shape
+        last_mat = np.zeros((origianl_shape[1],
+                             0,
+                             origianl_shape[0]))
         for t, single_frame_box in enumerate(pred_box):
-            origianl_shape = single_frame_box.shape
-            cv.imwrite(os.path.join(pred_boxs_sub_dir,
-                                    "pred_box @ {} deltaT.png".format(t)),
-                       single_frame_box.view(origianl_shape[1],
-                                             origianl_shape[2],
-                                             origianl_shape[0]).
-                       cpu().numpy())
+            # original img pixel range is from 0 to 1,
+            # multiply by 255 to better visualize it
+            cur_mat = single_frame_box.view(origianl_shape[1],
+                                            origianl_shape[2],
+                                            origianl_shape[0]).cpu().numpy() * 255
+            last_mat = np.concatenate((last_mat, cur_mat), axis=1)
+        cv.imwrite(os.path.join(pos_dists_dir,
+                                "pred_boxs @ {:.3f}.png".format(message_timestamp_sec[i])),
+                   last_mat)
 
 
 def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
@@ -170,6 +192,8 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
         print("Making output directory: " + output_dir)
         pred_points_dir = os.path.join(output_dir, 'pred_points/')
         file_utils.makedirs(pred_points_dir)
+        explicit_memory_dir = os.path.join(output_dir, 'explicit_memory/')
+        file_utils.makedirs(explicit_memory_dir)
         pos_dists_dir = os.path.join(output_dir, 'pred_pos_dists/')
         file_utils.makedirs(pos_dists_dir)
         pos_boxs_dir = os.path.join(output_dir, 'pred_boxs/')
@@ -185,7 +209,8 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
             v_errors.append(v_error)
             visualize_rnn_result(
                 output_renderer, img_feature, coordinate_heading,
-                message_timestamp_sec, pred_points_dir, pos_dists_dir, pos_boxs_dir, pred, y)
+                message_timestamp_sec, pred_points_dir, explicit_memory_dir,
+                pos_dists_dir, pos_boxs_dir, pred, y)
 
         average_displacement_error = 'average displacement error: {}.'.format(
             np.mean(displcement_errors))

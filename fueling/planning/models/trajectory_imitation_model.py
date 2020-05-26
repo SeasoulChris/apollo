@@ -443,7 +443,7 @@ class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
 
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points)
+        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
 
 
 class TrajectoryImitationRNNLoss():
