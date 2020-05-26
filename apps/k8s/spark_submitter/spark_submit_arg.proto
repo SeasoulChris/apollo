@@ -39,6 +39,9 @@ message Env {
 
   enum NodeSelector {
     ANY = 0;
+    FOR_FUEL = 1;
+    FOR_OPEN_SERVICES = 2;
+    FOR_SIMULATION = 3;
   }
   optional NodeSelector node_selector = 3;
 

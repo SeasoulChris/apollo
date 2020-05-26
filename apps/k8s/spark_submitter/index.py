@@ -159,10 +159,10 @@ class SparkSubmitJob(flask_restful.Resource):
                 'driver_memory': arg.driver.driver_memory,
             })
 
-        # TODO(xiaoxq): Select nodes.
-        # if arg.env.node_selector != Env.NodeSelector.ANY:
-        #    confs += '--conf spark.kubernetes.node.selector.xxx={} '.format(
-        #        Env.NodeSelector.Name(arg.env.node_selector))
+        # Use node-selector "FOR_FUEL" by default if it's not specified
+        if arg.env.node_selector != Env.NodeSelector.ANY:
+            confs += '--conf spark.kubernetes.node.selector.{}=YES '.format(
+                Env.NodeSelector.Name(arg.env.node_selector))
 
         # Envs.
         for key, value in ENVS.items():
