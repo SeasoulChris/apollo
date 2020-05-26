@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
 else
   # Mount required volumes.
   required_volumes="-v $(pwd):/fuel"
-
+  echo "pwd: "`pwd`
   APOLLO_ROOT="$(cd ../apollo-bazel2.x; pwd)"
   required_volumes="-v ${APOLLO_ROOT}:/apollo ${required_volumes}"
 
