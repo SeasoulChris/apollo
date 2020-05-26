@@ -60,8 +60,6 @@ def train_vanilla(train_X, train_y, model, loss, optimizer, epoch,
         if (i > 0) and (i % print_period == 0):
             logging.info('   Step: {}, training loss: {}'.format(
                 i, np.mean(loss_history[-print_period:])))
-            print('   Step: {}, training loss: {}'.format(
-                i, np.mean(loss_history[-print_period:])))
 
     train_loss = np.mean(loss_history)
     logging.info('Training loss: {}'.format(train_loss))
@@ -124,7 +122,6 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
 
     loss_history = []
     logging.info('Epoch: {}:'.format(epoch))
-    print('Epoch: {}:'.format(epoch))
     for i, (X, y) in enumerate(train_loader):
         optimizer.zero_grad()
         X, y = cuda(X), cuda(y)
@@ -139,8 +136,6 @@ def train_dataloader(train_loader, model, loss, optimizer, epoch, print_period=N
             continue
         if i > 0 and i % print_period == 0:
             logging.info('   Step: {}, training loss: {}'.format(
-                i, np.mean(loss_history[-print_period:])))
-            print('   Step: {}, training loss: {}'.format(
                 i, np.mean(loss_history[-print_period:])))
 
     train_loss = np.mean(loss_history)
@@ -199,7 +194,6 @@ def train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
             num_epoch_valid_loss_not_decreasing += 1
             # Early stop if enabled and met the criterion
             if early_stop == num_epoch_valid_loss_not_decreasing:
-                print('Reached early-stopping criterion. Stop training.')
                 logging.info('Reached early-stopping criterion. Stop training.')
                 logging.info('Best validation loss = {}'.format(best_valid_loss))
                 break
