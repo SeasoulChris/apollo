@@ -20,7 +20,8 @@ flags.DEFINE_string('role', '', 'Running as another role instead of the job subm
 
 # Env.
 flags.DEFINE_string('image', 'hub.baidubce.com/apollofuel/spark:latest', 'Docker image.')
-flags.DEFINE_enum('node_selector', 'ANY', ['ANY'], 'Node selector.')
+flags.DEFINE_enum('node_selector', 'ANY',
+                  ['ANY', 'FOR_FUEL', 'FOR_OPEN_SERVICES', 'FOR_SIMULATION'], 'Node selector.')
 flags.DEFINE_enum('log_verbosity', 'INFO', ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
                   'Log verbosity.')
 
