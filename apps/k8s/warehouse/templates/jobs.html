@@ -95,7 +95,7 @@
                            <th style="width: 10%;">Phase</th>
                            <th style="width: 15%;">Begin Time</th>
                            <th style="width: 10%;">Duration</th>
-                           <th style="width: 10%;">Delete</th>
+                           <th style="width: 10%;">Stop</th>
                            <th style="width: 10%;">Describe</th>
                            <th style="width: 10%;">Logs</th>
                         </tr>
@@ -107,7 +107,7 @@
                            <td>{{ pod.phase }}</td>
                            <td>{{ pod.creation_timestamp | timestamp_to_time }}</td>
                            <td>{{ pod.duration_ns | ns_to_duration }}</td>
-                           <td><a href="javascript:void(0);" onclick="delete_pod('{{ pod.podname }}', '{{ job_info.namespace }}')">Delete</a></td>
+                           <td><a href="javascript:void(0);" onclick="delete_pod('{{ pod.podname }}', '{{ job_info.namespace }}')">Stop</a></td>
                            <td><a href="{{ url_for('pod_describe_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}" target="_blank">Desc</a></td>
                            <td><a href="{{ url_for('pod_log_hdl', pod_name=pod.podname, namespace=job_info.namespace) }}" target="_blank">Logs</a></td>
                         </tr>
@@ -165,7 +165,7 @@
    
 
    function delete_pod(name, namespace){
-   	if(confirm('Confirm delete?')){
+   	if(confirm('Confirm stop?')){
    		$.ajax({
         url:$("#pod_delete_url").attr('href'), 
         async:false,
