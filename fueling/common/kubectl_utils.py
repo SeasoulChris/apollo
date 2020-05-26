@@ -19,12 +19,16 @@ class Kubectl(object):
         self.appsV1Api = client.AppsV1Api()
         self.apiClient = client.ApiClient()
 
-    def get_pods(self, namespace='default'):
+    def get_pods(self, namespace='default', tojson=False):
         """kubectl get pods
-        return type: list[V1Pod]
+        return type: list[V1Pod] if not tojson else json
         https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Pod.md
         """
-        return self.coreV1Api.list_namespaced_pod(namespace=namespace).items
+        pods_info = self.coreV1Api.list_namespaced_pod(namespace=namespace).items
+        if not tojson:
+            return pods_info
+        else:
+            return self.apiClient.sanitize_for_serialization(pods_info)
 
     def get_pods_by_pattern(self, pattern, namespace='default'):
         """Similar to get_pods() but filter by fnmatch-style pattern."""

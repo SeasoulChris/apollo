@@ -128,23 +128,25 @@ class BasePipeline(object):
         if len(driver_pod) == 1:
             pod_name = driver_pod[0].metadata.name
             pod_namespace = driver_pod[0].metadata.namespace
-            pod_log = kubectl.logs(pod_name, pod_namespace)
-            pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
-            phase = pod_desc['status']['phase']
-            creation_timestamp = (dateutil.parser
-                                  .parse(pod_desc['metadata']['creationTimestamp'])
-                                  .replace(tzinfo=timezone.utc))
-            Mongo().job_log_collection().insert_one(
-                {'logs': pod_log,
-                 'desc': json.dumps(pod_desc),
-                 'phase': phase,
-                 'job_id': flags.FLAGS.job_id,
-                 'pod_name': pod_name,
-                 'namespace': pod_namespace,
-                 'creation_timestamp': creation_timestamp.timestamp()})
-            logging.info(F'Save driver log success')
             if flags.FLAGS.auto_delete_driver_pod:
-                kubectl.delete_pod(pod_name)
+                kubectl.delete_pod(pod_name, pod_namespace)
+            else:
+                pod_log = kubectl.logs(pod_name, pod_namespace)
+                pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
+                phase = pod_desc['status']['phase']
+                creation_timestamp = (dateutil.parser
+                                      .parse(pod_desc['metadata']['creationTimestamp'])
+                                      .replace(tzinfo=timezone.utc))
+                Mongo().job_log_collection().insert_one(
+                    {'logs': pod_log,
+                     'desc': json.dumps(pod_desc, sort_keys=True, indent=4,
+                                        separators=(', ', ': ')),
+                     'phase': phase,
+                     'job_id': flags.FLAGS.job_id,
+                     'pod_name': pod_name,
+                     'namespace': pod_namespace,
+                     'creation_timestamp': creation_timestamp.timestamp()})
+                logging.info(F'Save driver log success')
         else:
             logging.info(
                 F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
