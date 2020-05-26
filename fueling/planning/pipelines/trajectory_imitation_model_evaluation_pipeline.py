@@ -262,7 +262,7 @@ if __name__ == "__main__":
                                                      args.imgs_dir,
                                                      args.input_data_augmentation)
     elif args.model_type == 'rnn':
-        model = TrajectoryImitationRNNUnetResnet18Model(
+        model = TrajectoryImitationRNNTest(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         test_dataset = TrajectoryImitationRNNDataset(args.test_set_folder,
                                                      args.renderer_config_file,

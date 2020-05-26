@@ -81,9 +81,9 @@ if __name__ == "__main__":
                                                       args.renderer_config_file,
                                                       args.imgs_dir,
                                                       args.input_data_augmentation)
-        model = TrajectoryImitationRNNUnetResnet18Model(
+        model = TrajectoryImitationRNNTest(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationRNNLoss()
+        loss = TrajectoryImitationRNNLoss(10000, 10, 1)
 
     else:
         logging.info('model {} is not implemnted'.format(args.model_type))

@@ -550,6 +550,12 @@ class TrajectoryImitationRNNTest(nn.Module):
 
 
 class TrajectoryImitationRNNLoss():
+
+    def __init__(self, pos_dist_loss_weight=1, box_loss_weight=1, pos_reg_loss_weight=1):
+        self.pos_dist_loss_weight = pos_dist_loss_weight
+        self.box_loss_weight = box_loss_weight
+        self.pos_reg_loss_weight = pos_reg_loss_weight
+
     def loss_fn(self, y_pred, y_true):
         batch_size = y_pred[0].shape[0]
         pred_pos_dists = y_pred[0].view(batch_size, -1)
@@ -565,10 +571,21 @@ class TrajectoryImitationRNNLoss():
 
         pos_reg_loss = nn.L1Loss()(pred_points, true_points)
 
-        logging.info("pos_dist_loss is {}, box_loss is {}, pos_reg_loss is {}".format(
-            pos_dist_loss, box_loss, pos_reg_loss))
-            
-        return pos_dist_loss + box_loss + pos_reg_loss
+        logging.info("pos_dist_loss is {}, box_loss is {}, pos_reg_loss is {}".
+                     format(
+                         pos_dist_loss,
+                         box_loss,
+                         pos_reg_loss))
+        logging.info("weighted_pos_dist_loss is {}, weighted_box_loss is {},"
+                     "weighted_pos_reg_loss is {}".
+                     format(
+                         self.pos_dist_loss_weight * pos_dist_loss,
+                         self.box_loss_weight * box_loss,
+                         self.pos_reg_loss_weight * pos_reg_loss))
+
+        return self.pos_dist_loss_weight * pos_dist_loss + \
+            self.box_loss_weight * box_loss + \
+            self.pos_reg_loss_weight * pos_reg_loss
 
     def loss_info(self, y_pred, y_true):
         # Focus on pose displacement error
