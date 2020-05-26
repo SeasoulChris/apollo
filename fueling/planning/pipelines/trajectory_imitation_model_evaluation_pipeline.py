@@ -22,7 +22,8 @@ from fueling.planning.models.trajectory_imitation_model import \
     TrajectoryImitationCNNModel, \
     TrajectoryImitationRNNModel, \
     TrajectoryImitationRNNMoreConvModel, \
-    TrajectoryImitationRNNUnetResnet18Model
+    TrajectoryImitationRNNUnetResnet18Model, \
+    TrajectoryImitationRNNTest
 from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
@@ -169,7 +170,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                                             origianl_shape[2],
                                             origianl_shape[0]).cpu().numpy() * 255
             last_mat = np.concatenate((last_mat, cur_mat), axis=1)
-        cv.imwrite(os.path.join(pos_dists_dir,
+        cv.imwrite(os.path.join(pos_boxs_dir,
                                 "pred_boxs @ {:.3f}.png".format(message_timestamp_sec[i])),
                    last_mat)
 
@@ -261,7 +262,7 @@ if __name__ == "__main__":
                                                      args.imgs_dir,
                                                      args.input_data_augmentation)
     elif args.model_type == 'rnn':
-        model = TrajectoryImitationRNNModel(
+        model = TrajectoryImitationRNNUnetResnet18Model(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         test_dataset = TrajectoryImitationRNNDataset(args.test_set_folder,
                                                      args.renderer_config_file,
@@ -273,9 +274,9 @@ if __name__ == "__main__":
         exit()
 
     test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=2,
+                                              batch_size=16,
                                               shuffle=True,
-                                              num_workers=4,
+                                              num_workers=2,
                                               drop_last=True)
     model_state_dict = torch.load(args.model_file)
 

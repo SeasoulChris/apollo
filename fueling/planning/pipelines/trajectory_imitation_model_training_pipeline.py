@@ -16,6 +16,7 @@ from fueling.planning.models.trajectory_imitation_model \
     TrajectoryImitationRNNModel,\
     TrajectoryImitationRNNMoreConvModel,\
     TrajectoryImitationRNNUnetResnet18Model,\
+    TrajectoryImitationRNNTest,\
     TrajectoryImitationCNNLoss, \
     TrajectoryImitationRNNLoss, \
     TrajectoryImitationWithEnvRNNLoss
@@ -24,7 +25,7 @@ import fueling.common.proto_utils as proto_utils
 
 if __name__ == "__main__":
     # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2, 3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3, 4, 5'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
@@ -80,7 +81,7 @@ if __name__ == "__main__":
                                                       args.renderer_config_file,
                                                       args.imgs_dir,
                                                       args.input_data_augmentation)
-        model = TrajectoryImitationRNNModel(
+        model = TrajectoryImitationRNNUnetResnet18Model(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         loss = TrajectoryImitationRNNLoss()
 
@@ -88,10 +89,10 @@ if __name__ == "__main__":
         logging.info('model {} is not implemnted'.format(args.model_type))
         exit()
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True,
-                                               num_workers=4, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=16, shuffle=True,
-                                               num_workers=4, drop_last=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
+                                               num_workers=8, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=64, shuffle=True,
+                                               num_workers=8, drop_last=True)
 
     learning_rate = 3e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
