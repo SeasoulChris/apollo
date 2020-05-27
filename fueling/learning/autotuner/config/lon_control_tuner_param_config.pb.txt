@@ -1,5 +1,5 @@
 git_info {
-  commit_id: "aa9d805d04cd8c9ef2ac9c51b0641b41f39a8cfc"
+  commit_id: "e753fc2775391f62434faddf00e6d28b50e1edfc"
   repo: "https://github.com/ApolloAuto/apollo.git"
 }
 tuner_parameters {
@@ -7,41 +7,68 @@ tuner_parameters {
   default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
   utility {
     utility_name: "ucb"
-    kappa: 3.0
+    kappa: 1.0
     xi: 1.0
   }
-  n_iter: 20
+  n_iter: 300
   init_points_1D: 0
   opt_max: true
   flag {
-    flag_name: "enable_speed_station_preview"
-    flag_dir: ""
-    enable: false
+    flag_name: "enable_steer_mrac_control"
+    flag_dir: "lat_controller_conf"
+    enable: true
+  }
+  parameter {
+    parameter_name: "kp"
+    parameter_dir: "lon_controller_conf.station_pid_conf"
+    min: 0.01
+    max: 1.0
   }
   parameter {
     parameter_name: "kp"
     parameter_dir: "lon_controller_conf.low_speed_pid_conf"
-    min: 1.0
+    min: 0.1
     max: 10.0
   }
   parameter {
     parameter_name: "ki"
     parameter_dir: "lon_controller_conf.low_speed_pid_conf"
-    min: 0.1
+    min: 0.01
     max: 1.0
   }
   parameter {
     parameter_name: "kp"
     parameter_dir: "lon_controller_conf.high_speed_pid_conf"
-    min: 1.0
+    min: 0.1
     max: 10.0
   }
   parameter {
     parameter_name: "ki"
     parameter_dir: "lon_controller_conf.high_speed_pid_conf"
-    min: 0.1
+    min: 0.01
     max: 1.0
   }
+}
+# Constant Parameters
+parameter {
+  parameter_name: "adaption_state_gain"
+  parameter_dir: "lat_controller_conf.steer_mrac_conf"
+  constant: 1.0
+}
+parameter {
+  parameter_name: "adaption_desired_gain"
+  parameter_dir: "lat_controller_conf.steer_mrac_conf"
+  constant: 1.0
+}
+parameter {
+  parameter_name: "adaption_nonlinear_gain"
+  parameter_dir: "lat_controller_conf.steer_mrac_conf"
+  constant: 1.0
+}
+parameter {
+  parameter_name: "clamping_time_constant"
+  parameter_dir: "lat_controller_conf.steer_mrac_conf"
+  constant: 0.01
 }
 scenarios {
   # San Mateo (low speed)
