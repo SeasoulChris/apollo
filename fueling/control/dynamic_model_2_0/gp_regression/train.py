@@ -42,28 +42,55 @@ def result_tracing(data_loader, model, likelihood):
     return np.mean(accuracies)
 
 
-def train_loop(train_loader, model, loss, optimizer):
+def train_loop(train_loader, model, loss, optimizer, is_visualize=False):
     loss_history = []
     for x_batch, y_batch in train_loader:
-        # logging.info(f'input batch shape is {x_batch.shape}')
-        # logging.info(f'output batch shape is {y_batch.shape}')
+        # visualize training data
+        if is_visualize:
+            train_x_mean, train_x_std = preprocess(x_batch, y_batch)
+            visualize_data(train_x_mean, train_x_std, y_batch)
+        logging.debug(f'input batch shape is {x_batch.shape}')
+        logging.debug(f'output batch shape is {y_batch.shape}')
         # **[window_size, batch_size, channel]
         x_batch = torch.transpose(x_batch, 0, 1)
-        # logging.info(f'transposed input shape is {x_batch.shape}')
+        logging.debug(f'transposed input shape is {x_batch.shape}')
         # training process
         optimizer.zero_grad()
         output = model(x_batch)
-        logging.info('waiting....')
         # train loss
-        # logging.info(f'y_batch shape is {y_batch.shape}')
+        logging.debug(f'y_batch shape is {y_batch.shape}')
         train_loss = -loss(output, y_batch)
         train_loss.backward()
         optimizer.step()
-        # logging.info(f'Training loss: {train_loss}')
         loss_history.append(train_loss.item())
     train_loss = np.mean(loss_history)
     logging.info(f'Training loss: {train_loss}')
     return train_loss
+
+
+def preprocess(train_x, train_y):
+    # batch_size, window_size, channel_number
+    logging.info(train_x.shape)
+    # batch_size, mean_value_of_window for each channel
+    train_x_mean = torch.mean(train_x, dim=1)
+    train_x_std = torch.std(train_x, dim=1)
+    for i in range(0, train_x_mean.shape[1]):
+        visualize_data(train_x_mean[:, i], train_x_std[:, i], train_y[:, 0])
+        visualize_data(train_x_mean[:, i], train_x_std[:, i], train_y[:, 1])
+    logging.info(
+        f'train_x_mean shape is {train_x_mean.shape}; and train_x_std shape is {train_x_std.shape}')
+    return train_x_mean, train_x_std
+
+
+def visualize_data(train_x_mean, train_x_std, train_y):
+    with torch.no_grad():
+        # Initialize plot
+        f, ax = plt.subplots(1, 1, figsize=(8, 3))
+        # Plot training data as black stars
+        ax.errorbar(train_x_mean.numpy(), train_y, xerr=train_x_std, fmt='k*')
+        ax.set_ylim([-1, 1])
+        ax.legend(['Observed Data', 'Mean', 'Confidence'])
+        plt.show()
 
 
 def train_over_dataloader(train_loader, model, loss, optimizer, print_period=None):
@@ -205,62 +232,65 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         else:
             likelihood.train()
             model.train()
-        # train_loss = train_over_dataloader(train_loader, model, loss, optimizer)
         train_loss = train_loop(train_loader, model, loss, optimizer)
-        with torch.no_grad():
-            model.eval()
-            likelihood.eval()
+
+        model.eval()
+        likelihood.eval()
+        with torch.no_grad(), gpytorch.settings.fast_pred_var():
             valid_loss = valid_loop(valid_loader, model, likelihood, loss)
-            # valid_loss, valid_accuracy = valid_and_trace(valid_loader, model, likelihood, loss)
+            # not calculating train accuracy for now
             # train_accuracy = result_tracing(train_loader, model, likelihood)
         scheduler.step(train_loss)
-        if epoch % 10 == 0:
+        if epoch == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
         # loss and accuracy for each epoch
         train_losses.append(train_loss)
+        # not calculating train accuracy for now
         # train_accuracies.append(train_accuracy)
         valid_losses.append(valid_loss)
+        # not calculating train accuracy for now
         # valid_accuracies.append(valid_accuracy)
 
         # Determine if valid_loss is getting better and if early_stop is needed.
-        # is_better_model = False
-        # if valid_loss < best_valid_loss:
-        #     logging.info(
-        #         f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
-        #     num_epoch_valid_loss_not_decreasing = 0
-        #     best_valid_loss = valid_loss
-        #     is_better_model = True
-        # else:
-        #     num_epoch_valid_loss_not_decreasing += 1
-        #     logging.info(
-        #         f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
-        #     # Early stop if enabled and met the criterion
-        #     if early_stop == num_epoch_valid_loss_not_decreasing:
-        #         logging.info('Reached early-stopping criterion. Stop training.')
-        #         logging.info('Best validation loss = {}'.format(best_valid_loss))
-        #         break
+        is_better_model = False
+        if valid_loss < best_valid_loss:
+            logging.info(
+                f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
+            num_epoch_valid_loss_not_decreasing = 0
+            best_valid_loss = valid_loss
+            is_better_model = True
+        else:
+            num_epoch_valid_loss_not_decreasing += 1
+            logging.info(
+                f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
+            # Early stop if enabled and met the criterion
+            if early_stop == num_epoch_valid_loss_not_decreasing:
+                logging.info('Reached early-stopping criterion. Stop training.')
+                logging.info('Best validation loss = {}'.format(best_valid_loss))
+                break
 
-        # # Save model according to the specified mode.
-        # online_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pt')
-        # offline_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pth')
-        # online_epoch_model = os.path.join(args.gp_model_path, timestr,
-        #                                   'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss))
-        # offline_epoch_model = os.path.join(args.gp_model_path, timestr,
-        #                                    'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
-        # if save_mode == 0:
-        #     # save best model
-        #     if is_better_model:
-        #         save_model_torch_script(model, likelihood, test_features, online_model)
-        #         save_model_state_dict(model, likelihood, offline_model)
-        # elif save_mode == 1:
-        #     # save all better models
-        #     if is_better_model:
-        #         save_model_torch_script(model, likelihood, test_features, online_epoch_model)
-        #         save_model_state_dict(model, likelihood, offline_epoch_model)
-        # elif save_mode == 2:
-        #     # save all model
-        #     save_model_torch_script(model, likelihood, test_features, online_epoch_model)
-        #     save_model_state_dict(model, likelihood, offline_epoch_model)
+        # Save model according to the specified mode.
+        online_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pt')
+        offline_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pth')
+        online_epoch_model = os.path.join(args.gp_model_path, timestr,
+                                          'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss))
+        offline_epoch_model = os.path.join(args.gp_model_path, timestr,
+                                           'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
+        if save_mode == 0:
+            # save best model
+            if is_better_model:
+                save_model_torch_script(model, likelihood, test_features, online_model)
+                save_model_state_dict(model, likelihood, offline_model)
+        elif save_mode == 1:
+            # save all better models
+            if is_better_model:
+                save_model_torch_script(model, likelihood, test_features, online_epoch_model)
+                save_model_state_dict(model, likelihood, offline_epoch_model)
+        elif save_mode == 2:
+            # save all model
+            save_model_torch_script(model, likelihood, test_features, online_epoch_model)
+            save_model_state_dict(model, likelihood, offline_epoch_model)
+
     # plot loss curve
     fig, axs = plt.subplots(figsize=[12, 4])
     fig = plt.figure(figsize=(12, 8))
@@ -273,6 +303,7 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
     plt.title("Losses comparison")
     plt.grid(True)
     # # plot accuracy curve
+    # TODO(Shu) Need to update
     # ax2 = fig.add_subplot(2, 1, 2)
     # ax2.set_xlabel('epoch', fontdict={'size': 12})
     # ax2.set_ylabel('accuracy', fontdict={'size': 12})

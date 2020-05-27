@@ -196,7 +196,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200518-204852")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/gp_model_output/20200526-224058")
     parser.add_argument(
         '--validation_result_path',
         type=str,
@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
     # model parameters
     parser.add_argument('--kernel_dim', type=int, default=20)
-    parser.add_argument('-b', '--batch_size', type=int, default=256)
+    parser.add_argument('-b', '--batch_size', type=int, default=1024)
 
     args = parser.parse_args()
     validator = ValidationVisualization(args)
@@ -227,6 +227,12 @@ if __name__ == '__main__':
     logging.info(validator.inducing_point_file)
     logging.info(validator.inducing_points.shape)
     validator.load_model()
+
+    # generate batch validation result
+    for i, (x_valid_batch, y_valid_batch) in enumerate(valid_loader):
+        x_valid_batch = torch.transpose(x_valid_batch, 0, 1)
+        pred = validator.likelihood(validator.model(x_valid_batch))
+        break
 
     for i, (X, y) in enumerate(valid_loader):
         logging.info(

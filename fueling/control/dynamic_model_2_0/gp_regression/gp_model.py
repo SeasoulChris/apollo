@@ -2,7 +2,7 @@
 
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.models import ApproximateGP
-from gpytorch.kernels import MaternKernel, InducingPointKernel
+from gpytorch.kernels import MaternKernel, InducingPointKernel, ScaleKernel
 from gpytorch.variational import CholeskyVariationalDistribution
 from gpytorch.variational import MultitaskVariationalStrategy, VariationalStrategy
 import gpytorch
@@ -28,7 +28,8 @@ class GPModel(ApproximateGP):
         super(GPModel, self).__init__(variational_strategy)
         self.mean_module = gpytorch.means.ConstantMean(batch_shape=torch.Size([num_tasks]))
         # kernel
-        self.covar_module = MaternKernel(batch_shape=torch.Size([num_tasks]))  # default nu=2.5
+        self.covar_module = ScaleKernel(MaternKernel(
+            batch_shape=torch.Size([num_tasks])))  # default nu=2.5
         self.warping = encoder_net_model
 
     def forward(self, input_data):
