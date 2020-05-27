@@ -41,7 +41,7 @@ class OptunaSuperTuner(OptunaOptimizationTuner):
         logging.info(f"Running {study_name} for {self.n_iter} trials...")
         self.visualizer = optuna.visualization
         self.optimizer = optuna.create_study(
-            direction="maximize",
+            direction="minimize",
             study_name=study_name,
             storage="postgresql://{}:{}@{}/{}".format(
                 os.environ["POSTGRES_USER"],

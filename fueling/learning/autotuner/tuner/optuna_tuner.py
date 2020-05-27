@@ -143,7 +143,7 @@ if __name__ == "__main__":
     logging.info(f"Running {study_name} for {n_iterations} trials...")
 
     study = optuna.create_study(
-        direction="maximize",
+        direction="minimize",
         study_name=study_name,
         storage="postgresql://{}:{}@{}/{}".format(
             os.environ["POSTGRES_USER"],
