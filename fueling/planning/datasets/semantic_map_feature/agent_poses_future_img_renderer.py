@@ -83,7 +83,7 @@ class AgentPosesFutureImgRenderer(object):
     def draw_agent_pose_future(self, center_x, center_y, center_heading,
                                ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
-        It uses index to get specific frame in the future rather than timestamp. 
+        It uses index to get specific frame in the future rather than timestamp.
         Make sure to inspect and clean data before using it
         '''
         local_map = np.zeros(
@@ -111,7 +111,7 @@ class AgentPosesFutureImgRenderer(object):
     def draw_agent_box_future(self, center_x, center_y, center_heading,
                               ego_pose_future, timestamp_idx, coordinate_heading=0.):
         '''
-        It uses index to get specific frame in the future rather than timestamp. 
+        It uses index to get specific frame in the future rather than timestamp.
         Make sure to inspect and clean data before using it
         '''
         local_map = np.zeros(
@@ -142,8 +142,8 @@ if __name__ == "__main__":
     config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
         "planning_semantic_map_config.pb.txt"
     offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/" \
-        "complete/00007.record.66.bin.future_status.bin",
+    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/"
+              "complete/00007.record.66.bin.future_status.bin",
               'rb') as file_in:
         offline_frames.ParseFromString(file_in.read())
     print("Finish reading proto...")
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
                                                          frame.localization.position.y,
                                                          frame.localization.heading,
-        frame.output.adc_future_trajectory_point, 10)
+                                                         frame.output.adc_future_trajectory_point, 10)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

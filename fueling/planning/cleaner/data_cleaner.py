@@ -1,6 +1,18 @@
 #!/usr/bin/env python
 """Clean records."""
 
+from fueling.planning.cleaner.analyzer_prediction import PredictionAnalyzer
+from fueling.planning.cleaner.analyzer_perception import PerceptionAnalyzer
+from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
+from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
+from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
+from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
+from fueling.common.base_pipeline import BasePipeline
+import fueling.common.record_utils as record_utils
+import fueling.common.logging as logging
+import fueling.common.file_utils as file_utils
+from cyber_py3.record import RecordReader, RecordWriter
+from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
 import os
 import sys
 from datetime import datetime, timedelta
@@ -10,22 +22,6 @@ from os import path
 
 sys.path.append('fueling/planning/analytics/planning_analytics.zip')
 sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
-
-from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
-
-from cyber_py3.record import RecordReader, RecordWriter
-import fueling.common.file_utils as file_utils
-import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
-
-from fueling.common.base_pipeline import BasePipeline
-from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
-from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
-from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
-from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
-from fueling.planning.cleaner.analyzer_perception import PerceptionAnalyzer
-
-from fueling.planning.cleaner.analyzer_prediction import PredictionAnalyzer
 
 
 class CleanPlanningRecords(BasePipeline):
@@ -113,9 +109,12 @@ class CleanPlanningRecords(BasePipeline):
         individual_tasks = [
             # 'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
             # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
-            'modules/planning/temp/converted_data_with_routing/batch_20200513_204330/MKZ173_20200121122216/',
-            'modules/planning/temp/converted_data_with_routing/batch_20200513_204330/MKZ170_20200121120310/',
-            'modules/planning/temp/converted_data_with_routing/batch_20200513_204330/MKZ167_20200121131624/'
+            ('modules/planning/temp/converted_data_with_routing/'
+             + 'batch_20200513_204330/MKZ173_20200121122216/'),
+            ('modules/planning/temp/converted_data_with_routing/'
+             + 'batch_20200513_204330/MKZ170_20200121120310/'),
+            ('modules/planning/temp/converted_data_with_routing/'
+             + 'batch_20200513_204330/MKZ167_20200121131624/')
         ]
         prefix = "/mnt/bos/"
 
@@ -171,12 +170,12 @@ class CleanPlanningRecords(BasePipeline):
             file_cnt += 1
             logging.info("")
             logging.info(
-                '[[*]] process file (' +
-                str(file_cnt) +
-                "/" +
-                str(total_file_cnt) +
-                "):" +
-                fn)
+                '[[*]] process file ('
+                + str(file_cnt)
+                + "/"
+                + str(total_file_cnt)
+                + "):"
+                + fn)
 
             if record_utils.is_record_file(fn):
                 self.process_file2(fn, task_folder)
@@ -216,7 +215,8 @@ class CleanPlanningRecords(BasePipeline):
                 perception_timestamp = PerceptionAnalyzer.get_msg_timstamp(msg)
                 last_perception_timestamp = self.perception_analyzer.get_last_perception_timestamp()
                 last_chassis_timestamp = self.chassis_analyzer.get_last_chassis_timestamp()
-                last_localization_timestamp = self.localization_analyzer.get_last_localization_timestamp()
+                last_localization_timestamp = \
+                    self.localization_analyzer.get_last_localization_timestamp()
                 last_prediction_timestamp = self.prediction_analyzer.get_last_prediction_timestamp()
 
                 if abs(perception_timestamp - last_chassis_timestamp) > 0.05 \
@@ -342,7 +342,8 @@ class CleanPlanningRecords(BasePipeline):
                 perception_timestamp = PerceptionAnalyzer.get_msg_timstamp(msg)
                 last_perception_timestamp = self.perception_analyzer.get_last_perception_timestamp()
                 last_chassis_timestamp = self.chassis_analyzer.get_last_chassis_timestamp()
-                last_localization_timestamp = self.localization_analyzer.get_last_localization_timestamp()
+                last_localization_timestamp = \
+                    self.localization_analyzer.get_last_localization_timestamp()
                 last_prediction_timestamp = self.prediction_analyzer.get_last_prediction_timestamp()
 
                 if abs(perception_timestamp - last_chassis_timestamp) > 0.05 \

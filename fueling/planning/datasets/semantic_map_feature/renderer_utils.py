@@ -9,9 +9,9 @@ def get_img_idx(local_point, local_center_idx, resolution):
     left as origin
 
     Argument:
-    local_point: a (2,) numpy array, the local point coordinates wrt local center 
+    local_point: a (2,) numpy array, the local point coordinates wrt local center
                  where y aixs point up
-    local_center_idx: a (2,) integer numpy array, the local point idx 
+    local_center_idx: a (2,) integer numpy array, the local point idx
                       on the integer img coordinates
     resolution: a float representing the ratio of world coordianates resolution
                 to the integer coordinates

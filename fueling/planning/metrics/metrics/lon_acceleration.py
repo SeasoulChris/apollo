@@ -33,12 +33,13 @@ class LonAcceleration:
                 elif current_acceleration < 0 and not math.isnan(current_acceleration):
                     self.deceleration_list.append(current_acceleration)
 
-                if self.last_acceleration is not None and self.last_acceleration_timestamp is not None:
+                if (self.last_acceleration is not None
+                        and self.last_acceleration_timestamp is not None):
                     # jerk
                     acc_duration = current_velocity_timestamp - self.last_acceleration_timestamp
                     if acc_duration > 0.03:
-                        current_jerk = (current_acceleration -
-                                        self.last_acceleration) / acc_duration
+                        current_jerk = (current_acceleration
+                                        - self.last_acceleration) / acc_duration
                         if current_acceleration > 0 and not math.isnan(current_jerk):
                             self.acc_jerk_list.append(current_jerk)
                         elif current_acceleration < 0 and not math.isnan(current_jerk):

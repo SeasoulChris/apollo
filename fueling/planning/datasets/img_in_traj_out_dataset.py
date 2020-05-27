@@ -17,7 +17,8 @@ from fueling.common.coord_utils import CoordUtils
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
-from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator import ChauffeurNetFeatureGenerator
+from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator \
+    import ChauffeurNetFeatureGenerator
 
 
 class TrajectoryImitationCNNDataset(Dataset):

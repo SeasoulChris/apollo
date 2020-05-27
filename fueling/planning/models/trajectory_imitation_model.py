@@ -365,8 +365,8 @@ class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
             self.base_layers[2])
         self.layer2 = nn.Sequential(*self.base_layers[3:5])
         self.layer3 = self.base_layers[5]
-        self.decode2 = UnetDecoder(128, 128+64, 128)
-        self.decode1 = UnetDecoder(128, 64+64, 64)
+        self.decode2 = UnetDecoder(128, 128 + 64, 128)
+        self.decode1 = UnetDecoder(128, 64 + 64, 64)
         self.decode0 = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.Conv2d(64, 32, kernel_size=3, padding=1, bias=False),
@@ -468,8 +468,8 @@ class TrajectoryImitationRNNTest(nn.Module):
         self.layer4 = self.base_layers[6]
         self.layer5 = self.base_layers[7]
         self.layer6 = self.base_layers[8]
-        self.decode2 = UnetDecoder(128, 128+64, 128)
-        self.decode1 = UnetDecoder(128, 64+64, 64)
+        self.decode2 = UnetDecoder(128, 128 + 64, 128)
+        self.decode1 = UnetDecoder(128, 64 + 64, 64)
         self.decode0 = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.Conv2d(64, 32, kernel_size=3, padding=1, bias=False),

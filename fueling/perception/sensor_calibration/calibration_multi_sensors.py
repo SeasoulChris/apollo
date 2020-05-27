@@ -68,8 +68,8 @@ class SensorCalibrationPipeline(BasePipeline):
     def _get_subdirs(self, d):
         """list add 1st-level task data directories under the root directory
         ignore hidden folders"""
-        return [f for f in os.listdir(d) if not f.startswith('.') and
-                os.path.isdir(os.path.join(d, f))]
+        return [f for f in os.listdir(d) if not f.startswith('.')
+                and os.path.isdir(os.path.join(d, f))]
 
     def run_test(self):
         """local mini test"""
@@ -139,7 +139,8 @@ class SensorCalibrationPipeline(BasePipeline):
 
         executable_dir = 'modules/perception/sensor_calibration/executable_bin'
         message_meta = [(os.path.join(job_dir, j),
-                         os.path.join(job_output_dir, j), self.our_storage().abs_path(executable_dir))
+                         os.path.join(job_output_dir, j),
+                         self.our_storage().abs_path(executable_dir))
                         for j in subjobs]
 
         # Run the pipeline with given parameters.

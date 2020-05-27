@@ -123,7 +123,7 @@ class CalibrationConfig(object):
         result_path = os.path.join(output_path, 'results')
         file_utils.makedirs(result_path)
 
-        if not self._task_name in self._supported_tasks:
+        if self._task_name not in self._supported_tasks:
             logging.error(f'does not support the calibration task: {self._task_name}')
 
         if self._task_name == 'lidar_to_gnss':

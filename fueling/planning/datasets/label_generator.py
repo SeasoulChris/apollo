@@ -94,7 +94,8 @@ class LabelGenerator(object):
                 if dict_key in self.planning_tag_dict:
                     # decide whether to update current planning_tag
                     self.planning_tag_dict[dict_key] = self.UpdatePlanningTag(
-                        dict_key, self.planning_tag_dict[dict_key], adc_trajectory_point.planning_tag)
+                        dict_key,
+                        self.planning_tag_dict[dict_key], adc_trajectory_point.planning_tag)
                 else:
                     # first time encounter
                     self.planning_tag_dict[dict_key] = adc_trajectory_point.planning_tag
@@ -187,7 +188,8 @@ class LabelGenerator(object):
                 # when dt is too large
                 future_end_index = j - 1
                 logging.debug(
-                    f'In {dict_key}, current index is {idx_curr}. At {j}, dt is {dt} greater than {max_dt_interval}. Future trajectory terminated')
+                    f'In {dict_key}, current index is {idx_curr}. At {j}, dt is {dt}'
+                    + f'greater than {max_dt_interval}. Future trajectory terminated')
                 break
             # If timespan exceeds max. observation time, then end observing.
             time_span = feature_sequence[j].timestamp_sec - feature_curr.timestamp_sec
@@ -240,7 +242,8 @@ class LabelGenerator(object):
         dict_val['total_observed_time_span'] = total_observed_time_span
         if total_observed_time_span < self.max_observation_time:
             logging.debug(
-                f'In {dict_key}, current index is {idx_curr}. {total_observed_time_span} is less than {self.max_observation_time}')
+                f'In {dict_key}, current index is {idx_curr}. '
+                + f'{total_observed_time_span} is less than {self.max_observation_time}')
         key = "adc@{:.3f}".format(feature_curr.timestamp_sec)
         self.observation_dict[key] = ((output_features), (dict_val))
         return

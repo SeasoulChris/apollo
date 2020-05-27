@@ -51,6 +51,7 @@ class AgentBoxImgRenderer(object):
         cv.fillPoly(local_map, [corner_points], color=(255))
         return local_map
 
+
 if __name__ == "__main__":
     config_file = "/fuel/fueling/planning/datasets/semantic_map_feature " \
         "/planning_semantic_map_config.pb.txt"

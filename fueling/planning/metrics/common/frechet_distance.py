@@ -5,8 +5,8 @@ import numpy as np
 
 
 def euclidean_distance(pt1, pt2):
-    return math.sqrt((pt2[0] - pt1[0]) * (pt2[0] - pt1[0]) +
-                     (pt2[1] - pt1[1]) * (pt2[1] - pt1[1]))
+    return math.sqrt((pt2[0] - pt1[0]) * (pt2[0] - pt1[0])
+                     + (pt2[1] - pt1[1]) * (pt2[1] - pt1[1]))
 
 
 def _c(ca, i, j, P, Q):

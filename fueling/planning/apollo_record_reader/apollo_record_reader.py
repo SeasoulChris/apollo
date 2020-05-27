@@ -52,10 +52,12 @@ class ApolloRecordReader:
                     chunk_body.ParseFromString(f.read(section_len))
                     for message in chunk_body.messages:
                         if topics is None:
-                            yield PyBagMessage(message.channel_name, message.content, "", message.time)
+                            yield PyBagMessage(
+                                message.channel_name, message.content, "", message.time)
                         else:
                             if message.channel_name in topics:
-                                yield PyBagMessage(message.channel_name, message.content, "", message.time)
+                                yield PyBagMessage(
+                                    message.channel_name, message.content, "", message.time)
 
                 elif section_type == 3:
                     index = Index()

@@ -106,7 +106,7 @@ class ObstaclePredictionsImgRenderer(object):
     def draw_obstacle_box_prediction_frame(
             self, obstacles, timestamp_idx, coordinate_heading=0.):
         '''
-        It uses index to get specific frame in the future rather than timestamp. 
+        It uses index to get specific frame in the future rather than timestamp.
         Make sure to inspect and clean data before using it
         '''
         local_map = np.zeros(

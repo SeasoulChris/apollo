@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 """Clean records."""
 
+from planning_analytics.route_generator.route_generator import RouteGenerator
+from planning_analytics.apl_record_reader.apl_record_reader import AplRecordReader
+from fueling.common.base_pipeline import BasePipeline
+import fueling.common.file_utils as file_utils
+import fueling.common.record_utils as record_utils
+import fueling.common.logging as logging
+from cyber_py3.record import RecordWriter
 import os
 import resource
 import sys
@@ -11,15 +18,6 @@ sys.path.append('/fuel/fueling/planning/analytics/planning_analytics.zip')
 sys.path.append('fueling/planning/analytics/planning_analytics.zip')
 sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
 
-from cyber_py3.record import RecordWriter
-import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
-import fueling.common.file_utils as file_utils
-from fueling.common.base_pipeline import BasePipeline
-
-from planning_analytics.apl_record_reader.apl_record_reader import AplRecordReader
-from planning_analytics.route_generator.route_generator import RouteGenerator
-
 
 class RoutingGenerator(BasePipeline):
     """CleanPlanningRecords pipeline."""
@@ -27,7 +25,8 @@ class RoutingGenerator(BasePipeline):
     def __init__(self):
         now = datetime.now() - timedelta(hours=7)
         dt_string = now.strftime("%Y%m%d_%H%M%S")
-        self.dst_prefix = '/mnt/bos/modules/planning/temp/converted_data_with_routing/batch_' + dt_string + "/"
+        self.dst_prefix = ('/mnt/bos/modules/planning/temp/converted_data_with_routing/batch_'
+                           + dt_string + "/")
         self.map_file = '/mnt/bos/code/baidu/adu-lab/apollo-map/yizhuangdaluwang/sim_map.bin'
         self.apl_topics = [
             '/apollo/canbus/chassis',
@@ -117,7 +116,7 @@ class RoutingGenerator(BasePipeline):
             routing_written = False
             for msg in reader.read_messages(record_path_file):
                 # if msg.topic == '/apollo/routing_request':
-                if routing_written == False:
+                if not routing_written:
                     writer.write_message('/apollo/routing_response',
                                          route_response_msg.SerializeToString(),
                                          msg.timestamp - 1)
@@ -132,7 +131,8 @@ class RoutingGenerator(BasePipeline):
             writer.close()
 
     def get_topic_descs(self):
-        filename = "/mnt/bos/small-records/2019/2019-11-11/2019-11-11-06-24-26/20191111062526.record"
+        filename = ("/mnt/bos/small-records/2019/2019-11-11/"
+                    + "2019-11-11-06-24-26/20191111062526.record")
         reader = AplRecordReader()
         for msg in reader.read_messages(filename):
             continue

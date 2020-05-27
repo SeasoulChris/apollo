@@ -55,10 +55,12 @@ class PlanningStabilityGrader(object):
 
         if lat_jerk in self.grade_table[self.key_lat_jerk_av]:
             if angular_velocity in self.grade_table[self.key_lat_jerk_av][lat_jerk]:
-                score_lat_jerk_av = self.grade_table[self.key_lat_jerk_av][lat_jerk][angular_velocity]
+                score_lat_jerk_av = \
+                    self.grade_table[self.key_lat_jerk_av][lat_jerk][angular_velocity]
         if lon_jerk in self.grade_table[self.key_lon_jerk_av]:
             if angular_velocity in self.grade_table[self.key_lon_jerk_av][lon_jerk]:
-                score_lon_jerk_av = self.grade_table[self.key_lon_jerk_av][lon_jerk][angular_velocity]
+                score_lon_jerk_av = \
+                    self.grade_table[self.key_lon_jerk_av][lon_jerk][angular_velocity]
         return score_lat_jerk_av * score_lon_jerk_av, score_lat_jerk_av, score_lon_jerk_av
 
     def grade_message(self, planning_pb):

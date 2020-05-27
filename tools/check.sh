@@ -34,12 +34,12 @@ ${RUNNER} bash /fuel/tools/lint.sh /fuel/apps
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/common
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/data
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/demo
+${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/perception
 ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/streaming
 
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/control
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/learning
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/map
-# TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/perception
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/planning
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/prediction
 # TODO(?): ${RUNNER} bash /fuel/tools/lint.sh /fuel/fueling/profiling

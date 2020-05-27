@@ -15,7 +15,7 @@ import fueling.common.proto_utils as proto_utils
 
 class TrainingDataOrganizer:
     '''
-    An orginizer which takes in LearningData, outputs LearningDataFrame and 
+    An orginizer which takes in LearningData, outputs LearningDataFrame and
         distribute them into training_set, validation_set and testing_set
     '''
 
@@ -63,11 +63,11 @@ class TrainingDataOrganizer:
 
     def load_frames_list(self, frames_dir):
         frames_list = list(filter(lambda frame_path:
-                           'future_status' in frame_path and 'bin' in frame_path,
-                           file_utils.list_files(frames_dir)))
-        
+                                  'future_status' in frame_path and 'bin' in frame_path,
+                                  file_utils.list_files(frames_dir)))
+
         random.shuffle(frames_list)
-        
+
         return frames_list
 
     def pick_small_samples(self, samples_size, frames_list):
@@ -148,7 +148,7 @@ class TrainingDataOrganizer:
 
 
 if __name__ == "__main__":
-    #TODO(Jinyun): use absl flag
+    # TODO(Jinyun): use absl flag
     parser = argparse.ArgumentParser(
         description='learning_data organizer data folder')
     parser.add_argument('data_dir', type=str,

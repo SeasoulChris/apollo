@@ -129,7 +129,8 @@ class PlannigAnalyzer:
         print(PrintColors.HEADER + "--- Planning Latency (ms) ---" + PrintColors.ENDC)
         StatisticalAnalyzer().print_statistical_results(self.module_latency)
 
-        print(PrintColors.HEADER + "--- Planning Trajectroy Type Distribution ---" + PrintColors.ENDC)
+        print(PrintColors.HEADER + "--- Planning Trajectroy Type Distribution ---"
+              + PrintColors.ENDC)
         DistributionAnalyzer().print_distribution_results(self.trajectory_type_dist)
 
         print(PrintColors.HEADER + "--- Planning Estop Distribution ---" + PrintColors.ENDC)
@@ -141,9 +142,9 @@ class PlannigAnalyzer:
         self.error_msg_analyzer.print_results()
 
         print(
-            PrintColors.HEADER +
-            "--- Planning Trajectory Frechet Distance (m) ---" +
-            PrintColors.ENDC)
+            PrintColors.HEADER
+            + "--- Planning Trajectory Frechet Distance (m) ---"
+            + PrintColors.ENDC)
         StatisticalAnalyzer().print_statistical_results(self.frechet_distance_list)
 
     def get_sim_results(self):

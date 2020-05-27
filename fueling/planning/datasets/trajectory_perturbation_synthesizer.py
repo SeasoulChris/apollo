@@ -54,8 +54,8 @@ class TrajectoryPerturbationSynthesizer(object):
                 (y[i] - trajectory[i][1])**2
 
         for i in range(1, state_horizon - 1):
-            smoothing_objective += (x[i] - (x[i-1] + x[i+1]) / 2)**2 + \
-                (y[i] - (y[i-1] + y[i+1]) / 2)**2
+            smoothing_objective += (x[i] - (x[i - 1] + x[i + 1]) / 2)**2 + \
+                (y[i] - (y[i - 1] + y[i + 1]) / 2)**2
 
         objective = self.ref_cost * ref_objective + \
             self.elastic_band_smoothing_cost * smoothing_objective
@@ -95,21 +95,21 @@ class TrajectoryPerturbationSynthesizer(object):
         state_horizon = original_trajectory.shape[0]
         headings = np.zeros((state_horizon, 1))
         headings[0] = math.atan2(original_trajectory[1][1] - original_trajectory[0][1],
-                                     original_trajectory[1][0] - original_trajectory[0][0])
+                                 original_trajectory[1][0] - original_trajectory[0][0])
         headings[-1] = math.atan2(original_trajectory[-1][1] - original_trajectory[-2][1],
-                                     original_trajectory[-1][0] - original_trajectory[-2][0])
+                                  original_trajectory[-1][0] - original_trajectory[-2][0])
         for i in range(1, state_horizon - 1):
-            headings[i] = math.atan2(original_trajectory[i+1][1] - original_trajectory[i-1][1],
-                                     original_trajectory[i+1][0] - original_trajectory[i-1][0])
+            headings[i] = math.atan2(original_trajectory[i + 1][1] - original_trajectory[i - 1][1],
+                                     original_trajectory[i + 1][0] - original_trajectory[i - 1][0])
         trajectory = np.hstack((xy_point, headings))
         return trajectory
 
     def check_trajectory_curvature(self, smoothed_trajectory):
         for i in range(smoothed_trajectory.shape[0] - 1):
-            point_distance = math.sqrt((smoothed_trajectory[i][0] -
-                                        smoothed_trajectory[i + 1][0])**2 +
-                                       (smoothed_trajectory[i][1] -
-                                        smoothed_trajectory[i + 1][1])**2)
+            point_distance = math.sqrt((smoothed_trajectory[i][0]
+                                        - smoothed_trajectory[i + 1][0])**2
+                                       + (smoothed_trajectory[i][1]
+                                          - smoothed_trajectory[i + 1][1])**2)
             angle_difference = math.fabs(
                 smoothed_trajectory[i + 1][2] - smoothed_trajectory[i][2])
             minimal_angle_difference = (
@@ -130,13 +130,16 @@ class TrajectoryPerturbationSynthesizer(object):
         fig = plt.figure(0)
         xy_graph = fig.add_subplot(111)
         xy_graph.plot(
-            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],  linestyle='--', marker='o', color='r')
+            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],
+            linestyle='--', marker='o', color='r')
         xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
                       linestyle='--', marker='o', color='g')
         original_point = xy_graph.scatter(origin_traj_for_plot[self.perturbate_point_idx][0],
-                                          origin_traj_for_plot[self.perturbate_point_idx][1], marker='D', color='r')
+                                          origin_traj_for_plot[self.perturbate_point_idx][1],
+                                          marker='D', color='r')
         perturbated_point = xy_graph.scatter(traj_for_plot[self.perturbate_point_idx][0],
-                                             traj_for_plot[self.perturbate_point_idx][1], marker='D', color='g')
+                                             traj_for_plot[self.perturbate_point_idx][1],
+                                             marker='D', color='g')
 
         xy_graph.set_aspect('equal')
         plt.show()
@@ -146,9 +149,9 @@ class TrajectoryPerturbationSynthesizer(object):
         the function to perturbate a point in given trajectories and return smoothed trajectory
 
         Arguments:
-        past_trajectory: (N_past, 3) numpy array including state (x, y, heading) 
+        past_trajectory: (N_past, 3) numpy array including state (x, y, heading)
                         in time ascending order
-        future_trajectory: (N_future, 3) numpy array including state (x, y, heading) 
+        future_trajectory: (N_future, 3) numpy array including state (x, y, heading)
                         in time ascending order
 
         Return:

@@ -14,7 +14,8 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-from fueling.planning.datasets.trajectory_perturbation_synthesizer import TrajectoryPerturbationSynthesizer
+from fueling.planning.datasets.trajectory_perturbation_synthesizer \
+    import TrajectoryPerturbationSynthesizer
 
 
 class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
@@ -30,8 +31,8 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
 
         # Make output_dir
         if os.path.isdir(self.output_dir):
-            logging.info(self.output_dir +
-                         " directory exists, delete it!")
+            logging.info(self.output_dir
+                         + " directory exists, delete it!")
             shutil.rmtree(self.output_dir)
         os.mkdir(self.output_dir)
         logging.info("Making output directory: " + self.output_dir)
@@ -46,7 +47,8 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
         fig = plt.figure(0)
         xy_graph = fig.add_subplot(111)
         xy_graph.plot(
-            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],  linestyle='--', marker='o', color='r')
+            origin_traj_for_plot[:, 0], origin_traj_for_plot[:, 1],
+            linestyle='--', marker='o', color='r')
         xy_graph.plot(traj_for_plot[:, 0], traj_for_plot[:, 1],
                       linestyle='--', marker='o', color='g')
 
@@ -68,9 +70,9 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
         future_trajectory = np.zeros((future_trajectory_length, 3))
 
         for i in range(past_trajectory_length):
-            path_point = frame.adc_trajectory_point[len(frame.adc_trajectory_point) -
-                                                    past_trajectory_length +
-                                                    i].\
+            path_point = frame.adc_trajectory_point[len(frame.adc_trajectory_point)
+                                                    - past_trajectory_length
+                                                    + i].\
                 trajectory_point.path_point
             past_trajectory[i, 0] = path_point.x
             past_trajectory[i, 1] = path_point.y
@@ -90,9 +92,9 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             return frame_file_path
 
         for i in range(past_trajectory_length):
-            path_point = frame.adc_trajectory_point[len(frame.adc_trajectory_point) -
-                                                    past_trajectory_length +
-                                                    i].\
+            path_point = frame.adc_trajectory_point[len(frame.adc_trajectory_point)
+                                                    - past_trajectory_length
+                                                    + i].\
                 trajectory_point.path_point
             path_point.x = perturbated_past_trajectory[i, 0]
             path_point.y = perturbated_past_trajectory[i, 1]
@@ -115,9 +117,9 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
         if self.is_dumping_img:
             output_fig_name = output_file_name.replace('.bin', '') + '.png'
             self.visualize_processed_frame(output_fig_name,
-                                           past_trajectory, 
-                                           future_trajectory, 
-                                           perturbated_past_trajectory, 
+                                           past_trajectory,
+                                           future_trajectory,
+                                           perturbated_past_trajectory,
                                            perturbated_future_trajectory)
 
         return output_file_name

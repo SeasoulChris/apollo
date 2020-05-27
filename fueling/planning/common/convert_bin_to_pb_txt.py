@@ -46,6 +46,7 @@ class ConvertBinToPBTxt(BasePipeline):
 
         logging.info('Processed {} folders'.format(processed_dir.count()))
     '''
+
     def process_dir(self, src_dir):
         for filename in os.listdir(src_dir):
             if filename.endswith(".bin"):

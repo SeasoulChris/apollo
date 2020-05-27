@@ -11,7 +11,8 @@ import fueling.common.logging as logging
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
-from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
+from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping \
+    import ObstacleMapping
 
 MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
 ENABLE_IMG_DUMP = False
@@ -40,7 +41,8 @@ class SemanticMapDataset(Dataset):
         all_file_paths = file_utils.list_files(data_dir)
         # sort by filenames numerically: learning_data.<int>.bin.training_data.npy
         all_file_paths.sort(
-            key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
+            key=lambda var: [int(x) if x.isdigit() else x
+                             for x in re.findall(r'[^0-9]|[0-9]+', var)])
         for file_path in all_file_paths:
             if 'training_data' not in file_path:
                 continue

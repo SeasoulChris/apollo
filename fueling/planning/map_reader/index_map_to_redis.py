@@ -14,7 +14,8 @@ class IndexMap(BasePipeline):
 
     def __init__(self):
         self.map_lane_prefix = 'map.data.sunnyvale_with_two_offices.v1.laneid2coord.'
-        self.map_file = "/mnt/bos/code/baidu/adu-lab/apollo-map/sunnyvale_with_two_offices/sim_map.bin"
+        self.map_file = ("/mnt/bos/code/baidu/adu-lab/apollo-map/"
+                         + "sunnyvale_with_two_offices/sim_map.bin")
 
     def run(self):
         map_pb = map_pb2.Map()

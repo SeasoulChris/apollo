@@ -39,7 +39,6 @@ class PostProcessor(BasePipeline):
             .keyBy(lambda src_file: (os.path.dirname(src_file), os.path.basename(src_file))))
         logging.info(bin_files.first())
 
-
         # PairedRDD((dir, origin_file_name), data_frame))
         data_frames = bin_files.flatMapValues(self._get_data_frame)
         logging.debug(data_frames.first())
@@ -49,7 +48,12 @@ class PostProcessor(BasePipeline):
         logging.debug(tag_data_frames.first())
 
         #PairedRDD((dst_file_path, origin_file_name), data_frame)
-        tag_data_frames = (tag_data_frames.map(lambda elem: self._tagged_folder(elem, self.src_dir_prefix, self.dst_dir_prefix)))
+        tag_data_frames = (
+            tag_data_frames.map(
+                lambda elem: self._tagged_folder(
+                    elem,
+                    self.src_dir_prefix,
+                    self.dst_dir_prefix)))
         logging.info(tag_data_frames.keys().first())
 
         # write single_frame to each bin to reduce memory usage
@@ -146,7 +150,6 @@ class PostProcessor(BasePipeline):
         dst_file_path = origin_file_path.replace(src_dir, dst_dir)
         logging.debug(f'dst file dir: {dst_file_path}')
         return ((dst_file_path, origin_file_name), data)
-
 
 
 if __name__ == '__main__':

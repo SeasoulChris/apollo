@@ -180,6 +180,7 @@ def jobs_hdl():
 
     jobs_dict = {}
     kubectl_jobs = set()
+
     def save_pod_info(podinfo, podfrom):
         """save pod info to dict
         podfrom: ['kubectl', 'mongodb']
