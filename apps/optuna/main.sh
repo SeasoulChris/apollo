@@ -2,12 +2,8 @@
 
 function print_usage() {
     echo 'Usage:
-    ./main.sh -c [ bce-platform | az-staging ] -a [ init | build | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
+    ./main.sh -c [ bce-platform | az-staging ] -a [ init | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
     '
-}
-
-function scale_deployment() {
-  kubectl scale deployment costservice-deployment -n $K8S_NAMESPACE --replicas=$REPLICA
 }
 
 function delete_worker() {
@@ -17,7 +13,6 @@ function delete_worker() {
 function run() {
   delete_worker
 
-  set -ex
   cd $( dirname "${BASH_SOURCE[0]}" )/../..
 
   # check if the config file is existing
@@ -29,11 +24,11 @@ function run() {
   STUDY_NAME="supertuner-$USER-$(date +%Y%m%d_%H%M%S)"
 
   # upload config file to /mnt/bos
-  # TODO: save config file under tuner_storage_dir (/mnt/bos/autotuner/$STUDY_NAME). Having an issue to access it as on 5/11/2020
-  CONFIG_FILE_DEST="modules/autotuner/$STUDY_NAME/$(basename "${CONFIG_FILE}")"
+  CONFIG_FILE_DEST="autotuner/$STUDY_NAME/$(basename "${CONFIG_FILE}")"
   apps/local/bos_fstool --src=${CONFIG_FILE} --dst=${CONFIG_FILE_DEST}
 
   # spin off worker(s)
+  set -ex
   RUN_FILE="${DEPLOY_DIR}/optuna_worker.yaml"
   IMG="${DEST_REPO}/${IMAGE}"
   sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__CONFIG_FILE__|/mnt/bos/$CONFIG_FILE_DEST|g; \
@@ -41,24 +36,6 @@ function run() {
         $RUN_FILE
   kubectl apply -f $RUN_FILE
   git checkout -- $RUN_FILE
-}
-
-function build_and_push() {
-  # NOTE: this will be depreicated soon as optuna and cost_service can share the same image
-  echo 'Building optuna image ...'
-  cd $( dirname "${BASH_SOURCE[0]}" )/../..
-
-  set -ex
-  docker build -t ${IMAGE} --network host -f apps/optuna/docker/Dockerfile .
-
-  echo 'Start pushing optuna image ...'
-  TAG="$(date +%Y%m%d_%H%M)"
-  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
-  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
-
-  TAG="latest"
-  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
-  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
 }
 
 function check_cluster() {
@@ -86,7 +63,7 @@ function init_environment() {
 }
 
 function init_settings() {
-  IMAGE="optuna_worker"
+  IMAGE="cost_service"
   DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
   case "$CLUSTER" in
     az-staging)
@@ -144,10 +121,6 @@ function main() {
   case "$ACTION" in
     init)
       init_environment
-      ;;
-    build)
-      # note: need to login to docker repo before executing this option
-      build_and_push
       ;;
     run)
       run

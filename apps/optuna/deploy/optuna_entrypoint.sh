@@ -21,6 +21,10 @@ function start_service() {
   source /home/libs/bash.rc
   source /apollo/scripts/apollo_base.sh
 
+  # GRPC settings
+  export GRPC_VERBOSITY=INFO
+  export GRPC_TRACE=call_error,client_channel_call,client_channel_routing,connectivity_state,server_channel
+
   echo "Study Name: $STUDY_NAME. Config File: $CONFIG_FILE. Worker Count: $WORKER_COUNT"
   # where images/logs/config are stored
   OUT_DIR="/mnt/bos/autotuner/$STUDY_NAME"
@@ -38,7 +42,6 @@ function start_service() {
     --study_storage_url=$STUDY_STORAGE_URL \
     --study_name=$STUDY_NAME \
     --n_coworkers=$WORKER_COUNT \
-
     2>&1 | tee $LOG_NAME; test ${PIPESTATUS[0]} -eq 0
 }
 
