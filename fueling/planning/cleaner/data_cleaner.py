@@ -1,18 +1,6 @@
 #!/usr/bin/env python
 """Clean records."""
 
-from fueling.planning.cleaner.analyzer_prediction import PredictionAnalyzer
-from fueling.planning.cleaner.analyzer_perception import PerceptionAnalyzer
-from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
-from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
-from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
-from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
-from fueling.common.base_pipeline import BasePipeline
-import fueling.common.record_utils as record_utils
-import fueling.common.logging as logging
-import fueling.common.file_utils as file_utils
-from cyber_py3.record import RecordReader, RecordWriter
-from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
 import os
 import sys
 from datetime import datetime, timedelta
@@ -22,6 +10,22 @@ from os import path
 
 sys.path.append('fueling/planning/analytics/planning_analytics.zip')
 sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
+
+from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
+
+from cyber_py3.record import RecordReader, RecordWriter
+import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
+import fueling.common.record_utils as record_utils
+
+from fueling.common.base_pipeline import BasePipeline
+from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
+from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
+from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
+from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
+from fueling.planning.cleaner.analyzer_perception import PerceptionAnalyzer
+
+from fueling.planning.cleaner.analyzer_prediction import PredictionAnalyzer
 
 
 class CleanPlanningRecords(BasePipeline):

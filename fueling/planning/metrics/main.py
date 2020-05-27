@@ -1,14 +1,4 @@
 #!/usr/bin/env python
-from fueling.planning.stability.grading.planning_stability_grader import PlanningStabilityGrader
-from fueling.planning.metrics.lidar_endtoend_analyzer import LidarEndToEndAnalyzer
-from modules.prediction.proto import prediction_obstacle_pb2
-from modules.perception.proto import perception_obstacle_pb2
-from module_planning_analyzer import PlannigAnalyzer
-from module_control_analyzer import ControlAnalyzer
-from modules.drivers.proto import pointcloud_pb2
-from modules.canbus.proto import chassis_pb2
-from modules.planning.proto import planning_pb2
-from modules.control.proto import control_cmd_pb2
 import argparse
 import json
 import sys
@@ -19,6 +9,17 @@ if sys.version_info[0] >= 3:
     from cyber_py3.record import RecordReader
 else:
     from cyber_py.record import RecordReader
+
+from modules.control.proto import control_cmd_pb2
+from modules.planning.proto import planning_pb2
+from modules.canbus.proto import chassis_pb2
+from modules.drivers.proto import pointcloud_pb2
+from module_control_analyzer import ControlAnalyzer
+from module_planning_analyzer import PlannigAnalyzer
+from modules.perception.proto import perception_obstacle_pb2
+from modules.prediction.proto import prediction_obstacle_pb2
+from fueling.planning.metrics.lidar_endtoend_analyzer import LidarEndToEndAnalyzer
+from fueling.planning.stability.grading.planning_stability_grader import PlanningStabilityGrader
 
 
 def process(control_analyzer, planning_analyzer, lidar_endtoend_analyzer,

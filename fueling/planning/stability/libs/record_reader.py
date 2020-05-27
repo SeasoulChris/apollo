@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-from modules.planning.proto import planning_pb2
-from modules.localization.proto import localization_pb2
-from modules.canbus.proto import chassis_pb2
 import sys
 
 if sys.version_info[0] >= 3:
     from cyber_py3.record import RecordReader
 else:
     from cyber_py.record import RecordReader
+
+from modules.canbus.proto import chassis_pb2
+from modules.localization.proto import localization_pb2
+from modules.planning.proto import planning_pb2
 
 
 class RecordItemReader:

@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
-from proto.global_adc_status_pb2 import Chassis
-from proto.prediction_obstacle_pb2 import PredictionObstacles
-from proto.localization_pose_pb2 import LocalizationEstimate
-from prediction_converter import PredictionConverter
-from localization_converter import LocalizationConverter
-from cybertron_record_pb2 import ParamSection, IndexSection, ReserveSection
-from cybertron_record_pb2 import HeaderSection
-from cybertron_record_pb2 import ChunkSection
-from cybertron_record_pb2 import ChunkHeader
 import struct
 import sys
 
 sys.path.append('./py_proto/modules/')
 sys.path.append('./py_proto/')
+
+from cybertron_record_pb2 import ChunkHeader
+from cybertron_record_pb2 import ChunkSection
+from cybertron_record_pb2 import HeaderSection
+from cybertron_record_pb2 import ParamSection, IndexSection, ReserveSection
+
+from localization_converter import LocalizationConverter
+from prediction_converter import PredictionConverter
+from proto.localization_pose_pb2 import LocalizationEstimate
+from proto.prediction_obstacle_pb2 import PredictionObstacles
+from proto.global_adc_status_pb2 import Chassis
 
 
 fn = sys.argv[1]
