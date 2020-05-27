@@ -133,7 +133,10 @@ class BasePipeline(object):
             else:
                 pod_log = kubectl.logs(pod_name, pod_namespace)
                 pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
-                phase = pod_desc['status']['phase']
+                if pod_desc['status']['phase'] == 'Running':
+                    phase = 'Succeeded'
+                else:
+                    phase = pod_desc['status']['phase']
                 creation_timestamp = (dateutil.parser
                                       .parse(pod_desc['metadata']['creationTimestamp'])
                                       .replace(tzinfo=timezone.utc))

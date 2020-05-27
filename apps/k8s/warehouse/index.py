@@ -151,21 +151,23 @@ def jobs_hdl():
         parent_uid = ''
         spark_job_owner = ''
         spark_job_id = ''
-        # executor
-        if 'owner_references' in pod['metadata']:
-            parent_uid = pod['metadata']['owner_references'][0]['uid']
-        # driver
+        # only executor has an parent_id indicating the uid of corresponding driver
+        if 'ownerReferences' in pod['metadata']:
+            parent_uid = pod['metadata']['ownerReferences'][0]['uid']
         else:
             # extract job_owner for future filtering
-            for env in pod['spec']['containers'][0]['env']:
-                if env['name'] == 'PYSPARK_APP_ARGS':
-                    for v in env['value'].split(' '):
-                        if '=' in v:
-                            arg_type, arg_value = v.split('=')
-                            if arg_type == '--job_owner':
-                                spark_job_owner = arg_value
-                            elif arg_type == '--job_id':
-                                spark_job_id = arg_value
+            try:
+                for env in pod['spec']['containers'][0]['env']:
+                    if env['name'] == 'PYSPARK_APP_ARGS':
+                        for v in env['value'].split(' '):
+                            if '=' in v:
+                                arg_type, arg_value = v.split('=')
+                                if arg_type == '--job_owner':
+                                    spark_job_owner = arg_value
+                                elif arg_type == '--job_id':
+                                    spark_job_id = arg_value
+            except Exception as ex:
+                pass
         return {'namespace': namespace,
                 'podname': podname,
                 'phase': phase,
@@ -178,7 +180,6 @@ def jobs_hdl():
 
     jobs_dict = {}
     kubectl_jobs = set()
-
     def save_pod_info(podinfo, podfrom):
         """save pod info to dict
         podfrom: ['kubectl', 'mongodb']
@@ -187,9 +188,10 @@ def jobs_hdl():
         # only display fuel jobs
         if not podinfo['podname'].startswith('job-'):
             return
-        appuid = ''
+        # executor
         if podinfo['parent_uid'] != '':
             appuid = podinfo['parent_uid']
+        # driver
         else:
             appuid = podinfo['pod_uid']
         # skip mongodb jobs which were already loaded from kubectl
@@ -264,13 +266,6 @@ def pod_delete_hdl():
         return 'illegal pod name/namespace'
 
 
-# TODO(Andrew):
-# 1. For the log page, it's OK to load and show all logs at once as a start. But in the
-# future it would be every fancy if it updates at realtime! Just like "kubectl logs -f <pod>".
-# 2. We may need to add the filter to the logs. As Spark itself outputs a lot of boring and noisy
-# logs, while we just want to see logs from our Python code.
-# 3. Currently we use <pre>...</pre> to show the logs so that it respects basic paragraphing. Later
-# We may need to use tools like https://pypi.org/project/ansi2html to get better styled result.
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
