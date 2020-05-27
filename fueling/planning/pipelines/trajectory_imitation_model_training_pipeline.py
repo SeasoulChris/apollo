@@ -3,6 +3,7 @@
 import argparse
 import os
 
+import cv2 as cv
 import torch
 
 from modules.planning.proto import planning_semantic_map_config_pb2
@@ -24,6 +25,9 @@ import fueling.common.proto_utils as proto_utils
 
 
 if __name__ == "__main__":
+    # TODO(Jinyun): check performance
+    cv.setNumThreads(0)
+
     # Set-up the GPU to use
     os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3, 4, 5'
 
