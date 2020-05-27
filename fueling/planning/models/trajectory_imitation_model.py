@@ -465,6 +465,9 @@ class TrajectoryImitationRNNTest(nn.Module):
             self.base_layers[2])
         self.layer2 = nn.Sequential(*self.base_layers[3:5])
         self.layer3 = self.base_layers[5]
+        self.layer4 = self.base_layers[6]
+        self.layer5 = self.base_layers[7]
+        self.layer6 = self.base_layers[8]
         self.decode2 = UnetDecoder(128, 128+64, 128)
         self.decode1 = UnetDecoder(128, 64+64, 64)
         self.decode0 = nn.Sequential(
@@ -473,21 +476,8 @@ class TrajectoryImitationRNNTest(nn.Module):
             nn.Conv2d(32, 2, kernel_size=3, padding=1, bias=False)
         )
 
-        self.output_conv_layer = nn.Sequential(
-            nn.Conv2d(in_channels=2, out_channels=2, kernel_size=121,
-                      padding=10),  # size self.input_img_size_h to 100
-            nn.ReLU(),
-            nn.Conv2d(in_channels=2, out_channels=2, kernel_size=71,
-                      padding=10),  # size 100 to 50
-            nn.ReLU(),
-            nn.Conv2d(in_channels=2, out_channels=1, kernel_size=46,
-                      padding=10),  # size 50 to 25
-            nn.ReLU()
-        )
-
         self.output_fc_layers = nn.Sequential(
-            nn.Linear(25 * 25, 4),
-            nn.ReLU()
+            nn.Linear(512, 4),
         )
 
     def forward(self, X):
@@ -513,9 +503,18 @@ class TrajectoryImitationRNNTest(nn.Module):
             e1 = self.layer1(stacked_imgs)  # 64,100,100
             e2 = self.layer2(e1)  # 64,50,50
             e3 = self.layer3(e2)  # 128,25,25
+
+            output_e1 = e3.clone()
+            output_e2 = self.layer4(output_e1)
+            output_e3 = self.layer5(output_e2)
+            output_e4 = self.layer6(output_e3)
+            output_e4 = output_e4.view(batch_size, -1)
+            pred_point = self.output_fc_layers(output_e4)
+            pred_points[:, t, :] = pred_point.clone()
+
             d2 = self.decode2(e3, e2)  # 128,50,50
             d1 = self.decode1(d2, e1)  # 64,100,100
-            P_B_k = self.decode0(d1)  # 64,200,200
+            P_B_k = self.decode0(d1)  # 2,200,200
 
             P_k = P_B_k[:, 0, :, :].clone()
             B_k = P_B_k[:, 1, :, :].clone()
@@ -528,19 +527,11 @@ class TrajectoryImitationRNNTest(nn.Module):
             pred_pos_dists[:, t, 0, :, :] = P_k.clone()
             pred_boxs[:, t, 0, :, :] = B_k.clone()
 
-            output_P_B_k = torch.stack((P_k, B_k), dim=1)
-
-            pred_point = self.output_conv_layer(output_P_B_k)
-            pred_point = pred_point.view(batch_size, -1)
-            pred_point = self.output_fc_layers(pred_point)
-            pred_points[:, t, :] = pred_point.clone()
-
-            arg_max_index = torch.argmax(
-                output_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            arg_max_row_index = arg_max_index // output_P_B_k.shape[-2:][0]
-            arg_max_col_index = arg_max_index % output_P_B_k.shape[-2:][1]
+            arg_max_index = torch.argmax(P_k.view(batch_size, -1), dim=1)
+            arg_max_row_index = arg_max_index // P_k.shape[-2:][0]
+            arg_max_col_index = arg_max_index % P_k.shape[-2:][1]
             M_k_next = M_B_k[:, 0, :, :].clone()
-            B_k_next = output_P_B_k[:, 1, :, :].clone()
+            B_k_next = B_k.clone()
             for i in range(batch_size):
                 M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
 
@@ -634,3 +625,21 @@ class TrajectoryImitationWithEnvRNNLoss():
         out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
         out = torch.mean(out)
         return out
+
+
+if __name__ == "__main__":
+    # code snippet for model prining
+    model = models.resnet18(True)
+
+    total_param = 0
+    for name, param in model.named_parameters():
+        print(name)
+        print(param.data.shape)
+        print(param.data.view(-1).shape[0])
+        total_param += param.data.view(-1).shape[0]
+    print(total_param)
+
+    for index, (name, child) in enumerate(model.named_children()):
+        print(index)
+        print(name)
+        print(child)
