@@ -9,3 +9,11 @@ py_binary(
         "//fueling/planning/models:semantic_map_model",
     ]
 )
+
+py_binary(
+    name = "model_training_on_cloud",
+    srcs = ["model_training_on_cloud.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+    ]
+)
