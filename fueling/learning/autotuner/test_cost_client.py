@@ -4,17 +4,19 @@ import time
 from fueling.learning.autotuner.client.cost_computation_client import CostComputationClient
 from fueling.learning.autotuner.proto.dynamic_model_info_pb2 import DynamicModel
 
+CHANNEL_URL = "localhost:50052"
+
 # uncomment me if testing inside a cluster
-# CostComputationClient.set_channel("costservice:50052")
+# CHANNEL_URL="costservice:50052"
 
 # uncomment me if testing for az-staging
-# CostComputationClient.set_channel("40.77.110.196:50052")
+# CHANNEL_URL="40.77.110.196:50052"
 
 # uncomment me if testing for bce-platform
-# CostComputationClient.set_channel("180.76.242.157:50052")
+# CHANNEL_URL="180.76.242.157:50052"
 
 # settings
-commit_id = "c693dd9e2e7910b041416021fcdb648cc4d8934d"
+commit_id = "8076ef3bf8b32bfd9a2a74e187e62e4b7168b1a4"
 scenario_ids = [11014, 11015, 11016, 11017, 11018, 11019, 11020, 30019, 30020, 30021, 30022, 30023, 30024, 30025]
 dynamic_model = DynamicModel.ECHO_LINCOLN
 configs = {  # map of config_id to path_to_config pairs
@@ -29,13 +31,13 @@ configs = {  # map of config_id to path_to_config pairs
 
 # method 1:
 """
-with CostComputationClient(commit_id, scenario_ids, dynamic_model) as client:
+with CostComputationClient(CHANNEL_URL, commit_id, scenario_ids, dynamic_model) as client:
     iteration_id, score = client.compute_cost(configs)
     print(f"Received score {score} for {iteration_id}")
 """
 
 # method 2:
-client = CostComputationClient()
+client = CostComputationClient(CHANNEL_URL)
 try:
     tic1 = time.perf_counter()
 

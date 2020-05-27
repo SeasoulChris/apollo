@@ -11,46 +11,59 @@ import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
 REQUEST_TIMEOUT_IN_SEC = 30 * 60
-
 MAX_RETRIES = 3
+KEEP_ALIVE_TIME_IN_SEC = 5 * 60
 
+# channel options: https://github.com/grpc/grpc/blob/master/include/grpc/impl/codegen/grpc_types.h
 CHANNEL_OPTIONS = [
     ('grpc.keepalive_timeout_ms', 60000),
+    ('grpc.keepalive_time_ms', KEEP_ALIVE_TIME_IN_SEC * 1000),
+    ('grpc.keepalive_permit_without_calls', 1),
+    ('grpc.http2.max_pings_without_data', int(REQUEST_TIMEOUT_IN_SEC / KEEP_ALIVE_TIME_IN_SEC)),
 ]
 
 
 class CostComputationClient(object):
     """The Python implementation of the Cost Computation GRPC client."""
 
-    CHANNEL_URL = "localhost:50052"
-
-    def __init__(self, commit_id=None, scenario_ids=None, dynamic_model=None,
+    def __init__(self, channel_url="localhost:50052",
+                 commit_id=None, scenario_ids=None,
+                 dynamic_model=None,
                  running_role_postfix=None):
         self.service_token = None
         self.max_retries = MAX_RETRIES
         self.request_timeout_in_sec = REQUEST_TIMEOUT_IN_SEC
+        self.channel, self.stub = self.create_channel_and_stub(channel_url)
 
         running_role = (f"{getpass.getuser()}-{running_role_postfix}" if running_role_postfix
                         else getpass.getuser())[:18]  # too long string may induce job-failing
 
         if commit_id and scenario_ids and dynamic_model and running_role:
-            self.initialize(commit_id, scenario_ids, dynamic_model, running_role)
+            self.initialize(commit_id, scenario_ids,
+                            dynamic_model, running_role)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+        self.channel.close()
+
+    def create_channel_and_stub(self, channel_url):
+        logging.info(f'Setting up grpc connection to {channel_url}')
+        channel = grpc.insecure_channel(
+            target=channel_url,
+            compression=grpc.Compression.Gzip,
+            options=CHANNEL_OPTIONS)
+        stub = cost_service_pb2_grpc.CostComputationStub(channel)
+
+        return channel, stub
 
     def set_max_retries(self, retries):
         self.max_retries = retries
 
     def set_request_timeout(self, seconds):
         self.request_timeout_in_sec = seconds
-
-    @classmethod
-    def set_channel(cls, channel):
-        cls.CHANNEL_URL = channel
 
     def is_initialized(self):
         return self.service_token is not None
@@ -99,37 +112,31 @@ class CostComputationClient(object):
         return cost_service_pb2.CloseRequest(token=self.service_token)
 
     def send_request_with_retry(self, request_name, request_payload):
-        with grpc.insecure_channel(
-                target=CostComputationClient.CHANNEL_URL,
-                compression=grpc.Compression.Gzip,
-                options=CHANNEL_OPTIONS) as channel:
+        request_function = getattr(self.stub, request_name)
+        for retry in range(self.max_retries):
+            try:
+                if retry > 0:
+                    logging.info(
+                        f'Retry {request_name} request. Retry count {retry} ...')
 
-            stub = cost_service_pb2_grpc.CostComputationStub(channel)
-            request_function = getattr(stub, request_name)
+                future = request_function.future(
+                    request_payload, timeout=self.request_timeout_in_sec)
 
-            for retry in range(self.max_retries):
-                try:
-                    if retry > 0:
-                        logging.info(f'Retry {request_name} request. Retry count {retry} ...')
+                def cancel_request(unused_signum, unused_frame):
+                    print(f'Cancelling {request_name} request ...')
+                    future.cancel()
+                    raise Exception('Request Cancelled.')
 
-                    future = request_function.future(
-                        request_payload, timeout=self.request_timeout_in_sec)
+                signal.signal(signal.SIGINT, cancel_request)
+                response = future.result()
 
-                    def cancel_request(unused_signum, unused_frame):
-                        print(f'Cancelling {request_name} request ...')
-                        future.cancel()
-                        raise Exception('Request Cancelled.')
-
-                    signal.signal(signal.SIGINT, cancel_request)
-                    response = future.result()
-
-                except grpc.RpcError as rpc_error:
-                    if retry == (self.max_retries - 1):
-                        raise rpc_error
-                    else:
-                        logging.error(rpc_error)
+            except grpc.RpcError as rpc_error:
+                if retry == (self.max_retries - 1):
+                    raise rpc_error
                 else:
-                    break
+                    logging.error(rpc_error)
+            else:
+                break
 
         status = response.status
         if status.code != 0:
@@ -152,7 +159,8 @@ class CostComputationClient(object):
 
         logging.info(f"Initializing service for commit {commit_id} with training scenarios "
                      f"{scenario_ids} ...")
-        request = self.construct_init_request(commit_id, scenario_ids, dynamic_model, running_role)
+        request = self.construct_init_request(
+            commit_id, scenario_ids, dynamic_model, running_role)
         response = self.send_request_with_retry('Initialize', request)
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")
@@ -162,7 +170,8 @@ class CostComputationClient(object):
             logging.error("Please initialize first.")
             return None
 
-        logging.info(f"Sending compute request to service {self.service_token} ...")
+        logging.info(
+            f"Sending compute request to service {self.service_token} ...")
         request = self.construct_compute_request(configs, cost_config_file)
         response = run_with_retry(
             self.max_retries,

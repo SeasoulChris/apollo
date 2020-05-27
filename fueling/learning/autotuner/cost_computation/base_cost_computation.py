@@ -140,7 +140,7 @@ class BaseCostComputation(BasePipeline):
             logging.info(f"Done running scenario {scenario_id} for {record_filename}.")
         else:
             self.pause_to_debug()
-            raise Exception(f"Failed to run scenario {scenario_id}")
+            raise Exception(f"Failed to run scenario {scenario_id}: {status}")
 
         record_absolute_dir = f"{self.get_absolute_iter_dir()}/{job_id}"
         if not file_utils.file_exists(f"{record_absolute_dir}/{record_filename}"):

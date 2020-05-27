@@ -122,9 +122,9 @@ class OptunaBaseTuner():
 
     def init_cost_client(self):
         config = self.tuner_param_config_pb
-        CostComputationClient.set_channel(flags.FLAGS.cost_computation_service_url)
-        self.cost_client = CostComputationClient()
+
         self.cost_client = CostComputationClient(
+            flags.FLAGS.cost_computation_service_url,
             config.git_info.commit_id,
             list(config.scenarios.id),
             config.dynamic_model,

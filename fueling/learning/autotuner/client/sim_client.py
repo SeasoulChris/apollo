@@ -8,12 +8,15 @@ import fueling.learning.autotuner.proto.git_info_pb2 as git_info_pb2
 import fueling.learning.autotuner.proto.sim_service_pb2_grpc as sim_service_pb2_grpc
 import fueling.common.logging as logging
 
-REQUEST_TIMEOUT_IN_SEC = 600
+REQUEST_TIMEOUT_IN_SEC = 15 * 60
 
+# channel options: https://github.com/grpc/grpc/blob/master/include/grpc/impl/codegen/grpc_types.h
 CHANNEL_OPTIONS = [
     ('grpc.keepalive_timeout_ms', 60000),
+    ('grpc.keepalive_time_ms', 5 * 60000),
+    ('grpc.keepalive_permit_without_calls', 1),
+    ('grpc.http2.max_pings_without_data', 12),
 ]
-
 
 class SimClient(object):
     CHANNEL_URL = "localhost:50051"
