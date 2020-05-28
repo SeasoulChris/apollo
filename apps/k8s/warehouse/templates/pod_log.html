@@ -28,6 +28,9 @@
 <a type="hidden" id="pod_log_streaming_url" href="{{ url_for('pod_log_streaming_hdl', pod_name=pod_name, namespace=namespace) }}"></a>
 <div class="panel panel-default">
    <div class="panel-heading">logs - {{ pod_name }}</div>
+   <div class="spark-ui" style="padding:10px;display:none;">
+      SparkUI: <a id="spark-ui" target="_blank"></a>
+   </div>
    <div class="panel-body">
       <div id="log-container">
            <pre></pre>
@@ -55,6 +58,18 @@
                 }
                 $("#log-container pre").append(this_response);
                 $("#log-container").scrollTop($("#log-container pre").height() - $("#log-container").height() + 10);
+                // Extract spark-ui address from driver log
+                if($("div.panel-heading").text().indexOf("driver") >= 0 && $("#spark-ui").text() == ""){
+                    var spark_ui_addr_tpl = "http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:spark-SPARKID-driver-svc:4040/proxy";
+                    var regex = /http:\/\/spark-(\d+)-driver-svc\.default\.svc:4040/;
+                    var query_spark_id = regex.exec($("#log-container pre").text());
+                    if(query_spark_id && query_spark_id.length > 0){
+                     var spark_ui_addr = spark_ui_addr_tpl.replace("SPARKID",query_spark_id[1]);
+                     $("#spark-ui").attr("href", spark_ui_addr);
+                     $("#spark-ui").text(spark_ui_addr);
+                     $(".spark-ui").css("display","block");
+                    }
+                }
             }
         }
     })
