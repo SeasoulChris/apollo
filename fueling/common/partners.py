@@ -42,4 +42,6 @@ partners = {
                              bos_bucket='coolhigh-test', bos_region='bj'),
     'd-kit-nxkj-84': Partner(name='NXKJ84', email='tony.hong@tech-nx.com',
                              bos_bucket='nx-tech', bos_region='gz'),
+    'd-kit-wfgk-72': Partner(name='WFGK72', email='wccsu1994@163.com',
+                             bos_bucket='wifuapollo', bos_region='su'),
 }
