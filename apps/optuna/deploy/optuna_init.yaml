@@ -40,7 +40,6 @@ spec:
         app: autotune-postgres
     spec:
       containers:
-      containers:
         - name: postgres
           image: postgres:latest
           imagePullPolicy: IfNotPresent

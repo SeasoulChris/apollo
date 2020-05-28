@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./entrypoint.sh [ bce-platform | bce-staging | az-staging | local ]
+    ./entrypoint.sh [ bce-platform | bce-staging | bce-debug | az-staging | local ]
     '
 }
 
@@ -23,7 +23,7 @@ function start_service() {
 
   # GRPC setting
   export GRPC_VERBOSITY=INFO
-  export GRPC_TRACE=client_channel_call,client_channel_routing,connectivity_state,server_channel
+  export GRPC_TRACE=call_error,client_channel_call,connectivity_state,server_channel
 
   LOG_DIR=/tmp/log
   mkdir -p $LOG_DIR
@@ -54,6 +54,11 @@ function main() {
     bce-staging)
       SUBMIT_SPARK_JOB_TO_K8S="false"
       SIM_SERVICE_URL="simservice:50051"
+      ;;
+    bce-debug)
+      SUBMIT_SPARK_JOB_TO_K8S="true"
+      SIM_SERVICE_URL="simservice.autotuner-debug.svc.cluster.local:50051"
+      ADDITIONAL_FLAGS="--spark_submitter_service_url=http://spark-submitter-service.default.svc.cluster.local:8000"
       ;;
     bce-platform)
       SUBMIT_SPARK_JOB_TO_K8S="true"

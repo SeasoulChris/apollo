@@ -54,8 +54,12 @@ function main() {
   local cluster=$1
   case "$cluster" in
     az-staging)
-      COST_SERVICE_URL="180.76.111.129:50052"
+      COST_SERVICE_URL="40.77.110.196:50052"
       STUDY_STORAGE_URL="40.77.100.63:5432"
+      ;;
+    bce-debug)
+      COST_SERVICE_URL="180.76.111.129:50052"
+      STUDY_STORAGE_URL="autotune-postgres.autotuner-debug.svc.cluster.local:5432"
       ;;
     bce-platform)
       COST_SERVICE_URL="180.76.242.157:50052"

@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./main.sh [ init | build | deploy ] [ bce-platform | bce-staging | az-staging ]
+    ./main.sh [ init | build | deploy ] [ bce-platform | bce-staging | bce-debug | az-staging ]
     '
 }
 
@@ -69,25 +69,28 @@ function init_settings() {
   DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
   case "$CLUSTER" in
     az-staging)
-      docker login simengineregistry.azurecr.io -u SImEngineRegistry -p dBHhbaaj3gBlFMpIDLWDwdeaUzLrsIL/
       DEST_REPO="simengineregistry.azurecr.io"
       K8S_NAMESPACE="default"
       REPLICA=1
       ;;
+    bce-debug)
+      DEST_REPO="hub.baidubce.com/apollofuel/autotuner_staging"
+      K8S_NAMESPACE="autotuner-debug"
+      REPLICA=2
+      ;;
     bce-staging)
-      docker login hub.baidubce.com -u apollofuel -p apollo@2017
       DEST_REPO="hub.baidubce.com/apollofuel/autotuner_staging"
       K8S_NAMESPACE="default"
       REPLICA=1
       ;;
     bce-platform)
-      docker login hub.baidubce.com -u apollofuel -p apollo@2017
       DEST_REPO="hub.baidubce.com/apollofuel/autotuner"
       K8S_NAMESPACE="autotuner"
       REPLICA=2
       ;;
     *)
       print_usage
+      exit 1
       ;;
   esac
 }

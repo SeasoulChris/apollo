@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./main.sh -c [ bce-platform | az-staging ] -a [ init | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
+    ./main.sh -c [ bce-platform | bce-debug | az-staging ] -a [ init | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
     '
 }
 
@@ -69,6 +69,10 @@ function init_settings() {
     az-staging)
       DEST_REPO="simengineregistry.azurecr.io"
       K8S_NAMESPACE="default"
+      ;;
+    bce-debug)
+      DEST_REPO="hub.baidubce.com/apollofuel/autotuner_staging"
+      K8S_NAMESPACE="autotuner-debug"
       ;;
     bce-platform)
       DEST_REPO="hub.baidubce.com/apollofuel/autotuner"
