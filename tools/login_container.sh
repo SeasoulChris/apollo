@@ -28,6 +28,7 @@ else
   # Mount required volumes.
   required_volumes="-v $(pwd):/fuel"
   if [ "$1" == -ci ]; then
+  echo "ci model"
   APOLLO_ROOT="$(cd /home/apollo/apollo-bazel2.x; pwd)"
   else
   APOLLO_ROOT="$(cd ../apollo-bazel2.x; pwd)"
@@ -86,5 +87,6 @@ else
   fi
   docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
 fi
-
+if [ "$1" != -ci ]; then
 docker exec -it -u ${USER} ${CONTAINER} bash
+fi
