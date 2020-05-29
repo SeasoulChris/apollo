@@ -15,7 +15,7 @@ from torchvision import transforms
 from fueling.learning.train_utils import *
 from fueling.learning.loss_utils import *
 from learning_algorithms.prediction.pipelines.pedestrian_trajectory_prediction.pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss
+from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss, WeightedSemanticMapLoss
 
 
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
                                                num_workers=16, drop_last=True)
 
     model = SemanticMapSelfLSTMModel(30, 20)
-    loss = SemanticMapLoss()
+    loss = WeightedSemanticMapLoss()
     learning_rate = 3e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
