@@ -24,11 +24,12 @@ function deploy() {
 }
 
 function build_and_push() {
-  echo 'Building cost_service image ...'
+  GITHUB_VERSION=$(git log --pretty=format:'%H (%cd)' -n 1)
+  echo 'Building cost_service image w/ github version $GITHUB_VERSION ...'
   cd $( dirname "${BASH_SOURCE[0]}" )/../..
 
   set -ex
-  docker build -t ${IMAGE} --network host -f apps/cost_service/docker/Dockerfile .
+  docker build -t ${IMAGE} --network host --build-arg GITHUB_VERSION="$GITHUB_VERSION"  -f apps/cost_service/docker/Dockerfile .
 
   echo 'Start pushing cost_service image ...'
   TAG="$(date +%Y%m%d_%H%M)"

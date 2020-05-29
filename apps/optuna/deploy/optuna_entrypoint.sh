@@ -21,6 +21,8 @@ function start_service() {
   source /home/libs/bash.rc
   source /apollo/scripts/apollo_base.sh
 
+  echo "GITHUB_VERSION: $GITHUB_VERSION"
+
   # GRPC settings
   export GRPC_VERBOSITY=INFO
   export GRPC_TRACE=call_error,client_channel_call,client_channel_routing,connectivity_state,server_channel

@@ -20,5 +20,8 @@ RUN echo "source /apollo/scripts/apollo_base.sh" > ~/.bash_profile && \
 ADD . /fuel
 WORKDIR /fuel
 
+ARG GITHUB_VERSION
+ENV GITHUB_VERSION=$GITHUB_VERSION
+
 RUN cat /home/libs/bash.rc >> ~/.bashrc && \
     ./tools/build.sh //fueling/learning/autotuner/...
