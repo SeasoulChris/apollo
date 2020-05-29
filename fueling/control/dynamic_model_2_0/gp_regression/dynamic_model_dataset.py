@@ -5,8 +5,20 @@
 import os
 
 
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+from matplotlib import cm
+
 from scipy.signal import savgol_filter
 from torch.utils.data import Dataset
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import minmax_scale
+from sklearn.preprocessing import MaxAbsScaler
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.preprocessing import PowerTransformer
 import h5py
 import numpy as np
 import torch
@@ -95,6 +107,9 @@ class DynamicModelDataset(Dataset):
         return (torch.from_numpy(processed_inputs).float(),
                 torch.from_numpy(self.datasets[idx][1]).float())
 
+    def get_len(self):
+        return self.__len__()
+
     def pre_process(self, input_data):
         """ pre processing, standardize or normalize """
         if self.is_standardize:
@@ -140,13 +155,11 @@ class DynamicModelDataset(Dataset):
             input_segment_std += np.mean(value, axis=0)
         input_segment_std = np.sqrt(input_segment_std / len(self.datasets))
 
-
         # save mean and standard deviation to npy file
         self.standardization_factors['mean'] = input_segment_mean
         self.standardization_factors['std'] = input_segment_std
         np.save(self.standardization_factors_file, self.standardization_factors)
         return input_segment_mean, input_segment_std
-
 
     def standardize(self, inputs):
         """Standardize given data"""
@@ -161,4 +174,3 @@ class DynamicModelDataset(Dataset):
         input_min = self.normalization_factors['min']
         inputs_normalized = (inputs - input_min) / (input_max - input_min)
         return inputs_normalized
-

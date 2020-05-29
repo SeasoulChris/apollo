@@ -42,6 +42,32 @@ def result_tracing(data_loader, model, likelihood):
     return np.mean(accuracies)
 
 
+def train_loop_test(train_loader, model, loss, optimizer, is_visualize=False):
+    loss_history = []
+    for x_batch, y_batch in train_loader:
+        # visualize training data
+        if is_visualize:
+            train_x_mean, train_x_std = preprocess(x_batch, y_batch)
+            visualize_data(train_x_mean, train_x_std, y_batch)
+        logging.debug(f'input batch shape is {x_batch.shape}')
+        logging.debug(f'output batch shape is {y_batch.shape}')
+        # **[window_size, batch_size, channel]
+        # x_batch = torch.transpose(x_batch, 0, 1)
+        logging.debug(f'transposed input shape is {x_batch.shape}')
+        # training process
+        optimizer.zero_grad()
+        output = model(x_batch)
+        # train loss
+        logging.debug(f'y_batch shape is {y_batch.shape}')
+        train_loss = -loss(output, y_batch)
+        train_loss.backward()
+        optimizer.step()
+        loss_history.append(train_loss.item())
+    train_loss = np.mean(loss_history)
+    logging.info(f'Training loss: {train_loss}')
+    return train_loss
+
+
 def train_loop(train_loader, model, loss, optimizer, is_visualize=False):
     loss_history = []
     for x_batch, y_batch in train_loader:
@@ -166,7 +192,7 @@ def valid_and_trace(valid_loader, model, likelihood, loss, use_cuda=False, analy
     return valid_loss, np.mean(valid_accuracy)
 
 
-def train(args, train_loader, valid_loader, print_period=None, early_stop=None, save_mode=0):
+def train(args, train_loader, valid_loader, total_train_number, print_period=None, early_stop=None, save_mode=0):
     timestr = time.strftime('%Y%m%d-%H%M%S')
     batch_size = args.batch_size
     num_inducing_point = args.num_inducing_point
@@ -182,8 +208,6 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
     logging.info(f'inducing point indices are {inducing_point_num}')
     logging.info(train_loader)
     for idx, (features, labels) in enumerate(train_loader):
-        logging.info(features)
-        logging.info(labels)
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
         inducing_points = features[:, inducing_point_num, :]
         # save inducing point for reload model
@@ -195,7 +219,8 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         break
 
     # likelihood
-    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=OUTPUT_DIM)
+    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
+        num_tasks=OUTPUT_DIM)
 
     # encoder
     encoder_net_model = Encoder(u_dim=INPUT_DIM, kernel_dim=kernel_dim)
@@ -210,7 +235,8 @@ def train(args, train_loader, valid_loader, print_period=None, early_stop=None, 
         {'params': likelihood.parameters()},
     ], lr=lr)
 
-    loss = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=OUTPUT_DIM)
+    loss = gpytorch.mlls.VariationalELBO(
+        likelihood, model, num_data=total_train_number)
 
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
@@ -389,6 +415,9 @@ if __name__ == "__main__":
     train_dataset = DynamicModelDataset(args.training_data_path)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
                               shuffle=True, drop_last=True)
+    total_train_number = train_dataset.get_len()
+    logging.info(f'total_train_number is {total_train_number}')
+
     valid_dataset = DynamicModelDataset(args.validation_data_path)
     valid_loader = DataLoader(valid_dataset, batch_size=args.batch_size,
                               shuffle=True, drop_last=True)
@@ -401,7 +430,7 @@ if __name__ == "__main__":
         logging.info(
             f'validation data batch: {i}, input size is {X.size()}, output size is {y.size()}')
 
-    train(args, train_loader, valid_loader)
+    train(args, train_loader, valid_loader, total_train_number)
     # python ./fueling/control/dynamic_model_2_0/gp_regression/train.py
     # -t /fuel/fueling/control/dynamic_model_2_0/testdata/0417/train
     # -v /fuel/fueling/control/dynamic_model_2_0/testdata/0417/validation

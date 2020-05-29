@@ -229,10 +229,10 @@ if __name__ == '__main__':
     validator.load_model()
 
     # generate batch validation result
-    for i, (x_valid_batch, y_valid_batch) in enumerate(valid_loader):
-        x_valid_batch = torch.transpose(x_valid_batch, 0, 1)
-        pred = validator.likelihood(validator.model(x_valid_batch))
-        break
+    # for i, (x_valid_batch, y_valid_batch) in enumerate(valid_loader):
+    #     x_valid_batch = torch.transpose(x_valid_batch, 0, 1)
+    #     pred = validator.likelihood(validator.model(x_valid_batch))
+    #     break
 
     for i, (X, y) in enumerate(valid_loader):
         logging.info(
