@@ -85,6 +85,7 @@ class BaseTuner():
         self.best_params = {}
         self.optimize_time = 0.0
         self.time_efficiency = 0.0
+        self.visual_storage_dir = self.get_saving_path()
 
         print(f"Training scenarios are {self.tuner_param_config_pb.scenarios.id}")
 
@@ -232,6 +233,9 @@ class BaseTuner():
                 iter += 1
         return point
 
+    def get_saving_path(self):
+        return os.path.join(self.tuner_storage_dir, self.timestamp)
+
     def get_result(self):
         logging.info(f"Result after: {self.n_iter + self.init_points} steps are {self.best_cost} "
                      f"with params {self.best_params}")
@@ -247,7 +251,7 @@ class BaseTuner():
                               'tuner_parameters': tuner_param_config_dict['tuner_parameters'],
                               'iteration_records': self.iteration_records}
 
-        saving_path = os.path.join(self.tuner_storage_dir, self.timestamp)
+        saving_path = self.get_saving_path()
         if not os.path.isdir(saving_path):
             os.makedirs(saving_path)
         # Save step-by-step detailed optimization data

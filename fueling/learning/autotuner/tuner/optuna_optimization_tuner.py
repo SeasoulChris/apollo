@@ -41,7 +41,7 @@ class OptunaOptimizationTuner(BaseTuner):
         self.iter = -1
 
         self.optimizer.optimize(self.objective, n_trials=self.n_iter)
-        self.visualize(self.timestamp)
+        self.visualize(self.get_saving_path())
 
         self.best_cost = self.optimizer.best_value
         self.best_params = self.optimizer.best_params
@@ -51,7 +51,7 @@ class OptunaOptimizationTuner(BaseTuner):
     def visualize(self, task_dir):
         tic_start = time.perf_counter()
 
-        self.visual_storage_dir = os.path.join(self.tuner_storage_dir, task_dir)
+        self.visual_storage_dir = task_dir
         file_utils.makedirs(self.visual_storage_dir)
         figure1 = self.visualizer.plot_optimization_history(self.optimizer)
         figure2 = self.visualizer.plot_contour(self.optimizer, params=list(self.pbounds.keys())[:2])

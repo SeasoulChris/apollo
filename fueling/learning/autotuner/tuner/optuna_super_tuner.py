@@ -53,6 +53,9 @@ class OptunaSuperTuner(OptunaOptimizationTuner):
             load_if_exists=True,
         )
 
+    def get_saving_path(self):
+        return os.path.join(self.tuner_storage_dir, 'result')
+
 
 if __name__ == "__main__":
     tic_start = time.perf_counter()

@@ -18,6 +18,7 @@ CHANNEL_OPTIONS = [
     ('grpc.http2.max_pings_without_data', 12),
 ]
 
+
 class SimClient(object):
     CHANNEL_URL = "localhost:50051"
 
