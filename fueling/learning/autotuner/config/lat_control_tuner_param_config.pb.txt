@@ -59,6 +59,11 @@ tuner_parameters {
     constant: 1.0
   }
   parameter {
+    parameter_name: "adaption_matrix_p"
+    parameter_dir: "lat_controller_conf.steer_mrac_conf"
+    constant: 0.0001
+  }
+  parameter {
     parameter_name: "clamping_time_constant"
     parameter_dir: "lat_controller_conf.steer_mrac_conf"
     constant: 0.01
