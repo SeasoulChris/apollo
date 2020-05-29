@@ -28,10 +28,11 @@ class AgentBoxImgRenderer(object):
         self.back_edge_to_center = 1.043
         self.left_edge_to_center = 1.055
         self.right_edge_to_center = 1.055
-        self.east_oriented_box = np.array([[self.front_edge_to_center, self.front_edge_to_center,
-                                            -self.back_edge_to_center, -self.back_edge_to_center],
-                                           [self.left_edge_to_center, -self.right_edge_to_center,
-                                            -self.right_edge_to_center, self.left_edge_to_center]]).T
+        self.east_oriented_box = np.array(
+            [[self.front_edge_to_center, self.front_edge_to_center,
+              -self.back_edge_to_center, -self.back_edge_to_center],
+             [self.left_edge_to_center, -self.right_edge_to_center,
+              -self.right_edge_to_center, self.left_edge_to_center]]).T
 
     def draw_agent_box(self, coordinate_heading=0.):
         local_map = np.zeros(

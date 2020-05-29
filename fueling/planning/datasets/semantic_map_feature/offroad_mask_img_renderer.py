@@ -57,8 +57,8 @@ class OffroadMaskImgRenderer(object):
         center_basemap_idx = renderer_utils.get_img_idx(
             center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
         rough_local_map = self.base_map[center_basemap_idx[1] - self.rough_crop_radius:
-                                        center_basemap_idx[1] +
-                                        self.rough_crop_radius,
+                                        center_basemap_idx[1]
+                                        + self.rough_crop_radius,
                                         center_basemap_idx[0] - self.rough_crop_radius:
                                         center_basemap_idx[0] + self.rough_crop_radius]
         rough_local_map_grid = [
@@ -71,9 +71,9 @@ class OffroadMaskImgRenderer(object):
         rotated = cv.warpAffine(
             rough_local_map, M, tuple(rough_local_map_grid))
         fine_crop = rotated[center_local_idx[1] - self.local_base_point_h_idx:
-                            center_local_idx[1] +
-                            (self.local_size_h - self.local_base_point_h_idx), center_local_idx[0] -
-                            self.local_base_point_w_idx:
+                            center_local_idx[1]
+                            + (self.local_size_h - self.local_base_point_h_idx), center_local_idx[0]
+                            - self.local_base_point_w_idx:
                             center_local_idx[0] + self.local_base_point_w_idx]
         return fine_crop
 
@@ -98,7 +98,8 @@ if __name__ == '__main__':
         config_file, "sunnyvale_with_two_offices")
     for frame in offline_frames.learning_data:
         img = offroad_mask_mapping.draw_offroad_mask(
-            frame.localization.position.x, frame.localization.position.y, frame.localization.heading)
+            frame.localization.position.x,
+            frame.localization.position.y, frame.localization.heading)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

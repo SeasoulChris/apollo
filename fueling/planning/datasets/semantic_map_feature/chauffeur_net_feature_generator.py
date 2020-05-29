@@ -7,19 +7,32 @@ import cv2 as cv
 
 from modules.planning.proto import learning_data_pb2
 
-from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer import AgentBoxImgRenderer
-from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
-from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer import AgentPosesHistoryImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_offroad_mask_img_renderer import BaseOffroadMaskImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer import BaseRoadMapImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer import BaseSpeedLimitImgRenderer
-from fueling.planning.datasets.semantic_map_feature.obstacle_history_img_renderer import ObstacleHistoryImgRenderer
-from fueling.planning.datasets.semantic_map_feature.obstacle_predictions_img_renderer import ObstaclePredictionsImgRenderer
-from fueling.planning.datasets.semantic_map_feature.offroad_mask_img_renderer import OffroadMaskImgRenderer
-from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer import RoadMapImgRenderer
-from fueling.planning.datasets.semantic_map_feature.routing_img_renderer import RoutingImgRenderer
-from fueling.planning.datasets.semantic_map_feature.speed_limit_img_renderer import SpeedLimitImgRenderer
-from fueling.planning.datasets.semantic_map_feature.traffic_lights_img_renderer import TrafficLightsImgRenderer
+from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer \
+    import AgentBoxImgRenderer
+from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer \
+    import AgentPosesFutureImgRenderer
+from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer \
+    import AgentPosesHistoryImgRenderer
+from fueling.planning.datasets.semantic_map_feature.base_offroad_mask_img_renderer \
+    import BaseOffroadMaskImgRenderer
+from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer \
+    import BaseRoadMapImgRenderer
+from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer \
+    import BaseSpeedLimitImgRenderer
+from fueling.planning.datasets.semantic_map_feature.obstacle_history_img_renderer \
+    import ObstacleHistoryImgRenderer
+from fueling.planning.datasets.semantic_map_feature.obstacle_predictions_img_renderer \
+    import ObstaclePredictionsImgRenderer
+from fueling.planning.datasets.semantic_map_feature.offroad_mask_img_renderer \
+    import OffroadMaskImgRenderer
+from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer \
+    import RoadMapImgRenderer
+from fueling.planning.datasets.semantic_map_feature.routing_img_renderer \
+    import RoutingImgRenderer
+from fueling.planning.datasets.semantic_map_feature.speed_limit_img_renderer \
+    import SpeedLimitImgRenderer
+from fueling.planning.datasets.semantic_map_feature.traffic_lights_img_renderer \
+    import TrafficLightsImgRenderer
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 
@@ -226,9 +239,10 @@ class ChauffeurNetFeatureGenerator(object):
     def render_obstacle_box_prediction_frame(
             self, center_x, center_y, center_heading,
             obstacles, timestamp_idx, coordinate_heading=0.):
-        return self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(obstacles,
-                                                                                    timestamp_idx,
-                                                                                    coordinate_heading)
+        return self.obstacle_predictions_mapping.draw_obstacle_box_prediction_frame(
+            obstacles,
+            timestamp_idx,
+            coordinate_heading)
 
     def render_initial_agent_states(self, coordinate_heading=0.):
         agent_box_img = self.agent_box_mapping.draw_agent_box(
@@ -248,9 +262,10 @@ if __name__ == "__main__":
     config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
         "planning_semantic_map_config.pb.txt"
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
-    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(config_file,
-                                                                   imgs_dir,
-                                                                   region, base_map_update_flag=False)
+    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
+        config_file,
+        imgs_dir,
+        region, base_map_update_flag=False)
     print("Finish loading chauffeur_net_feature_generator...")
 
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
@@ -274,13 +289,14 @@ if __name__ == "__main__":
         current_x = current_path_point.x
         current_y = current_path_point.y
         current_theta = current_path_point.theta
-        chauffeur_net_feature_generator.render_seperated_img_features(frame.frame_num,
-                                                                      frame.adc_trajectory_point[-1].timestamp_sec,
-                                                                      frame.adc_trajectory_point,
-                                                                      frame.obstacle,
-                                                                      current_x,
-                                                                      current_y,
-                                                                      current_theta,
-                                                                      frame.routing.local_routing_lane_id,
-                                                                      frame.traffic_light_detection.traffic_light,
-                                                                      output_dirs)
+        chauffeur_net_feature_generator.render_seperated_img_features(
+            frame.frame_num,
+            frame.adc_trajectory_point[-1].timestamp_sec,
+            frame.adc_trajectory_point,
+            frame.obstacle,
+            current_x,
+            current_y,
+            current_theta,
+            frame.routing.local_routing_lane_id,
+            frame.traffic_light_detection.traffic_light,
+            output_dirs)

@@ -109,7 +109,8 @@ class OutputDataGenerator(BasePipeline):
         if result.isEmpty():
             logging.info("Nothing to be processed.")
             return
-        logging.info('Processed {}/{} tasks'.format(result.values().reduce(operator.add), result.count()))
+        logging.info('Processed {}/{} tasks'.format(
+            result.values().reduce(operator.add), result.count()))
 
     @staticmethod
     def get_file_id(src_file, is_shift=False):

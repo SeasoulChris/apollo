@@ -47,7 +47,7 @@ class PostProcessor(BasePipeline):
         tag_data_frames = data_frames.flatMapValues(self._key_by_tag)
         logging.debug(tag_data_frames.first())
 
-        #PairedRDD((dst_file_path, origin_file_name), data_frame)
+        # PairedRDD((dst_file_path, origin_file_name), data_frame)
         tag_data_frames = (
             tag_data_frames.map(
                 lambda elem: self._tagged_folder(

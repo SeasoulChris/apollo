@@ -137,8 +137,7 @@ def img_white_gradient_to_color_gradient(img, single_color_max_value):
         np.repeat(
             np.expand_dims(
                 np.logical_and(img[:, :, 0] == img[:, :, 1],
-                               img[:, :, 0] ==
-                               img[:, :, 2]),
+                               img[:, :, 0] == img[:, :, 2]),
                 axis=2),
             repeats=3,
             axis=2),

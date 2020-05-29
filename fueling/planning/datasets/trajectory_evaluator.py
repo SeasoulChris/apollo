@@ -47,8 +47,8 @@ class TrajectoryEvaluator(BasePipeline):
         """ Process files """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
-        dest_dir_elements = ['output_data_evaluated' if x ==
-                             'output_data' else x for x in src_dir_elements]
+        dest_dir_elements = ['output_data_evaluated' if x
+                             == 'output_data' else x for x in src_dir_elements]
         if ('output_data_evaluated' in dest_dir_elements):
             dest_dir = "/".join(dest_dir_elements)
         else:

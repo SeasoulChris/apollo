@@ -32,10 +32,10 @@ class BaseOffroadMaskImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Offoad Mask Map base point is " +
-              str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Offroad Mask Map W * H is " +
-              str(self.GRID[0]) + " * " + str(self.GRID[1]))
+        print("Base Offoad Mask Map base point is "
+              + str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        print("Base Offroad Mask Map W * H is "
+              + str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
@@ -67,10 +67,10 @@ class BaseOffroadMaskImgRenderer(object):
 
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
-        self.GRID = [int(np.round((right_top_x - left_bottom_x +
-                                   2 * self.base_map_padding) / self.resolution)),
-                     int(np.round((right_top_y - left_bottom_y +
-                                   2 * self.base_map_padding) / self.resolution))]
+        self.GRID = [int(np.round((right_top_x - left_bottom_x
+                                   + 2 * self.base_map_padding) / self.resolution)),
+                     int(np.round((right_top_y - left_bottom_y
+                                   + 2 * self.base_map_padding) / self.resolution))]
         self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
@@ -112,5 +112,5 @@ if __name__ == '__main__':
     mapping = BaseOffroadMaskImgRenderer(
         config_file, "sunnyvale_with_two_offices")
     # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(os.path.join(imgs_dir, mapping.region +
-                            "_offroad_mask.png"), mapping.base_map)
+    cv.imwrite(os.path.join(imgs_dir, mapping.region
+                            + "_offroad_mask.png"), mapping.base_map)

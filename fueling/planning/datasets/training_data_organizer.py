@@ -30,8 +30,8 @@ class TrainingDataOrganizer:
     def split_to_frames(self, data_dir, output_dir):
         # Make output_dir
         if os.path.isdir(output_dir):
-            logging.info(output_dir +
-                         " directory exists, delete it!")
+            logging.info(output_dir
+                         + " directory exists, delete it!")
             shutil.rmtree(output_dir)
         file_utils.makedirs(output_dir)
         logging.info("Making output directory: " + output_dir)
@@ -80,8 +80,8 @@ class TrainingDataOrganizer:
 
     def categorize_learning_sets(self, frames_list, output_dir):
         frames_total_count = len(frames_list)
-        to_be_synthesized_set_end_idx = int(frames_total_count *
-                                            self.to_be_synthesized_set_ratio)
+        to_be_synthesized_set_end_idx = int(frames_total_count
+                                            * self.to_be_synthesized_set_ratio)
         training_set_end_idx = int(
             frames_total_count * self.training_set_ratio)
         validation_set_end_idx = training_set_end_idx + \
@@ -103,8 +103,8 @@ class TrainingDataOrganizer:
                     os.path.join(output_dir, 'testing_set/')]
         for set_dir in set_dirs:
             if os.path.isdir(set_dir):
-                logging.info(set_dir +
-                             " directory exists, delete it!")
+                logging.info(set_dir
+                             + " directory exists, delete it!")
                 shutil.rmtree(set_dir)
             file_utils.makedirs(set_dir)
             logging.info("Making output sub folders: " + set_dir)

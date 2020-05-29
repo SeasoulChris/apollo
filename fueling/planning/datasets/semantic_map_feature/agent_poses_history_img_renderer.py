@@ -85,11 +85,12 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     agent_history_mapping = AgentPosesHistoryImgRenderer(config_file)
     for frame in offline_frames.learning_data:
-        img = agent_history_mapping.draw_agent_poses_history(frame.adc_trajectory_point[-1].timestamp_sec,
-                                                             frame.localization.position.x,
-                                                             frame.localization.position.y,
-                                                             frame.localization.heading,
-                                                             frame.adc_trajectory_point)
+        img = agent_history_mapping.draw_agent_poses_history(
+            frame.adc_trajectory_point[-1].timestamp_sec,
+            frame.localization.position.x,
+            frame.localization.position.y,
+            frame.localization.heading,
+            frame.adc_trajectory_point)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

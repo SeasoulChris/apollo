@@ -33,10 +33,10 @@ class BaseRoadMapImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Road Map base point is " +
-              str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Road Map W * H is " +
-              str(self.GRID[0]) + " * " + str(self.GRID[1]))
+        print("Base Road Map base point is "
+              + str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        print("Base Road Map W * H is "
+              + str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
@@ -68,10 +68,10 @@ class BaseRoadMapImgRenderer(object):
 
         self.base_point = np.array([left_bottom_x - self.base_map_padding,
                                     left_bottom_y - self.base_map_padding])
-        self.GRID = [int(np.round((right_top_x - left_bottom_x +
-                                   2 * self.base_map_padding) / self.resolution)),
-                     int(np.round((right_top_y - left_bottom_y +
-                                   2 * self.base_map_padding) / self.resolution))]
+        self.GRID = [int(np.round((right_top_x - left_bottom_x
+                                   + 2 * self.base_map_padding) / self.resolution)),
+                     int(np.round((right_top_y - left_bottom_y
+                                   + 2 * self.base_map_padding) / self.resolution))]
         self.base_point_idx = np.array([0, self.GRID[1]])
         self.base_map = np.zeros(
             [self.GRID[1], self.GRID[0], 3], dtype=np.uint8)
@@ -90,7 +90,8 @@ class BaseRoadMapImgRenderer(object):
         see http://www.icst.pku.edu.cn/F/course/ImageProcessing/2018/resource/Color78.pdf, page 5
         """
         H = H * 6
-        I = H // 1
+        # Use A instead of I to avoid "ambiguous variable name" lint complaint
+        A = H // 1
         F = H % 1
         M = V * (1 - S)
         N = V * (1 - S * F)
@@ -101,7 +102,7 @@ class BaseRoadMapImgRenderer(object):
                     3: (M, N, V),
                     4: (K, M, V),
                     5: (V, M, N)}
-        return tuple(x * 255 for x in hsv_dict[I])
+        return tuple(x * 255 for x in hsv_dict[A])
 
     def _draw_road(self, color=(64, 64, 64)):
         for road in self.hd_map.road:
@@ -231,10 +232,10 @@ class BaseRoadMapImgRenderer(object):
                          segment.line_segment.point[i + 1].y]) - self.base_point,
                         self.base_point_idx,
                         self.resolution)
-                    theta = np.arctan2(segment.line_segment.point[i + 1].y -
-                                       segment.line_segment.point[i].y,
-                                       segment.line_segment.point[i + 1].x -
-                                       segment.line_segment.point[i].x) / (2 * np.pi) % 1
+                    theta = np.arctan2(segment.line_segment.point[i + 1].y
+                                       - segment.line_segment.point[i].y,
+                                       segment.line_segment.point[i + 1].x
+                                       - segment.line_segment.point[i].x) / (2 * np.pi) % 1
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self._hsv_to_rgb(theta), thickness=4)
 

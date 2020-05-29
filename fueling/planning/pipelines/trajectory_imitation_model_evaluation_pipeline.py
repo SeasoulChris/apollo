@@ -24,7 +24,8 @@ from fueling.planning.models.trajectory_imitation_model import \
     TrajectoryImitationRNNMoreConvModel, \
     TrajectoryImitationRNNUnetResnet18Model, \
     TrajectoryImitationRNNTest
-from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import AgentPosesFutureImgRenderer
+from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import \
+    AgentPosesFutureImgRenderer
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
 
 

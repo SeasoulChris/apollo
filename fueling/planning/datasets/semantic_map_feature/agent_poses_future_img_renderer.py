@@ -34,10 +34,11 @@ class AgentPosesFutureImgRenderer(object):
         self.back_edge_to_center = 1.043
         self.left_edge_to_center = 1.055
         self.right_edge_to_center = 1.055
-        self.east_oriented_box = np.array([[self.front_edge_to_center, self.front_edge_to_center,
-                                            -self.back_edge_to_center, -self.back_edge_to_center],
-                                           [self.left_edge_to_center, -self.right_edge_to_center,
-                                            -self.right_edge_to_center, self.left_edge_to_center]]).T
+        self.east_oriented_box = np.array(
+            [[self.front_edge_to_center, self.front_edge_to_center,
+              -self.back_edge_to_center, -self.back_edge_to_center],
+             [self.left_edge_to_center, -self.right_edge_to_center,
+              -self.right_edge_to_center, self.left_edge_to_center]]).T
 
     def draw_agent_pose_future_trajectory(self, ego_pose_future, coordinate_heading=0.):
         local_map = np.zeros(
@@ -162,7 +163,8 @@ if __name__ == "__main__":
         img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
                                                          frame.localization.position.y,
                                                          frame.localization.heading,
-                                                         frame.output.adc_future_trajectory_point, 10)
+                                                         frame.output.adc_future_trajectory_point,
+                                                         10)
         key = "{}@{:.3f}".format(
             frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
         filename = key + ".png"

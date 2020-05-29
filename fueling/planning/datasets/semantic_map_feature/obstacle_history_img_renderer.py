@@ -14,7 +14,10 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 
 
 class ObstacleHistoryImgRenderer(object):
-    """class of ObstacleHistoryImgRenderer to create images of surrounding obstacles with bounding boxes"""
+    """
+    class of ObstacleHistoryImgRenderer to create images of
+    surrounding obstacles with bounding boxes
+    """
 
     def __init__(self, config_file):
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
@@ -53,15 +56,14 @@ class ObstacleHistoryImgRenderer(object):
 
                 # obstacles are in ego vehicle coordiantes where ego car faces toward
                 # EAST, so rotation to NORTH is done below
-                corner_points = renderer_utils.box_affine_tranformation(east_oriented_box,
-                                                                        path_point_array,
-                                                                        np.pi / 2 + path_point.theta +
-                                                                        coordinate_heading,
-                                                                        np.array(
-                                                                            [0, 0]),
-                                                                        np.pi / 2 + coordinate_heading,
-                                                                        self.local_base_point_idx,
-                                                                        self.resolution)
+                corner_points = renderer_utils.box_affine_tranformation(
+                    east_oriented_box,
+                    path_point_array,
+                    np.pi / 2 + path_point.theta + coordinate_heading,
+                    np.array([0, 0]),
+                    np.pi / 2 + coordinate_heading,
+                    self.local_base_point_idx,
+                    self.resolution)
 
                 cv.fillPoly(local_map, [np.int32(corner_points)], color=color)
 

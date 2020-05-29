@@ -14,7 +14,9 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 
 
 class ObstaclePredictionsImgRenderer(object):
-    """class of ObstaclesImgRenderer to create images of surrounding obstacles with bounding boxes"""
+    """
+    class of ObstaclesImgRenderer to create images of surrounding obstacles with bounding boxes
+    """
 
     def __init__(self, config_file):
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
@@ -55,8 +57,8 @@ class ObstaclePredictionsImgRenderer(object):
                 corner_points = renderer_utils.\
                     box_affine_tranformation(east_oriented_box,
                                              path_point_array,
-                                             np.pi / 2 + path_point.theta +
-                                             coordinate_heading,
+                                             np.pi / 2 + path_point.theta
+                                             + coordinate_heading,
                                              np.array(
                                                  [0, 0]),
                                              np.pi / 2 + coordinate_heading,
@@ -93,8 +95,8 @@ class ObstaclePredictionsImgRenderer(object):
                 corner_points = renderer_utils.\
                     box_affine_tranformation(east_oriented_box,
                                              path_point_array,
-                                             np.pi / 2 + path_point.theta +
-                                             coordinate_heading,
+                                             np.pi / 2 + path_point.theta
+                                             + coordinate_heading,
                                              np.array(
                                                  [0, 0]),
                                              np.pi / 2 + coordinate_heading,
@@ -135,8 +137,8 @@ class ObstaclePredictionsImgRenderer(object):
                 corner_points = renderer_utils.\
                     box_affine_tranformation(east_oriented_box,
                                              path_point_array,
-                                             np.pi / 2 + path_point.theta +
-                                             coordinate_heading,
+                                             np.pi / 2 + path_point.theta
+                                             + coordinate_heading,
                                              np.array(
                                                  [0, 0]),
                                              np.pi / 2 + coordinate_heading,
@@ -173,8 +175,8 @@ class ObstaclePredictionsImgRenderer(object):
                 corner_points = renderer_utils.\
                     box_affine_tranformation(east_oriented_box,
                                              path_point_array,
-                                             np.pi / 2 + path_point.theta +
-                                             coordinate_heading,
+                                             np.pi / 2 + path_point.theta
+                                             + coordinate_heading,
                                              np.array(
                                                  [0, 0]),
                                              np.pi / 2 + coordinate_heading,
