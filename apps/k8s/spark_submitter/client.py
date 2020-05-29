@@ -82,6 +82,7 @@ class SparkSubmitterClient(object):
         arg['job'].pop('fueling_zip_base64')
         logging.info('SparkSubmitArg is')
         pprint.PrettyPrinter(indent=2).pprint(arg)
+        sys.stdout.flush()
 
         # Process result.
         if not res.ok:
