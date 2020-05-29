@@ -44,6 +44,14 @@ class InterPolationMessage(object):
         chasis_data = utils.chassis_msg_to_data(self.chasis_msg)
         if any(np.isnan(feature) for feature in chasis_data):
             return False
+        # If gear_location is not expected, it's invalid
+        gear_Location_pos, gear_location_expected_val = len(chasis_data) - 1, 1 
+        if int(chasis_data[gear_location_pos]) != gear_location_expected_val:
+            return False
+        # If speed is not expected, it's invalid
+        speed_pos, speed_expected_val = 0, 0
+        if chasis_data[speed_pos] < speed_expected_val:
+            return False
         return True
 
     def do_interpolation(self):
