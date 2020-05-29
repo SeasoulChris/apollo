@@ -38,7 +38,7 @@ class TrajectoryImitationCNNModel(nn.Module):
             nn.Dropout(0.3),
             nn.Linear(500, 120),
             nn.Dropout(0.3),
-            nn.Linear(120, self.pred_horizon * 5)
+            nn.Linear(120, self.pred_horizon * 4)
         )
 
     def forward(self, X):
@@ -47,21 +47,20 @@ class TrajectoryImitationCNNModel(nn.Module):
         out = self.cnn(out)
         out = out.view(out.size(0), -1)
         out = self.fc(out)
-        out = out.view(out.size(0), self.pred_horizon * 5)
+        out = out.view(out.size(0), self.pred_horizon, 4)
         return out
 
 
 class TrajectoryImitationCNNLoss():
     def loss_fn(self, y_pred, y_true):
         loss_func = nn.MSELoss()
-        y_true = y_true.view(y_true.size(0), -1)
         return loss_func(y_pred, y_true)
 
     def loss_info(self, y_pred, y_true):
-        y_true = y_true.view(y_true.size(0), -1)
-        out = y_pred - y_true
-        out = torch.sqrt(torch.sum(out ** 2, 1))
-        out = torch.mean(out)
+        batch_size = y_pred.size(0)
+        out = (y_pred - y_true).view(batch_size, -1, 4)
+        pose_diff = out[:, :, 0:2]
+        out = torch.mean(torch.sqrt(torch.sum(pose_diff ** 2, dim=-1)))
         return out
 
 
@@ -80,31 +79,6 @@ class TrajectoryImitationRNNModel(nn.Module):
         self.pred_horizon = pred_horizon
         self.input_img_size_h = input_img_size[0]
         self.input_img_size_w = input_img_size[1]
-
-        # TODO(Jinyun): implementation and evaluate Method 1 below
-        # Method 1:
-        # a. use ConvTranspose2d to upsample feature([1000,])
-        #    to [1, self.input_img_size_h, self.input_img_size_w]
-        # b. stack with M_k-1([1, self.input_img_size_h, self.input_img_size_w]) and
-        #    B_k-1([1, self.input_img_size_h, self.input_img_size_w])
-        #    inorder to get 3 channel image as input
-        # c. pass a Conv layer to get hidden state which is P_k and B_k
-        # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v]
-        #    and add it to output
-        # f. use argmax to update M_k by P_k
-        # g. feed M_k and B_k to next iteration
-
-        # Method 2:
-        # a. use Conv2d and FC layer to encode M_k-1 and B_k-1
-        #    ([2, self.input_img_size_h, self.input_img_size_w]) to ([256,])
-        # b. stack with feature([1000,]) inorder to get a 1d vector as input
-        # c. pass a ConvTranspose2d layer to output P_k and B_k
-        # d. add P_k and B_k to output
-        # e. pass P_k and B_k through output layer to get [x_k, y_k, phi, v]
-        #    and add it to output
-        # f. use argmax to update M_k by P_k
-        # g. feed M_k and B_k to next iteration
 
         self.memory_encoder = nn.Sequential(
             nn.Conv2d(in_channels=2, out_channels=1, kernel_size=121,
@@ -136,8 +110,7 @@ class TrajectoryImitationRNNModel(nn.Module):
         )
 
         self.output_fc_layers = nn.Sequential(
-            nn.Linear(self.input_img_size_h * self.input_img_size_w, 4),
-            nn.ReLU()
+            nn.Linear(self.input_img_size_h * self.input_img_size_w, 4)
         )
 
     def forward(self, X):
@@ -194,10 +167,10 @@ class TrajectoryImitationRNNModel(nn.Module):
             # arg_max_row_index = arg_max_index // F_P_B_k.shape[-2:][0]
             # arg_max_col_index = arg_max_index % F_P_B_k.shape[-2:][1]
             # original code above, changed to below for jit trace success
-            # TODO(Jinyun): TracerWarning: torch.tensor results are registered 
-            # as constants in the trace. You can safely ignore this warning if 
-            # you use this function to create tensors out of constant variables 
-            # that would be the same every time you call this function. In any 
+            # TODO(Jinyun): TracerWarning: torch.tensor results are registered
+            # as constants in the trace. You can safely ignore this warning if
+            # you use this function to create tensors out of constant variables
+            # that would be the same every time you call this function. In any
             # other case, this might cause the trace to be incorrect
             arg_max_row_index = arg_max_index // torch.tensor(
                 [F_P_B_k.shape[-2:][0]]).to(img_feature.device)
@@ -205,17 +178,17 @@ class TrajectoryImitationRNNModel(nn.Module):
                 [F_P_B_k.shape[-2:][1]]).to(img_feature.device)
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            # TODO(Jinyun): TracerWarning: Converting a tensor to a Python index 
+            # TODO(Jinyun): TracerWarning: Converting a tensor to a Python index
             # might cause the trace to be incorrect. We can't record the data flow
-            # of Python values, so this value will be treated as a constant in the 
-            # future. This means that the trace might not generalize to other inputs! 
+            # of Python values, so this value will be treated as a constant in the
+            # future. This means that the trace might not generalize to other inputs!
             # like "for i in range(batch_size)" and "M_k_next[i, arg_max_row_index[i]"
             for i in range(batch_size):
                 M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
 
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points)
+        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
 
 
 class TrajectoryImitationRNNMoreConvModel(nn.Module):
@@ -285,14 +258,14 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
 
         self.output_fc_layers = nn.Sequential(
             nn.Linear(25 * 25, 4),
-            nn.ReLU()
         )
 
     def forward(self, X):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        M_B_k = nn.Parameter(M_B_k, requires_grad=True)
+        # TODO(Jinyun): check possible issue without nn.Parameter
+        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         img_feature_encoding = self.feature_net(
             self.feature_compression_layer(img_feature))
@@ -345,7 +318,7 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
 
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points)
+        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
 
 
 class UnetDecoder(nn.Module):
@@ -365,10 +338,10 @@ class UnetDecoder(nn.Module):
         return x1
 
 
-class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
+class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
-        super(TrajectoryImitationRNNUnetResnet18Model, self).__init__()
+        super(TrajectoryImitationRNNUnetResnet18Modelv1, self).__init__()
 
         self.pred_horizon = pred_horizon
         self.input_img_size_h = input_img_size[0]
@@ -405,14 +378,14 @@ class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
 
         self.output_fc_layers = nn.Sequential(
             nn.Linear(25 * 25, 4),
-            nn.ReLU()
         )
 
     def forward(self, X):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        M_B_k = nn.Parameter(M_B_k, requires_grad=True)
+        # TODO(Jinyun): check possible issue without nn.Parameter
+        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         pred_pos_dists = torch.zeros(
             (batch_size, self.pred_horizon, 1,
@@ -465,10 +438,10 @@ class TrajectoryImitationRNNUnetResnet18Model(nn.Module):
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
 
 
-class TrajectoryImitationRNNTest(nn.Module):
+class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
-        super(TrajectoryImitationRNNTest, self).__init__()
+        super(TrajectoryImitationRNNUnetResnet18Modelv2, self).__init__()
 
         self.pred_horizon = pred_horizon
         self.input_img_size_h = input_img_size[0]
@@ -502,7 +475,8 @@ class TrajectoryImitationRNNTest(nn.Module):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        M_B_k = nn.Parameter(M_B_k, requires_grad=True)
+        # TODO(Jinyun): check possible issue without nn.Parameter
+        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         pred_pos_dists = torch.zeros(
             (batch_size, self.pred_horizon, 1,

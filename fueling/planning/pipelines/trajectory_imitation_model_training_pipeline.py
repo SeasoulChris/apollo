@@ -16,8 +16,8 @@ from fueling.planning.models.trajectory_imitation_model \
     import TrajectoryImitationCNNModel, \
     TrajectoryImitationRNNModel, \
     TrajectoryImitationRNNMoreConvModel, \
-    TrajectoryImitationRNNUnetResnet18Model, \
-    TrajectoryImitationRNNTest, \
+    TrajectoryImitationRNNUnetResnet18Modelv1, \
+    TrajectoryImitationRNNUnetResnet18Modelv2, \
     TrajectoryImitationCNNLoss, \
     TrajectoryImitationRNNLoss, \
     TrajectoryImitationWithEnvRNNLoss
@@ -68,17 +68,17 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                       map_path,
                                                       region,
                                                       input_data_augmentation)
-        model = TrajectoryImitationRNNTest(
+        model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationRNNLoss(10000, 10, 1)
+        loss = TrajectoryImitationRNNLoss(1, 1, 1)
 
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True,
                                                num_workers=8, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=64, shuffle=True,
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=128, shuffle=True,
                                                num_workers=8, drop_last=True)
 
     learning_rate = 3e-4
@@ -93,6 +93,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     else:
         logging.info("Not using CUDA.")
 
+    # Not suggested right now as jit trace can't trace a nn.DataParallel module
     if torch.cuda.device_count() > 1:
         logging.info("multiple GPUs are used")
         model = torch.nn.DataParallel(model)
@@ -101,15 +102,15 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     torch.autograd.set_detect_anomaly(True)
 
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=10, save_name=model_save_dir, print_period=50)
+                           scheduler, epochs=20, save_name=model_save_dir, print_period=50)
 
 
 if __name__ == "__main__":
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
 
-    # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2, 3, 4, 5'
+    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
