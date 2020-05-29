@@ -18,6 +18,7 @@ else
   RUNNER="docker exec -it -u ${USER} ${CONTAINER}"
 fi
 
+${RUNNER} source /fuel/tools/fuel_docker.sh
 
 echo "######################### Build #########################"
 ${RUNNER} bash /fuel/tools/build_local.sh
