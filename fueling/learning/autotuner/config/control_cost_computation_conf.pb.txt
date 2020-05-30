@@ -35,6 +35,10 @@ cost_metrics {
     weighting_factor: 1.0
   }
   weighting_metrics {
+    metrics_name: "heading_err_rate_std"
+    weighting_factor: 2.0
+  }
+  weighting_metrics {
     metrics_name: "station_err_std_harsh"
     weighting_factor: 1.0
   }
@@ -51,6 +55,10 @@ cost_metrics {
     weighting_factor: 1.0
   }
   weighting_metrics {
+    metrics_name: "heading_err_rate_std_harsh"
+    weighting_factor: 2.0
+  }
+  weighting_metrics {
     metrics_name: "station_err_peak"
     weighting_factor: 1.0
   }
@@ -64,6 +72,10 @@ cost_metrics {
   }
   weighting_metrics {
     metrics_name: "heading_err_peak"
+    weighting_factor: 1.0
+  }
+  weighting_metrics {
+    metrics_name: "heading_err_rate_peak"
     weighting_factor: 1.0
   }
 
