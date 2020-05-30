@@ -41,12 +41,12 @@ class OptunaOptimizationTuner(BaseTuner):
         self.iter = -1
 
         self.optimizer.optimize(self.objective, n_trials=self.n_iter)
-        self.visualize(self.get_saving_path())
-
         self.best_cost = self.optimizer.best_value
         self.best_params = self.optimizer.best_params
         self.optimize_time = time.perf_counter() - tic_start_overall
         self.time_efficiency = self.optimize_time / (self.n_iter + self.init_points)
+
+        self.visualize(self.get_saving_path())
 
     def visualize(self, task_dir):
         tic_start = time.perf_counter()
@@ -100,7 +100,6 @@ class OptunaOptimizationTuner(BaseTuner):
                                                              'config_point': next_point}})
 
         logging.info(f"Timer: optimize_with_sim_cost  - {time.perf_counter() - tic_start: 0.04f} sec")
-        logging.info(f"Optimizer iteration: {self.iter}, target: {target}, config point: {next_point}")
 
         return target
 
