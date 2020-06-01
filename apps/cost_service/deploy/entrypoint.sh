@@ -9,12 +9,27 @@ function print_usage() {
 function mount_bos() {
   # Mount bosfs data
   # Check https://cloud.baidu.com/doc/BOS/BOSCLI.html#.E5.AE.89.E8.A3.85RPM.E5.8C.85
-  mkdir -p /mnt/bos
-  bosfs apollo-platform-fuel /mnt/bos -o allow_other,logfile=/tmp/bos.log,endpoint=http://bj.bcebos.com,ak=a07590cd90a54310ab68652c97b9bc21,sk=50ddc29c022c4a549973706678dfcddd
+  RW_MOUNT="/mnt/bos-rw"
+  RO_MOUNT="/mnt/bos-ro"
+  EXPOSE_MOUNT="/mnt/bos"
+  mkdir -p "${RW_MOUNT}" "${RO_MOUNT}" "${EXPOSE_MOUNT}"
+
+  bosfs "${bucket}" "${RW_MOUNT}" -o logfile=/tmp/bos-rw.log,endpoint=http://bj.bcebos.com,ak=${ak},sk=${sk}
+  bosfs "${bucket}" "${RO_MOUNT}" -o ro,logfile=/tmp/bos-ro.log,endpoint=http://bj.bcebos.com,ak=${ak},sk=${sk}
   if [ $? -ne 0 ]; then
     echo 'Failed to mount /mnt/bos!'
     exit 1
   fi
+
+  READONLY_PATHS=( "modules" )
+  for subpath in "${READONLY_PATHS[@]}"; do
+    ln -s "${RO_MOUNT}/${subpath}" "${EXPOSE_MOUNT}/${subpath}"
+  done
+
+  READWRITE_PATHS=( "autotuner" )
+  for subpath in "${READWRITE_PATHS[@]}"; do
+    ln -s "${RW_MOUNT}/${subpath}" "${EXPOSE_MOUNT}/${subpath}"
+  done
 }
 
 function start_service() {

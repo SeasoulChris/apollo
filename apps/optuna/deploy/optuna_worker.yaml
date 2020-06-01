@@ -32,6 +32,8 @@ spec:
           envFrom:
             - secretRef:
                 name: postgres-secrets
+            - secretRef:
+                name: bos-secret
           securityContext:
             privileged: true
       imagePullSecrets:

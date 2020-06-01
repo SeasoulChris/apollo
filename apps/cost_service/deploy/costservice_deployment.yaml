@@ -26,5 +26,8 @@ spec:
           privileged: true
         ports:
           - containerPort: 50052
+        envFrom:
+          - secretRef:
+              name: bos-secret
       imagePullSecrets:
       - name: regsecret
