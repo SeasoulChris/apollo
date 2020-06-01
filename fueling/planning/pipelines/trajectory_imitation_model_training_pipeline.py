@@ -25,7 +25,7 @@ import fueling.common.proto_utils as proto_utils
 
 
 def training(model_type, train_dir, valid_dir, renderer_config_file,
-             imgs_dir, input_data_augmentation):
+             imgs_dir, input_data_augmentation, model_save_dir):
     logging.info(
         'training directory:{} validation directory:{}'.format(train_dir, valid_dir))
 
@@ -93,7 +93,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     torch.autograd.set_detect_anomaly(True)
 
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=10, save_name='./', print_period=50)
+                           scheduler, epochs=10, save_name=model_save_dir, print_period=50)
 
 
 if __name__ == "__main__":
@@ -121,9 +121,12 @@ if __name__ == "__main__":
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
 
+    model_save_dir = './'
+
     training(args.model_type,
              args.train_file,
              args.valid_file,
              args.renderer_config_file,
              args.imgs_dir,
-             args.input_data_augmentation)
+             args.input_data_augmentation,
+             model_save_dir)

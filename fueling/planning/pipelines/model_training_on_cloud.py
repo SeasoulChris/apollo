@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
-# Standard packages
 import os
 import sys
 import time
 
-# Third-party packages
 import torch
 
-# Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
+from fueling.planning.pipelines.trajectory_imitation_model_training_pipeline import traning
 
 
 class PytorchTraining(BasePipeline):
@@ -35,7 +33,19 @@ class PytorchTraining(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
-        # TODO(yifei) add train code here
+        based_dir = '/mnt/bos/modules/planning/imitation/'
+        model_type = 'rnn'
+        train_dir = based_dir + 'traning_data/'
+        valid_dir = based_dir + 'validation_data/'
+        renderer_config_file \
+            = based_dir + 'semantic_map_feature/planning_semantic_map_config.pb.txt'
+
+        imgs_dir = based_dir + "imitation/semantic_map_features/"
+        input_data_augmentation = False
+        model_dir = based_dir + "imitation/model/"
+
+        traning(model_type, train_dir, valid_dir, renderer_config_file,
+                imgs_dir, input_data_augmentation, model_dir)
 
 
 if __name__ == '__main__':
