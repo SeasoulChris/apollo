@@ -132,6 +132,8 @@ We leverage PySpark to orchestrate the jobs on Kubernetes cluster. Good practice
    1) Use absolute path like `/apollo/...` to refer to files in Apollo.
    1) Goto next tip for cloud data usage.
 
+1. Run `tools/check.sh` to make sure everything works well before submitting your code, otherwise
+   the CI robot will complain and reject.
 1. We use [bosfs](https://cloud.baidu.com/doc/BOS/s/Ajwvyqhya) to mount Apollo's BOS storage at
    `/mnt/bos`, which can be used as a POSIX file system. But if you want to list many files under a
    folder, a better way is to call
