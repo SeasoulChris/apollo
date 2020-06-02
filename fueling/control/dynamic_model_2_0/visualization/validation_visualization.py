@@ -187,16 +187,16 @@ if __name__ == '__main__':
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/gp_model_output/20200526-224058")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/gp_model_output/20200602-194130")
     parser.add_argument(
         '--validation_result_path',
         type=str,
@@ -221,7 +221,6 @@ if __name__ == '__main__':
         logging.info(
             f'training data batch: {i}, input size is {X.size()}, output size is {y.size()}')
         train_labels = y
-        break
 
     validator.load_data()
     logging.info(validator.inducing_point_file)
@@ -229,18 +228,16 @@ if __name__ == '__main__':
     validator.load_model()
 
     # generate batch validation result
-    # for i, (x_valid_batch, y_valid_batch) in enumerate(valid_loader):
-    #     x_valid_batch = torch.transpose(x_valid_batch, 0, 1)
-    #     pred = validator.likelihood(validator.model(x_valid_batch))
-    #     break
+    for i, (x_valid_batch, y_valid_batch) in enumerate(valid_loader):
+        x_valid_batch = torch.transpose(x_valid_batch, 0, 1)
+        pred = validator.likelihood(validator.model(x_valid_batch))
+        break
 
     for i, (X, y) in enumerate(valid_loader):
-        logging.info(
+        logging.debug(
             f'validation data batch: {i}, input size is {X.size()}, output size is {y.size()}')
         for x_data_point, y_data_point in zip(X, y):
-            logging.info(f'Model input is {x_data_point[0,:]}')
-            logging.info(
+            logging.debug(f'Model input is {x_data_point[0,:]}')
+            logging.debug(
                 f'Model prediction is {validator.predict(x_data_point)} and ground truth is {y_data_point}')
         validator.validate(X, y, i, train_labels)
-        # break for single batch test
-        break
