@@ -134,8 +134,6 @@ def generate_gp_data(model_path, segment):
         else:
             gear_status = 1
 
-        logging.info(input_segment[k, 0: MLP_DIM_INPUT].reshape(
-            1, MLP_DIM_INPUT))
         predicted_a, predicted_w = generate_mlp_output(input_segment[k, 0: MLP_DIM_INPUT].reshape(
                                                        1, MLP_DIM_INPUT), model, norms, gear_status)
 
@@ -163,7 +161,6 @@ def generate_gp_data(model_path, segment):
     output_segment[output_index["d_y"]] = segment[INPUT_LENGTH -
                                                   1, segment_index["y"]] - predicted_y
     logging.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
-    logging.info(input_segment)
     return (input_segment, output_segment)
 
 

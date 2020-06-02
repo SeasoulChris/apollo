@@ -56,10 +56,6 @@ train_x = torch.from_numpy(np_train_x).type(torch.FloatTensor)
 np_train_y1 = func_y1(np_train_x[:, 0], np_train_x[:, 1])
 np_train_y2 = func_y2(np_train_x[:, 0], np_train_x[:, 1])
 # new data set
-# Y_2D_train_1 = torch.from_numpy(np.sin(0.5 * np.linalg.norm(np_train_x, axis=1)) +
-#                                 noise_2D * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
-# Y_2D_train_2 = torch.from_numpy(np.cos(0.5 * np.linalg.norm(np_train_x, axis=1)) +
-#                                 noise_2D * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
 Y_2D_train_1 = torch.from_numpy(np_train_y1 +
                                 noise_2D * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
 Y_2D_train_2 = torch.from_numpy(np_train_y2 +
@@ -75,7 +71,6 @@ plt.figure(figsize=(14, 7))
 exact_rx, exact_ry = np.arange(-4, 4, 0.1), np.arange(-4, 4, 0.1)
 g_train_x1, g_train_x2 = np.meshgrid(exact_rx, exact_ry)
 X_2D_train = np.c_[g_train_x1.ravel(), g_train_x2.ravel()]
-# exact_y1 = np.sin(0.5 * np.linalg.norm(X_2D_train, axis=1))
 exact_y1 = func_y1(X_2D_train[:, 0], X_2D_train[:, 1])
 ax = plt.gcf().add_subplot(1, 2, 1, projection='3d')
 ax.plot_surface(g_train_x1, g_train_x2, exact_y1.reshape(g_train_x1.shape), cmap=cm.coolwarm,
@@ -83,7 +78,6 @@ ax.plot_surface(g_train_x1, g_train_x2, exact_y1.reshape(g_train_x1.shape), cmap
 ax.scatter(np_train_x[:, 0], np_train_x[:, 1], train_y[:, 0].detach().numpy())
 
 
-# exact_y2 = np.cos(0.5 * np.linalg.norm(X_2D_train, axis=1))
 exact_y2 = func_y2(X_2D_train[:, 0], X_2D_train[:, 1])
 ax = plt.gcf().add_subplot(1, 2, 2, projection='3d')
 ax.plot_surface(g_train_x1, g_train_x2, exact_y2.reshape(g_train_x1.shape), cmap=cm.coolwarm,

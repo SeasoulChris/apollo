@@ -193,8 +193,7 @@ def train(args, train_loader, valid_loader, total_train_number, print_period=Non
         break
 
     # likelihood
-    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(
-        num_tasks=OUTPUT_DIM)
+    likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=OUTPUT_DIM)
 
     # encoder
     encoder_net_model = Encoder(u_dim=INPUT_DIM, kernel_dim=kernel_dim)
@@ -209,8 +208,7 @@ def train(args, train_loader, valid_loader, total_train_number, print_period=Non
         {'params': likelihood.parameters()},
     ], lr=lr)
 
-    loss = gpytorch.mlls.VariationalELBO(
-        likelihood, model, num_data=total_train_number)
+    loss = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=total_train_number)
 
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
