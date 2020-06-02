@@ -25,9 +25,18 @@ py_binary(
         ":display_util",
         ":metrics_util",
         ":records_util",
-        "//fueling/common:kubectl_utils",
+        ":job_manager",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
+    ],
+)
+
+py_library(
+    name = "job_manager",
+    srcs = ["job_manager.py"],
+    deps = [
+        "//fueling/common:kubectl_utils",
+        "//fueling/common:mongo_utils",
     ],
 )
 

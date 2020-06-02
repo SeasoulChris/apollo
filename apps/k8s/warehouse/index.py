@@ -1,29 +1,23 @@
 #!/usr/bin/env python
 """Serve data imported in MongoDB."""
 
-from datetime import timezone
 import collections
 import datetime
-import dateutil.parser
-import json
 import os
 
 from absl import app as absl_app
 from absl import flags
-from ansi2html import Ansi2HTMLConverter
 import flask
 import flask_socketio
 import gunicorn.app.base
 import pymongo
 
-from fueling.common.kubectl_utils import Kubectl
 from fueling.common.mongo_utils import Mongo
 from fueling.data.proto.record_meta_pb2 import RecordMeta
-# uncomment below for testing
-# import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 import fueling.common.redis_utils as redis_utils
 
+from apps.k8s.warehouse.job_manager import JobManager
 import apps.k8s.warehouse.display_util as display_util
 import apps.k8s.warehouse.metrics_util as metrics_util
 import apps.k8s.warehouse.records_util as records_util
@@ -35,18 +29,11 @@ PORT = 8000
 WORKERS = 5
 PAGE_SIZE = 30
 METRICS_PV_PREFIX = 'apps.warehouse.pv.'
-TIMEZONE = 'America/Los_Angeles'
 
 app = flask.Flask(__name__)
 app.secret_key = str(datetime.datetime.now())
 app.jinja_env.filters.update(display_util.utils)
 socketio = flask_socketio.SocketIO(app)
-
-# apply the kubenetes config file
-# uncomment below for testing
-# kubectl = Kubectl(file_utils.fuel_path('apps/k8s/warehouse/kubectl.conf'))
-# comment below for testing
-kubectl = Kubectl()
 
 
 @app.route('/')
@@ -137,124 +124,14 @@ def record_hdl(record_path):
 @app.route('/jobs')
 def jobs_hdl():
     """Handler of the pod list page"""
-
-    # TODO(Andrew): As it's a big component, let's make a job_manager.py with `class JobManager`,
-    # to host all the related stuffs. So that we can keep the index.py straight forward with only
-    # HTTP handlers.
-    def extract_pod_info(pod):
-        """extract pod data from json"""
-        namespace = pod['metadata']['namespace']
-        podname = pod['metadata']['name']
-        phase = pod['status']['phase']
-        creation_timestamp = (dateutil.parser.parse(pod['metadata']['creationTimestamp'])
-                              .replace(tzinfo=timezone.utc))
-        curr_datetime = datetime.datetime.now(timezone.utc)
-        duration_ns = (curr_datetime - creation_timestamp).seconds * 1e9
-        pod_uid = pod['metadata']['uid']
-        parent_uid = ''
-        spark_job_owner = ''
-        spark_job_id = ''
-        # only executor has an parent_id indicating the uid of corresponding driver
-        if 'ownerReferences' in pod['metadata']:
-            parent_uid = pod['metadata']['ownerReferences'][0]['uid']
-        else:
-            # extract job_owner for future filtering
-            try:
-                for env in pod['spec']['containers'][0]['env']:
-                    if env['name'] == 'PYSPARK_APP_ARGS':
-                        for v in env['value'].split(' '):
-                            if '=' in v:
-                                arg_type, arg_value = v.split('=')
-                                if arg_type == '--job_owner':
-                                    spark_job_owner = arg_value
-                                elif arg_type == '--job_id':
-                                    spark_job_id = arg_value
-            except Exception as ex:
-                pass
-        return {'namespace': namespace,
-                'podname': podname,
-                'phase': phase,
-                'creation_timestamp': creation_timestamp,
-                'duration_ns': duration_ns,
-                'pod_uid': pod_uid,
-                'parent_uid': parent_uid,
-                'spark_job_id': spark_job_id,
-                'spark_job_owner': spark_job_owner}
-
-    jobs_dict = {}
-    kubectl_jobs = set()
-
-    def save_pod_info(podinfo, podfrom):
-        """save pod info to dict
-        podfrom: ['kubectl', 'mongodb']
-        Notice: load the kubectl jobs frist, then mongodb jobs
-        """
-        # only display fuel jobs
-        if not podinfo['podname'].startswith('job-'):
-            return
-        # executor
-        if podinfo['parent_uid'] != '':
-            appuid = podinfo['parent_uid']
-        # driver
-        else:
-            appuid = podinfo['pod_uid']
-        # skip mongodb jobs which were already loaded from kubectl
-        if podfrom == 'mongodb':
-            if appuid in kubectl_jobs:
-                return
-        if appuid not in jobs_dict:
-            jobs_dict[appuid] = {}
-            jobs_dict[appuid]['pods'] = []
-            # save jobs loaded from kubectl
-            if podfrom == 'kubectl':
-                kubectl_jobs.add(appuid)
-        # job(same to driver) info
-        if podinfo['parent_uid'] == '':
-            jobs_dict[appuid]['spark_job_owner'] = podinfo['spark_job_owner']
-            jobs_dict[appuid]['spark_job_id'] = podinfo['spark_job_id']
-            jobs_dict[appuid]['namespace'] = podinfo['namespace']
-            jobs_dict[appuid]['name'] = podinfo['podname']
-            jobs_dict[appuid]['creation_timestamp'] = podinfo['creation_timestamp'].timestamp()
-            jobs_dict[appuid]['phase'] = podinfo['phase']
-        # driver & executor pod info
-        jobs_dict[appuid]['pods'].append({
-            'podname': podinfo['podname'],
-            'phase': podinfo['phase'],
-            'creation_timestamp': podinfo['creation_timestamp'].timestamp(),
-            'duration_ns': podinfo['duration_ns']
-        })
-
-    # load jobs from kubectl api
-    kubectljobs = kubectl.get_pods(namespace='default', tojson=True) or []
-    for kubectljob in kubectljobs:
-        save_pod_info(extract_pod_info(kubectljob), 'kubectl')
-
-    # load jobs from mongodb
-    mongojobs = Mongo().job_log_collection().find({}, {'logs': 0, '_id': 0}) or []
-    for mongojob in mongojobs:
-        save_pod_info(extract_pod_info(json.loads(mongojob['desc'])), 'mongodb')
-
-    sorted_job_list = sorted(
-        list(jobs_dict.items()),
-        key=lambda x: x[1]['creation_timestamp'],
-        reverse=True)
-    return flask.render_template('jobs.html', jobs_list=sorted_job_list)
+    return flask.render_template('jobs.html', jobs_list=JobManager().job_list())
 
 
 @app.route('/pod_describe/<path:pod_name>/<path:namespace>')
 def pod_describe_hdl(pod_name, namespace='default'):
     """Handler of the pod info page"""
-    mongodesc = Mongo().job_log_collection().find_one({'pod_name': pod_name,
-                                                       'namespace': namespace},
-                                                      {'desc': 1, '_id': 0})
-    if mongodesc:
-        mongodesctext = mongodesc['desc']
-        return flask.render_template('pod_describe.html', pod_name=pod_name,
-                                     pod_info=mongodesctext)
     return flask.render_template('pod_describe.html', pod_name=pod_name,
-                                 pod_info=json.dumps(
-                                     kubectl.describe_pod(pod_name, namespace, tojson=True),
-                                     sort_keys=True, indent=4, separators=(', ', ': ')))
+                                 pod_info=JobManager().pod_describe(pod_name, namespace))
 
 
 @app.route('/pod_delete', methods=['POST'])
@@ -263,7 +140,7 @@ def pod_delete_hdl():
     pod_name = flask.request.form.get('pod_name', '')
     namespace = flask.request.form.get('namespace', '')
     if pod_name and namespace and pod_name.startswith('job-'):
-        return str(kubectl.delete_pod(pod_name, namespace))
+        return JobManager().pod_delete(pod_name, namespace)
     else:
         return 'illegal pod name/namespace'
 
@@ -277,29 +154,8 @@ def pod_log_hdl(pod_name, namespace='default'):
 @app.route('/pod_log_streaming/<path:pod_name>/<path:namespace>')
 def pod_log_streaming_hdl(pod_name, namespace='default'):
     """Handler of the pod streaming log"""
-    conv = Ansi2HTMLConverter()
-
-    def decorate_logs(generator):
-        """decorate logs"""
-        for log in generator:
-            log = log.decode('utf-8')
-            yield conv.convert(ansi=log, full=False)
-
-    mongologs = Mongo().job_log_collection().find_one({'pod_name': pod_name,
-                                                       'namespace': namespace})
-    if mongologs:
-        mongologstext = mongologs['logs'] + '\ncurrent log was loaded from database.'
-        return conv.convert(ansi=mongologstext, full=False)
-    logs_generator = None
-    try:
-        logs_generator = kubectl.log_stream(pod_name, namespace)
-    except Exception as ex:
-        pass
-    if logs_generator:
-        return flask.Response(flask.stream_with_context(
-            decorate_logs(logs_generator)), mimetype="text/plain")
-    else:
-        return 'pod does not exist or has been deleted'
+    return flask.Response(flask.stream_with_context(
+           JobManager().pod_log_streaming(pod_name, namespace)), mimetype="text/plain")
 
 
 @app.route('/bos-ask', methods=['POST'])
