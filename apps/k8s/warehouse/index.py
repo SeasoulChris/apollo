@@ -155,7 +155,7 @@ def pod_log_hdl(pod_name, namespace='default'):
 def pod_log_streaming_hdl(pod_name, namespace='default'):
     """Handler of the pod streaming log"""
     return flask.Response(flask.stream_with_context(
-           JobManager().pod_log_streaming(pod_name, namespace)), mimetype="text/plain")
+        JobManager().pod_log_streaming(pod_name, namespace)), mimetype="text/plain")
 
 
 @app.route('/bos-ask', methods=['POST'])

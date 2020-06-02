@@ -16,6 +16,7 @@ from fueling.common.mongo_utils import Mongo
 
 TIMEZONE = 'America/Los_Angeles'
 
+
 class JobManager(object):
     """Handle all the job related stuffs"""
     def __init__(self):
@@ -148,6 +149,7 @@ class JobManager(object):
     def pod_log_streaming(self, pod_name, namespace='default'):
         """Handler of the pod streaming log"""
         conv = Ansi2HTMLConverter()
+
         def decorate_logs(generator):
             """decorate logs"""
             for log in generator:
