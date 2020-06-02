@@ -5,6 +5,7 @@ import sys
 import time
 
 import torch
+import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
@@ -23,6 +24,8 @@ class PytorchTraining(BasePipeline):
     @staticmethod
     def train(instance_id):
         """Run training task"""
+        cv.setNumThreads(0)
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
         logging.info('nvidia-smi on Executor {}:'.format(instance_id))
         if os.system('nvidia-smi') != 0:
