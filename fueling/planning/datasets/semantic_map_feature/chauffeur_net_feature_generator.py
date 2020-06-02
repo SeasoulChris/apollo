@@ -39,14 +39,14 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 class ChauffeurNetFeatureGenerator(object):
     """class of ChauffeurNetFeatureGenerator to initialize renderers and aggregate input features"""
 
-    def __init__(self, config_file, imgs_dir, region, base_map_update_flag=True):
+    def __init__(self, config_file, imgs_dir, region, map_path, base_map_update_flag=True):
         self.imgs_dir = imgs_dir
         self.config_file = config_file
         if not os.path.isfile(os.path.join(self.imgs_dir, region + ".png")) \
                 or not os.path.isfile(os.path.join(self.imgs_dir, region + "_speedlimit.png")) \
                 or not os.path.isfile(os.path.join(self.imgs_dir, region + "_offroad_mask.png")) \
                 or base_map_update_flag:
-            self.draw_base_map(self.config_file, region)
+            self.draw_base_map(self.config_file, region, map_path)
         self.agent_box_mapping = AgentBoxImgRenderer(self.config_file)
         self.agent_pose_future_mapping = AgentPosesFutureImgRenderer(
             self.config_file)
@@ -57,21 +57,21 @@ class ChauffeurNetFeatureGenerator(object):
         self.obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(
             self.config_file)
         self.offroad_mask_mapping = OffroadMaskImgRenderer(
-            self.config_file, region)
-        self.road_map_mapping = RoadMapImgRenderer(self.config_file, region)
-        self.routing_mapping = RoutingImgRenderer(self.config_file, region)
+            self.config_file, region, imgs_dir)
+        self.road_map_mapping = RoadMapImgRenderer(self.config_file, region, imgs_dir)
+        self.routing_mapping = RoutingImgRenderer(self.config_file, region, map_path)
         self.speed_limit_mapping = SpeedLimitImgRenderer(
-            self.config_file, region)
+            self.config_file, region, imgs_dir)
         self.traffic_lights_mapping = TrafficLightsImgRenderer(
-            self.config_file, region)
+            self.config_file, region, map_path)
 
-    def draw_base_map(self, config_file, region):
+    def draw_base_map(self, config_file, region, map_path):
         self.base_offroad_mask_mapping = BaseOffroadMaskImgRenderer(
-            config_file, region)
+            config_file, region, map_path)
         self.base_road_map_mapping = BaseRoadMapImgRenderer(
-            config_file, region)
+            config_file, region, map_path)
         self.base_speed_limit_mapping = BaseSpeedLimitImgRenderer(
-            config_file, region)
+            config_file, region, map_path)
         cv.imwrite(os.path.join(self.imgs_dir, region + "_offroad_mask.png"),
                    self.base_offroad_mask_mapping.base_map)
         cv.imwrite(os.path.join(self.imgs_dir, region + ".png"),

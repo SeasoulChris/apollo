@@ -22,7 +22,7 @@ from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_genera
 
 
 class TrajectoryImitationCNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir,
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  input_data_agumentation=False, ouput_point_num=10):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
@@ -35,7 +35,7 @@ class TrajectoryImitationCNNDataset(Dataset):
         self.instances = file_utils.list_files(data_dir)
 
         # TODO(Jinyun): add multi-map support
-        region = "sunnyvale_with_two_offices"
+        # region = "sunnyvale_with_two_offices"
 
         self.total_num_data_pt = len(self.instances)
 
@@ -45,7 +45,7 @@ class TrajectoryImitationCNNDataset(Dataset):
         # TODO(Jinyun): recognize map_name in __getitem__
         self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
                                                                             imgs_dir,
-                                                                            region)
+                                                                            region, map_path)
         self.input_data_agumentation = input_data_agumentation
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
@@ -122,7 +122,7 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 
 class TrajectoryImitationRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir,
+    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
@@ -138,7 +138,7 @@ class TrajectoryImitationRNNDataset(Dataset):
         self.instances = file_utils.list_files(data_dir)
 
         # TODO(Jinyun): add multi-map support
-        region = "sunnyvale_with_two_offices"
+        # region = "sunnyvale_with_two_offices"
 
         self.total_num_data_pt = len(self.instances)
 
@@ -150,6 +150,7 @@ class TrajectoryImitationRNNDataset(Dataset):
             ChauffeurNetFeatureGenerator(renderer_config_file,
                                          imgs_dir,
                                          region,
+                                         map_path,
                                          base_map_update_flag=False)
         self.input_data_agumentation = input_data_agumentation
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()

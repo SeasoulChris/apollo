@@ -27,11 +27,29 @@ py_library(
 
 py_library(
     name = "chauffeur_net_feature_generator",
-    srcs = ["chauffeur_net_feature_generator.py"],
+    srcs = [
+        "chauffeur_net_feature_generator.py",
+        "agent_box_img_renderer.py",
+        "agent_poses_future_img_renderer.py",
+        "agent_poses_history_img_renderer.py",
+        "base_offroad_mask_img_renderer.py",
+        "base_roadmap_img_renderer.py",
+        "base_speedlimit_img_renderer.py",
+        "obstacle_history_img_renderer.py",
+        "obstacle_predictions_img_renderer.py",
+        "offroad_mask_img_renderer.py",
+        "roadmap_img_renderer.py",
+        "routing_img_renderer.py",
+        "speed_limit_img_renderer.py",
+        "traffic_lights_img_renderer.py",
+        "renderer_utils.py",
+    ],
     deps = [
         #":basemap_img_renderer",
     ],
 )
+
+
 
 py_library(
     name = "agent_box_img_renderer",

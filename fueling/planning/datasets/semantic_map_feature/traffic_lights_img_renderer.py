@@ -20,7 +20,7 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 class TrafficLightsImgRenderer(object):
     """class of TrafficLightsImgRenderer to create images of surrounding traffic conditions"""
 
-    def __init__(self, config_file, region):
+    def __init__(self, config_file, region, map_path):
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution  # in meter/pixel
@@ -34,6 +34,7 @@ class TrafficLightsImgRenderer(object):
 
         self.region = region
         self.hd_map = None
+        self.map_path = map_path
         self.signal_dict = {}
         self.lane_dict = {}
         self.overlap_dict = {}
@@ -45,7 +46,7 @@ class TrafficLightsImgRenderer(object):
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
         self.hd_map = map_pb2.Map()
-        map_path = "/apollo/modules/map/data/" + self.region + "/base_map.bin"
+        map_path = self.map_path  # "/apollo/modules/map/data/" + self.region + "/base_map.bin"
         try:
             with open(map_path, 'rb') as file_in:
                 self.hd_map.ParseFromString(file_in.read())

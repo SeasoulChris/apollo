@@ -18,7 +18,7 @@ class BaseSpeedLimitImgRenderer(object):
     class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format
     """
 
-    def __init__(self, config_file, region):
+    def __init__(self, config_file, region, map_path):
         """contruct function to init BaseRoadMapImgRenderer object"""
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
@@ -26,6 +26,7 @@ class BaseSpeedLimitImgRenderer(object):
         self.base_map_padding = config.base_map_padding    # in meter
 
         self.region = region
+        self.map_path = map_path
 
         self.city_driving_max_speed = config.city_driving_max_speed  # 22.22 m/s /approx 80km/h
 
@@ -44,7 +45,7 @@ class BaseSpeedLimitImgRenderer(object):
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
         self.hd_map = map_pb2.Map()
-        map_path = "/apollo/modules/map/data/" + self.region + "/base_map.bin"
+        map_path = self.map_path  # "/apollo/modules/map/data/" + self.region + "/base_map.bin"
         try:
             with open(map_path, 'rb') as file_in:
                 self.hd_map.ParseFromString(file_in.read())

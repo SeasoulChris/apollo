@@ -17,9 +17,9 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 class SpeedLimitImgRenderer(object):
     """class of SpeedLimitImgRenderer to create a image of surrounding road speed limit"""
 
-    def __init__(self, config_file, region):
+    def __init__(self, config_file, region, map_dir):
         """contruct function to init RoadMapImgRenderer object"""
-        self.map_dir = "/fuel/testdata/planning/semantic_map_features"
+        self.map_dir = map_dir  # "/fuel/testdata/planning/semantic_map_features"
         self.base_map = cv.imread(os.path.join(
             self.map_dir, region + "_speedlimit.png"))
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()

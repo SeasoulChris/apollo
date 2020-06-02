@@ -25,7 +25,7 @@ import fueling.common.proto_utils as proto_utils
 
 
 def training(model_type, train_dir, valid_dir, renderer_config_file,
-             imgs_dir, input_data_augmentation, model_save_dir):
+             imgs_dir, input_data_augmentation, model_save_dir, region, map_path):
     logging.info(
         'training directory:{} validation directory:{}'.format(train_dir, valid_dir))
 
@@ -43,10 +43,14 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         train_dataset = TrajectoryImitationCNNDataset(train_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
+                                                      map_path,
+                                                      region,
                                                       input_data_augmentation)
         valid_dataset = TrajectoryImitationCNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
+                                                      map_path,
+                                                      region,
                                                       input_data_augmentation)
         model = TrajectoryImitationCNNModel(pred_horizon=10)
         loss = TrajectoryImitationCNNLoss()
@@ -55,10 +59,14 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         train_dataset = TrajectoryImitationRNNDataset(train_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
+                                                      map_path,
+                                                      region,
                                                       input_data_augmentation)
         valid_dataset = TrajectoryImitationRNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
+                                                      map_path,
+                                                      region,
                                                       input_data_augmentation)
         model = TrajectoryImitationRNNTest(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
@@ -122,6 +130,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model_save_dir = './'
+    region = "sunnyvale_with_two_offices"
+    map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
 
     training(args.model_type,
              args.train_file,
@@ -129,4 +139,6 @@ if __name__ == "__main__":
              args.renderer_config_file,
              args.imgs_dir,
              args.input_data_augmentation,
-             model_save_dir)
+             model_save_dir,
+             region,
+             map_path)

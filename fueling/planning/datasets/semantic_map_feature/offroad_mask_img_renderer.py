@@ -17,9 +17,9 @@ import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer
 class OffroadMaskImgRenderer(object):
     """class of OffroadMaskImgRenderer to create an road map around ego vehicle with map element """
 
-    def __init__(self, config_file, region):
+    def __init__(self, config_file, region, map_dir):
         """contruct function to init OffroadMaskImgRenderer object"""
-        self.map_dir = "/fuel/testdata/planning/semantic_map_features"
+        self.map_dir = map_dir  # "/fuel/testdata/planning/semantic_map_features"
         self.base_map = cv.imread(os.path.join(
             self.map_dir, region + "_offroad_mask.png"), cv.IMREAD_UNCHANGED)
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()

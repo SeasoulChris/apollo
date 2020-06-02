@@ -89,6 +89,8 @@ py_library(
     deps = [
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+        "//fueling/planning/datasets/semantic_map_feature:chauffeur_net_feature_generator",
     ],
 )
 
