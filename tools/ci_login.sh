@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
+
 source ./tools/docker_version.sh
+
 # Change container name if the host machine is shared by multiple users.
 CONTAINER="fuel"
 
@@ -27,7 +29,7 @@ if [ $? -eq 0 ]; then
 else
   # Mount required volumes.
   required_volumes="-v $(pwd):/fuel"
-  APOLLO_ROOT="$(cd ../apollo-bazel2.x; pwd)"
+    APOLLO_ROOT="$(cd /home/apollo/apollo-bazel2.x; pwd)"
   required_volumes="-v ${APOLLO_ROOT}:/apollo ${required_volumes}"
 
   USER_ID=$(id -u)
@@ -82,4 +84,3 @@ else
   fi
   docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
 fi
-docker exec -it -u ${USER} ${CONTAINER} bash
