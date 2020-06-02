@@ -138,6 +138,9 @@ def record_hdl(record_path):
 def jobs_hdl():
     """Handler of the pod list page"""
 
+    # TODO(Andrew): As it's a big component, let's make a job_manager.py with `class JobManager`,
+    # to host all the related stuffs. So that we can keep the index.py straight forward with only
+    # HTTP handlers.
     def extract_pod_info(pod):
         """extract pod data from json"""
         namespace = pod['metadata']['namespace']
@@ -222,16 +225,14 @@ def jobs_hdl():
         })
 
     # load jobs from kubectl api
-    kubectljobs = kubectl.get_pods(namespace='default', tojson=True)
-    if kubectljobs:
-        for kubectljob in kubectljobs:
-            save_pod_info(extract_pod_info(kubectljob), 'kubectl')
+    kubectljobs = kubectl.get_pods(namespace='default', tojson=True) or []
+    for kubectljob in kubectljobs:
+        save_pod_info(extract_pod_info(kubectljob), 'kubectl')
 
     # load jobs from mongodb
-    mongojobs = Mongo().job_log_collection().find({}, {'logs': 0, '_id': 0})
-    if mongojobs:
-        for mongojob in mongojobs:
-            save_pod_info(extract_pod_info(json.loads(mongojob['desc'])), 'mongodb')
+    mongojobs = Mongo().job_log_collection().find({}, {'logs': 0, '_id': 0}) or []
+    for mongojob in mongojobs:
+        save_pod_info(extract_pod_info(json.loads(mongojob['desc'])), 'mongodb')
 
     sorted_job_list = sorted(
         list(jobs_dict.items()),
