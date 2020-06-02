@@ -14,6 +14,7 @@ function mount_bos() {
   EXPOSE_MOUNT="/mnt/bos"
   mkdir -p "${RW_MOUNT}" "${RO_MOUNT}" "${EXPOSE_MOUNT}"
 
+  # bucket, ak, and sk values are from bos-secret
   bosfs "${bucket}" "${RW_MOUNT}" -o logfile=/tmp/bos-rw.log,endpoint=http://bj.bcebos.com,ak=${ak},sk=${sk}
   bosfs "${bucket}" "${RO_MOUNT}" -o ro,logfile=/tmp/bos-ro.log,endpoint=http://bj.bcebos.com,ak=${ak},sk=${sk}
   if [ $? -ne 0 ]; then
