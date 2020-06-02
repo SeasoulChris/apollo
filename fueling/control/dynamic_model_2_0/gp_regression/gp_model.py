@@ -18,7 +18,7 @@ class GPModel(ApproximateGP):
         # mark the CholeskyVariationalDistribution as batch
         # so that we learn a variational distribution for each task
         variational_distribution = CholeskyVariationalDistribution(
-            num_inducing_points=inducing_points.shape[-2], batch_shape=torch.Size([num_tasks]))
+            num_inducing_points=inducing_points.shape[-2])
         # wrap the VariationalStrategy in a MultitaskVariationalStrategy
         # so that the output will be a MultitaskMultivariateNormal
         variational_strategy = MultitaskVariationalStrategy(VariationalStrategy(
@@ -35,7 +35,7 @@ class GPModel(ApproximateGP):
     def forward(self, input_data):
         logging.debug(f'input data is {input_data[-1, -1,:]}')
         input_data = self.warping(input_data)
-        logging.debug(f'input data is {input_data}')
+        logging.debug(f'input data is {input_data.shape}')
         mean_x = self.mean_module(input_data)
         logging.debug(f'input data mean value is {mean_x[:, 0]}')
         covar_x = self.covar_module(input_data)
