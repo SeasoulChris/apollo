@@ -143,7 +143,7 @@ class JobManager(object):
 
     def pod_delete(self, pod_name, namespace='default'):
         """delete pod"""
-        self.kubectl.delete_pod(pod_name, namespace)
+        return self.kubectl.delete_pod(pod_name, namespace)
 
     def pod_log_streaming(self, pod_name, namespace='default'):
         """Handler of the pod streaming log"""

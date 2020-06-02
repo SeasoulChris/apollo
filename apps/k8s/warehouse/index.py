@@ -140,7 +140,7 @@ def pod_delete_hdl():
     pod_name = flask.request.form.get('pod_name', '')
     namespace = flask.request.form.get('namespace', '')
     if pod_name and namespace and pod_name.startswith('job-'):
-        return JobManager().pod_delete(pod_name, namespace)
+        return str(JobManager().pod_delete(pod_name, namespace))
     else:
         return 'illegal pod name/namespace'
 
