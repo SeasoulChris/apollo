@@ -42,32 +42,6 @@ def result_tracing(data_loader, model, likelihood):
     return np.mean(accuracies)
 
 
-def train_loop_test(train_loader, model, loss, optimizer, is_visualize=False):
-    loss_history = []
-    for x_batch, y_batch in train_loader:
-        # visualize training data
-        if is_visualize:
-            train_x_mean, train_x_std = preprocess(x_batch, y_batch)
-            visualize_data(train_x_mean, train_x_std, y_batch)
-        logging.debug(f'input batch shape is {x_batch.shape}')
-        logging.debug(f'output batch shape is {y_batch.shape}')
-        # **[window_size, batch_size, channel]
-        # x_batch = torch.transpose(x_batch, 0, 1)
-        logging.debug(f'transposed input shape is {x_batch.shape}')
-        # training process
-        optimizer.zero_grad()
-        output = model(x_batch)
-        # train loss
-        logging.debug(f'y_batch shape is {y_batch.shape}')
-        train_loss = -loss(output, y_batch)
-        train_loss.backward()
-        optimizer.step()
-        loss_history.append(train_loss.item())
-    train_loss = np.mean(loss_history)
-    logging.info(f'Training loss: {train_loss}')
-    return train_loss
-
-
 def train_loop(train_loader, model, loss, optimizer, is_visualize=False):
     loss_history = []
     for x_batch, y_batch in train_loader:
@@ -241,7 +215,7 @@ def train(args, train_loader, valid_loader, total_train_number, print_period=Non
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                                   verbose=False, threshold=0.0001, threshold_mode='rel',
-                                  cooldown=0, min_lr=0.1, eps=1e-08)
+                                  cooldown=0, min_lr=0.0, eps=1e-08)
 
     best_valid_loss = float('+inf')
     num_epoch_valid_loss_not_decreasing = 0
