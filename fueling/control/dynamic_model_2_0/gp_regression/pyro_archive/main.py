@@ -26,12 +26,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/training")
-    # default = "/fuel/fueling/control/dynamic_model_2_0/testdata/labeled_data"
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/pyro_archive/train_data")
     parser.add_argument(
         '--testing_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/test_dataset")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/pyro_archive/test_data")
     parser.add_argument(
         '--gp_model_path',
         type=str,
@@ -40,10 +39,6 @@ if __name__ == '__main__':
         '--eval_result_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/results")
-    # parser.add_argument(
-    #     '--online_gp_model_path',
-    #     type=str,
-    #     default="/fuel/fueling/control/dynamic_model_2_0/testdata/20191004-130454")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
