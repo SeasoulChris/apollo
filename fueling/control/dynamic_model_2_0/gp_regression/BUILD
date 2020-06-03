@@ -40,7 +40,6 @@ py_binary(
     name = "train",
     srcs = ["train.py"],
     deps = [
-        ":dataset",
         ":dynamic_model_dataset",
         ":gp_model",
         "//fueling/learning:train_utils",
