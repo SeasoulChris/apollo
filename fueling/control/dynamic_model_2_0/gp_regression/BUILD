@@ -27,9 +27,9 @@ py_library(
     ],
 )
 
-py_test(
-    name = "dynamic_model_dataset_test",
-    srcs = ["dynamic_model_dataset_test.py"],
+py_binary(
+    name = "dynamic_model_dataset_visualization",
+    srcs = ["dynamic_model_dataset_visualization.py"],
     data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
     deps = [
         ":dynamic_model_dataset",

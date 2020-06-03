@@ -295,7 +295,7 @@ def merge_brake_throttle(brake, throttle):
 if __name__ == '__main__':
     # initialize obj
     dynamic_model_dataset = DynamicModelDataset(
-        data_dir='/fuel/fueling/control/dynamic_model_2_0/testdata/train', is_standardize=False)
+        data_dir='/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train', is_standardize=False)
     logging.info(f'dataset length {len(dynamic_model_dataset.datasets)}')
     # what to do
     validate_result = False
@@ -328,6 +328,6 @@ if __name__ == '__main__':
         visualize(datasets, input_indices, output_index)
     if check_data:
         features = check_feature_data(
-            '/fuel/fueling/control/dynamic_model_2_0/testdata/train')
+            '/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train')
         input_indices = np.array([15, 16])
         visualize_input_only(features, input_indices)
