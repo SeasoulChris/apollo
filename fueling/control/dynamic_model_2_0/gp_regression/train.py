@@ -360,24 +360,24 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/gp_model_output")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/gp_model_output")
 
     # model parameters
-    parser.add_argument('-ni', '--num_inducing_point', type=int, default=128)
+    parser.add_argument('-ni', '--num_inducing_point', type=int, default=1)
     parser.add_argument('--kernel_dim', type=int, default=20)
     # optimizer parameters
-    parser.add_argument('-e', '--epochs', type=int, default=50)
+    parser.add_argument('-e', '--epochs', type=int, default=10)
     parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('-b', '--batch_size', type=int, default=1024)
+    parser.add_argument('-b', '--batch_size', type=int, default=1)
 
     # argument to use cuda or not for training
     parser.add_argument('--use_cuda', type=bool, default=False)
