@@ -23,9 +23,9 @@ py_binary(
     data = [":resource"],
     deps = [
         ":display_util",
+        ":job_manager",
         ":metrics_util",
         ":records_util",
-        ":job_manager",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
     ],

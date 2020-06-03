@@ -48,14 +48,16 @@ class JobManager(object):
             # extract job_owner for future filtering
             try:
                 for env in pod['spec']['containers'][0]['env']:
-                    if env['name'] == 'PYSPARK_APP_ARGS':
-                        for v in env['value'].split(' '):
-                            if '=' in v:
-                                arg_type, arg_value = v.split('=')
-                                if arg_type == '--job_owner':
-                                    spark_job_owner = arg_value
-                                elif arg_type == '--job_id':
-                                    spark_job_id = arg_value
+                    if env['name'] != 'PYSPARK_APP_ARGS':
+                        continue
+                    for v in env['value'].split(' '):
+                        if '=' not in v:
+                            continue
+                        arg_type, arg_value = v.split('=')
+                        if arg_type == '--job_owner':
+                            spark_job_owner = arg_value
+                        elif arg_type == '--job_id':
+                            spark_job_id = arg_value
             except Exception as ex:
                 pass
         return {'namespace': namespace,
