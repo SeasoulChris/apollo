@@ -65,3 +65,13 @@ imu_scaling = {
     "acc": 0.76,  # scaling rate for acceleration
     "heading_rate": 0.78  # scaling rate for angular speed
 }
+
+training_config = {
+    # Training configs for DM2.0
+    "use_cuda": False,
+    "num_inducing_point": 128,  # No. of inducing points
+    "kernel_dim": 20,  # kernel dimension
+    "epochs": 50,  # training epochs
+    "lr": 0.01,  # default learning rate
+    "batch_size": 512,  # default batch size
+}
