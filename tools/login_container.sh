@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-source ./tools/docker_version.sh
 # Change container name if the host machine is shared by multiple users.
 CONTAINER="fuel"
 
 # Goto fuel root
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+source ./tools/docker_version.sh
 
 # Decide to use GPU or not.
 DOCKER_RUN="docker run"
