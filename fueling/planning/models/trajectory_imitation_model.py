@@ -116,10 +116,6 @@ class TrajectoryImitationRNNModel(nn.Module):
     def forward(self, X):
         img_feature = X[0]
         batch_size = img_feature.size(0)
-        # M_B_k = torch.cat((X[1], X[2]), dim=1)
-        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
-        # original code above, changed to below for jit trace success
-        # TODO(Jinyun): check possible issue without nn.Parameter
         M_B_k = torch.cat((X[1], X[2]), dim=1).to(img_feature.device)
 
         img_feature_encoding = self.feature_net(
@@ -164,28 +160,14 @@ class TrajectoryImitationRNNModel(nn.Module):
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            # arg_max_row_index = arg_max_index // F_P_B_k.shape[-2:][0]
-            # arg_max_col_index = arg_max_index % F_P_B_k.shape[-2:][1]
-            # original code above, changed to below for jit trace success
-            # TODO(Jinyun): TracerWarning: torch.tensor results are registered
-            # as constants in the trace. You can safely ignore this warning if
-            # you use this function to create tensors out of constant variables
-            # that would be the same every time you call this function. In any
-            # other case, this might cause the trace to be incorrect
-            arg_max_row_index = arg_max_index // torch.tensor(
-                [F_P_B_k.shape[-2:][0]]).to(img_feature.device)
-            arg_max_col_index = arg_max_index % torch.tensor(
-                [F_P_B_k.shape[-2:][1]]).to(img_feature.device)
+            col_num = torch.tensor(
+                [self.input_img_size_w], device=img_feature.device)
+            arg_max_row_index = arg_max_index // col_num
+            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            # TODO(Jinyun): TracerWarning: Converting a tensor to a Python index
-            # might cause the trace to be incorrect. We can't record the data flow
-            # of Python values, so this value will be treated as a constant in the
-            # future. This means that the trace might not generalize to other inputs!
-            # like "for i in range(batch_size)" and "M_k_next[i, arg_max_row_index[i]"
-            for i in range(batch_size):
-                M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
-
+            M_k_next[torch.arange(batch_size),
+                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
@@ -264,8 +246,6 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        # TODO(Jinyun): check possible issue without nn.Parameter
-        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         img_feature_encoding = self.feature_net(
             self.feature_compression_layer(img_feature))
@@ -309,13 +289,14 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            arg_max_row_index = arg_max_index // F_P_B_k.shape[-2:][0]
-            arg_max_col_index = arg_max_index % F_P_B_k.shape[-2:][1]
+            col_num = torch.tensor(
+                [self.input_img_size_w], device=img_feature.device)
+            arg_max_row_index = arg_max_index // col_num
+            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            for i in range(batch_size):
-                M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
-
+            M_k_next[torch.arange(batch_size),
+                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
@@ -384,8 +365,6 @@ class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        # TODO(Jinyun): check possible issue without nn.Parameter
-        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         pred_pos_dists = torch.zeros(
             (batch_size, self.pred_horizon, 1,
@@ -426,13 +405,14 @@ class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            arg_max_row_index = arg_max_index // F_P_B_k.shape[-2:][0]
-            arg_max_col_index = arg_max_index % F_P_B_k.shape[-2:][1]
+            col_num = torch.tensor(
+                [self.input_img_size_w], device=img_feature.device)
+            arg_max_row_index = arg_max_index // col_num
+            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            for i in range(batch_size):
-                M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
-
+            M_k_next[torch.arange(batch_size),
+                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
@@ -475,8 +455,6 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
         img_feature = X[0]
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
-        # TODO(Jinyun): check possible issue without nn.Parameter
-        # M_B_k = nn.Parameter(M_B_k, requires_grad=True)
 
         pred_pos_dists = torch.zeros(
             (batch_size, self.pred_horizon, 1,
@@ -520,13 +498,14 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
             pred_boxs[:, t, 0, :, :] = B_k.clone()
 
             arg_max_index = torch.argmax(P_k.view(batch_size, -1), dim=1)
-            arg_max_row_index = arg_max_index // P_k.shape[-2:][0]
-            arg_max_col_index = arg_max_index % P_k.shape[-2:][1]
+            col_num = torch.tensor(
+                [self.input_img_size_w], device=img_feature.device)
+            arg_max_row_index = arg_max_index // col_num
+            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
             B_k_next = B_k.clone()
-            for i in range(batch_size):
-                M_k_next[i, arg_max_row_index[i], arg_max_col_index[i]] = 1
-
+            M_k_next[torch.arange(batch_size),
+                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
