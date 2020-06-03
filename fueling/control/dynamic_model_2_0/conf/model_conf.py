@@ -54,8 +54,8 @@ input_index = {
 }
 
 output_index = {
-    "d_x": 0,  # the residual error between groud-truth x and predicted x
-    "d_y": 1  # the residual error between groud-truth y and predicted y
+    "d_x": 0,  # the residual error between ground-truth x and predicted x
+    "d_y": 1  # the residual error between ground-truth y and predicted y
 }
 
 imu_scaling = {

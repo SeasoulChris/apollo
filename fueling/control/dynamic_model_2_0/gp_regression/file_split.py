@@ -23,6 +23,7 @@ class TrainTestFileSplitter():
         self.split_ratio = 0.8
 
     def get_category_list(self):
+        """categorize data files to train-set and test-set"""
         self.category_dir_list = [f.path for f in os.scandir(self.src_dir) if f.is_dir()]
         logging.info(self.category_dir_list)
         # loop over each category
