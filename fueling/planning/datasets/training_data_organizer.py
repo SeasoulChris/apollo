@@ -171,10 +171,10 @@ if __name__ == "__main__":
                         help='organizer data folder')
     parser.add_argument('output_dir', type=str,
                         help='output data folder')
-    parser.add_argument('sample_frames_num', '--sample_frames_num',
+    parser.add_argument('-sample_frames_num', '--sample_frames_num',
                         type=int, default=500000,
                         help='sample_frames_num for run_mode 2')
-    parser.add_argument('is_generate_synthesize_folder', '--is_generate_synthesize_folder',
+    parser.add_argument('-is_generate_synthesize_folder', '--is_generate_synthesize_folder',
                         type=bool, default=False,
                         help='whether generate synthesize_folder')
     args = parser.parse_args()
