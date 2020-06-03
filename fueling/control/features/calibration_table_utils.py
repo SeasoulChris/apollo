@@ -140,11 +140,11 @@ def satisfy_brake_condition(elem, index, VEHICLE_PARAM_CONF):
     acc_min_condition = VEHICLE_PARAM_CONF.max_deceleration
     segment_brake_list = gen_brake_list(VEHICLE_PARAM_CONF)
     condition = (
-        abs(elem[index][3]) < steer_condition and
-        speed_min_condition < elem[index][0] < speed_max_condition and
-        segment_brake_list[0] < elem[index][2] < segment_brake_list[-1] and
-        acc_min_condition < elem[index][1] < 0.0 and
-        int(elem[index][4]) == 0)
+        abs(elem[index][3]) < steer_condition
+        and speed_min_condition < elem[index][0] < speed_max_condition
+        and segment_brake_list[0] < elem[index][2] < segment_brake_list[-1]
+        and acc_min_condition < elem[index][1] < 0.0
+        and int(elem[index][4]) == 0)
     return condition
 
 
@@ -155,11 +155,11 @@ def satisfy_throttle_condition(elem, index, VEHICLE_PARAM_CONF):
     acc_max_condition = VEHICLE_PARAM_CONF.max_acceleration
     segment_throttle_list = gen_throttle_list(VEHICLE_PARAM_CONF)
     condition = (
-        abs(elem[index][3]) < steer_condition and
-        speed_min_condition < elem[index][0] < speed_max_condition and
-        segment_throttle_list[0] < elem[index][2] < segment_throttle_list[-1] and
-        0.0 < elem[index][1] < acc_max_condition and
-        int(elem[index][4]) == 0)
+        abs(elem[index][3]) < steer_condition
+        and speed_min_condition < elem[index][0] < speed_max_condition
+        and segment_throttle_list[0] < elem[index][2] < segment_throttle_list[-1]
+        and 0.0 < elem[index][1] < acc_max_condition
+        and int(elem[index][4]) == 0)
     return condition
 
 

@@ -23,7 +23,8 @@ pyro.enable_validation(True)
 # batch matrix vector multiplication
 
 
-def bmv(bM, bv): return bM.matmul(bv.unsqueeze(-1)).squeeze()
+def bmv(bM, bv):
+    return bM.matmul(bv.unsqueeze(-1)).squeeze()
 
 
 class FNET(nn.Module):
@@ -268,8 +269,8 @@ class GpImu(Parameterized):
         for k in range(u.shape[1]):
             delta_R = delta_R_prev.matmul(SO3.exp(u[:, k, :3] * self.delta_t).as_matrix())
             delta_v = delta_v_prev + bmv(delta_R, u[:, k, 3:]) * self.delta_t
-            delta_p = (delta_p_prev + delta_v * self.delta_t +
-                       bmv(delta_R, u[:, k, 3:] * self.delta_t) * (self.delta_t ** 2) / 2)
+            delta_p = (delta_p_prev + delta_v * self.delta_t
+                       + bmv(delta_R, u[:, k, 3:] * self.delta_t) * (self.delta_t ** 2) / 2)
             delta_R_prev = SO3.from_matrix(delta_R, normalize=True).as_matrix()
             delta_v_prev = delta_v
             delta_p_prev = delta_p

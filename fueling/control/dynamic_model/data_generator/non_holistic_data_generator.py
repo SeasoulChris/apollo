@@ -10,10 +10,12 @@ import h5py
 import numpy as np
 
 
-from fueling.control.dynamic_model.conf.model_config import acc_method, imu_scaling, pose_output_index
+from fueling.control.dynamic_model.conf.model_config import \
+    acc_method, imu_scaling, pose_output_index
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
-from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
+from fueling.control.dynamic_model.conf.model_config import \
+    holistic_input_index, holistic_output_index
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
@@ -231,8 +233,8 @@ def generate_network_output(segment, model_folder, model_name):
             velocity_fnn = segment[k, segment_index["speed"]]
             # Scale the acceleration and angular speed data read from IMU
             output_fnn[k, output_index["acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
+                + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
             output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * segment[k, segment_index["w_z"]]
 
         if k >= DIM_SEQUENCE_LENGTH:

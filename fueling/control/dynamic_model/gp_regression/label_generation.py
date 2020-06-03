@@ -91,10 +91,10 @@ def generate_gp_data(args, segment):
         predicted_y += predicted_v * np.sin(predicted_heading) * feature_config["delta_t"]
     # logging.info("The predicted x:{}, y:{}".format(predicted_x, predicted_y))
     # The residual error on x and y prediction
-    output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
-                                                  1, segment_index["x"]] - predicted_x
-    output_segment[output_index["d_y"]] = segment[INPUT_LENGTH -
-                                                  1, segment_index["y"]] - predicted_y
+    output_segment[output_index["d_x"]] = segment[INPUT_LENGTH
+                                                  - 1, segment_index["x"]] - predicted_x
+    output_segment[output_index["d_y"]] = segment[INPUT_LENGTH
+                                                  - 1, segment_index["y"]] - predicted_y
     logging.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
     return (input_segment, output_segment)
 

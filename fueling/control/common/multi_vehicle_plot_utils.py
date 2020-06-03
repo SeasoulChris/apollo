@@ -29,7 +29,7 @@ def plot(plot_title, plot_points, pdf_file):
     """Plot points(array) to given pdf file"""
     plt.figure(figsize=(4, 3))
     plt.hist(plot_points, bins='auto')
-    plt.title(F'Histogram of the {plot_title}') 
+    plt.title(F'Histogram of the {plot_title}')
     pdf_file.savefig()
     plt.close()
 

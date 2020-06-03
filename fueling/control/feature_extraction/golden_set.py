@@ -139,7 +139,8 @@ class GoldenSet(BasePipeline):
             # PairRDD(dir, topic_counter)
             .filter(lambda _counter:
                     _counter[1].get(record_utils.CHASSIS_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT
-                    and _counter[1].get(record_utils.LOCALIZATION_CHANNEL, 0) >= MIN_MSG_PER_SEGMENT)
+                    and _counter[1].get(record_utils.LOCALIZATION_CHANNEL, 0)
+                    >= MIN_MSG_PER_SEGMENT)
             # RDD(dir)
             .keys()
             .cache())

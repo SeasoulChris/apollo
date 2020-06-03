@@ -56,8 +56,8 @@ def main(args):
     getopt.add_argument('--date', help='Download specific date')
     args = getopt.parse_args()
 
-    if (not args.all and not args.lb3 and not args.sen and not args.vel and
-            not args.gt and not args.gt_cov):
+    if (not args.all and not args.lb3 and not args.sen and not args.vel
+            and not args.gt and not args.gt_cov):
         print("No data type specified. Use --help to see options.")
 
     for date in dates:

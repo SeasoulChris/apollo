@@ -10,7 +10,8 @@ import numpy as np
 from fueling.control.dynamic_model.conf.model_config import imu_scaling
 from fueling.control.dynamic_model.conf.model_config import feature_config, point_mass_config
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index, output_index
-from fueling.control.dynamic_model.conf.model_config import holistic_input_index, holistic_output_index
+from fueling.control.dynamic_model.conf.model_config import \
+    holistic_input_index, holistic_output_index
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
@@ -70,8 +71,8 @@ def generate_mlp_data(segment, total_len):
             segment[k, segment_index["v_y"]] * np.cos(segment[k, segment_index["heading"]])
         # longitudinal acceleration
         mlp_input_data[k, holistic_input_index["lon_acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-             segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+            (segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
+             + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
         # lateral acceleration
         mlp_input_data[k, holistic_input_index["lat_acceleration"]] = PP7_IMU_SCALING * \
             segment[k, segment_index["a_x"]] * np.sin(segment[k, segment_index["heading"]]) - \
@@ -89,16 +90,16 @@ def generate_mlp_data(segment, total_len):
 
         # longitudinal acceleration next
         mlp_output_data[k, holistic_output_index["lon_acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] *
-                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) +
-             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] *
-                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
+            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]]
+                * np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
+             + segment[k + DIM_DELAY_STEPS, segment_index["a_y"]]
+                * np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # lateral acceleration next
         mlp_output_data[k, holistic_output_index["lat_acceleration"]] = PP7_IMU_SCALING * \
-            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]] *
-                np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]) -
-             segment[k + DIM_DELAY_STEPS, segment_index["a_y"]] *
-                np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
+            (segment[k + DIM_DELAY_STEPS, segment_index["a_x"]]
+                * np.sin(segment[k + DIM_DELAY_STEPS, segment_index["heading"]])
+             - segment[k + DIM_DELAY_STEPS, segment_index["a_y"]]
+                * np.cos(segment[k + DIM_DELAY_STEPS, segment_index["heading"]]))
         # angular speed next
         mlp_output_data[k, holistic_output_index["w_z"]] = PP7_IMU_SCALING * \
             segment[k + DIM_DELAY_STEPS, segment_index["w_z"]]
@@ -129,12 +130,12 @@ def generate_imu_output(segment):
     output_imu = np.zeros([total_len, DIM_OUTPUT])
     # longitudinal acceleration by imu
     output_imu[:, holistic_output_index["lon_acceleration"]] = PP7_IMU_SCALING * \
-        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]]) +
-         segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]]))
+        (segment[:, segment_index["a_x"]] * np.cos(segment[:, segment_index["heading"]])
+         + segment[:, segment_index["a_y"]] * np.sin(segment[:, segment_index["heading"]]))
     # lateral acceleration by imu
     output_imu[:, holistic_output_index["lat_acceleration"]] = PP7_IMU_SCALING * \
-        (segment[:, segment_index["a_x"]] * np.sin(segment[:, segment_index["heading"]]) -
-         segment[:, segment_index["a_y"]] * np.cos(segment[:, segment_index["heading"]]))
+        (segment[:, segment_index["a_x"]] * np.sin(segment[:, segment_index["heading"]])
+         - segment[:, segment_index["a_y"]] * np.cos(segment[:, segment_index["heading"]]))
     output_imu[:, holistic_output_index["w_z"]] = segment[:, segment_index["w_z"]] * \
         PP7_IMU_SCALING  # angular speed by imu
     return output_imu
@@ -224,11 +225,11 @@ def generate_network_output(segment, model_folder, model_name):
             lon_velocity_fnn = segment[k, segment_index["speed"]]
             # Scale the acceleration and angular speed data read from IMU
             output_fnn[k, holistic_output_index["lon_acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]]) +
-                segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
+                segment[k, segment_index["a_x"]] * np.cos(segment[k, segment_index["heading"]])
+                + segment[k, segment_index["a_y"]] * np.sin(segment[k, segment_index["heading"]]))
             output_fnn[k, holistic_output_index["lat_acceleration"]] = PP7_IMU_SCALING * (
-                segment[k, segment_index["a_x"]] * np.sin(segment[k, segment_index["heading"]]) -
-                segment[k, segment_index["a_y"]] * np.cos(segment[k, segment_index["heading"]]))
+                segment[k, segment_index["a_x"]] * np.sin(segment[k, segment_index["heading"]])
+                - segment[k, segment_index["a_y"]] * np.cos(segment[k, segment_index["heading"]]))
             output_fnn[k, output_index["w_z"]] = PP7_IMU_SCALING * \
                 segment[k, segment_index["w_z"]]
 

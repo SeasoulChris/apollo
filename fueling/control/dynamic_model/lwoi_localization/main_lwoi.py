@@ -3,9 +3,6 @@
 """Integrate the leanring wheel odometry and UMU errors algorithm"""
 """and invoke the algorithm for kaist data"""
 
-
-
-
 import argparse
 import glob
 import os
@@ -20,6 +17,8 @@ import torch
 from dataset import NCLTDataset, KAISTDataset
 from filter import KAISTFilter, NCLTFilter
 from train import train_gp, GpOdoFog, GpImu, FNET, HNET
+
+
 def read_data_nclt(args):
     """Read the raw data in the NCLT format"""
 
@@ -110,8 +109,8 @@ def read_data_nclt(args):
         # take IMR gyro and accelerometer
         imu = imu[:, [6, 7, 8, 3, 4, 5]]
 
-        error = ((fog - fog.float().double()).norm() + (imu - imu.float().double()).norm() +
-                 (odo - odo.float().double()).norm() + (gt - gt.float().double()).norm())
+        error = ((fog - fog.float().double()).norm() + (imu - imu.float().double()).norm()
+                 + (odo - odo.float().double()).norm() + (gt - gt.float().double()).norm())
         if error > 0.1:
             print("conversion double -> float error ! ! !")
 
@@ -152,9 +151,9 @@ def read_data_nclt(args):
 
             y_imu[i] = torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
                                   chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
-                                  chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
-                                                       v_i * args.Delta_t -
-                                                       1 / 2 * g * args.Delta_t ** 2)), 0)
+                                  chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3]
+                                                       - v_i * args.Delta_t
+                                                       - 1 / 2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
@@ -339,9 +338,9 @@ def read_data_kaist(args):
 
                 y_imu[i] = torch.cat((SO3.from_matrix(chi_i[:3, :3].t().mm(chi_end[:3, :3])).log(),
                                       chi_i[:3, :3].t().mv(v_end - v_i - g * args.Delta_t),
-                                      chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3] -
-                                                           v_i * args.Delta_t -
-                                                           1 / 2 * g * args.Delta_t ** 2)), 0)
+                                      chi_i[:3, :3].t().mv(chi_end[:3, 3] - chi_i[:3, 3]
+                                                           - v_i * args.Delta_t
+                                                           - 1 / 2 * g * args.Delta_t ** 2)), 0)
 
             i_odo += k
             i += 1
@@ -472,11 +471,11 @@ def post_tests(args, dataset, filter_original):
         print("\n" + dataset_name + type_dataset + ", dataset size: {}"
               .format(chi.shape[0]))
         print("m-ATE Translation corrected " + args.compare + ": {:.2f} (m-ATE un-corrected "
-              .format(error_corrected['mate translation']) +
-              args.compare + ": {:.2f})".format(error_original['mate translation']))
+              .format(error_corrected['mate translation'])
+              + args.compare + ": {:.2f})".format(error_original['mate translation']))
         print("m-ATE Rotation corrected " + args.compare + " : {:.2f} (m-ATE un-corrected "
-              .format(error_corrected['mate rotation'] * 180 / np.pi) +
-              args.compare + ": {:.2f})".format(error_original['mate rotation'] * 180 / np.pi))
+              .format(error_corrected['mate rotation'] * 180 / np.pi)
+              + args.compare + ": {:.2f})".format(error_original['mate rotation'] * 180 / np.pi))
         bar_dataset.update(i)
 
 

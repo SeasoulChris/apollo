@@ -122,13 +122,13 @@ class GeneralFeatureExtraction(BasePipeline):
 
         def align():
             """align up chassis and pose data w.r.t time """
-            while (index[0] < len(times_cs) and index[1] < len(times_pose) and
-                   abs(times_cs[index[0]] - times_pose[index[1]]) > max_phase_delta):
-                while (index[0] < len(times_cs) and index[1] < len(times_pose) and
-                       times_cs[index[0]] < times_pose[index[1]] - max_phase_delta):
+            while (index[0] < len(times_cs) and index[1] < len(times_pose)
+                   and abs(times_cs[index[0]] - times_pose[index[1]]) > max_phase_delta):
+                while (index[0] < len(times_cs) and index[1] < len(times_pose)
+                       and times_cs[index[0]] < times_pose[index[1]] - max_phase_delta):
                     index[0] += 1
-                while (index[0] < len(times_cs) and index[1] < len(times_pose) and
-                       times_pose[index[1]] < times_cs[index[0]] - max_phase_delta):
+                while (index[0] < len(times_cs) and index[1] < len(times_pose)
+                       and times_pose[index[1]] < times_cs[index[0]] - max_phase_delta):
                     index[1] += 1
 
         align()
@@ -137,8 +137,8 @@ class GeneralFeatureExtraction(BasePipeline):
             limit = min(len(times_cs) - index[0], len(times_pose) - index[1])
 
             for seg_len in range(1, limit):
-                delta = abs(times_cs[index[0] + seg_len] -
-                            times_pose[index[1] + seg_len])
+                delta = abs(times_cs[index[0] + seg_len]
+                            - times_pose[index[1] + seg_len])
                 if delta > max_phase_delta or seg_len == limit - 1:
                     if seg_len >= min_segment_length or seg_len == limit - 1:
                         yield GetDatapoints(pose[index[1]: index[1] + seg_len],

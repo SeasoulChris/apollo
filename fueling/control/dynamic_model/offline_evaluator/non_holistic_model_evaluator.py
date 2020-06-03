@@ -62,11 +62,11 @@ def heading_angle(scenario_segments, platform_path):
     segment_dd[0, segment_index["heading"]] = segment_origin[0, segment_index["heading"]]
     for index in range(1, segment_d.shape[0]):
         segment_d[index, segment_index["heading"]] = normalize_angle(
-            segment_d[index - 1, segment_index["heading"]] +
-            segment_d[index - 1, segment_index["w_z"]] * DELTA_T)
+            segment_d[index - 1, segment_index["heading"]]
+            + segment_d[index - 1, segment_index["w_z"]] * DELTA_T)
         segment_dd[index, segment_index["heading"]] = normalize_angle(
-            segment_dd[index - 1, segment_index["heading"]] +
-            segment_dd[index - 1, segment_index["w_z"]] * DELTA_T)
+            segment_dd[index - 1, segment_index["heading"]]
+            + segment_dd[index - 1, segment_index["w_z"]] * DELTA_T)
     # plot
     pdf_file_path = os.path.join(platform_path, "heading_angle{}.pdf".format(scenario))
     with PdfPages(pdf_file_path) as pdf_file:
@@ -98,11 +98,11 @@ def location(scenario_segments, platform_path):
     for index in range(1, len(location_x)):
         # location from speed (acc from speed)
         segment_d[index, segment_index["x"]] = (
-            segment_d[index - 1, segment_index["x"]] +
-            segment_d[index - 1, segment_index["v_x"]] * DELTA_T)
+            segment_d[index - 1, segment_index["x"]]
+            + segment_d[index - 1, segment_index["v_x"]] * DELTA_T)
         segment_d[index, segment_index["y"]] = (
-            segment_d[index - 1, segment_index["y"]] +
-            segment_d[index - 1, segment_index["v_y"]] * DELTA_T)
+            segment_d[index - 1, segment_index["y"]]
+            + segment_d[index - 1, segment_index["v_y"]] * DELTA_T)
         # location from acc(speed)
         segment_dd[index, segment_index["x"]] = \
             segment_dd[index - 1, segment_index["x"]] + \
@@ -115,11 +115,11 @@ def location(scenario_segments, platform_path):
         tmp_v_y = segment_origin[index - 1, segment_index["v_y"]]
         logging.info("tmp_v_x: {}".format(tmp_v_x))
         tmp_x[index] = tmp_x[index - 1] + tmp_v_x * DELTA_T +\
-            1 / 2 * imu_scaling["pp7"] * segment_origin[index -
-                                                        1, segment_index["a_x"]] * DELTA_T * DELTA_T
+            1 / 2 * imu_scaling["pp7"] * segment_origin[index - 1,
+                                                        segment_index["a_x"]] * DELTA_T * DELTA_T
         tmp_y[index] = tmp_y[index - 1] + tmp_v_y * DELTA_T +\
-            1 / 2 * imu_scaling["pp7"] * segment_origin[index -
-                                                        1, segment_index["a_y"]] * DELTA_T * DELTA_T
+            1 / 2 * imu_scaling["pp7"] * segment_origin[index - 1,
+                                                        segment_index["a_y"]] * DELTA_T * DELTA_T
     pdf_file_path = os.path.join(platform_path, "location{}.pdf".format(scenario))
     logging.info("tmp_x shape {}".format(tmp_x.shape))
     with PdfPages(pdf_file_path) as pdf_file:
@@ -161,42 +161,44 @@ def speed(scenario_segments, platform_path):
     v_dd = np.zeros(segment_origin[:, segment_index["v_x"]].shape)
     for index in range(0, len(v_origin) - 1):
         # origin speed
-        v_origin[index] = (segment_origin[index, segment_index["v_x"]] *
-                           np.cos(normalize_angle(segment_origin[index, segment_index["heading"]])) +
-                           segment_origin[index, segment_index["v_y"]] *
-                           np.sin(normalize_angle(segment_origin[index, segment_index["heading"]])))
+        v_origin[index] = (segment_origin[index, segment_index["v_x"]]
+                           * np.cos(normalize_angle(segment_origin[index,
+                                                                   segment_index["heading"]]))
+                           + segment_origin[index, segment_index["v_y"]]
+                           * np.sin(normalize_angle(segment_origin[index,
+                                                                   segment_index["heading"]])))
         # differential from location
         if index == 0:
             segment_d[index, segment_index["v_x"]] = segment_origin[index, segment_index["v_x"]]
             segment_dd[index, segment_index["v_x"]] = segment_origin[index, segment_index["v_x"]]
             segment_d[index, segment_index["v_y"]] = segment_origin[index, segment_index["v_y"]]
             segment_dd[index, segment_index["v_y"]] = segment_origin[index, segment_index["v_y"]]
-            v_d[index] = (segment_d[index, segment_index["v_x"]] *
-                          np.cos(normalize_angle(segment_d[index, segment_index["heading"]])) +
-                          segment_d[index, segment_index["v_y"]] *
-                          np.sin(normalize_angle(segment_d[index, segment_index["heading"]])))
-            v_dd[index] = (segment_dd[index, segment_index["v_x"]] *
-                           np.cos(normalize_angle(segment_dd[index, segment_index["heading"]])) +
-                           segment_dd[index, segment_index["v_y"]] *
-                           np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
+            v_d[index] = (segment_d[index, segment_index["v_x"]]
+                          * np.cos(normalize_angle(segment_d[index, segment_index["heading"]]))
+                          + segment_d[index, segment_index["v_y"]]
+                          * np.sin(normalize_angle(segment_d[index, segment_index["heading"]])))
+            v_dd[index] = (segment_dd[index, segment_index["v_x"]]
+                           * np.cos(normalize_angle(segment_dd[index, segment_index["heading"]]))
+                           + segment_dd[index, segment_index["v_y"]]
+                           * np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
         else:
             segment_dd[index, segment_index["v_x"]] = (
-                segment_dd[index - 1, segment_index["v_x"]] +
-                segment_dd[index - 1, segment_index["a_x"]] * DELTA_T)
+                segment_dd[index - 1, segment_index["v_x"]]
+                + segment_dd[index - 1, segment_index["a_x"]] * DELTA_T)
             segment_dd[index, segment_index["v_y"]] = (
-                segment_dd[index - 1, segment_index["v_y"]] +
-                segment_dd[index - 1, segment_index["a_y"]] * DELTA_T)
+                segment_dd[index - 1, segment_index["v_y"]]
+                + segment_dd[index - 1, segment_index["a_y"]] * DELTA_T)
 
-            a_d = (segment_d[index - 1, segment_index["a_x"]] *
-                   np.cos(normalize_angle(segment_d[index - 1, segment_index["heading"]])) +
-                   segment_d[index - 1, segment_index["a_y"]] *
-                   np.sin(normalize_angle(segment_d[index - 1, segment_index["heading"]])))
+            a_d = (segment_d[index - 1, segment_index["a_x"]]
+                   * np.cos(normalize_angle(segment_d[index - 1, segment_index["heading"]]))
+                   + segment_d[index - 1, segment_index["a_y"]]
+                   * np.sin(normalize_angle(segment_d[index - 1, segment_index["heading"]])))
             v_d[index] = v_d[index - 1] + a_d * DELTA_T
 
-            a_dd = (segment_dd[index - 1, segment_index["a_x"]] *
-                    np.cos(normalize_angle(segment_dd[index, segment_index["heading"]])) +
-                    segment_dd[index - 1, segment_index["a_y"]] *
-                    np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
+            a_dd = (segment_dd[index - 1, segment_index["a_x"]]
+                    * np.cos(normalize_angle(segment_dd[index, segment_index["heading"]]))
+                    + segment_dd[index - 1, segment_index["a_y"]]
+                    * np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
             v_dd[index] = v_dd[index - 1] + a_dd * DELTA_T
 
     # plot
@@ -226,20 +228,22 @@ def acceleration(scenario_segments, platform_path):
         max(abs(segment_origin[:, segment_index["a_x"]] - segment_d[:, segment_index["a_x"]]))))
     # origin
     for index in range(0, len(acc_origin)):
-        acc_origin[index] = (segment_origin[index, segment_index["a_x"]] *
-                             np.cos(normalize_angle(segment_origin[index, segment_index["heading"]])) +
-                             segment_origin[index, segment_index["a_y"]] *
-                             np.sin(normalize_angle(segment_origin[index, segment_index["heading"]])))
+        acc_origin[index] = (segment_origin[index, segment_index["a_x"]]
+                             * np.cos(normalize_angle(segment_origin[index,
+                                                      segment_index["heading"]]))
+                             + segment_origin[index, segment_index["a_y"]]
+                             * np.sin(normalize_angle(segment_origin[index,
+                                                      segment_index["heading"]])))
         # acc from speed
-        acc_d[index] = (segment_d[index, segment_index["a_x"]] *
-                        np.cos(normalize_angle(segment_d[index, segment_index["heading"]])) +
-                        segment_d[index, segment_index["a_y"]] *
-                        np.sin(normalize_angle(segment_d[index, segment_index["heading"]])))
+        acc_d[index] = (segment_d[index, segment_index["a_x"]]
+                        * np.cos(normalize_angle(segment_d[index, segment_index["heading"]]))
+                        + segment_d[index, segment_index["a_y"]]
+                        * np.sin(normalize_angle(segment_d[index, segment_index["heading"]])))
         # acc from location
-        acc_dd[index] = (segment_dd[index, segment_index["a_x"]] *
-                         np.cos(normalize_angle(segment_dd[index, segment_index["heading"]])) +
-                         segment_dd[index, segment_index["a_y"]] *
-                         np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
+        acc_dd[index] = (segment_dd[index, segment_index["a_x"]]
+                         * np.cos(normalize_angle(segment_dd[index, segment_index["heading"]]))
+                         + segment_dd[index, segment_index["a_y"]]
+                         * np.sin(normalize_angle(segment_dd[index, segment_index["heading"]])))
     # plot
     pdf_file_path = os.path.join(platform_path, "acc{}.pdf".format(scenario))
     logging.info("max: {}".format(max(abs(acc_origin - acc_d))))

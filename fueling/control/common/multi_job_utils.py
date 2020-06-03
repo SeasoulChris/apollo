@@ -113,7 +113,7 @@ def feature_generate(elems, vehicle_param_conf):
         chassis = elem[0]
         pose = elem[1].pose
 
-       # check gear
+        # check gear
         if int(chassis.gear_location) != 1 or chassis.speed_mps < 0.0:  # keep only gear_drive data
             continue
         heading_angle = pose.heading
@@ -140,8 +140,10 @@ def feature_generate(elems, vehicle_param_conf):
 
 
 def gen_cmd_list(vehicle_param_conf, train_conf):
-    segment_brake_list = np.linspace(-1 * train_conf.brake_max, -1 * vehicle_param_conf.brake_deadzone,
-                                     num=train_conf.brake_segment).tolist()
+    segment_brake_list = np.linspace(
+        -1 * train_conf.brake_max,
+        -1 * vehicle_param_conf.brake_deadzone,
+        num=train_conf.brake_segment).tolist()
     segment_throttle_list = np.linspace(
         vehicle_param_conf.throttle_deadzone,
         train_conf.throttle_max,
@@ -159,10 +161,10 @@ def satisfy_brake_condition(elem, index, vehicle_param_conf, train_conf):
     # acc_min_condition = vehicle_param_conf.max_deceleration
     steer_condition = train_conf.steer_condition
     condition = (
-        abs(elem[index][3]) < steer_condition and
-        brake_min_condition < elem[index][2] < brake_max_condition and
-        elem[index][1] < 0.0 and
-        int(elem[index][4]) == 0)
+        abs(elem[index][3]) < steer_condition
+        and brake_min_condition < elem[index][2] < brake_max_condition
+        and elem[index][1] < 0.0
+        and int(elem[index][4]) == 0)
     return condition
 
 
@@ -176,10 +178,10 @@ def satisfy_throttle_condition(elem, index, vehicle_param_conf, train_conf):
     # acc_max_condition = vehicle_param_conf.max_acceleration
     steer_condition = train_conf.steer_condition
     condition = (
-        abs(elem[index][3]) < steer_condition and
-        throttle_min_condition < elem[index][2] < throttle_max_condition and
-        0.0 < elem[index][1] and
-        int(elem[index][4]) == 0)
+        abs(elem[index][3]) < steer_condition
+        and throttle_min_condition < elem[index][2] < throttle_max_condition
+        and 0.0 < elem[index][1]
+        and int(elem[index][4]) == 0)
     return condition
 
 

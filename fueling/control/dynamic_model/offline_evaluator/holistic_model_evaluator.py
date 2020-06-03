@@ -111,7 +111,8 @@ def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_poi
     evaluation_results.learning_based_result.speed_error = rmse_fnn_lon_speed
     evaluation_results.learning_based_result.speed_error_rate = rmse_fnn_lon_speed / rms_lon_speed
     evaluation_results.point_mass_result.speed_error = rmse_point_mass_lon_speed
-    evaluation_results.point_mass_result.speed_error_rate = rmse_point_mass_lon_speed / rms_lon_speed
+    evaluation_results.point_mass_result.speed_error_rate = \
+        rmse_point_mass_lon_speed / rms_lon_speed
 
     rmse_imu_lat_speed = sqrt(mean_squared_error(vehicle_state_imu[:, 1], vehicle_state_gps[:, 1]))
     rmse_fnn_lat_speed = sqrt(mean_squared_error(vehicle_state_fnn[:, 1], vehicle_state_gps[:, 1]))
@@ -125,7 +126,8 @@ def evaluate_vehicle_state(vehicle_state_gps, output_imu, output_fnn, output_poi
     evaluation_results.learning_based_result.speed_error = rmse_fnn_lat_speed
     evaluation_results.learning_based_result.speed_error_rate = rmse_fnn_lat_speed / rms_lat_speed
     evaluation_results.point_mass_result.speed_error = rmse_point_mass_lat_speed
-    evaluation_results.point_mass_result.speed_error_rate = rmse_point_mass_lat_speed / rms_lat_speed
+    evaluation_results.point_mass_result.speed_error_rate = \
+        rmse_point_mass_lat_speed / rms_lat_speed
 
     rmse_imu_heading = sqrt(mean_squared_error(vehicle_state_imu[:, 2], vehicle_state_gps[:, 2]))
     rmse_fnn_heading = sqrt(mean_squared_error(vehicle_state_fnn[:, 2], vehicle_state_gps[:, 2]))
@@ -269,7 +271,8 @@ def evaluate(model_info, dataset_info, platform_path):
     vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass = evaluate_vehicle_state(
         vehicle_state_gps, output_imu, output_fnn, output_point_mass, evaluation_results)
     trajectory_imu, trajectory_fnn, trajectory_point_mass = evaluate_trajectory(
-        trajectory_gps, vehicle_state_imu, vehicle_state_fnn, vehicle_state_point_mass, evaluation_results)
+        trajectory_gps, vehicle_state_imu, vehicle_state_fnn,
+        vehicle_state_point_mass, evaluation_results)
     with open(evaluation_result_path, 'w') as txt_file:
         txt_file.write('evaluated on model: {} \n'.format(model_info[1]))
         txt_file.write('evaluated on record: {} \n'.format(dataset_info[1]))

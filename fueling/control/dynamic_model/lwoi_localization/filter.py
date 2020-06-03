@@ -103,13 +103,13 @@ class NCLTFilter():
             self.J[k, :3, :3] = delta_R_prev * self.delta_t
             self.J[k, 3:6, :3] = -delta_R_prev.mm(self.skew(u[k, 3:])) * self.delta_t
             self.J[k, 3:6, 3:6] = delta_R_prev * self.delta_t
-            self.J[k, 3:6, :3] = (-1 / 2 * delta_R_prev.mm(self.skew(u[k, 3:])) *
-                                  (self.delta_t ** 2))
+            self.J[k, 3:6, :3] = (-1 / 2 * delta_R_prev.mm(self.skew(u[k, 3:]))
+                                  * (self.delta_t ** 2))
             self.J[k, 6:9, 3:6] = 1 / 2 * delta_R_prev * (self.delta_t ** 2)
             delta_R = delta_R_prev.mm(SO3.exp(u[k, :3] * self.delta_t).as_matrix())
             delta_v = delta_v_prev + delta_R.mv(u[k, 3:] * self.delta_t)
-            delta_p = (delta_p_prev + delta_v * self.delta_t +
-                       delta_R.mv(u[k, 3:] * self.delta_t) * (self.delta_t ** 2) / 2)
+            delta_p = (delta_p_prev + delta_v * self.delta_t
+                       + delta_R.mv(u[k, 3:] * self.delta_t) * (self.delta_t ** 2) / 2)
             delta_R_prev = SO3.from_matrix(delta_R, normalize=True).as_matrix()
             delta_v_prev = delta_v
             delta_p_prev = delta_p
@@ -136,8 +136,8 @@ class NCLTFilter():
 
         delta_R = SO3.from_matrix(R0.t().mm(Rend)).log()
         delta_v = R0.t().mv(v_end - v0 - self.g * self.Delta_t)
-        delta_p = R0.t().mv(p_end - p0 - v0 * self.Delta_t -
-                            1 / 2 * self.g * (self.Delta_t ** 2))
+        delta_p = R0.t().mv(p_end - p0 - v0 * self.Delta_t
+                            - 1 / 2 * self.g * (self.Delta_t ** 2))
 
         return torch.cat((delta_R, delta_v, delta_p), 0)
 
@@ -190,8 +190,8 @@ class NCLTFilter():
         B = torch.Tensor([[1 / 2, 1 / 2],  # v_l, v_r to v_forward
                           [0, 0]])
         F[3, 3] = 1 + self.x[7] * self.x[3].sin() * self.x[4].tan() * dt
-        F[3, 4] = ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos()) *
-                   self.x[4].tan() * dt)
+        F[3, 4] = ((self.x[7] * self.x[3].sin() + self.x[8] * self.x[3].cos())
+                   * self.x[4].tan() * dt)
         F[4, 3] = self.x[8] * self.x[3].sin() * dt
         G[:2, :2] = SO2.from_angle(self.x[5].unsqueeze(0)).as_matrix().mm(B) * dt
 
@@ -217,13 +217,13 @@ class NCLTFilter():
         v = torch.Tensor([1 / 2 * (u_odo[0][0] + u_odo[0][1]), 0, 0])
         H[:3, 3:6] = -Rot_prev.t().mm(Rot_new)
         H[:3, 9:12] = -Rot_prev.t()
-        H[3:6, 9:12] = -Rot_prev.t().mm(self.skew(self.x[:3] - self.x_prev[:3] -
-                                                  v * self.Delta_t -
-                                                  1 / 2 * self.g * self.Delta_t ** 2))
+        H[3:6, 9:12] = -Rot_prev.t().mm(self.skew(self.x[:3] - self.x_prev[:3]
+                                                  - v * self.Delta_t
+                                                  - 1 / 2 * self.g * self.Delta_t ** 2))
         H[6:9, :3] = Rot_prev.t()
         H[6:9, 12:15] = -Rot_prev.t()
-        H[6:9, 9:12] = self.skew(self.x[:3] - self.x_prev[:3] -
-                                 v * self.Delta_t - 1 / 2 * self.g * self.Delta_t ** 2)
+        H[6:9, 9:12] = self.skew(self.x[:3] - self.x_prev[:3]
+                                 - v * self.Delta_t - 1 / 2 * self.g * self.Delta_t ** 2)
         return H, J
 
     def update_cov(self, J_cor, u_odo):
@@ -242,9 +242,9 @@ class NCLTFilter():
         Id = torch.eye(self.P.shape[-1])
         ImKH = Id - K_prefix.mm(torch.gesv(H, S)[0])
         # *Joseph form* of covariance update for numerical stability.
-        self.P = (ImKH.mm(self.P).mm(ImKH.transpose(-1, -2)) +
-                  K_prefix.mm(torch.gesv((K_prefix.mm(torch.gesv(R, S)[0]))
-                                         .transpose(-1, -2), S)[0]))
+        self.P = (
+            ImKH.mm(self.P).mm(ImKH.transpose(-1, -2))
+            + K_prefix.mm(torch.gesv((K_prefix.mm(torch.gesv(R, S)[0])).transpose(-1, -2), S)[0]))
         return K_prefix, S
 
     def update_state(self, K_prefix, S, dy):
