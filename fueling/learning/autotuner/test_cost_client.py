@@ -15,6 +15,9 @@ CHANNEL_URL = "localhost:50052"
 # uncomment me if testing for bce-platform
 # CHANNEL_URL="180.76.242.157:50052"
 
+# uncomment me if testing for bce-debug
+CHANNEL_URL="180.76.111.129:50052"
+
 # settings
 commit_id = "8076ef3bf8b32bfd9a2a74e187e62e4b7168b1a4"
 scenario_ids = [11014, 11015, 11016, 11017, 11018, 11019, 11020, 30019, 30020, 30021, 30022, 30023, 30024, 30025]
@@ -41,7 +44,7 @@ client = CostComputationClient(CHANNEL_URL)
 try:
     tic1 = time.perf_counter()
 
-    client.initialize(commit_id, scenario_ids, dynamic_model, getpass.getuser())
+    client.initialize(commit_id, scenario_ids, dynamic_model)
     print(f"Initialization time: {time.perf_counter() - tic1:0.4f} seconds")
     """
     client.set_token("tuner-8f6b804fc84f495280d27e6696330db2")

@@ -10,17 +10,17 @@ import fueling.learning.autotuner.proto.cost_computation_service_pb2_grpc as cos
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.common.logging as logging
 
-REQUEST_TIMEOUT_IN_SEC = 30 * 60
+MAX_RUNNING_ROLE_LENGTH = 18
 MAX_RETRIES = 3
-KEEP_ALIVE_TIME_IN_SEC = 5 * 60
 
-# channel options: https://github.com/grpc/grpc/blob/master/include/grpc/impl/codegen/grpc_types.h
-CHANNEL_OPTIONS = [
-    ('grpc.keepalive_timeout_ms', 60000),
-    ('grpc.keepalive_time_ms', KEEP_ALIVE_TIME_IN_SEC * 1000),
-    ('grpc.keepalive_permit_without_calls', 1),
-    ('grpc.http2.max_pings_without_data', int(REQUEST_TIMEOUT_IN_SEC / KEEP_ALIVE_TIME_IN_SEC)),
-]
+KEEP_ALIVE_TIME_IN_SEC = 5 * 60
+OPERATION_TIMEOUT_IN_SEC = {
+    'Initialize': 30 * 60,
+    'FirstComputeCost': 45 * 60,  # first time usually needs longer time to pull code, map, binary, etc
+    'ComputeCost': 10 * 60,
+    'Close': 5 * 60,
+    'Default': 10 * 60,
+}
 
 
 class CostComputationClient(object):
@@ -32,15 +32,12 @@ class CostComputationClient(object):
                  running_role_postfix=None):
         self.service_token = None
         self.max_retries = MAX_RETRIES
-        self.request_timeout_in_sec = REQUEST_TIMEOUT_IN_SEC
         self.channel, self.stub = self.create_channel_and_stub(channel_url)
+        self.running_role_postfix = running_role_postfix
+        self.first_cost_computation = True
 
-        running_role = (f"{getpass.getuser()}-{running_role_postfix}" if running_role_postfix
-                        else getpass.getuser())[:18]  # too long string may induce job-failing
-
-        if commit_id and scenario_ids and dynamic_model and running_role:
-            self.initialize(commit_id, scenario_ids,
-                            dynamic_model, running_role)
+        if commit_id and scenario_ids and dynamic_model:
+            self.initialize(commit_id, scenario_ids, dynamic_model)
 
     def __enter__(self):
         return self
@@ -51,19 +48,27 @@ class CostComputationClient(object):
 
     def create_channel_and_stub(self, channel_url):
         logging.info(f'Setting up grpc connection to {channel_url}')
+
+        # channel options:
+        # https://github.com/grpc/grpc/blob/master/include/grpc/impl/codegen/grpc_types.h
+        max_request_timeout_in_sec = max(OPERATION_TIMEOUT_IN_SEC.values())
+        channel_options = [
+            ('grpc.keepalive_timeout_ms', 60000),
+            ('grpc.keepalive_time_ms', KEEP_ALIVE_TIME_IN_SEC * 1000),
+            ('grpc.keepalive_permit_without_calls', 1),
+            ('grpc.http2.max_pings_without_data',
+             int(max_request_timeout_in_sec / KEEP_ALIVE_TIME_IN_SEC)),
+        ]
         channel = grpc.insecure_channel(
             target=channel_url,
             compression=grpc.Compression.Gzip,
-            options=CHANNEL_OPTIONS)
+            options=channel_options)
         stub = cost_service_pb2_grpc.CostComputationStub(channel)
 
         return channel, stub
 
     def set_max_retries(self, retries):
         self.max_retries = retries
-
-    def set_request_timeout(self, seconds):
-        self.request_timeout_in_sec = seconds
 
     def is_initialized(self):
         return self.service_token is not None
@@ -111,16 +116,18 @@ class CostComputationClient(object):
     def construct_close_request(self):
         return cost_service_pb2.CloseRequest(token=self.service_token)
 
-    def send_request_with_retry(self, request_name, request_payload):
+    def send_request_with_retry(self, request_name, request_payload, request_timeout_sec=None):
         request_function = getattr(self.stub, request_name)
+
+        default_timeout = OPERATION_TIMEOUT_IN_SEC['Default']
+        timeout = request_timeout_sec or OPERATION_TIMEOUT_IN_SEC.get(request_name, default_timeout)
+        logging.info(f"Running {request_name} with {timeout} sec timeout.")
         for retry in range(self.max_retries):
             try:
                 if retry > 0:
-                    logging.info(
-                        f'Retry {request_name} request. Retry count {retry} ...')
+                    logging.info(f'Retry {request_name} request. Retry count {retry} ...')
 
-                future = request_function.future(
-                    request_payload, timeout=self.request_timeout_in_sec)
+                future = request_function.future(request_payload, timeout=timeout)
 
                 def cancel_request(unused_signum, unused_frame):
                     print(f'Cancelling {request_name} request ...')
@@ -152,15 +159,20 @@ class CostComputationClient(object):
 
         self.service_token = service_token
 
-    def initialize(self, commit_id, scenario_ids, dynamic_model, running_role):
+    def initialize(self, commit_id, scenario_ids, dynamic_model):
         if self.is_initialized():
             logging.info(f"Service {self.service_token} has been initialized")
             return
 
         logging.info(f"Initializing service for commit {commit_id} with training scenarios "
                      f"{scenario_ids} ...")
+
+        running_role = getpass.getuser()
+        if self.running_role_postfix:
+            running_role += f"-{self.running_role_postfix}"
+
         request = self.construct_init_request(
-            commit_id, scenario_ids, dynamic_model, running_role)
+            commit_id, scenario_ids, dynamic_model, running_role[:MAX_RUNNING_ROLE_LENGTH])
         response = self.send_request_with_retry('Initialize', request)
         self.service_token = response.token
         logging.info(f"Service {self.service_token} initialized ")
@@ -170,14 +182,18 @@ class CostComputationClient(object):
             logging.error("Please initialize first.")
             return None
 
-        logging.info(
-            f"Sending compute request to service {self.service_token} ...")
-        request = self.construct_compute_request(configs, cost_config_file)
+        logging.info(f"Sending compute request to service {self.service_token} ...")
+
+        request_payload = self.construct_compute_request(configs, cost_config_file)
+        request_timeout = OPERATION_TIMEOUT_IN_SEC['FirstComputeCost'] if self.first_cost_computation else None
+        self.first_cost_computation = False
+
         response = run_with_retry(
             self.max_retries,
             self.send_request_with_retry,
             'ComputeCost',
-            request)
+            request_payload,
+            request_timeout)
         logging.info(f"Service {self.service_token} finished computing cost {response.score} for "
                      f"iteration {response.iteration_id}")
         return response.iteration_id, response.score
