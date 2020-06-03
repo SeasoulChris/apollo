@@ -75,3 +75,29 @@ py_binary(
         "//fueling/common:logging",
     ],
 )
+
+py_binary(
+    name = "train_utils",
+    srcs = ["train_utils.py"],
+    deps = [
+        ":gp_model",
+    ],
+)
+
+py_binary(
+    name = "train_simo",
+    srcs = ["train_simo.py"],
+    deps = [
+        ":encoder",
+        ":train_utils",
+    ],
+)
+
+py_binary(
+    name = "train_mimo",
+    srcs = ["train_mimo.py"],
+    deps = [
+        ":encoder",
+        ":train_utils",
+    ],
+)

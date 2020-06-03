@@ -31,3 +31,15 @@ class Encoder(nn.Module):
         logging.debug(data.shape)
         logging.debug(data[-1, :])
         return data
+
+
+class DummyEncoder(nn.Module):
+    """encoder (for place holder only)"""
+
+    def __init__(self):
+        """Network initialization"""
+        super(DummyEncoder, self).__init__()
+
+    def forward(self, data):
+        """Define forward computation and activation functions"""
+        return data

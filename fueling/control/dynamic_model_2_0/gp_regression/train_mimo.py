@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 import tqdm
 
-
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import DummyEncoder
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 
@@ -96,20 +96,7 @@ inducing_points = torch.rand(2, 32, 2)
 num_epochs = 14
 lr = 0.1
 
-
-class Encoder(nn.Module):
-    """encoder (for place holder only)"""
-
-    def __init__(self):
-        """Network initialization"""
-        super(Encoder, self).__init__()
-
-    def forward(self, data):
-        """Define forward computation and activation functions"""
-        return data
-
-
-encoder_net_model = Encoder()
+encoder_net_model = DummyEncoder()
 model, likelihood, optimizer, loss = train_utils.init_train(
     inducing_points, encoder_net_model, train_y.size(1), train_y.size(0), lr)
 
