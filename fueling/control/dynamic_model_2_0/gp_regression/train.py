@@ -13,7 +13,8 @@ import torch
 import torch.nn as nn
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
-from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import DynamicModelDataset
+from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
+    DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
@@ -166,7 +167,8 @@ def valid_and_trace(valid_loader, model, likelihood, loss, use_cuda=False, analy
     return valid_loss, np.mean(valid_accuracy)
 
 
-def train(args, train_loader, valid_loader, total_train_number, print_period=None, early_stop=None, save_mode=0):
+def train(args, train_loader, valid_loader, total_train_number,
+          print_period=None, early_stop=None, save_mode=0):
     timestr = time.strftime('%Y%m%d-%H%M%S')
     batch_size = args.batch_size
     num_inducing_point = args.num_inducing_point
@@ -253,14 +255,16 @@ def train(args, train_loader, valid_loader, total_train_number, print_period=Non
         is_better_model = False
         if valid_loss < best_valid_loss:
             logging.info(
-                f'****** current valid loss {valid_loss} is less then best valid loss {best_valid_loss}')
+                f'****** current valid loss {valid_loss} is '
+                + f'less then best valid loss {best_valid_loss}')
             num_epoch_valid_loss_not_decreasing = 0
             best_valid_loss = valid_loss
             is_better_model = True
         else:
             num_epoch_valid_loss_not_decreasing += 1
             logging.info(
-                f'****** number of valid loss not decreasing epoch is: {num_epoch_valid_loss_not_decreasing} ')
+                f'****** number of valid loss not decreasing epoch is: '
+                + f'{num_epoch_valid_loss_not_decreasing} ')
             # Early stop if enabled and met the criterion
             if early_stop == num_epoch_valid_loss_not_decreasing:
                 logging.info('Reached early-stopping criterion. Stop training.')
@@ -271,9 +275,11 @@ def train(args, train_loader, valid_loader, total_train_number, print_period=Non
         online_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pt')
         offline_model = os.path.join(args.gp_model_path, timestr, 'gp_model.pth')
         online_epoch_model = os.path.join(args.gp_model_path, timestr,
-                                          'model_epoch{}_valloss{:.6f}.pt'.format(epoch, valid_loss))
+                                          'model_epoch{}_valloss{:.6f}.pt'.format(epoch,
+                                                                                  valid_loss))
         offline_epoch_model = os.path.join(args.gp_model_path, timestr,
-                                           'model_epoch{}_valloss{:.6f}.pth'.format(epoch, valid_loss))
+                                           'model_epoch{}_valloss{:.6f}.pth'.format(epoch,
+                                                                                    valid_loss))
         if save_mode == 0:
             # save best model
             if is_better_model:

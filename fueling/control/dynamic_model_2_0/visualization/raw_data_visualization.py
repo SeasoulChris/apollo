@@ -149,8 +149,8 @@ class RawDataVisualization():
         """ s = v0 * dt + 0.5 * a * t * t"""
         # initial velocity
         init_normalized_heading = self._normalize_angle(self.feature[0, segment_index["heading"]])
-        v0 = (self.feature[0, segment_index["v_x"]] * np.cos(init_normalized_heading) +
-              self.feature[0, segment_index["v_y"]] * np.sin(init_normalized_heading))
+        v0 = (self.feature[0, segment_index["v_x"]] * np.cos(init_normalized_heading)
+              + self.feature[0, segment_index["v_y"]] * np.sin(init_normalized_heading))
         v.append(v0)
         s = np.zeros((self.data_dim, 1))
         for idx in range(1, self.data_dim):
@@ -172,8 +172,8 @@ class RawDataVisualization():
             normalized_heading = self._normalize_angle(heading)
             # TODO(Shu): remove this when scaling is added to feature extraction
             acc[idx] = (self.feature[idx, segment_index["a_x"]]
-                        * np.cos(normalized_heading) +
-                        self.feature[idx, segment_index["a_y"]]
+                        * np.cos(normalized_heading)
+                        + self.feature[idx, segment_index["a_y"]]
                         * np.sin(normalized_heading))
         return acc
 
@@ -209,10 +209,11 @@ class RawDataVisualization():
             ax2.set_ylabel('speed (m/s)', fontdict={'size': 12})
             # ground truth (GPS) speed m/s
             ax2.plot(self.feature[:, segment_index['speed']], 'b.', label='GPS')
-            ax2.plot(self.feature[:, segment_index["v_x"]] *
-                     np.cos(self.feature[:, segment_index["heading"]]) +
-                     self.feature[:, segment_index["v_y"]] *
-                     np.sin(self.feature[:, segment_index["heading"]]), 'y.', label='GPS velocity')
+            ax2.plot(self.feature[:, segment_index["v_x"]]
+                     * np.cos(self.feature[:, segment_index["heading"]])
+                     + self.feature[:, segment_index["v_y"]]
+                     * np.sin(self.feature[:, segment_index["heading"]]),
+                     'y.', label='GPS velocity')
 
             # imu speed speed
             ax2.plot(self.imu_v, 'r.', label='IMU')
@@ -246,8 +247,8 @@ class RawDataVisualization():
             plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
             plt.plot(imu_x - x_position[0], imu_y - y_position[0], 'r.', label='IMU')
             plt.plot(dm_x - x_position[0], dm_y - y_position[0], 'g.', label="Dynamic model")
-            plt.plot(echo_lincoln_x - x_position[0], echo_lincoln_y -
-                     y_position[0], 'y.', label='Echo-lincoln')
+            plt.plot(echo_lincoln_x - x_position[0], echo_lincoln_y
+                     - y_position[0], 'y.', label='Echo-lincoln')
             plt.plot(0, 0, 'x', markersize=6, color='k')
             plt.legend(fontsize=12, numpoints=5, frameon=False)
             plt.title("Trajectory for " + dataset_name)
@@ -269,7 +270,8 @@ if __name__ == '__main__':
                         default="/fuel/fueling/control/dynamic_model_2_0/testdata/plots")
     parser.add_argument('-dm10',
                         '--dm10_model_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model")
+                        default="/fuel/fueling/control/dynamic_model_2_0/"
+                                + "label_generation/mlp_model")
     args = parser.parse_args()
     h5_file_list = []
     for file in file_utils.list_files(args.training_data_path):

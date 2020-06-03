@@ -14,7 +14,8 @@ from fueling.control.dynamic_model_2_0.gp_regression.encoder import DummyEncoder
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 
-# based on https://gpytorch.readthedocs.io/en/latest/examples/04_Variational_and_Approximate_GPs/SVGP_Multitask_GP_Regression.html#Set-up-training-data
+# based on https://gpytorch.readthedocs.io/en/latest/examples/04_Variational_and_Approximate_GPs
+# /SVGP_Multitask_GP_Regression.html#Set-up-training-data
 # confs
 num_epochs = 20
 lr = 0.01

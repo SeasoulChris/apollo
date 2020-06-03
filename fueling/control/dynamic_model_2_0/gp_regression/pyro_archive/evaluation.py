@@ -30,14 +30,13 @@ def test_gp(args, dataset, GaussianProcess):
             return pyro.module("DeepEncodingNet", deep_encoding_net)(original_feature)
 
         Xu = input_data[torch.arange(0, input_data.shape[0],
-                                     step=int(max(input_data.shape[0] / args.num_inducing_point, 1))).long()]
+                                     step=int(max(input_data.shape[0]
+                                                  / args.num_inducing_point, 1))).long()]
         likelihood = gp.likelihoods.Gaussian(variance=torch.ones(2, 1))
-        # likelihood.load_state_dict(lik_dict)
 
         kernelization = gp.kernels.Matern52(input_dim=args.kernel_dim,
                                             lengthscale=torch.ones(args.kernel_dim))
         kernel = gp.kernels.Warping(kernelization, iwarping_fn=_encoded_feature)
-        # kernel.load_state_dict(kernel_dict)
         gp_f = gp.models.VariationalSparseGP(input_data, torch.ones(2, input_data.shape[0]),
                                              kernel, Xu, num_data=input_data.shape[0],
                                              likelihood=likelihood, mean_function=None,

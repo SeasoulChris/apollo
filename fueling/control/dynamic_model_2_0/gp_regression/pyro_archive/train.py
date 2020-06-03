@@ -44,9 +44,6 @@ def save_gp(args, gp_model, feature, encoder):
                os.path.join(model_saving_path, "likelihood.p"))
     torch.save(encoder.state_dict(), os.path.join(model_saving_path, "fnet.p"))
     predict_fn = Predict(gp_model.model, gp_model.guide)
-    # predict_module = torch.jit.trace_module(predict_fn, {"forward": (feature,)}, check_trace=False)
-    # # TypeError: guide() takes 1 positional argument but 2 were given
-    # torch.jit.save(predict_module, '/tmp/reg_predict.pt')
     encoder_module = torch.jit.trace_module(encoder, {"forward": (feature,)}, check_trace=False)
     torch.jit.save(encoder_module, '/tmp/encoder_module.pt')
 

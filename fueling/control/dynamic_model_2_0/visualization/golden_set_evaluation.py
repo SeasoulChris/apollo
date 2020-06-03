@@ -20,8 +20,10 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, fea
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.evaluation import evaluation
-from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization import RawDataVisualization
-from fueling.control.dynamic_model_2_0.visualization.validation_visualization import ValidationVisualization
+from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization import \
+    RawDataVisualization
+from fueling.control.dynamic_model_2_0.visualization.validation_visualization import \
+    ValidationVisualization
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -150,7 +152,8 @@ class GoldenSetEvaluation():
         # pading first (0:99) points with zeros
         padded_d_value = np.pad(d_value, (data_length, 0), 'constant')
         logging.debug(
-            f'padded array with shape {padded_d_value.shape} and looks like {padded_d_value[0:data_length+2, ]}')
+            f'padded array with shape {padded_d_value.shape} and '
+            + f'looks like {padded_d_value[0:data_length+2, ]}')
 
         # composation for dynamic model 1.0 results
         accumulated_value = np.cumsum(padded_d_value / 100.0, axis=0)
@@ -189,12 +192,14 @@ class GoldenSetEvaluation():
         logging.info(f'Echo_lincoln accumulated error is :{echo_lincoln_error} m')
         # shifted position
         plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
-        plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1] -
-                 self.imu_xy[1][0], 'm.', label='IMU')
-        plt.plot(self.DM10_xy[:, 0] - self.DM10_xy[0, 0], self.DM10_xy[:, 1] -
-                 self.DM10_xy[0, 1], 'g.', label=f"Dynamic model 1.0, error is {DM10_error:.3f} m")
-        plt.plot(corrected_xy[:, 0] - corrected_xy[0, 0], corrected_xy[:, 1] -
-                 corrected_xy[0, 1], 'r.', label=f"Dynamic model 2.0, error is {DM20_error:.3f} m")
+        plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1]
+                 - self.imu_xy[1][0], 'm.', label='IMU')
+        plt.plot(self.DM10_xy[:, 0] - self.DM10_xy[0, 0], self.DM10_xy[:, 1]
+                 - self.DM10_xy[0, 1], 'g.',
+                 label=f"Dynamic model 1.0, error is {DM10_error:.3f} m")
+        plt.plot(corrected_xy[:, 0] - corrected_xy[0, 0], corrected_xy[:, 1]
+                 - corrected_xy[0, 1], 'r.',
+                 label=f"Dynamic model 2.0, error is {DM20_error:.3f} m")
         plt.plot(self.echo_lincoln_xy[:, 0] - self.echo_lincoln_xy[0, 0],
                  self.echo_lincoln_xy[:, 1] - self.echo_lincoln_xy[0, 1],
                  'y.', label=f"Echo Lincoln, error is {echo_lincoln_error:.3f} m")
@@ -232,14 +237,16 @@ if __name__ == '__main__':
                         default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
     parser.add_argument('--validation_result_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_results")
+                        default="/fuel/fueling/control/dynamic_model_2_0/"
+                                + "testdata/evaluation_results")
     parser.add_argument('-plot',
                         '--plot_path',
                         type=str,
                         default="/fuel/fueling/control/dynamic_model_2_0/testdata/plots")
     parser.add_argument('-dm10',
                         '--dm10_model_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model")
+                        default="/fuel/fueling/control/dynamic_model_2_0/"
+                                + "label_generation/mlp_model")
 
     parser.add_argument('-dm10_result',
                         '--dm10_result_path', type=str)

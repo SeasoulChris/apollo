@@ -16,7 +16,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.preprocessing import PowerTransformer
 
-from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import DynamicModelDataset
+from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
+    DynamicModelDataset
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.h5_utils as h5_utils
@@ -163,8 +164,8 @@ def make_plot_input_only(distributions, item_idx):
     cutoffs_X1 = np.percentile(X[:, 1], zoom_in_percentile_range)
 
     non_outliers_mask = (
-        np.all(X > [cutoffs_X0[0], cutoffs_X1[0]], axis=1) &
-        np.all(X < [cutoffs_X0[1], cutoffs_X1[1]], axis=1))
+        np.all(X > [cutoffs_X0[0], cutoffs_X1[0]], axis=1)
+        & np.all(X < [cutoffs_X0[1], cutoffs_X1[1]], axis=1))
     plot_distribution_input_only(axarr[1], X[non_outliers_mask],
                                  hist_nbins=50,
                                  x0_label="Brake",
@@ -187,8 +188,8 @@ def make_plot(distributions, item_idx, y, cmap, y_full):
     cutoffs_X1 = np.percentile(X[:, 1], zoom_in_percentile_range)
 
     non_outliers_mask = (
-        np.all(X > [cutoffs_X0[0], cutoffs_X1[0]], axis=1) &
-        np.all(X < [cutoffs_X0[1], cutoffs_X1[1]], axis=1))
+        np.all(X > [cutoffs_X0[0], cutoffs_X1[0]], axis=1)
+        & np.all(X < [cutoffs_X0[1], cutoffs_X1[1]], axis=1))
     plot_distribution(axarr[1], X[non_outliers_mask], y[non_outliers_mask], cmap,
                       hist_nbins=50,
                       x0_label="Brake",
@@ -295,7 +296,8 @@ def merge_brake_throttle(brake, throttle):
 if __name__ == '__main__':
     # initialize obj
     dynamic_model_dataset = DynamicModelDataset(
-        data_dir='/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train', is_standardize=False)
+        data_dir='/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train',
+        is_standardize=False)
     logging.info(f'dataset length {len(dynamic_model_dataset.datasets)}')
     # what to do
     validate_result = False
@@ -312,7 +314,8 @@ if __name__ == '__main__':
             plt.figure(figsize=(12, 8))
             plt.plot(processed_data[:, id], 'b.')
             logging.info(
-                f'mean value for {id} is {np.mean(processed_data[:, id].numpy(), dtype=np.float64)}')
+                f'mean value for {id} is '
+                + f'{np.mean(processed_data[:, id].numpy(), dtype=np.float64)}')
             logging.info(
                 f'std value for {id} is {np.std(processed_data[:, id].numpy(), dtype=np.float64)}')
             logging.info(

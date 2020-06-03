@@ -15,7 +15,8 @@ import h5py
 import numpy as np
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling
-from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config, input_index, output_index
+from fueling.control.dynamic_model_2_0.conf.model_conf import \
+    feature_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -45,7 +46,7 @@ class GlobalModels(object):
     @staticmethod
     def get_model(model_file_path):
         """Get a model from pool"""
-        if not model_file_path in GlobalModels.models:
+        if model_file_path not in GlobalModels.models:
             return None
         return GlobalModels.models[model_file_path]
 
@@ -119,10 +120,10 @@ def generate_gp_data(model_path, segment):
     for k in range(INPUT_LENGTH):
         input_segment[k, input_index["v"]] = segment[k, segment_index["speed"]]
         # add scaling to acceleration
-        input_segment[k, input_index["a"]] = imu_scaling["acc"] * segment[k, segment_index["a_x"]] * \
-            np.cos(segment[k, segment_index["heading"]]) + \
-            segment[k, segment_index["a_y"]] * \
-            np.sin(segment[k, segment_index["heading"]])
+        input_segment[k, input_index["a"]] = imu_scaling["acc"] * segment[k, segment_index["a_x"]] \
+            * np.cos(segment[k, segment_index["heading"]]) \
+            + segment[k, segment_index["a_y"]] \
+            * np.sin(segment[k, segment_index["heading"]])
         input_segment[k, input_index["u_1"]] = segment[k, segment_index["throttle"]]
         input_segment[k, input_index["u_2"]] = segment[k, segment_index["brake"]]
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
@@ -156,10 +157,10 @@ def generate_gp_data(model_path, segment):
         f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
         ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
     logging.info(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
-    output_segment[output_index["d_x"]] = segment[INPUT_LENGTH -
-                                                  1, segment_index["x"]] - predicted_x
-    output_segment[output_index["d_y"]] = segment[INPUT_LENGTH -
-                                                  1, segment_index["y"]] - predicted_y
+    output_segment[output_index["d_x"]] = segment[INPUT_LENGTH
+                                                  - 1, segment_index["x"]] - predicted_x
+    output_segment[output_index["d_y"]] = segment[INPUT_LENGTH
+                                                  - 1, segment_index["y"]] - predicted_y
     logging.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
     return (input_segment, output_segment)
 
@@ -223,7 +224,8 @@ if __name__ == '__main__':
     parser.add_argument('--unlabeled_dataset_path', type=str,
                         default="./apollo/data/test_raw_data/")
     parser.add_argument('--model_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward/")
+                        default="/fuel/fueling/control/dynamic_model_2_0/"
+                                + "testdata/mlp_model/forward/")
     parser.add_argument('--labeled_dataset_path', type=str,
                         default="./apollo/data/labeled_data")
     args = parser.parse_args()

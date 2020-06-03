@@ -17,7 +17,8 @@ import torch.nn as nn
 from fueling.common import file_utils
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
-from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import DynamicModelDataset
+from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
+    DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
@@ -130,14 +131,14 @@ class ValidationVisualization():
 
         # plot
         fig, ax = plt.subplots(1)
-        ax.set_xlabel('$\Delta$x (m)', fontdict={'size': 12})
-        ax.set_ylabel('$\Delta$y (m)', fontdict={'size': 12})
+        ax.set_xlabel('$Delta$x (m)', fontdict={'size': 12})
+        ax.set_ylabel('$Delta$y (m)', fontdict={'size': 12})
         ax.set_title("Result Visualization")
         # confidence region
         confidence_regions = []
         for idx in range(0, validation_labels.shape[0]):
-            rect = Rectangle((lower[idx, 0], lower[idx, 1]), upper[idx, 0] -
-                             lower[idx, 0], upper[idx, 1] - lower[idx, 1])
+            rect = Rectangle((lower[idx, 0], lower[idx, 1]), upper[idx, 0]
+                             - lower[idx, 0], upper[idx, 1] - lower[idx, 1])
             confidence_regions.append(rect)
         # confident regions
         pc = PatchCollection(confidence_regions, facecolor='g', alpha=0.04, edgecolor='b')
@@ -196,7 +197,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515_smoke_test/gp_model_output/20200602-194130")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/"
+                + "0515_smoke_test/gp_model_output/20200602-194130")
     parser.add_argument(
         '--validation_result_path',
         type=str,
@@ -239,5 +241,6 @@ if __name__ == '__main__':
         for x_data_point, y_data_point in zip(X, y):
             logging.debug(f'Model input is {x_data_point[0,:]}')
             logging.debug(
-                f'Model prediction is {validator.predict(x_data_point)} and ground truth is {y_data_point}')
+                f'Model prediction is {validator.predict(x_data_point)} '
+                + f'and ground truth is {y_data_point}')
         validator.validate(X, y, i, train_labels)

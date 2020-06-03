@@ -16,11 +16,11 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.conf.model_conf import \
-     segment_index, feature_config, input_index, output_index
+    segment_index, feature_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
-       feature_utils_2_0 
+    feature_utils_2_0
 import fueling.control.features.feature_extraction_utils as feature_utils
 import fueling.control.dynamic_model_2_0.label_generation.label_generation as label_generation
 
@@ -54,13 +54,15 @@ class PipelineLabelGenerator(BasePipeline):
 
         logging.info(F'src: {src_prefix}, dst: {dst_prefix}, model path: {model_path}')
 
-        hdf5_files = spark_helper.cache_and_log('OutputRecords',
+        hdf5_files = spark_helper.cache_and_log(
+            'OutputRecords',
             # RDD(end_files)
             self.to_rdd(self.our_storage().list_files(src_prefix))
             # RDD(hdf5 files)
             .filter(spark_op.filter_path(['*.hdf5'])))
 
-        categories = spark_helper.cache_and_log('CalculatedCategories',
+        categories = spark_helper.cache_and_log(
+            'CalculatedCategories',
             # RDD(hdf5 files)
             hdf5_files
             # PairRDD(hdf5 file, hdf5 file)
@@ -68,8 +70,8 @@ class PipelineLabelGenerator(BasePipeline):
             # PairRDD(hdf5 file, segment)
             .mapValues(label_generation.generate_segment)
             # PairRDD(category_id, (hdf5 file, segment))
-            .map(lambda file_segment: (self.calculate_category_id(file_segment[1]),
-                (file_segment[0], file_segment[1])))
+            .map(lambda file_segment: (self.calculate_category_id(
+                                       file_segment[1]), (file_segment[0], file_segment[1])))
             # PairRDD(category_id, (hdf5 file, segment)s)
             .groupByKey())
 
@@ -77,7 +79,6 @@ class PipelineLabelGenerator(BasePipeline):
         (categories
             .repartition(partitions)
             .foreach(lambda cate: self.process_file(cate, src_prefix, dst_prefix, model_path)))
-
 
     def process_file(self, category, src_prefix, dst_prefix, model_path):
         """Process category group and generate h5 files"""
@@ -98,7 +99,6 @@ class PipelineLabelGenerator(BasePipeline):
             if segmnets_count_for_each_category == 0:
                 break
 
-
     def write_single_h5_file(self, dst_h5_file, segment, model_path):
         """Write segment into a single h5 file"""
         model_path = file_utils.fuel_path(model_path)
@@ -107,8 +107,6 @@ class PipelineLabelGenerator(BasePipeline):
         with h5py.File(dst_h5_file, 'w') as h5_file:
             h5_file.create_dataset('input_segment', data=input_segment)
             h5_file.create_dataset('output_segment', data=output_segment)
-        logging.info(F'successfully write into destination h5 file: {dst_h5_file}')
-
 
     def calculate_category_id(self, segment):
         """Calculate category id by given segment"""
@@ -123,7 +121,7 @@ class PipelineLabelGenerator(BasePipeline):
             if feature_name != 'speed':
                 feature_value *= 100.0
             category_id += str(funcs[idx](feature_value))
-        return category_id 
+        return category_id
 
 
 if __name__ == '__main__':

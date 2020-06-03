@@ -56,10 +56,12 @@ train_x = torch.from_numpy(np_train_x).type(torch.FloatTensor)
 np_train_y1 = func_y1(np_train_x[:, 0], np_train_x[:, 1])
 np_train_y2 = func_y2(np_train_x[:, 0], np_train_x[:, 1])
 # new data set
-Y_2D_train_1 = torch.from_numpy(np_train_y1 +
-                                noise_2D * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
-Y_2D_train_2 = torch.from_numpy(np_train_y2 +
-                                noise_2D * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
+Y_2D_train_1 = torch.from_numpy(np_train_y1
+                                + noise_2D
+                                * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
+Y_2D_train_2 = torch.from_numpy(np_train_y2
+                                + noise_2D
+                                * np.random.randn(len(np_train_x))).type(torch.FloatTensor)
 train_y = torch.stack([
     Y_2D_train_1,
     Y_2D_train_2,

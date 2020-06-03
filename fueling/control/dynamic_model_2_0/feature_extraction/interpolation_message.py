@@ -45,7 +45,7 @@ class InterPolationMessage(object):
         if any(np.isnan(feature) for feature in chasis_data):
             return False
         # If gear_location is not expected, it's invalid
-        gear_Location_pos, gear_location_expected_val = len(chasis_data) - 1, 1 
+        gear_location_pos, gear_location_expected_val = len(chasis_data) - 1, 1
         if int(chasis_data[gear_location_pos]) != gear_location_expected_val:
             return False
         # If speed is not expected, it's invalid

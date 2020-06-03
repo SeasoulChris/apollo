@@ -14,7 +14,8 @@ import torch.nn.functional as Func
 import pickle
 
 from fueling.control.dynamic_model_2_0.gp_regression.gpytorch_example.dataset import GPDataSet
-from fueling.control.dynamic_model_2_0.gp_regression.gpytorch_example.gp_model_example import GPModelExample
+from fueling.control.dynamic_model_2_0.gp_regression.gpytorch_example.gp_model_example import \
+    GPModelExample
 import fueling.common.logging as logging
 
 

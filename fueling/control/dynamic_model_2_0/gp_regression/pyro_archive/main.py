@@ -2,10 +2,9 @@
 
 import argparse
 
-
-#from fueling.control.dynamic_model_2_0.evaluation.pyro_archive.evaluation import test_gp
 from fueling.control.dynamic_model_2_0.gp_regression.pyro_archive.dataset import GPDataSet
-from fueling.control.dynamic_model_2_0.gp_regression.pyro_archive.gaussian_process import GaussianProcess
+from fueling.control.dynamic_model_2_0.gp_regression.pyro_archive.gaussian_process import \
+    GaussianProcess
 from fueling.control.dynamic_model_2_0.gp_regression.pyro_archive.train import train_gp
 
 

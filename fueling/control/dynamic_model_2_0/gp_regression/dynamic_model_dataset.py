@@ -51,7 +51,7 @@ class DynamicModelDataset(Dataset):
             self.set_standardization_factors()
             self.set_normalization_factors()
         else:
-           # for validation and test data, use same normalization factors as training data set.
+            # for validation and test data, use same normalization factors as training data set.
             # for processed training data (factors already saved) load factor directly
             # factor_file path is training data path
             self.standardization_factors_file = os.path.join(
@@ -64,7 +64,8 @@ class DynamicModelDataset(Dataset):
             self.normalization_factors = np.load(
                 self.normalization_factors_file, allow_pickle=True).item()
             logging.info(
-                f'loading normalization factors from {self.normalization_factors_file} as {self.normalization_factors}')
+                f'loading normalization factors from {self.normalization_factors_file}'
+                + f'as {self.normalization_factors}')
 
     def get_datasets(self):
         """Extract datasets from data path"""
