@@ -27,12 +27,13 @@ py_library(
     ],
 )
 
-py_binary(
+py_test(
     name = "dynamic_model_dataset_test",
     srcs = ["dynamic_model_dataset_test.py"],
     data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
     deps = [
         ":dynamic_model_dataset",
+        "//fueling/common:h5_utils",
     ]
 )
 

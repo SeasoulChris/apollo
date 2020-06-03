@@ -31,10 +31,7 @@ def check_feature_data(data_dir):
             features = h5_utils.read_h5(hdf5_file)
         else:
             features = np.concatenate((features, h5_utils.read_h5(hdf5_file)), axis=0)
-    logging.info(features.shape)
-    # for i in range(0, features.shape[1]):
-    #     plt.plot(features[:, i])
-    #     plt.show()
+    logging.debug(features.shape)
     for i in range(0, features.shape[0]):
         cnt = 0
         if features[i, 14] < 0:
@@ -298,12 +295,12 @@ def merge_brake_throttle(brake, throttle):
 if __name__ == '__main__':
     # initialize obj
     dynamic_model_dataset = DynamicModelDataset(
-        data_dir='/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train', is_standardize=False)
+        data_dir='/fuel/fueling/control/dynamic_model_2_0/testdata/train', is_standardize=False)
     logging.info(f'dataset length {len(dynamic_model_dataset.datasets)}')
     # what to do
     validate_result = False
     visualize_normalization_method = False
-    check_data = True
+    check_data = False
     # validation processing:
     if validate_result:
         processed_data = dynamic_model_dataset.getitem(0)[0]
@@ -331,6 +328,6 @@ if __name__ == '__main__':
         visualize(datasets, input_indices, output_index)
     if check_data:
         features = check_feature_data(
-            '/fuel/fueling/control/dynamic_model_2_0/testdata/2019-06-07-14-38-08')
+            '/fuel/fueling/control/dynamic_model_2_0/testdata/train')
         input_indices = np.array([15, 16])
         visualize_input_only(features, input_indices)
