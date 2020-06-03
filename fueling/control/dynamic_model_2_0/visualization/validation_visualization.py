@@ -131,8 +131,8 @@ class ValidationVisualization():
 
         # plot
         fig, ax = plt.subplots(1)
-        ax.set_xlabel('$Delta$x (m)', fontdict={'size': 12})
-        ax.set_ylabel('$Delta$y (m)', fontdict={'size': 12})
+        ax.set_xlabel('$\Delta$x (m)', fontdict={'size': 12})
+        ax.set_ylabel('$\Delta$y (m)', fontdict={'size': 12})
         ax.set_title("Result Visualization")
         # confidence region
         confidence_regions = []
