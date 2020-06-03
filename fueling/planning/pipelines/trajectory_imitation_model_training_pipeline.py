@@ -126,11 +126,10 @@ if __name__ == "__main__":
                         help='location to store input base img or output img')
     parser.add_argument('-input_data_augmentation', '--input_data_augmentation', type=bool,
                         default=False, help='whether to do input data augmentation')
-    parser.add_argument('-s', '--save-path', type=str, default='./',
+    parser.add_argument('-save_dir', '--save_dir', type=str, default='./',
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
 
-    model_save_dir = './'
     region = "sunnyvale_with_two_offices"
     map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
 
@@ -140,6 +139,6 @@ if __name__ == "__main__":
              args.renderer_config_file,
              args.imgs_dir,
              args.input_data_augmentation,
-             model_save_dir,
+             args.save_dir,
              region,
              map_path)

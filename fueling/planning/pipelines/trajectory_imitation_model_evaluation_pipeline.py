@@ -281,58 +281,44 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
         print(average_v_error)
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='evaluation')
-    parser.add_argument('model_type', type=str, help='model type, cnn or rnn')
-    parser.add_argument('model_file', type=str, help='trained model')
-    parser.add_argument('test_set_folder', type=str, help='test data')
-    parser.add_argument('-renderer_config_file', '--renderer_config_file',
-                        type=str, default='/fuel/fueling/planning/datasets/'
-                        'semantic_map_feature/planning_semantic_map_config.pb.txt',
-                        help='renderer configuration file in proto.txt')
-    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/'
-                        'planning/semantic_map_features',
-                        help='location to store input base img or output img')
-    parser.add_argument('-multi_gpu_trained', '--multi_gpu_trained', type=bool,
-                        default=False, help='whether trained with multi-gpu')
-    args = parser.parse_args()
-
-    # Set-up the GPU to use
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
+def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
+               imgs_dir, region, map_path):
     model = None
     test_dataset = None
 
     renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
     renderer_config = proto_utils.get_pb_from_text_file(
-        args.renderer_config_file, renderer_config)
+        renderer_config_file, renderer_config)
 
-    if args.model_type == 'cnn':
+    if model_type == 'cnn':
         model = TrajectoryImitationCNNModel(pred_horizon=10)
-        test_dataset = TrajectoryImitationCNNDataset(args.test_set_folder,
-                                                     args.renderer_config_file,
-                                                     args.imgs_dir,
+        test_dataset = TrajectoryImitationCNNDataset(test_set_folder,
+                                                     renderer_config_file,
+                                                     imgs_dir,
+                                                     map_path,
+                                                     region,
                                                      input_data_agumentation=False,
                                                      evaluate_mode=True)
-    elif args.model_type == 'rnn':
+    elif model_type == 'rnn':
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        test_dataset = TrajectoryImitationRNNDataset(args.test_set_folder,
-                                                     args.renderer_config_file,
-                                                     args.imgs_dir,
+        test_dataset = TrajectoryImitationRNNDataset(test_set_folder,
+                                                     renderer_config_file,
+                                                     imgs_dir,
+                                                     map_path,
+                                                     region,
                                                      input_data_agumentation=False,
                                                      evaluate_mode=True)
     else:
-        logging.info('model {} is not implemnted'.format(args.model_type))
+        logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
     test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=16,
+                                              batch_size=32,
                                               shuffle=True,
                                               num_workers=2,
                                               drop_last=True)
-    model_state_dict = torch.load(args.model_file)
+    model_state_dict = torch.load(model_file)
 
     # added if model was trained using nn.DataParallel
     if args.multi_gpu_trained:
@@ -347,12 +333,43 @@ if __name__ == "__main__":
     else:
         print("Not using CUDA.")
 
-    if args.model_type == 'cnn':
+    if model_type == 'cnn':
         cnn_model_evaluator(test_loader, model,
-                            args.renderer_config_file, args.imgs_dir)
-    elif args.model_type == 'rnn':
+                            renderer_config_file, imgs_dir)
+    elif model_type == 'rnn':
         rnn_model_evaluator(test_loader, model,
-                            args.renderer_config_file, args.imgs_dir)
+                            renderer_config_file, imgs_dir)
     else:
-        logging.info('model {} is not implemnted'.format(args.model_type))
+        logging.info('model {} is not implemnted'.format(model_type))
         exit()
+
+
+if __name__ == "__main__":
+    # TODO(Jinyun): check performance
+    cv.setNumThreads(0)
+
+    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
+    parser = argparse.ArgumentParser(description='evaluation')
+    parser.add_argument('model_type', type=str, help='model type, cnn or rnn')
+    parser.add_argument('model_file', type=str, help='trained model')
+    parser.add_argument('test_set_folder', type=str, help='test data')
+    parser.add_argument('-renderer_config_file', '--renderer_config_file',
+                        type=str, default='/fuel/fueling/planning/datasets/'
+                        'semantic_map_feature/planning_semantic_map_config.pb.txt',
+                        help='renderer configuration file in proto.txt')
+    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/'
+                        'planning/semantic_map_features',
+                        help='location to store input base img or output img')
+    parser.add_argument('-multi_gpu_trained', '--multi_gpu_trained', type=bool,
+                        default=False, help='whether trained with multi-gpu')
+    parser.add_argument('-save_path', '--save_path', type=str, default='./',
+                        help='Specify the directory to save trained models.')
+    args = parser.parse_args()
+
+    region = "sunnyvale_with_two_offices"
+    map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
+
+    evaluating(args.model_type, args.model_file, args.test_set_folder, args.renderer_config_file,
+               args.imgs_dir, region, map_path)
