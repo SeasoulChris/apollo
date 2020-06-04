@@ -111,17 +111,7 @@ class BasePipeline(object):
             BasePipeline.SPARK_CONTEXT.stop()
             BasePipeline.SPARK_CONTEXT = None
 
-    def __main__(self, argv):
-        """Run the pipeline."""
-        if flags.FLAGS.cloud:
-            SparkSubmitterClient(self.entrypoint).submit()
-            return
-        try:
-            self.init()
-            self.run()
-        finally:
-            self.stop()
-
+    def __cloud_job_post_process__(self):
         kubectl = Kubectl()
         driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
         driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
@@ -151,8 +141,20 @@ class BasePipeline(object):
                      'creation_timestamp': creation_timestamp.timestamp()})
                 logging.info(F'Save driver log success')
         else:
-            logging.info(
-                F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
+            logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
+
+    def __main__(self, argv):
+        """Run the pipeline."""
+        if flags.FLAGS.cloud:
+            SparkSubmitterClient(self.entrypoint).submit()
+            return
+        try:
+            self.init()
+            self.run()
+        finally:
+            self.stop()
+        if flags.FLAGS.running_mode == 'PROD':
+            self.__cloud_job_post_process__()
 
     def main(self):
         """Kick off everything."""
