@@ -101,3 +101,13 @@ py_binary(
         ":train_utils",
     ],
 )
+
+
+py_binary(
+    name = "train_smoke_test",
+    srcs = ["train_smoke_test.py"],
+    deps = [
+        ":encoder",
+        ":train_utils",
+    ],
+)
