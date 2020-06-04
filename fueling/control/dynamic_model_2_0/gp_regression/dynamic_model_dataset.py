@@ -34,19 +34,18 @@ PI = 3.14159
 class DynamicModelDataset(Dataset):
     """ data preparation for dynamic model """
 
-    def __init__(self, data_dir, model_dir='/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward', factor_file=None, is_normalize=False, is_standardize=True):
+    def __init__(self, data_dir, model_dir=None, factor_file=None,
+                 is_normalize=False, is_standardize=True):
         super().__init__()
         self.data_dir = data_dir
         self.is_normalize = is_normalize
         self.is_standardize = is_standardize
 
         if not model_dir:
-            """ input data is not pre normalized """
-            self.pre_input_std = 1.0
-            self.pre_input_mean = 0.0
-        else:
-            self.model_dir = model_dir
-            self.get_pre_normalization_factors()
+            model_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward'
+
+        self.model_dir = model_dir
+        self.get_pre_normalization_factors()
 
         self.get_datasets()
 

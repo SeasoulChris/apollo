@@ -51,7 +51,7 @@ class TrainTestFileSplitter():
             dst_file = file.replace(src_prefix, dst_prefix, 1)
             dst_dir = os.path.dirname(dst_file)
             logging.debug(
-                f'src_prefix is {src_prefix} and dst_prefix is {dst_prefix} and dst_dir is {dst_dir}')
+                f'src_prefix is {src_prefix}, dst_prefix is {dst_prefix}, dst_dir is {dst_dir}')
             if not os.path.exists(dst_dir):
                 os.makedirs(dst_dir)
             shutil.copy(file, dst_file)

@@ -118,14 +118,14 @@ def evaluation_visualization(file_path):
     training_labels = evaluation_result['training_labels']
     # plot
     fig, ax = plt.subplots(1)
-    ax.set_xlabel('$\Delta$x (m)', fontdict={'size': 12})
-    ax.set_ylabel('$\Delta$y (m)', fontdict={'size': 12})
+    ax.set_xlabel('$\\Delta$x (m)', fontdict={'size': 12})
+    ax.set_ylabel('$\\Delta$y (m)', fontdict={'size': 12})
     ax.set_title("Result Visualization")
     # confidence region
     confidence_regions = []
     for idx in range(0, validation_labels.shape[0]):
-        rect = Rectangle((lower[idx, 0], lower[idx, 1]), upper[idx, 0] -
-                         lower[idx, 0], upper[idx, 1] - lower[idx, 1])
+        rect = Rectangle((lower[idx, 0], lower[idx, 1]), upper[idx, 0]
+                         - lower[idx, 0], upper[idx, 1] - lower[idx, 1])
         confidence_regions.append(rect)
     pc = PatchCollection(confidence_regions, facecolor='g', alpha=0.04, edgecolor='b')
     ax.add_collection(pc)
@@ -144,8 +144,8 @@ def evaluation_visualization(file_path):
 def plot(validation_labels, mean, upper, lower):
     # 3D plot delta_x, delta_y for each training point
     fig, ax = plt.subplot(1)
-    plt.xlabel('$\delta$x (m)', fontdict={'size': 12})
-    plt.ylabel('$\delta$y (m)', fontdict={'size': 12})
+    plt.xlabel('$\\delta$x (m)', fontdict={'size': 12})
+    plt.ylabel('$\\delta$y (m)', fontdict={'size': 12})
     plt.title("Result Visualization")
     plt.plot(validation_labels[:, 0], validation_labels[:, 1],
              'o', color='blue', label='Ground truth')
