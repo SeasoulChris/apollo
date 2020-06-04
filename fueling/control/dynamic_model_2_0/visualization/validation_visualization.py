@@ -2,6 +2,7 @@
 import argparse
 import glob
 import os
+import time
 
 
 from matplotlib.collections import PatchCollection
@@ -42,6 +43,7 @@ class ValidationVisualization():
         self.kernel_dim = args.kernel_dim
         self.input_dim = feature_config["input_dim"]
         self.output_dim = feature_config["output_dim"]
+        self.timestr = time.strftime('%Y%m%d-%H%M%S')
 
     def load_model(self):
         """
@@ -114,7 +116,7 @@ class ValidationVisualization():
                                  f'{set_id}_validation_result.npy'), validation_result)
         return mean.detach().numpy()
 
-    def visualize(self):
+    def visualize(self, set_id):
         # get data from .npy file
         logging.info(self.validation_result_file)
         validation_result = np.load(self.validation_result_file, allow_pickle=True).item()
@@ -154,8 +156,8 @@ class ValidationVisualization():
         ax.legend(fontsize=12, frameon=False)
         ax.grid(True)
         # time stamp
-        file_utils.makedirs(self.dst_file_path)
-        plt.savefig(os.path.join(self.dst_file_path, "plot.png"))
+        file_utils.makedirs(os.path.join(self.dst_file_path, self.timestr))
+        plt.savefig(os.path.join(self.dst_file_path, self.timestr, f"{set_id}_plot.png"))
         plt.show()
 
     def validate(self, test_features, test_labels, set_id, train_labels=None, is_plot=True):
@@ -167,11 +169,11 @@ class ValidationVisualization():
         logging.info(f'Validating set {set_id}')
         self.validation_result_file = os.path.join(args.validation_data_path,
                                                    f'{set_id}_validation_result.npy')
-        if not os.path.exists(self.validation_result_file):
-            self.get_validation_result(test_features, test_labels, set_id, train_labels)
+        # if not os.path.exists(self.validation_result_file):
+        self.get_validation_result(test_features, test_labels, set_id, train_labels)
         logging.info(f'Validation results are saved at {self.validation_result_file}')
         if is_plot:
-            self.visualize()
+            self.visualize(set_id)
 
     def make_prediction(self, input_x):
         self.load_data()
@@ -198,7 +200,7 @@ if __name__ == '__main__':
         '--gp_model_path',
         type=str,
         default="/fuel/fueling/control/dynamic_model_2_0/testdata/"
-                + "0603/gp_model_output/20200604-033713")
+                + "0603/gp_model_output/20200604-213455")
     parser.add_argument(
         '--validation_result_path',
         type=str,
