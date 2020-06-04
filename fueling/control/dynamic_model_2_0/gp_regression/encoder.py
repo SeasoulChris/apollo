@@ -21,15 +21,11 @@ class Encoder(nn.Module):
         logging.debug(data[0, -1, :])
         # original data shape: [sequency/window_size, batch_size, channel]
         # conv_input shape: [batch_size, channel, sequency/window_size]
-        logging.debug(torch.transpose(data, 1, 0).shape)
-        conv1_input = torch.transpose(torch.transpose(data, 1, 0), -2, -1)
-        logging.debug(conv1_input.shape)
+        conv1_input = torch.transpose(torch.transpose(data, -2, -3), -2, -1)
         data = F.relu(self.conv1(conv1_input))
         logging.debug(data.shape)
         data = F.relu(self.conv2(data))
         data = self.fc(data.view(data.shape[0], -1))
-        logging.debug(data.shape)
-        logging.debug(data[-1, :])
         return data
 
 

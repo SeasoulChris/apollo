@@ -42,4 +42,5 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
         optimizer.step()
         loss_history.append(train_loss.item())
     train_loss = np.mean(loss_history)
+    logging.info(f'train loss is {train_loss}')
     return train_loss

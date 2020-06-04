@@ -75,3 +75,14 @@ training_config = {
     "lr": 0.01,  # default learning rate
     "batch_size": 512,  # default batch size
 }
+
+
+smoke_test_training_config = {
+    # Training configs for DM2.0
+    "use_cuda": False,
+    "num_inducing_point": 128,  # No. of inducing points
+    "kernel_dim": 20,  # kernel dimension
+    "epochs": 70,  # training epochs
+    "lr": 0.01,  # default learning rate
+    "batch_size": 64,  # default batch size
+}
