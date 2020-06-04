@@ -61,12 +61,3 @@ py_binary(
         "//fueling/common:record_utils",
     ],
 )
-
-py_test(
-    name = "data_cleaner_test",
-    srcs = ["data_cleaner_test.py"],
-    data = ["//fueling/demo/testdata:small_record"],
-    deps = [
-        ":data_cleaner",
-    ]
-)
