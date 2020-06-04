@@ -29,6 +29,7 @@ segment_index = {
 feature_config = {
     "input_dim": 6,  # Input dimension of DM 2.0
     "output_dim": 2,  # Output dimension
+    "input_window_size": 100,  # input window size
     "mlp_input_dim": 5,  # Input dimension of DM 1.0
     "delta_t": 0.01,  # updating cycle delta_t for input data
     "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
@@ -71,18 +72,19 @@ training_config = {
     "use_cuda": False,
     "num_inducing_point": 128,  # No. of inducing points
     "kernel_dim": 20,  # kernel dimension
-    "epochs": 50,  # training epochs
+    "num_epochs": 50,  # training epochs
     "lr": 0.01,  # default learning rate
     "batch_size": 512,  # default batch size
 }
 
 
 smoke_test_training_config = {
-    # Training configs for DM2.0
+    # Training configs for smoke test of DM2.0
     "use_cuda": False,
-    "num_inducing_point": 128,  # No. of inducing points
+    "num_inducing_point": 16,  # No. of inducing points
     "kernel_dim": 20,  # kernel dimension
-    "epochs": 70,  # training epochs
+    "num_epochs": 50,  # training epochs
     "lr": 0.01,  # default learning rate
     "batch_size": 64,  # default batch size
+    "input_window_size": 100  # default input window size
 }
