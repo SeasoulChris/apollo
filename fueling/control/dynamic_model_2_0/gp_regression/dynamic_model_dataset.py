@@ -28,16 +28,25 @@ INPUT_DIM = feature_config["input_dim"]
 OUTPUT_DIM = feature_config["output_dim"]
 WINDOW_SIZE = feature_config["window_size"]
 POLYNOMINAL_ORDER = feature_config["polynomial_order"]
+PI = 3.14159
 
 
 class DynamicModelDataset(Dataset):
     """ data preparation for dynamic model """
 
-    def __init__(self, data_dir, factor_file=None, is_normalize=False, is_standardize=True):
+    def __init__(self, data_dir, model_dir='/fuel/fueling/control/dynamic_model_2_0/testdata/mlp_model/forward', factor_file=None, is_normalize=False, is_standardize=True):
         super().__init__()
         self.data_dir = data_dir
         self.is_normalize = is_normalize
         self.is_standardize = is_standardize
+
+        if not model_dir:
+            """ input data is not pre normalized """
+            self.pre_input_std = 1.0
+            self.pre_input_mean = 0.0
+        else:
+            self.model_dir = model_dir
+            self.get_pre_normalization_factors()
 
         self.get_datasets()
 
@@ -67,6 +76,13 @@ class DynamicModelDataset(Dataset):
                 f'loading normalization factors from {self.normalization_factors_file}'
                 + f'as {self.normalization_factors}')
 
+    def get_pre_normalization_factors(self):
+        """ if the model is pre-normalized, get the normalization factor"""
+        model_norms_path = os.path.join(self.model_dir, 'norms.h5')
+        with h5py.File(model_norms_path, 'r') as model_norms_file:
+            self.pre_input_mean = np.array(model_norms_file.get('input_mean'))
+            self.pre_input_std = np.array(model_norms_file.get('input_std'))
+
     def get_datasets(self):
         """Extract datasets from data path"""
         # list of dataset = (input_tensor, output_tensor)
@@ -79,9 +95,11 @@ class DynamicModelDataset(Dataset):
                 input_segment = np.array(model_norms_file.get('input_segment'))
                 if np.isnan(np.sum(input_segment)):
                     logging.error(f'file {h5_file} contains NAN data in input segment')
-                # Smoothing noisy acceleration data
-                input_segment[:, input_index["a"]] = savgol_filter(
-                    input_segment[:, input_index["a"]], WINDOW_SIZE, POLYNOMINAL_ORDER)
+                # denormalize input data from DM10
+                input_segment[:, range(0, 5)] = input_segment[:, range(0, 5)] * \
+                    self.pre_input_std + self.pre_input_mean
+                # heading angle covert back to PI
+                input_segment[:, -1] = input_segment[:, -1] * PI
                 # Get output data
                 output_segment = np.array(model_norms_file.get('output_segment'))
                 if np.isnan(np.sum(output_segment)):
