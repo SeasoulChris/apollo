@@ -141,18 +141,20 @@ WEIGHTED_SCORE = {
                           "speed_err_std": 1.0,
                           "lateral_err_std": 3.0,
                           "heading_err_std": 1.0,
+                          "heading_err_rate_std": 2.0,
                           "station_err_std_harsh": 1.0,
                           "speed_err_std_harsh": 1.0,
                           "lateral_err_std_harsh": 4.0,
                           "heading_err_std_harsh": 1.0,
+                          "heading_err_rate_std_harsh": 2.0,
                           "station_err_peak": 1.0,
                           "speed_err_peak": 1.0,
                           "lateral_err_peak": 4.0,
-                          "heading_err_peak": 1.0,},
+                          "heading_err_peak": 1.0,
+                          "heading_err_rate_peak": 1.0},
     "penalty_metrics": {"replan_trajectory_count": 1.0,},
     "fail_metrics": {"control_error_code_count": 10.0,},
 }
-
 
 """Vehicle Dynamics Profiling Index and Names: """
 

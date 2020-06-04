@@ -55,7 +55,7 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
         self.assertTrue('control_error_code_count' in output_dict)
         self.assertListEqual(['0.000%', '5218'], output_dict['control_error_code_count'])
         self.assertTrue('weighted_score' in output_dict)
-        self.assertListEqual(['18.875%', '5218'], output_dict['weighted_score'])
+        self.assertListEqual(['25.304%', '5218'], output_dict['weighted_score'])
 
     def test_run_data_mode(self):
         flags.FLAGS.running_mode = 'TEST'
@@ -85,7 +85,7 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
         self.assertListEqual(['34.425%', '177', '1556733975.015'],
                              output_dict['ending_station_err_trajectory_0'])
         self.assertTrue('weighted_score' in output_dict)
-        self.assertListEqual(['22.044%', '5399'], output_dict['weighted_score'])
+        self.assertListEqual(['29.289%', '5399'], output_dict['weighted_score'])
 
         grading_file = ('apollo/2020/Transit/Lon_Lat_Controller/2019-02-25/20190225165600/'
                         'Transit_Lon_Lat_Controller_control_performance_grading.txt')
