@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-from torch.optim.lr_scheduler import MultiStepLR, ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
 import gpytorch
 import torch
@@ -43,11 +43,13 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
         optimizer.step()
         loss_history.append(train_loss.item())
     train_loss = np.mean(loss_history)
-    logging.info(f'train loss is {train_loss}')
+    print(f'train loss is {train_loss}')
     return train_loss
 
 
-def train_with_adjusted_lr(num_epochs, train_loader, model, loss, optimizer, is_transpose=False):
+def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
+                           loss, optimizer, is_transpose=False):
+    # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                                   verbose=False, threshold=0.0001, threshold_mode='rel',
                                   cooldown=0, min_lr=0.0, eps=1e-08)
@@ -60,7 +62,7 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, loss, optimizer, is_
     for i in epochs_iter:
         # Within each iteration, we will go over each minibatch of data
         minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-        train_loss = basic_train_loop(train_loader, model, loss, optimizer, True)
+        train_loss = basic_train_loop(train_loader, model, loss, optimizer, is_transpose)
         scheduler.step(train_loss)
         if i == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)

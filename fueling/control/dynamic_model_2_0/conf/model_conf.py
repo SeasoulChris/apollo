@@ -88,3 +88,15 @@ smoke_test_training_config = {
     "batch_size": 64,  # default batch size
     "input_window_size": 100  # default input window size
 }
+
+
+toy_test_training_config = {
+    # Training configs for smoke test of DM2.0
+    "use_cuda": False,
+    "num_inducing_point": 1,  # No. of inducing points
+    "kernel_dim": 20,  # kernel dimension
+    "num_epochs": 10,  # training epochs
+    "lr": 0.01,  # default learning rate
+    "batch_size": 1,  # default batch size
+    "input_window_size": 100  # default input window size
+}

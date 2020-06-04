@@ -185,7 +185,9 @@ def train(args, train_loader, valid_loader, total_train_number,
     logging.info(train_loader)
     for idx, (features, labels) in enumerate(train_loader):
         features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
-        inducing_points = features[:, inducing_point_num, :]
+        inducing_points = features[:, inducing_point_num, :].unsqueeze(0)
+        # extend inducing points
+        inducing_points = torch.cat((inducing_points, inducing_points), 0)
         # save inducing point for reload model
         np.save(os.path.join(args.validation_data_path, 'inducing_points.npy'), inducing_points)
         break
@@ -366,16 +368,16 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/gp_model_output")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/gp_model_output")
 
     # model parameters
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=1)
