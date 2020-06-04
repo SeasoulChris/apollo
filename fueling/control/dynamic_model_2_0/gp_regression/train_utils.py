@@ -24,6 +24,7 @@ def init_train(inducing_points, encoder_net_model, output_dim, total_train_numbe
     ], lr=lr)
 
     loss = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=total_train_number)
+
     return model, likelihood, optimizer, loss
 
 
@@ -44,3 +45,22 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
     train_loss = np.mean(loss_history)
     logging.info(f'train loss is {train_loss}')
     return train_loss
+
+
+def train_with_adjusted_lr(num_epochs, train_loader, model, loss, optimizer, is_transpose=False):
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
+                                  verbose=False, threshold=0.0001, threshold_mode='rel',
+                                  cooldown=0, min_lr=0.0, eps=1e-08)
+
+    # training
+    model.train()
+    likelihood.train()
+
+    epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
+    for i in epochs_iter:
+        # Within each iteration, we will go over each minibatch of data
+        minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
+        train_loss = basic_train_loop(train_loader, model, loss, optimizer, True)
+        scheduler.step(train_loss)
+        if i == 10:
+            gpytorch.settings.tridiagonal_jitter(1e-4)
