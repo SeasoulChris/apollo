@@ -14,8 +14,8 @@ import pyspark_utils.op as spark_op
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.control.feature_visualization.control_feature_scenario_oriented_visualization_utils \
-    as visual_utils
+import fueling.profiling.control.feature_visualization.\
+    control_feature_scenario_oriented_visualization_utils as visual_utils
 
 
 class ControlProfilingScenarioOrientedVisualization(BasePipeline):
@@ -38,9 +38,9 @@ class ControlProfilingScenarioOrientedVisualization(BasePipeline):
         original_prefix = 'modules/control/control_profiling_hf5'
         target_prefix = original_prefix
         # RDD(tasks), the task dirs
-        todo_tasks = spark_helper.cache_and_log('todo_tasks',
-                                                dir_utils.get_todo_tasks(original_prefix, target_prefix,
-                                                                         'COMPLETE', 'COMPLETE_PLOT'))
+        todo_tasks = spark_helper.cache_and_log(
+            'todo_tasks',
+            dir_utils.get_todo_tasks(original_prefix, target_prefix, 'COMPLETE', 'COMPLETE_PLOT'))
         self.run_internal(todo_tasks, original_prefix, target_prefix)
         logging.info('Control Profiling Visualization: All Done, PROD')
 

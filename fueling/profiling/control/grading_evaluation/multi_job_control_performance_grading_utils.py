@@ -36,7 +36,7 @@ def compute_h5_and_gradings(target_groups, flags):
     if flags['ctl_metrics_save_report']:
         h5_output_file = '{:05d}'.format(group_id)
         logging.info(F'writing {grading_mtx.shape[0]} messages ({grading_mtx.shape[1]} dimensions) '
-                    F'to h5 file {h5_output_file} for target {target}')
+                     F'to h5 file {h5_output_file} for target {target}')
         h5_utils.write_h5(grading_mtx, target, h5_output_file)
     else:
         file_utils.makedirs(target)
@@ -394,8 +394,8 @@ def combine_gradings(grading_x, grading_y):
         val_x, num_x = grading_x[idx]
         val_y, num_y = grading_y[idx]
         # Standard deviation and usage values
-        if (grading_x._fields[idx].find('std') >= 0 or
-                grading_x._fields[idx].find('usage') >= 0):
+        if (grading_x._fields[idx].find('std') >= 0
+                or grading_x._fields[idx].find('usage') >= 0):
             if num_x + num_y != 0:
                 grading_item_value = ((val_x ** 2 * (num_x - 1) + val_y ** 2 * (num_y - 1))
                                       / (num_x + num_y - 1)) ** 0.5
@@ -434,9 +434,9 @@ def combine_gradings(grading_x, grading_y):
             else:
                 grading_item_value = val_x
         # Beyond and count values
-        elif (grading_x._fields[idx].find('sensation') >= 0 or
-              grading_x._fields[idx].find('count') >= 0 or
-              grading_x._fields[idx].find('mean') >= 0):
+        elif (grading_x._fields[idx].find('sensation') >= 0
+              or grading_x._fields[idx].find('count') >= 0
+              or grading_x._fields[idx].find('mean') >= 0):
             if num_x + num_y != 0:
                 grading_item_value = (
                     val_x * num_x + val_y * num_y) / (num_x + num_y)
@@ -502,14 +502,14 @@ def output_gradings(target_grading, flags):
                 if isinstance(value[0], list):
                     if 'ending' in name:
                         for idx in range(len(value[0][0])):
-                            grading_file.write('Grading_output: \t ' +
-                                               '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
+                            grading_file.write('Grading_output: \t '
+                                               + '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
                                                .format(name + '_trajectory_' + str(idx),
                                                        value[0][0][idx], value[1],
                                                        value[0][1][idx]))
                     if 'peak' in name:
-                        grading_file.write('Grading_output: \t ' +
-                                           '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
+                        grading_file.write('Grading_output: \t '
+                                           + '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
                                            .format(name, value[0][0], value[1], value[0][1]))
                 # For the other values, the data are stored as one float variable in the first
                 # element of value tuples

@@ -36,8 +36,8 @@ def parse_vehicle_controller(task, flags):
         logging.warning(F'task directory is invalid: {task}')
         return False
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
-                        if (record_utils.is_record_file(record_file) or
-                            record_utils.is_bag_file(record_file))), None)
+                        if (record_utils.is_record_file(record_file)
+                            or record_utils.is_bag_file(record_file))), None)
     if not record_file:
         logging.warning(F'no valid record file found in task: {task}')
         return False
@@ -76,8 +76,9 @@ def parse_vehicle_controller(task, flags):
         messages, record_utils.CONTROL_CHANNEL)
     # Check control important field
     if control_message and hasattr(record_utils.message_to_proto(control_message), 'debug'):
-        if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug') and
-                hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
+        if (hasattr(record_utils.message_to_proto(control_message).debug, 'simple_lon_debug')
+                and hasattr(
+                    record_utils.message_to_proto(control_message).debug, 'simple_lat_debug')):
             controller_type = "Lon_Lat_Controller"
         elif hasattr(record_utils.message_to_proto(control_message).debug, 'simple_mpc_debug'):
             controller_type = "MPC_Controller"
@@ -95,7 +96,9 @@ def parse_vehicle_controller(task, flags):
 
 def extract_data_at_multi_channels(msgs, flags, driving_mode,
                                    gear_position, control_nonerror_status):
-    """Extract control/chassis/ data array and filter the control data with selected chassis features"""
+    """
+    Extract control/chassis/ data array and filter the control data with selected chassis features
+    """
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
     localization_msgs = collect_message_by_topic(
@@ -104,8 +107,9 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode,
                                               for msg in chassis_msgs] if data is not None])
     control_mtx = np.array([data for data in [extract_control_data_from_msg(msg)
                                               for msg in control_msgs] if data is not None])
-    localization_mtx = np.array([data for data in [extract_localization_data_from_msg(msg)
-                                                   for msg in localization_msgs] if data is not None])
+    localization_mtx = np.array(
+        [data for data in [extract_localization_data_from_msg(msg)
+                           for msg in localization_msgs] if data is not None])
     logging.info(F'The original msgs size are: chassis {chassis_mtx.shape[0]}, '
                  F'control {control_mtx.shape[0]}, and localization {localization_mtx.shape[0]}')
     if (chassis_mtx.shape[0] == 0 or control_mtx.shape[0] == 0 or localization_mtx.shape[0] == 0):
@@ -124,17 +128,17 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode,
 
     # Second, identify the control error code and re-build the control data with control error
     # Note: when any error_code emerges, the chassis_header and localization_header in the control
-    #       channel are abondoned; so we need to dig the error_code from the non-filtered control data,
-    #       and then feed the chassis_timestamp and localization_timestamp back to control data
+    # channel are abondoned; so we need to dig the error_code from the non-filtered control data,
+    # and then feed the chassis_timestamp and localization_timestamp back to control data
     control_error_condition = (
         control_mtx[:, FEATURE_IDX['control_error_code']] != control_nonerror_status)
     for control_idx in np.where(control_error_condition)[0]:
         error_timestamp = round(control_mtx[control_idx, FEATURE_IDX['timestamp_sec']], 3)
-        chassis_idx = np.argmin(np.abs(chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']] -
-                                       error_timestamp))
+        chassis_idx = np.argmin(np.abs(chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']]
+                                       - error_timestamp))
         chassis_timestamp = chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']]
-        localization_idx = np.argmin(np.abs(localization_mtx[:, POSE_IDX['timestamp_sec']] -
-                                            error_timestamp))
+        localization_idx = np.argmin(np.abs(localization_mtx[:, POSE_IDX['timestamp_sec']]
+                                            - error_timestamp))
         localization_timestamp = localization_mtx[localization_idx, POSE_IDX['timestamp_sec']]
         if (abs(chassis_timestamp - error_timestamp) < MAX_PHASE_DELTA):
             control_mtx[control_idx, FEATURE_IDX['chassis_timestamp_sec']] = chassis_timestamp
@@ -142,16 +146,18 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode,
                         FEATURE_IDX['localization_timestamp_sec']] = localization_timestamp
 
     # Third, filter the control data with existing chassis and localization sequence_num
-    control_idx_by_chassis = np.in1d(['%.3f' % x for x in
-                                      control_mtx[:, FEATURE_IDX['chassis_timestamp_sec']]],
-                                     ['%.3f' % x for x in
-                                      chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']]])
-    control_idx_by_localization = np.in1d(['%.3f' % x for x in
-                                           control_mtx[:, FEATURE_IDX['localization_timestamp_sec']]],
-                                          ['%.3f' % x for x in
-                                           localization_mtx[:, POSE_IDX['timestamp_sec']]])
-    control_mtx_rtn = control_mtx[control_idx_by_chassis &
-                                  control_idx_by_localization, :]
+    control_idx_by_chassis = np.in1d(
+        ['%.3f' % x for x in
+         control_mtx[:, FEATURE_IDX['chassis_timestamp_sec']]],
+        ['%.3f' % x for x in
+         chassis_mtx_filtered[:, MODE_IDX['timestamp_sec']]])
+    control_idx_by_localization = np.in1d(
+        ['%.3f' % x for x in
+         control_mtx[:, FEATURE_IDX['localization_timestamp_sec']]],
+        ['%.3f' % x for x in
+         localization_mtx[:, POSE_IDX['timestamp_sec']]])
+    control_mtx_rtn = control_mtx[control_idx_by_chassis
+                                  & control_idx_by_localization, :]
 
     # Fourth, filter the control data with specific status flags
     if flags['ctl_metrics_filter_by_MRAC']:
@@ -177,12 +183,12 @@ def extract_data_at_multi_channels(msgs, flags, driving_mode,
                                                   FEATURE_IDX['chassis_timestamp_sec']], 3)
         localization_timestamp = round(
             control_mtx_rtn[control_idx, FEATURE_IDX['localization_timestamp_sec']], 3)
-        while (round(chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']], 3) !=
-               chassis_timestamp):
+        while (round(chassis_mtx_filtered[chassis_idx, MODE_IDX['timestamp_sec']], 3)
+               != chassis_timestamp):
             chassis_idx += 1
         chassis_idx_rtn.append(chassis_idx)
-        while (round(localization_mtx[localization_idx, POSE_IDX['timestamp_sec']], 3) !=
-               localization_timestamp):
+        while (round(localization_mtx[localization_idx, POSE_IDX['timestamp_sec']], 3)
+               != localization_timestamp):
             localization_idx += 1
         localization_idx_rtn.append(localization_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
@@ -256,8 +262,8 @@ def extract_control_data_from_msg(msg):
     control_header = getattr(msg_proto, 'header', float('NaN'))
     input_debug = getattr(getattr(msg_proto, 'debug', float('NaN')),
                           'input_debug', float('NaN'))
-    if (hasattr(getattr(msg_proto, 'debug'), 'simple_lon_debug') and
-            hasattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')):
+    if (hasattr(getattr(msg_proto, 'debug'), 'simple_lon_debug')
+            and hasattr(getattr(msg_proto, 'debug'), 'simple_lat_debug')):
         control_lon = msg_proto.debug.simple_lon_debug
         control_lat = msg_proto.debug.simple_lat_debug
         data_array = np.array([

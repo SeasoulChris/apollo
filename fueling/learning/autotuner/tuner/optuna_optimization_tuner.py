@@ -100,8 +100,8 @@ class OptunaOptimizationTuner(BaseTuner):
                                                              'target': target,
                                                              'config_point': next_point}})
 
-        logging.info(f"Timer: optimize_with_sim_cost  - {time.perf_counter() "
-                     f"- tic_start: 0.04f} sec")
+        logging.info(f"Timer: optimize_with_sim_cost  - "
+                     f"{time.perf_counter() - tic_start: 0.04f} sec")
 
         return target
 

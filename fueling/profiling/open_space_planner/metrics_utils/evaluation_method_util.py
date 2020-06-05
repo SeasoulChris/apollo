@@ -53,7 +53,8 @@ def stats_helper(feature_mtx, feature_name, above_threshold=True,
     profiling_conf = get_config_open_space_profiling()
     return compute_stats(feature_mtx, feature_name, profiling_conf, FEATURE_IDX,
                          above_threshold=above_threshold, ratio_threshold=1.0, percentile=95,
-                         filter_name=filter_name, filter_value=filter_value, filter_mode=filter_mode)
+                         filter_name=filter_name, filter_value=filter_value,
+                         filter_mode=filter_mode)
 
 
 def merge_grading_results(grading_tuple):
@@ -116,8 +117,8 @@ def trajectory_grading(target_group):
         logging.warning(F'No valid element for target {target}')
         return (target, None)
 
-    max_time_to_collision_ratio = (REFERENCE_VALUES['max_time_to_collision'] /
-                                   REFERENCE_VALUES['time_to_collision'])
+    max_time_to_collision_ratio = (REFERENCE_VALUES['max_time_to_collision']
+                                   / REFERENCE_VALUES['time_to_collision'])
     has_collision = stats_helper(feature_mtx, 'min_time_to_collision_ratio', False,
                                  filter_name=['min_time_to_collision_ratio'],
                                  filter_value=[max_time_to_collision_ratio], filter_mode=[1])
@@ -180,13 +181,15 @@ def output_grading(target_grading):
                                    .format(name, ' ', value[0], value[-1]))
             if len(value) == 5:
                 # it has 4 statistics and num of elements
-                grading_file.write('{:<36s} {:<16s} {:<16.3f} {:<16.3f} {:<16.3f} {:<16.3f} {:<16s} {:<16n}\n'
-                                   .format(name, 'N.A.', value[0], value[1], value[2], value[3],
-                                           'N.A.', value[-1]))
+                grading_file.write(
+                    '{:<36s} {:<16s} {:<16.3f} {:<16.3f} {:<16.3f} {:<16.3f} {:<16s} {:<16n}\n'
+                    .format(name, 'N.A.', value[0], value[1], value[2], value[3],
+                            'N.A.', value[-1]))
             if len(value) == 6:
                 # it has 5 statistics and num of elements
-                grading_file.write('{:<36s} {:<16n} {:<16.3%} {:<16.3%} {:<16.3%} {:<16.3%} {:<16s} {:<16n}\n'
-                                   .format(name, value[0], value[1], value[2], value[3], value[4],
-                                           'N.A.', value[-1]))
+                grading_file.write(
+                    '{:<36s} {:<16n} {:<16.3%} {:<16.3%} {:<16.3%} {:<16.3%} {:<16s} {:<16n}\n'
+                    .format(name, value[0], value[1], value[2], value[3], value[4],
+                            'N.A.', value[-1]))
     with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
-            grading_json.write(json.dumps(grading_dict))
+        grading_json.write(json.dumps(grading_dict))

@@ -131,11 +131,12 @@ def find_min_collision_time(msg, vehicle_param):
             for predicted_pt in predicted_traj.trajectory_point:
                 predicted_time = obstacle_start_time + predicted_pt.relative_time
                 if abs(adc_time - predicted_time) < 0.1:
-                    predicted_polygon = transform(cur_polygon,
-                                                  [cur_position.x,
-                                                      cur_position.y], obstacle.perception_obstacle.theta,
-                                                  [predicted_pt.path_point.x, predicted_pt.path_point.y],
-                                                  predicted_pt.path_point.theta)
+                    predicted_polygon = transform(
+                        cur_polygon,
+                        [cur_position.x, cur_position.y],
+                        obstacle.perception_obstacle.theta,
+                        [predicted_pt.path_point.x, predicted_pt.path_point.y],
+                        predicted_pt.path_point.theta)
                     if Polygon(adc_polygon).intersects(Polygon(predicted_polygon)):
                         logging.info(F'{adc_start_time}s: Predicted collision at '
                                      F'{traj_point.relative_time} '
@@ -352,9 +353,8 @@ def extract_planning_trajectory_feature(target_group):
 
     extracted_data = (extract_data_from_trajectory(
         msg['planning'].trajectory_point, vehicle_param, roi_boundaries,
-            extract_obstacle_polygons(msg), find_min_collision_time(msg, vehicle_param),
-            msg['planning'].header.timestamp_sec)
-        for msg in msgs)
+        extract_obstacle_polygons(msg), find_min_collision_time(msg, vehicle_param),
+        msg['planning'].header.timestamp_sec) for msg in msgs)
     planning_trajectory_mtx = np.concatenate(
         [data for data in extracted_data if data is not None and data.shape[0] > 10])
 

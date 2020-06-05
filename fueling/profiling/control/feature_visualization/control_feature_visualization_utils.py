@@ -130,15 +130,17 @@ def plot_h5_features_hist(data_rdd):
 
     with PdfPages(pdffile) as pdf:
         for i in range(len(FEATURE_NAMES)):
-            if (i < data.shape[1] and
-                    (i < FEATURE_IDX["timestamp_sec"] or i > FEATURE_IDX["trajectory_sequence_num"])):
+            if (i < data.shape[1]
+                    and (i < FEATURE_IDX["timestamp_sec"]
+                         or i > FEATURE_IDX["trajectory_sequence_num"])):
                 logging.info('Processing the plots at Column: {}, Feature: {}'
                              .format(i, FEATURE_NAMES[i]))
                 if i == FEATURE_IDX["pose_heading_offset"]:
-                    data_plot_idx = np.where((data[:, FEATURE_IDX["speed"]] >
-                                              profiling_conf.control_metrics.speed_stop) &
-                                             (data[:, FEATURE_IDX["curvature_reference"]] <
-                                              profiling_conf.control_metrics.curvature_harsh_limit))[0]
+                    data_plot_idx = np.where(
+                        (data[:, FEATURE_IDX["speed"]]
+                         > profiling_conf.control_metrics.speed_stop)
+                        & (data[:, FEATURE_IDX["curvature_reference"]]
+                           < profiling_conf.control_metrics.curvature_harsh_limit))[0]
                     data_plot = np.take(data[:, i], data_plot_idx, axis=0)
                 else:
                     data_plot = data[:, i]
@@ -167,8 +169,9 @@ def plot_h5_features_hist(data_rdd):
                         plt.close()
                     else:
                         plt.figure(figsize=(4, 3))
-                        plt.hist(data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
-                                 bins=100)
+                        plt.hist(
+                            data_plot[seq[int(length * bounds[0]):int(length * bounds[1] - 1)]],
+                            bins=100)
                         plt.xlabel(FEATURE_NAMES[i])
                         plt.ylabel('Sample length')
                         plt.title("Histogram of " + FEATURE_NAMES[i] + " ("

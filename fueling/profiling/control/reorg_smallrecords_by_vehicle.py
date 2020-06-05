@@ -53,7 +53,8 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
         """Run the pipeline with given arguments."""
 
         dir_vehicle_list = self.get_vehicles(record_dir_rdd.collect())
-        # dir_vehicle_list[('Transit', '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27'),...]
+        # dir_vehicle_list[('Transit',
+        # '/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-24-27'),...]
         logging.info(F'dir_vehicle_list{dir_vehicle_list}')
 
         def _filter_vehicle(vehicle):
@@ -101,14 +102,17 @@ class ReorgSmallRecordsByVehicle(BasePipeline):
             'dir_vehicle_rdd',
             self.to_rdd(dir_vehicle_list)
             # PairRDD (vehicle, source_dir) which is not reorgized
-            .filter(spark_op.filter_value(lambda target: not os.path.exists(os.path.join(target, REORG_TAG))))
+            .filter(spark_op.filter_value(
+                lambda target: not os.path.exists(os.path.join(target, REORG_TAG))))
             # PairRDD (source_dir, target_dir)
             .map(spark_op.swap_kv)
             # PairRDD(source_dir, target_dir_with_vehicle)
-            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', '/mnt/bos/control/small-records/Transit')]
+            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12',
+            # '/mnt/bos/control/small-records/Transit')]
             .mapValues(lambda vehicle: os.path.join(target_prefix, vehicle))
             # PairRDD(source_dir, target_dir_with_vehicle) sample like:
-            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12', '/mnt/bos/control/small-records/Transit/2019-02-25/2019-02-25-16-18-12')]
+            # ('/mnt/bos/small-records/2019/2019-02-25/2019-02-25-16-18-12',
+            # '/mnt/bos/control/small-records/Transit/2019-02-25/2019-02-25-16-18-12')]
             .map(_update_rdd)
             # PairRDD(source_dir, target_dir_with_vehicle) value unique:
             .filter(spark_op.filter_value(lambda task: not os.path.exists(task)))

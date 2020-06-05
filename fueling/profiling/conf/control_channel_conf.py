@@ -152,8 +152,8 @@ WEIGHTED_SCORE = {
                           "lateral_err_peak": 4.0,
                           "heading_err_peak": 1.0,
                           "heading_err_rate_peak": 1.0},
-    "penalty_metrics": {"replan_trajectory_count": 1.0,},
-    "fail_metrics": {"control_error_code_count": 10.0,},
+    "penalty_metrics": {"replan_trajectory_count": 1.0, },
+    "fail_metrics": {"control_error_code_count": 10.0, },
 }
 
 """Vehicle Dynamics Profiling Index and Names: """

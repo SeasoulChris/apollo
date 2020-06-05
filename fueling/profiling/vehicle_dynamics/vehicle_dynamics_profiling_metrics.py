@@ -15,8 +15,8 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.profiling.common.dir_utils as dir_utils
-import fueling.profiling.vehicle_dynamics.feature_extraction.vehicle_dynamics_feature_extraction_utils \
-    as feature_utils
+import fueling.profiling.vehicle_dynamics.feature_extraction.\
+    vehicle_dynamics_feature_extraction_utils as feature_utils
 import fueling.profiling.vehicle_dynamics.grading_evaluation.vehicle_dynamics_grading_utils \
     as grading_utils
 
@@ -58,11 +58,11 @@ class VehicleDynamicsProfilingMetrics(BasePipeline):
          # PairRDD(target_dir, task), the map of target dirs and source dirs
          .keyBy(lambda source: source.replace(original_prefix, target_prefix, 1))
          # PairRDD(target_dir, record_file)
-         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
-                        glob.glob(os.path.join(task, '*bag*')))
+         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*'))
+                        + glob.glob(os.path.join(task, '*bag*')))
          # PairRDD(target_dir, record_file), filter out unqualified files
-         .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
-                                       record_utils.is_bag_file(file)))
+         .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file)
+                                       or record_utils.is_bag_file(file)))
          # PairRDD(target_dir, message), control and chassis message
          .flatMapValues(record_utils.read_record([record_utils.CONTROL_CHANNEL,
                                                   record_utils.CHASSIS_CHANNEL]))

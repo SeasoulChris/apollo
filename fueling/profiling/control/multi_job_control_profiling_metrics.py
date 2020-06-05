@@ -85,8 +85,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
         else:
             """Control Profiling: works on the 'external/internal-user road-test' mode"""
-            original_prefix = (self.FLAGS.get('input_data_path') or
-                               'modules/control/profiling/multi_job')
+            original_prefix = (self.FLAGS.get('input_data_path')
+                               or 'modules/control/profiling/multi_job')
 
             job_owner = self.FLAGS.get('job_owner')
             # Use year as the job_id if data from apollo-platform, to avoid
@@ -96,8 +96,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             job_email = partners.get(job_owner).email if self.is_partner_job() else ''
             logging.info(F'email address of job owner: {job_email}')
 
-            output_prefix = (self.FLAGS.get('output_data_path') or
-                             'modules/control/tmp/results')
+            output_prefix = (self.FLAGS.get('output_data_path')
+                             or 'modules/control/tmp/results')
             target_prefix = os.path.join(output_prefix, job_owner, job_id)
 
             our_storage = self.our_storage()
@@ -290,11 +290,11 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         (reorganized_target
          # PairRDD(target_dir, record_file)
-         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*')) +
-                        glob.glob(os.path.join(task, '*bag*')))
+         .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*'))
+                        + glob.glob(os.path.join(task, '*bag*')))
          # PairRDD(target_dir, record_file), filter out unqualified files
-         .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file) or
-                                       record_utils.is_bag_file(file)))
+         .filter(spark_op.filter_value(lambda file: record_utils.is_record_file(file)
+                                       or record_utils.is_bag_file(file)))
          # PairRDD(target_dir, message)
          .flatMapValues(record_utils.read_record(feature_utils.CHANNELS))
          #  # PairRDD(target_dir, messages)

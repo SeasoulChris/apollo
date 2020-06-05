@@ -39,7 +39,9 @@ VEHICLE_PARAM_FILE = 'vehicle_param.pb.txt'
 
 
 def zip_msgs(msgs):
-    """convert a list of sorted prediction-and-planning msgs into a list of planning-prediction pairs"""
+    """
+    convert a list of sorted prediction-and-planning msgs into a list of planning-prediction pairs
+    """
     paired_msgs = []
     latest_prediction_pb2 = None
     for msg in msgs:
@@ -65,8 +67,8 @@ def zip_msgs(msgs):
 def has_desired_stage(msgs):
     if hasattr(msgs['planning'].debug.planning_data, 'scenario'):
         scenario = msgs['planning'].debug.planning_data.scenario
-        return (scenario.scenario_type == SCENARIO_TYPE and
-                scenario.stage_type == STAGE_TYPE)
+        return (scenario.scenario_type == SCENARIO_TYPE
+                and scenario.stage_type == STAGE_TYPE)
     return False
 
 
@@ -138,8 +140,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
                           .flatMapValues(object_storage.list_files)
                           # PairRDD(target_prefix, record_file)
                           .filter(spark_op.filter_value(
-                              lambda file: record_utils.is_record_file(file) or
-                              record_utils.is_bag_file(file)))
+                              lambda file: record_utils.is_record_file(file)
+                              or record_utils.is_bag_file(file)))
                           .cache())
         if logging.level_debug():
             logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')

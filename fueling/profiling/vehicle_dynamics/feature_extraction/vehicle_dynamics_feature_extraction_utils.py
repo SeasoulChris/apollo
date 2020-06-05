@@ -24,8 +24,8 @@ MIN_EPSILON = 0.000001
 def verify_vehicle_controller(task):
     """Verify if the task has any record file whose controller/vehicle types match config"""
     record_file = next((os.path.join(task, record_file) for record_file in os.listdir(task)
-                        if (record_utils.is_record_file(record_file) or
-                            record_utils.is_bag_file(record_file))), None)
+                        if (record_utils.is_record_file(record_file)
+                            or record_utils.is_bag_file(record_file))), None)
     if not record_file:
         logging.warning('no valid record file found in task: {}'.format(task))
         return False
@@ -74,7 +74,9 @@ def data_matches_config(vehicle_type, controller_type):
 
 
 def extract_data_two_channels(msgs, driving_mode, gear_position):
-    """Extract control/chassis data array and filter the control data with selected chassis features"""
+    """
+    Extract control/chassis data array and filter the control data with selected chassis features
+    """
     chassis_msgs = collect_message_by_topic(msgs, record_utils.CHASSIS_CHANNEL)
     control_msgs = collect_message_by_topic(msgs, record_utils.CONTROL_CHANNEL)
 
@@ -112,8 +114,8 @@ def extract_data_two_channels(msgs, driving_mode, gear_position):
     chassis_idx_rtn = []
     chassis_idx = 0
     for control_idx in range(control_mtx_rtn.shape[0]):
-        while (control_mtx_rtn[control_idx, DYNAMICS_FEATURE_IDX['chassis_sequence_num']] !=
-               chassis_mtx_filtered[chassis_idx, DYNAMICS_MODE_IDX['sequence_num']]):
+        while (control_mtx_rtn[control_idx, DYNAMICS_FEATURE_IDX['chassis_sequence_num']]
+               != chassis_mtx_filtered[chassis_idx, DYNAMICS_MODE_IDX['sequence_num']]):
             chassis_idx += 1
         chassis_idx_rtn.append(chassis_idx)
     chassis_mtx_rtn = np.take(chassis_mtx_filtered, chassis_idx_rtn, axis=0)
@@ -203,8 +205,8 @@ def extract_chassis_data_from_msg(msg):
     """Extract wanted fields from chassis message"""
     msg_proto = record_utils.message_to_proto(msg)
     chassis_header = msg_proto.header
-    if (get_profiling_config().vehicle_type.find('Mkz') or
-            get_profiling_config().vehicle_type.find('Lexus')):
+    if (get_profiling_config().vehicle_type.find('Mkz')
+            or get_profiling_config().vehicle_type.find('Lexus')):
         data_array = np.array([
             # Features: "Status" category
             msg_proto.driving_mode,                          # 0

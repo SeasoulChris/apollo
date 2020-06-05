@@ -148,12 +148,12 @@ def compute_ending(grading_mtx, arg, FEATURE_IDX):
     static_start_time = [grading_mtx[0, FEATURE_IDX[arg.time_name]]]
     static_stop_time = [grading_mtx[0, FEATURE_IDX[arg.time_name]]]
     for idx in range(1, grading_mtx.shape[0]):
-        if (grading_mtx[idx, FEATURE_IDX[arg.time_name]] -
-                grading_mtx[idx - 1, FEATURE_IDX[arg.time_name]] <= 1.0):
+        if (grading_mtx[idx, FEATURE_IDX[arg.time_name]]
+                - grading_mtx[idx - 1, FEATURE_IDX[arg.time_name]] <= 1.0):
             static_stop_time[-1] = grading_mtx[idx, FEATURE_IDX[arg.time_name]]
         else:
-            static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.feature_name]]) /
-                                arg.threshold)
+            static_error.append(np.fabs(grading_mtx[idx, FEATURE_IDX[arg.feature_name]])
+                                / arg.threshold)
             static_start_time.append(grading_mtx[idx, FEATURE_IDX[arg.time_name]])
             static_stop_time.append(grading_mtx[idx, FEATURE_IDX[arg.time_name]])
     return ([static_error, static_start_time, static_stop_time], elem_num)
@@ -176,16 +176,16 @@ def compute_usage(grading_mtx, arg, min_sample_size, FEATURE_IDX):
 def compute_below(grading_mtx, arg, FEATURE_IDX):
     """Compute the count below the threshold, normalized by the total number"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) <=
-                         arg.threshold)[0]) / elem_num,
+    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]])
+                         <= arg.threshold)[0]) / elem_num,
             elem_num)
 
 
 def compute_beyond(grading_mtx, arg, FEATURE_IDX):
     """Compute the count beyond the threshold, normalized by the total number"""
     elem_num, _ = grading_mtx.shape
-    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]]) >=
-                         arg.threshold)[0]) / elem_num,
+    return (len(np.where(np.fabs(grading_mtx[:, FEATURE_IDX[arg.feature_name]])
+                         >= arg.threshold)[0]) / elem_num,
             elem_num)
 
 

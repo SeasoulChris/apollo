@@ -12,6 +12,7 @@ import fueling.common.logging as logging
 from fueling.profiling.common.stats_utils import IQR_outlier_filter
 from fueling.profiling.conf.open_space_planner_conf import TRAJECTORY_FEATURE_NAMES
 
+
 def plot(data_rdd):
     output_dir, data = data_rdd
     hist_pdf_file = os.path.join(output_dir, 'feature_visualization.pdf')
@@ -26,7 +27,6 @@ def plot(data_rdd):
             length = samples.shape[0]
             logging.info(F'Generating plot for Feature {i}: {feature_name}, '
                          F'{length}/{raw_length} samples used for histogram.')
-            
             # Histogram
             plt.figure(figsize=(4, 3))
             plt.hist(samples, bins=100)

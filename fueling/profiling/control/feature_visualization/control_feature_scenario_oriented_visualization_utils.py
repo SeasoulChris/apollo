@@ -88,8 +88,8 @@ def plot_feature_vs_feature(data_plot_x, data_plot_y, label_plot, features, titl
                  label=label_plot[i], linewidth=0.2)
     plt.xlabel(features[0])
     plt.ylabel(features[1])
-    plt.title(FEATURE_NAMES[FEATURE_IDX[features[0]]] + " v.s. " +
-              FEATURE_NAMES[FEATURE_IDX[features[1]]] + " (" + title_addon + ")",
+    plt.title(FEATURE_NAMES[FEATURE_IDX[features[0]]] + " v.s. "
+              + FEATURE_NAMES[FEATURE_IDX[features[1]]] + " (" + title_addon + ")",
               fontsize=8)
     plt.legend(fontsize=6)
     plt.tight_layout()
@@ -99,8 +99,8 @@ def customize_start_time(array):
     if np.isnan(START_POS_X) or np.isnan(START_POS_Y):
         start_time = np.amin(array[:, FEATURE_IDX["timestamp_sec"]], axis=0)
     else:
-        dist_from_start = ((array[:, FEATURE_IDX["reference_position_x"]] - START_POS_X) ** 2 +
-                           (array[:, FEATURE_IDX["reference_position_y"]] - START_POS_Y) ** 2)
+        dist_from_start = ((array[:, FEATURE_IDX["reference_position_x"]] - START_POS_X) ** 2
+                           + (array[:, FEATURE_IDX["reference_position_y"]] - START_POS_Y) ** 2)
         start_time = array[np.argmin(dist_from_start, axis=0), FEATURE_IDX["timestamp_sec"]]
     return start_time
 
@@ -126,8 +126,8 @@ def plot_h5_features_per_scenario(data_list):
     if grading_dir:
         vehicle_controller = os.path.basename(grading_dir[0]).replace(
             'control_performance_grading.txt', '')
-        pdffile = os.path.join(dir_data[0], vehicle_controller +
-                               'control_data_visualization_per_scenario.pdf')
+        pdffile = os.path.join(dir_data[0], vehicle_controller
+                               + 'control_data_visualization_per_scenario.pdf')
     else:
         pdffile = os.path.join(dir_data[0], 'control_data_visualization_per_scenario.pdf')
     # Plot the selected features
@@ -138,8 +138,8 @@ def plot_h5_features_per_scenario(data_list):
                          ["curvature_reference"]]
         for features in plot_features:
             title_addon = str(len(data)) + " test cases"
-            data_plot_x = [array[:, FEATURE_IDX["timestamp_sec"]] -
-                           array[0, FEATURE_IDX["timestamp_sec"]] for array in data]
+            data_plot_x = [array[:, FEATURE_IDX["timestamp_sec"]]
+                           - array[0, FEATURE_IDX["timestamp_sec"]] for array in data]
             data_plot_y = []
             label_plot = []
             for feature in features:
@@ -155,13 +155,13 @@ def plot_h5_features_per_scenario(data_list):
         plot_features = [["curvature_reference"]]
         for features in plot_features:
             title_addon = 'rate of change, ' + str(len(data)) + " test cases"
-            data_plot_x = [array[0:-1, FEATURE_IDX["timestamp_sec"]] -
-                           array[0, FEATURE_IDX["timestamp_sec"]] for array in data]
+            data_plot_x = [array[0:-1, FEATURE_IDX["timestamp_sec"]]
+                           - array[0, FEATURE_IDX["timestamp_sec"]] for array in data]
             data_plot_y = []
             label_plot = []
             for feature in features:
-                data_plot_y_sub = [np.diff(array[:, FEATURE_IDX[feature]], axis=0) /
-                                   np.diff(array[:, FEATURE_IDX["timestamp_sec"]], axis=0)
+                data_plot_y_sub = [np.diff(array[:, FEATURE_IDX[feature]], axis=0)
+                                   / np.diff(array[:, FEATURE_IDX["timestamp_sec"]], axis=0)
                                    for array in data]
                 data_plot_y.append(data_plot_y_sub)
                 label_plot_sub = [os.path.basename(dir) for dir in dir_data]

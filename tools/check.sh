@@ -23,11 +23,11 @@ bash /fuel/tools/lint.sh /fuel/fueling/demo
 bash /fuel/tools/lint.sh /fuel/fueling/learning
 bash /fuel/tools/lint.sh /fuel/fueling/perception
 bash /fuel/tools/lint.sh /fuel/fueling/planning
+bash /fuel/tools/lint.sh /fuel/fueling/profiling
 bash /fuel/tools/lint.sh /fuel/fueling/streaming
 
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/map
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/prediction
-# TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/profiling
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/simulation
 # TODO(?): bash /fuel/tools/lint.sh /fuel/learning_algorithms
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling  # Finally
