@@ -4,6 +4,7 @@
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.metrics import mean_squared_error
 import gpytorch
 import math
 import numpy as np
@@ -152,3 +153,18 @@ ax.plot_surface(gx, gy, lower[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
 ax.scatter(train_x[:, 0].detach().numpy(), train_x[:, 1].detach().numpy(),
            train_y[:, 1].detach().numpy())
 plt.show()
+
+
+#  accuracy
+test_exact_y1 = func_y1(X_2D[:, 0], X_2D[:, 1])
+test_exact_y2 = func_y2(X_2D[:, 0], X_2D[:, 1])
+test_y_exact = np.stack([test_exact_y1, test_exact_y2], axis=1)
+
+print(test_y_exact.shape)
+print(mean.shape)
+mse_x = mean_squared_error(mean[:, 0], test_y_exact[:, 0])
+mse_y = mean_squared_error(mean[:, 1], test_y_exact[:, 1])
+print(f'mse loss is {mse_x}')
+print(f'mse loss is {mse_y}')
+# mse loss is 0.035218787166998104
+# mse loss is 0.9804320714474639

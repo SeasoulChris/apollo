@@ -169,7 +169,6 @@ class ValidationVisualization():
         logging.info(f'Validating set {set_id}')
         self.validation_result_file = os.path.join(args.validation_data_path,
                                                    f'{set_id}_validation_result.npy')
-        # if not os.path.exists(self.validation_result_file):
         self.get_validation_result(test_features, test_labels, set_id, train_labels)
         logging.info(f'Validation results are saved at {self.validation_result_file}')
         if is_plot:
@@ -189,18 +188,14 @@ if __name__ == '__main__':
     parser.add_argument(
         '-t',
         '--training_data_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train")
+        type=str)
     parser.add_argument(
         '-v',
         '--validation_data_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test")
+        type=str)
     parser.add_argument(
         '--gp_model_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/"
-                + "0603/gp_model_output/20200604-213455")
+        type=str)
     parser.add_argument(
         '--validation_result_path',
         type=str,

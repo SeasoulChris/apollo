@@ -125,16 +125,11 @@ def train_over_dataloader(train_loader, model, loss, optimizer, print_period=Non
 def valid_loop(valid_loader, model, likelihood, loss):
     loss_history = []
     for x_batch, y_batch in valid_loader:
-        # logging.info(f'input batch shape is {x_batch.shape}')
-        # logging.info(f'output batch shape is {y_batch.shape}')
-        # # **[window_size, batch_size, channel]
+        # **[window_size, batch_size, channel]
         x_batch = torch.transpose(x_batch, 0, 1)
-        # logging.info(f'transposed input shape is {x_batch.shape}')
         # cross validation process
         pred = likelihood(model(x_batch))
-        # logging.info('waiting....')
         # validation loss
-        # logging.info(f'predicted mean value shape is {pred.mean.shape}')
         valid_loss = -loss(pred, y_batch)
         logging.info(f'Validation loss: {valid_loss}')
         loss_history.append(valid_loss.item())
@@ -368,16 +363,16 @@ if __name__ == "__main__":
         '-t',
         '--training_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/train")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train")
     parser.add_argument(
         '-v',
         '--validation_data_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/test")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test")
     parser.add_argument(
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/gp_model_output")
+        default="/fuel/fueling/control/dynamic_model_2_0/gp_regression/gp_model_output")
 
     # model parameters
     parser.add_argument('-ni', '--num_inducing_point', type=int, default=1)

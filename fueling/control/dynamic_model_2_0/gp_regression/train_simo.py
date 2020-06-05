@@ -4,6 +4,7 @@ import math
 
 
 from matplotlib import pyplot as plt
+from sklearn.metrics import mean_squared_error
 import gpytorch
 import numpy as np
 import torch
@@ -19,6 +20,7 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 # confs
 num_epochs = 20
 lr = 0.01
+num_inducing_point = 16
 
 #   load data
 train_x = torch.linspace(0, 1, 100)
@@ -28,7 +30,7 @@ train_y = torch.stack([
     torch.cos(train_x * (2 * math.pi)) + torch.randn(train_x.size()) * 0.2,
 ], -1)
 
-inducing_points = torch.rand(2, 16, 1)
+inducing_points = torch.rand(2, num_inducing_point, 1)
 
 # encoder
 encoder_net_model = DummyEncoder()
@@ -63,6 +65,7 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
     mean = predictions.mean
     lower, upper = predictions.confidence_region()
 
+
 # This contains predictions for both tasks, flattened out
 # The first half of the predictions is for the first task
 # The second half is for the second task
@@ -87,3 +90,16 @@ y2_ax.set_ylim([-3, 3])
 y2_ax.legend(['Observed Data', 'Mean', 'Confidence'])
 y2_ax.set_title('Observed Values (Likelihood)')
 plt.show()
+
+
+#  accuracy
+test_y_exact = torch.stack([
+    torch.sin(test_x * (2 * math.pi)),
+    torch.cos(test_x * (2 * math.pi)),
+], -1).detach().numpy()
+mse_x = mean_squared_error(mean[:, 0], test_y_exact[:, 0])
+mse_y = mean_squared_error(mean[:, 1], test_y_exact[:, 1])
+print(f'mse loss is {mse_x}')
+print(f'mse loss is {mse_y}')
+# mse loss is 0.023380782455205917
+# mse loss is 0.07363846898078918
