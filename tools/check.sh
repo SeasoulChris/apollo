@@ -12,10 +12,7 @@ echo "######################### Build #########################"
 bash /fuel/tools/build_local.sh
 
 echo "######################### Test #########################"
-# TODO(?): Contact the owner, fix the exceptions and enable all tests: "bazel test //..."
-bazel test $(bazel query //... \
-    except //fueling/profiling/control:multi_job_control_profiling_metrics_test
-)
+bazel test //...
 
 echo "######################### Lint #########################"
 bash /fuel/tools/lint.sh /fuel/apps
