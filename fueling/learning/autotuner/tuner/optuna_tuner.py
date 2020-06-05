@@ -56,7 +56,8 @@ flags.DEFINE_string(
 flags.DEFINE_string(
     "study_name",
     "",
-    "study name for optuna, this is necessary if running optuna in parallel. Otherwise, generate a random name."
+    "study name for optuna, this is necessary if running optuna in parallel. "
+    "Otherwise, generate a random name."
 )
 
 
@@ -113,8 +114,8 @@ class OptunaBaseTuner():
         iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
-                {self.tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
-                    self.algorithm_conf_pb)},
+                {self.tuner_param_config_pb.tuner_parameters.default_conf_filename:
+                    text_format.MessageToString(self.algorithm_conf_pb)},
             }
         )
         logging.info(f"Received score for {iteration_id} as {weighted_score[config_id]}")

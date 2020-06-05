@@ -110,7 +110,8 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             request.dynamic_model)
         init_sim_event.clear()
 
-        logging.info(f"Timer: total init - {time.perf_counter() - tic_start:0.04f} sec [Token: {service_token}]")
+        logging.info(f"Timer: total init - {time.perf_counter() - tic_start:0.04f} "
+                     f"sec [Token: {service_token}]")
         return CostComputation.create_init_response(
             status.code, status.message, service_token,
         )
@@ -168,7 +169,8 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
         try:
             job = self.CostJob()
             if not job.run(options):
-                logging.error(f"failed to run job. [Token: {request.token}, Iteration: {iteration_id}]")
+                logging.error(f"failed to run job. [Token: {request.token}, "
+                              f"Iteration: {iteration_id}]")
                 return CostComputation.create_compute_response(
                     exit_code=1, message="failed to compute cost.",
                     iteration_id=iteration_id
@@ -193,11 +195,13 @@ class CostComputation(cost_service_pb2_grpc.CostComputationServicer):
             for (config_id, weighted_score) in scores.items():
                 response.score[config_id] = float(weighted_score)
 
-            logging.info(f"Timer: total compute - {time.perf_counter() - tic_start:0.04f} sec [Token: {request.token}, Iteration: {iteration_id}]")
+            logging.info(f"Timer: total compute - {time.perf_counter() - tic_start:0.04f} sec "
+                         f"[Token: {request.token}, Iteration: {iteration_id}]")
             return response
 
         except Exception as error:
-            logging.error(f"failed to get weighted score. [Token: {request.token}, Iteration: {iteration_id}]\n\t{error}")
+            logging.error(f"failed to get weighted score. [Token: {request.token}, "
+                          f"Iteration: {iteration_id}]\n\t{error}")
             return CostComputation.create_compute_response(
                 exit_code=1, message="failed to calculate weighted score.",
                 iteration_id=iteration_id

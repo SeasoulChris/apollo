@@ -51,7 +51,8 @@ class SimClient(object):
 
     @classmethod
     def run_scenario(
-        cls, service_token, iteration_id, scenario_id, config, record_output_path, record_output_file
+        cls, service_token, iteration_id, scenario_id, config,
+        record_output_path, record_output_file
     ):
         logging.info(f"Running scenario {scenario_id} for {record_output_file} ...")
         job_info = sim_service_pb2.JobInfo(

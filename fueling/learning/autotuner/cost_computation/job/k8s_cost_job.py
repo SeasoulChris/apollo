@@ -63,7 +63,8 @@ class K8sCostJob(BaseCostJob):
                 continue
 
             job_status = json.loads(res.json() or '{}').get('status')
-            if job_status == "Preparing" and prev_job_status is not None and prev_job_status != job_status:
+            if (job_status == "Preparing" and prev_job_status is not None
+                    and prev_job_status != job_status):
                 # Preparing status happens when the pod is not found.
                 # If not found for the second time, that means the job is completed.
                 return True
@@ -76,7 +77,8 @@ class K8sCostJob(BaseCostJob):
 
             prev_job_status = job_status
 
-        logging.info(f'{cost_job_info} with spark job {spark_job_id} done with status {job_status}.')
+        logging.info(f'{cost_job_info} with spark job '
+                     f'{spark_job_id} done with status {job_status}.')
         return job_status in JOB_SUCCESS_STATUS
 
     def cancel(self):

@@ -129,7 +129,8 @@ class BayesianOptimizationVisualUtils():
             logging.debug(f"mean_value size: {mean_value.shape}")
             mean_im = fig_mean.pcolormesh(param_grid[:, 0].reshape(100, 100),
                                           param_grid[:, 1].reshape(100, 100),
-                                          mean_value.reshape(100, 100), shading='nearest', cmap=cmap)
+                                          mean_value.reshape(100, 100),
+                                          shading='nearest', cmap=cmap)
             fig_mean.plot(x_obs[:, 0], x_obs[:, 1], 'D', markersize=4, color='k')
             plt.colorbar(mean_im, ax=fig_mean)
             fig_mean.set_xlim((param_min[0], param_max[0]))

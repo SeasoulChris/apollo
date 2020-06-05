@@ -30,8 +30,8 @@ class TrajectoryBivariateGaussianLoss:
             2 * corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + self.eps_)
         z = torch.clamp(z, min=self.eps_)
 
-        P = 1 / (2 * np.pi * torch.sqrt((sigma_x * sigma_y)**2) *
-                 torch.sqrt(1 - corr**2) + self.eps_) * torch.exp(-z / (2 * (1 - corr**2)))
+        P = 1 / (2 * np.pi * torch.sqrt((sigma_x * sigma_y)**2)
+                 * torch.sqrt(1 - corr**2) + self.eps_) * torch.exp(-z / (2 * (1 - corr**2)))
 
         loss = torch.clamp(P, min=self.eps_)
         loss = -loss.log()

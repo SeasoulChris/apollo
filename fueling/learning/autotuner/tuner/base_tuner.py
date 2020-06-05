@@ -54,7 +54,6 @@ class BaseTuner():
         self.pbounds = {}
         self.pconstants = {}
         tuner_parameters = self.tuner_param_config_pb.tuner_parameters
-        #self.algorithm_conf_pb = tuner_parameters.default_conf_proto
         for parameter in tuner_parameters.parameter:
             if parameter.parameter_dir:
                 parameter.parameter_name = parameter.parameter_dir + "." + parameter.parameter_name
@@ -143,8 +142,8 @@ class BaseTuner():
         iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
-                {tuner_param_config_pb.tuner_parameters.default_conf_filename: text_format.MessageToString(
-                    algorithm_conf_pb)},
+                {tuner_param_config_pb.tuner_parameters.default_conf_filename:
+                    text_format.MessageToString(algorithm_conf_pb)},
             }
         )
         logging.info(f"Received score for {iteration_id}")
@@ -158,7 +157,8 @@ class BaseTuner():
         message = self.algorithm_conf_pb
         for name in message_name:
             message = getattr(message, name)
-        # DESCRIPTOR attribute 'full_name' is formatted as 'Package Name + Enclosing Type Name + Field name'
+        # DESCRIPTOR attribute 'full_name' is formatted as
+        # 'Package Name + Enclosing Type Name + Field name'
         # For example, 'apollo.control.LatControllerConf.matrix_q'
         config_name = message.DESCRIPTOR.fields_by_name[field_name].full_name.split('.')[-2]
         # DESCRIPTOR attribute 'label' is formatted as 'OPTIONAL = 1, REPEATED = 3, REQUIRED = 2'
@@ -170,8 +170,8 @@ class BaseTuner():
         """Seqarate the repeated messages by adding the surffix '___digit' to their names"""
         _, _, _, is_repeated = self.parse_param_to_proto(parameter.parameter_name)
         if is_repeated:
-            repeated_keys = ([key for key in self.pbounds if parameter.parameter_name in key] +
-                             [key for key in self.pconstants if parameter.parameter_name in key])
+            repeated_keys = ([key for key in self.pbounds if parameter.parameter_name in key]
+                             + [key for key in self.pconstants if parameter.parameter_name in key])
             parameter.parameter_name += ('___' + str(len(repeated_keys)))
         return parameter
 

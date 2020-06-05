@@ -20,7 +20,8 @@ flags.DEFINE_string(
 flags.DEFINE_string(
     "study_name",
     "",
-    "study name for optuna, this is necessary if running optuna in parallel. Otherwise, generate a random name."
+    "study name for optuna, this is necessary if running optuna in parallel. "
+    "Otherwise, generate a random name."
 )
 flags.DEFINE_integer(
     "n_coworkers",

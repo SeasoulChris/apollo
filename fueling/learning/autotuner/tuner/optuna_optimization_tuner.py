@@ -84,7 +84,8 @@ class OptunaOptimizationTuner(BaseTuner):
             logging.info(f"\n  {proto}: {getattr(message, field_name)}")
 
         for flag in self.tuner_param_config_pb.tuner_parameters.flag:
-            flag_full_name = flag.flag_dir + '.' + flag.flag_name if flag.flag_dir else flag.flag_name
+            flag_full_name = \
+                flag.flag_dir + '.' + flag.flag_name if flag.flag_dir else flag.flag_name
             message, config_name, flag_name, _ = self.parse_param_to_proto(flag_full_name)
             config = eval(config_name + '()')
             message.ClearField(flag_name)
@@ -99,7 +100,8 @@ class OptunaOptimizationTuner(BaseTuner):
                                                              'target': target,
                                                              'config_point': next_point}})
 
-        logging.info(f"Timer: optimize_with_sim_cost  - {time.perf_counter() - tic_start: 0.04f} sec")
+        logging.info(f"Timer: optimize_with_sim_cost  - {time.perf_counter() "
+                     f"- tic_start: 0.04f} sec")
 
         return target
 

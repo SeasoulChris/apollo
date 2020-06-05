@@ -164,8 +164,8 @@ class ProfilingCostComputation(BaseCostComputation):
 
         # Parse and compute the penalty metrics from control profiling results
         for metrics in cost_metrics.penalty_metrics:
-            score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1] *
-                      metrics.penalty_score)
+            score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1]
+                      * metrics.penalty_score)
 
         # Parse and compute the fail metrics from control profiling results
         for metrics in cost_metrics.fail_metrics:

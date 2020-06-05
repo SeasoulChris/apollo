@@ -20,13 +20,13 @@ def cuda(x):
         return tuple([cuda(y) for y in x])
     return x.cuda() if torch.cuda.is_available() else x
 
+
 # TODO(jiacheng): implement this
 
 
 def save_checkpoint():
-    #filepath = os.path.join(checkpoint_dir, filename)
-    #torch.save(state, filepath)
     return
+
 
 #########################################################
 # Vanilla training and validating
@@ -155,8 +155,6 @@ def valid_dataloader(valid_loader, model, loss, analyzer=None):
 
         valid_loss_info = loss.loss_info(pred, y)
         if valid_loss_info is not None:
-            #print ('Validation avg displacement = {}'.format(valid_loss_info))
-            #logging.info('Validation avg displacement = {}'.format(valid_loss_info))
             loss_info_history.append(valid_loss_info.item())
         if analyzer is not None:
             analyzer.process(X, y, pred)

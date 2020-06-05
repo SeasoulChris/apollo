@@ -16,7 +16,8 @@ MAX_RETRIES = 3
 KEEP_ALIVE_TIME_IN_SEC = 5 * 60
 OPERATION_TIMEOUT_IN_SEC = {
     'Initialize': 30 * 60,
-    'FirstComputeCost': 45 * 60,  # first time usually needs longer time to pull code, map, binary, etc
+    # first time usually needs longer time to pull code, map, binary, etc
+    'FirstComputeCost': 45 * 60,
     'ComputeCost': 10 * 60,
     'Close': 5 * 60,
     'Default': 10 * 60,
@@ -185,7 +186,8 @@ class CostComputationClient(object):
         logging.info(f"Sending compute request to service {self.service_token} ...")
 
         request_payload = self.construct_compute_request(configs, cost_config_file)
-        request_timeout = OPERATION_TIMEOUT_IN_SEC['FirstComputeCost'] if self.first_cost_computation else None
+        request_timeout = \
+            OPERATION_TIMEOUT_IN_SEC['FirstComputeCost'] if self.first_cost_computation else None
         self.first_cost_computation = False
 
         response = run_with_retry(
