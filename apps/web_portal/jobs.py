@@ -40,6 +40,7 @@ class OpenSpacePlannerProfiling(BaseJob):
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
             'output_data_path': job_arg.flags.get("output_data_path"),
+            'open_space_planner_profiling_generate_report': True,
         }
         return (entrypoint, client_flags, job_flags)
 

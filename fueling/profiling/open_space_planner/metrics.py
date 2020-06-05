@@ -27,7 +27,7 @@ from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util i
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 
-flags.DEFINE_boolean('open_space_planner_profiling_generate_report', True,
+flags.DEFINE_boolean('open_space_planner_profiling_generate_report', False,
                      'whether an email report with feature plot etc. is required')
 flags.DEFINE_boolean('open_space_planner_profiling_debug', False,
                      'whether feature HDF5 files need to be saved for debugging')
@@ -215,6 +215,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'grading_result_first: {grading_result.first()}')
 
         # 5. plot and visualize features, save grading result
+        # PairRDD(target, combined_grading_result), output grading results for each target
+        grading_result.foreach(output_grading)
         if self.FLAGS['open_space_planner_profiling_debug']:
             # PairRDD(target, features), save features in h5 file
             stage_feature.foreach(lambda group: output_features(group, 'stage_feature'))
@@ -223,8 +225,6 @@ class OpenSpacePlannerMetrics(BasePipeline):
             trajectory_feature.foreach(lambda group: output_features(group, 'trajectory_feature'))
 
         if self.FLAGS['open_space_planner_profiling_generate_report']:
-            # PairRDD(target, combined_grading_result), output grading results for each target
-            grading_result.foreach(output_grading)
             # PairRDD(target, planning_trajectory_features), feature plots
             trajectory_feature.foreach(plot)
             self.email_output(todo_task_dirs.keys().collect(), origin_prefix, target_prefix)

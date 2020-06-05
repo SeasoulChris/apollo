@@ -38,6 +38,9 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
 
         grading_output = file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/open_space_performance_grading.txt')
+        self.assertTrue(os.path.exists(grading_output))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.output_data_path}/open_space_performance_grading.json')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/stage_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
@@ -46,7 +49,6 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
             F'{flags.FLAGS.output_data_path}/zigzag_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/trajectory_feature.hdf5')))
-        self.assertTrue(os.path.exists(grading_output))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/feature_visualization.pdf')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
@@ -60,7 +62,7 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertListEqual(['0', '15.570%', '2.347%', '3.938%', '11.645%',
                               'N.A.', '26576'], output_dict['lateral_negative_jerk_ratio'])
         self.assertListEqual(['0', '0.000%', '0.000%', '0.000%', '0.000%',
-                              'N.A.', '26576'], output_dict['distance_to_obstacles_ratio'])
+                              'N.A.', '0'], output_dict['distance_to_obstacles_ratio'])
         shutil.rmtree(flags.FLAGS.output_data_path)
 
     def test_obstacle_no_report(self):
@@ -75,6 +77,10 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.pipeline.init()
         result_data = self.pipeline.run()
 
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.output_data_path}/open_space_performance_grading.txt')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.output_data_path}/open_space_performance_grading.json')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/stage_feature.hdf5')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
@@ -83,8 +89,6 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
             F'{flags.FLAGS.output_data_path}/zigzag_feature.hdf5')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/trajectory_feature.hdf5')))
-        self.assertFalse(os.path.exists(file_utils.fuel_path(
-            F'{flags.FLAGS.output_data_path}/open_space_performance_grading.txt')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/feature_visualization.pdf')))
         self.assertFalse(os.path.exists(file_utils.fuel_path(
@@ -96,8 +100,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertListEqual([0.012658227848101266, 1.0, 0.31569599160665557, 0.17568621907920884,
                               0.42628587217711833, 237], output.non_gear_switch_length_ratio)
         self.assertTupleEqual((4.141625030490488e-05, 1), output.initial_heading_diff_ratio)
-        self.assertListEqual([0.0, 0.33018652986519514, 0.07183626104490519, 0.0921702059601975,
-                              0.28618771851206865, 26301], output.distance_to_obstacles_ratio)
+        self.assertListEqual([0.0, 0.33018652986519514, 0.1823102366181574, 0.06817409352324616,
+                              0.33018652953932903, 9053], output.distance_to_obstacles_ratio)
         shutil.rmtree(flags.FLAGS.output_data_path)
 
     def parse_grading_output(self, output_path):

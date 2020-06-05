@@ -3,6 +3,7 @@
 """ Open-space planner feature processing related utils. """
 
 from collections import namedtuple
+import json
 import os
 
 import fueling.common.file_utils as file_utils
@@ -89,7 +90,7 @@ def latency_grading(target_group):
     grading_group_result = GradingResults(
         # Exclude HitBoundTimes for these metrics
         end_to_end_time=stats_helper(feature_mtx, 'end_to_end_time')[1:],
-        zigzag_time=stats_helper(feature_mtx, 'zigzag_time', True, filter_name=['zigzag_time'],
+        zigzag_time=stats_helper(feature_mtx, 'zigzag_time', filter_name=['zigzag_time'],
                                  filter_value=[0.1], filter_mode=[0])[1:],
     )
     return (target, grading_group_result)
@@ -103,8 +104,7 @@ def zigzag_grading(target_group):
 
     grading_group_result = GradingResults(
         non_gear_switch_length_ratio=stats_helper(feature_mtx, 'non_gear_switch_length_ratio',
-                                                  True, filter_name=[
-                                                      'non_gear_switch_length_ratio'],
+                                                  filter_name=['non_gear_switch_length_ratio'],
                                                   filter_value=[0.0], filter_mode=[0]),
     )
     return (target, grading_group_result)
@@ -149,7 +149,10 @@ def trajectory_grading(target_group):
         lateral_negative_jerk_ratio=stats_helper(feature_mtx, 'lateral_negative_jerk_ratio'),
         distance_to_roi_boundaries_ratio=stats_helper(
             feature_mtx, 'distance_to_roi_boundaries_ratio'),
-        distance_to_obstacles_ratio=stats_helper(feature_mtx, 'distance_to_obstacles_ratio'),
+        distance_to_obstacles_ratio=stats_helper(feature_mtx, 'distance_to_obstacles_ratio',
+                                                 filter_name=['distance_to_obstacles_ratio'],
+                                                 filter_value=[0.1], filter_mode=[0]),
+        # Check sample size of min_time_to_collision_ratio
         min_time_to_collision_ratio=(has_collision if has_collision[-1] > 0 else no_collision),
     )
     return (target, grading_group_result)
@@ -185,3 +188,5 @@ def output_grading(target_grading):
                 grading_file.write('{:<36s} {:<16n} {:<16.3%} {:<16.3%} {:<16.3%} {:<16.3%} {:<16s} {:<16n}\n'
                                    .format(name, value[0], value[1], value[2], value[3], value[4],
                                            'N.A.', value[-1]))
+    with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
+            grading_json.write(json.dumps(grading_dict))

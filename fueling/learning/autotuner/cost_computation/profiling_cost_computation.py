@@ -55,7 +55,6 @@ class ProfilingCostComputation(BaseCostComputation):
 
     def read_cost_config(self):
         """Read and parse config from cost computation pb file"""
-        # TODO (Yu/Vivian/Una): find an appropriate way to switch XXX_cost_computation_conf
         config_file = file_utils.fuel_path(self.FLAGS.get('cost_computation_conf_filename'))
         cost_conf_pb = CostComputationConf()
         proto_utils.get_pb_from_text_file(config_file, cost_conf_pb)
