@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@default_deps//:requirements.bzl", "requirement")
+
 py_library(
     name = "encoder",
     srcs = ["encoder.py"],
@@ -106,8 +108,11 @@ py_binary(
 py_binary(
     name = "train_smoke_test",
     srcs = ["train_smoke_test.py"],
+    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
     deps = [
+        ":dynamic_model_dataset",
         ":encoder",
         ":train_utils",
+        "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
 )

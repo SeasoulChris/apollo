@@ -9,6 +9,7 @@ import gpytorch
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.utils.data
 import tqdm
 
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import DummyEncoder

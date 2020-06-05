@@ -3,7 +3,6 @@
 import math
 
 from absl import flags
-from absl.testing import absltest
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
@@ -16,7 +15,6 @@ import torch
 import torch.nn as nn
 import tqdm
 
-from fueling.common.base_pipeline import BasePipelineTest
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import smoke_test_training_config, training_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import toy_test_training_config
