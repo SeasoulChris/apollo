@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
 import gpytorch
 import torch
+import tqdm
 
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
@@ -66,3 +67,15 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
         scheduler.step(train_loss)
         if i == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
+    return model, likelihood
+
+
+def load_model(file_path, encoder_net_model, model, likelihood):
+    """
+    load state dict for model and likelihood
+    """
+    # load state dict
+    logging.info(f"Loading GP model from {file_path}")
+    model_state_dict, likelihood_state_dict = torch.load(file_path)
+    model.load_state_dict(model_state_dict)
+    likelihood.load_state_dict(likelihood_state_dict)
