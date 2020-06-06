@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import math
+import os
+import time
 
 from absl import flags
 from matplotlib import pyplot as plt
@@ -23,16 +25,18 @@ from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset \
     import DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
+from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 
-test_type = "toy_test"
+train_model = False
+test_type = "full_test"
 if test_type == "full_test":
     config = training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test"
-if test_type == "smoke_test":
+elif test_type == "smoke_test":
     config = smoke_test_training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/train"
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/test"
@@ -41,6 +45,9 @@ else:
     config = toy_test_training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train"
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test"
+# time
+timestr = time.strftime('%Y%m%d-%H%M')
+model_path = os.path.join(validation_data_path, f'{timestr}_gp_model.pth')
 
 
 # setup data loader
@@ -72,24 +79,18 @@ model, likelihood, optimizer, loss = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"])
 
-# training
-model.train()
-likelihood.train()
 
-scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
-                              verbose=False, threshold=0.0001, threshold_mode='rel',
-                              cooldown=0, min_lr=0.0, eps=1e-08)
+if train_model:
+    model, likelihood = train_utils.train_with_adjusted_lr(config["num_epochs"], train_loader, model, likelihood,
+                                                           loss, optimizer, is_transpose=True)
 
-
-epochs_iter = tqdm.tqdm(range(config["num_epochs"]), desc="Epoch")
-for i in epochs_iter:
-    # Within each iteration, we will go over each minibatch of data
-    minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-    train_loss = train_utils.basic_train_loop(train_loader, model, loss, optimizer, True)
-    scheduler.step(train_loss)
-    if i == config["epoch_set_tridiagonal_jitter"]:
-        gpytorch.settings.tridiagonal_jitter(config["tridiagonal_jitter"])
-
+    # test save and load model
+    save_model_state_dict(model, likelihood, model_path)
+else:
+    # load model
+    model_state_dict, likelihood_state_dict = torch.load(model_path)
+    model.load_state_dict(model_state_dict)
+    likelihood.load_state_dict(likelihood_state_dict)
 
 # validation
 # Set into eval mode
