@@ -13,6 +13,7 @@ function delete_worker() {
 function run() {
   delete_worker
 
+  set -ex
   cd $( dirname "${BASH_SOURCE[0]}" )/../..
 
   # check if the config file is existing
@@ -24,11 +25,10 @@ function run() {
   STUDY_NAME="supertuner-$USER-$(date +%Y%m%d_%H%M%S)"
 
   # upload config file to /mnt/bos
-  CONFIG_FILE_DEST="autotuner/$STUDY_NAME/$(basename "${CONFIG_FILE}")"
+  CONFIG_FILE_DEST="modules/autotuner/$STUDY_NAME/$(basename "${CONFIG_FILE}")"
   apps/local/bos_fstool --src=${CONFIG_FILE} --dst=${CONFIG_FILE_DEST}
 
   # spin off worker(s)
-  set -ex
   RUN_FILE="${DEPLOY_DIR}/optuna_worker.yaml"
   IMG="${DEST_REPO}/${IMAGE}"
   sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__CONFIG_FILE__|/mnt/bos/$CONFIG_FILE_DEST|g; \

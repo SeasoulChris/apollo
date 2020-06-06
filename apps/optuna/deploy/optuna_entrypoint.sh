@@ -2,7 +2,7 @@
 
 function print_usage() {
     echo 'Usage:
-    ./optuna_entrypoint.sh [ bce-platform | az-staging ]
+    ./optuna_entrypoint.sh [ bce-platform | az-staging | bce-debug ]
     '
 }
 
