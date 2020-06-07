@@ -289,8 +289,21 @@ def visualize(datasets, input_indices, output_index):
         plt.show()
 
 
-def merge_brake_throttle(brake, throttle):
-    pass
+def check_outlier(data_dir):
+    """Extract datasets from data path"""
+    # list of dataset = (input_tensor, output_tensor)
+    h5_files = file_utils.list_files_with_suffix(data_dir, '.h5')
+    for idx, h5_file in enumerate(h5_files):
+        logging.debug(f'h5_file: {h5_file}')
+        with h5py.File(h5_file, 'r') as model_norms_file:
+            # Get input data
+            input_segment = np.array(model_norms_file.get('input_segment'))
+            if np.isnan(np.sum(input_segment)):
+                logging.error(f'file {h5_file} contains NAN data in input segment')
+            # Get output data
+            output_segment = np.array(model_norms_file.get('output_segment'))
+            if np.any(np.max(output_segment)) > 1.0:
+                logging.error(f'file {h5_file} contains large_label')
 
 
 if __name__ == '__main__':
@@ -303,6 +316,7 @@ if __name__ == '__main__':
     validate_result = False
     visualize_normalization_method = False
     check_data = False
+    check_large_label = True
     # validation processing:
     if validate_result:
         processed_data = dynamic_model_dataset.getitem(0)[0]
@@ -334,3 +348,5 @@ if __name__ == '__main__':
             '/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train')
         input_indices = np.array([15, 16])
         visualize_input_only(features, input_indices)
+    if check_large_label:
+        check_outlier('/fuel/fueling/control/dynamic_model_2_0/0603')

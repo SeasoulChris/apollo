@@ -11,10 +11,10 @@ from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
 
-def init_train(inducing_points, encoder_net_model, output_dim, total_train_number, lr):
+def init_train(inducing_points, encoder_net_model, output_dim, total_train_number, lr, kernel_dim):
     # model
     model = GPModel(inducing_points=inducing_points,
-                    encoder_net_model=encoder_net_model, num_tasks=output_dim)
+                    encoder_net_model=encoder_net_model, ard_num_dims=kernel_dim, num_tasks=output_dim)
     #  likelihood
     likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=output_dim)
 

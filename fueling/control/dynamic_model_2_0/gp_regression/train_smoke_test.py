@@ -77,7 +77,7 @@ logging.info(inducing_points.shape)
 encoder_net_model = Encoder(u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
-    total_train_number, config["lr"])
+    total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
 
 
 if train_model:
@@ -88,9 +88,7 @@ if train_model:
     save_model_state_dict(model, likelihood, model_path)
 else:
     # load model
-    model_state_dict, likelihood_state_dict = torch.load(model_path)
-    model.load_state_dict(model_state_dict)
-    likelihood.load_state_dict(likelihood_state_dict)
+    train_utils.load_model(model_path, encoder_net_model, model, likelihood)
 
 # validation
 # Set into eval mode
@@ -99,7 +97,8 @@ likelihood.eval()
 
 
 valid_dataset = DynamicModelDataset(validation_data_path)
-valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
+# valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
+valid_loader = DataLoader(valid_dataset, batch_size=1024)
 # use all validation data
 # Make predictions
 with torch.no_grad(), gpytorch.settings.fast_pred_var():

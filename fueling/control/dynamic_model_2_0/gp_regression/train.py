@@ -293,7 +293,6 @@ def train(args, train_loader, valid_loader, total_train_number,
             save_model_state_dict(model, likelihood, offline_epoch_model)
 
     # plot loss curve
-    fig, axs = plt.subplots(figsize=[12, 4])
     fig = plt.figure(figsize=(12, 8))
     ax1 = fig.add_subplot(2, 1, 1)
     ax1.set_xlabel('epoch', fontdict={'size': 12})

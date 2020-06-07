@@ -19,12 +19,15 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 # based on https://gpytorch.readthedocs.io/en/latest/examples/04_Variational_and_Approximate_GPs
 # /SVGP_Multitask_GP_Regression.html#Set-up-training-data
 # confs
-num_epochs = 20
+num_epochs = 50
 lr = 0.01
 num_inducing_point = 16
-
+kernal_dim = 1
+output_dim = 2
+train_data_nums = 100
 #   load data
 train_x = torch.linspace(0, 1, 100)
+
 
 train_y = torch.stack([
     torch.sin(train_x * (2 * math.pi)) + torch.randn(train_x.size()) * 0.2,
@@ -35,23 +38,25 @@ inducing_points = torch.rand(2, num_inducing_point, 1)
 
 # encoder
 encoder_net_model = DummyEncoder()
+# use scale constant other than torch dimension
 model, likelihood, optimizer, loss = train_utils.init_train(
-    inducing_points, encoder_net_model, train_y.size(1), train_y.size(0), lr)
+    inducing_points, encoder_net_model, output_dim, train_data_nums, lr,
+    kernel_dim=kernal_dim)
 
 # Training loader (different data loader)
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(train_x, train_y))
 
-model.train()
-likelihood.train()
+model, likelihood = train_utils.train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
+                                                       loss, optimizer)
+# model.train()
+# likelihood.train()
 
-epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
-for i in epochs_iter:
-    # Within each iteration, we will go over each minibatch of data
-    minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-    train_utils.basic_train_loop(train_loader, model, loss, optimizer)
-
-
+# epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
+# for i in epochs_iter:
+#     # Within each iteration, we will go over each minibatch of data
+#     minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
+#     train_utils.basic_train_loop(train_loader, model, loss, optimizer)
 # Set into eval mode
 model.eval()
 likelihood.eval()

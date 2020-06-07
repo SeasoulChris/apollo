@@ -97,25 +97,25 @@ inducing_points = torch.rand(2, 32, 2)
 
 
 # confs
-num_epochs = 14
+num_epochs = 100
 lr = 0.1
+kernel_dim = 2
+output_dim = 2
+train_data_nums = 500
+
 
 encoder_net_model = DummyEncoder()
+# kernel dim is same as input dim in this test
 model, likelihood, optimizer, loss = train_utils.init_train(
-    inducing_points, encoder_net_model, train_y.size(1), train_y.size(0), lr)
+    inducing_points, encoder_net_model, output_dim, train_data_nums, lr,
+    kernel_dim=kernel_dim)
 
 # Training loader
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(train_x, train_y), batch_size=32)
 
-model.train()
-likelihood.train()
-
-epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
-for i in epochs_iter:
-    # Within each iteration, we will go over each minibatch of data
-    minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-    train_utils.basic_train_loop(train_loader, model, loss, optimizer)
+model, likelihood = train_utils.train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
+                                                       loss, optimizer)
 
 
 # Set into eval mode
@@ -147,19 +147,22 @@ ax.scatter(train_x[:, 0].detach().numpy(), train_x[:, 1].detach().numpy(),
 ax = plt.gcf().add_subplot(1, 2, 2, projection='3d')
 ax.plot_surface(gx, gy, mean[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
                 linewidth=0, alpha=0.2, antialiased=False)
-ax.plot_surface(gx, gy, upper[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
-                linewidth=0, alpha=0.2, antialiased=False)
-ax.plot_surface(gx, gy, lower[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
-                linewidth=0, alpha=0.2, antialiased=False)
+# ax.plot_surface(gx, gy, upper[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
+#                 linewidth=0, alpha=0.2, antialiased=False)
+# ax.plot_surface(gx, gy, lower[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
+#                 linewidth=0, alpha=0.2, antialiased=False)
 ax.scatter(train_x[:, 0].detach().numpy(), train_x[:, 1].detach().numpy(),
            train_y[:, 1].detach().numpy())
-plt.show()
 
 
 #  accuracy
 test_exact_y1 = func_y1(X_2D[:, 0], X_2D[:, 1])
 test_exact_y2 = func_y2(X_2D[:, 0], X_2D[:, 1])
 test_y_exact = np.stack([test_exact_y1, test_exact_y2], axis=1)
+
+ax.plot_surface(gx, gy, test_exact_y2.reshape(gx.shape),
+                linewidth=0, alpha=0.2, antialiased=False)
+plt.show()
 
 print(test_y_exact.shape)
 print(mean.shape)
