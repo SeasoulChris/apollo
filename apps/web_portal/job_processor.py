@@ -50,7 +50,10 @@ class JobProcessor(object):
             logging.error(msg)
             return HTTPStatus.UNAUTHORIZED, msg
         # Construct client_flags.
-        client_flags = {'role': self.job_arg.partner.id}
+        client_flags = {
+            'role': self.job_arg.partner.id,
+            'node_selector': 'FOR_OPEN_SERVICES',
+        }
         if not self.populate_storage_config(client_flags):
             msg = 'job_arg format error!'
             logging.error(msg)
