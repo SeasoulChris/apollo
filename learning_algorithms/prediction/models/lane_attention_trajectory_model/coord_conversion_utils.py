@@ -71,7 +71,7 @@ class FindClosestNodeFromLineToPoint(nn.Module):
 
         # Calculate the L2 distance between every lane-points to the point.
         # (N x num_node-2 x 2)
-        distances = nodes - point.view(N, 1, 2).repeat(1, num_node-2, 1).float()
+        distances = nodes - point.view(N, 1, 2).repeat(1, num_node - 2, 1).float()
         distances = distances ** 2
         # (N x num_node-2)
         distances = torch.sum(distances, 2)

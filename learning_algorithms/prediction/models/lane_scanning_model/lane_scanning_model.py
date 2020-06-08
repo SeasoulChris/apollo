@@ -34,29 +34,29 @@ class LaneScanningDataset(Dataset):
                 feature_len = data_point[0]
                 if feature_len == 135:
                     if verbose:
-                        print ('Skipped this one because it has no lane.')
+                        print('Skipped this one because it has no lane.')
                     continue
                 if feature_len <= 0:
                     if verbose:
-                        print ('Skipped this one because it has no feature.')
+                        print('Skipped this one because it has no feature.')
                     continue
-                if (feature_len-135) % 400 != 0:
+                if (feature_len - 135) % 400 != 0:
                     if verbose:
-                        print ('Skipped this one because dimension isn\'t correct.')
+                        print('Skipped this one because dimension isn\'t correct.')
                     continue
 
-                curr_num_lanes = int((feature_len-135)/400)
+                curr_num_lanes = int((feature_len - 135) / 400)
                 self.obs_features.append(
                     np.asarray(data_point[1:46]).reshape((1, 45)))
                 self.lane_features.append(
                     np.asarray(data_point[136:-30]).reshape((curr_num_lanes, 400)))
                 traj_label = np.zeros((1, 20))
                 for j, point in enumerate(data_point[-30:-20]):
-                    traj_label[0, j], traj_label[0, j+10] = \
+                    traj_label[0, j], traj_label[0, j + 10] = \
                         CoordUtils.world_to_relative(point, data_point[-30])
                 self.traj_labels.append(traj_label)
             if verbose:
-                print ('Loaded {} out of {} files'.format(i+1, len(self.all_files)))
+                print('Loaded {} out of {} files'.format(i + 1, len(self.all_files)))
 
         self.length = len(self.obs_features)
 
@@ -109,7 +109,7 @@ class lane_scanning_model(torch.nn.Module):
     def __init__(self,
                  dim_cnn=[4, 10, 16, 25],
                  hidden_size=128,
-                 dim_lane_fc=[128*8, 700, 456, 230],
+                 dim_lane_fc=[128 * 8, 700, 456, 230],
                  dim_obs_fc=[45, 38, 32],
                  dim_traj_fc=[262, 120, 40]):
         super(lane_scanning_model, self).__init__()
@@ -187,12 +187,12 @@ class lane_scanning_model(torch.nn.Module):
         # N x max_num_laneseq x 256
         min_val = torch.min(static_fea)
         static_fea_maxpool, _ = pad_packed_sequence(
-            static_fea_states, batch_first=True, padding_value=min_val.item()-0.1)
+            static_fea_states, batch_first=True, padding_value=min_val.item() - 0.1)
         static_fea_maxpool, _ = torch.max(static_fea_maxpool, 1)
         static_fea_avgpool = torch.sum(static_fea, 1) / num_laneseq.reshape(N, 1)
         static_fea_front = static_fea[:, 0]
         idx_1 = np.arange(N).tolist()
-        idx_2 = (num_laneseq-1).int().data.tolist()
+        idx_2 = (num_laneseq - 1).int().data.tolist()
         static_fea_back = static_fea[idx_1, idx_2]
         static_fea_all = torch.cat((static_fea_maxpool, static_fea_avgpool,
                                     static_fea_front, static_fea_back), 1)

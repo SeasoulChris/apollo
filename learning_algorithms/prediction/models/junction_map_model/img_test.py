@@ -27,8 +27,8 @@ for i, (X, y) in enumerate(valid_loader):
     accuracy = (pred_label == true_label).type(torch.float).mean().item()
     numerator += np.sum(pred_label == true_label)
     denominator += true_label.shape[0]
-    print("step "+str(i)+": "+str(numerator)+" / "+str(denominator)
-          + " = "+str(100*numerator/denominator)+" %")
+    print("step " + str(i) + ": " + str(numerator) + " / " + str(denominator)
+          + " = " + str(100 * numerator / denominator) + " %")
 
     # max_kappa = 0
     # label = y.detach().numpy()

@@ -68,7 +68,7 @@ class HumanTrajectoryDataset(Dataset):
             # Go through every scene:
             for time_stamp_idx in range(0, num_sequences * skip + 1, skip):
                 curr_scene_data = np.concatenate(
-                    frame_data[time_stamp_idx:time_stamp_idx+seq_len], axis=0)
+                    frame_data[time_stamp_idx:time_stamp_idx + seq_len], axis=0)
                 peds_in_curr_scene_data = np.unique(curr_scene_data[:, 1])
                 curr_scene = np.zeros(
                     (len(peds_in_curr_scene_data), augmented_seq_len, 2))
@@ -98,12 +98,12 @@ class HumanTrajectoryDataset(Dataset):
                     curr_ped = curr_ped[:, 2:]
                     curr_ped_aug = np.zeros(
                         ((curr_ped.shape[0] - 1) * (self.extra_sample + 1) + 1, 2))
-                    for j in range(curr_ped.shape[0]-1):
-                        xy_diff = curr_ped[j+1, :] - curr_ped[j, :]
-                        for k in range(self.extra_sample+1):
-                            curr_ped_aug[j*(self.extra_sample+1)+k, :] = curr_ped[j,
-                                                                                  :] + xy_diff*k/(self.extra_sample+1)
-                    curr_ped_aug[curr_ped_aug.shape[0]-1, :] = curr_ped[curr_ped.shape[0]-1, :]
+                    for j in range(curr_ped.shape[0] - 1):
+                        xy_diff = curr_ped[j + 1, :] - curr_ped[j, :]
+                        for k in range(self.extra_sample + 1):
+                            curr_ped_aug[j * (self.extra_sample + 1) + k, :] = curr_ped[j,
+                                                                                        :] + xy_diff * k / (self.extra_sample + 1)
+                    curr_ped_aug[curr_ped_aug.shape[0] - 1, :] = curr_ped[curr_ped.shape[0] - 1, :]
                     curr_ped = curr_ped_aug
                     # 2. Add noise to the observed trajectory (no noise added
                     #    to the ground-truth label).
@@ -136,13 +136,13 @@ class HumanTrajectoryDataset(Dataset):
                     self.scene_is_predictable_list.append(curr_scene_is_predictable)
         self.num_scene = len(self.scene_list)
         if verbose:
-            print ('Statistics:')
-            print ('Average # of pedestrians in a scene = {}'.format(np.average(num_peds_in_scene)))
-            print ('Standard deviation of # of pedestrians in a scene = {}'.format(
+            print('Statistics:')
+            print('Average # of pedestrians in a scene = {}'.format(np.average(num_peds_in_scene)))
+            print('Standard deviation of # of pedestrians in a scene = {}'.format(
                 np.std(num_peds_in_scene)))
-            print ('Max # of pedestrians in a scene = {}'.format(np.max(num_peds_in_scene)))
-            print ('Min # of pedestrians in a scene = {}'.format(np.min(num_peds_in_scene)))
-            print ('Median # of pedestrians in a scene = {}'.format(np.median(num_peds_in_scene)))
+            print('Max # of pedestrians in a scene = {}'.format(np.max(num_peds_in_scene)))
+            print('Min # of pedestrians in a scene = {}'.format(np.min(num_peds_in_scene)))
+            print('Median # of pedestrians in a scene = {}'.format(np.median(num_peds_in_scene)))
 
     def __len__(self):
         return self.num_scene
@@ -174,7 +174,7 @@ def collate_scenes(batch):
     past_traj_timestamp_mask = np.concatenate(past_traj_timestamp_mask)
     is_predictable = np.concatenate(is_predictable)
 
-    same_scene_mask = [np.ones((length, 1))*i for i, length in enumerate(same_scene_mask)]
+    same_scene_mask = [np.ones((length, 1)) * i for i, length in enumerate(same_scene_mask)]
     same_scene_mask = np.concatenate(same_scene_mask)
 
     return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel),

@@ -27,7 +27,7 @@ if __name__ == '__main__':
         print("Making output directory: " + output_dir)
 
     obs_pos_dict = dict()
-    list_input = glob.glob(args.input+'/frame_env.*.bin')
+    list_input = glob.glob(args.input + '/frame_env.*.bin')
     print(list_input)
     for input_file in list_input:
         list_frame = offline_features_pb2.ListFrameEnv()
@@ -48,6 +48,6 @@ if __name__ == '__main__':
                     obs_pos_dict[key] = [(feature.position.x, feature.position.y)
                                          for feature in history.feature]
                     # print("Writing to: " + os.path.join(output_dir + filename))
-            except:
+            except BaseException:
                 print("Possible error on frame: " + str(idx) + "/" + str(len(list_frame.frame_env)))
-    np.save(os.path.join(output_dir+"/obs_pos.npy"), obs_pos_dict)
+    np.save(os.path.join(output_dir + "/obs_pos.npy"), obs_pos_dict)

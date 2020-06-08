@@ -9,6 +9,7 @@ from learning_algorithms.prediction.data_preprocessing.map_feature.mapping impor
 OFFSET_X = semantic_map_config['offset_x']
 OFFSET_Y = semantic_map_config['offset_y']
 
+
 class ObstacleMapping(object):
     """class of ObstacleMapping to create an obstacle feature_map"""
 
@@ -37,8 +38,8 @@ class ObstacleMapping(object):
         self.base_point = np.array(center_point) - 100
         self.GRID = [2000, 2000]
         self.resolution = 0.1
-        self.feature_map = base_map[center_idx[1]-1000:center_idx[1] +
-                                    1000, center_idx[0]-1000:center_idx[0]+1000].copy()
+        self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] +
+                                    1000, center_idx[0] - 1000:center_idx[0] + 1000].copy()
         self.draw_obstacles_history()
         self.draw_ego_history(ego_history)
 
@@ -64,9 +65,9 @@ class ObstacleMapping(object):
         w, l = 2.11, 4.93
         theta = self.world_coord[2]
         points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
-                        [np.sin(theta), np.cos(theta)]]),
-                        np.array([[l/2, l/2, -l/2, -l/2],
-                        [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
+                                  [np.sin(theta), np.cos(theta)]]),
+                        np.array([[l / 2, l / 2, -l / 2, -l / 2],
+                                  [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array(pos_point)
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
@@ -74,12 +75,12 @@ class ObstacleMapping(object):
         # draw obstacle_history
         # history is a np.array with shape [history_size, polygon_point_size, 2]
         history_size = history.shape[0]
-        for i in range(history_size-10, history_size):
+        for i in range(history_size - 10, history_size):
             polygon_points = history[i]
             if (polygon_points == np.zeros([20, 2])).all():
                 continue
             self._draw_polygon(feature_map, polygon_points, tuple(
-                c*(1/history_size*i) for c in color))
+                c * (1 / history_size * i) for c in color))
 
     def draw_obstacles_history(self, color=(0, 255, 255)):
         if self.obstacles_history is None:
@@ -97,19 +98,19 @@ class ObstacleMapping(object):
             theta = ego_history[i][2]
             pos_point = [ego_history[i][0], ego_history[i][1]]
             points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
-                            [np.sin(theta), np.cos(theta)]]),
-                            np.array([[l/2, l/2, -l/2, -l/2],
-                            [w/2, -w/2, -w/2, w/2]])).T + np.array(pos_point)
+                                      [np.sin(theta), np.cos(theta)]]),
+                            np.array([[l / 2, l / 2, -l / 2, -l / 2],
+                                      [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array(pos_point)
             points = [self.get_trans_point(point) for point in points]
             cv.fillPoly(self.feature_map, [np.int32(points)],
-                        color=tuple(c*(1/history_size*i) for c in color))
+                        color=tuple(c * (1 / history_size * i) for c in color))
 
     def crop_area(self, feature_map, world_coord):
         center = tuple(self.get_trans_point(world_coord[0:2]))
         heading_angle = world_coord[2] * 180 / np.pi
-        M = cv.getRotationMatrix2D(center, 90-heading_angle, 1.0)
+        M = cv.getRotationMatrix2D(center, 90 - heading_angle, 1.0)
         rotated = cv.warpAffine(feature_map, M, tuple(self.GRID))
-        output = rotated[center[1]-300:center[1]+100, center[0]-200:center[0]+200]
+        output = rotated[center[1] - 300:center[1] + 100, center[0] - 200:center[0] + 200]
         return cv.resize(output, (224, 224))
 
     def crop_by_history(self, history, color=(0, 0, 255)):

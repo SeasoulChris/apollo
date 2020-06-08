@@ -24,16 +24,16 @@ class ObstacleMapping(object):
         config = semantic_map_config_pb2.SemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(map_dir + "semantic_map_config.pb.txt", config)
         self.resolution = config.resolution
-        center_idx = [int(np.round((center_point[0]-config.base_point.x)/self.resolution)),
-                      int(config.dim_y-np.round((center_point[1]-config.base_point.y)/self.resolution))]
+        center_idx = [int(np.round((center_point[0] - config.base_point.x) / self.resolution)),
+                      int(config.dim_y - np.round((center_point[1] - config.base_point.y) / self.resolution))]
 
         self.frame_env = frame_env
         self.timestamp = self.frame_env.timestamp
         self.base_point = np.array(center_point) - config.observation_range
         self.GRID = [int(2 * config.observation_range / config.resolution),
                      int(2 * config.observation_range / config.resolution)]
-        self.feature_map = base_map[center_idx[1]-int(config.observation_range / config.resolution):center_idx[1]+int(config.observation_range / config.resolution),
-                                    center_idx[0]-int(config.observation_range / config.resolution):center_idx[0]+int(config.observation_range / config.resolution)]
+        self.feature_map = base_map[center_idx[1] - int(config.observation_range / config.resolution):center_idx[1] + int(config.observation_range / config.resolution),
+                                    center_idx[0] - int(config.observation_range / config.resolution):center_idx[0] + int(config.observation_range / config.resolution)]
         self.draw_frame()
 
     def get_trans_point(self, p):
@@ -46,7 +46,7 @@ class ObstacleMapping(object):
         w, l = feature.width, feature.length
         theta = feature.theta
         points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]),
-                        np.array([[l/2, l/2, -l/2, -l/2], [w/2, -w/2, -w/2, w/2]])).T + np.array([pos_x, pos_y])
+                        np.array([[l / 2, l / 2, -l / 2, -l / 2], [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array([pos_x, pos_y])
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
@@ -59,14 +59,14 @@ class ObstacleMapping(object):
 
     def draw_history(self, feature_map, history, color=(0, 255, 255)):
         # draw obstacle_history in reverse order
-        for i in range(len(history.feature)-1, -1, -1):
+        for i in range(len(history.feature) - 1, -1, -1):
             feature = history.feature[i]
             if feature.id == -1:
                 self._draw_rectangle(feature_map, feature, tuple(
-                    c*(1-self.timestamp+feature.timestamp) for c in color))
+                    c * (1 - self.timestamp + feature.timestamp) for c in color))
             else:
                 self._draw_polygon(feature_map, feature, tuple(
-                    c*(1-self.timestamp+feature.timestamp) for c in color))
+                    c * (1 - self.timestamp + feature.timestamp) for c in color))
 
     def draw_frame(self, color=(0, 255, 255)):
         for history in self.frame_env.obstacles_history:
@@ -76,16 +76,17 @@ class ObstacleMapping(object):
     def crop_area(self, feature_map, center_point, heading):
         center = tuple(self.get_trans_point(center_point))
         heading_angle = heading * 180 / np.pi
-        M = cv.getRotationMatrix2D(center, 90-heading_angle, 1.0)
+        M = cv.getRotationMatrix2D(center, 90 - heading_angle, 1.0)
         rotated = cv.warpAffine(feature_map, M, tuple(self.GRID))
-        output = rotated[center[1]-300:center[1]+100, center[0]-200:center[0]+200]
+        output = rotated[center[1] - 300:center[1] + 100, center[0] - 200:center[0] + 200]
         return cv.resize(output, (224, 224))
 
     def crop_by_history(self, history, color=(0, 0, 255)):
         feature_map = self.feature_map.copy()
         self.draw_history(feature_map, history, color)
         curr_feature = history.feature[0]
-        return self.crop_area(feature_map, [curr_feature.position.x, curr_feature.position.y], curr_feature.theta)
+        return self.crop_area(feature_map, [curr_feature.position.x,
+                                            curr_feature.position.y], curr_feature.theta)
 
 
 if __name__ == '__main__':
@@ -115,4 +116,4 @@ if __name__ == '__main__':
             obs_pos_dict[key] = obs_pos
             img = obstacle_mapping.crop_by_history(history)
             cv.imwrite(os.path.join(output_dir + "/" + filename), img)
-    np.save(os.path.join(output_dir+"/obs_pos.npy"), obs_pos_dict)
+    np.save(os.path.join(output_dir + "/obs_pos.npy"), obs_pos_dict)

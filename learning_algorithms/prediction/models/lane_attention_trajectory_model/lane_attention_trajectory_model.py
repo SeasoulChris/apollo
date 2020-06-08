@@ -47,17 +47,17 @@ class SelfLSTM(nn.Module):
         pred_out = cuda(torch.zeros(N, self.pred_len, 5))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
         ts_obs_mask, curr_obs_pos, curr_obs_pos_rel = None, None, None
-        for t in range(1, observation_len+self.pred_len):
+        for t in range(1, observation_len + self.pred_len):
             if t < observation_len:
-                ts_obs_mask = (obs_hist_size > observation_len-t).long().view(-1)
+                ts_obs_mask = (obs_hist_size > observation_len - t).long().view(-1)
                 curr_obs_pos_rel = obs_pos_rel[:, t, :].float()
                 curr_obs_pos = obs_pos[:, t, :].float()
             else:
                 ts_obs_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(ht.clone()).float().clone()
-                curr_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(ht.clone()).float().clone()
+                curr_obs_pos_rel = pred_out[:, t - observation_len, :2]
                 curr_obs_pos = curr_obs_pos + curr_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = curr_obs_pos.clone()
+                pred_traj[:, t - observation_len, :] = curr_obs_pos.clone()
 
             curr_N = torch.sum(ts_obs_mask).long().item()
             if curr_N == 0:
@@ -139,21 +139,21 @@ class FixedLane_LSTM(nn.Module):
 
         # Do lane LSTM.
         # (M x 64), (M x 64), (M x 2)
-        dummy1, dummy2, lane_dist, dummy3, dummy4 = self.obs2lane_lstm(lane_features, obs_pos[:, observation_len-1, :].float(),
+        dummy1, dummy2, lane_dist, dummy3, dummy4 = self.obs2lane_lstm(lane_features, obs_pos[:, observation_len - 1, :].float(),
                                                                        same_obstacle_mask, pred_mask, lane_ht, lane_ct)
 
-        for t in range(1, observation_len+self.pred_len):
+        for t in range(1, observation_len + self.pred_len):
             # Select the proper input data
             if t < observation_len:
-                this_timestamp_mask = (obs_hist_size > observation_len-t).long().view(-1)
+                this_timestamp_mask = (obs_hist_size > observation_len - t).long().view(-1)
                 this_obs_pos_rel = obs_pos_rel[:, t, :].float()
                 this_obs_pos = obs_pos[:, t, :].float()
             else:
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
-                this_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
+                this_obs_pos_rel = pred_out[:, t - observation_len, :2]
                 this_obs_pos = this_obs_pos + this_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = this_obs_pos.clone()
+                pred_traj[:, t - observation_len, :] = this_obs_pos.clone()
 
             curr_N = torch.sum(this_timestamp_mask).long().item()
             if curr_N == 0:
@@ -264,18 +264,18 @@ class LanePooling_LSTM(nn.Module):
         pred_out = cuda(torch.zeros(N, self.pred_len, 5))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
         this_timestamp_mask, this_obs_pos, this_obs_pos_rel = None, None, None
-        for t in range(1, observation_len+self.pred_len):
+        for t in range(1, observation_len + self.pred_len):
             # Select the proper input data
             if t < observation_len:
-                this_timestamp_mask = (obs_hist_size > observation_len-t).long().view(-1)
+                this_timestamp_mask = (obs_hist_size > observation_len - t).long().view(-1)
                 this_obs_pos_rel = obs_pos_rel[:, t, :].float()
                 this_obs_pos = obs_pos[:, t, :].float()
             else:
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
-                this_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
+                this_obs_pos_rel = pred_out[:, t - observation_len, :2]
                 this_obs_pos = this_obs_pos + this_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = this_obs_pos.clone()
+                pred_traj[:, t - observation_len, :] = this_obs_pos.clone()
 
             curr_N = torch.sum(this_timestamp_mask).long().item()
             if curr_N == 0:
@@ -397,18 +397,18 @@ class LaneAttention_LSTM(nn.Module):
         pred_out = cuda(torch.zeros(N, self.pred_len, 5))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
         this_timestamp_mask, this_obs_pos, this_obs_pos_rel = None, None, None
-        for t in range(1, observation_len+self.pred_len):
+        for t in range(1, observation_len + self.pred_len):
             # Select the proper input data
             if t < observation_len:
-                this_timestamp_mask = (obs_hist_size > observation_len-t).long().view(-1)
+                this_timestamp_mask = (obs_hist_size > observation_len - t).long().view(-1)
                 this_obs_pos_rel = obs_pos_rel[:, t, :].float()
                 this_obs_pos = obs_pos[:, t, :].float()
             else:
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
-                this_obs_pos_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(Ht.clone()).float().clone()
+                this_obs_pos_rel = pred_out[:, t - observation_len, :2]
                 this_obs_pos = this_obs_pos + this_obs_pos_rel
-                pred_traj[:, t-observation_len, :] = this_obs_pos.clone()
+                pred_traj[:, t - observation_len, :] = this_obs_pos.clone()
 
             curr_N = torch.sum(this_timestamp_mask).long().item()
             if curr_N == 0:
@@ -588,7 +588,7 @@ class LaneLSTM(nn.Module):
 
         # Embed the lane-points.
         # (N*num_lane_pt x 2)
-        lane_embed_input = lane_points.view(N*num_lane_pt, 2)
+        lane_embed_input = lane_points.view(N * num_lane_pt, 2)
         # (N x num_lane_pt x embed_size)
         lane_embed = self.embed(lane_embed_input).view(N, num_lane_pt, -1)
 
@@ -626,7 +626,7 @@ class LaneFutureEncoding(nn.Module):
             self.lane_lstm = LaneLSTM(embed_size=32, hidden_size=64)
         else:
             self.lane_enc = torch.nn.Sequential(
-                nn.Linear(window_size*2, 64),
+                nn.Linear(window_size * 2, 64),
                 nn.ReLU(),
             )
 
@@ -646,30 +646,30 @@ class LaneFutureEncoding(nn.Module):
 
         # Get obstalces' SL-coord
         # (N x 2)
-        sl_coord = self.proj_pt_to_sl(proj_pt, proj_pt-obs_pos, idx_before,
+        sl_coord = self.proj_pt_to_sl(proj_pt, proj_pt - obs_pos, idx_before,
                                       idx_after, lane_features)
 
         # Increment every delta_s=0.5 and get a new sequence of SL
         sl_coord[:, 1] = cuda(torch.zeros(N))
         sl_coord = sl_coord.view(N, 1, 2)
         # (N x 2)
-        delta_sl = torch.cat((cuda(torch.ones(N, 1))*self.delta_s, cuda(torch.zeros(N, 1))), 1)
+        delta_sl = torch.cat((cuda(torch.ones(N, 1)) * self.delta_s, cuda(torch.zeros(N, 1))), 1)
         # (N x window_size+1 x 2)
-        delta_sl = delta_sl.view(N, 1, 2).repeat(1, self.window_size+1, 1)
+        delta_sl = delta_sl.view(N, 1, 2).repeat(1, self.window_size + 1, 1)
         delta_sl[:, 0, :] = cuda(torch.zeros(N, 2))
         cum_sl = torch.cumsum(delta_sl, 1)
         # (N x window_size+1 x 2)
-        sl_coord_new = sl_coord.repeat(1, self.window_size+1, 1) + cum_sl
+        sl_coord_new = sl_coord.repeat(1, self.window_size + 1, 1) + cum_sl
 
         # Convert that SL back to XY and get delta_X, delta_Y
         xy_coord = self.sl_to_xy(
-            lane_features.view(N, 1, 150, 4).repeat(1, self.window_size+1,
-                                                    1, 1).view(N*(self.window_size+1), 150, 4),
-            sl_coord_new.view(N*(self.window_size+1), 2))
+            lane_features.view(N, 1, 150, 4).repeat(1, self.window_size + 1,
+                                                    1, 1).view(N * (self.window_size + 1), 150, 4),
+            sl_coord_new.view(N * (self.window_size + 1), 2))
         if self.debug_mode:
             return xy_coord
         # (N x window_size+1 x 2)
-        xy_coord = xy_coord.view(N, self.window_size+1, 2)
+        xy_coord = xy_coord.view(N, self.window_size + 1, 2)
         # (N x window_size x 2)
         delta_xy = xy_coord[:, 1:, :] - xy_coord[:, :-1, :]
 
@@ -712,7 +712,7 @@ class LanePoolingSimple(nn.Module):
             if ts_mask[obs_id] > 0:
                 # Select the lane of interest based on the smallest distance.
                 min_idx = torch.argmin(lane_dist[curr_mask])
-                lane_of_interest_mask[num_visited_lanes+min_idx] = cuda(torch.ones(1))
+                lane_of_interest_mask[num_visited_lanes + min_idx] = cuda(torch.ones(1))
             num_visited_lanes = num_visited_lanes + curr_num_lane
         lane_of_interest_mask = (lane_of_interest_mask > 0)
 
@@ -731,7 +731,7 @@ class GetAggregatedLaneEnc(nn.Module):
         self.aggr_enc_size = aggr_enc_size
 
         self.lane_scoring_mlp = generate_mlp(
-            [lane_hidden_size+lane_info_enc_size] + [16, 1], dropout=0.0, last_layer_nonlinear=False)
+            [lane_hidden_size + lane_info_enc_size] + [16, 1], dropout=0.0, last_layer_nonlinear=False)
         self.softmax_layer = nn.Softmax()
 
     def forward(self, lane_ht, lane_info_enc, lane_future_enc, same_obstacle_mask):
@@ -814,18 +814,18 @@ class ProbablisticTrajectoryLoss:
 
         eps = 1e-4
 
-        corr = torch.clamp(corr, min=-1+eps, max=1-eps)
-        z = (x-mux)**2/(sigma_x**2+eps) + (y-muy)**2/(sigma_y**2+eps) - \
-            2*corr*(x-mux)*(y-muy)/(torch.sqrt((sigma_x*sigma_y)**2)+eps)
+        corr = torch.clamp(corr, min=-1 + eps, max=1 - eps)
+        z = (x - mux)**2 / (sigma_x**2 + eps) + (y - muy)**2 / (sigma_y**2 + eps) - \
+            2 * corr * (x - mux) * (y - muy) / (torch.sqrt((sigma_x * sigma_y)**2) + eps)
         z = torch.clamp(z, min=eps)
 
-        P = 1/(2*np.pi*torch.sqrt((sigma_x*sigma_y)**2)*torch.sqrt(1-corr**2)+eps) \
-            * torch.exp(-z/(2*(1-corr**2)))
+        P = 1 / (2 * np.pi * torch.sqrt((sigma_x * sigma_y)**2) * torch.sqrt(1 - corr**2) + eps) \
+            * torch.exp(-z / (2 * (1 - corr**2)))
 
         loss = torch.clamp(P, min=eps)
         loss = -loss.log()
 
-        return torch.sum(loss)/N
+        return torch.sum(loss) / N
 
     def loss_info(self, y_pred_tuple, y_true):
         y_pred, y_pred_traj = y_pred_tuple

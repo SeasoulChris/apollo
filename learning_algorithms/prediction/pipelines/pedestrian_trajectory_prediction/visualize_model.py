@@ -25,16 +25,15 @@ model.load_state_dict(torch.load(state_dict_path, map_location='cpu'))
 model.eval()
 
 
-
 for i, (X, traj) in enumerate(test_dataloader):
     origin_img = X[5]
-    origin_img = origin_img.view(224,224,3).detach().numpy()
+    origin_img = origin_img.view(224, 224, 3).detach().numpy()
     cv.imwrite("/fuel/img{}.png".format(i), origin_img)
     (pred, img_attn) = model.forward(X)
     # print(traj)
-    img_attn = img_attn.view(224,224,1).detach().numpy()
+    img_attn = img_attn.view(224, 224, 1).detach().numpy()
     img_after_attn = origin_img * img_attn
     cv.imwrite("/fuel/img_after_attn{}.png".format(i), img_after_attn)
-    cv.imwrite("/fuel/img_attn{}.png".format(i), img_attn/ np.max(img_attn) * 255)
+    cv.imwrite("/fuel/img_attn{}.png".format(i), img_attn / np.max(img_attn) * 255)
     if i == 1:
         break

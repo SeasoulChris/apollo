@@ -152,7 +152,7 @@ class VehicleLSTM(nn.Module):
                                    batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*8, encode_size),
+            nn.Linear(hidden_size * 8, encode_size),
             nn.ReLU(),
         )
 
@@ -179,7 +179,7 @@ class VehicleLSTM(nn.Module):
         obs_position = torch.cat((obs_x, obs_y, vel_x, vel_y, acc_x, acc_y,
                                   vel_heading, vel_heading_changing_rate), 2).float()
         # (N x 20 x embed_size)
-        obs_embed = self.embed(obs_position.view(N*20, 8)).view(N, 20, self.embed_size)
+        obs_embed = self.embed(obs_position.view(N * 20, 8)).view(N, 20, self.embed_size)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
@@ -218,7 +218,7 @@ class VehicleDynamicLSTM(nn.Module):
         self.vehicle_rnn = nn.LSTM(embed_size, hidden_size, num_layers=1, batch_first=True)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*3, encode_size),
+            nn.Linear(hidden_size * 3, encode_size),
             nn.ReLU(),
         )
 
@@ -256,7 +256,7 @@ class VehicleDynamicLSTM(nn.Module):
 
         # Input embedding.
         # (N x 20 x embed_size)
-        obs_embed = self.embed(obs_fea.view(N*20, 8)).view(N, 20, self.embed_size)
+        obs_embed = self.embed(obs_fea.view(N * 20, 8)).view(N, 20, self.embed_size)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
@@ -266,7 +266,7 @@ class VehicleDynamicLSTM(nn.Module):
         obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
         min_val = torch.min(obs_states)
         obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,
-                                                        padding_value=min_val.item()-0.1)
+                                                        padding_value=min_val.item() - 0.1)
         # (N x hidden_size)
         final_states = ht.view(N, self.hidden_size)
         max_states, _ = torch.max(obs_states_for_maxpool, 1)
@@ -304,7 +304,7 @@ class BackwardLaneLSTM(nn.Module):
                                    batch_first=True, bidirectional=False)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*3, encode_size),
+            nn.Linear(hidden_size * 3, encode_size),
             nn.ReLU(),
         )
 
@@ -336,7 +336,7 @@ class BackwardLaneLSTM(nn.Module):
         obs_fea = obs_fea.index_select(0, sorted_idx)
 
         # (M x 20 x embed_size)
-        obs_embed = self.embed(obs_fea.view(M*20, 1))
+        obs_embed = self.embed(obs_fea.view(M * 20, 1))
         obs_embed = obs_embed.view(M, 20, self.embed_size)
 
         # Run through RNN.
@@ -347,7 +347,7 @@ class BackwardLaneLSTM(nn.Module):
         obs_states, input_sizes = pad_packed_sequence(packed_output, batch_first=True)
         min_val = torch.min(obs_states)
         obs_states_for_maxpool, _ = pad_packed_sequence(packed_output, batch_first=True,
-                                                        padding_value=min_val.item()-0.1)
+                                                        padding_value=min_val.item() - 0.1)
         # (M x hidden_size)
         final_states = ht.view(M, self.hidden_size)
         max_states, _ = torch.max(obs_states_for_maxpool, 1)
@@ -385,7 +385,7 @@ class LaneLSTM(nn.Module):
                                        num_layers=1, batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*8, encode_size),
+            nn.Linear(hidden_size * 8, encode_size),
             nn.ReLU(),
         )
 
@@ -402,7 +402,7 @@ class LaneLSTM(nn.Module):
         # (N x 100 x embed_size)
         lane_input = forward_lane_features.float().view(N, 100, 4)
         lane_input = lane_input[:, ::5, :]
-        lane_input = lane_input.view(N*20, 4)
+        lane_input = lane_input.view(N * 20, 4)
         lane_embed = self.embed(lane_input).view(N, 20, self.embed_size)
 
         # Run through RNN.
@@ -450,7 +450,7 @@ class AttentionalLaneLSTM(nn.Module):
                                        num_layers=1, batch_first=True, bidirectional=True)
 
         self.encode = torch.nn.Sequential(
-            nn.Linear(hidden_size*8, encode_size),
+            nn.Linear(hidden_size * 8, encode_size),
             nn.ReLU(),
         )
 
@@ -468,7 +468,7 @@ class AttentionalLaneLSTM(nn.Module):
         # Input embedding.
         # (M x 150 x embed_size)
         forward_lane_features = lane_features[:, -400:].contiguous()
-        lane_embed = self.embed(forward_lane_features.float().view(M*100, 4)
+        lane_embed = self.embed(forward_lane_features.float().view(M * 100, 4)
                                 ).view(M, 100, self.embed_size)
 
         # obs_feature attention.
@@ -481,7 +481,7 @@ class AttentionalLaneLSTM(nn.Module):
             new_attention_scores[curr_mask, :] = attention_scores[obs_id, :].view(
                 1, 100).repeat(curr_N, 1)
         # (M x 100 x hidden_size)
-        attention_scores = new_attention_scores.view(M, 100, 1).repeat(1, 1, self.hidden_size*2)
+        attention_scores = new_attention_scores.view(M, 100, 1).repeat(1, 1, self.hidden_size * 2)
 
         # Run through RNN.
         h0, c0 = self.h0.repeat(1, M, 1), self.c0.repeat(1, M, 1)
@@ -513,7 +513,7 @@ class SimpleAggregation(nn.Module):
         '''
         N = obs_encoding.size(0)
         input_encoding_size = obs_encoding.size(1)
-        out = cuda(torch.zeros(N, input_encoding_size*2))
+        out = cuda(torch.zeros(N, input_encoding_size * 2))
 
         for obs_id in range(same_obs_mask.max().long().item() + 1):
             curr_mask = (same_obs_mask[:, 0] == obs_id)
@@ -552,7 +552,7 @@ class AttentionalAggregation(nn.Module):
             output: N x output_size
         '''
         N = obs_encoding.size(0)
-        out = cuda(torch.zeros(N, self.output_size*2))
+        out = cuda(torch.zeros(N, self.output_size * 2))
 
         for obs_id in range(same_obs_mask.max().long().item() + 1):
             curr_mask = (same_obs_mask[:, 0] == obs_id)
@@ -571,10 +571,11 @@ class AttentionalAggregation(nn.Module):
 
 
 class DistributionalScoring(nn.Module):
-    def __init__(self, obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1024, mlp_size=[600, 100, 16, 1]):
+    def __init__(self, obs_enc_size=128, lane_enc_size=128,
+                 aggr_enc_size=1024, mlp_size=[600, 100, 16, 1]):
         super(DistributionalScoring, self).__init__()
         self.mlp = generate_mlp(
-            [obs_enc_size+lane_enc_size+aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
+            [obs_enc_size + lane_enc_size + aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
         self.softmax_layer = nn.Softmax()
 
     def forward(self, obs_encoding, lane_encoding, aggregated_info, same_obs_mask):
@@ -638,7 +639,7 @@ class ClassificationLoss:
                 total_correct_data_pt += 1
             total_num_data_pt += 1
 
-        return total_correct_data_pt/total_num_data_pt
+        return total_correct_data_pt / total_num_data_pt
 
     def loss_debug(self, y_pred, y_true_tuple):
         y_labels, y_is_cutin, y_same_obs_mask = y_true_tuple

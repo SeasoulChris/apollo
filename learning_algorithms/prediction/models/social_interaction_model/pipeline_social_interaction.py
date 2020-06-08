@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # Model and training setup
     model = SimpleLSTM(pred_len=40)
     loss = ProbablisticTrajectoryLoss()
-    print (model)
+    print(model)
     learning_rate = 3e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -44,10 +44,10 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if (torch.cuda.is_available()):
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,

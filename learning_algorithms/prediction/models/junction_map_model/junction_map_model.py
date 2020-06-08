@@ -23,7 +23,7 @@ Dataset set-up
 
 class JunctionMapDataset(Dataset):
     def __init__(self, dir, transform=None, verbose=False):
-        self.items = glob.glob(dir+"/**/*.png", recursive=True)
+        self.items = glob.glob(dir + "/**/*.png", recursive=True)
         if transform:
             self.transform = transform
         else:
@@ -58,14 +58,14 @@ class JunctionMapDataset(Dataset):
             # sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
             junction_label = junction_label_dict[key]
             if len(junction_label) != 24:
-                return self.__getitem__(idx+1)
+                return self.__getitem__(idx + 1)
             sample_mask = torch.FloatTensor(junction_label[-12:]).view(-1)
             sample_label = torch.FloatTensor(junction_label[:12]).view(-1)
-        except:
-            return self.__getitem__(idx+1)
+        except BaseException:
+            return self.__getitem__(idx + 1)
 
         if len(sample_mask) != 12 or len(sample_label) != 12:
-            return self.__getitem__(idx+1)
+            return self.__getitem__(idx + 1)
 
         return (sample_img, sample_mask), sample_label
 
@@ -121,5 +121,5 @@ class JunctionMapLoss():
         pred_label = y_pred.topk(1)[1]
         true_label = y_true.topk(1)[1]
         accuracy = (pred_label == true_label).type(torch.float).mean().item()
-        print("Accuracy is {:.3f} %".format(100*accuracy))
+        print("Accuracy is {:.3f} %".format(100 * accuracy))
         return

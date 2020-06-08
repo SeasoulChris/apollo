@@ -116,7 +116,7 @@ class SemanticMap(object):
                     3: (M, N, V),
                     4: (K, M, V),
                     5: (V, M, N)}
-        return tuple(x*255 for x in hsv_dict[I])
+        return tuple(x * 255 for x in hsv_dict[I])
 
     def _draw_road(self, color=(64, 64, 64)):
         for road in self.hd_map.road:
@@ -131,7 +131,7 @@ class SemanticMap(object):
                                 points = np.vstack((points, point))
                     elif edge.type == 3:
                         for segment in edge.curve.segment:
-                            for i in range(len(segment.line_segment.point)-1, -1, -1):
+                            for i in range(len(segment.line_segment.point) - 1, -1, -1):
                                 point = self.get_trans_point(
                                     [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                                 points = np.vstack((points, point))
@@ -162,30 +162,30 @@ class SemanticMap(object):
             if lane.type == 2 and lane.left_boundary.virtual and lane.right_boundary.virtual:
                 continue
             for segment in lane.left_boundary.curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self.get_trans_point(
                         [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                     p1 = self.get_trans_point(
-                        [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
                     cv.line(self.base_map, tuple(p0), tuple(p1), color=color, thickness=2)
             for segment in lane.right_boundary.curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self.get_trans_point(
                         [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                     p1 = self.get_trans_point(
-                        [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
                     cv.line(self.base_map, tuple(p0), tuple(p1), color=color, thickness=2)
 
     def _draw_lane_central(self):
         for lane in self.hd_map.lane:
             for segment in lane.central_curve.segment:
-                for i in range(len(segment.line_segment.point)-1):
+                for i in range(len(segment.line_segment.point) - 1):
                     p0 = self.get_trans_point(
                         [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                     p1 = self.get_trans_point(
-                        [segment.line_segment.point[i+1].x, segment.line_segment.point[i+1].y])
-                    theta = np.arctan2(segment.line_segment.point[i+1].y-segment.line_segment.point[i].y,
-                                       segment.line_segment.point[i+1].x-segment.line_segment.point[i].x)/(2*np.pi) % 1
+                        [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                    theta = np.arctan2(segment.line_segment.point[i + 1].y - segment.line_segment.point[i].y,
+                                       segment.line_segment.point[i + 1].x - segment.line_segment.point[i].x) / (2 * np.pi) % 1
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self._hsv_to_rgb(theta), thickness=4)
 

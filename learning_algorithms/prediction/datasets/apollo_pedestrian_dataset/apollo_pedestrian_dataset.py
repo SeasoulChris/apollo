@@ -46,7 +46,7 @@ class ApolloPedestrianDataset(Dataset):
                 if ped_id not in self.ped_id_to_traj_data:
                     self.ped_id_to_traj_data[ped_id] = []
                 self.ped_id_to_traj_data[ped_id] = self.ped_id_to_traj_data[ped_id] + \
-                    [(ped_timestamp, ped_x, ped_y, np.sqrt((ped_x-adc_x)**2 + (ped_y-adc_y)**2))]
+                    [(ped_timestamp, ped_x, ped_y, np.sqrt((ped_x - adc_x)**2 + (ped_y - adc_y)**2))]
 
         # Go through all peds, remove those that are too short to be usable.
         new_ped_id_to_traj_data = dict()
@@ -91,12 +91,12 @@ class ApolloPedestrianDataset(Dataset):
                 clean_ped_timestamp[1:] - clean_ped_timestamp[:-1] > threshold_discontinuity)
             ped_discontinuity_idx = [
                 0] + (ped_discontinuity_idx.reshape(-1) + 1).tolist() + [len(clean_ped_val)]
-            for i in range(len(ped_discontinuity_idx)-1):
-                if ped_discontinuity_idx[i+1] - ped_discontinuity_idx[i] > pred_len + 1:
+            for i in range(len(ped_discontinuity_idx) - 1):
+                if ped_discontinuity_idx[i + 1] - ped_discontinuity_idx[i] > pred_len + 1:
                     new_ped_id_to_traj_data[str(
-                        ped_id)+'_'+str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i+1]]
+                        ped_id) + '_' + str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i + 1]]
                     ped_tracking_length.append(
-                        ped_discontinuity_idx[i+1] - ped_discontinuity_idx[i])
+                        ped_discontinuity_idx[i + 1] - ped_discontinuity_idx[i])
                     seg_id += 1
         self.ped_id_to_traj_data = new_ped_id_to_traj_data
         ped_tracking_length = np.asarray(ped_tracking_length)
@@ -111,8 +111,8 @@ class ApolloPedestrianDataset(Dataset):
                 curr_scene_timestamp_mask = np.zeros((1, seq_len))
 
                 curr_scene[0, -len(ped_val):, :] = np.asarray(ped_val)
-                curr_scene_rel[0, -len(ped_val)+1:, :] = np.asarray(ped_val)[1:,
-                                                                             :] - np.asarray(ped_val)[:-1, :]
+                curr_scene_rel[0, -len(ped_val) + 1:, :] = np.asarray(ped_val)[1:,
+                                                                               :] - np.asarray(ped_val)[:-1, :]
                 curr_scene_timestamp_mask[0, -len(ped_val):] = np.ones((len(ped_val)))
 
                 self.scene_list.append(curr_scene)
@@ -120,27 +120,27 @@ class ApolloPedestrianDataset(Dataset):
                 self.scene_timestamp_mask.append(curr_scene_timestamp_mask)
                 self.scene_is_predictable_list.append(np.ones((1, 1)))
             else:
-                for i in range(len(ped_val)-seq_len+1):
+                for i in range(len(ped_val) - seq_len + 1):
                     self.scene_list.append(np.asarray(
-                        ped_val[i:i+seq_len]).reshape((1, seq_len, 2)))
+                        ped_val[i:i + seq_len]).reshape((1, seq_len, 2)))
                     curr_scene_rel = np.zeros((1, seq_len, 2))
                     curr_scene_rel[0, 1:, :] = np.asarray(
-                        ped_val[i:i+seq_len])[1:, :] - np.asarray(ped_val[i:i+seq_len])[:-1, :]
+                        ped_val[i:i + seq_len])[1:, :] - np.asarray(ped_val[i:i + seq_len])[:-1, :]
                     self.scene_rel_list.append(curr_scene_rel)
                     self.scene_timestamp_mask.append(np.ones((1, seq_len)))
                     self.scene_is_predictable_list.append(np.ones((1, 1)))
         self.num_scene = len(self.scene_list)
 
         if verbose:
-            print ('Dataset size = {}'.format(self.num_scene))
-            print ('Total number of usable pedestrians: {}'.format(len(self.ped_id_to_traj_data)))
-            print ('Number of data with tracking length >= seq_len = {}'.format(
+            print('Dataset size = {}'.format(self.num_scene))
+            print('Total number of usable pedestrians: {}'.format(len(self.ped_id_to_traj_data)))
+            print('Number of data with tracking length >= seq_len = {}'.format(
                 np.sum((ped_tracking_length - pred_len - obs_len) >= 0)))
-            print ('Average tracking length = {}'.format(np.average(ped_tracking_length)))
-            print ('Median tracking length = {}'.format(np.median(ped_tracking_length)))
-            print ('Max tracking length = {}'.format(np.max(ped_tracking_length)))
-            print ('Min tracking length = {}'.format(np.min(ped_tracking_length)))
-            print ('Standard deviation of tracking length = {}'.format(np.std(ped_tracking_length)))
+            print('Average tracking length = {}'.format(np.average(ped_tracking_length)))
+            print('Median tracking length = {}'.format(np.median(ped_tracking_length)))
+            print('Max tracking length = {}'.format(np.max(ped_tracking_length)))
+            print('Min tracking length = {}'.format(np.min(ped_tracking_length)))
+            print('Standard deviation of tracking length = {}'.format(np.std(ped_tracking_length)))
 
     def __len__(self):
         return self.num_scene

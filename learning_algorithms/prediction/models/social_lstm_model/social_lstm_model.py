@@ -155,7 +155,7 @@ def collate_scenes(batch):
     for i, length in enumerate(same_scene_mask):
         temp_mask.append(np.ones((length, 1)) * i)
     same_scene_mask = \
-        [np.ones((length, 1))*i for i, length in enumerate(same_scene_mask)]
+        [np.ones((length, 1)) * i for i, length in enumerate(same_scene_mask)]
     same_scene_mask = np.concatenate(same_scene_mask)
 
     return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel),
@@ -187,10 +187,10 @@ class SocialPooling(nn.Module):
         # N x N
         eps = 1e-2
         mask_within_pooling_area = \
-            (rel_pos_matrix[:, :, 0] < self.area_span / 2.0-eps) * \
-            (rel_pos_matrix[:, :, 0] > -self.area_span / 2.0+eps) * \
-            (rel_pos_matrix[:, :, 1] < self.area_span / 2.0-eps) * \
-            (rel_pos_matrix[:, :, 1] > -self.area_span / 2.0+eps)
+            (rel_pos_matrix[:, :, 0] < self.area_span / 2.0 - eps) * \
+            (rel_pos_matrix[:, :, 0] > -self.area_span / 2.0 + eps) * \
+            (rel_pos_matrix[:, :, 1] < self.area_span / 2.0 - eps) * \
+            (rel_pos_matrix[:, :, 1] > -self.area_span / 2.0 + eps)
         mask_within_pooling_area = mask_within_pooling_area.float()
         mask_within_pooling_area -= torch.eye(N).cuda()
 
@@ -245,7 +245,7 @@ class SocialPooling(nn.Module):
             #print (ht_matrix.shape)
             curr_ht_pooled = curr_ht_pooled.scatter_add(1, mask_grid_id, ht_matrix)
 
-            ht_pooled[N_filled:N_filled+curr_N, :, :] = curr_ht_pooled
+            ht_pooled[N_filled:N_filled + curr_N, :, :] = curr_ht_pooled
             N_filled += curr_N
 
         return ht_pooled
@@ -370,16 +370,16 @@ class ProbablisticTrajectoryLoss:
 
         eps = 1e-10
 
-        z = ((x-mux)/(eps+sigma_x))**2 + ((y-muy)/(eps+sigma_y))**2 - \
-            2*corr*(x-mux)*(y-muy)/(sigma_x*sigma_y+eps)
+        z = ((x - mux) / (eps + sigma_x))**2 + ((y - muy) / (eps + sigma_y))**2 - \
+            2 * corr * (x - mux) * (y - muy) / (sigma_x * sigma_y + eps)
         #print (z)
-        P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
-            torch.exp(-z/(2*(1-corr**2)))
+        P = 1 / (2 * np.pi * sigma_x * sigma_y * torch.sqrt(1 - corr**2) + eps) * \
+            torch.exp(-z / (2 * (1 - corr**2)))
 
         loss = torch.clamp(P, min=eps)
         #print (loss)
         loss = -loss.log()
-        return torch.sum(loss)/N
+        return torch.sum(loss) / N
 
     def loss_valid(self, y_pred, y_true):
         loss = nn.MSELoss()

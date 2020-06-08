@@ -82,7 +82,7 @@ def CombineFeaturesAndLabels(feature_path, label_path):
         # future_traj: list of tuples
         # Only retain those data with > 3sec future traj.
         if key not in dict_labels:
-            print ('Cannot find a feature-to-label mapping.')
+            print('Cannot find a feature-to-label mapping.')
             continue
         if 'obs_traj' not in dict_labels[key]:
             continue

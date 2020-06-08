@@ -10,7 +10,7 @@ from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
 
 
 def point_to_idx(point_x, point_y):
-    return (int((point_x + 40)/0.1), int((point_y + 40)/0.1))
+    return (int((point_x + 40) / 0.1), int((point_y + 40) / 0.1))
 
 
 def plot_img(obs_features, lane_features, labels, count):
@@ -27,7 +27,7 @@ def plot_img(obs_features, lane_features, labels, count):
 
     for obs_hist_pt in range(20):
         cv.circle(img, point_to_idx(
-            obs_features[2+obs_hist_pt*9], obs_features[1+obs_hist_pt*9]), radius=3, color=[128, 128, 128])
+            obs_features[2 + obs_hist_pt * 9], obs_features[1 + obs_hist_pt * 9]), radius=3, color=[128, 128, 128])
 
     for lane_idx in range(num_lane_seq):
         curr_lane = lane_features[lane_idx]
@@ -35,8 +35,8 @@ def plot_img(obs_features, lane_features, labels, count):
         if labels[lane_idx] == 1:
             continue
         for point_idx in range(149):
-            cv.line(img, point_to_idx(curr_lane[point_idx*4], curr_lane[point_idx*4+1]),
-                    point_to_idx(curr_lane[point_idx*4+4], curr_lane[point_idx*4+5]),
+            cv.line(img, point_to_idx(curr_lane[point_idx * 4], curr_lane[point_idx * 4 + 1]),
+                    point_to_idx(curr_lane[point_idx * 4 + 4], curr_lane[point_idx * 4 + 5]),
                     color=color_to_use)
 
     for lane_idx in range(num_lane_seq):
@@ -45,8 +45,8 @@ def plot_img(obs_features, lane_features, labels, count):
         if labels[lane_idx] == 0:
             continue
         for point_idx in range(149):
-            cv.line(img, point_to_idx(curr_lane[point_idx*4], curr_lane[point_idx*4+1]),
-                    point_to_idx(curr_lane[point_idx*4+4], curr_lane[point_idx*4+5]),
+            cv.line(img, point_to_idx(curr_lane[point_idx * 4], curr_lane[point_idx * 4 + 1]),
+                    point_to_idx(curr_lane[point_idx * 4 + 4], curr_lane[point_idx * 4 + 5]),
                     color=color_to_use)
 
     cv.imwrite('img={}__laneseq={}.png'.format(count, num_lane_seq), cv.flip(cv.flip(img, 0), 1))

@@ -28,7 +28,7 @@ Dataset set-up
 
 class SemanticMapDataset(Dataset):
     def __init__(self, dir, transform=None, verbose=False):
-        self.items = glob.glob(dir+"/**/*.png", recursive=True)
+        self.items = glob.glob(dir + "/**/*.png", recursive=True)
         if transform:
             self.transform = transform
         else:
@@ -65,11 +65,11 @@ class SemanticMapDataset(Dataset):
 
             sample_obs_feature = torch.FloatTensor(past_pos).view(-1)
             sample_label = torch.FloatTensor(future_pos[0:10]).view(-1)
-        except:
-            return self.__getitem__(idx+1)
+        except BaseException:
+            return self.__getitem__(idx + 1)
 
         if len(sample_obs_feature) != 20 or len(sample_label) != 20:
-            return self.__getitem__(idx+1)
+            return self.__getitem__(idx + 1)
 
         return (sample_img, sample_obs_feature), sample_label
 
@@ -127,11 +127,11 @@ class SemanticMapLoss():
 
 class WeightedSemanticMapLoss():
     def loss_fn(self, y_pred, y_true):
-        end_direction = y_true[:,-1,:] - y_true[:,-2,:]
-        start_direction = y_true[:,1,:] - y_true[:,0,:]
-        end_theta = torch.atan2(end_direction[:,1], end_direction[:,0])
-        start_theta = torch.atan2(start_direction[:,1], start_direction[:,0])
-        theta_diff = torch.abs(end_theta - start_theta) / (0.25*math.pi)
+        end_direction = y_true[:, -1, :] - y_true[:, -2, :]
+        start_direction = y_true[:, 1, :] - y_true[:, 0, :]
+        end_theta = torch.atan2(end_direction[:, 1], end_direction[:, 0])
+        start_theta = torch.atan2(start_direction[:, 1], start_direction[:, 0])
+        theta_diff = torch.abs(end_theta - start_theta) / (0.25 * math.pi)
         weight = torch.exp(theta_diff)
         out = y_pred - y_true
         weighted_out = weight * torch.mean(torch.sum(out ** 2, 2), 1)
@@ -178,7 +178,7 @@ class SemanticMapSelfLSTMModel(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
+        pred_traj = torch.zeros((N, self.pred_len, 2), device=img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
@@ -238,7 +238,7 @@ class SemanticMapSelfAttentionLSTMModel(nn.Module):
         img, img_attn = self.attn_block(img)
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
+        pred_traj = torch.zeros((N, self.pred_len, 2), device=img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
@@ -292,8 +292,8 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        curr_obs_pos_step = torch.zeros((N, 2), device = img.device)
-        pred_traj = torch.zeros((N, self.pred_len, 5), device = img.device)
+        curr_obs_pos_step = torch.zeros((N, 2), device=img.device)
+        pred_traj = torch.zeros((N, self.pred_len, 5), device=img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
@@ -305,7 +305,6 @@ class SemanticMapSelfLSTMModelWithUncertainty(nn.Module):
                 pred_traj[:, t - self.observation_len, :] = curr_obs_pos_step
                 curr_obs_pos = curr_obs_pos + curr_obs_pos_step[:, 0:2]
                 pred_traj[:, t - self.observation_len, 0:2] = curr_obs_pos
-
 
             disp_embedding = self.disp_embed(curr_obs_pos_step[:, 0:2]).view(N, 1, -1)
 
@@ -336,7 +335,7 @@ class SemanticMapSelfLSTMEgoAttentionModel(nn.Module):
                             num_layers=1, batch_first=True)
 
         self.pred_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size*2 + self.cnn_out_size, 2),
+            nn.Linear(hidden_size * 2 + self.cnn_out_size, 2),
         )
 
     def forward(self, X):
@@ -351,7 +350,7 @@ class SemanticMapSelfLSTMEgoAttentionModel(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_traj = torch.zeros((N, self.pred_len, 2), device = img.device)
+        pred_traj = torch.zeros((N, self.pred_len, 2), device=img.device)
 
         for t in range(1, self.observation_len + self.pred_len):
             if t < self.observation_len:
@@ -405,11 +404,11 @@ class SemanticMapSelfLSTMMultiModal(nn.Module):
 
         img_embedding = self.cnn(img)
         img_embedding = img_embedding.view(img_embedding.size(0), -1)
-        pred_traj = torch.zeros((N, self.num_modes, self.pred_len, 2), device = img.device)
+        pred_traj = torch.zeros((N, self.num_modes, self.pred_len, 2), device=img.device)
 
         for i in range(self.num_modes):
             ht, ct = self.h0.repeat(1, N, 1), self.h0.repeat(1, N, 1)
-            self.lstm[i].to(device = img.device)
+            self.lstm[i].to(device=img.device)
             for t in range(1, self.observation_len + self.pred_len):
                 if t < self.observation_len:
                     curr_obs_pos_step = obs_pos_step[:, t, :].float()
@@ -425,10 +424,12 @@ class SemanticMapSelfLSTMMultiModal(nn.Module):
 
         return pred_traj
 
+
 class SemanticMapSocialAttentionModel(nn.Module):
     '''
     Semantic map model with social attention
     '''
+
     def __init__(self, pred_len, num_history_points,
                  embed_size=64, edge_hidden_size=256, node_hidden_size=128, attention_dim=64,
                  cnn_net=models.mobilenet_v2, pretrained=True):
@@ -467,8 +468,8 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
     def forward(self, X):
         img, target_obs_pos_abs, target_obs_hist_size, target_obs_pos_rel, target_obs_pos_step, \
-             nearby_obs_pos_abs, nearby_obs_hist_sizes, nearby_obs_pos_rel, nearby_obs_pos_step, \
-             num_nearby_obs = X
+            nearby_obs_pos_abs, nearby_obs_hist_sizes, nearby_obs_pos_rel, nearby_obs_pos_step, \
+            num_nearby_obs = X
 
         N = img.size(0)
         observation_len = target_obs_pos_abs.size(1)
@@ -493,14 +494,14 @@ class SemanticMapSocialAttentionModel(nn.Module):
 
         scores = torch.zeros(N, nearby_padding_size)
 
-        for t in range(1, observation_len+self.pred_len):
+        for t in range(1, observation_len + self.pred_len):
             if t < observation_len:
-                target_ts_obs_mask = (target_obs_hist_size > observation_len - t).view(-1) # (N,)
+                target_ts_obs_mask = (target_obs_hist_size > observation_len - t).view(-1)  # (N,)
                 curr_target_obs_pos_abs = target_obs_pos_abs[:, t, :].float()  # (N, 2)
                 curr_target_obs_pos_rel = target_obs_pos_rel[:, t, :].float()  # (N, 2)
-                curr_target_obs_pos_step = target_obs_pos_step[:, t, :].float() # (N, 2)
+                curr_target_obs_pos_step = target_obs_pos_step[:, t, :].float()  # (N, 2)
                 # (N, nearby_padding_size, 1)
-                nearby_ts_obs_mask = (nearby_obs_hist_sizes > observation_len-t)
+                nearby_ts_obs_mask = (nearby_obs_hist_sizes > observation_len - t)
                 # (N, nearby_padding_size)
                 nearby_ts_obs_mask = nearby_ts_obs_mask[:, :, 0]
                 # (N, nearby_padding_size, 2)
@@ -517,7 +518,7 @@ class SemanticMapSocialAttentionModel(nn.Module):
                 curr_target_obs_pos_abs = curr_target_obs_pos_abs + pred_out
                 curr_target_obs_pos_rel = curr_target_obs_pos_rel + pred_out
                 curr_target_obs_pos_step = pred_out
-                pred_traj[:, t-observation_len, :] = curr_target_obs_pos_rel.clone()
+                pred_traj[:, t - observation_len, :] = curr_target_obs_pos_rel.clone()
 
             # Target obstacles forward
             num_target_ts_obs = torch.sum(target_ts_obs_mask).long().item()
@@ -525,14 +526,14 @@ class SemanticMapSocialAttentionModel(nn.Module):
             if num_target_ts_obs == 0:
                 continue
             target_disp_embedding = self.step_disp_embedding(
-                curr_target_obs_pos_step[target_ts_obs_mask==1, :]
+                curr_target_obs_pos_step[target_ts_obs_mask == 1, :]
                 .view(num_target_ts_obs, 1, -1).clone())
 
             _, (ht_new_t, ct_new_t) = self.target_lstm(target_disp_embedding,
-                (target_ht[target_ts_obs_mask==1, :].view(1, num_target_ts_obs, -1),
-                 target_ct[target_ts_obs_mask==1, :].view(1, num_target_ts_obs, -1)))
-            target_ht[target_ts_obs_mask==1, :] = ht_new_t.view(num_target_ts_obs, -1)
-            target_ct[target_ts_obs_mask==1, :] = ct_new_t.view(num_target_ts_obs, -1)
+                                                       (target_ht[target_ts_obs_mask == 1, :].view(1, num_target_ts_obs, -1),
+                                                        target_ct[target_ts_obs_mask == 1, :].view(1, num_target_ts_obs, -1)))
+            target_ht[target_ts_obs_mask == 1, :] = ht_new_t.view(num_target_ts_obs, -1)
+            target_ct[target_ts_obs_mask == 1, :] = ct_new_t.view(num_target_ts_obs, -1)
 
             # Nearby obstacles forward
             curr_N = torch.sum(nearby_ts_obs_mask).long().item()
@@ -542,15 +543,15 @@ class SemanticMapSocialAttentionModel(nn.Module):
             curr_nearby_ts_mask = nearby_ts_obs_mask.view(-1).long()
 
             nearby_disp_embedding = self.step_disp_embedding(
-                (curr_nearby_obs_pos_step.view(-1, 2).clone())[curr_nearby_ts_mask==1, :] \
+                (curr_nearby_obs_pos_step.view(-1, 2).clone())[curr_nearby_ts_mask == 1, :]
                 .clone()).view(curr_N, 1, -1)
 
             _, (ht_new_n, ct_new_n) = self.nearby_lstm(nearby_disp_embedding,
-                (nearby_ht_list[curr_nearby_ts_mask==1, :].view(1, curr_N, -1),
-                 nearby_ct_list[curr_nearby_ts_mask==1, :].view(1, curr_N, -1)))
+                                                       (nearby_ht_list[curr_nearby_ts_mask == 1, :].view(1, curr_N, -1),
+                                                        nearby_ct_list[curr_nearby_ts_mask == 1, :].view(1, curr_N, -1)))
 
-            nearby_ht_list[curr_nearby_ts_mask==1, :] = ht_new_n.view(curr_N, -1)
-            nearby_ct_list[curr_nearby_ts_mask==1, :] = ct_new_n.view(curr_N, -1)
+            nearby_ht_list[curr_nearby_ts_mask == 1, :] = ht_new_n.view(curr_N, -1)
+            nearby_ct_list[curr_nearby_ts_mask == 1, :] = ct_new_n.view(curr_N, -1)
 
             # (M, 2)
             curr_nearby_pos_abs = curr_nearby_obs_pos_abs.view(-1, 2)
@@ -573,19 +574,19 @@ class SemanticMapSocialAttentionModel(nn.Module):
             att_scores = torch.sum((att_nearby_embedding * att_target_embedding), 1).clone()
             # (M,)
             att_scores = att_scores * torch.tensor(curr_N) / \
-                         torch.sqrt(torch.tensor(self.attention_dim).float())
+                torch.sqrt(torch.tensor(self.attention_dim).float())
             att_scores = att_scores * (curr_nearby_ts_mask.float())
             att_score_max, _ = torch.max(att_scores.view(N, -1), 1)
             att_scores = att_scores.view(N, -1) - att_score_max.repeat(nearby_padding_size, 1).t()
 
-            att_scores_numerator = (torch.exp(att_scores).view(-1) * \
+            att_scores_numerator = (torch.exp(att_scores).view(-1) *
                                     (curr_nearby_ts_mask.float())).view(N, -1)
 
             att_scores_denominator = \
                 torch.sum(att_scores_numerator, 1).repeat(nearby_padding_size, 1).t() + 1e-6
-            att_scores_final = (att_scores_numerator / \
+            att_scores_final = (att_scores_numerator /
                                 att_scores_denominator).view(N, nearby_padding_size, 1) \
-                         .repeat(1, 1, self.edge_hidden_size)
+                .repeat(1, 1, self.edge_hidden_size)
 
             Ht[:, :] = torch.sum(
                 (nearby_ht_list.view(N, nearby_padding_size, -1).clone() * att_scores_final), 1)

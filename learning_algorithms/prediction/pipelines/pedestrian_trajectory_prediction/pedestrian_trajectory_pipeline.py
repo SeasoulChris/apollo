@@ -18,8 +18,6 @@ from learning_algorithms.prediction.pipelines.pedestrian_trajectory_prediction.p
 from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss, WeightedSemanticMapLoss
 
 
-
-
 if __name__ == "__main__":
     # Set-up the GPU to use
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
@@ -48,11 +46,11 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if (torch.cuda.is_available()):
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                          scheduler, epochs=50, save_name=args.save_path, print_period=200, save_mode=2)
+                           scheduler, epochs=50, save_name=args.save_path, print_period=200, save_mode=2)

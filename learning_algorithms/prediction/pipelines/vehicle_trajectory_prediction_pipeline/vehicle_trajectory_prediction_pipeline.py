@@ -49,13 +49,13 @@ if __name__ == "__main__":
         diff = torch.sqrt(torch.sum(diff ** 2, 2))
         out = torch.mean(diff, dim=1)
         return out
-    
+
     def base_loss_info(y_pred, y_true):
         diff = y_pred[:, :, :2] - y_true
         diff = torch.sqrt(torch.sum(diff ** 2, 2))
         out = torch.mean(diff)
         return out
-    
+
     # loss = MultiModalLoss(base_loss_fn, base_loss_info)
 
     learning_rate = 3e-4
@@ -65,10 +65,10 @@ if __name__ == "__main__":
 
     # CUDA setup:
     if (torch.cuda.is_available()):
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,

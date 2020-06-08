@@ -2,7 +2,7 @@
 Run with:
     ./tools/submit-job-to-k8s.py --main=fueling/map/generate_base_map.py --memory=8 --disk=10
 """
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 # Standard packages
 from datetime import datetime
@@ -29,6 +29,7 @@ import fueling.common.redis_utils as redis_utils
 
 flags.DEFINE_float('lane_width', 3.0, 'lane width.')
 flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')
+
 
 class MapGenSingleLine(BasePipeline):
     """map_gen_single_line pipeline."""
@@ -64,7 +65,7 @@ class MapGenSingleLine(BasePipeline):
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         logging.info("job_id: %s" % job_id)
-        
+
         self.lane_width = self.FLAGS.get('lane_width')
         self.extra_roi_extension = self.FLAGS.get('extra_roi_extension')
 

@@ -22,7 +22,7 @@ def LoadDataForLearning(filepath):
         with open(filepath, 'rb') as file_in:
             list_of_data_for_learning.ParseFromString(file_in.read())
         return list_of_data_for_learning.data_for_learning
-    except:
+    except BaseException:
         return None
 
 
@@ -35,8 +35,8 @@ def CalculateDistanceAndAngle(curve, point):
     '''
     min_dist = None
     for i in range(len(curve)):
-        distance = np.sqrt((point[0] - curve[len(curve)-1-i][0])**2 +
-                           (point[1] - curve[len(curve)-1-i][1])**2)
+        distance = np.sqrt((point[0] - curve[len(curve) - 1 - i][0])**2 +
+                           (point[1] - curve[len(curve) - 1 - i][1])**2)
         if min_dist is None:
             min_dist = distance
         else:
@@ -67,11 +67,11 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             continue
         dict_labels = np.load(label_path).item()
         # Load the feature for learning file.
-        print ('============================================')
-        print ('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
+        print('============================================')
+        print('Reading file: {}. ({}/{})'.format(path, file_count, len(all_file_paths)))
         vector_data_for_learning = LoadDataForLearning(path)
         if vector_data_for_learning is None:
-            print ('Failed to read file')
+            print('Failed to read file')
             continue
 
         num_dirty_data_point = 0
@@ -123,26 +123,28 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             list_of_backward_lane_points = []
             obs_past_history = features_for_learning[:obs_feature_size]
             for i in range(num_lane_sequence):
-                lane_points_l = features_for_learning[obs_feature_size+i*single_lane_feature_size:
-                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
-                lane_points_s = features_for_learning[obs_feature_size+i*single_lane_feature_size+1:
-                                                      obs_feature_size+(i+1)*single_lane_feature_size:4]
+                lane_points_l = features_for_learning[obs_feature_size + i * single_lane_feature_size:
+                                                      obs_feature_size + (i + 1) * single_lane_feature_size:4]
+                lane_points_s = features_for_learning[obs_feature_size + i * single_lane_feature_size + 1:
+                                                      obs_feature_size + (i + 1) * single_lane_feature_size:4]
                 curr_backward_lane_points = list(zip(lane_points_l, lane_points_s))
                 curr_backward_lane_points = curr_backward_lane_points[0:int(
-                    past_lane_feature_size/4)]
+                    past_lane_feature_size / 4)]
                 list_of_backward_lane_points.append(curr_backward_lane_points)
-            # Contains num_lane_sequence lists, while each list of tuples represents historical dist and angle.
+            # Contains num_lane_sequence lists, while each list of tuples represents
+            # historical dist and angle.
             list_of_dists_and_angles = []
             for lane_points in list_of_backward_lane_points:
                 curr_historical_dist_and_angle = []
-                for obs_hist_idx in range(int(obs_feature_size/9)):
+                for obs_hist_idx in range(int(obs_feature_size / 9)):
                     # If no history, then exit.
-                    if obs_past_history[obs_hist_idx*9] == 0:
+                    if obs_past_history[obs_hist_idx * 9] == 0:
                         break
                     curr_historical_dist_and_angle.append(CalculateDistanceAndAngle(
-                        lane_points, (obs_past_history[obs_hist_idx*9+2], obs_past_history[obs_hist_idx*9+1])))
+                        lane_points, (obs_past_history[obs_hist_idx * 9 + 2], obs_past_history[obs_hist_idx * 9 + 1])))
                 list_of_dists_and_angles.append(curr_historical_dist_and_angle)
-            #    b. Second, if multiple backward lane merges into one, then remove those that have exactly the same avg displacement.
+            # b. Second, if multiple backward lane merges into one, then remove those
+            # that have exactly the same avg displacement.
             list_of_avg_displacement = []
             for curr_historical_dist_and_angle in list_of_dists_and_angles:
                 list_of_avg_displacement.append(
@@ -178,7 +180,7 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                         if lane_seg_id in lane_sequence:
                             lane_seq_set.add(i)
                     stable_window_lane_sequences.append(lane_seq_set)
-            if len(stable_window_lane_sequences) != int(stable_window/0.1):
+            if len(stable_window_lane_sequences) != int(stable_window / 0.1):
                 num_dirty_data_point += 1
                 continue
             is_dirty_data_point = False
@@ -217,7 +219,8 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
                     has_stepped_out = 0
             num_cutin_data_points += has_stepped_out
 
-            # 7. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume there are five lane sequences)
+            # 7. Refactor the label into the format of [1, 1, 0, 0, 0] ... (assume
+            # there are five lane sequences)
             one_hot_encoding_label = []
             for i in range(num_lane_sequence):
                 if i in end_lane_sequences:
@@ -228,9 +231,9 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
             # Put everything together.
             curr_data_point = [num_lane_sequence] + features_for_learning[:obs_feature_size]
             for i in valid_lane_sequence_ids:
-                curr_data_point += features_for_learning[obs_feature_size+i*single_lane_feature_size:
-                                                         obs_feature_size+(i+1)*single_lane_feature_size]
-                past_distances = [-1 for j in range(int(obs_feature_size/9))]
+                curr_data_point += features_for_learning[obs_feature_size + i * single_lane_feature_size:
+                                                         obs_feature_size + (i + 1) * single_lane_feature_size]
+                past_distances = [-1 for j in range(int(obs_feature_size / 9))]
                 for j in range(len(list_of_dists_and_angles[i])):
                     past_distances[j] = list_of_dists_and_angles[i][j][0]
                 curr_data_point += past_distances
@@ -240,20 +243,20 @@ def DataPreprocessing(feature_dir, label_dir, pred_len=3.0, stable_window=0.5):
         # Save into a local file for training.
         try:
             num_usable_data_points = len(output_np_array)
-            print ('Removed dirty data points: {}'.format(num_dirty_data_point))
-            print ('Total usable data points: {}'.format(num_usable_data_points))
-            print ('Total cut-in data points: {}'.format(num_cutin_data_points))
+            print('Removed dirty data points: {}'.format(num_dirty_data_point))
+            print('Total usable data points: {}'.format(num_usable_data_points))
+            print('Total cut-in data points: {}'.format(num_cutin_data_points))
             output_np_array = np.array(output_np_array)
-            np.save(path+'.training_data.npy', output_np_array)
+            np.save(path + '.training_data.npy', output_np_array)
             total_usable_data_points += num_usable_data_points
             total_num_dirty_data_points += num_dirty_data_point
             total_cutin_data_points += num_cutin_data_points
-        except:
-            print ('Failed to save output file.')
+        except BaseException:
+            print('Failed to save output file.')
 
-    print ('Removed {} dirty data points.'.format(total_num_dirty_data_points))
-    print ('There are {} usable data points.'.format(total_usable_data_points))
-    print ('There are {} cut-in data points.'.format(total_cutin_data_points))
+    print('Removed {} dirty data points.'.format(total_num_dirty_data_points))
+    print('There are {} usable data points.'.format(total_usable_data_points))
+    print('There are {} cut-in data points.'.format(total_cutin_data_points))
 
 
 class ApolloVehicleRegularRoadDataset(Dataset):
@@ -275,16 +278,17 @@ class ApolloVehicleRegularRoadDataset(Dataset):
             file_content = np.load(file_path).tolist()
             for data_pt in file_content:
                 curr_num_lane_sequence = int(data_pt[0])
-                if len(data_pt) != curr_num_lane_sequence*(single_lane_feature_size+20+2)+obs_feature_size+2:
+                if len(data_pt) != curr_num_lane_sequence * \
+                        (single_lane_feature_size + 20 + 2) + obs_feature_size + 2:
                     continue
 
                 curr_obs_hist_size = np.sum(
-                    np.array(data_pt[1:obs_feature_size+1:9])) * np.ones((1, 1))
+                    np.array(data_pt[1:obs_feature_size + 1:9])) * np.ones((1, 1))
 
                 curr_obs_feature = np.array(
-                    data_pt[1:obs_feature_size+1]).reshape((int(obs_feature_size/9), 9))
+                    data_pt[1:obs_feature_size + 1]).reshape((int(obs_feature_size / 9), 9))
                 curr_obs_feature = np.flip(curr_obs_feature, 0)
-                new_curr_obs_feature = np.zeros((int(obs_feature_size/9), 9))
+                new_curr_obs_feature = np.zeros((int(obs_feature_size / 9), 9))
                 new_curr_obs_feature[:int(curr_obs_hist_size[0][0]),
                                      :] = curr_obs_feature[-int(curr_obs_hist_size[0][0]):, :]
                 curr_obs_feature = new_curr_obs_feature.reshape((1, obs_feature_size))
@@ -292,9 +296,9 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 #   - Remove data-points with history that has positive s values.
                 #   - Remove data-points with history that has big abrupt jumps.
 
-                curr_lane_feature = np.array(data_pt[obs_feature_size+1:obs_feature_size+1 +
-                                                     (single_lane_feature_size+20)*curr_num_lane_sequence])\
-                    .reshape((curr_num_lane_sequence, single_lane_feature_size+20))
+                curr_lane_feature = np.array(data_pt[obs_feature_size + 1:obs_feature_size + 1 +
+                                                     (single_lane_feature_size + 20) * curr_num_lane_sequence])\
+                    .reshape((curr_num_lane_sequence, single_lane_feature_size + 20))
                 curr_backward_lane_points = curr_lane_feature[:, single_lane_feature_size:]
                 curr_backward_lane_points = np.flip(curr_backward_lane_points, 1)
                 new_curr_backward_lane_points = np.zeros((curr_num_lane_sequence, 20))
@@ -305,9 +309,9 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                 curr_lane_feature = curr_lane_feature[:, :single_lane_feature_size]
 
                 curr_self_lane_feature = np.array(
-                    data_pt[-1-2*curr_num_lane_sequence:-1-curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
+                    data_pt[-1 - 2 * curr_num_lane_sequence:-1 - curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
 
-                curr_label = np.array(data_pt[-1-curr_num_lane_sequence:-1])
+                curr_label = np.array(data_pt[-1 - curr_num_lane_sequence:-1])
                 if np.sum(curr_label) == 0:
                     continue
 
@@ -340,8 +344,8 @@ class ApolloVehicleRegularRoadDataset(Dataset):
                         self.is_cutin.append(curr_is_cutin)
 
         self.total_num_data_pt = len(self.obstacle_features)
-        print ('Total number of data points = {}'.format(self.total_num_data_pt))
-        print ('Total number of cut-in data points = {}'.format(total_num_cutin_data_pt))
+        print('Total number of data points = {}'.format(self.total_num_data_pt))
+        print('Total number of cut-in data points = {}'.format(total_num_cutin_data_pt))
 
     def __len__(self):
         return self.total_num_data_pt
@@ -367,7 +371,7 @@ def collate_fn(batch):
     labels = np.concatenate(labels)
     is_cutin = np.concatenate(is_cutin)
 
-    same_obstacle_mask = [np.ones((length, 1))*i for i, length in enumerate(same_obstacle_mask)]
+    same_obstacle_mask = [np.ones((length, 1)) * i for i, length in enumerate(same_obstacle_mask)]
     same_obstacle_mask = np.concatenate(same_obstacle_mask)
 
     return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_features), torch.from_numpy(backward_lane_points),

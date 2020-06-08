@@ -26,6 +26,8 @@ OFFSET_Y = semantic_map_config['offset_y']
           polygon_points: x, y, x, y, ..., x, y
       future: [x, y, x, y, ..., x, y]
 '''
+
+
 class PedestrianTrajectoryDataset(Dataset):
     def RecoverHistory(self, history):
         history[:, 1] += OFFSET_X
@@ -134,16 +136,16 @@ class PedestrianTrajectoryDataset(Dataset):
 
                     curr_obs_pos_rel = np.zeros((1, MAX_OBS_HISTORY_SIZE, 2))
                     if curr_obs_hist_size > 1:
-                        curr_obs_pos_rel[0, -curr_obs_hist_size+1:, :] = \
-                        curr_obs_pos[0, -curr_obs_hist_size+1:, :] - \
-                        curr_obs_pos[0, -curr_obs_hist_size:-1, :]
+                        curr_obs_pos_rel[0, -curr_obs_hist_size + 1:, :] = \
+                            curr_obs_pos[0, -curr_obs_hist_size + 1:, :] - \
+                            curr_obs_pos[0, -curr_obs_hist_size:-1, :]
                     self.obs_pos_rel.append(curr_obs_pos_rel)
 
                     if len(data_pt[1]) == 0:
                         self.is_predictable.append(np.zeros((1, 1)))
                         self.reference_world_coord.append([0.0, 0.0, 0.0])
                         self.future_traj.append(np.zeros((1, self.pred_len, 2)))
-                        self.future_traj_rel.append(np.zeros((1, self.pred_len-1, 2)))
+                        self.future_traj_rel.append(np.zeros((1, self.pred_len - 1, 2)))
                         continue
 
                     self.is_predictable.append(np.ones((1, 1)))
@@ -162,7 +164,7 @@ class PedestrianTrajectoryDataset(Dataset):
                         new_curr_future_traj[0, i, 1] = new_coord[1]
                     # (1 x self.pred_len x 2)
                     self.future_traj.append(new_curr_future_traj)
-                    curr_future_traj_rel = np.zeros((1, self.pred_len-1, 2))
+                    curr_future_traj_rel = np.zeros((1, self.pred_len - 1, 2))
                     curr_future_traj_rel = \
                         new_curr_future_traj[:, 1:, :] - new_curr_future_traj[:, :-1, :]
                     # (1 x self.pred_len-1 x 2)
@@ -175,7 +177,7 @@ class PedestrianTrajectoryDataset(Dataset):
 
         self.total_num_data_pt = len(self.start_idx)
         logging.info('Total number of data points = {}'.format(self.total_num_data_pt))
-                    
+
     def __len__(self):
         return self.total_num_data_pt
 
@@ -206,12 +208,12 @@ class PedestrianTrajectoryDataset(Dataset):
         target_obs_pos_abs = all_obs_positions[predicting_idx, :, :]
         target_obs_pos_rel = np.zeros_like(target_obs_pos_abs)
         target_obs_pos_step = np.zeros_like(target_obs_pos_abs)
-        hist_size  = int(target_obs_hist_size[0])
-        for i in range(20-hist_size, 20):
+        hist_size = int(target_obs_hist_size[0])
+        for i in range(20 - hist_size, 20):
             target_obs_pos_rel[i, :] = CoordUtils.world_to_relative(
                 target_obs_pos_abs[i, :], world_coord)
             if i > 0:
-                target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i-1, :]
+                target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - target_obs_pos_rel[i - 1, :]
 
         return ((img,
                  torch.from_numpy(target_obs_pos_abs).float(),
@@ -227,6 +229,6 @@ class PedestrianTrajectoryDataset(Dataset):
 
 
 if __name__ == '__main__':
-    pedestrian_dataset = PedestrianTrajectoryDataset('/data/kinglong_train_clean/train/baidudasha/jinlong-JinLongBaiduDaSha/20200226/')
+    pedestrian_dataset = PedestrianTrajectoryDataset(
+        '/data/kinglong_train_clean/train/baidudasha/jinlong-JinLongBaiduDaSha/20200226/')
     pedestrian_dataset.getitem(10)
-

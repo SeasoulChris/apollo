@@ -13,7 +13,7 @@ from scipy.signal import filtfilt
 # Helper Functions
 #######################################################################
 def point_to_idx(point_x, point_y):
-    return (int(point_x/0.1 + 400), int(point_y/0.1 + 400))
+    return (int(point_x / 0.1 + 400), int(point_y / 0.1 + 400))
 
 
 def plot_img(future_pt, count, adjusted_future_pt=None):
@@ -52,8 +52,8 @@ def LabelCleaningCoarse(feature_seq, pred_len=30):
     angular_vel = np.sum(
         obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
     turning_ang = (np.arctan2(
-        obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
-    turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
+        obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
+    turning_ang = turning_ang if turning_ang < np.pi else turning_ang - 2 * np.pi
     # 3. Filtered the extream values for acc and ang_vel.
     if np.max(np.abs(linear_acc)) > 50:
         return None
@@ -61,16 +61,16 @@ def LabelCleaningCoarse(feature_seq, pred_len=30):
         return None
     # Get the statistics of the cleaned labels, and do some re-balancing to
     # maintain roughly the same distribution as before.
-    if -np.pi/6 <= turning_ang <= np.pi/6:
-        area = (obs_pos[0, 0]*obs_pos[1, 1] + obs_pos[1, 0]*obs_pos[-1, 1] + obs_pos[-1, 0]*obs_pos[0, 1]
-                - obs_pos[0, 0]*obs_pos[-1, 1] - obs_pos[1, 0]*obs_pos[0, 1] - obs_pos[-1, 0]*obs_pos[1, 1])
-        if area/(np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
+    if -np.pi / 6 <= turning_ang <= np.pi / 6:
+        area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
+                - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+        if area / (np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
             return 'change_lane'
         else:
             return 'straight'
-    elif -np.pi/2 <= turning_ang < -np.pi/6:
+    elif -np.pi / 2 <= turning_ang < -np.pi / 6:
         return 'right'
-    elif np.pi/6 < turning_ang <= np.pi/2:
+    elif np.pi / 6 < turning_ang <= np.pi / 2:
         return 'left'
     else:
         return 'uturn'
@@ -147,7 +147,7 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
     file_count = 0
     for label_dict_name in label_dict_list:
         file_count += 1
-        print ('Processing {}/{}'.format(file_count, len(label_dict_list)))
+        print('Processing {}/{}'.format(file_count, len(label_dict_list)))
         label_dict = np.load(label_dict_name).item()
         cleaned_label_dict = {}
         idx = 0
@@ -164,8 +164,8 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / \
                 ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
             turning_ang = (np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0]) -
-                           np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2*np.pi)
-            turning_ang = turning_ang if turning_ang < np.pi else turning_ang-2*np.pi
+                           np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
+            turning_ang = turning_ang if turning_ang < np.pi else turning_ang - 2 * np.pi
             # 3. Filtered the extream values for acc and ang_vel.
             if np.max(np.abs(linear_acc)) > 80:
                 continue
@@ -177,18 +177,18 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
 
             # Get the statistics of the cleaned labels, and do some re-balancing to
             # maintain roughly the same distribution as before.
-            if -np.pi/6 <= turning_ang <= np.pi/6:
+            if -np.pi / 6 <= turning_ang <= np.pi / 6:
                 if np.min(angular_vel) < 0.9 or np.max(np.abs(linear_acc)) > 30:
                     continue
-                area = (obs_pos[0, 0]*obs_pos[1, 1] + obs_pos[1, 0]*obs_pos[-1, 1] + obs_pos[-1, 0]*obs_pos[0, 1]
-                        - obs_pos[0, 0]*obs_pos[-1, 1] - obs_pos[1, 0]*obs_pos[0, 1] - obs_pos[-1, 0]*obs_pos[1, 1])
-                if area/(np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
+                area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
+                        - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+                if area / (np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
                     count['change_lane'] += 1
                 else:
                     count['straight'] += 1
-            elif -np.pi/2 <= turning_ang < -np.pi/6:
+            elif -np.pi / 2 <= turning_ang < -np.pi / 6:
                 count['right'] += 1
-            elif np.pi/6 < turning_ang <= np.pi/2:
+            elif np.pi / 6 < turning_ang <= np.pi / 2:
                 if np.max(np.abs(linear_acc)) > 30:
                     continue
                 count['left'] += 1
@@ -199,7 +199,11 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
         print("Got " + str(len(cleaned_label_dict.keys())) +
               "/" + str(len(label_dict.keys())) + " labels left!")
         print(count)
-        np.save(label_dict_name.replace('cleaned_label.npy', 'cleaner_label.npy'), cleaned_label_dict)
+        np.save(
+            label_dict_name.replace(
+                'cleaned_label.npy',
+                'cleaner_label.npy'),
+            cleaned_label_dict)
     print(count)
     return
 

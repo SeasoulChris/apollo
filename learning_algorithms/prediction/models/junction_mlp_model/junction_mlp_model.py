@@ -51,5 +51,5 @@ class JunctionMLPLoss():
         pred_label = y_pred.topk(1)[1]
         true_label = y_true.topk(1)[1]
         accuracy = (pred_label == true_label).type(torch.float).mean().item()
-        print("Accuracy is {:.3f} %".format(100*accuracy))
+        print("Accuracy is {:.3f} %".format(100 * accuracy))
         return

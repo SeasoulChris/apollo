@@ -59,10 +59,10 @@ class SimpleLSTM(nn.Module):
             else:
                 # Making predictions.
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(ht).float()
-                this_traj_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(ht).float()
+                this_traj_rel = pred_out[:, t - observation_len, :2]
                 this_traj = this_traj + this_traj_rel
-                pred_traj[:, t-observation_len, :] = this_traj
+                pred_traj[:, t - observation_len, :] = this_traj
 
             if torch.sum(this_timestamp_mask) == 0:
                 continue
@@ -200,10 +200,10 @@ class SocialPooling(nn.Module):
         # is within pooling area of agent i. (note that agent i is not within
         # pooling area of agent i, which is itself)
         mask_within_pooling_area = \
-            (rel_pos_matrix[:, :, 0] < self.area_span / 2.0-eps) * \
-            (rel_pos_matrix[:, :, 0] > -self.area_span / 2.0+eps) * \
-            (rel_pos_matrix[:, :, 1] < self.area_span / 2.0-eps) * \
-            (rel_pos_matrix[:, :, 1] > -self.area_span / 2.0+eps)
+            (rel_pos_matrix[:, :, 0] < self.area_span / 2.0 - eps) * \
+            (rel_pos_matrix[:, :, 0] > -self.area_span / 2.0 + eps) * \
+            (rel_pos_matrix[:, :, 1] < self.area_span / 2.0 - eps) * \
+            (rel_pos_matrix[:, :, 1] > -self.area_span / 2.0 + eps)
         mask_within_pooling_area = mask_within_pooling_area.float()
         mask_within_pooling_area -= cuda(torch.eye(N))
 
@@ -264,7 +264,7 @@ class SocialPooling(nn.Module):
             curr_ht_pooled = curr_ht_pooled.scatter_add(1, mask_grid_id, ht_matrix)
 
             # 5. Update the pooled Ht.
-            ht_pooled[N_filled:N_filled+curr_N, :, :] = curr_ht_pooled
+            ht_pooled[N_filled:N_filled + curr_N, :, :] = curr_ht_pooled
             N_filled += curr_N
 
         return ht_pooled
@@ -325,7 +325,7 @@ class SocialAttention(nn.Module):
         #                             1 x 1 x edge_hidden_size].
         s_edge_ht_list = []
         s_edge_ct_list = []
-        for i in range(same_scene_mask.max().long().item()+1):
+        for i in range(same_scene_mask.max().long().item() + 1):
             curr_dim = torch.sum(same_scene_mask == i).item()
             s_edge_ht_list.append(self.s_edge_h0.repeat(curr_dim, curr_dim, 1))
             s_edge_ct_list.append(self.s_edge_c0.repeat(curr_dim, curr_dim, 1))
@@ -343,7 +343,7 @@ class SocialAttention(nn.Module):
         pred_out = cuda(torch.zeros(N, self.pred_len, 5))
         pred_traj = cuda(torch.zeros(N, self.pred_len, 2))
         this_timestamp_mask, this_traj, this_traj_rel = None, None, None
-        for t in range(observation_len+self.pred_len):
+        for t in range(observation_len + self.pred_len):
             if t < observation_len:
                 # (N x 1)
                 this_timestamp_mask = past_traj_timestamp_mask[:, t].view(N, 1)
@@ -353,10 +353,10 @@ class SocialAttention(nn.Module):
                 this_traj = past_traj[:, t, :].float()
             else:
                 this_timestamp_mask = pred_mask
-                pred_out[:, t-observation_len, :] = self.pred_layer(node_ht_list).float()
-                this_traj_rel = pred_out[:, t-observation_len, :2]
+                pred_out[:, t - observation_len, :] = self.pred_layer(node_ht_list).float()
+                this_traj_rel = pred_out[:, t - observation_len, :2]
                 this_traj = this_traj + this_traj_rel
-                pred_traj[:, t-observation_len, :] = this_traj
+                pred_traj[:, t - observation_len, :] = this_traj
 
             # 1. Do spatial-edge (h_{uv}) RNN.
             s_edge_ht_list, s_edge_ct_list = self.spatial_edge_rnn(
@@ -524,7 +524,7 @@ class EdgeToNodeAttention(nn.Module):
             curr_N = s_ht.size(0)
             attention_score =\
                 attention_score_list[i].view(curr_N, curr_N, 1).repeat(1, 1, self.edge_hidden_size)
-            spatial_ht_summary.append(torch.sum(s_ht*attention_score, 1))
+            spatial_ht_summary.append(torch.sum(s_ht * attention_score, 1))
 
         return torch.cat(spatial_ht_summary, 0)
 
@@ -618,7 +618,7 @@ class EdgeToNodeAverage(nn.Module):
         for m in spatial_ht_list:
             mask = cuda(torch.ones(m.size(0), m.size(0)) - torch.eye(m.size(0)))
             mask = mask.view(m.size(0), m.size(0), 1).repeat(1, 1, m.size(2))
-            spatial_ht_summary.append(torch.mean(mask*m, 1).view(m.size(0), m.size(2)))
+            spatial_ht_summary.append(torch.mean(mask * m, 1).view(m.size(0), m.size(2)))
 
         return torch.cat(spatial_ht_summary, 0)
 
@@ -631,10 +631,10 @@ class NodeRNN(nn.Module):
             nn.ReLU(),
         )
         self.hid_embed = torch.nn.Sequential(
-            nn.Linear(edge_hidden_size*2, embed_size),
+            nn.Linear(edge_hidden_size * 2, embed_size),
             nn.ReLU(),
         )
-        self.lstm = nn.LSTM(embed_size*2, node_hidden_size, num_layers=1, batch_first=True)
+        self.lstm = nn.LSTM(embed_size * 2, node_hidden_size, num_layers=1, batch_first=True)
 
     def forward(self, Hv_t, hvv_t, xv_t, hv_tm1, cv_tm1, ts_mask):
         '''
@@ -681,15 +681,15 @@ class ProbablisticTrajectoryLoss:
 
         eps = 1e-10
 
-        z = ((x-mux)/(eps+sigma_x))**2 + ((y-muy)/(eps+sigma_y))**2 - \
-            2*corr*(x-mux)*(y-muy)/(sigma_x*sigma_y+eps)
-        P = 1/(2*np.pi*sigma_x*sigma_y*torch.sqrt(1-corr**2)+eps) * \
-            torch.exp(-z/(2*(1-corr**2)))
+        z = ((x - mux) / (eps + sigma_x))**2 + ((y - muy) / (eps + sigma_y))**2 - \
+            2 * corr * (x - mux) * (y - muy) / (sigma_x * sigma_y + eps)
+        P = 1 / (2 * np.pi * sigma_x * sigma_y * torch.sqrt(1 - corr**2) + eps) * \
+            torch.exp(-z / (2 * (1 - corr**2)))
 
         loss = torch.clamp(P, min=eps)
         loss = -loss.log()
 
-        return torch.sum(loss)/N
+        return torch.sum(loss) / N
 
     def loss_info(self, y_pred_tuple, y_true):
         y_pred, y_pred_traj = y_pred_tuple

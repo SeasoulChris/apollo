@@ -24,7 +24,7 @@ def train_using_given_model_and_params(model_params, train_file, valid_file):
     # Set-up model, optimizer, and scheduler
     model = FastLaneAttention(*model_params)
     loss = ClassificationLoss()
-    print (model)
+    print(model)
     learning_rate = 1e-4
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -32,10 +32,10 @@ def train_using_given_model_and_params(model_params, train_file, valid_file):
 
     # Set-up CUDA
     if torch.cuda.is_available():
-        print ("Using CUDA to speed up training.")
+        print("Using CUDA to speed up training.")
         model.cuda()
     else:
-        print ("Not using CUDA.")
+        print("Not using CUDA.")
 
     # Model training
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,

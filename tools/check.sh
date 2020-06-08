@@ -26,10 +26,11 @@ bash /fuel/tools/lint.sh /fuel/fueling/planning
 bash /fuel/tools/lint.sh /fuel/fueling/profiling
 bash /fuel/tools/lint.sh /fuel/fueling/streaming
 
-# TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/map
+bash /fuel/tools/lint.sh /fuel/fueling/map
+bash /fuel/tools/lint.sh /fuel/learning_algorithms
+
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/prediction
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling/simulation
-# TODO(?): bash /fuel/tools/lint.sh /fuel/learning_algorithms
 # TODO(?): bash /fuel/tools/lint.sh /fuel/fueling  # Finally
 
 echo "######################### All check passed! #########################"

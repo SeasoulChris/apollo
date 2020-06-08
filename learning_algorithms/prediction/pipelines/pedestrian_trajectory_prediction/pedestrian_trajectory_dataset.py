@@ -27,6 +27,8 @@ OFFSET_Y = semantic_map_config['offset_y']
       future: [x, y, x, y, ..., x, y]
       id: [id]
 '''
+
+
 class PedestrianTrajectoryDataset(Dataset):
     def RecoverHistory(self, history):
         history[:, 1] += OFFSET_X
@@ -84,7 +86,7 @@ class PedestrianTrajectoryDataset(Dataset):
                     self.data_pt_list.append((file_path, scene_id, data_pt_id))
 
         logging.info('Total number of data points = {}'.format(len(self.data_pt_list)))
-                    
+
     def __len__(self):
         return len(self.data_pt_list)
 
@@ -100,7 +102,7 @@ class PedestrianTrajectoryDataset(Dataset):
         obs_polygons = []
         # Target obstacle's historical information
         world_coord = [0.0, 0.0, 0.0]
-        target_obs_hist_size = np.zeros([1,1])
+        target_obs_hist_size = np.zeros([1, 1])
         target_obs_polygons = np.zeros([1, MAX_OBS_HISTORY_SIZE, 20, 2])
         target_obs_pos_abs = np.zeros([MAX_OBS_HISTORY_SIZE, 2])
         target_obs_pos_rel = np.zeros_like(target_obs_pos_abs)
@@ -143,7 +145,7 @@ class PedestrianTrajectoryDataset(Dataset):
                         CoordUtils.world_to_relative(target_obs_pos_abs[i, :], world_coord)
                     if i > 0:
                         target_obs_pos_step[i, :] = target_obs_pos_rel[i, :] - \
-                                                    target_obs_pos_rel[i-1, :]
+                            target_obs_pos_rel[i - 1, :]
                 # go over future trajectory
                 curr_future_traj = curr_future.reshape([self.pred_len, 2])
                 for i in range(self.pred_len):
@@ -174,7 +176,7 @@ class PedestrianTrajectoryDataset(Dataset):
             for i in range(curr_hist_start, 20):
                 ego_pos_rel[i, :] = CoordUtils.world_to_relative(ego_pos_abs[i, :], world_coord)
                 if i > 0:
-                    ego_pos_step[i, :] = ego_pos_rel[i, :] - ego_pos_rel[i-1, :]
+                    ego_pos_step[i, :] = ego_pos_rel[i, :] - ego_pos_rel[i - 1, :]
 
         obs_polygons = np.concatenate(obs_polygons)
         obs_mapping = ObstacleMapping(map_region, self.base_map[map_region],
@@ -203,4 +205,3 @@ class PedestrianTrajectoryDataset(Dataset):
 if __name__ == '__main__':
     pedestrian_dataset = PedestrianTrajectoryDataset('/fuel/kinglong_data/train_clean/')
     pedestrian_dataset.getitem(100)
-
