@@ -73,6 +73,10 @@ class SparkSubmitJob(flask_restful.Resource):
         K8S_MASTER = 'k8s://https://180.76.60.99:6443'
         STORAGE = '/mnt/bos'
         EXTRACTED_PATH = '/apollo/modules/data/fuel'
+        SPARK_LOG_STORAGE = 'file:///mnt/bos/modules/data/spark'
+        EVENTLOG_DIR = os.path.join(SPARK_LOG_STORAGE, 'spark-events')
+        DRIVER_LOG4J = os.path.join(SPARK_LOG_STORAGE, 'driver-logs/log4j-driver.properties')
+        EXECUTOR_LOG4J = os.path.join(SPARK_LOG_STORAGE, 'executor-logs/log4j-executor.properties')
         SECRET_ENVS = {
             'BOS_ACCESS': 'bos-secret:ak',
             'BOS_SECRET': 'bos-secret:sk',
@@ -138,34 +142,25 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.kubernetes.memoryOverheadFactor=0 '
             '--conf yarn.log-aggregation-enable=true '
             '--conf spark.eventLog.enabled=true '
-            '--conf spark.eventLog.dir=file:///mnt/bos/modules/data/spark/spark-events/ '
-            '--conf "spark.driver.extraJavaOptions=-Djob_id=%(job_id)s '
-            '-Dlog4j.configuration=file:///mnt/bos/modules/data/spark/driver-logs/log4j-driver.properties" '
-            '--conf "spark.executor.extraJavaOptions=-Djob_id=%(job_id)s '
-            '-Dlog4j.configuration=file:///mnt/bos/modules/data/spark/executor-logs/log4j-executor.properties" '
+            f'--conf spark.eventLog.dir={EVENTLOG_DIR} '
+            f'--conf "spark.driver.extraJavaOptions=-Djob_id={job_id} '
+            f'-Dlog4j.configuration={DRIVER_LOG4J}" '
+            f'--conf "spark.executor.extraJavaOptions=-Djob_id={job_id} '
+            f'-Dlog4j.configuration={EXECUTOR_LOG4J}" '
             # Docker
             '--conf spark.kubernetes.container.image.pullPolicy=Always '
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '
-            '--conf spark.kubernetes.container.image=%(docker_image)s '
+            f'--conf spark.kubernetes.container.image={arg.env.docker_image} '
             # Driver
-            '--conf spark.driver.memory=%(driver_memory)sg '
+            f'--conf spark.driver.memory={arg.driver.driver_memory} '
             '--conf spark.kubernetes.authenticate.driver.serviceAccountName=spark '
             # Executor
-            '--conf spark.executor.instances=%(workers)s '
-            '--conf spark.default.parallelism=%(workers)s '
-            '--conf spark.executor.memory=%(worker_memory)sg '
-            '--conf spark.kubernetes.executor.request.cores=%(worker_cpu)s '
-            '--conf spark.kubernetes.executor.gpus=%(worker_gpu)s '
-            '--conf spark.kubernetes.executor.ephemeralStorageGB=%(worker_disk)s ' % {
-                'job_id': job_id,
-                'docker_image': arg.env.docker_image,
-                'workers': arg.worker.count,
-                'worker_memory': arg.worker.memory,
-                'worker_cpu': arg.worker.cpu,
-                'worker_gpu': arg.worker.gpu,
-                'worker_disk': arg.worker.disk,
-                'driver_memory': arg.driver.driver_memory,
-            })
+            f'--conf spark.executor.instances={arg.worker.count} '
+            f'--conf spark.default.parallelism={arg.worker.count} '
+            f'--conf spark.executor.memory={arg.worker.memory} '
+            f'--conf spark.kubernetes.executor.request.cores={arg.worker.cpu} '
+            f'--conf spark.kubernetes.executor.gpus={arg.worker.gpu} '
+            f'--conf spark.kubernetes.executor.ephemeralStorageGB={arg.worker.disk} ')
 
         # Use node-selector for different types of jobs
         if arg.env.node_selector != Env.NodeSelector.ANY:
