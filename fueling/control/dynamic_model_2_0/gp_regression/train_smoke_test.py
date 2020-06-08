@@ -26,9 +26,6 @@ from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
-input_dim = feature_config["input_dim"]
-output_dim = feature_config["output_dim"]
-input_window_size = feature_config["input_window_size"]
 
 test_type = "toy_test"
 if test_type == "full_test":
@@ -45,17 +42,10 @@ else:
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train"
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test"
 
-# learning parameters
-batch_size = config["batch_size"]
-num_epochs = config["num_epochs"]
-lr = config["lr"]
-num_inducing_point = config["num_inducing_point"]
-kernel_dim = config["kernel_dim"]
-
 
 # setup data loader
 train_dataset = DynamicModelDataset(training_data_path)
-train_loader = DataLoader(train_dataset, batch_size=batch_size,
+train_loader = DataLoader(train_dataset, batch_size=config["batch_size"],
                           shuffle=True, drop_last=True)
 total_train_number = len(train_loader.dataset)
 train_y = train_dataset[0][1].unsqueeze(0)
@@ -66,8 +56,8 @@ logging.info(train_y.shape)
 
 
 # inducing points
-step_size = int(max(batch_size / num_inducing_point, 1))
-inducing_point_num = torch.arange(0, batch_size, step=step_size)
+step_size = int(max(config["batch_size"] / config["num_inducing_point"], 1))
+inducing_point_num = torch.arange(0, config["batch_size"], step=step_size)
 for idx, (features, labels) in enumerate(train_loader):
     features = torch.transpose(features, 0, 1).type(torch.FloatTensor)
     inducing_points = features[:, inducing_point_num, :].unsqueeze(0)
@@ -77,9 +67,10 @@ inducing_points = torch.cat((inducing_points, inducing_points), 0)
 logging.info(inducing_points.shape)
 
 # encoder
-encoder_net_model = Encoder(u_dim=input_dim, kernel_dim=kernel_dim)
+encoder_net_model = Encoder(u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss = train_utils.init_train(
-    inducing_points, encoder_net_model, output_dim, total_train_number, lr)
+    inducing_points, encoder_net_model, feature_config["output_dim"],
+    total_train_number, config["lr"])
 
 # training
 model.train()
@@ -90,14 +81,14 @@ scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                               cooldown=0, min_lr=0.0, eps=1e-08)
 
 
-epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
+epochs_iter = tqdm.tqdm(range(config["num_epochs"]), desc="Epoch")
 for i in epochs_iter:
     # Within each iteration, we will go over each minibatch of data
     minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
     train_loss = train_utils.basic_train_loop(train_loader, model, loss, optimizer, True)
     scheduler.step(train_loss)
-    if i == 10:
-        gpytorch.settings.tridiagonal_jitter(1e-4)
+    if i == config["epoch_set_tridiagonal_jitter"]:
+        gpytorch.settings.tridiagonal_jitter(config["tridiagonal_jitter"])
 
 
 # validation
