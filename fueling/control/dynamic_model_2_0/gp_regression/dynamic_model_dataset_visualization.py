@@ -7,6 +7,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import h5py
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import minmax_scale
 from sklearn.preprocessing import MaxAbsScaler
@@ -289,21 +290,30 @@ def visualize(datasets, input_indices, output_index):
         plt.show()
 
 
-def check_outlier(data_dir):
+def check_outlier(data_dir, loc, std):
     """Extract datasets from data path"""
     # list of dataset = (input_tensor, output_tensor)
     h5_files = file_utils.list_files_with_suffix(data_dir, '.h5')
+    PI = 3.14159
+    print(len(h5_files))
+    cnt = 0
     for idx, h5_file in enumerate(h5_files):
-        logging.debug(f'h5_file: {h5_file}')
+        # logging.info(f'h5_file: {h5_file}')
         with h5py.File(h5_file, 'r') as model_norms_file:
             # Get input data
             input_segment = np.array(model_norms_file.get('input_segment'))
-            if np.isnan(np.sum(input_segment)):
-                logging.error(f'file {h5_file} contains NAN data in input segment')
+            # denormalize input data from DM10
+            input_segment[:, range(0, 5)] = input_segment[:, range(0, 5)] * std + loc
+            # heading angle covert back to PI
+            input_segment[:, -1] = input_segment[:, -1] * PI
             # Get output data
             output_segment = np.array(model_norms_file.get('output_segment'))
-            if np.any(np.max(output_segment)) > 1.0:
+            if np.any(np.max(output_segment) > 5.0):
+                # print(f'input segment: {input_segment[]}')
+                print(output_segment)
                 logging.error(f'file {h5_file} contains large_label')
+                cnt += 1
+    logging.info(f'outliers total number is : {cnt}')
 
 
 if __name__ == '__main__':
@@ -349,4 +359,5 @@ if __name__ == '__main__':
         input_indices = np.array([15, 16])
         visualize_input_only(features, input_indices)
     if check_large_label:
-        check_outlier('/fuel/fueling/control/dynamic_model_2_0/0603')
+        check_outlier('/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train',
+                      dynamic_model_dataset.pre_input_mean, dynamic_model_dataset.pre_input_std)

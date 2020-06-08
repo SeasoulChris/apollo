@@ -96,7 +96,6 @@ def generate_gp_data(model_path, segment):
 
     model_weights_path = os.path.join(model_path, 'weights.h5')
 
-    logging.info(F'loading model: {model_weights_path}')
     model = GlobalModels.get_model(model_weights_path)
     if not model:
         model = load_model(model_weights_path)
@@ -109,7 +108,6 @@ def generate_gp_data(model_path, segment):
     predicted_v = segment[0, segment_index["v_x"]] * np.cos(segment[0, segment_index["heading"]]) +\
         segment[0, segment_index["v_y"]] * np.sin(segment[0, segment_index["heading"]])
     predicted_heading = segment[0, segment_index["heading"]]
-    logging.info(f'init predicted_heading is {predicted_heading}')
     predicted_w = segment[0, segment_index["w_z"]]
     predicted_x = segment[0, segment_index["x"]]
     predicted_y = segment[0, segment_index["y"]]
@@ -152,15 +150,15 @@ def generate_gp_data(model_path, segment):
         predicted_w_prev = predicted_w
         predicted_a_prev = predicted_a
     # The residual error on x and y prediction
-    logging.info(
+    logging.debug(
         f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
         ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
-    logging.info(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
+    logging.debug(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
     output_segment[output_index["d_x"]] = segment[INPUT_LENGTH
                                                   - 1, segment_index["x"]] - predicted_x
     output_segment[output_index["d_y"]] = segment[INPUT_LENGTH
                                                   - 1, segment_index["y"]] - predicted_y
-    logging.info("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
+    logging.debug("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
     return (input_segment, output_segment)
 
 

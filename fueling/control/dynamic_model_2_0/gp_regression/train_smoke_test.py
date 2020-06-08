@@ -30,8 +30,8 @@ import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 
-train_model = False
-test_type = "full_test"
+train_model = True
+test_type = "toy_test"
 if test_type == "full_test":
     config = training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
@@ -81,8 +81,9 @@ model, likelihood, optimizer, loss = train_utils.init_train(
 
 
 if train_model:
-    model, likelihood = train_utils.train_with_adjusted_lr(config["num_epochs"], train_loader, model, likelihood,
-                                                           loss, optimizer, is_transpose=True)
+    model, likelihood = train_utils.train_with_adjusted_lr(
+        config["num_epochs"], train_loader, model, likelihood,
+        loss, optimizer, is_transpose=True)
 
     # test save and load model
     save_model_state_dict(model, likelihood, model_path)

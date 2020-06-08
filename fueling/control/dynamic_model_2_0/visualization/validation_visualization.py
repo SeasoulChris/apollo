@@ -56,7 +56,8 @@ class ValidationVisualization():
         # encoder model
         encoder_net_model = Encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         # TODO(Shu): check if it is necessary to use training data for initialization
-        self.model = GPModel(self.inducing_points, encoder_net_model, self.output_dim)
+        self.model = GPModel(self.inducing_points, encoder_net_model,
+                             self.kernel_dim, self.output_dim)
         self.model.load_state_dict(model_state_dict)
 
         self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(

@@ -37,18 +37,6 @@ class RawDataVisualization():
         self.load_model()
         self.dm10_input = None
 
-    # def get_inputs(self):
-    #     hdf5_files = file_utils.list_files_with_suffix(self.data_dir, '.hdf5')
-    #     for idx, hdf5_file in enumerate(hdf5_files):
-    #         logging.debug(f'hdf5_file: {hdf5_file}')
-    #         if self.features is None:
-    #             # 100 * 6
-    #             self.features = h5_utils.read_h5(hdf5_file)
-    #         else:
-    #             # [feature, 1*6]
-    #             self.features = np.concatenate(
-    #                 (self.features, h5_utils.read_h5(hdf5_file))[:, -1], axis=0)
-
     def get_data(self):
         """load features"""
         # features file are 100 frame with 99 frame overlapping
@@ -60,12 +48,6 @@ class RawDataVisualization():
         self.feature = feature[:, :]
         self.data_dim = self.feature.shape[0]
         logging.info(self.data_dim)
-
-    def get_DM10_input():
-        pass
-
-    def get_DM20_input():
-        pass
 
     def load_model(self):
         """ dynamic model 1.0 model"""
@@ -92,12 +74,12 @@ class RawDataVisualization():
         imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc, self.imu_v)
         return (imu_x, imu_y)
 
-    def dynamic_model_10_location(self):
+    def dynamic_model_10_location(self, updated_loc=None):
         """ get dynamic model 10 predicted location """
         dm_acc, dm_w = self.dynamic_model_10_output()
         self.dm_acc = dm_acc
         self.dm_w = dm_w
-        dm_x, dm_y = self.get_location_from_a_and_w(dm_w, dm_acc)
+        dm_x, dm_y = self.get_location_from_a_and_w(dm_w, dm_acc, updated_loc=updated_loc)
         return (dm_x, dm_y)
 
     def echo_lincoln_location(self):
@@ -109,7 +91,7 @@ class RawDataVisualization():
             echo_lincoln_acc_w[:, 1], echo_lincoln_acc_w[:, 0])
         return (echo_lincoln_x, echo_lincoln_y)
 
-    def get_location_from_a_and_w(self, ws, accs, v=[]):
+    def get_location_from_a_and_w(self, ws, accs, v=[], updated_loc=None):
         """ integration from acceleration and heading angle change rate to x, y"""
         dt = feature_config["delta_t"]
         theta = self.calc_theta(ws, dt)
@@ -117,9 +99,13 @@ class RawDataVisualization():
         x = np.zeros((self.data_dim, 1))
         y = np.zeros((self.data_dim, 1))
 
-        # init from GPS location
-        x_init = self.feature[0, segment_index['x']]
-        y_init = self.feature[0, segment_index['y']]
+        if updated_loc is None:
+            # init from GPS location
+            x_init = self.feature[0, segment_index['x']]
+            y_init = self.feature[0, segment_index['y']]
+        else:
+            x_init = updated_loc[:, 0]  # updated x pos
+            y_init = updated_loc[:, 1]  # updated y pos
 
         for idx in range(0, self.data_dim):
             x[idx] = x_init + s[idx] * np.cos(theta[idx])
@@ -160,7 +146,7 @@ class RawDataVisualization():
         init_heading = self._normalize_angle(self.feature[0, segment_index['heading']])
         # init heading from GPS
         theta[0] = init_heading
-        logging.info(f'init heading is {theta[0]}')
+        logging.debug(f'init heading is {theta[0]}')
         for idx in range(1, self.data_dim):
             # theta = theta_0 + omega * dt
             theta[idx] = self._normalize_angle(init_heading + w[idx - 1] * dt)
