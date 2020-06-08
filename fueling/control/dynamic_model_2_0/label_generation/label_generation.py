@@ -28,8 +28,7 @@ DIM_INPUT = feature_config["input_dim"]
 MLP_DIM_INPUT = feature_config["mlp_input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
-PI = 3.14159
-
+# PI = 3.14159
 # Cache models to avoid the same one got loaded repeatedly
 
 
@@ -127,7 +126,7 @@ def generate_gp_data(model_path, segment):
         input_segment[k, input_index["u_1"]] = segment[k, segment_index["throttle"]]
         input_segment[k, input_index["u_2"]] = segment[k, segment_index["brake"]]
         input_segment[k, input_index["u_3"]] = segment[k, segment_index["steering"]]
-        input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]] / PI
+        input_segment[k, input_index["phi"]] = segment[k, segment_index["heading"]]
 
         # gear status
         if segment.shape[1] > segment_index["gear_position"]:
@@ -165,10 +164,11 @@ def generate_gp_data(model_path, segment):
     return (input_segment, output_segment)
 
 
-def generate_mlp_output(mlp_input, model, norms, gear_status=1):
+def generate_mlp_output(inputs, model, norms, gear_status=1):
     """
     Generate MLP model's direct output
     """
+    mlp_input = inputs.copy()  # not change inputs value
     input_mean, input_std, output_mean, output_std = norms
     # Prediction on acceleration and angular speed by MLP
     output_fnn = np.zeros([1, 2])
