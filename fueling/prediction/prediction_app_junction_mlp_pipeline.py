@@ -2,7 +2,8 @@
 
 """Running training job for junction-mlp-pipeline"""
 
-import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pipeline as junction_mlp
+import learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_pipeline as \
+    junction_mlp
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging

@@ -68,5 +68,5 @@ class BoundingRectangle:
 
     def print_vertices(self):
         for i in range(4):
-            print(str(self.vertices[i].x) + "\t" +
-                  str(self.vertices[i].y) + "\n")
+            print(str(self.vertices[i].x) + "\t"
+                  + str(self.vertices[i].y) + "\n")

@@ -210,8 +210,10 @@ class LabelGenerator(object):
                 # If roughly get to the center of another lane, label lane change to be finished.
                 left_bound = feature_sequence[j].lane.lane_feature.dist_to_left_boundary
                 right_bound = feature_sequence[j].lane.lane_feature.dist_to_right_boundary
-                if left_bound / (left_bound + right_bound) > (0.5 - param_fea['lane_change_finish_condition']) and \
-                   left_bound / (left_bound + right_bound) < (0.5 + param_fea['lane_change_finish_condition']):
+                if (left_bound / (left_bound + right_bound)
+                        > (0.5 - param_fea['lane_change_finish_condition'])
+                    and left_bound / (left_bound + right_bound)
+                        < (0.5 + param_fea['lane_change_finish_condition'])):
                     if has_started_lane_change:
                         # This means that the obstacle has finished lane change.
                         has_finished_lane_change = True
@@ -311,7 +313,8 @@ class LabelGenerator(object):
                             is_following_this_lane = True
                             for l_id in range(1, min(len(current_lane_ids),
                                                      len(observed_val['obs_actual_lane_ids']))):
-                                if current_lane_ids[l_id] != observed_val['obs_actual_lane_ids'][l_id]:
+                                if (current_lane_ids[l_id]
+                                        != observed_val['obs_actual_lane_ids'][l_id]):
                                     is_following_this_lane = False
                                     break
 
@@ -360,12 +363,15 @@ class LabelGenerator(object):
                                 if observed_val['has_finished_lane_change'] and \
                                    observed_val['lane_change_finish_time'] < period_of_interest:
                                     lane_sequence.label = 3
-                                    lane_sequence.time_to_lane_edge = observed_val['lane_change_start_time']
-                                    lane_sequence.time_to_lane_center = observed_val['lane_change_finish_time']
+                                    lane_sequence.time_to_lane_edge = \
+                                        observed_val['lane_change_start_time']
+                                    lane_sequence.time_to_lane_center = \
+                                        observed_val['lane_change_finish_time']
                                 # Obstacle started lane changing but haven't finished yet.
                                 else:
                                     lane_sequence.label = 1
-                                    lane_sequence.time_to_lane_edge = observed_val['lane_change_start_time']
+                                    lane_sequence.time_to_lane_edge = \
+                                        observed_val['lane_change_start_time']
                                     lane_sequence.time_to_lane_center = -1.0
 
                             # Obstacle has changed to some other lane.
@@ -376,7 +382,9 @@ class LabelGenerator(object):
 
                 for lane_sequence in feature.lane.lane_graph.lane_sequence:
                     lane_sequence_dict[lane_sequence.lane_sequence_id] = [
-                        lane_sequence.label, lane_sequence.time_to_lane_center, lane_sequence.time_to_lane_edge]
+                        lane_sequence.label,
+                        lane_sequence.time_to_lane_center,
+                        lane_sequence.time_to_lane_edge]
                 self.cruise_label_dict["{}@{:.3f}".format(
                     feature.id, feature.timestamp)] = lane_sequence_dict
         np.save(self.filepath + '.cruise_label.npy', self.cruise_label_dict)
@@ -417,7 +425,6 @@ class LabelGenerator(object):
                 # Sanity check.
                 if not fea.HasField('junction_feature') or \
                    not len(fea.junction_feature.junction_exit):
-                    # print("No junction_feature, junction_exit, or junction_mlp_feature, not labeling this frame.")
                     continue
                 curr_pos = np.array([fea.position.x, fea.position.y])
                 # Only keep speed > 1

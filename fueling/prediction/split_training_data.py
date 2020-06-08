@@ -15,7 +15,9 @@ for file_path in all_file_paths:
     for scene_id, scene in enumerate(file_content):
         writing_scene += [scene]
         if (len(writing_scene) >= 100):
-            np.save(file_path.replace(file_prefix, target_prefix).replace('.npy', '.{}.npy'.format(writing_idx)), np.array(writing_scene))
+            np.save(file_path.replace(file_prefix, target_prefix).replace(
+                '.npy', '.{}.npy'.format(writing_idx)), np.array(writing_scene))
             writing_scene.clear()
             writing_idx += 1
-    np.save(file_path.replace(file_prefix, target_prefix).replace('.npy', '.{}.npy'.format(writing_idx)), np.array(writing_scene))
+    np.save(file_path.replace(file_prefix, target_prefix).replace(
+        '.npy', '.{}.npy'.format(writing_idx)), np.array(writing_scene))

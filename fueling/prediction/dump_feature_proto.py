@@ -41,8 +41,8 @@ class DumpFeatureProto(BasePipeline):
             self.to_rdd(self.our_storage().list_end_dirs(target_prefix))
             # RDD(record_dir), has been completed
             .map(lambda label_dir: label_dir.replace(os.path.join(
-                target_prefix, label_dir[(label_dir.find(target_prefix) +
-                                          len(target_prefix)):].split('/')[0] + '/'),
+                target_prefix, label_dir[(label_dir.find(target_prefix)
+                                          + len(target_prefix)):].split('/')[0] + '/'),
                 origin_prefix))
             # RDD(record_dir), which is unique
             .distinct())

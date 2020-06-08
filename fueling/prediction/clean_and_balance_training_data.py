@@ -85,8 +85,9 @@ class CleanTrainingDataPipeline(BasePipeline):
         linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
         angular_vel = np.sum(
             obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
-        turning_ang = (np.arctan2(
-            obs_vel[-1, 1], obs_vel[-1, 0]) - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
+        turning_ang = (
+            np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0])
+            - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
         turning_ang = turning_ang if turning_ang < np.pi else turning_ang - 2 * np.pi
         # 3. Filtered the extream values for acc and ang_vel.
         if np.max(np.abs(linear_acc)) > LINEAR_ACC_THRESHOLD:
