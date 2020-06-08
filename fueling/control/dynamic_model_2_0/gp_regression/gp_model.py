@@ -27,9 +27,9 @@ class GPModel(ApproximateGP):
 
         super().__init__(variational_strategy)
         self.mean_module = gpytorch.means.ConstantMean(batch_shape=torch.Size([num_tasks]))
-        # kernel
+        # kernel default nu=2.5
         self.covar_module = ScaleKernel(MaternKernel(
-            batch_shape=torch.Size([num_tasks])), batch_shape=torch.Size([num_tasks]))  # default nu=2.5
+            batch_shape=torch.Size([num_tasks])), batch_shape=torch.Size([num_tasks]))
         self.warping = encoder_net_model
 
     def forward(self, input_data):
