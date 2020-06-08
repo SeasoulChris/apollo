@@ -136,6 +136,13 @@ class SparkSubmitJob(flask_restful.Resource):
         confs = (
             # Overall
             '--conf spark.kubernetes.memoryOverheadFactor=0 '
+            '--conf yarn.log-aggregation-enable=true '
+            '--conf spark.eventLog.enabled=true '
+            '--conf spark.eventLog.dir=file:///mnt/bos/modules/data/spark/spark-events/ '
+            '--conf "spark.driver.extraJavaOptions=-Djob_id=%(job_id)s '
+            '-Dlog4j.configuration=file:///mnt/bos/modules/data/spark/driver-logs/log4j-driver.properties" '
+            '--conf "spark.executor.extraJavaOptions=-Djob_id=%(job_id)s '
+            '-Dlog4j.configuration=file:///mnt/bos/modules/data/spark/executor-logs/log4j-executor.properties" '
             # Docker
             '--conf spark.kubernetes.container.image.pullPolicy=Always '
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '
@@ -150,6 +157,7 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.kubernetes.executor.request.cores=%(worker_cpu)s '
             '--conf spark.kubernetes.executor.gpus=%(worker_gpu)s '
             '--conf spark.kubernetes.executor.ephemeralStorageGB=%(worker_disk)s ' % {
+                'job_id': job_id,
                 'docker_image': arg.env.docker_image,
                 'workers': arg.worker.count,
                 'worker_memory': arg.worker.memory,
