@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import argparse
 import numpy as np
@@ -164,7 +165,7 @@ class LabelGenerator(object):
     @output: All saved as class variables in observation_dict,
     '''
 
-    def ObserveFeatureSequence(self, feature_sequence, idx_curr, max_dt_interval=5.0):
+    def ObserveFeatureSequence(self, feature_sequence, idx_curr, max_dt_interval=1.0):
         output_features = learning_data_pb2.LearningOutput()
         # Initialization.
         feature_curr = feature_sequence[idx_curr]
@@ -184,6 +185,8 @@ class LabelGenerator(object):
         for j in range(future_start_index, feature_seq_len):
             # dt between future sampling points
             dt = feature_sequence[j].timestamp_sec - feature_sequence[j - 1].timestamp_sec
+            if dt > 0.5:
+                logging.info(f'current dt is larger than 0.5s {dt}')
             if dt > max_dt_interval:
                 # when dt is too large
                 future_end_index = j - 1
@@ -349,11 +352,9 @@ class LabelGenerator(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='labeling')
     parser.add_argument(
-        '--input_file', type=str,
-        default='/apollo/data/learning_based_planning/input/00036.record.1.bin')
+        '--input_file', type=str)
     parser.add_argument(
         '--secondary_input_file', type=str)
-
     # output file name is modified in code
     parser.add_argument(
         '--output_file', type=str,
@@ -361,6 +362,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--future_img_output_file', type=str,
         default='/apollo/data/learning_based_planning/output/future_trajectory.pdf')
+    parser.add_argument(
+        '--all_img_output_dir', type=str,
+        default='/apollo/data/learning_based_planning/output')
     parser.add_argument(
         '--history_img_output_file', type=str,
         default='/apollo/data/learning_based_planning/output/history_trajectory.pdf')
@@ -386,7 +390,12 @@ if __name__ == '__main__':
     if len(result2) == 0:
         logging.info(f'no data generated')
     else:
-        data_points = result2[key_list[args.key_id]]
-        logging.debug(data_points)
-        label_gen.Visualize(data_points, args.future_img_output_file)
-        label_gen.Label()
+        for key_id in key_list:
+            data_points = result2[key_id]
+            logging.debug(data_points)
+            label_gen.Visualize(data_points, args.future_img_output_file)
+            label_gen.Label()
+            total_data_points = history_data_points + data_points
+            all_img_output_file = os.path.join(
+                args.all_img_output_dir, f'{key_id}_all_trajectory.pdf')
+            label_gen.Visualize(total_data_points, all_img_output_file)
