@@ -34,9 +34,24 @@ class RawDataVisualization():
         self.imu_acc = None
         self.imu_w = None
         self.imu_v = []
+        self.load_model()
+        self.dm10_input = None
+
+    # def get_inputs(self):
+    #     hdf5_files = file_utils.list_files_with_suffix(self.data_dir, '.hdf5')
+    #     for idx, hdf5_file in enumerate(hdf5_files):
+    #         logging.debug(f'hdf5_file: {hdf5_file}')
+    #         if self.features is None:
+    #             # 100 * 6
+    #             self.features = h5_utils.read_h5(hdf5_file)
+    #         else:
+    #             # [feature, 1*6]
+    #             self.features = np.concatenate(
+    #                 (self.features, h5_utils.read_h5(hdf5_file))[:, -1], axis=0)
 
     def get_data(self):
         """load features"""
+        # features file are 100 frame with 99 frame overlapping
         if self.data_file.endswith('.hdf5'):
             feature = read_h5(self.data_file)
         else:
@@ -45,6 +60,27 @@ class RawDataVisualization():
         self.feature = feature[:, :]
         self.data_dim = self.feature.shape[0]
         logging.info(self.data_dim)
+
+    def get_DM10_input():
+        pass
+
+    def get_DM20_input():
+        pass
+
+    def load_model(self):
+        """ dynamic model 1.0 model"""
+        # load model parameters
+        model_path = self.model_path
+        model_norms_path = os.path.join(model_path, 'norms.h5')
+        with h5py.File(model_norms_path, 'r') as model_norms_file:
+            input_mean = np.array(model_norms_file.get('input_mean'))
+            input_std = np.array(model_norms_file.get('input_std'))
+            output_mean = np.array(model_norms_file.get('output_mean'))
+            output_std = np.array(model_norms_file.get('output_std'))
+            self.norms = (input_mean, input_std, output_mean, output_std)
+        # load model
+        model_weights_path = os.path.join(model_path, 'weights.h5')
+        self.model = load_model(model_weights_path)
 
     def imu_location(self):
         """ imu location """
@@ -96,19 +132,6 @@ class RawDataVisualization():
 
     def dynamic_model_10_output(self):
         """ dynamic model 1.0 output"""
-        # TODO (Shu): merge this with label generatio
-        # load model parameters
-        model_path = self.model_path
-        model_norms_path = os.path.join(model_path, 'norms.h5')
-        with h5py.File(model_norms_path, 'r') as model_norms_file:
-            input_mean = np.array(model_norms_file.get('input_mean'))
-            input_std = np.array(model_norms_file.get('input_std'))
-            output_mean = np.array(model_norms_file.get('output_mean'))
-            output_std = np.array(model_norms_file.get('output_std'))
-            norms = (input_mean, input_std, output_mean, output_std)
-        model_weights_path = os.path.join(model_path, 'weights.h5')
-        model = load_model(model_weights_path)
-
         # Initialize the first frame's data
         predicted_a = np.zeros((self.data_dim, 1))
         predicted_w = np.zeros((self.data_dim, 1))
@@ -124,7 +147,7 @@ class RawDataVisualization():
             # time delay ?
             mlp_input = np.array([speed, imu_scaling["acc"] * acc,
                                   throttle, brake, steering]).reshape(1, 5)
-            predicted_a[k], predicted_w[k] = generate_mlp_output(mlp_input, model, norms)
+            predicted_a[k], predicted_w[k] = generate_mlp_output(mlp_input, self.model, self.norms)
         logging.debug(f'predicted_a: {predicted_a}')
         logging.debug(f'predicted_w: {predicted_w}')
 

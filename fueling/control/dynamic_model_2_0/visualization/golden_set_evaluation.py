@@ -16,7 +16,9 @@ import torch
 import torch.nn as nn
 
 
-from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
+from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling
+from fueling.control.dynamic_model_2_0.conf.model_conf import \
+    feature_config, input_index, output_index
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.evaluation import evaluation
@@ -24,6 +26,7 @@ from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization impo
     RawDataVisualization
 from fueling.control.dynamic_model_2_0.visualization.validation_visualization import \
     ValidationVisualization
+import fueling.common.h5_utils as h5_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -31,11 +34,12 @@ import fueling.common.logging as logging
 class GoldenSetEvaluation():
     """ golden set evaluation results """
 
-    def __init__(self, golden_set_data, args):
+    def __init__(self, feature_dir, args):
         super().__init__()
         # features numpy file include all paired data points; dimension is 23
-        self.features_file_path = golden_set_data  # npy file
+        self.feature_dir = feature_dir
         self.features = None
+        self.get_non_overlapping_features()
         # TODO(Shu): expand this
         self.args = args
         self.DM10_xy = None
@@ -44,10 +48,50 @@ class GoldenSetEvaluation():
         self.data_frame_length = 100
         self.raw_data_visualization = None
         self.imu_xy = None
+        #
+        self.DM20 = ValidationVisualization(self.args)
+        # get inducing points for model initialization
+        self.DM20.load_data()  # inducing points
+        self.DM20.load_model()
+
+    def get_non_overlapping_features(self):
+        # features file are 100 frame with 99 frame overlapping
+        hdf5_files = file_utils.list_files_with_suffix(self.feature_dir, '.hdf5')
+
+        def get_file_number(hdf5_files):
+            """ files are named in time sequence """
+            return int(os.path.basename(hdf5_files).split('.')[0])
+
+        self.hdf5_files = sorted(hdf5_files, key=get_file_number)
+        for idx, hdf5_file in enumerate(self.hdf5_files):
+            if self.features is None:
+                # 100 * 23
+                self.features = h5_utils.read_h5(hdf5_file)
+            else:
+                # [feature, 1*23]
+                updated_features = h5_utils.read_h5(hdf5_file)
+                self.features = np.concatenate(
+                    (self.features, np.expand_dims(updated_features[-1, :], axis=0)), axis=0)
+        logging.info(self.features.shape)
+        self.features_file_path = os.path.join(self.feature_dir, 'features.npy')
+        np.save(self.features_file_path, self.features)
+
+    def get_dm20_input(self, hdf5_file):
+        features = h5_utils.read_h5(hdf5_file)
+        input_segment = np.zeros((feature_config["input_window_size"], feature_config["input_dim"]))
+        input_segment[:, input_index["v"]] = features[:, segment_index["speed"]]
+        # add scaling to acceleration
+        input_segment[:, input_index["a"]] = imu_scaling["acc"] * features[:, segment_index["a_x"]] \
+            * np.cos(features[:, segment_index["heading"]]) \
+            + features[:, segment_index["a_y"]] \
+            * np.sin(features[:, segment_index["heading"]])
+        input_segment[:, input_index["u_1"]] = features[:, segment_index["throttle"]]
+        input_segment[:, input_index["u_2"]] = features[:, segment_index["brake"]]
+        input_segment[:, input_index["u_3"]] = features[:, segment_index["steering"]]
+        input_segment[:, input_index["phi"]] = features[:, segment_index["heading"]]
+        return input_segment
 
     def load_data(self):
-        logging.info(f'load data from {self.features_file_path}')
-        self.features = np.load(self.features_file_path, allow_pickle=True)
         logging.info(f'total data points is {len(self.features)}')
         self.raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
         self.raw_data_visualization.feature = self.features
@@ -69,10 +113,10 @@ class GoldenSetEvaluation():
             np.save(dst_file, self.echo_lincoln_xy)
 
     def get_DM10_result(self, is_save=True):
-        raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
-        raw_data_visualization.feature = self.features
-        raw_data_visualization.data_dim = self.features.shape[0]
-        DM10_x, DM10_y = raw_data_visualization.dynamic_model_10_location()
+        # raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
+        # raw_data_visualization.feature = self.features
+        # raw_data_visualization.data_dim = self.features.shape[0]
+        DM10_x, DM10_y = self.raw_data_visualization.dynamic_model_10_location()
         self.DM10_xy = np.array(list(zip(DM10_x, DM10_y))).squeeze()
         logging.debug(f'Dynamic model 1.0 results\' shape is {self.DM10_xy.shape}')
         logging.debug(f'Data points in dynamic model 1.0 looks like {self.DM10_xy[0,:]}')
@@ -99,14 +143,27 @@ class GoldenSetEvaluation():
             logging.info(f'Dynamic model 2.0 results are saved to file {dst_file}')
             np.save(dst_file, self.DM20_dx_dy)
 
+    def get_DM20_result_from_features(self):
+        # read features
+        for idx, hdf5_file in enumerate(self.hdf5_files):
+            # generate dm2.0 input
+            input_segment = self.get_dm20_input(self, hdf5_file)
+            logging.info(input_segment.shape)
+            # normalized input_segment
+            # generate predicted results
+            predict_result = torch.from_numpy(DM20.predict(input_segment)).float()
+            if idx == 0:
+                self.DM20_dx_dy = predict_result
+            else:
+                self.DM20_dx_dy = torch.cat((self.DM20_dx_dy, predict_result), 0)
+
     def get_DM20_result_dataloader(self, is_save=True):
         """load dynamic model 2.0,
             make prediction,
             and generate pose correction for each point (100:)"""
-
         DM20 = ValidationVisualization(self.args)
         # get inducing points for model initialization
-        DM20.load_data()
+        DM20.load_data()  # inducing points
         DM20.load_model()
         # make prediction for each h5 files
         logging.info(self.args.testing_data_path)
@@ -230,11 +287,11 @@ if __name__ == '__main__':
     parser.add_argument('-train',
                         '--training_data_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/train")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train")
     parser.add_argument('-v',
                         '--validation_data_path',
                         type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0515/test")
+                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test")
     parser.add_argument('--validation_result_path',
                         type=str,
                         default="/fuel/fueling/control/dynamic_model_2_0/"
@@ -265,7 +322,7 @@ if __name__ == '__main__':
         '-md',
         '--gp_model_path',
         type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/gp_model_output/20200518-204852")
+        default="/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test/20200607-1829")
 
     # model parameters
     parser.add_argument('--delta_t', type=float, default=0.01)
@@ -284,30 +341,41 @@ if __name__ == '__main__':
     # argment to use cuda or not
     parser.add_argument('--use_cuda', type=bool, default=False)
 
-    file_path = 'fueling/control/dynamic_model_2_0/testdata/golden_set'
-    npy_file_list = glob.glob(os.path.join(file_path, '*/*recover_features.npy'))
-    logging.info(f'total {len(npy_file_list )} files: {npy_file_list }')
     args = parser.parse_args()
-    first_time_run = True
-    for npy_file in npy_file_list:
-        logging.info(f'processing npy_file: {npy_file}')
-        scenario_id = os.path.dirname(npy_file).split('/')[-1]
-        logging.info(scenario_id)
-        test_data_folder = os.path.join(
-            '/fuel/local_test/labeled_data/2020-04-30-19', scenario_id)
-        args.testing_data_path = test_data_folder
-        args.dm10_result_path = os.path.join(file_path, scenario_id, 'DM10_results.npy')
-        args.dm20_result_path = os.path.join(file_path, scenario_id, 'DM20_results.npy')
-        args.echo_lincoln_result_path = os.path.join(
-            file_path, scenario_id, 'Echo_Lincoln_results.npy')
-        logging.info(
-            f'model output data path is {args.dm10_result_path} and {args.dm20_result_path}')
-        evaluator = GoldenSetEvaluation(npy_file, args)
-        evaluator.load_data()
-        evaluator.get_imu_result()
-        # if results files (.npy) are provided than skip these two
-        if first_time_run:
-            evaluator.get_DM10_result()
-            evaluator.get_DM20_result_dataloader()
-            evaluator.get_echo_lincoln_result()
-        evaluator.plot()
+
+    # loop over each golden set scenarios
+
+    file_path = 'fueling/control/dynamic_model_2_0/testdata/0602_golden_set/5_3'
+    evaluator = GoldenSetEvaluation(file_path, args)
+    evaluator.load_data()
+    evaluator.get_DM10_result()
+    evaluator.get_imu_result()
+    evaluator.get_DM20_result_from_features()
+    evaluator.plot()
+
+    # npy_file_list = glob.glob(os.path.join(file_path, '*/*recover_features.npy'))
+    # logging.info(f'total {len(npy_file_list )} files: {npy_file_list }')
+    # args = parser.parse_args()
+    # first_time_run = True
+    # for npy_file in npy_file_list:
+    #     logging.info(f'processing npy_file: {npy_file}')
+    #     scenario_id = os.path.dirname(npy_file).split('/')[-1]
+    #     logging.info(scenario_id)
+    #     test_data_folder = os.path.join(
+    #         '/fuel/local_test/labeled_data/2020-04-30-19', scenario_id)
+    #     args.testing_data_path = test_data_folder
+    #     args.dm10_result_path = os.path.join(file_path, scenario_id, 'DM10_results.npy')
+    #     args.dm20_result_path = os.path.join(file_path, scenario_id, 'DM20_results.npy')
+    #     args.echo_lincoln_result_path = os.path.join(
+    #         file_path, scenario_id, 'Echo_Lincoln_results.npy')
+    #     logging.info(
+    #         f'model output data path is {args.dm10_result_path} and {args.dm20_result_path}')
+    #     evaluator = GoldenSetEvaluation(npy_file, args)
+    #     evaluator.load_data()
+    #     evaluator.get_imu_result()
+    #     # if results files (.npy) are provided than skip these two
+    #     if first_time_run:
+    #         evaluator.get_DM10_result()
+    #         evaluator.get_DM20_result_dataloader()
+    #         evaluator.get_echo_lincoln_result()
+    #     evaluator.plot()
