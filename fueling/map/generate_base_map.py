@@ -1,8 +1,9 @@
+#!/usr/bin/env python
+
 """
 Run with:
     ./tools/submit-job-to-k8s.py --main=fueling/map/generate_base_map.py --memory=8 --disk=10
 """
-# !/usr/bin/env python
 
 # Standard packages
 from datetime import datetime
