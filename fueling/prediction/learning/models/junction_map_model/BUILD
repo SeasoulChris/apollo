@@ -13,7 +13,7 @@ py_library(
     srcs = ["img_test.py"],
     deps = [
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/junction_map_model",
+        "//fueling/prediction/learning/models/junction_map_model",
     ],
 )
 
@@ -22,6 +22,6 @@ py_library(
     srcs = ["junction_map_pipeline.py"],
     deps = [
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/junction_map_model",
+        "//fueling/prediction/learning/models/junction_map_model",
     ],
 )

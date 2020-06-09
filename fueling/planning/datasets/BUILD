@@ -8,7 +8,7 @@ py_library(
     deps = [
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
-        "//learning_algorithms/prediction/data_preprocessing/map_feature:online_mapping",
+        "//fueling/prediction/learning/data_preprocessing/map_feature:online_mapping",
     ],
 )
 

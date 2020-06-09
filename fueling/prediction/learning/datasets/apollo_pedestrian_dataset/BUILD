@@ -10,6 +10,6 @@ py_library(
     srcs = ["apollo_pedestrian_dataset.py"],
     deps = [
         "//fueling/common:file_utils",
-        "//learning_algorithms/prediction/datasets/apollo_pedestrian_dataset:data_for_learning_pb2",
+        "//fueling/prediction/learning/datasets/apollo_pedestrian_dataset:data_for_learning_pb2",
     ],
 )

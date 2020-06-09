@@ -5,7 +5,7 @@ py_library(
     srcs = ["junction_mlp_pipeline.py"],
     deps = [
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/junction_mlp_model",
+        "//fueling/prediction/learning/models/junction_mlp_model",
     ],
 )
 

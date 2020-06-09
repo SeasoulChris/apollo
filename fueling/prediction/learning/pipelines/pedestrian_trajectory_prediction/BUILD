@@ -7,7 +7,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
-        "//learning_algorithms/prediction/data_preprocessing/map_feature:online_mapping",
+        "//fueling/prediction/learning/data_preprocessing/map_feature:online_mapping",
     ]
 )
 
@@ -20,7 +20,7 @@ py_binary(
         "//fueling/learning:train_utils",
         "//fueling/prediction/common:configure",
         ":pedestrian_trajectory_dataset",
-        "//learning_algorithms/prediction/models/semantic_map_model:semantic_map_model",
+        "//fueling/prediction/learning/models/semantic_map_model:semantic_map_model",
     ]
 )
 
@@ -29,6 +29,6 @@ py_binary(
     srcs = ["visualize_model.py"],
     deps = [
         ":pedestrian_trajectory_dataset",
-        "//learning_algorithms/prediction/models/semantic_map_model:semantic_map_model",
+        "//fueling/prediction/learning/models/semantic_map_model:semantic_map_model",
     ],
 )

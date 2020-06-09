@@ -4,7 +4,7 @@ py_library(
     name = "segment_social_lstm_model",
     srcs = ["segment_social_lstm_model.py"],
     deps = [
-        "//learning_algorithms/prediction/models/social_lstm_model",
+        "//fueling/prediction/learning/models/social_lstm_model",
     ],
 )
 
@@ -14,7 +14,7 @@ py_library(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/social_lstm_model",
+        "//fueling/prediction/learning/models/social_lstm_model",
     ],
 )
 

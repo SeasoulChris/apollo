@@ -15,6 +15,6 @@ py_library(
     deps = [
         "//fueling/learning:network_utils",
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/lane_attention_trajectory_model:coord_conversion_utils",
+        "//fueling/prediction/learning/models/lane_attention_trajectory_model:coord_conversion_utils",
     ],
 )

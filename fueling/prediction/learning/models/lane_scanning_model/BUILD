@@ -17,6 +17,6 @@ py_library(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/lane_scanning_model",
+        "//fueling/prediction/learning/models/lane_scanning_model",
     ],
 )

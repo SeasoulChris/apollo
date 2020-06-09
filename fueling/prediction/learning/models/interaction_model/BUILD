@@ -5,7 +5,7 @@ py_library(
     srcs = ["interaction_pipeline.py"],
     deps = [
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/models/interaction_model",
+        "//fueling/prediction/learning/models/interaction_model",
     ],
 )
 

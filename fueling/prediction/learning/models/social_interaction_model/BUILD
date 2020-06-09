@@ -18,8 +18,8 @@ py_library(
     srcs = ["pipeline_social_interaction.py"],
     deps = [
         "//fueling/learning:train_utils",
-        "//learning_algorithms/prediction/datasets/apollo_pedestrian_dataset",
-        "//learning_algorithms/prediction/models/social_interaction_model",
-        "//learning_algorithms/prediction/models/social_interaction_model:human_trajectory_dataset",
+        "//fueling/prediction/learning/datasets/apollo_pedestrian_dataset",
+        "//fueling/prediction/learning/models/social_interaction_model",
+        "//fueling/prediction/learning/models/social_interaction_model:human_trajectory_dataset",
     ],
 )
