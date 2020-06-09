@@ -8,7 +8,7 @@ USE_CACHE="YES"
 cmp -s deps/default.txt "${CACHE_DIR}/default.txt"
 if [ $? -ne 0 ]; then
   echo "deps/default.txt changed since last caching. We will refresh the local pip-cache."
-  sudo pip3 download -r deps/default.txt -d ${CACHE_DIR}
+  sudo pip3 download -i https://mirrors.aliyun.com/pypi/simple/ -r deps/default.txt -d ${CACHE_DIR}
   if [ $? -eq 0 ]; then
     sudo cp deps/default.txt ${CACHE_DIR}/default.txt
   else
