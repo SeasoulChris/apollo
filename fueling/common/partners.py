@@ -44,4 +44,8 @@ partners = {
                              bos_bucket='nx-tech', bos_region='gz'),
     'd-kit-wfgk-72': Partner(name='WFGK72', email='wccsu1994@163.com',
                              bos_bucket='wifuapollo', bos_region='su'),
+    'd-kit-xmjl-76': Partner(name='XMJL76', email='kingwingshome@outlook.com',
+                             bos_bucket='kingpilot', bos_region='bj'),
+    'd-kit-zjsys-83': Partner(name='ZJSYS83', email='liuyt@zhejianglab.com',
+                              bos_bucket='zjlabsam', bos_region='su'),
 }
