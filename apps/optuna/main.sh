@@ -42,6 +42,10 @@ function check_cluster() {
   local current_cluster=`kubectl config current-context`
   echo "Current cluster is ${current_cluster}"
 
+  if [ "${current_cluster}" = "kubernetes-admin@kubernetes" ]; then
+    current_cluster="bce-platform"
+  fi
+
   if [ "${current_cluster}" != "${CLUSTER}" ]; then
     echo "Current cluster isn't the deploy one, please switch your cluster."
     exit 1
@@ -113,7 +117,7 @@ function main() {
   done
 
   # validate inputs
-  if [[ -z "${CLUSTER}" || -z "${ACTION}" ]] || [[ "${ACTION}" = "run" && -z "${CONFIG_FILE}" ]]; then
+  if [[ -z "${CLUSTER}" || -z "${ACTION}" ]] || [[ "${ACTION}" == "run" && -z "${CONFIG_FILE}" ]]; then
     print_usage
     exit 1
   fi
