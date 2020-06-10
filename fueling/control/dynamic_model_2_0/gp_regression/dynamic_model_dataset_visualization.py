@@ -3,11 +3,6 @@
 import os
 
 from matplotlib import cm
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-import h5py
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import minmax_scale
 from sklearn.preprocessing import MaxAbsScaler
@@ -16,6 +11,12 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.preprocessing import PowerTransformer
+import h5py
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
 
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
     DynamicModelDataset
@@ -295,10 +296,8 @@ def check_outlier(data_dir, loc, std):
     # list of dataset = (input_tensor, output_tensor)
     h5_files = file_utils.list_files_with_suffix(data_dir, '.h5')
     PI = 3.14159
-    print(len(h5_files))
     cnt = 0
     for idx, h5_file in enumerate(h5_files):
-        # logging.info(f'h5_file: {h5_file}')
         with h5py.File(h5_file, 'r') as model_norms_file:
             # Get input data
             input_segment = np.array(model_norms_file.get('input_segment'))
@@ -309,8 +308,6 @@ def check_outlier(data_dir, loc, std):
             # Get output data
             output_segment = np.array(model_norms_file.get('output_segment'))
             if np.any(np.max(output_segment) > 5.0):
-                # print(f'input segment: {input_segment[]}')
-                print(output_segment)
                 logging.error(f'file {h5_file} contains large_label')
                 cnt += 1
     logging.info(f'outliers total number is : {cnt}')
@@ -359,5 +356,5 @@ if __name__ == '__main__':
         input_indices = np.array([15, 16])
         visualize_input_only(features, input_indices)
     if check_large_label:
-        check_outlier('/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train',
+        check_outlier('/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/train',
                       dynamic_model_dataset.pre_input_mean, dynamic_model_dataset.pre_input_std)

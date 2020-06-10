@@ -36,28 +36,10 @@ class GPModel(ApproximateGP):
         self.warping = encoder_net_model
 
     def forward(self, input_data):
-        # warpped_input_date = self.warping(input_data)
+        # to void loop for jit script
         warpped_input_date = torch.cat(
             (self.warping(input_data[0, :]).unsqueeze(0),
              self.warping(input_data[1, :]).unsqueeze(0)), 0)
-        # warpped_input_date = torch.cat(
-        #     (self.warping(input_data[0, :]).unsqueeze(0),
-        #      self.warping(input_data[1, :]).unsqueeze(0),
-        #      self.warping(input_data[2, :]).unsqueeze(0)), 0)
-        # logging.info(input_data.shape)
         mean_x = self.mean_module(warpped_input_date)
         covar_x = self.covar_module(warpped_input_date)
         return MultivariateNormal(mean_x, covar_x)
-
-
-# class GPModelWithDerivatives(gpytorch.models.ExactGP):
-#     def __init__(self, train_x, train_y, likelihood):
-#         super(GPModelWithDerivatives, self).__init__(train_x, train_y, likelihood)
-#         self.mean_module = gpytorch.means.ConstantMeanGrad()
-#         self.base_kernel = gpytorch.kernels.RBFKernelGrad(ard_num_dims=2)
-#         self.covar_module = gpytorch.kernels.ScaleKernel(self.base_kernel)
-
-#     def forward(self, x):
-#         mean_x = self.mean_module(x)
-#         covar_x = self.covar_module(x)
-#         return gpytorch.distributions.MultitaskMultivariateNormal(mean_x, covar_x)

@@ -49,14 +49,7 @@ train_loader = torch.utils.data.DataLoader(
 
 model, likelihood = train_utils.train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
                                                        loss, optimizer)
-# model.train()
-# likelihood.train()
 
-# epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
-# for i in epochs_iter:
-#     # Within each iteration, we will go over each minibatch of data
-#     minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
-#     train_utils.basic_train_loop(train_loader, model, loss, optimizer)
 # Set into eval mode
 model.eval()
 likelihood.eval()

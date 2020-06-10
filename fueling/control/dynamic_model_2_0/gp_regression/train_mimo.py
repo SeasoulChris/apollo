@@ -147,10 +147,10 @@ ax.scatter(train_x[:, 0].detach().numpy(), train_x[:, 1].detach().numpy(),
 ax = plt.gcf().add_subplot(1, 2, 2, projection='3d')
 ax.plot_surface(gx, gy, mean[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
                 linewidth=0, alpha=0.2, antialiased=False)
-# ax.plot_surface(gx, gy, upper[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
-#                 linewidth=0, alpha=0.2, antialiased=False)
-# ax.plot_surface(gx, gy, lower[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
-#                 linewidth=0, alpha=0.2, antialiased=False)
+ax.plot_surface(gx, gy, upper[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
+                linewidth=0, alpha=0.2, antialiased=False)
+ax.plot_surface(gx, gy, lower[:, 1].numpy().reshape(gx.shape), cmap=cm.coolwarm,
+                linewidth=0, alpha=0.2, antialiased=False)
 ax.scatter(train_x[:, 0].detach().numpy(), train_x[:, 1].detach().numpy(),
            train_y[:, 1].detach().numpy())
 

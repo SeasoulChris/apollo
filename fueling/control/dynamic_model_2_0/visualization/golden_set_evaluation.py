@@ -105,7 +105,6 @@ class GoldenSetEvaluation():
         input_segment[:, input_index["phi"]] = features[:, segment_index["heading"]]
         _, dm01_output_segment = generate_gp_data(
             self.args.dm10_model_path, features.copy())
-        # logging.info(f'dm01_output_segment: {dm01_output_segment}')
         return input_segment, np.expand_dims(dm01_output_segment, axis=0)
 
     def load_data(self):
@@ -168,10 +167,8 @@ class GoldenSetEvaluation():
         # read features
         dm20_hdf5_file = self.hdf5_files  # [::100]
         for idx, hdf5_file in enumerate(dm20_hdf5_file):
-            # logging.info(hdf5_file)
             # generate dm2.0 input
             input_segment, dm01_output_segment = self.get_dm20_input(hdf5_file)
-            # logging.info(dm01_output_segment.shape)
             # normalized input_segment
             input_segment = torch.from_numpy(self.standardize(input_segment))
             # generate predicted results
@@ -181,7 +178,6 @@ class GoldenSetEvaluation():
                 self.DM20_dx_dy = predict_result
                 self.label = torch.from_numpy(dm01_output_segment)
             else:
-                # logging.info(self.label.shape)
                 self.DM20_dx_dy = torch.cat((self.DM20_dx_dy, predict_result), 0)
                 self.label = torch.cat((self.label, torch.from_numpy(dm01_output_segment)), 0)
         dst_label_file = os.path.join(self.feature_dir, 'label.npy')
@@ -223,36 +219,6 @@ class GoldenSetEvaluation():
             dst_file = os.path.join(dst_dir, 'DM20_results.npy')
             logging.info(f'Dynamic model 2.0 results are saved to file {dst_file}')
             np.save(dst_file, self.DM20_dx_dy)
-
-    def corrected_DM10_result(self):
-        # load dynamic model 2.0 results (dx, dy) for trajectory points from 100 to end
-        # if self.DM20_dx_dy is None:
-        #     self.DM20_dx_dy = np.load(self.args.dm20_result_path, allow_pickle=True)
-        if self.DM10_xy is None:
-            self.DM10_xy = np.load(self.args.dm10_result_path, allow_pickle=True)
-        # corrected dynamic model 1.0 localization results
-        logging.info(self.DM20_dx_dy)
-        logging.info(self.label)
-        corrected_xy = np.zeros(self.DM10_xy.shape)
-        for i in range(0, 2):
-            corrected_xy[:, i] = self.DM10_xy[:, i] + \
-                self.correction(self.label[:-1, i], self.data_frame_length)
-        logging.info(f'Corrected localization matrix has the shape as {corrected_xy.shape}')
-        return corrected_xy
-
-    def correction(self, d_value, data_length):
-        # pading first (0:99) points with zeros
-        padded_d_value = np.pad(d_value, (data_length, 0), 'constant')
-        logging.debug(
-            f'padded array with shape {padded_d_value.shape} and '
-            + f'looks like {padded_d_value[0:data_length+2, ]}')
-
-        # composation for dynamic model 1.0 results;
-        accumulated_value = np.cumsum(padded_d_value / 100, axis=0)
-        logging.debug(
-            f'accumulated array with shape {accumulated_value.shape} '
-            'and looks like {accumulated_value[0:data_length+2, ]}')
-        return accumulated_value
 
     def correct_non_overlap_data(self):
         DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
@@ -313,7 +279,6 @@ class GoldenSetEvaluation():
         # location from dynamic model
         if self.DM10_xy is None:
             self.DM10_xy = np.load(self.args.dm10_result_path, allow_pickle=True)
-        # corrected_xy = self.corrected_DM10_result()
         # location from echo Lincoln model
         if self.echo_lincoln_xy is None:
             logging.info(self.args.echo_lincoln_result_path)

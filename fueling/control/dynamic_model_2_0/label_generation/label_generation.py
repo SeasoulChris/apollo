@@ -28,7 +28,7 @@ DIM_INPUT = feature_config["input_dim"]
 MLP_DIM_INPUT = feature_config["mlp_input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
 SPEED_EPSILON = 1e-6   # Speed Threshold To Indicate Driving Directions
-# PI = 3.14159
+PI = 3.14159
 # Cache models to avoid the same one got loaded repeatedly
 
 

@@ -98,8 +98,8 @@ likelihood.eval()
 
 
 valid_dataset = DynamicModelDataset(validation_data_path)
-# valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
-valid_loader = DataLoader(valid_dataset, batch_size=1024)
+# reduce batch size when memory is not enough
+valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
 # use all validation data
 # Make predictions
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
