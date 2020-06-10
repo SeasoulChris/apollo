@@ -3,6 +3,7 @@
 
 import collections
 import datetime
+import json
 import os
 
 from absl import app as absl_app
@@ -148,7 +149,20 @@ def pod_delete_hdl():
 @app.route('/pod_log/<path:pod_name>/<path:namespace>')
 def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
-    return flask.render_template('pod_log.html', pod_name=pod_name, namespace=namespace)
+    svc_domain = 'usa-data.baidu.com:8001'
+    svc_name = 'spark-history-server:18080'
+    spark_history_server = (f'{svc_domain}/api/v1/namespaces/default/services/'
+                            f'http:{svc_name}/proxy/history')
+    try:
+        spark_app_selector = (json.loads(JobManager().pod_describe(pod_name, namespace))
+                              ['metadata']
+                              ['labels']
+                              ['spark-app-selector'])
+        spark_history_url = os.path.join(spark_history_server, spark_app_selector)
+    except Exception as ex:
+        spark_history_url = ''
+    return flask.render_template('pod_log.html', pod_name=pod_name, namespace=namespace,
+                                 spark_history_url=spark_history_url)
 
 
 @app.route('/pod_log_streaming/<path:pod_name>/<path:namespace>')

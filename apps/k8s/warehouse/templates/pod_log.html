@@ -26,6 +26,7 @@
 
 {% block body %}
 <a type="hidden" id="pod_log_streaming_url" href="{{ url_for('pod_log_streaming_hdl', pod_name=pod_name, namespace=namespace) }}"></a>
+<a type="hidden" id="spark_history_url" href="{{ spark_history_url }}"></a>
 <div class="panel panel-default">
    <div class="panel-heading">logs - {{ pod_name }}</div>
    <div class="spark-ui" style="padding:10px;display:none;">
@@ -76,6 +77,13 @@
     .done(function(data)
     {
         console.log('Complete response = ' + data);
+        // Replace spark-ui running url with history server url
+        var spark_ui_addr = $("#spark_history_url").attr("href");
+        if(spark_ui_addr.length > 0){
+          $("#spark-ui").attr("href", spark_ui_addr);
+          $("#spark-ui").text(spark_ui_addr);
+          $(".spark-ui").css("display","block");
+        }
     })
     .fail(function(data)
     {
