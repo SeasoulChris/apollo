@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-import learning_algorithms.prediction.models.semantic_map_model.semantic_map_model as semantic_map_model
+import fueling.prediction.learning.models.semantic_map_model.semantic_map_model as semantic_map_model
 from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset
 from apollo_vehicle_trajectory_dataset import collate_fn
 

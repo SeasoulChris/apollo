@@ -16,8 +16,8 @@ from torchvision.models.resnet import BasicBlock
 from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.models.semantic_map_model.self_attention import Self_Attn
-from learning_algorithms.prediction.models.semantic_map_model.spatial_attention import SpatialAttention2d
+from fueling.prediction.learning.models.semantic_map_model.self_attention import Self_Attn
+from fueling.prediction.learning.models.semantic_map_model.spatial_attention import SpatialAttention2d
 
 '''
 ========================================================================

@@ -14,8 +14,8 @@ from torchvision import transforms
 
 from fueling.learning.train_utils import *
 from fueling.learning.loss_utils import *
-from learning_algorithms.prediction.pipelines.pedestrian_trajectory_prediction.pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss, WeightedSemanticMapLoss
+from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction.pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
+from fueling.prediction.learning.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss, WeightedSemanticMapLoss
 
 
 if __name__ == "__main__":

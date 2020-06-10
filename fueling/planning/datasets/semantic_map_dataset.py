@@ -11,10 +11,10 @@ import fueling.common.logging as logging
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
-from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping \
+from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping \
     import ObstacleMapping
 
-MAP_IMG_DIR = "/fuel/learning_algorithms/prediction/data_preprocessing/map_feature/"
+MAP_IMG_DIR = "/fuel/fueling/prediction/learning/data_preprocessing/map_feature/"
 ENABLE_IMG_DUMP = False
 
 

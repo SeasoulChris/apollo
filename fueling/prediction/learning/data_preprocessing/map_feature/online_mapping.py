@@ -4,7 +4,7 @@ import numpy as np
 import cv2 as cv
 
 from fueling.prediction.common.configure import semantic_map_config
-from learning_algorithms.prediction.data_preprocessing.map_feature.mapping import Mapping
+from fueling.prediction.learning.data_preprocessing.map_feature.mapping import Mapping
 
 OFFSET_X = semantic_map_config['offset_x']
 OFFSET_Y = semantic_map_config['offset_y']

@@ -5,7 +5,7 @@ import argparse
 import torch
 
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import *
+from fueling.prediction.learning.models.semantic_map_model.semantic_map_model import *
 
 
 if __name__ == "__main__":

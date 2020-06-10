@@ -8,7 +8,7 @@ from torchvision import models
 
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel
+from fueling.prediction.learning.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel
 
 
 def jit_trace_semantic_map_model(torch_model_file, jit_model_file, device):

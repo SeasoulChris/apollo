@@ -9,7 +9,7 @@ import cv2 as cv
 
 from modules.prediction.proto import offline_features_pb2
 
-from learning_algorithms.prediction.data_preprocessing.map_feature.obstacle_mapping import ObstacleMapping
+from fueling.prediction.learning.data_preprocessing.map_feature.obstacle_mapping import ObstacleMapping
 
 
 if __name__ == '__main__':

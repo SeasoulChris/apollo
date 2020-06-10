@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import models
 from torchvision import transforms
 
-import learning_algorithms.prediction.models.semantic_map_model.semantic_map_model as semantic_map_model
+import fueling.prediction.learning.models.semantic_map_model.semantic_map_model as semantic_map_model
 from pedestrian_trajectory_dataset import PedestrianTrajectoryDataset as PedestrianTrajectoryDataset
 
 dataset_path = '/data/kinglong_train_split/valid/baidudasha/jinlong-JinLongBaiduDaSha/20200224/'

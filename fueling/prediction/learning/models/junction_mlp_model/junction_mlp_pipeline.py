@@ -7,7 +7,7 @@ import h5py
 import torch
 
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.models.junction_mlp_model.junction_mlp_model import *
+from fueling.prediction.learning.models.junction_mlp_model.junction_mlp_model import *
 
 
 dim_input = 114

@@ -2,7 +2,7 @@
 
 import argparse
 
-from learning_algorithms.prediction.data_preprocessing.features_labels_utils import *
+from fueling.prediction.learning.data_preprocessing.features_labels_utils import *
 
 
 if __name__ == "__main__":

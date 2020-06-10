@@ -8,7 +8,7 @@ from torchvision import transforms
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
-from learning_algorithms.prediction.data_preprocessing.map_feature.online_mapping import ObstacleMapping
+from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping import ObstacleMapping
 
 from modules.prediction.proto.offline_features_pb2 import ListDataForLearning
 

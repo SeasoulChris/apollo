@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
+from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2 import *
 import fueling.common.file_utils as file_utils
-import learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
+import fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_learning_pb2
 
 
 obs_feature_size = 180

@@ -5,9 +5,9 @@ import argparse
 import torch
 
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset import *
-from learning_algorithms.prediction.models.social_interaction_model.human_trajectory_dataset import *
-from learning_algorithms.prediction.models.social_interaction_model.social_interaction_model import *
+from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset import *
+from fueling.prediction.learning.models.social_interaction_model.human_trajectory_dataset import *
+from fueling.prediction.learning.models.social_interaction_model.social_interaction_model import *
 
 
 if __name__ == "__main__":

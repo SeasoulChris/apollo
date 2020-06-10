@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import models
 from torchvision import transforms
 
-import learning_algorithms.prediction.models.semantic_map_model.semantic_map_model as semantic_map_model
+import fueling.prediction.learning.models.semantic_map_model.semantic_map_model as semantic_map_model
 from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset as ApolloVehicleTrajectoryDataset
 
 dataset_path = '/data/training_data/train/sunnyvale/2019-01-03/'

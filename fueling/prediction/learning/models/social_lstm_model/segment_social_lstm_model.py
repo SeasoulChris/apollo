@@ -5,7 +5,7 @@ import copy
 import torch
 import torch.nn as nn
 
-from learning_algorithms.prediction.models.social_lstm_model.social_lstm_model import *
+from fueling.prediction.learning.models.social_lstm_model.social_lstm_model import *
 
 
 grid_size = 2

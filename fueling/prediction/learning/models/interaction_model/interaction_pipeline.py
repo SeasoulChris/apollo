@@ -5,7 +5,7 @@ import argparse
 import torch
 
 from fueling.learning.train_utils import *
-from learning_algorithms.prediction.models.interaction_model.interaction_model import *
+from fueling.prediction.learning.models.interaction_model.interaction_model import *
 
 
 delta = 0.5
