@@ -402,6 +402,20 @@ def extract_data_from_zigzag(msg, wheel_base):
     return data
 
 
+def is_open_space_ready(open_space):
+    # Open space planner has took some time to calculate the trajectories
+    if open_space.time_latency > 0:
+        return True
+
+    # First trajectory in open space does not have exactly 10 points,
+    # which means it has exited the stopping stage
+    if len(open_space.partitioned_trajectories.trajectory) > 0:
+        len_first_trajectory = len(open_space.partitioned_trajectories.trajectory[0].trajectory_point)
+        if (len_first_trajectory > 0) and (len_first_trajectory != 10):
+            return True
+    return False
+
+
 def extract_zigzag_trajectory_feature(target_group):
     """Extract zigzag trajectory related feature matrix from a group of planning messages"""
     target, msgs = target_group
@@ -411,9 +425,7 @@ def extract_zigzag_trajectory_feature(target_group):
 
     zigzag_list = []
     for msg in msgs:
-        # Find the first frame when zigzag trajectory is ready
-        # Do not depend on the number of zigzag trajectories as it may be a stopping one
-        if msg['planning'].debug.planning_data.open_space.time_latency > 0:
+        if is_open_space_ready(msg['planning'].debug.planning_data.open_space):
             zigzag_list.extend(extract_data_from_zigzag(msg['planning'], vehicle_param.wheel_base))
     return target, np.array([zigzag_list]).T  # make sure numpy shape is (num, 1)
 
@@ -427,9 +439,7 @@ def extract_stage_feature(target_group):
     end_timestamp = msgs[-1]['planning'].header.timestamp_sec
     gear_shift_times = 1
     for msg in msgs:
-        # Find the first frame when zigzag trajectory is ready
-        # Do not depend on the number of zigzag trajectories as it may be a stopping one
-        if msg['planning'].debug.planning_data.open_space.time_latency > 0:
+        if is_open_space_ready(msg['planning'].debug.planning_data.open_space):
             gear_shift_times = len(
                 msg['planning'].debug.planning_data.open_space.partitioned_trajectories.trajectory)
             for point in msg['planning'].trajectory_point:

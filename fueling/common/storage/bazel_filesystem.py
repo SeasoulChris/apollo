@@ -9,4 +9,4 @@ class BazelFilesystem(Filesystem):
     """A local filesystem for Bazel test."""
 
     def __init__(self):
-        BaseStorage.__init__(self, '/')
+        BaseStorage.__init__(self, '/tmp')

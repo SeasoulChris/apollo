@@ -1,0 +1,44 @@
+cost_params {
+  profiling_script: "fueling/profiling/open_space_planner/metrics.py"
+  grading_output: "*grading.json"
+  path_flag {
+    flag_name: "input_data_path"
+  }
+  path_flag {
+    flag_name: "output_data_path"
+  }
+  string_flag {
+    flag_name: "open_space_planner_profiling_vehicle_conf_path"
+    str_val: "/mnt/bos/modules/control/control_conf/mkz7/"
+  }
+  bool_flag {
+    flag_name: "open_space_planner_profiling_generate_report"
+    enable: false
+  }
+}
+
+cost_metrics {
+  weighting_metric {
+    metric_name: "initial_heading_diff_ratio"
+    weighting_factor: 1.0
+    dim_1_idx: 0
+  }
+  weighting_metric {
+    metric_name: "curvature_ratio"
+    weighting_factor: 1.0
+    dim_1_idx: 2
+  }
+
+  penalty_metric {
+    metric_name: "longitudinal_deceleration_ratio"
+    penalty_score: 1.0
+    dim_1_idx: 0
+  }
+
+  fail_metric {
+    metric_name: "min_time_to_collision_ratio"
+    dim_1_idx: 0
+  }
+
+  fail_score: 100.0
+}

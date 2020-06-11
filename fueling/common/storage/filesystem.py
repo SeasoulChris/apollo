@@ -19,6 +19,6 @@ class Filesystem(BaseStorage):
         Get a list of files with given prefix and suffix.
         Return absolute paths if to_abs_path is True else keys.
         """
-        return [self.path_to_key(f)
+        return [self.relative_path(f)
                 for f in glob.glob(self.abs_path(os.path.join(prefix, '**')), recursive=True)
                 if os.path.isfile(f)]

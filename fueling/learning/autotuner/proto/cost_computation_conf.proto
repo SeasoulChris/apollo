@@ -2,55 +2,70 @@ syntax = "proto3";
 
 package apollo.fuelation;
 
-// Path Flag indicate the flag which will be iteratively updated with the data bag path
+// Path Flag indicates a flag which will be iteratively updated with the data path
 message PathFlag {
   string flag_name = 1;
 }
 
-// Feature Flag indicate the flag with the string format
-message FeatureFlag {
+// String Flag indicates a flag with string format
+message StringFlag {
   string flag_name = 1;
-  string feature = 2;
+  string str_val = 2;
 }
 
-// Mode Flag indicate the flag with the boolean format
-message ModeFlag {
+// Bool Flag indicates a flag with boolean format
+message BoolFlag {
   string flag_name = 1;
   bool enable = 2;
 }
 
 message CostParams {
-  string profiling_filename = 1;
-  string grading_filename = 2;
+  string profiling_script = 1;
+  string grading_output = 2;
   repeated PathFlag path_flag = 3;
-  repeated FeatureFlag feature_flag = 4;
-  repeated ModeFlag mode_flag = 5;
+  repeated StringFlag string_flag = 4;
+  repeated BoolFlag bool_flag = 5;
 }
 
-// Weighting Metrics indicate the statistically-meaningful metrics, such as std, rms, max, min
-// For the i-th metrics, weighting_ratio[i] = weighting_factor[i] / sum(weighting_factor[1: n])
-message WeightingMetrics {
-  string metrics_name = 1;
+// Weighting Metrics indicate the statistical metrics, such as std, rms, max, min
+// For the i-th metric, weighting_ratio[i] = weighting_factor[i] / sum(weighting_factor[1:n])
+message WeightingMetric {
+  string metric_name = 1;
   double weighting_factor = 2;
+  sint32 dim_1_idx = 3;
+  // in case it is an embedded array.
+  // use oneof as wrapper to check if idx is set,
+  // since primitive types always have default value in proto3
+  oneof dim_2 { sint32 dim_2_idx = 4; }
 }
 
-// Penalty Metrics indicate the event-counting metrics, such as replan counter
+// Penalty Metrics indicate the counting metrics of undesirable events, such as replan, hit-bound
 // Penalty score is the score of every individual event
-message PenaltyMetrics {
-  string metrics_name = 1;
+message PenaltyMetric {
+  string metric_name = 1;
   double penalty_score = 2;
+  sint32 dim_1_idx = 3;
+  // in case it is an embedded array.
+  // use oneof as wrapper to check if idx is set,
+  // since primitive types always have default value in proto3
+  oneof dim_2 { sint32 dim_2_idx = 4; }
 }
 
-// Fail Metrics indicate the once-per-scenario fail-related metrics, such as e-stop error code
-message FailMetrics {
-  string metrics_name = 1;
+// Fail Metrics indicate the critical metrics, such as e-stop error code, collision
+message FailMetric {
+  string metric_name = 1;
+  sint32 dim_1_idx = 2;
+  // in case it is an embedded array.
+  // use oneof as wrapper to check if idx is set,
+  // since primitive types always have default value in proto3
+  oneof dim_2 { sint32 dim_2_idx = 3; }
 }
 
 message CostMetrics {
-  repeated WeightingMetrics weighting_metrics = 1;
-  repeated PenaltyMetrics penalty_metrics = 2;
-  repeated FailMetrics fail_metrics = 3;
-  // Fail score is the score in case of the fail metrics exist (non-zero)
+  repeated WeightingMetric weighting_metric = 1;
+  repeated PenaltyMetric penalty_metric = 2;
+  repeated FailMetric fail_metric = 3;
+  // Fail score is the final score in the case of the fail metrics exist (non-zero)
   double fail_score = 4;
 }
 

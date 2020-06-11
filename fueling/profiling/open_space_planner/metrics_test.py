@@ -97,8 +97,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertEqual(1, len(result_data))
         _, output = result_data[0]
         self.assertEqual(20, len(output))
-        self.assertListEqual([0.012658227848101266, 1.0, 0.31569599160665557, 0.17568621907920884,
-                              0.42628587217711833, 237], output.non_gear_switch_length_ratio)
+        self.assertListEqual([0.005628517823639775, 1.0, 0.3183317924567638, 0.13117638380055793,
+                              0.42628587217711833, 533], output.non_gear_switch_length_ratio)
         self.assertTupleEqual((4.141625030490488e-05, 1), output.initial_heading_diff_ratio)
         self.assertListEqual([0.0, 0.33018652986519514, 0.1823102366181574, 0.06817409352324616,
                               0.33018652953932903, 9053], output.distance_to_obstacles_ratio)

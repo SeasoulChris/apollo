@@ -71,7 +71,7 @@ class ProfilingCostComputation(BaseCostComputation):
 
     def run_profiling_locally(self, options):
         metrics_file = file_utils.fuel_path(
-            self.cost_conf_pb.cost_params.profiling_filename
+            self.cost_conf_pb.cost_params.profiling_script
         )
         option_strings = [f"--{name}={value}" for (name, value) in options.items()]
         cmd = f"cd {file_utils.fuel_path('.')}; python {metrics_file} {' '.join(option_strings)}"
@@ -89,34 +89,32 @@ class ProfilingCostComputation(BaseCostComputation):
         options = {}
         for flag in self.cost_conf_pb.cost_params.path_flag:
             options.update({flag.flag_name: bag_path})
-        for flag in self.cost_conf_pb.cost_params.feature_flag:
-            options.update({flag.flag_name: flag.feature})
-        for flag in self.cost_conf_pb.cost_params.mode_flag:
+        for flag in self.cost_conf_pb.cost_params.string_flag:
+            options.update({flag.flag_name: flag.str_val})
+        for flag in self.cost_conf_pb.cost_params.bool_flag:
             options.update({flag.flag_name: flag.enable})
 
         if not self.run_profiling_locally(options):
-            logging.error(f"Fail to submit the profiling job.")
+            logging.error(f"Fail to run the profiling job locally.")
             self.pause_to_debug()
             return [float('nan'), 0]
         logging.info(f"Timer: run_profiling_locally - {time.perf_counter() - tic_start: 0.04f} sec")
 
         # extract the profiling score of the individual scenario
         profiling_grading_dir = glob.glob(os.path.join(
-            bag_path, self.cost_conf_pb.cost_params.grading_filename
+            bag_path, self.cost_conf_pb.cost_params.grading_output
         ))
         logging.info(f"Score file storage path: {profiling_grading_dir}")
 
         if not profiling_grading_dir:
-            logging.error(f"Fail to acquire the profiling grading file "
-                          f"under the path: {bag_path}")
+            logging.error(f"Fail to acquire the profiling output file under {bag_path}")
             self.pause_to_debug()
             return [float('nan'), 0]
         else:
             with open(profiling_grading_dir[0], 'r') as grading_json:
                 grading = json.load(grading_json)
             # Parse the profiling results and compute the combined weighted-score
-            # TODO (Yu/Vivian/Una): find an appropriate way to switch XXX_profiling_weighting
-            profiling_score = self.control_profiling_weighting(grading)
+            profiling_score = self.profiling_weighting(grading)
             logging.info(f"Profiling score for individual scenario: "
                          f"score={profiling_score[0]}, sample={profiling_score[1]}")
 
@@ -139,38 +137,52 @@ class ProfilingCostComputation(BaseCostComputation):
         avg_score = total_score / total_sample if total_sample > 0 else float('nan')
         return avg_score
 
-    def control_profiling_weighting(self, grading):
+    def profiling_weighting(self, grading):
         """
-        calculate the control profiling score based on the selected cost metrics and
-        control-specified parameter formats
+        Calculate the weighted profiling score based on the selected cost metrics
         """
         score = 0.0
-        weighting = 0.0
-        sample = grading['total_time_usage'][1]
+        sample = 0
 
-        # Read and parse config from control cost computation pb file
+        # Read and parse config from cost computation conf pb file
         cost_metrics = self.cost_conf_pb.cost_metrics
 
-        # Parse and compute the weighting metrics from control profiling results
-        for metrics in cost_metrics.weighting_metrics:
-            if 'peak' in metrics.metrics_name:
-                # for peak metrics, the grading format: [[score, timestamp], sample]
-                score += grading[metrics.metrics_name][0][0] * metrics.weighting_factor
+        # Parse and compute the weighting metrics from profiling results
+        weighting = 0.0
+        for metric in cost_metrics.weighting_metric:
+            if metric.HasField('dim_2_idx'):
+                # Embedded array metrics, the grading format: [[score1, score2, ...], sample]
+                score += (grading[metric.metric_name][metric.dim_1_idx][metric.dim_2_idx]
+                          * metric.weighting_factor)
             else:
-                # for other metrics, the grading format: [score, sample]
-                score += grading[metrics.metrics_name][0] * metrics.weighting_factor
-            weighting += metrics.weighting_factor
+                # Single array metrics, the grading format: [score1, score2, ..., sample]
+                score += grading[metric.metric_name][metric.dim_1_idx] * metric.weighting_factor
+            weighting += metric.weighting_factor
+            sample = max(sample, grading[metric.metric_name][-1])
         score /= weighting
 
-        # Parse and compute the penalty metrics from control profiling results
-        for metrics in cost_metrics.penalty_metrics:
-            score += (grading[metrics.metrics_name][0] * grading[metrics.metrics_name][1]
-                      * metrics.penalty_score)
+        # Parse and compute the penalty metrics from profiling results
+        for metric in cost_metrics.penalty_metric:
+            # Restore the original count, i.e. not weighted by sample size
+            if metric.HasField('dim_2_idx'):
+                score += (grading[metric.metric_name][metric.dim_1_idx][metric.dim_2_idx]
+                          * grading[metric.metric_name][-1]
+                          * metric.penalty_score)
+            else:
+                score += (grading[metric.metric_name][metric.dim_1_idx]
+                          * grading[metric.metric_name][-1]
+                          * metric.penalty_score)
+            sample = max(sample, grading[metric.metric_name][-1])
 
-        # Parse and compute the fail metrics from control profiling results
-        for metrics in cost_metrics.fail_metrics:
-            if grading[metrics.metrics_name][0] > 0:
-                score = cost_metrics.fail_score
+        # Parse and compute the fail metrics from profiling results
+        for metric in cost_metrics.fail_metric:
+            if metric.HasField('dim_2_idx'):
+                if grading[metric.metric_name][metric.dim_1_idx][metric.dim_2_idx] > 0:
+                    score = cost_metrics.fail_score
+            else:
+                if grading[metric.metric_name][metric.dim_1_idx] > 0:
+                    score = cost_metrics.fail_score
+            sample = max(sample, grading[metric.metric_name][-1])
 
         return (score, sample)
 

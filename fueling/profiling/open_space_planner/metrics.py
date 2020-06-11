@@ -31,7 +31,8 @@ flags.DEFINE_boolean('open_space_planner_profiling_generate_report', False,
                      'whether an email report with feature plot etc. is required')
 flags.DEFINE_boolean('open_space_planner_profiling_debug', False,
                      'whether feature HDF5 files need to be saved for debugging')
-
+flags.DEFINE_string('open_space_planner_profiling_vehicle_conf_path', None,
+                    'storage path of vehicle_param.pb.txt')
 
 SCENARIO_TYPE = ScenarioConfig.VALET_PARKING
 STAGE_TYPE = ScenarioConfig.VALET_PARKING_PARKING
@@ -99,7 +100,13 @@ class OpenSpacePlannerMetrics(BasePipeline):
         # 1. get record files
         origin_prefix = flags.FLAGS.input_data_path
         target_prefix = flags.FLAGS.output_data_path
-        job_owner = self.FLAGS.get('job_owner')
+        vehicle_conf_path = self.FLAGS['open_space_planner_profiling_vehicle_conf_path']
+        if (vehicle_conf_path is not None) and (has_vehicle_conf(vehicle_conf_path)):
+            logging.info(F'{VEHICLE_PARAM_FILE} comes from {vehicle_conf_path}')
+        else:
+            vehicle_conf_path = None
+            logging.info('No open_space_planner_profiling_vehicle_conf_path specified')
+        job_owner = self.FLAGS['job_owner']
         self.partner_email = partners.get(job_owner).email if self.is_partner_job() else ''
         logging.info(F'Email address of job owner {job_owner}: {self.partner_email}')
 
@@ -108,11 +115,14 @@ class OpenSpacePlannerMetrics(BasePipeline):
 
         # This will return absolute path
         src_dirs = self.to_rdd(object_storage.list_end_dirs(origin_prefix))
-        valid_src_dirs = src_dirs.filter(has_vehicle_conf)
+        if vehicle_conf_path is None:
+            valid_src_dirs = src_dirs.filter(has_vehicle_conf)
+        else:
+            valid_src_dirs = src_dirs
         invalid_src_dirs = (src_dirs
                             .filter(lambda d: not has_vehicle_conf(d))
                             .collect())
-        if invalid_src_dirs:
+        if invalid_src_dirs and (vehicle_conf_path is None):
             logging.warn(F'invalid_src_dirs: {invalid_src_dirs}')
             self.error_msg = F'No {VEHICLE_PARAM_FILE} found in directory: {invalid_src_dirs}'
         if logging.level_debug():
@@ -120,10 +130,17 @@ class OpenSpacePlannerMetrics(BasePipeline):
             logging.debug(F'valid_src_dirs: {valid_src_dirs.collect()}')
 
         # Copy over vehicle param config
-        src_dst_rdd = (valid_src_dirs
-                       .map(lambda src_dir: (
-                            src_dir, src_dir.replace(origin_prefix, target_prefix, 1)))
-                       .cache())
+        if vehicle_conf_path is not None:
+            src_dst_rdd = (valid_src_dirs
+                           .map(lambda src_dir: (
+                                vehicle_conf_path,
+                                src_dir.replace(origin_prefix, target_prefix, 1)))
+                           .cache())
+        else:
+            src_dst_rdd = (valid_src_dirs
+                           .map(lambda src_dir: (
+                                src_dir, src_dir.replace(origin_prefix, target_prefix, 1)))
+                           .cache())
         if logging.level_debug():
             logging.debug(F'src_dst_rdd: {src_dst_rdd.collect()}')
         src_dst_rdd.values().foreach(file_utils.makedirs)

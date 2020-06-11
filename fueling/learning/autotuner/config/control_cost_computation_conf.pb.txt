@@ -1,91 +1,96 @@
 cost_params {
-  profiling_filename: "fueling/profiling/control/multi_job_control_profiling_metrics.py"
-  grading_filename: "*/*/*/*grading.json"
+  profiling_script: "fueling/profiling/control/multi_job_control_profiling_metrics.py"
+  grading_output: "*/*/*/*grading.json"
   path_flag {
     flag_name: "input_data_path"
   }
   path_flag {
     flag_name: "output_data_path"
   }
-  mode_flag {
+  bool_flag {
     flag_name: "ctl_metrics_simulation_only_test"
     enable: true
   }
-  mode_flag {
+  bool_flag {
     flag_name: "ctl_metrics_save_report"
     enable: false
   }
 }
 
 cost_metrics {
-  weighting_metrics {
-    metrics_name: "station_err_std"
+  weighting_metric {
+    metric_name: "station_err_std"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "speed_err_std"
+  weighting_metric {
+    metric_name: "speed_err_std"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "lateral_err_std"
+  weighting_metric {
+    metric_name: "lateral_err_std"
     weighting_factor: 3.0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_std"
+  weighting_metric {
+    metric_name: "heading_err_std"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_rate_std"
+  weighting_metric {
+    metric_name: "heading_err_rate_std"
     weighting_factor: 2.0
   }
-  weighting_metrics {
-    metrics_name: "station_err_std_harsh"
+  weighting_metric {
+    metric_name: "station_err_std_harsh"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "speed_err_std_harsh"
+  weighting_metric {
+    metric_name: "speed_err_std_harsh"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "lateral_err_std_harsh"
+  weighting_metric {
+    metric_name: "lateral_err_std_harsh"
     weighting_factor: 4.0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_std_harsh"
+  weighting_metric {
+    metric_name: "heading_err_std_harsh"
     weighting_factor: 1.0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_rate_std_harsh"
+  weighting_metric {
+    metric_name: "heading_err_rate_std_harsh"
     weighting_factor: 2.0
   }
-  weighting_metrics {
-    metrics_name: "station_err_peak"
+  weighting_metric {
+    metric_name: "station_err_peak"
     weighting_factor: 1.0
+    dim_2_idx: 0
   }
-  weighting_metrics {
-    metrics_name: "speed_err_peak"
+  weighting_metric {
+    metric_name: "speed_err_peak"
     weighting_factor: 1.0
+    dim_2_idx: 0
   }
-  weighting_metrics {
-    metrics_name: "lateral_err_peak"
+  weighting_metric {
+    metric_name: "lateral_err_peak"
     weighting_factor: 4.0
+    dim_2_idx: 0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_peak"
+  weighting_metric {
+    metric_name: "heading_err_peak"
     weighting_factor: 1.0
+    dim_2_idx: 0
   }
-  weighting_metrics {
-    metrics_name: "heading_err_rate_peak"
+  weighting_metric {
+    metric_name: "heading_err_rate_peak"
     weighting_factor: 1.0
+    dim_2_idx: 0
   }
 
-  penalty_metrics {
-    metrics_name: "replan_trajectory_count"
+  penalty_metric {
+    metric_name: "replan_trajectory_count"
     penalty_score: 1.0
   }
 
-  fail_metrics {
-    metrics_name: "control_error_code_count"
+  fail_metric {
+    metric_name: "control_error_code_count"
   }
 
   fail_score: 10.0

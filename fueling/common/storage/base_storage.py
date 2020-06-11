@@ -10,16 +10,16 @@ class BaseStorage(object):
     def __init__(self, mnt_path):
         self.mnt_path = mnt_path
 
-    def abs_path(self, key):
+    def abs_path(self, path):
         """Return absolute mounting path of the given key."""
-        return os.path.join(self.mnt_path, key)
+        if path.startswith('/'):
+            return path
+        return os.path.join(self.mnt_path, path)
 
-    def path_to_key(self, path):
+    def relative_path(self, path):
         """Remove mnt_path it is abs_path."""
         if path.startswith(self.mnt_path):
-            path = path[len(self.mnt_path):]
-        if path.startswith('/'):
-            path = path[1:]
+            path = path[len(self.mnt_path) + 1:]
         return path
 
     def list_keys(self, prefix):
@@ -30,8 +30,9 @@ class BaseStorage(object):
         """
         Get a list of files with given prefix and suffix.
         Return absolute paths if to_abs_path is True else keys.
+        Allow prefix to be both absolute path and relative path.
         """
-        files = self.list_keys(prefix)
+        files = self.list_keys(self.relative_path(prefix))
         if suffix:
             files = [path for path in files if path.endswith(suffix)]
         if to_abs_path:
@@ -42,8 +43,9 @@ class BaseStorage(object):
         """
         Get a list of dirs with given prefix, which contain at least one file.
         Return absolute paths if to_abs_path is True else keys.
+        Allow prefix to be both absolute path and relative path.
         """
-        files = self.list_keys(prefix)
+        files = self.list_keys(self.relative_path(prefix))
         dirs = set(map(os.path.dirname, files))
         if to_abs_path:
             dirs = map(self.abs_path, dirs)

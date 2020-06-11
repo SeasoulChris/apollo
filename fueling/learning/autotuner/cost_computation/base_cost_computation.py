@@ -41,8 +41,7 @@ class BaseCostComputation(BasePipeline):
     def init(self):
         BasePipeline.init(self)
 
-        mode = "CLOUD" if self.FLAGS.get('running_mode') == 'PROD' else "LOCAL"
-        logging.info(f"Running cost_computation in {mode} mode.")
+        logging.info(f"Running cost_computation in {self.FLAGS.get('running_mode')} mode.")
 
         if not flags.FLAGS.token:
             logging.error("Service token not specified.")
