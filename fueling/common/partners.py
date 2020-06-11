@@ -48,4 +48,8 @@ partners = {
                              bos_bucket='kingpilot', bos_region='bj'),
     'd-kit-zjsys-83': Partner(name='ZJSYS83', email='liuyt@zhejianglab.com',
                               bos_bucket='zjlabsam', bos_region='su'),
+    'd-kit-jcxx-93': Partner(name='JCXX93', email='zhangjc@iiisct.com',
+                             bos_bucket='archiplab', bos_region='bj'),
+    'd-kit-cqjt-36': Partner(name='CQJT36', email='16925652@qq.com',
+                             bos_bucket='jiaodawurenche', bos_region='bj'),
 }
