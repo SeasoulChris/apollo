@@ -25,8 +25,8 @@
 {% endblock %}
 
 {% block body %}
-<a type="hidden" id="pod_log_streaming_url" href="{{ url_for('pod_log_streaming_hdl', pod_name=pod_name, namespace=namespace) }}"></a>
-<a type="hidden" id="spark_history_url" href="{{ spark_history_url }}"></a>
+<a style="display:none" id="pod_log_streaming_url" href="{{ url_for('pod_log_streaming_hdl', pod_name=pod_name, namespace=namespace) }}"></a>
+<a style="display:none" id="spark_history_url">{{ spark_history_url }}</a>
 <div class="panel panel-default">
    <div class="panel-heading">logs - {{ pod_name }}</div>
    <div class="spark-ui" style="padding:10px;display:none;">
@@ -79,7 +79,7 @@
         console.log('Complete response = ' + data);
         // Replace spark-ui running url with history server url
         // If the logs doesn't contain a SparkUI url, this zone will not be displayed
-        var spark_ui_addr = $("#spark_history_url").attr("href");
+        var spark_ui_addr = $("#spark_history_url").text();
         if(spark_ui_addr.length > 0){
           $("#spark-ui").attr("href", spark_ui_addr);
           $("#spark-ui").text(spark_ui_addr);
