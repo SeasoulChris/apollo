@@ -151,7 +151,7 @@ def pod_log_hdl(pod_name, namespace='default'):
     """Handler of the pod log page"""
     svc_domain = 'usa-data.baidu.com:8001'
     svc_name = 'spark-history-server:18080'
-    spark_history_server = (f'{svc_domain}/api/v1/namespaces/default/services/'
+    spark_history_server = (f'http://{svc_domain}/api/v1/namespaces/default/services/'
                             f'http:{svc_name}/proxy/history')
     try:
         spark_app_selector = (json.loads(JobManager().pod_describe(pod_name, namespace))
