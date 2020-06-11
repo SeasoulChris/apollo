@@ -63,8 +63,8 @@ imu_scaling = {
     # IMU compensation for localization scaling issue
     "pp6": 0.55,  # scaling rate for acceleration and angular speed on pp6
     "pp7": 1.085,  # scaling rate for acceleration and angular speed on pp7
-    "acc": 0.76,  # scaling rate for acceleration
-    "heading_rate": 0.78  # scaling rate for angular speed
+    "acc": 0.885,  # scaling rate for acceleration 0.76 0.885
+    "heading_rate": 0.855  # scaling rate for angular speed 0.78 0.855
 }
 
 training_config = {

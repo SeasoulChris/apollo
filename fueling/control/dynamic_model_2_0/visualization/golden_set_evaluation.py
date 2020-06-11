@@ -39,6 +39,12 @@ class GoldenSetEvaluation():
         super().__init__()
         # features numpy file include all paired data points; dimension is 23
         self.feature_dir = feature_dir
+        self.features_file_path = os.path.join(self.feature_dir, 'features.npy')
+        self.DM10_result_file = os.path.join(feature_dir, 'DM10_results.npy')
+        self.echo_lincoln_result_file = os.path.join(feature_dir, 'Echo_Lincoln_results.npy')
+        self.DM20_result_file = os.path.join(feature_dir, 'DM20_results.py')
+        self.analyses_result_file = os.path.join(self.feature_dir, 'analyses_result.py')
+
         self.features = None
         self.get_non_overlapping_features()
         # TODO(Shu): expand this
@@ -73,7 +79,8 @@ class GoldenSetEvaluation():
 
         def get_file_number(hdf5_files):
             """ files are named in time sequence """
-            return int(os.path.basename(hdf5_files).split('.')[0])
+            file_name = os.path.basename(hdf5_files).split('.')[0]
+            return int(file_name.split('-')[0])
 
         self.hdf5_files = sorted(hdf5_files, key=get_file_number)
         for idx, hdf5_file in enumerate(self.hdf5_files):
@@ -86,7 +93,6 @@ class GoldenSetEvaluation():
                 self.features = np.concatenate(
                     (self.features, np.expand_dims(updated_features[-1, :], axis=0)), axis=0)
         logging.info(self.features.shape)
-        self.features_file_path = os.path.join(self.feature_dir, 'features.npy')
         np.save(self.features_file_path, self.features)
 
     def get_dm20_input(self, hdf5_file):
@@ -114,7 +120,10 @@ class GoldenSetEvaluation():
         self.raw_data_visualization.data_dim = self.features.shape[0]
 
     def get_imu_result(self):
-        self.imu_xy = self.raw_data_visualization.imu_location()
+        imu_data = RawDataVisualization(self.features_file_path, self.args)
+        imu_data.feature = self.features
+        imu_data.data_dim = self.features.shape[0]
+        self.imu_xy = imu_data.imu_location()
 
     def get_echo_lincoln_result(self, is_save=True):
         echo_lincoln_x, echo_lincoln_y = self.raw_data_visualization.echo_lincoln_location()
@@ -123,10 +132,8 @@ class GoldenSetEvaluation():
         logging.debug(f'Data points in Echo Lincoln looks like {self.echo_lincoln_xy[0,:]}')
         if is_save:
             # write to npy
-            dst_dir = os.path.dirname(self.features_file_path)
-            dst_file = os.path.join(dst_dir, 'Echo_Lincoln_results.npy')
-            logging.info(f'Echo Lincoln results are saved to file {dst_file}')
-            np.save(dst_file, self.echo_lincoln_xy)
+            logging.info(f'Echo Lincoln results are saved to file {self.echo_lincoln_result_file}')
+            np.save(self.echo_lincoln_result_file, self.echo_lincoln_xy)
 
     def get_DM10_result(self, is_save=True):
         DM10_x, DM10_y = self.raw_data_visualization.dynamic_model_10_location()
@@ -135,10 +142,8 @@ class GoldenSetEvaluation():
         logging.debug(f'Data points in dynamic model 1.0 looks like {self.DM10_xy[0,:]}')
         if is_save:
             # write to npy
-            dst_dir = os.path.dirname(self.features_file_path)
-            dst_file = os.path.join(dst_dir, 'DM10_results.npy')
-            logging.info(f'Dynamic model 1.0 results are saved to file {dst_file}')
-            np.save(dst_file, self.DM10_xy)
+            logging.info(f'Dynamic model 1.0 results are saved to file {self.DM10_result_file}')
+            np.save(self.DM10_result_file, self.DM10_xy)
 
     def get_DM10_result_in_DM20(self, DM10_in_DM20, features, updated_loc):
         DM10_in_DM20.feature = features
@@ -165,7 +170,7 @@ class GoldenSetEvaluation():
 
     def get_DM20_result_from_features(self):
         # read features
-        dm20_hdf5_file = self.hdf5_files  # [::100]
+        dm20_hdf5_file = self.hdf5_files
         for idx, hdf5_file in enumerate(dm20_hdf5_file):
             # generate dm2.0 input
             input_segment, dm01_output_segment = self.get_dm20_input(hdf5_file)
@@ -184,41 +189,6 @@ class GoldenSetEvaluation():
         np.save(dst_label_file, self.label)
         dst_DM20_dxdy_file = os.path.join(self.feature_dir, 'DM20_dxdy.npy')
         np.save(dst_DM20_dxdy_file, self.DM20_dx_dy)
-
-    def get_DM20_result_dataloader(self, is_save=True):
-        """load dynamic model 2.0,
-            make prediction,
-            and generate pose correction for each point (100:)"""
-        DM20 = ValidationVisualization(self.args)
-        # get inducing points for model initialization
-        DM20.load_data()  # inducing points
-        DM20.load_model()
-        # make prediction for each h5 files
-        logging.info(self.args.testing_data_path)
-        h5_files = file_utils.list_files_with_suffix(self.args.testing_data_path, '.h5')
-        logging.info(len(h5_files))
-        h5_files.sort()
-        for idx, h5_file in enumerate(h5_files):
-            logging.debug(f'h5_file: {h5_file}')
-            with h5py.File(h5_file, 'r') as model_norms_file:
-                # Get input data
-                input_segment = torch.from_numpy(
-                    np.array(model_norms_file.get('input_segment'))).float()
-                predict_result = torch.from_numpy(DM20.predict(input_segment)).float()
-                # dimension: 1 * output_dim
-                if idx == 0:
-                    self.DM20_dx_dy = predict_result
-                else:
-                    self.DM20_dx_dy = torch.cat((self.DM20_dx_dy, predict_result), 0)
-        logging.info(f'Dynamic model 2.0 results\' shape is {self.DM20_dx_dy.shape}')
-        logging.info(f'Data points in dynamic model 2.0 looks like {self.DM20_dx_dy[0,:]}')
-        if is_save:
-            # write to npy
-            dst_dir = os.path.dirname(self.features_file_path)
-            logging.info(dst_dir)
-            dst_file = os.path.join(dst_dir, 'DM20_results.npy')
-            logging.info(f'Dynamic model 2.0 results are saved to file {dst_file}')
-            np.save(dst_file, self.DM20_dx_dy)
 
     def correct_non_overlap_data(self):
         DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
@@ -245,6 +215,8 @@ class GoldenSetEvaluation():
         dm20_hdf5_file = self.hdf5_files[::100]
         updated_loc = None
         gp_updated_loc = None
+        if self.DM10_xy is None:
+            self.DM10_xy = np.load(self.DM10_result_file, allow_pickle=True)
         self.label_corrected_xy = np.expand_dims(
             self.DM10_xy[0, :], axis=0)  # first point is not corrected
         self.gp_corrected_xy = np.expand_dims(self.DM10_xy[0, :], axis=0)
@@ -260,13 +232,88 @@ class GoldenSetEvaluation():
             # gp correction
             gp_updated_loc = np.transpose(np.array([gp_dm_x[-1] + gp_d_correction[idx, 0],
                                                     gp_dm_y[-1] + gp_d_correction[idx, 1]]))
-            logging.info(self.label_corrected_xy.shape)
-            logging.info(updated_loc.shape)
             self.label_corrected_xy = np.concatenate(
                 (self.label_corrected_xy, updated_loc), axis=0)
             self.gp_corrected_xy = np.concatenate(
                 (self.gp_corrected_xy, gp_updated_loc), axis=0)
-        logging.info(self.label_corrected_xy.shape)
+        logging.info(self.DM20_result_file)
+        np.save(self.DM20_result_file, self.gp_corrected_xy)
+
+    def get_error_analyses(self):
+        # load data
+        # ground truth
+        self.features = np.load(self.features_file_path, allow_pickle=True)
+        xy_position = self.features[:, segment_index['x']:segment_index['y'] + 1]
+        logging.info(xy_position.shape)
+        # location from dynamic model 1.0
+        if self.DM10_xy is None:
+            self.DM10_xy = np.load(self.DM10_result_file, allow_pickle=True)
+        # location from echo Lincoln model
+        if self.echo_lincoln_xy is None:
+            self.echo_lincoln_xy = np.load(self.echo_lincoln_result_file, allow_pickle=True)
+        logging.info(self.echo_lincoln_xy.shape)
+        # get location of DM20 model
+        if self.gp_corrected_xy is None:
+            self.gp_corrected_xy = np.load(self.analyses_result_file, allow_pickle=True)
+
+        # 1s, 10s, 30s and end of trajectory error
+        time_frame_ranges = [99, 999, 2999, self.features.shape[0] - 1]
+        analyses_result = dict()
+        analyses_result["echo_lincoln_cates"] = []
+        analyses_result["echo_lincoln_mates"] = []
+        analyses_result["DM10_cates"] = []
+        analyses_result["DM10_mates"] = []
+        analyses_result["DM20_cates"] = []
+        analyses_result["DM20_mates"] = []
+        for time_frame in time_frame_ranges:
+            echo_lincoln_mate = self.calc_mate(self.echo_lincoln_xy, xy_position, time_frame)
+            analyses_result["echo_lincoln_mates"].append(echo_lincoln_mate)
+            logging.info(f'Echo_lincoln: {time_frame}th time frame Mate is {echo_lincoln_mate}')
+            echo_lincoln_cate = self.calc_cate(self.echo_lincoln_xy, xy_position, time_frame)
+            analyses_result["echo_lincoln_cates"].append(echo_lincoln_cate)
+            logging.info(f'Echo_lincoln: {time_frame}th time frame Cate is {echo_lincoln_cate}')
+
+            DM10_mate = self.calc_mate(self.DM10_xy, xy_position, time_frame)
+            analyses_result["DM10_mates"].append(DM10_mate)
+            logging.info(f'DM10: {time_frame}th time frame Mate is {DM10_mate}')
+            DM10_cate = self.calc_cate(self.DM10_xy, xy_position, time_frame)
+            analyses_result["DM10_cates"].append(DM10_cate)
+            logging.info(f'DM10: {time_frame}th time frame Cate is {DM10_cate}')
+
+            DM20_mate = (self.calc_mate(
+                self.gp_corrected_xy, xy_position[::self.data_frame_length, :],
+                min(int(time_frame / self.data_frame_length + 1),
+                    self.gp_corrected_xy.shape[0] - 1)) / self.data_frame_length)
+            analyses_result["DM20_mates"].append(DM20_mate)
+            logging.info(f'DM20: {time_frame}th time frame Mate is {DM20_mate}')
+            DM20_cate = self.calc_cate(
+                self.gp_corrected_xy, xy_position[::self.data_frame_length, :],
+                min(int(time_frame / self.data_frame_length + 1),
+                    self.gp_corrected_xy.shape[0] - 1))
+            analyses_result["DM20_cates"].append(DM20_cate)
+            logging.info(f'DM20: {time_frame}th time frame Cate is {DM20_cate}')
+
+        np.save(self.analyses_result_file, analyses_result)
+
+    def calc_mate(self, predicted_result, ground_truth, nth_frame):
+        """  Mean Absolute Trajectory Error (m-ATE):
+        The mean absolute trajectory error averages the magnitude of
+        translational error of estimated poses with respect to a ground truth trajectory defined
+        within the same navigation frame."""
+        # N-th frame (N = 1 for Cate; N = N-th frame for Mate)
+        # predicted_result np.array with shape 1 * M_dim
+        # ground_truth with same shape
+        return (math.sqrt(np.sum((predicted_result[nth_frame, :] - ground_truth[nth_frame, :])**2))
+                / nth_frame)
+
+    def calc_cate(self, predicted_result, ground_truth, nth_frame):
+        """  Cumulative Absolute Trajectory Error (c-ATE):
+        Cumulative absolute trajectory error sums translational
+        em-ATE up to a given point in a trajectory."""
+        # N-th frame (N = 1 for Cate; N = N-th frame for Mate)
+        # predicted_result np.array with shape 1 * M_dim
+        # ground_truth with same shape
+        return math.sqrt(np.sum((predicted_result[nth_frame, :] - ground_truth[nth_frame, :])**2))
 
     def plot(self):
         fig, axs = plt.subplots(figsize=[8, 8])
@@ -290,6 +337,7 @@ class GoldenSetEvaluation():
         logging.info(f'Echo Lincoln trajectory shape is :{self.echo_lincoln_xy.shape}')
         DM10_error = self.calc_accumulated_error(xy_position, self.DM10_xy)
         echo_lincoln_error = self.calc_accumulated_error(xy_position, self.echo_lincoln_xy)
+        DM20_error = self.calc_accumulated_error(self.gp_corrected_xy, self.label_corrected_xy)
         logging.info(f'Dynamic model 1.0 accumulated error is :{DM10_error} m')
         logging.info(f'Echo_lincoln accumulated error is :{echo_lincoln_error} m')
         # shifted position
@@ -302,7 +350,6 @@ class GoldenSetEvaluation():
         plt.plot(self.echo_lincoln_xy[:, 0] - self.echo_lincoln_xy[0, 0],
                  self.echo_lincoln_xy[:, 1] - self.echo_lincoln_xy[0, 1],
                  'y.', label=f"Echo Lincoln, error is {echo_lincoln_error:.3f} m")
-
         # correct DM1.0 result (using label)
         plt.plot(self.label_corrected_xy[:, 0] - self.DM10_xy[0, 0],
                  self.label_corrected_xy[:, 1] - self.DM10_xy[0, 1], 'k.',
@@ -310,7 +357,7 @@ class GoldenSetEvaluation():
         # correct DM1.0 result (using gp model)
         plt.plot(self.gp_corrected_xy[:, 0] - self.DM10_xy[0, 0],
                  self.gp_corrected_xy[:, 1] - self.DM10_xy[0, 1], 'rx',
-                 label='Corrected result with GP model')
+                 label=f'Corrected result with GP model, error is {DM20_error:.3f} m')
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
@@ -405,4 +452,5 @@ if __name__ == '__main__':
     evaluator.get_echo_lincoln_result()
     evaluator.get_DM20_result_from_features()
     evaluator.correct_non_overlap_data()
+    evaluator.get_error_analyses()
     evaluator.plot()

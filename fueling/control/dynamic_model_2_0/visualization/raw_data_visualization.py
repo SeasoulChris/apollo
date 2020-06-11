@@ -71,7 +71,7 @@ class RawDataVisualization():
         self.imu_acc = imu_acc
         self.imu_w = imu_w
         self.imu_v = []
-        imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc, self.imu_v)
+        imu_x, imu_y = self.get_location_from_a_and_w(imu_w, imu_acc, v=self.imu_v)
         return (imu_x, imu_y)
 
     def dynamic_model_10_location(self, updated_loc=None):
