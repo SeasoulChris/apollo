@@ -143,10 +143,6 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf yarn.log-aggregation-enable=true '
             '--conf spark.eventLog.enabled=true '
             f'--conf spark.eventLog.dir={EVENTLOG_DIR} '
-            f'--conf "spark.driver.extraJavaOptions=-Djob_id={job_id} '
-            f'-Dlog4j.configuration={DRIVER_LOG4J}" '
-            f'--conf "spark.executor.extraJavaOptions=-Djob_id={job_id} '
-            f'-Dlog4j.configuration={EXECUTOR_LOG4J}" '
             # Docker
             '--conf spark.kubernetes.container.image.pullPolicy=Always '
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '
