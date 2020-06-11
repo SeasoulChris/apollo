@@ -410,7 +410,8 @@ def is_open_space_ready(open_space):
     # First trajectory in open space does not have exactly 10 points,
     # which means it has exited the stopping stage
     if len(open_space.partitioned_trajectories.trajectory) > 0:
-        len_first_trajectory = len(open_space.partitioned_trajectories.trajectory[0].trajectory_point)
+        len_first_trajectory = len(
+            open_space.partitioned_trajectories.trajectory[0].trajectory_point)
         if (len_first_trajectory > 0) and (len_first_trajectory != 10):
             return True
     return False
