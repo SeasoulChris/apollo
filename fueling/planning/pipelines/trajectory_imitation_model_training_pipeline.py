@@ -11,13 +11,15 @@ from modules.planning.proto import planning_semantic_map_config_pb2
 import fueling.common.logging as logging
 from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.img_in_traj_out_dataset \
-    import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset
+    import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset, \
+    TrajectoryImitationCNNFCLSTMDataset
 from fueling.planning.models.trajectory_imitation_model \
     import TrajectoryImitationCNNModel, \
     TrajectoryImitationRNNModel, \
     TrajectoryImitationRNNMoreConvModel, \
     TrajectoryImitationRNNUnetResnet18Modelv1, \
     TrajectoryImitationRNNUnetResnet18Modelv2, \
+    TrajectoryImitationCNNFCLSTM, \
     TrajectoryImitationCNNLoss, \
     TrajectoryImitationRNNLoss, \
     TrajectoryImitationWithEnvRNNLoss
@@ -45,13 +47,15 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation)
+                                                      input_data_augmentation,
+                                                      ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation)
+                                                      input_data_augmentation,
+                                                      ouput_point_num=10)
         model = TrajectoryImitationCNNModel(pred_horizon=10)
         loss = TrajectoryImitationCNNLoss()
 
@@ -61,16 +65,39 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation)
+                                                      input_data_augmentation,
+                                                      ouput_point_num=10)
         valid_dataset = TrajectoryImitationRNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation)
+                                                      input_data_augmentation,
+                                                      ouput_point_num=10)
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         loss = TrajectoryImitationRNNLoss(1, 1, 1)
+
+    elif model_type == 'cnn+fc_lstm':
+        train_dataset = TrajectoryImitationCNNFCLSTMDataset(train_dir,
+                                                            renderer_config_file,
+                                                            imgs_dir,
+                                                            map_path,
+                                                            region,
+                                                            input_data_augmentation,
+                                                            history_point_num=10,
+                                                            ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNFCLSTMDataset(valid_dir,
+                                                            renderer_config_file,
+                                                            imgs_dir,
+                                                            map_path,
+                                                            region,
+                                                            input_data_augmentation,
+                                                            history_point_num=10,
+                                                            ouput_point_num=10)
+        model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
+                                             hidden_size=128)
+        loss = TrajectoryImitationCNNLoss()
 
     else:
         logging.info('model {} is not implemnted'.format(model_type))
@@ -114,7 +141,7 @@ if __name__ == "__main__":
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
-    parser.add_argument('model_type', type=str, help='model type, cnn or rnn')
+    parser.add_argument('model_type', type=str, help='model type, cnn, rnn or cnn+fc_lstm')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',

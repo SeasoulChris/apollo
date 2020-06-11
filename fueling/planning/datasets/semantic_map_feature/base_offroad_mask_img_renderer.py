@@ -33,7 +33,7 @@ class BaseOffroadMaskImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Offoad Mask Map base point is "
+        print("Base Offroad Mask Map base point is "
               + str(self.base_point[0]) + ", " + str(self.base_point[1]))
         print("Base Offroad Mask Map W * H is "
               + str(self.GRID[0]) + " * " + str(self.GRID[1]))

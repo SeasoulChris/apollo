@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from torchvision import models
 
 from fueling.common.coord_utils import CoordUtils
+from fueling.learning.network_utils import generate_lstm
 import fueling.common.logging as logging
 
 '''
@@ -509,6 +510,63 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
         return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
+
+
+class TrajectoryImitationCNNFCLSTM(nn.Module):
+    def __init__(self, history_len, pred_horizon, embed_size=64,
+                 hidden_size=128, cnn_net=models.mobilenet_v2,
+                 pretrained=True):
+        super(TrajectoryImitationCNNFCLSTM, self).__init__()
+        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
+        self.cnn = cnn_net(pretrained=pretrained)
+        self.cnn_out_size = 1000
+        for param in self.cnn.parameters():
+            param.requires_grad = True
+
+        self.history_len = history_len
+        self.pred_horizon = pred_horizon
+
+        self.embedding_fc_layer = torch.nn.Sequential(
+            nn.Linear(4, embed_size),
+            nn.ReLU(),
+        )
+
+        self.h0, self.c0, self.lstm = generate_lstm(embed_size, hidden_size)
+
+        self.output_fc_layer = torch.nn.Sequential(
+            nn.Linear(hidden_size + self.cnn_out_size, 4),
+        )
+
+    def forward(self, X):
+        img_feature, hist_points, hist_points_step = X
+        batch_size = img_feature.size(0)
+        ht, ct = self.h0.repeat(1, batch_size, 1),\
+            self.c0.repeat(1, batch_size, 1)
+
+        img_embedding = self.cnn(
+            self.compression_cnn_layer(img_feature)).view(batch_size, -1)
+        pred_traj = torch.zeros(
+            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+
+        for t in range(1, self.history_len + self.pred_horizon):
+            if t < self.history_len:
+                cur_pose_step = hist_points_step[:, t, :].float()
+                cur_pose = hist_points[:, t, :].float()
+            else:
+                pred_input = torch.cat(
+                    (ht.view(batch_size, -1), img_embedding), 1)
+                cur_pose_step = self.output_fc_layer(
+                    pred_input).float().clone()
+                cur_pose = cur_pose + cur_pose_step
+                pred_traj[:, t - self.history_len,
+                          :] = cur_pose.clone()
+
+            disp_embedding = self.embedding_fc_layer(
+                cur_pose_step.clone()).view(batch_size, 1, -1)
+
+            _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
+
+        return pred_traj
 
 
 class TrajectoryImitationRNNLoss():

@@ -17,13 +17,15 @@ import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
 from fueling.planning.datasets.img_in_traj_out_dataset import \
     TrajectoryImitationCNNDataset, \
-    TrajectoryImitationRNNDataset
+    TrajectoryImitationRNNDataset, \
+    TrajectoryImitationCNNFCLSTMDataset
 from fueling.planning.models.trajectory_imitation_model import \
     TrajectoryImitationCNNModel, \
     TrajectoryImitationRNNModel, \
     TrajectoryImitationRNNMoreConvModel, \
     TrajectoryImitationRNNUnetResnet18Modelv1, \
-    TrajectoryImitationRNNUnetResnet18Modelv2
+    TrajectoryImitationRNNUnetResnet18Modelv2, \
+    TrajectoryImitationCNNFCLSTM
 from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
@@ -309,14 +311,27 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                      region,
                                                      input_data_agumentation=False,
                                                      evaluate_mode=True)
+    if model_type == 'cnn+fc_lstm':
+        model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
+                                             hidden_size=128)
+        test_dataset = TrajectoryImitationCNNFCLSTMDataset(test_set_folder,
+                                                           renderer_config_file,
+                                                           imgs_dir,
+                                                           map_path,
+                                                           region,
+                                                           input_data_agumentation=False,
+                                                           history_point_num=10,
+                                                           ouput_point_num=10,
+                                                           evaluate_mode=True)
+
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
     test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=32,
+                                              batch_size=128,
                                               shuffle=True,
-                                              num_workers=2,
+                                              num_workers=8,
                                               drop_last=True)
     model_state_dict = torch.load(model_file)
 
@@ -333,7 +348,7 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
     else:
         print("Not using CUDA.")
 
-    if model_type == 'cnn':
+    if model_type == 'cnn' or model_type == 'cnn+fc_lstm':
         cnn_model_evaluator(test_loader, model,
                             renderer_config_file, imgs_dir)
     elif model_type == 'rnn':
@@ -352,7 +367,8 @@ if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     parser = argparse.ArgumentParser(description='evaluation')
-    parser.add_argument('model_type', type=str, help='model type, cnn or rnn')
+    parser.add_argument('model_type', type=str,
+                        help='model type, cnn, rnn or cnn+fc_lstm')
     parser.add_argument('model_file', type=str, help='trained model')
     parser.add_argument('test_set_folder', type=str, help='test data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
