@@ -68,10 +68,10 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
    1. **Run optuna based optimization via cluster:**
       To start optuna workers
       ```bash
-      cd /apollo-fuel/apps/optuna
+      cd /apollo-fuel/apps/autotuner
       # -w: number of workers
       # -f: path to tuner_param file
-      bash main.sh -c bce-platform -a run -f fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt -w 2
+      bash super_tuner.sh -c bce-platform -a run -f fueling/learning/autotuner/config/mrac_tuner_param_config.pb.txt -w 2
       ```
 
       To monitor all service/apps
@@ -81,7 +81,7 @@ For the Bayesian/Optuna Optimization Tuner, the parameter setting and running pr
 
       To stop all optuna workers
       ```bash
-      bash main.sh -c bce-platform -a stop
+      bash super_tuner.sh -c bce-platform -a stop
       ```
 
 1. Monitor the Optimization process **via the terminal**:

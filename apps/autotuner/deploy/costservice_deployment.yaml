@@ -20,7 +20,7 @@ spec:
         image: __IMG__
         imagePullPolicy: Always
         command:
-            - "/fuel/apps/cost_service/deploy/entrypoint.sh"
+            - "/fuel/apps/autotuner/deploy/costservice_entrypoint.sh"
             - "__CLUSTER__"
         securityContext:
           privileged: true

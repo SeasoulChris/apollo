@@ -1,9 +1,11 @@
 #!/bin/bash
 
+source ./common.sh
+
 function print_usage() {
-    echo 'Usage:
-    ./main.sh -c [ bce-platform | bce-debug | az-staging ] -a [ init | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
-    '
+    echo "Usage:
+    ./super_tuner.sh -c [ $(join_by ' | ' ${VALID_CLUSTERS[@]}) ] -a [ init | run -f <CONFIG_FILE> -w <NUMBER_OF_WORKERS> | stop ]
+    "
 }
 
 function delete_worker() {
@@ -38,20 +40,6 @@ function run() {
   git checkout -- $RUN_FILE
 }
 
-function check_cluster() {
-  local current_cluster=`kubectl config current-context`
-  echo "Current cluster is ${current_cluster}"
-
-  if [ "${current_cluster}" = "kubernetes-admin@kubernetes" ]; then
-    current_cluster="bce-platform"
-  fi
-
-  if [ "${current_cluster}" != "${CLUSTER}" ]; then
-    echo "Current cluster isn't the deploy one, please switch your cluster."
-    exit 1
-  fi
-}
-
 function init_environment() {
   if [ "$K8S_NAMESPACE" != "default" ]; then
     kubectl create namespace $K8S_NAMESPACE
@@ -66,27 +54,6 @@ function init_environment() {
   git checkout -- $SERVICE_FILE
 }
 
-function init_settings() {
-  IMAGE="cost_service"
-  DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
-  case "$CLUSTER" in
-    az-staging)
-      DEST_REPO="simengineregistry.azurecr.io"
-      K8S_NAMESPACE="default"
-      ;;
-    bce-debug)
-      DEST_REPO="hub.baidubce.com/apollofuel/autotuner_staging"
-      K8S_NAMESPACE="autotuner-debug"
-      ;;
-    bce-platform)
-      DEST_REPO="hub.baidubce.com/apollofuel/autotuner"
-      K8S_NAMESPACE="autotuner"
-      ;;
-    *)
-      print_usage
-      ;;
-  esac
-}
 
 function main() {
   CLUSTER=''
@@ -122,8 +89,7 @@ function main() {
     exit 1
   fi
 
-
-  check_cluster
+  check_cluster $CLUSTER
   init_settings
 
   case "$ACTION" in
