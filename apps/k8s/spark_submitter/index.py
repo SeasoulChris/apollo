@@ -152,12 +152,12 @@ class SparkSubmitJob(flask_restful.Resource):
             '--conf spark.kubernetes.container.image.pullSecrets=baidubce '
             f'--conf spark.kubernetes.container.image={arg.env.docker_image} '
             # Driver
-            f'--conf spark.driver.memory={arg.driver.driver_memory} '
+            f'--conf spark.driver.memory={arg.driver.driver_memory}g '
             '--conf spark.kubernetes.authenticate.driver.serviceAccountName=spark '
             # Executor
             f'--conf spark.executor.instances={arg.worker.count} '
             f'--conf spark.default.parallelism={arg.worker.count} '
-            f'--conf spark.executor.memory={arg.worker.memory} '
+            f'--conf spark.executor.memory={arg.worker.memory}g '
             f'--conf spark.kubernetes.executor.request.cores={arg.worker.cpu} '
             f'--conf spark.kubernetes.executor.gpus={arg.worker.gpu} '
             f'--conf spark.kubernetes.executor.ephemeralStorageGB={arg.worker.disk} ')
