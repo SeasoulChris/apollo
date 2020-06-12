@@ -1,12 +1,26 @@
 #!/usr/bin/env bash
-# CI check.
-
-CONTAINER="fuel"
-
-cd $( dirname "${BASH_SOURCE[0]}" )
 
 # Fail on any error.
 set -e
+
+# Goto fuel root
+cd "$( dirname "${BASH_SOURCE[0]}" )/.."
+
+# For CI robot.
+if [ "$1" == "--ci" ]; then
+  source ./tools/docker_version.sh
+  APOLLO_ROOT="/home/apollo/apollo-bazel2.x"
+  docker run --privileged --rm \
+      --net host \
+      -v $(pwd):/fuel \
+      -v ${APOLLO_ROOT}:/apollo \
+      -v /home/.bazel_cache:/home/.bazel_cache \
+      -w /fuel \
+      ${IMAGE} bash /fuel/tools/check.sh
+  exit 0
+fi
+
+source /usr/local/miniconda/bin/activate fuel
 
 echo "######################### Build #########################"
 bash /fuel/tools/build_local.sh

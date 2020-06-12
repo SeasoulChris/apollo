@@ -6,6 +6,4 @@ if [ -e "/apollo/scripts/apollo_base.sh" ]; then
   source /apollo/scripts/apollo_base.sh
 fi
 
-source /usr/local/miniconda/bin/activate fuel
-
 bash /fuel/tools/check.sh
