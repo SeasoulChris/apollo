@@ -23,7 +23,6 @@ py_binary(
     srcs = ["feature_extraction.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:file_utils",
         "//fueling/common:h5_utils",
         "//fueling/common:record_utils",
         "//fueling/control/dynamic_model_2_0/feature_extraction:feature_extraction_utils",

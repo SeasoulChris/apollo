@@ -11,7 +11,6 @@ from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message 
     InterPolationMessage, InterPolationMessageList
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
-import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -96,7 +95,7 @@ def write_segment(output_data_path, task_id_group):
     output_data_path = os.path.join(output_data_path, os.path.basename(task))
     # If the to-be-written file exists already, something is wrong, throw it
     HDF5_SUFFIX = '.hdf5'
-    if file_utils.file_exists(os.path.join(output_data_path, F'{group_id}{HDF5_SUFFIX}')):
+    if os.path.exists(os.path.join(output_data_path, F'{group_id}{HDF5_SUFFIX}')):
         raise Exception(F'file exists for {task}: {group_id}')
     data_set = generate_dataset(group)
     if not data_set:
