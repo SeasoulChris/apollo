@@ -15,6 +15,7 @@ from absl.testing import absltest
 from pyspark import SparkConf, SparkContext
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
+from fueling.common.job_utils import JobUtils
 from fueling.common.kubectl_utils import Kubectl
 from fueling.common.mongo_utils import Mongo
 from fueling.common.storage.bazel_filesystem import BazelFilesystem
@@ -102,6 +103,10 @@ class BasePipeline(object):
             FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         # Member variables are available on both driver and executors.
         self.FLAGS = FLAGS.flag_values_dict()
+        if flags.FLAGS.running_mode == 'PROD':
+            JobUtils(FLAGS.job_id).save_job_submit_info(bool(self.is_partner_job()))
+            logging.info(f'Create fuel job {FLAGS.job_id} in mongodb')
+
         logging.info('Running job with owner={}, id={}'.format(FLAGS.job_owner, FLAGS.job_id))
 
     @staticmethod
@@ -139,6 +144,7 @@ class BasePipeline(object):
                      'pod_name': pod_name,
                      'namespace': pod_namespace,
                      'creation_timestamp': creation_timestamp.timestamp()})
+                JobUtils(flags.FLAGS.job_id).save_job_phase(phase)
                 logging.info(F'Save driver log success')
         else:
             logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')

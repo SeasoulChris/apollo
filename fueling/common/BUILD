@@ -5,6 +5,7 @@ py_library(
     srcs = ["base_pipeline.py"],
     deps = [
         "//apps/k8s/spark_submitter:client",
+        "//fueling/common:job_utils",
         "//fueling/common:kubectl_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common/storage:bazel_filesystem",
@@ -48,6 +49,15 @@ py_library(
     srcs = ["h5_utils.py"],
     deps = [
         ":logging",
+    ],
+)
+
+py_library(
+    name = "job_utils",
+    srcs = ["job_utils.py"],
+    deps = [
+        ":mongo_utils",
+        ":record_utils",
     ],
 )
 

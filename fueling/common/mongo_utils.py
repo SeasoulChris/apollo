@@ -54,6 +54,10 @@ class Mongo(object):
         """Get job log collection."""
         return self.collection('job_logs')
 
+    def fuel_job_collection(self):
+        """Get fuel job collection"""
+        return self.collection('fuel_job')
+
 
 if __name__ == '__main__':
     def main(argv):
