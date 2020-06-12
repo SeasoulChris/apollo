@@ -11,6 +11,7 @@ from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message 
     InterPolationMessage, InterPolationMessageList
 from fueling.control.features.feature_extraction_utils import gen_data_point
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
+import fueling.common.file_utils as file_utils
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -18,9 +19,30 @@ import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_u
     feature_utils
 
 
+def serialize_groups(groups):
+    """Get a string of groups for debugging"""
+    groups_str = ''
+    for group in groups:
+        group_str += '{:.9f},'.format(group[-1].chasis_msg.header.timestamp_sec)
+    return groups_str
+
+
+def generate_task_groups(task, valid_groups):
+    """Generate task group tuples based on valid groups, validate groups are sorted as well"""
+    timestamp = None
+    task_groups = []
+    for group_id, group in enumerate(valid_groups):
+        if timestamp is not None and group[-1].chasis_msg.header.timestamp_sec < timestamp:
+            raise Exception(F'{task}: unsorted {group_id}, {serialize_groups(valid_groups)}')
+        timestamp = group[-1].chasis_msg.header.timestamp_sec
+        task_groups.append((task, group_id, group))
+    return task_groups
+
+
 def group_task_messages(task_messages):
     """Match chasis and pose messages and generate groups"""
     task, messages = task_messages
+    messages = sorted(messages, key=lambda topic_message: topic_message[1].header.timestamp_sec)
     cur_interp_msg, interp_messages_list = InterPolationMessage(), InterPolationMessageList()
     cur_pose_msg = None
     logging.info(F'task: {task}, messages len: {len(messages)}')
@@ -51,7 +73,8 @@ def group_task_messages(task_messages):
     valid_groups = interp_messages_list.generate_valid_groups(invalid_interp_pos)
     logging.info(F'how many valid groups: {len(valid_groups)}')
 
-    return [(task, group_id, group) for group_id, group in enumerate(valid_groups)]
+    # Generate final results
+    return generate_task_groups(task, valid_groups)
 
 
 def generate_dataset(group):
@@ -71,6 +94,10 @@ def write_segment(output_data_path, task_id_group):
         return
     task, group_id, group = task_id_group
     output_data_path = os.path.join(output_data_path, os.path.basename(task))
+    # If the to-be-written file exists already, something is wrong, throw it
+    HDF5_SUFFIX = '.hdf5'
+    if file_utils.file_exists(os.path.join(output_data_path, F'{group_id}{HDF5_SUFFIX}')):
+        raise Exception(F'file exists for {task}: {group_id}')
     data_set = generate_dataset(group)
     if not data_set:
         logging.info(F'no dataset generated for group {group_id} and folder {output_data_path}')
@@ -97,7 +124,8 @@ class FeatureExtraction(BasePipeline):
             # RDD(files)
             self.to_rdd(self.our_storage().list_files(input_data_path))
             # RDD(record files)
-            .filter(record_utils.is_record_file)
+            #.filter(record_utils.is_record_file)
+            .filter(lambda x: x.find('.record') != -1)
             # PairRDD(task, record file)
             .keyBy(os.path.dirname)
             # PairRDD(task, message)
@@ -105,14 +133,12 @@ class FeatureExtraction(BasePipeline):
                                                      record_utils.LOCALIZATION_CHANNEL]))
             # PairRDD(task, (topic, proto))
             .mapValues(lambda value: (value.topic, record_utils.message_to_proto(value)))
-            # PariRDD(task, (topic, proto)), sort by proto.header.timestamp_sec
-            .sortBy(lambda x: x[1][1].header.timestamp_sec)
-            # PairRDD(task, (sorted messages))
+            # PairRDD(task, (messages))
             .groupByKey())
 
         groups = spark_helper.cache_and_log(
             'FilteredGroups',
-            # PairRDD(task, (sorted messages))
+            # PairRDD(task, (messages))
             task_msgs_rdd
             # PairRDD(task, group_id, InterPolationMessages as a group)
             .flatMap(group_task_messages))
