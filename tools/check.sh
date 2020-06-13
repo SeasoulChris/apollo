@@ -14,10 +14,9 @@ if [ "$1" == "--ci" ]; then
       --net host \
       -v $(pwd):/fuel \
       -v ${APOLLO_ROOT}:/apollo \
-      -v /home/.bazel_cache:/home/.bazel_cache \
       -w /fuel \
       ${IMAGE} bash /fuel/tools/check.sh
-  exit 0
+  exit $?
 fi
 
 source /usr/local/miniconda/bin/activate fuel
