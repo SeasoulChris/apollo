@@ -23,7 +23,8 @@ Model definition
 
 class TrajectoryImitationCNNModel(nn.Module):
     def __init__(self,
-                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
+                 cnn_net=models.mobilenet_v2, pretrained=True,
+                 pred_horizon=10):
         super(TrajectoryImitationCNNModel, self).__init__()
         # compressed to 3 channel
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
@@ -65,9 +66,17 @@ class TrajectoryImitationCNNLoss():
         return out
 
 
+@torch.jit.script
+def assign_ones(M_k_next: torch.Tensor, batch_iteration_num: torch.Tensor,
+                arg_max_index: torch.Tensor, one_tensor: torch.Tensor):
+    M_k_next[batch_iteration_num, arg_max_index] = one_tensor
+    return M_k_next
+
+
 class TrajectoryImitationRNNModel(nn.Module):
     def __init__(self, input_img_size,
-                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
+                 cnn_net=models.mobilenet_v2, pretrained=True,
+                 pred_horizon=10):
         super(TrajectoryImitationRNNModel, self).__init__()
         # TODO(Jinyun): compressed to 3 channel, to be refined
         self.feature_compression_layer = nn.Conv2d(12, 3, 3, padding=1)
@@ -122,16 +131,18 @@ class TrajectoryImitationRNNModel(nn.Module):
         img_feature_encoding = self.feature_net(
             self.feature_compression_layer(img_feature))
 
+        # initialize the result tensor with a redundant timestamp info
+        # rather than empty because of a issue during TensorRT parsing onnx
         pred_pos_dists = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_boxs = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_points = torch.zeros(
-            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+            (batch_size, 1, 4), device=img_feature.device)
 
         for t in range(self.pred_horizon):
             P_B_k = self.memory_encoder(M_B_k)
@@ -151,32 +162,45 @@ class TrajectoryImitationRNNModel(nn.Module):
                                                       self.input_img_size_w)
             B_k = torch.sigmoid(B_k)
 
-            pred_pos_dists[:, t, 0, :, :] = P_k
-            pred_boxs[:, t, 0, :, :] = B_k
+            pred_pos_dists = torch.cat(
+                (pred_pos_dists, P_k.unsqueeze(1).unsqueeze(1)), dim=1)
+            pred_boxs = torch.cat(
+                (pred_boxs, B_k.unsqueeze(1).unsqueeze(1)), dim=1)
 
             pred_point = self.output_conv_layer(F_P_B_k)
             pred_point = pred_point.view(batch_size, -1)
             pred_point = self.output_fc_layers(pred_point)
-            pred_points[:, t, :] = pred_point.clone()
+            pred_points = torch.cat(
+                (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            col_num = torch.tensor(
-                [self.input_img_size_w], device=img_feature.device)
-            arg_max_row_index = arg_max_index // col_num
-            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
+            M_k_next = M_k_next.view(batch_size, -1)
+            batch_iteration_num = np.arange(batch_size)
+            batch_iteration_num = torch.from_numpy(
+                batch_iteration_num).to(img_feature.device)
+            one_tensor = torch.ones((1), device=img_feature.device)
+            M_k_next = assign_ones(
+                M_k_next, batch_iteration_num, arg_max_index, one_tensor)
+            M_k_next = M_k_next.view(batch_size, self.input_img_size_h,
+                                     self.input_img_size_w)
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            M_k_next[torch.arange(batch_size),
-                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
+        # only return predicted points when exporting onnx or jit tracing
+        # return pred_points[:, 1:, :]
+
+        return (pred_pos_dists[:, 1:, :, :, :],
+                pred_boxs[:, 1:, :, :, :],
+                pred_points[:, 1:, :],
+                M_B_k)
 
 
 class TrajectoryImitationRNNMoreConvModel(nn.Module):
     def __init__(self, input_img_size,
-                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
+                 cnn_net=models.mobilenet_v2, pretrained=True,
+                 pred_horizon=10):
         super(TrajectoryImitationRNNMoreConvModel, self).__init__()
         # TODO(Jinyun): compressed to 3 channel, to be refined
         self.feature_compression_layer = nn.Conv2d(12, 3, 3, padding=1)
@@ -251,16 +275,18 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
         img_feature_encoding = self.feature_net(
             self.feature_compression_layer(img_feature))
 
+        # initialize the result tensor with a redundant timestamp info
+        # rather than empty because of a issue during TensorRT parsing onnx
         pred_pos_dists = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_boxs = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_points = torch.zeros(
-            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+            (batch_size, 1, 4), device=img_feature.device)
 
         for t in range(self.pred_horizon):
             P_B_k = self.memory_encoder(M_B_k)
@@ -280,27 +306,39 @@ class TrajectoryImitationRNNMoreConvModel(nn.Module):
                                                       self.input_img_size_w)
             B_k = torch.sigmoid(B_k)
 
-            pred_pos_dists[:, t, 0, :, :] = P_k
-            pred_boxs[:, t, 0, :, :] = B_k
+            pred_pos_dists = torch.cat(
+                (pred_pos_dists, P_k.unsqueeze(1).unsqueeze(1)), dim=1)
+            pred_boxs = torch.cat(
+                (pred_boxs, B_k.unsqueeze(1).unsqueeze(1)), dim=1)
 
             pred_point = self.output_conv_layer(F_P_B_k)
             pred_point = pred_point.view(batch_size, -1)
             pred_point = self.output_fc_layers(pred_point)
-            pred_points[:, t, :] = pred_point.clone()
+            pred_points = torch.cat(
+                (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            col_num = torch.tensor(
-                [self.input_img_size_w], device=img_feature.device)
-            arg_max_row_index = arg_max_index // col_num
-            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
+            M_k_next = M_k_next.view(batch_size, -1)
+            batch_iteration_num = np.arange(batch_size)
+            batch_iteration_num = torch.from_numpy(
+                batch_iteration_num).to(img_feature.device)
+            one_tensor = torch.ones((1), device=img_feature.device)
+            M_k_next = assign_ones(
+                M_k_next, batch_iteration_num, arg_max_index, one_tensor)
+            M_k_next = M_k_next.view(batch_size, self.input_img_size_h,
+                                     self.input_img_size_w)
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            M_k_next[torch.arange(batch_size),
-                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
+        # only return predicted points when exporting onnx or jit tracing
+        # return pred_points[:, 1:, :]
+
+        return (pred_pos_dists[:, 1:, :, :, :],
+                pred_boxs[:, 1:, :, :, :],
+                pred_points[:, 1:, :],
+                M_B_k)
 
 
 class UnetDecoder(nn.Module):
@@ -322,7 +360,8 @@ class UnetDecoder(nn.Module):
 
 class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
     def __init__(self, input_img_size,
-                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
+                 cnn_net=models.mobilenet_v2, pretrained=True,
+                 pred_horizon=10):
         super(TrajectoryImitationRNNUnetResnet18Modelv1, self).__init__()
 
         self.pred_horizon = pred_horizon
@@ -367,16 +406,18 @@ class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
 
+        # initialize the result tensor with a redundant timestamp info
+        # rather than empty because of a issue during TensorRT parsing onnx
         pred_pos_dists = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_boxs = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_points = torch.zeros(
-            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+            (batch_size, 1, 4), device=img_feature.device)
 
         for t in range(self.pred_horizon):
             stacked_imgs = torch.cat((img_feature, M_B_k), dim=1)
@@ -396,32 +437,45 @@ class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
                                                       self.input_img_size_w)
             B_k = torch.sigmoid(B_k)
 
-            pred_pos_dists[:, t, 0, :, :] = P_k
-            pred_boxs[:, t, 0, :, :] = B_k
+            pred_pos_dists = torch.cat(
+                (pred_pos_dists, P_k.unsqueeze(1).unsqueeze(1)), dim=1)
+            pred_boxs = torch.cat(
+                (pred_boxs, B_k.unsqueeze(1).unsqueeze(1)), dim=1)
 
             pred_point = self.output_conv_layer(F_P_B_k)
             pred_point = pred_point.view(batch_size, -1)
             pred_point = self.output_fc_layers(pred_point)
-            pred_points[:, t, :] = pred_point.clone()
+            pred_points = torch.cat(
+                (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
 
             arg_max_index = torch.argmax(
                 F_P_B_k[:, 0, :, :].view(batch_size, -1), dim=1)
-            col_num = torch.tensor(
-                [self.input_img_size_w], device=img_feature.device)
-            arg_max_row_index = arg_max_index // col_num
-            arg_max_col_index = arg_max_index % col_num
             M_k_next = M_B_k[:, 0, :, :].clone()
+            M_k_next = M_k_next.view(batch_size, -1)
+            batch_iteration_num = np.arange(batch_size)
+            batch_iteration_num = torch.from_numpy(
+                batch_iteration_num).to(img_feature.device)
+            one_tensor = torch.ones((1), device=img_feature.device)
+            M_k_next = assign_ones(
+                M_k_next, batch_iteration_num, arg_max_index, one_tensor)
+            M_k_next = M_k_next.view(batch_size, self.input_img_size_h,
+                                     self.input_img_size_w)
             B_k_next = F_P_B_k[:, 1, :, :].clone()
-            M_k_next[torch.arange(batch_size),
-                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
+        # only return predicted points when exporting onnx or jit tracing
+        # return pred_points[:, 1:, :]
+
+        return (pred_pos_dists[:, 1:, :, :, :],
+                pred_boxs[:, 1:, :, :, :],
+                pred_points[:, 1:, :],
+                M_B_k)
 
 
 class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
     def __init__(self, input_img_size,
-                 cnn_net=models.mobilenet_v2, pretrained=True, pred_horizon=10):
+                 cnn_net=models.mobilenet_v2, pretrained=True,
+                 pred_horizon=10):
         super(TrajectoryImitationRNNUnetResnet18Modelv2, self).__init__()
 
         self.pred_horizon = pred_horizon
@@ -457,16 +511,18 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
         batch_size = img_feature.size(0)
         M_B_k = torch.cat((X[1], X[2]), dim=1)
 
+        # initialize the result tensor with a redundant timestamp info
+        # rather than empty because of a issue during TensorRT parsing onnx
         pred_pos_dists = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_boxs = torch.zeros(
-            (batch_size, self.pred_horizon, 1,
+            (batch_size, 1, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         pred_points = torch.zeros(
-            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+            (batch_size, 1, 4), device=img_feature.device)
 
         for t in range(self.pred_horizon):
             stacked_imgs = torch.cat((img_feature, M_B_k), dim=1)
@@ -481,7 +537,8 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
             output_e4 = self.layer6(output_e3)
             output_e4 = output_e4.view(batch_size, -1)
             pred_point = self.output_fc_layers(output_e4)
-            pred_points[:, t, :] = pred_point.clone()
+            pred_points = torch.cat(
+                (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
 
             d2 = self.decode2(e3, e2)  # 128,50,50
             d1 = self.decode1(d2, e1)  # 64,100,100
@@ -495,21 +552,33 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
                                                       self.input_img_size_w)
             B_k = torch.sigmoid(B_k)
 
-            pred_pos_dists[:, t, 0, :, :] = P_k.clone()
-            pred_boxs[:, t, 0, :, :] = B_k.clone()
+            pred_pos_dists = torch.cat(
+                (pred_pos_dists, P_k.clone().unsqueeze(1).unsqueeze(1)), dim=1)
+            pred_boxs = torch.cat(
+                (pred_boxs, B_k.clone().unsqueeze(1).unsqueeze(1)), dim=1)
 
-            arg_max_index = torch.argmax(P_k.view(batch_size, -1), dim=1)
-            col_num = torch.tensor(
-                [self.input_img_size_w], device=img_feature.device)
-            arg_max_row_index = arg_max_index // col_num
-            arg_max_col_index = arg_max_index % col_num
+            arg_max_index = torch.argmax(
+                P_k.view(batch_size, -1), dim=1)
             M_k_next = M_B_k[:, 0, :, :].clone()
+            M_k_next = M_k_next.view(batch_size, -1)
+            batch_iteration_num = np.arange(batch_size)
+            batch_iteration_num = torch.from_numpy(
+                batch_iteration_num).to(img_feature.device)
+            one_tensor = torch.ones((1), device=img_feature.device)
+            M_k_next = assign_ones(
+                M_k_next, batch_iteration_num, arg_max_index, one_tensor)
+            M_k_next = M_k_next.view(batch_size, self.input_img_size_h,
+                                     self.input_img_size_w)
             B_k_next = B_k.clone()
-            M_k_next[torch.arange(batch_size),
-                     arg_max_row_index, arg_max_col_index] = 1
             M_B_k = torch.stack((M_k_next, B_k_next), dim=1)
 
-        return (pred_pos_dists, pred_boxs, pred_points, M_B_k)
+        # only return predicted points when exporting onnx or jit tracing
+        # return pred_points[:, 1:, :]
+
+        return (pred_pos_dists[:, 1:, :, :, :],
+                pred_boxs[:, 1:, :, :, :],
+                pred_points[:, 1:, :],
+                M_B_k)
 
 
 class TrajectoryImitationCNNFCLSTM(nn.Module):
@@ -546,7 +615,7 @@ class TrajectoryImitationCNNFCLSTM(nn.Module):
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
         pred_traj = torch.zeros(
-            (batch_size, self.pred_horizon, 4), device=img_feature.device)
+            (batch_size, 1, 4), device=img_feature.device)
 
         for t in range(1, self.history_len + self.pred_horizon):
             if t < self.history_len:
@@ -558,20 +627,21 @@ class TrajectoryImitationCNNFCLSTM(nn.Module):
                 cur_pose_step = self.output_fc_layer(
                     pred_input).float().clone()
                 cur_pose = cur_pose + cur_pose_step
-                pred_traj[:, t - self.history_len,
-                          :] = cur_pose.clone()
+                pred_points = torch.cat(
+                    (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
 
             disp_embedding = self.embedding_fc_layer(
                 cur_pose_step.clone()).view(batch_size, 1, -1)
 
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
-        return pred_traj
+        return pred_traj[:, 1:, :]
 
 
 class TrajectoryImitationRNNLoss():
 
-    def __init__(self, pos_dist_loss_weight=1, box_loss_weight=1, pos_reg_loss_weight=1):
+    def __init__(self, pos_dist_loss_weight=1, box_loss_weight=1,
+                 pos_reg_loss_weight=1):
         self.pos_dist_loss_weight = pos_dist_loss_weight
         self.box_loss_weight = box_loss_weight
         self.pos_reg_loss_weight = pos_reg_loss_weight

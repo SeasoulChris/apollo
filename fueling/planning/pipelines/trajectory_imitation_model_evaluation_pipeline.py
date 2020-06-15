@@ -311,7 +311,7 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                      region,
                                                      input_data_agumentation=False,
                                                      evaluate_mode=True)
-    if model_type == 'cnn+fc_lstm':
+    elif model_type == 'cnn+fc_lstm':
         model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
                                              hidden_size=128)
         test_dataset = TrajectoryImitationCNNFCLSTMDataset(test_set_folder,
@@ -323,7 +323,6 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                            history_point_num=10,
                                                            ouput_point_num=10,
                                                            evaluate_mode=True)
-
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
