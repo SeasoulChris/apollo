@@ -40,6 +40,7 @@ def execute_task(message_meta):
     if executable_dir not in os.environ['LD_LIBRARY_PATH']:
         os.environ['LD_LIBRARY_PATH'] = executable_dir + ':' + os.environ['LD_LIBRARY_PATH']
     os.system("echo $LD_LIBRARY_PATH")
+
     if task_name == 'lidar_to_gnss':
         executable_bin = os.path.join(executable_dir, 'multi_lidar_gnss_calibrator')
     elif task_name == 'camera_to_lidar':
@@ -59,7 +60,7 @@ def execute_task(message_meta):
     else:
         logging.error('Failed to run sensor caliration for {}: {}'.format(task_name, return_code))
         time.sleep(60 * 3)
-    return os.path.join(output_dir, 'results')
+    return os.path.join(output_dir, 'results'), task_name
 
 
 class SensorCalibrationPipeline(BasePipeline):
@@ -77,6 +78,7 @@ class SensorCalibrationPipeline(BasePipeline):
 
     def run(self):
         """Run Prod. production version"""
+        sub_type = set()
         result_files = []
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
@@ -90,7 +92,7 @@ class SensorCalibrationPipeline(BasePipeline):
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
         try:
-            result_files = self.run_internal(self.FLAGS.get('input_data_path'))
+            result_files, sub_type = self.run_internal(self.FLAGS.get('input_data_path'))
         except BaseException as e:
             logging.error(e)
 
@@ -100,12 +102,17 @@ class SensorCalibrationPipeline(BasePipeline):
         if partner:
             receivers.append(partner.email)
 
+        logging.info(f"Generated sub_type {len(sub_type)} results: {sub_type}")
+        sub_job_type = 'All'
+        if len(sub_type) == 1:
+            sub_job_type = sub_type.pop()
+
         if result_files:
             title = 'Your sensor calibration job is done!'
             content = {'Job Owner': job_owner, 'Job ID': job_id}
             email_utils.send_email_info(title, content, receivers, result_files)
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'success'}
+                           'job_status': 'success', 'sub_type': sub_job_type}
             redis_utils.redis_extend_dict(redis_key, redis_value)
         else:
             title = 'Your sensor calibration job failed!'
@@ -113,7 +120,7 @@ class SensorCalibrationPipeline(BasePipeline):
                        'IDG-apollo@baidu.com, so we can investigate.')
             email_utils.send_email_error(title, content, receivers)
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'failed'}
+                           'job_status': 'failed', 'sub_type': sub_job_type}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             logging.fatal('Failed to process sensor calibration job')
 
@@ -146,13 +153,18 @@ class SensorCalibrationPipeline(BasePipeline):
         # Run the pipeline with given parameters.
         result_dirs = self.to_rdd(message_meta).map(execute_task).collect()
 
+        logging.info(f"result_dirs {result_dirs}: All Done")
+
+        task_types = set()
         result_files = []
-        for result_dir in result_dirs:
+        for result_dir, task_name in result_dirs:
             if result_dir:
+                task_types.add(task_name)
                 result_files.extend(glob.glob(os.path.join(result_dir, '*.yaml')))
         logging.info(f"Sensor Calibration on data {job_dir}: All Done")
         logging.info(f"Generated {len(result_files)} results: {result_files}")
-        return result_files
+        logging.info(f"Generated task_types {len(task_types)} results: {task_types}")
+        return result_files, task_types
 
 
 if __name__ == '__main__':

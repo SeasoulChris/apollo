@@ -38,8 +38,8 @@ class LocalMapPipeline(BasePipeline):
 
     def run(self):
         """Production."""
-        src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
-        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
+        src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
+        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
         zone_id = self.FLAGS.get('zone_id')
@@ -79,7 +79,7 @@ class LocalMapPipeline(BasePipeline):
             title = 'Your localmap is not generated!'
             email_utils.send_email_info(title, content, receivers)
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'Local map failed'}
+                           'job_status': 'failed', 'sub_type': 'Base map'}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             return
 
@@ -88,10 +88,17 @@ class LocalMapPipeline(BasePipeline):
         todo_records = self.to_rdd([source_dir])
         self.run_internal(todo_records, source_dir, target_dir, zone_id, lidar_type)
 
-        email_utils.send_email_info(title, content, receivers)
+        path = os.path.join(target_dir, 'local_map')
+        if not os.path.exists(path):
+            title = 'Your localmap is not generated!'
+            logging.warning('local_map folder: {} not exists'.format(path))
+            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                           'job_status': 'failed', 'sub_type': 'Base map'}
+        else:
+            redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
+                           'job_status': 'success', 'sub_type': 'All'}
 
-        redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                       'job_status': 'success'}
+        email_utils.send_email_info(title, content, receivers)
         redis_utils.redis_extend_dict(redis_key, redis_value)
 
     def run_internal(self, todo_records, src_prefix, dst_prefix, zone_id, lidar_type):

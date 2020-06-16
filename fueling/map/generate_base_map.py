@@ -60,8 +60,8 @@ class MapGenSingleLine(BasePipeline):
         logging.info('base_map.txt generated: Done, Test')
 
     def run(self):
-        src_prefix = self.FLAGS.get('input_data_path', 'test/virtual_lane/data')
-        dst_prefix = self.FLAGS.get('output_data_path', 'test/virtual_lane/result')
+        src_prefix = self.FLAGS.get('input_data_path') or 'test/virtual_lane/data'
+        dst_prefix = self.FLAGS.get('output_data_path') or 'test/virtual_lane/result'
 
         job_owner = self.FLAGS.get('job_owner')
         job_id = self.FLAGS.get('job_id')
