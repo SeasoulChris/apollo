@@ -306,6 +306,8 @@ class ObstacleToLaneRelation(nn.Module):
         indices = torch.cat((idx_before.view(M, 1), idx_after.view(M, 1)), 1)
         # (M x 2)
         proj_pt, _ = self.get_projection_point(
-            lane_features[torch.arange(M), idx_before, :2], lane_features[torch.arange(M), idx_after, :2], repeated_obs_pos)
+            lane_features[torch.arange(M), idx_before, :2],
+            lane_features[torch.arange(M), idx_after, :2],
+            repeated_obs_pos)
 
         return proj_pt, indices, repeated_obs_pos

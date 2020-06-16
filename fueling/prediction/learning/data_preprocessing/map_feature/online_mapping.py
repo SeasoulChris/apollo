@@ -38,8 +38,8 @@ class ObstacleMapping(object):
         self.base_point = np.array(center_point) - 100
         self.GRID = [2000, 2000]
         self.resolution = 0.1
-        self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] +
-                                    1000, center_idx[0] - 1000:center_idx[0] + 1000].copy()
+        self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] + 1000,
+                                    center_idx[0] - 1000:center_idx[0] + 1000].copy()
         self.draw_obstacles_history()
         self.draw_ego_history(ego_history)
 
@@ -62,12 +62,13 @@ class ObstacleMapping(object):
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
     def _draw_rectangle(self, feature_map, pos_point, color=(0, 255, 255)):
-        w, l = 2.11, 4.93
+        width, length = 2.11, 4.93
         theta = self.world_coord[2]
-        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
-                                  [np.sin(theta), np.cos(theta)]]),
-                        np.array([[l / 2, l / 2, -l / 2, -l / 2],
-                                  [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array(pos_point)
+        points = np.dot(
+            np.array([[np.cos(theta), -np.sin(theta)],
+                      [np.sin(theta), np.cos(theta)]]),
+            np.array([[length / 2, length / 2, -length / 2, -length / 2],
+                      [width / 2, -width / 2, -width / 2, width / 2]])).T + np.array(pos_point)
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 
@@ -94,13 +95,14 @@ class ObstacleMapping(object):
             return
         history_size = len(ego_history)
         for i in range(history_size):
-            w, l = 2.11, 4.93
+            width, length = 2.11, 4.93
             theta = ego_history[i][2]
             pos_point = [ego_history[i][0], ego_history[i][1]]
-            points = np.dot(np.array([[np.cos(theta), -np.sin(theta)],
-                                      [np.sin(theta), np.cos(theta)]]),
-                            np.array([[l / 2, l / 2, -l / 2, -l / 2],
-                                      [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array(pos_point)
+            points = np.dot(
+                np.array([[np.cos(theta), -np.sin(theta)],
+                          [np.sin(theta), np.cos(theta)]]),
+                np.array([[length / 2, length / 2, -length / 2, -length / 2],
+                          [width / 2, -width / 2, -width / 2, width / 2]])).T + np.array(pos_point)
             points = [self.get_trans_point(point) for point in points]
             cv.fillPoly(self.feature_map, [np.int32(points)],
                         color=tuple(c * (1 / history_size * i) for c in color))

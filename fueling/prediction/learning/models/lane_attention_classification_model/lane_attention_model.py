@@ -17,7 +17,8 @@ class CruiseMLP(nn.Module):
             obs_enc_size=128, lane_enc_size=128, aggr_enc_size=1, mlp_size=[100, 16, 1])
 
     def forward(self, X):
-        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+        (obs_hist_size, obs_features, backward_lane_points,
+         lane_features, is_self_lane, same_obs_mask) = X
         obs_hist_size = obs_hist_size.float()
         obs_features = obs_features.float()
         lane_features = lane_features.float()
@@ -53,7 +54,8 @@ class FastLaneAttention(nn.Module):
                 obs_enc_size=128, lane_enc_size=128, aggr_enc_size=256, mlp_size=[100, 16, 1])
 
     def forward(self, X):
-        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+        (obs_hist_size, obs_features, backward_lane_points,
+         lane_features, is_self_lane, same_obs_mask) = X
         obs_hist_size = obs_hist_size.float()
         obs_features = obs_features.float()
         lane_features = lane_features.float()
@@ -97,7 +99,8 @@ class LaneAttention(nn.Module):
             - is_self_lane: M x 1
             - same_obs_mask: M x 1
         '''
-        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+        (obs_hist_size, obs_features, backward_lane_points,
+         lane_features, is_self_lane, same_obs_mask) = X
         obs_hist_size = obs_hist_size.float()
         obs_features = obs_features.float()
         lane_features = lane_features.float()
@@ -575,7 +578,9 @@ class DistributionalScoring(nn.Module):
                  aggr_enc_size=1024, mlp_size=[600, 100, 16, 1]):
         super(DistributionalScoring, self).__init__()
         self.mlp = generate_mlp(
-            [obs_enc_size + lane_enc_size + aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
+            [obs_enc_size + lane_enc_size + aggr_enc_size] + mlp_size,
+            dropout=0.0,
+            last_layer_nonlinear=False)
         self.softmax_layer = nn.Softmax()
 
     def forward(self, obs_encoding, lane_encoding, aggregated_info, same_obs_mask):

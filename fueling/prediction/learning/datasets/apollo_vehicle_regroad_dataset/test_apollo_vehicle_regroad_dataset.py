@@ -5,7 +5,8 @@ import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
 
-from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset as ApolloVehicleRegularRoadDataset
+from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset \
+    as ApolloVehicleRegularRoadDataset
 from apollo_vehicle_regroad_dataset import collate_fn as collate_fn
 
 
@@ -27,7 +28,10 @@ def plot_img(obs_features, lane_features, labels, count):
 
     for obs_hist_pt in range(20):
         cv.circle(img, point_to_idx(
-            obs_features[2 + obs_hist_pt * 9], obs_features[1 + obs_hist_pt * 9]), radius=3, color=[128, 128, 128])
+            obs_features[2 + obs_hist_pt * 9],
+            obs_features[1 + obs_hist_pt * 9]),
+            radius=3,
+            color=[128, 128, 128])
 
     for lane_idx in range(num_lane_seq):
         curr_lane = lane_features[lane_idx]
@@ -53,7 +57,8 @@ def plot_img(obs_features, lane_features, labels, count):
 
 
 if __name__ == '__main__':
-    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/train_data/lane_changes'
+    dataset_path = ('/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data'
+                    '/test_data_preprocessing/train_data/lane_changes')
     test_dataset = ApolloVehicleRegularRoadDataset(
         dataset_path, is_lane_scanning=True, training_mode=False)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False,

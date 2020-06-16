@@ -48,7 +48,8 @@ class JunctionMapDataset(Dataset):
             key = os.path.basename(img_name).replace(".png", "")
             # pos_dict = np.load(os.path.join(os.path.dirname(img_name),'obs_pos.npy')).item()
             # past_pos = pos_dict[key]
-            # label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","features-san-mateo-new"),'future_status.npy')).item()
+            # label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(
+            #     "image-feature","features-san-mateo-new"),'future_status.npy')).item()
             # future_pos = label_dict[key]
             # origin = future_pos[0]
             junction_label_dict = np.load(os.path.join(os.path.dirname(img_name).replace(

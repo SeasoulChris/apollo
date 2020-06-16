@@ -9,8 +9,8 @@ import fueling.prediction.learning.datasets.apollo_pedestrian_dataset.data_for_l
 
 
 def LoadDataForLearning(filepath):
-    list_of_data_for_learning = \
-        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
+    list_of_data_for_learning = (learning_algorithms.datasets.apollo_pedestrian_dataset
+                                 .data_for_learning_pb2.ListDataForLearning())
     with open(filepath, 'rb') as file_in:
         list_of_data_for_learning.ParseFromString(file_in.read())
     return list_of_data_for_learning.data_for_learning
@@ -45,8 +45,11 @@ class ApolloPedestrianDataset(Dataset):
                 # Store the value into dict (key is ped_id).
                 if ped_id not in self.ped_id_to_traj_data:
                     self.ped_id_to_traj_data[ped_id] = []
-                self.ped_id_to_traj_data[ped_id] = self.ped_id_to_traj_data[ped_id] + \
-                    [(ped_timestamp, ped_x, ped_y, np.sqrt((ped_x - adc_x)**2 + (ped_y - adc_y)**2))]
+                self.ped_id_to_traj_data[ped_id] = self.ped_id_to_traj_data[
+                    ped_id] + [(ped_timestamp,
+                                ped_x,
+                                ped_y,
+                                np.sqrt((ped_x - adc_x)**2 + (ped_y - adc_y)**2))]
 
         # Go through all peds, remove those that are too short to be usable.
         new_ped_id_to_traj_data = dict()
@@ -64,9 +67,11 @@ class ApolloPedestrianDataset(Dataset):
         for ped_id, ped_val in self.ped_id_to_traj_data.items():
             normalized_ped_val = ped_val
             for i in range(len(normalized_ped_val)):
-                normalized_ped_val[i] = (normalized_ped_val[i][0], normalized_ped_val[i][1] - normalized_ped_val[-1][1],
-                                         normalized_ped_val[i][2] - normalized_ped_val[-1][2], normalized_ped_val[i][3])
-            #print (normalized_ped_val)
+                normalized_ped_val[i] = (normalized_ped_val[i][0],
+                                         normalized_ped_val[i][1] - normalized_ped_val[-1][1],
+                                         normalized_ped_val[i][2] - normalized_ped_val[-1][2],
+                                         normalized_ped_val[i][3])
+            # print (normalized_ped_val)
             self.ped_id_to_traj_data[ped_id] = normalized_ped_val
 
         # Go through every pedestrian:
@@ -93,8 +98,8 @@ class ApolloPedestrianDataset(Dataset):
                 0] + (ped_discontinuity_idx.reshape(-1) + 1).tolist() + [len(clean_ped_val)]
             for i in range(len(ped_discontinuity_idx) - 1):
                 if ped_discontinuity_idx[i + 1] - ped_discontinuity_idx[i] > pred_len + 1:
-                    new_ped_id_to_traj_data[str(
-                        ped_id) + '_' + str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i + 1]]
+                    new_ped_id_to_traj_data[str(ped_id) + '_' + str(seg_id)] = clean_ped_val[
+                        ped_discontinuity_idx[i]:ped_discontinuity_idx[i + 1]]
                     ped_tracking_length.append(
                         ped_discontinuity_idx[i + 1] - ped_discontinuity_idx[i])
                     seg_id += 1
@@ -111,8 +116,8 @@ class ApolloPedestrianDataset(Dataset):
                 curr_scene_timestamp_mask = np.zeros((1, seq_len))
 
                 curr_scene[0, -len(ped_val):, :] = np.asarray(ped_val)
-                curr_scene_rel[0, -len(ped_val) + 1:, :] = np.asarray(ped_val)[1:,
-                                                                               :] - np.asarray(ped_val)[:-1, :]
+                curr_scene_rel[0, -len(ped_val) + 1:, :] = np.asarray(
+                    ped_val)[1:, :] - np.asarray(ped_val)[:-1, :]
                 curr_scene_timestamp_mask[0, -len(ped_val):] = np.ones((len(ped_val)))
 
                 self.scene_list.append(curr_scene)

@@ -38,7 +38,7 @@ bash /fuel/tools/lint.sh /fuel/fueling/learning
 bash /fuel/tools/lint.sh /fuel/fueling/map
 bash /fuel/tools/lint.sh /fuel/fueling/perception
 bash /fuel/tools/lint.sh /fuel/fueling/planning
-#bash /fuel/tools/lint.sh /fuel/fueling/prediction
+bash /fuel/tools/lint.sh /fuel/fueling/prediction
 bash /fuel/tools/lint.sh /fuel/fueling/profiling
 bash /fuel/tools/lint.sh /fuel/fueling/simulation
 bash /fuel/tools/lint.sh /fuel/fueling/streaming

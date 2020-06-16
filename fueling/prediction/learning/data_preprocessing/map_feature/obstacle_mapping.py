@@ -24,16 +24,23 @@ class ObstacleMapping(object):
         config = semantic_map_config_pb2.SemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(map_dir + "semantic_map_config.pb.txt", config)
         self.resolution = config.resolution
-        center_idx = [int(np.round((center_point[0] - config.base_point.x) / self.resolution)),
-                      int(config.dim_y - np.round((center_point[1] - config.base_point.y) / self.resolution))]
+        center_idx = [int(np.round((center_point[0] - config.base_point.x)
+                                   / self.resolution)),
+                      int(config.dim_y - np.round((center_point[1] - config.base_point.y)
+                                                  / self.resolution))]
 
         self.frame_env = frame_env
         self.timestamp = self.frame_env.timestamp
         self.base_point = np.array(center_point) - config.observation_range
         self.GRID = [int(2 * config.observation_range / config.resolution),
                      int(2 * config.observation_range / config.resolution)]
-        self.feature_map = base_map[center_idx[1] - int(config.observation_range / config.resolution):center_idx[1] + int(config.observation_range / config.resolution),
-                                    center_idx[0] - int(config.observation_range / config.resolution):center_idx[0] + int(config.observation_range / config.resolution)]
+        self.feature_map = base_map[
+            center_idx[1]
+            - int(config.observation_range / config.resolution):center_idx[1]
+            + int(config.observation_range / config.resolution),
+            center_idx[0]
+            - int(config.observation_range / config.resolution):center_idx[0]
+            + int(config.observation_range / config.resolution)]
         self.draw_frame()
 
     def get_trans_point(self, p):
@@ -43,10 +50,13 @@ class ObstacleMapping(object):
     def _draw_rectangle(self, feature_map, feature, color=(0, 255, 255)):
         pos_x = feature.position.x
         pos_y = feature.position.y
-        w, l = feature.width, feature.length
+        width, length = feature.width, feature.length
         theta = feature.theta
-        points = np.dot(np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]),
-                        np.array([[l / 2, l / 2, -l / 2, -l / 2], [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array([pos_x, pos_y])
+        points = np.dot(
+            np.array([[np.cos(theta), -np.sin(theta)],
+                      [np.sin(theta), np.cos(theta)]]),
+            np.array([[length / 2, length / 2, -length / 2, -length / 2],
+                      [width / 2, -width / 2, -width / 2, width / 2]])).T + np.array([pos_x, pos_y])
         points = [self.get_trans_point(point) for point in points]
         cv.fillPoly(feature_map, [np.int32(points)], color=color)
 

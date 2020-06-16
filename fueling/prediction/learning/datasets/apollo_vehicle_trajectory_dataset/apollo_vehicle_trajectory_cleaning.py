@@ -26,12 +26,19 @@ def plot_img(future_pt, count, adjusted_future_pt=None):
     cv.line(img, (0, 999), (0, 0), color=[255, 255, 255])
     cv.line(img, (799, 999), (0, 999), color=[255, 255, 255])
     for ts in range(future_pt.shape[0]):
-        cv.circle(img, point_to_idx(future_pt[ts][0] - future_pt[0][0], future_pt[ts]
-                                    [1] - future_pt[0][1]), radius=3, thickness=2, color=[0, 128, 128])
+        cv.circle(img, point_to_idx(future_pt[ts][0] - future_pt[0][0],
+                                    future_pt[ts][1] - future_pt[0][1]),
+                  radius=3,
+                  thickness=2,
+                  color=[0, 128, 128])
     if adjusted_future_pt is not None:
         for ts in range(adjusted_future_pt.shape[0]):
-            cv.circle(img, point_to_idx(adjusted_future_pt[ts][0] - adjusted_future_pt[0][0], adjusted_future_pt[ts]
-                                        [1] - adjusted_future_pt[0][1]), radius=3, thickness=2, color=[128, 0, 128])
+            cv.circle(img,
+                      point_to_idx(adjusted_future_pt[ts][0] - adjusted_future_pt[0][0],
+                                   adjusted_future_pt[ts][1] - adjusted_future_pt[0][1]),
+                      radius=3,
+                      thickness=2,
+                      color=[128, 0, 128])
     cv.imwrite('img={}.png'.format(count), cv.flip(cv.flip(img, 0), 1))
 
 
@@ -62,8 +69,12 @@ def LabelCleaningCoarse(feature_seq, pred_len=30):
     # Get the statistics of the cleaned labels, and do some re-balancing to
     # maintain roughly the same distribution as before.
     if -np.pi / 6 <= turning_ang <= np.pi / 6:
-        area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
-                - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+        area = (obs_pos[0, 0] * obs_pos[1, 1]
+                + obs_pos[1, 0] * obs_pos[-1, 1]
+                + obs_pos[-1, 0] * obs_pos[0, 1]
+                - obs_pos[0, 0] * obs_pos[-1, 1]
+                - obs_pos[1, 0] * obs_pos[0, 1]
+                - obs_pos[-1, 0] * obs_pos[1, 1])
         if area / (np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
             return 'change_lane'
         else:
@@ -127,8 +138,8 @@ def LabelCleaningAndSmoothing(label_dir):
                 smoothed_obs_pos = smoothed_obs_pos - smoothed_obs_pos[0, :]
                 # plot_img(obs_pos, idx, smoothed_obs_pos)
                 # idx += 1
-        print("Got " + str(len(processed_label_dict.keys())) +
-              "/" + str(len(label_dict.keys())) + " labels left!")
+        print("Got " + str(len(processed_label_dict.keys()))
+              + "/" + str(len(label_dict.keys())) + " labels left!")
         print(count)
         # np.save(label_dict_name.replace('future_status.npy',
         #                                 'processed_label.npy'), processed_label_dict)
@@ -163,8 +174,8 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             linear_acc = (linear_vel[1:] - linear_vel[0:-1]) / 0.1
             angular_vel = np.sum(obs_vel[1:, :] * obs_vel[:-1, :], axis=1) / \
                 ((linear_vel[1:] * linear_vel[:-1]) + 1e-6)
-            turning_ang = (np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0]) -
-                           np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
+            turning_ang = (np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0])
+                           - np.arctan2(obs_vel[0, 1], obs_vel[0, 0])) % (2 * np.pi)
             turning_ang = turning_ang if turning_ang < np.pi else turning_ang - 2 * np.pi
             # 3. Filtered the extream values for acc and ang_vel.
             if np.max(np.abs(linear_acc)) > 80:
@@ -180,8 +191,12 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
             if -np.pi / 6 <= turning_ang <= np.pi / 6:
                 if np.min(angular_vel) < 0.9 or np.max(np.abs(linear_acc)) > 30:
                     continue
-                area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
-                        - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+                area = (obs_pos[0, 0] * obs_pos[1, 1]
+                        + obs_pos[1, 0] * obs_pos[-1, 1]
+                        + obs_pos[-1, 0] * obs_pos[0, 1]
+                        - obs_pos[0, 0] * obs_pos[-1, 1]
+                        - obs_pos[1, 0] * obs_pos[0, 1]
+                        - obs_pos[-1, 0] * obs_pos[1, 1])
                 if area / (np.linalg.norm(obs_pos[1, :] - obs_pos[0, :]) + 1e-6) >= 3:
                     count['change_lane'] += 1
                 else:
@@ -196,8 +211,8 @@ def LabelCleaningFine(feature_dir, label_dir, pred_len=30):
                 count['uturn'] += 1
             cleaned_label_dict[key] = feature_seq[:pred_len]
 
-        print("Got " + str(len(cleaned_label_dict.keys())) +
-              "/" + str(len(label_dict.keys())) + " labels left!")
+        print("Got " + str(len(cleaned_label_dict.keys()))
+              + "/" + str(len(label_dict.keys())) + " labels left!")
         print(count)
         np.save(
             label_dict_name.replace(
@@ -229,8 +244,8 @@ def LabelBalance(label_dir, straight_remain_rate=0.25):
                 feature_seq = feature_seq[:pred_len]
                 processed_label_dict[key] = feature_seq
 
-        print("Got " + str(len(processed_label_dict.keys())) +
-              "/" + str(len(label_dict.keys())) + " labels left!")
+        print("Got " + str(len(processed_label_dict.keys()))
+              + "/" + str(len(label_dict.keys())) + " labels left!")
         print(count)
         np.save(label_dict_file.replace('future_status_clean.npy',
                                         'future_status_clean_balance.npy'), processed_label_dict)
@@ -240,8 +255,10 @@ def LabelBalance(label_dir, straight_remain_rate=0.25):
 # Main function.
 #######################################################################
 if __name__ == '__main__':
- #    # Option-a. First coarse label cleaning, then smoothing.
- #    LabelCleaningAndSmoothing('/data/labels-future-points/')
- #    # Option-b. Only fine label cleaning, no smoothing.
- #    LabelCleaningFine('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
- #    LabelBalance('/home/xukecheng/labels', 0.21)
+    # Option-a. First coarse label cleaning, then smoothing.
+    # LabelCleaningAndSmoothing('/data/labels-future-points/')
+
+    # Option-b. Only fine label cleaning, no smoothing.
+    # LabelCleaningFine('test',
+    #     '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
+    # LabelBalance('/home/xukecheng/labels', 0.21)

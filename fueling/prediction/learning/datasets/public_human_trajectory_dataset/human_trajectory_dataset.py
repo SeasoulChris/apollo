@@ -101,8 +101,10 @@ class HumanTrajectoryDataset(Dataset):
                     for j in range(curr_ped.shape[0] - 1):
                         xy_diff = curr_ped[j + 1, :] - curr_ped[j, :]
                         for k in range(self.extra_sample + 1):
-                            curr_ped_aug[j * (self.extra_sample + 1) + k, :] = curr_ped[j,
-                                                                                        :] + xy_diff * k / (self.extra_sample + 1)
+                            curr_ped_aug[j * (self.extra_sample + 1) + k, :] = (curr_ped[j, :]
+                                                                                + xy_diff * k
+                                                                                / (self.extra_sample
+                                                                                   + 1))
                     curr_ped_aug[curr_ped_aug.shape[0] - 1, :] = curr_ped[curr_ped.shape[0] - 1, :]
                     curr_ped = curr_ped_aug
                     # 2. Add noise to the observed trajectory (no noise added
@@ -163,8 +165,12 @@ def collate_scenes(batch):
     # unzip to form list of np-arrays
     # TODO(jiacheng): set a max. limit in case the collated data exceeds the limit
     #                 of graphics memory of NVIDIA.
-    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = zip(
-        *batch)
+    (past_traj,
+     past_traj_rel,
+     pred_traj,
+     pred_traj_rel,
+     past_traj_timestamp_mask,
+     is_predictable) = zip(*batch)
 
     same_scene_mask = [scene.shape[0] for scene in past_traj]
     past_traj = np.concatenate(past_traj)
@@ -177,7 +183,11 @@ def collate_scenes(batch):
     same_scene_mask = [np.ones((length, 1)) * i for i, length in enumerate(same_scene_mask)]
     same_scene_mask = np.concatenate(same_scene_mask)
 
-    return (torch.from_numpy(past_traj), torch.from_numpy(past_traj_rel),
-            torch.from_numpy(past_traj_timestamp_mask), torch.from_numpy(is_predictable), torch.from_numpy(same_scene_mask)),\
-        (torch.from_numpy(pred_traj), torch.from_numpy(pred_traj_rel),
+    return (torch.from_numpy(past_traj),
+            torch.from_numpy(past_traj_rel),
+            torch.from_numpy(past_traj_timestamp_mask),
+            torch.from_numpy(is_predictable),
+            torch.from_numpy(same_scene_mask)),\
+        (torch.from_numpy(pred_traj),
+         torch.from_numpy(pred_traj_rel),
          torch.from_numpy(is_predictable))

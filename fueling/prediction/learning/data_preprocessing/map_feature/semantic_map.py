@@ -99,24 +99,24 @@ class SemanticMap(object):
                                 segment.line_segment, p_min, p_max)
         return p_min, p_max
 
-    def _hsv_to_rgb(self, H=1.0, S=1.0, V=1.0):
+    def _hsv_to_rgb(self, val_H=1.0, val_S=1.0, val_V=1.0):
         """
         convert HSV to RGB color,
         see http://www.icst.pku.edu.cn/F/course/ImageProcessing/2018/resource/Color78.pdf, page 5
         """
-        H = H * 6
-        I = H // 1
-        F = H % 1
-        M = V * (1 - S)
-        N = V * (1 - S * F)
-        K = V * (1 - S * (1 - F))
-        hsv_dict = {0: (V, K, M),
-                    1: (N, V, M),
-                    2: (M, V, K),
-                    3: (M, N, V),
-                    4: (K, M, V),
-                    5: (V, M, N)}
-        return tuple(x * 255 for x in hsv_dict[I])
+        val_H = val_H * 6
+        val_I = val_H // 1
+        val_F = val_H % 1
+        val_M = val_V * (1 - val_S)
+        val_N = val_V * (1 - val_S * val_F)
+        val_K = val_V * (1 - val_S * (1 - val_F))
+        hsv_dict = {0: (val_V, val_K, val_M),
+                    1: (val_N, val_V, val_M),
+                    2: (val_M, val_V, val_K),
+                    3: (val_M, val_N, val_V),
+                    4: (val_K, val_M, val_V),
+                    5: (val_V, val_M, val_N)}
+        return tuple(x * 255 for x in hsv_dict[val_I])
 
     def _draw_road(self, color=(64, 64, 64)):
         for road in self.hd_map.road:
@@ -127,13 +127,15 @@ class SemanticMap(object):
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point)):
                                 point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                    [segment.line_segment.point[i].x,
+                                     segment.line_segment.point[i].y])
                                 points = np.vstack((points, point))
                     elif edge.type == 3:
                         for segment in edge.curve.segment:
                             for i in range(len(segment.line_segment.point) - 1, -1, -1):
                                 point = self.get_trans_point(
-                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                    [segment.line_segment.point[i].x,
+                                     segment.line_segment.point[i].y])
                                 points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
 
@@ -184,8 +186,11 @@ class SemanticMap(object):
                         [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
                     p1 = self.get_trans_point(
                         [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
-                    theta = np.arctan2(segment.line_segment.point[i + 1].y - segment.line_segment.point[i].y,
-                                       segment.line_segment.point[i + 1].x - segment.line_segment.point[i].x) / (2 * np.pi) % 1
+                    theta = np.arctan2(
+                        segment.line_segment.point[i + 1].y
+                        - segment.line_segment.point[i].y,
+                        segment.line_segment.point[i + 1].x
+                        - segment.line_segment.point[i].x) / (2 * np.pi) % 1
                     cv.line(self.base_map, tuple(p0), tuple(p1),
                             color=self._hsv_to_rgb(theta), thickness=4)
 
