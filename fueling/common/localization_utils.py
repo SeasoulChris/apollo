@@ -3,6 +3,7 @@
 
 import math
 
+from scipy.optimize import fmin
 import numpy as np
 
 
@@ -28,18 +29,18 @@ def get_imu_list_from_pose_list(poses, imu_scaling_acc, imu_scaling_heading_rate
         """From heading rate to heading"""
         theta = np.zeros((data_dim,))
         init_heading = _normalize_angle(poses[0].heading)
-        # init heading from GPS
+        # Init heading from GPS
         theta[0] = init_heading
         for idx in range(1, data_dim):
             # theta = theta_0 + omega * dt
             theta[idx] = _normalize_angle(init_heading + w[idx - 1] * dt)
-            # update init heading for next step
+            # Update init heading for next step
             init_heading = theta[idx]
         return theta
 
     def _calc_s(poses, data_dim, acc, dt):
         """Calculate s, s = v0 * dt + 0.5 * a * t * t"""
-        # initial velocity
+        # Initial velocity
         init_normalized_heading = _normalize_angle(poses[0].heading)
         v = (poses[0].linear_velocity.x * np.cos(init_normalized_heading)
              + poses[0].linear_velocity.y * np.sin(init_normalized_heading))
@@ -97,8 +98,6 @@ def find_optimized_imu_scaling(localization_protos):
         return accumulation
 
     poses = [localization.pose for localization in localization_protos]
-    import numpy as np
-    from scipy.optimize import fmin
     initial_scaling_acc, initial_scaling_heading = 0.5, 0.5
     return fmin(
         _compare_poses_imus, args=(poses,),
