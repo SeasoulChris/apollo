@@ -105,6 +105,7 @@ class CleanTrainingDataPipeline(BasePipeline):
     '''
     @param training_data_dir: end dir containing training_data.npy
     '''
+
     def CleanTrainingData(self, training_data_filepath, cleaned_training_data_filepath):
         count = Counter()
         file_content = np.load(training_data_filepath, allow_pickle=True).tolist()

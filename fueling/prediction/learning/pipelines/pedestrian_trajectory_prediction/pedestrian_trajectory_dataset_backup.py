@@ -11,7 +11,8 @@ from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from fueling.prediction.common.configure import semantic_map_config
-from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping import ObstacleMapping
+from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping \
+    import ObstacleMapping
 
 MAX_OBS_HISTORY_SIZE = 20
 OFFSET_X = semantic_map_config['offset_x']

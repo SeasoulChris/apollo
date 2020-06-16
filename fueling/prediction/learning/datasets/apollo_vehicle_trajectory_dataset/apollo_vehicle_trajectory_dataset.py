@@ -8,7 +8,8 @@ from torchvision import transforms
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
-from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping import ObstacleMapping
+from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping \
+    import ObstacleMapping
 
 from modules.prediction.proto.offline_features_pb2 import ListDataForLearning
 
@@ -38,7 +39,8 @@ class DataPreprocessor(object):
 
     def load_numpy_dict(self, feature_file_path, label_dir='labels_future_trajectory',
                         label_file='future_status_clean.npy'):
-        '''Load the numpy dictionary file for the corresponding feature-file.
+        '''
+        Load the numpy dictionary file for the corresponding feature-file.
         '''
         dir_path = os.path.dirname(feature_file_path)
         label_path = os.path.join(dir_path, label_file)
@@ -50,9 +52,11 @@ class DataPreprocessor(object):
         return np.load(label_path).item()
 
     def deserialize_and_construct_lane_graph(self, serial_lane_graph):
-        '''Deserialize the serial_lane_graph and construct a lane_graph.
+        '''
+        Deserialize the serial_lane_graph and construct a lane_graph.
 
-            - return: a lane-graph which is a list of lane_sequences, each lane_sequence is represented by a frozenset.
+        - return: a lane-graph which is a list of lane_sequences,
+          each lane_sequence is represented by a frozenset.
         '''
         if serial_lane_graph[-1] != '|':
             serial_lane_graph.append('|')
@@ -174,8 +178,9 @@ class DataPreprocessor(object):
                 curr_data_point += features_for_learning[:obs_feature_size]
                 #   c. include the lane_features for each lane.
                 for i in range(num_lane_sequence):
-                    curr_data_point += features_for_learning[obs_feature_size + i * single_lane_feature_size:
-                                                             obs_feature_size + (i + 1) * single_lane_feature_size]
+                    curr_data_point += features_for_learning[obs_feature_size
+                                         + i * single_lane_feature_size: obs_feature_size
+                                         + (i + 1) * single_lane_feature_size]
                 #   d. include the future_status labels.
                 if future_trajectory is not None:
                     key_ts_to_valid_data[key_ts] = True
@@ -252,7 +257,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
         accumulated_data_pt = 0
 
         # TODO(Hongyi): add the drawing class here.
-        self.base_map = {"sunnyvale": cv.imread("/fuel/testdata/map_feature/sunnyvale_with_two_offices.png"),
+        self.base_map = {"sunnyvale":
+                         cv.imread("/fuel/testdata/map_feature/sunnyvale_with_two_offices.png"),
                          "san_mateo": cv.imread("/fuel/testdata/map_feature/san_mateo.png"),
                          "baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png"), }
 
@@ -291,8 +297,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
 
                     # Get the obstacle position features (organized from past to present).
                     # (if length not enough, then pad heading zeros)
-                    curr_obs_feature = np.array(
-                        data_pt[1:obs_feature_size + 1]).reshape((obs_hist_size, obs_unit_feature_size))
+                    curr_obs_feature = np.array(data_pt[1:obs_feature_size + 1])
+                                         .reshape((obs_hist_size, obs_unit_feature_size))
                     curr_obs_feature = np.flip(curr_obs_feature, 0)
                     curr_obs_pos = np.zeros((1, obs_hist_size, 2))
                     # (1 x max_obs_hist_size x 2)
@@ -313,8 +319,10 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     # Get the lane features.
                     # (curr_num_lane_sequence x num_lane_pts x 4)
                     curr_lane_feature = np.array(data_pt[obs_feature_size + 1:obs_feature_size + 1 +
-                                                         (single_lane_feature_size) * curr_num_lane_sequence])\
-                        .reshape((curr_num_lane_sequence, int(single_lane_feature_size / 4), 4))
+                                                         (single_lane_feature_size)
+                                                         * curr_num_lane_sequence])
+                                          .reshape(curr_num_lane_sequence,
+                                                   int(single_lane_feature_size / 4), 4)
                     curr_lane_feature[:, :, [0, 1]] = curr_lane_feature[:, :, [1, 0]]
                     # Remove too close lane-points.
                     curr_lane_feature = np.concatenate(
@@ -326,8 +334,11 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     end_pt = 2 * curr_lane_feature[:, -1, :] - 1 * curr_lane_feature[:, -2, :]
                     end_pt[:, 2] = curr_lane_feature[:, -1, 2]
                     end_pt[:, 3] = np.zeros((curr_num_lane_sequence))
-                    curr_lane_feature = np.concatenate((begin_pt.reshape((curr_num_lane_sequence, 1, 4)),
-                                                        curr_lane_feature, end_pt.reshape((curr_num_lane_sequence, 1, 4))), axis=1)
+                    curr_lane_feature = np.concatenate((begin_pt.
+                                                        reshape((curr_num_lane_sequence, 1, 4)),
+                                                        curr_lane_feature,
+                                                        end_pt.reshape((curr_num_lane_sequence, 1, 4))),
+                                                        axis=1)
                     self.lane_feature.append(curr_lane_feature)
 
                     # Skip getting label data for those without labels at all.
@@ -356,8 +367,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     # (1 x self.pred_len x 2)
                     self.future_traj.append(new_curr_future_traj)
                     curr_future_traj_rel = np.zeros((1, self.pred_len - 1, 2))
-                    curr_future_traj_rel = new_curr_future_traj[:,
-                                                                1:, :] - new_curr_future_traj[:, :-1, :]
+                    curr_future_traj_rel = new_curr_future_traj[:, 1:, :]
+                                             - new_curr_future_traj[:, :-1, :]
                     # (1 x self.pred_len-1 x 2)
                     self.future_traj_rel.append(curr_future_traj_rel)
 
@@ -429,8 +440,8 @@ class ApolloVehicleTrajectoryDataset(Dataset):
                     nearby_obs_pos_rel[obs_id, i, :] = CoordUtils.world_to_relative(
                         nearby_obs_pos_abs[obs_id, i, :], world_coord)
                     if i > 0:
-                        nearby_obs_pos_step[obs_id, i, :] = nearby_obs_pos_rel[obs_id,
-                                                                               i, :] - nearby_obs_pos_rel[obs_id, i - 1, :]
+                        nearby_obs_pos_step[obs_id, i, :] = nearby_obs_pos_rel[obs_id, i, :]
+                                                              - nearby_obs_pos_rel[obs_id, i - 1, :]
 
             selected_nearby_idx = self.select_nearby_obs(target_obs_pos_abs, nearby_obs_pos_abs)
             nearby_obs_pos_abs_with_padding = np.zeros([MAX_NUM_NEARBY_OBS, obs_hist_size, 2])
@@ -488,8 +499,8 @@ def collate_fn(batch):
     '''
     # batch is a list of tuples.
     # unzip to form lists of np-arrays.
-    obs_hist_size, obs_pos, obs_pos_rel, lane_features, future_traj, future_traj_rel, is_predictable, same_scene_mask = zip(
-        *batch)
+    obs_hist_size, obs_pos, obs_pos_rel, lane_features, future_traj, future_traj_rel, \
+        is_predictable, same_scene_mask = zip(*batch)
 
     same_obstacle_mask = [elem.shape[0] for elem in lane_features]
 
@@ -514,9 +525,10 @@ def collate_fn(batch):
 
     # TODO(jiacheng): process the same_scene_mask.
 
-    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), torch.from_numpy(obs_pos_rel),
-            torch.from_numpy(lane_features).float(), torch.from_numpy(same_obstacle_mask)), \
-        (torch.from_numpy(future_traj), torch.from_numpy(
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), \
+            torch.from_numpy(obs_pos_rel), torch.from_numpy(lane_features).float(), \
+            torch.from_numpy(same_obstacle_mask)), \
+           (torch.from_numpy(future_traj), torch.from_numpy(
             future_traj_rel), torch.ones(obs_pos.shape[0], 1))
 
 

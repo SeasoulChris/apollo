@@ -14,8 +14,11 @@ from torchvision import transforms
 
 from fueling.learning.train_utils import *
 from fueling.learning.loss_utils import *
-from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction.pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
-from fueling.prediction.learning.models.semantic_map_model.semantic_map_model import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, SemanticMapLoss, WeightedSemanticMapLoss
+from fueling.prediction.learning.pipelines.pedestrian_trajectory_prediction \
+    .pedestrian_trajectory_dataset import PedestrianTrajectoryDataset
+from fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
+    import SemanticMapSelfLSTMModel, SemanticMapSelfLSTMEgoAttentionModel, \
+    SemanticMapLoss, WeightedSemanticMapLoss
 
 
 if __name__ == "__main__":
@@ -52,5 +55,5 @@ if __name__ == "__main__":
         print("Not using CUDA.")
 
     # Model training:
-    train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=50, save_name=args.save_path, print_period=200, save_mode=2)
+    train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer, scheduler,
+                           epochs=50, save_name=args.save_path, print_period=200, save_mode=2)

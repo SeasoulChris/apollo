@@ -6,7 +6,8 @@ import torch
 
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
-from fueling.prediction.learning.datasets.apollo_vehicle_regroad_dataset.apollo_vehicle_regroad_dataset import *
+from fueling.prediction.learning.datasets.apollo_vehicle_regroad_dataset \
+    .apollo_vehicle_regroad_dataset import *
 from fueling.prediction.learning.models.lane_attention_model.lane_attention_model import *
 
 

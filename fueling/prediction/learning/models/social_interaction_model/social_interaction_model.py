@@ -210,8 +210,8 @@ class SocialPooling(nn.Module):
         # (N x N) matrix of mask, the (i,j) element indicates which grid that
         # agent j falls in w.r.t. agent i.
         mask_grid_id = torch.floor(
-            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) /
-            torch.tensor(self.area_span / self.grid_size))
+            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0))
+            / torch.tensor(self.area_span / self.grid_size))
         mask_grid_id = mask_grid_id[:, :, 0] * self.grid_size + mask_grid_id[:, :, 1]
         mask_grid_id *= mask_within_pooling_area
         mask_grid_id = mask_grid_id.long()
@@ -306,7 +306,7 @@ class SocialAttention(nn.Module):
         #
         self.spatial_edge_rnn = SpatialEdgeRNN(embed_size, edge_hidden_size)
         self.temporal_edge_rnn = TemporalEdgeRNN(embed_size, edge_hidden_size)
-        #self.edge_to_node = EdgeToNodeAverage()
+        # self.edge_to_node = EdgeToNodeAverage()
         self.edge_to_node = EdgeToNodeAttention(64, edge_hidden_size)
         self.node_rnn = NodeRNN(embed_size, edge_hidden_size, node_hidden_size)
         self.pred_layer = torch.nn.Sequential(
@@ -367,7 +367,7 @@ class SocialAttention(nn.Module):
                 t_edge_ht_list, t_edge_ct_list, this_traj_rel, this_timestamp_mask)
 
             # 3. Do EdgeToNodeAttention.
-            #Ht = self.edge_to_node(s_edge_ht_list, t_edge_ht_list)
+            # Ht = self.edge_to_node(s_edge_ht_list, t_edge_ht_list)
             Ht = self.edge_to_node(
                 s_edge_ht_list, t_edge_ht_list, this_timestamp_mask, same_scene_mask)
 
@@ -438,19 +438,28 @@ class SpatialEdgeRNN(nn.Module):
             # (curr_existing_N**2, embed_size)
             e_uv = self.embed(curr_xt_1.view(curr_existing_N**2, 2))
             _, (curr_ht_1, curr_ct_1) = self.lstm(e_uv.view(curr_existing_N**2, 1, -1),
-                                                  (curr_ht_1.view(1, curr_existing_N**2, -1), curr_ct_1.view(1, curr_existing_N**2, -1)))
+                                                  (curr_ht_1.view(1, curr_existing_N**2, -1),
+                                                   curr_ct_1.view(1, curr_existing_N**2, -1)))
             curr_ht_1 = curr_ht_1.view(curr_existing_N, curr_existing_N, -1)
             curr_ct_1 = curr_ct_1.view(curr_existing_N, curr_existing_N, -1)
 
             # Scatter back to the original matrices.
             curr_ht_0 = curr_ht_0.scatter(
-                1, curr_timestamp_idx.view(1, curr_existing_N, 1).repeat(curr_existing_N, 1, self.hidden_size), curr_ht_1)
+                1, curr_timestamp_idx.view(1, curr_existing_N,
+                                           1).repeat(curr_existing_N, 1,
+                                                     self.hidden_size), curr_ht_1)
             curr_ht = curr_ht.scatter(
-                0, curr_timestamp_idx.view(curr_existing_N, 1, 1).repeat(1, curr_N, self.hidden_size), curr_ht_0)
+                0, curr_timestamp_idx.view(curr_existing_N, 1,
+                                           1).repeat(1, curr_N,
+                                                     self.hidden_size), curr_ht_0)
             curr_ct_0 = curr_ct_0.scatter(
-                1, curr_timestamp_idx.view(1, curr_existing_N, 1).repeat(curr_existing_N, 1, self.hidden_size), curr_ct_1)
+                1, curr_timestamp_idx.view(1, curr_existing_N,
+                                           1).repeat(curr_existing_N, 1,
+                                                     self.hidden_size), curr_ct_1)
             curr_ct = curr_ct.scatter(
-                0, curr_timestamp_idx.view(curr_existing_N, 1, 1).repeat(1, curr_N, self.hidden_size), curr_ct_0)
+                0, curr_timestamp_idx.view(curr_existing_N, 1,
+                                           1).repeat(1, curr_N,
+                                                     self.hidden_size), curr_ct_0)
 
             # Update the list of ht/ct:
             ht_list[scene_id] = curr_ht
@@ -593,7 +602,8 @@ class EdgeAttentionScore(nn.Module):
             curr_score_1 = curr_score_mat_numerator / curr_score_mat_denominator
             curr_score_0 = cuda(torch.zeros(curr_existing_N, curr_N))
             curr_score_0 = curr_score_0.scatter(
-                1, curr_timestamp_idx.view(1, curr_existing_N).repeat(curr_existing_N, 1), curr_score_1)
+                1, curr_timestamp_idx.view(1, curr_existing_N).repeat(curr_existing_N, 1),
+                curr_score_1)
             curr_score = cuda(torch.zeros(curr_N, curr_N))
             curr_score = curr_score.scatter(
                 0, curr_timestamp_idx.view(curr_existing_N, 1).repeat(1, curr_N), curr_score_0)
@@ -700,7 +710,7 @@ class ProbablisticTrajectoryLoss:
         # return out
 
         loss = nn.MSELoss()
-        #y_pred_traj = y_true[0][is_predictable[:,0]==1,:,:].float()
+        # y_pred_traj = y_true[0][is_predictable[:,0]==1,:,:].float()
         # for i in range(1, y_pred_traj.size(1)):
         #    y_pred_traj[:, i, :] = y_pred_traj[:, i-1, :] + y_pred[:, i, :2]
         out = loss(y_pred_traj, y_true[0][is_predictable[:, 0] == 1, :, :].float())

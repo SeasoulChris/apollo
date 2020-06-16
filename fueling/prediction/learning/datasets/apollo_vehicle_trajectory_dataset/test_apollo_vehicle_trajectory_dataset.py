@@ -6,7 +6,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-import fueling.prediction.learning.models.semantic_map_model.semantic_map_model as semantic_map_model
+import fueling.prediction.learning.models.semantic_map_model.semantic_map_model \
+    as semantic_map_model
 from apollo_vehicle_trajectory_dataset import ApolloVehicleTrajectoryDataset
 from apollo_vehicle_trajectory_dataset import collate_fn
 
@@ -29,7 +30,8 @@ def plot_img(obs_features, lane_features, labels, pred, count):
 
     for obs_hist_pt in range(20):
         cv.circle(img, point_to_idx(
-            obs_features[1 + obs_hist_pt * 2], obs_features[obs_hist_pt * 2]), radius=3, color=[128, 128, 128])
+            obs_features[1 + obs_hist_pt * 2], obs_features[obs_hist_pt * 2]),
+            radius=3, color=[128, 128, 128])
 
     for lane_idx in range(num_lane_seq):
         curr_lane = lane_features[lane_idx]
@@ -50,7 +52,8 @@ def plot_img(obs_features, lane_features, labels, pred, count):
 
 if __name__ == '__main__':
     # Unit test without image
-    dataset_path = '/home/jiacheng/large-data/data_preprocessing/training_data/features/san_mateo/2018/2018-10-01'
+    dataset_path = {'/home/jiacheng/large-data/data_preprocessing'
+                    '/training_data/features/san_mateo/2018/2018-10-01'}
     test_dataset = ApolloVehicleTrajectoryDataset(dataset_path)
     test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                                  num_workers=1, collate_fn=collate_fn)
@@ -63,7 +66,9 @@ if __name__ == '__main__':
         # print (y[1])
         # print (y[2])
         model = semantic_map_model.SemanticMapSelfLSTMModel(30, 20)
-        model_path = "/home/sunhongyi/Documents/apollo-fuel/learning_algorithms/prediction/pipelines/vehicle_trajectory_prediction_pipeline/model_epoch1_valloss8798324149956.923828.pt"
+        model_path = {'/home/sunhongyi/Documents/apollo-fuel/learning_algorithms'
+                      '/prediction/pipelines/vehicle_trajectory_prediction_pipeline'
+                      '/model_epoch1_valloss8798324149956.923828.pt'}
         model.load_state_dict(torch.load(model_path))
         model.cuda().eval()
         pred = model.forward(cuda(X))

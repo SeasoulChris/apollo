@@ -17,7 +17,8 @@ from fueling.common.coord_utils import CoordUtils
 from fueling.learning.network_utils import *
 from fueling.learning.train_utils import *
 from fueling.prediction.learning.models.semantic_map_model.self_attention import Self_Attn
-from fueling.prediction.learning.models.semantic_map_model.spatial_attention import SpatialAttention2d
+from fueling.prediction.learning.models.semantic_map_model.spatial_attention \
+    import SpatialAttention2d
 
 '''
 ========================================================================
@@ -530,8 +531,10 @@ class SemanticMapSocialAttentionModel(nn.Module):
                 .view(num_target_ts_obs, 1, -1).clone())
 
             _, (ht_new_t, ct_new_t) = self.target_lstm(target_disp_embedding,
-                                                       (target_ht[target_ts_obs_mask == 1, :].view(1, num_target_ts_obs, -1),
-                                                        target_ct[target_ts_obs_mask == 1, :].view(1, num_target_ts_obs, -1)))
+                                                       (target_ht[target_ts_obs_mask == 1, :]
+                                                        .view(1, num_target_ts_obs, -1),
+                                                        target_ct[target_ts_obs_mask == 1, :]
+                                                        .view(1, num_target_ts_obs, -1)))
             target_ht[target_ts_obs_mask == 1, :] = ht_new_t.view(num_target_ts_obs, -1)
             target_ct[target_ts_obs_mask == 1, :] = ct_new_t.view(num_target_ts_obs, -1)
 
@@ -547,8 +550,10 @@ class SemanticMapSocialAttentionModel(nn.Module):
                 .clone()).view(curr_N, 1, -1)
 
             _, (ht_new_n, ct_new_n) = self.nearby_lstm(nearby_disp_embedding,
-                                                       (nearby_ht_list[curr_nearby_ts_mask == 1, :].view(1, curr_N, -1),
-                                                        nearby_ct_list[curr_nearby_ts_mask == 1, :].view(1, curr_N, -1)))
+                                                       (nearby_ht_list[curr_nearby_ts_mask == 1, :]
+                                                        .view(1, curr_N, -1),
+                                                        nearby_ct_list[curr_nearby_ts_mask == 1, :]
+                                                        .view(1, curr_N, -1)))
 
             nearby_ht_list[curr_nearby_ts_mask == 1, :] = ht_new_n.view(curr_N, -1)
             nearby_ct_list[curr_nearby_ts_mask == 1, :] = ct_new_n.view(curr_N, -1)
@@ -579,13 +584,13 @@ class SemanticMapSocialAttentionModel(nn.Module):
             att_score_max, _ = torch.max(att_scores.view(N, -1), 1)
             att_scores = att_scores.view(N, -1) - att_score_max.repeat(nearby_padding_size, 1).t()
 
-            att_scores_numerator = (torch.exp(att_scores).view(-1) *
-                                    (curr_nearby_ts_mask.float())).view(N, -1)
+            att_scores_numerator = (torch.exp(att_scores).view(-1)
+                                    * (curr_nearby_ts_mask.float())).view(N, -1)
 
             att_scores_denominator = \
                 torch.sum(att_scores_numerator, 1).repeat(nearby_padding_size, 1).t() + 1e-6
-            att_scores_final = (att_scores_numerator /
-                                att_scores_denominator).view(N, nearby_padding_size, 1) \
+            att_scores_final = (att_scores_numerator
+                                / att_scores_denominator).view(N, nearby_padding_size, 1) \
                 .repeat(1, 1, self.edge_hidden_size)
 
             Ht[:, :] = torch.sum(

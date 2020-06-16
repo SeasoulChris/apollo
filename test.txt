@@ -1,0 +1,360 @@
+######################### Build #########################
+/apollo /fuel
+System check passed. Build continue ...
+/fuel
+###### You are building with local pip-cache! ######
+######################### Test #########################
+//fueling/data/labeling:populate_frames_test                    (cached) PASSED in 13.2s
+//fueling/data/pipelines:generate_small_records_test            (cached) PASSED in 18.8s
+//fueling/data/pipelines:reorg_small_records_test               (cached) PASSED in 22.2s
+//fueling/demo:simplest_demo_test                               (cached) PASSED in 19.5s
+//fueling/demo:stat_auto_mileage_test                           (cached) PASSED in 9.7s
+//fueling/map:generate_base_map_test                            (cached) PASSED in 19.2s
+//fueling/map:generate_local_map_test                           (cached) PASSED in 16.7s
+//fueling/map:generate_sim_routing_map_test                     (cached) PASSED in 16.4s
+//fueling/planning/datasets:learning_data_generator_test        (cached) PASSED in 9.3s
+//fueling/profiling/control:multi_job_control_profiling_metrics_test (cached) PASSED in 41.5s
+//fueling/profiling/open_space_planner:metrics_test             (cached) PASSED in 74.1s
+
+Executed 0 out of 11 tests: 11 tests pass.
+There were tests whose specified size is too big. Use the --test_verbose_timeout_warnings command line option to see which ones these are.
+######################### Lint #########################
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:182:42: E128 continuation line under-indented for visual indent
+                                         + i * single_lane_feature_size: obs_feature_size
+                                         ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:183:42: E128 continuation line under-indented for visual indent
+                                         + (i + 1) * single_lane_feature_size]
+                                         ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:301:42: E111 indentation is not a multiple of four
+                                         .reshape((obs_hist_size, obs_unit_feature_size))
+                                         ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:301:42: E113 unexpected indentation
+                                         .reshape((obs_hist_size, obs_unit_feature_size))
+                                         ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:321:100: W504 line break after binary operator
+                    curr_lane_feature = np.array(data_pt[obs_feature_size + 1:obs_feature_size + 1 +
+                                                                                                   ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:324:43: E111 indentation is not a multiple of four
+                                          .reshape(curr_num_lane_sequence,
+                                          ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:324:43: E113 unexpected indentation
+                                          .reshape(curr_num_lane_sequence,
+                                          ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:340:101: E501 line too long (104 > 100 characters)
+                                                        end_pt.reshape((curr_num_lane_sequence, 1, 4))),
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:341:57: E127 continuation line over-indented for visual indent
+                                                        axis=1)
+                                                        ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:371:46: E111 indentation is not a multiple of four
+                                             - new_curr_future_traj[:, :-1, :]
+                                             ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:371:46: E113 unexpected indentation
+                                             - new_curr_future_traj[:, :-1, :]
+                                             ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:444:63: E111 indentation is not a multiple of four
+                                                              - nearby_obs_pos_rel[obs_id, i - 1, :]
+                                                              ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:444:63: E113 unexpected indentation
+                                                              - nearby_obs_pos_rel[obs_id, i - 1, :]
+                                                              ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:528:73: E502 the backslash is redundant between brackets
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_pos), \
+                                                                        ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_dataset.py:529:85: E502 the backslash is redundant between brackets
+            torch.from_numpy(obs_pos_rel), torch.from_numpy(lane_features).float(), \
+                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:30:101: E501 line too long (103 > 100 characters)
+                                    [1] - future_pt[0][1]), radius=3, thickness=2, color=[0, 128, 128])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:33:101: E501 line too long (116 > 100 characters)
+            cv.circle(img, point_to_idx(adjusted_future_pt[ts][0] - adjusted_future_pt[0][0], adjusted_future_pt[ts]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:34:101: E501 line too long (116 > 100 characters)
+                                        [1] - adjusted_future_pt[0][1]), radius=3, thickness=2, color=[128, 0, 128])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:65:101: E501 line too long (111 > 100 characters)
+        area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:66:101: E501 line too long (114 > 100 characters)
+                - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:130:62: W504 line break after binary operator
+        print("Got " + str(len(processed_label_dict.keys())) +
+                                                             ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:166:71: W504 line break after binary operator
+            turning_ang = (np.arctan2(obs_vel[-1, 1], obs_vel[-1, 0]) -
+                                                                      ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:183:101: E501 line too long (119 > 100 characters)
+                area = (obs_pos[0, 0] * obs_pos[1, 1] + obs_pos[1, 0] * obs_pos[-1, 1] + obs_pos[-1, 0] * obs_pos[0, 1]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:184:101: E501 line too long (122 > 100 characters)
+                        - obs_pos[0, 0] * obs_pos[-1, 1] - obs_pos[1, 0] * obs_pos[0, 1] - obs_pos[-1, 0] * obs_pos[1, 1])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:199:60: W504 line break after binary operator
+        print("Got " + str(len(cleaned_label_dict.keys())) +
+                                                           ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:232:62: W504 line break after binary operator
+        print("Got " + str(len(processed_label_dict.keys())) +
+                                                             ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:243:2: E114 indentation is not a multiple of four (comment)
+ #    # Option-a. First coarse label cleaning, then smoothing.
+ ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:244:2: E114 indentation is not a multiple of four (comment)
+ #    LabelCleaningAndSmoothing('/data/labels-future-points/')
+ ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:245:2: E114 indentation is not a multiple of four (comment)
+ #    # Option-b. Only fine label cleaning, no smoothing.
+ ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:246:2: E114 indentation is not a multiple of four (comment)
+ #    LabelCleaningFine('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
+ ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:246:101: E501 line too long (124 > 100 characters)
+ #    LabelCleaningFine('test', '/home/jiacheng/work/apollo/data/apollo_vehicle_trajectory_data/labels-future-points-clean')
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_trajectory_dataset/apollo_vehicle_trajectory_cleaning.py:247:2: E114 indentation is not a multiple of four (comment)
+ #    LabelBalance('/home/xukecheng/labels', 0.21)
+ ^
+/fuel/fueling/prediction/learning/datasets/public_human_trajectory_dataset/human_trajectory_dataset.py:105:101: E501 line too long (130 > 100 characters)
+                                                                                        :] + xy_diff * k / (self.extra_sample + 1)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/public_human_trajectory_dataset/human_trajectory_dataset.py:166:101: E501 line too long (103 > 100 characters)
+    past_traj, past_traj_rel, pred_traj, pred_traj_rel, past_traj_timestamp_mask, is_predictable = zip(
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/public_human_trajectory_dataset/human_trajectory_dataset.py:181:101: E501 line too long (126 > 100 characters)
+            torch.from_numpy(past_traj_timestamp_mask), torch.from_numpy(is_predictable), torch.from_numpy(same_scene_mask)),\
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:20:101: E501 line too long (106 > 100 characters)
+        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:38:73: W504 line break after binary operator
+        distance = np.sqrt((point[0] - curve[len(curve) - 1 - i][0])**2 +
+                                                                        ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:109:101: E501 line too long (111 > 100 characters)
+               (len(features_for_learning) - obs_feature_size) / single_lane_feature_size != num_lane_sequence:
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:120:101: E501 line too long (106 > 100 characters)
+            # 3. Extract the features of obstacle's historical distances/angles w.r.t. the lane-sequences.
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:126:101: E501 line too long (102 > 100 characters)
+                lane_points_l = features_for_learning[obs_feature_size + i * single_lane_feature_size:
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:127:101: E501 line too long (110 > 100 characters)
+                                                      obs_feature_size + (i + 1) * single_lane_feature_size:4]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:128:101: E501 line too long (106 > 100 characters)
+                lane_points_s = features_for_learning[obs_feature_size + i * single_lane_feature_size + 1:
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:129:101: E501 line too long (110 > 100 characters)
+                                                      obs_feature_size + (i + 1) * single_lane_feature_size:4]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:144:101: E501 line too long (119 > 100 characters)
+                        lane_points, (obs_past_history[obs_hist_idx * 9 + 2], obs_past_history[obs_hist_idx * 9 + 1])))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:151:101: E501 line too long (106 > 100 characters)
+                    sum(curr_dist_and_angle[0] for curr_dist_and_angle in curr_historical_dist_and_angle))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:234:101: E501 line too long (105 > 100 characters)
+                curr_data_point += features_for_learning[obs_feature_size + i * single_lane_feature_size:
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:235:101: E501 line too long (111 > 100 characters)
+                                                         obs_feature_size + (i + 1) * single_lane_feature_size]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:299:96: W504 line break after binary operator
+                curr_lane_feature = np.array(data_pt[obs_feature_size + 1:obs_feature_size + 1 +
+                                                                                               ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:300:101: E501 line too long (112 > 100 characters)
+                                                     (single_lane_feature_size + 20) * curr_num_lane_sequence])\
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:306:101: E501 line too long (113 > 100 characters)
+                    curr_obs_hist_size[0][0]), :] = curr_backward_lane_points[-int(curr_obs_hist_size[0][0]):, :]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:312:101: E501 line too long (126 > 100 characters)
+                    data_pt[-1 - 2 * curr_num_lane_sequence:-1 - curr_num_lane_sequence]).reshape((curr_num_lane_sequence, 1))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:354:101: E501 line too long (105 > 100 characters)
+        out = (self.obstacle_hist_size[idx], self.obstacle_features[idx], self.backward_lane_points[idx],
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:355:101: E501 line too long (101 > 100 characters)
+               self.lane_features[idx], self.is_self_lane[idx], self.labels[idx], self.is_cutin[idx])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:362:101: E501 line too long (107 > 100 characters)
+    obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, labels, is_cutin = zip(
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:377:101: E501 line too long (116 > 100 characters)
+    return (torch.from_numpy(obs_hist_size), torch.from_numpy(obs_features), torch.from_numpy(backward_lane_points),
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:378:101: E501 line too long (117 > 100 characters)
+            torch.from_numpy(lane_features), torch.from_numpy(is_self_lane), torch.from_numpy(same_obstacle_mask)), \
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:383:101: E501 line too long (117 > 100 characters)
+    DataPreprocessing('/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/features',
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/apollo_vehicle_regroad_dataset.py:384:101: E501 line too long (117 > 100 characters)
+                      '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/features')
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/test_apollo_vehicle_regroad_dataset.py:8:101: E501 line too long (109 > 100 characters)
+from apollo_vehicle_regroad_dataset import ApolloVehicleRegularRoadDataset as ApolloVehicleRegularRoadDataset
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/test_apollo_vehicle_regroad_dataset.py:30:101: E501 line too long (115 > 100 characters)
+            obs_features[2 + obs_hist_pt * 9], obs_features[1 + obs_hist_pt * 9]), radius=3, color=[128, 128, 128])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_vehicle_regroad_dataset/test_apollo_vehicle_regroad_dataset.py:56:101: E501 line too long (128 > 100 characters)
+    dataset_path = '/home/jiacheng/work/apollo/data/apollo_vehicle_regroad_data/test_data_preprocessing/train_data/lane_changes'
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:13:101: E501 line too long (106 > 100 characters)
+        learning_algorithms.datasets.apollo_pedestrian_dataset.data_for_learning_pb2.ListDataForLearning()
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:49:101: E501 line too long (101 > 100 characters)
+                    [(ped_timestamp, ped_x, ped_y, np.sqrt((ped_x - adc_x)**2 + (ped_y - adc_y)**2))]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:67:101: E501 line too long (120 > 100 characters)
+                normalized_ped_val[i] = (normalized_ped_val[i][0], normalized_ped_val[i][1] - normalized_ped_val[-1][1],
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:68:101: E501 line too long (120 > 100 characters)
+                                         normalized_ped_val[i][2] - normalized_ped_val[-1][2], normalized_ped_val[i][3])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:69:13: E265 block comment should start with '# '
+            #print (normalized_ped_val)
+            ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:97:101: E501 line too long (123 > 100 characters)
+                        ped_id) + '_' + str(seg_id)] = clean_ped_val[ped_discontinuity_idx[i]:ped_discontinuity_idx[i + 1]]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/datasets/apollo_pedestrian_dataset/apollo_pedestrian_dataset.py:115:101: E501 line too long (111 > 100 characters)
+                                                                               :] - np.asarray(ped_val)[:-1, :]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/obstacle_mapping.py:28:101: E501 line too long (110 > 100 characters)
+                      int(config.dim_y - np.round((center_point[1] - config.base_point.y) / self.resolution))]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/obstacle_mapping.py:35:101: E501 line too long (168 > 100 characters)
+        self.feature_map = base_map[center_idx[1] - int(config.observation_range / config.resolution):center_idx[1] + int(config.observation_range / config.resolution),
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/obstacle_mapping.py:36:101: E501 line too long (168 > 100 characters)
+                                    center_idx[0] - int(config.observation_range / config.resolution):center_idx[0] + int(config.observation_range / config.resolution)]
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/obstacle_mapping.py:46:12: E741 ambiguous variable name 'l'
+        w, l = feature.width, feature.length
+           ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/obstacle_mapping.py:49:101: E501 line too long (128 > 100 characters)
+                        np.array([[l / 2, l / 2, -l / 2, -l / 2], [w / 2, -w / 2, -w / 2, w / 2]])).T + np.array([pos_x, pos_y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:100:9: E741 ambiguous variable name 'I'
+        I = H // 1
+        ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:122:101: E501 line too long (103 > 100 characters)
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:128:101: E501 line too long (103 > 100 characters)
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:179:101: E501 line too long (109 > 100 characters)
+                    theta = np.arctan2(segment.line_segment.point[i + 1].y - segment.line_segment.point[i].y,
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:180:101: E501 line too long (127 > 100 characters)
+                                       segment.line_segment.point[i + 1].x - segment.line_segment.point[i].x) / (2 * np.pi) % 1
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/mapping.py:192:101: E501 line too long (103 > 100 characters)
+                            [segment.line_segment.point[i + 1].x, segment.line_segment.point[i + 1].y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/online_mapping.py:41:72: W504 line break after binary operator
+        self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] +
+                                                                       ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/online_mapping.py:65:12: E741 ambiguous variable name 'l'
+        w, l = 2.11, 4.93
+           ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/online_mapping.py:97:16: E741 ambiguous variable name 'l'
+            w, l = 2.11, 4.93
+               ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/generate_img.py:12:101: E501 line too long (103 > 100 characters)
+from fueling.prediction.learning.data_preprocessing.map_feature.obstacle_mapping import ObstacleMapping
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/semantic_map.py:108:9: E741 ambiguous variable name 'I'
+        I = H // 1
+        ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/semantic_map.py:130:101: E501 line too long (103 > 100 characters)
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/semantic_map.py:136:101: E501 line too long (103 > 100 characters)
+                                    [segment.line_segment.point[i].x, segment.line_segment.point[i].y])
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/semantic_map.py:187:101: E501 line too long (109 > 100 characters)
+                    theta = np.arctan2(segment.line_segment.point[i + 1].y - segment.line_segment.point[i].y,
+                                                                                                    ^
+/fuel/fueling/prediction/learning/data_preprocessing/map_feature/semantic_map.py:188:101: E501 line too long (127 > 100 characters)
+                                       segment.line_segment.point[i + 1].x - segment.line_segment.point[i].x) / (2 * np.pi) % 1
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_classification_model/lane_attention_model.py:20:101: E501 line too long (105 > 100 characters)
+        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_classification_model/lane_attention_model.py:56:101: E501 line too long (105 > 100 characters)
+        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_classification_model/lane_attention_model.py:100:101: E501 line too long (105 > 100 characters)
+        obs_hist_size, obs_features, backward_lane_points, lane_features, is_self_lane, same_obs_mask = X
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_classification_model/lane_attention_model.py:578:101: E501 line too long (111 > 100 characters)
+            [obs_enc_size + lane_enc_size + aggr_enc_size] + mlp_size, dropout=0.0, last_layer_nonlinear=False)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/junction_map_model/junction_map_model.py:51:101: E501 line too long (152 > 100 characters)
+            # label_dict = np.load(os.path.join(os.path.dirname(img_name).replace("image-feature","features-san-mateo-new"),'future_status.npy')).item()
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/coord_conversion_utils.py:309:101: E501 line too long (124 > 100 characters)
+            lane_features[torch.arange(M), idx_before, :2], lane_features[torch.arange(M), idx_after, :2], repeated_obs_pos)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:8:101: E501 line too long (103 > 100 characters)
+from fueling.prediction.learning.models.lane_attention_trajectory_model.coord_conversion_utils import *
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:70:101: E501 line too long (113 > 100 characters)
+                disp_embedding, (ht[ts_obs_mask, :].view(1, curr_N, -1), ct[ts_obs_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:142:101: E501 line too long (129 > 100 characters)
+        dummy1, dummy2, lane_dist, dummy3, dummy4 = self.obs2lane_lstm(lane_features, obs_pos[:, observation_len - 1, :].float(),
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:143:101: E501 line too long (119 > 100 characters)
+                                                                       same_obstacle_mask, pred_mask, lane_ht, lane_ct)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:167:101: E501 line too long (161 > 100 characters)
+                                                        (obs_ht[this_timestamp_mask, :].view(1, curr_N, -1), obs_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:174:101: E501 line too long (102 > 100 characters)
+            lane_ht, lane_ct, dummy3, dummy1, dummy2 = self.obs2lane_lstm(lane_features, this_obs_pos,
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:175:101: E501 line too long (132 > 100 characters)
+                                                                          same_obstacle_mask, this_timestamp_mask, lane_ht, lane_ct)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:197:101: E501 line too long (161 > 100 characters)
+                                                        (all_ht[this_timestamp_mask, :].view(1, curr_N, -1), all_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:289:101: E501 line too long (161 > 100 characters)
+                                                        (obs_ht[this_timestamp_mask, :].view(1, curr_N, -1), obs_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:296:101: E501 line too long (105 > 100 characters)
+            lane_ht, lane_ct, lane_dist, dummy1, dummy2 = self.obs2lane_lstm(lane_features, this_obs_pos,
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:297:101: E501 line too long (135 > 100 characters)
+                                                                             same_obstacle_mask, this_timestamp_mask, lane_ht, lane_ct)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:318:101: E501 line too long (161 > 100 characters)
+                                                        (all_ht[this_timestamp_mask, :].view(1, curr_N, -1), all_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:364:101: E501 line too long (120 > 100 characters)
+                soft_argmax_degree=soft_argmax_degree, lane_info_enc_size=64, lane_future_enc_size=0, aggr_enc_size=128)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:367:101: E501 line too long (121 > 100 characters)
+                soft_argmax_degree=soft_argmax_degree, lane_info_enc_size=64, lane_future_enc_size=64, aggr_enc_size=192)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:422:101: E501 line too long (161 > 100 characters)
+                                                        (obs_ht[this_timestamp_mask, :].view(1, curr_N, -1), obs_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:430:101: E501 line too long (103 > 100 characters)
+                lane_features, this_obs_pos, same_obstacle_mask, this_timestamp_mask, lane_ht, lane_ct)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:446:101: E501 line too long (161 > 100 characters)
+                                                        (all_ht[this_timestamp_mask, :].view(1, curr_N, -1), all_ct[this_timestamp_mask, :].view(1, curr_N, -1)))
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:645:101: E501 line too long (115 > 100 characters)
+            lane_features[torch.arange(N), idx_before, :2], lane_features[torch.arange(N), idx_after, :2], obs_pos)
+                                                                                                    ^
+/fuel/fueling/prediction/learning/models/lane_attention_trajectory_model/lane_attention_trajectory_model.py:734:101: E501 line too long (103 > 100 characters)
+            [lane_hidden_size + lane_info_enc_size] + [16, 1], dropout=0.0, last_layer_nonlinear=False)
+                                                                                                    ^

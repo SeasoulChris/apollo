@@ -5,9 +5,12 @@ import argparse
 import torch
 
 from fueling.learning.train_utils import *
-from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset import *
-from fueling.prediction.learning.models.social_interaction_model.human_trajectory_dataset import *
-from fueling.prediction.learning.models.social_interaction_model.social_interaction_model import *
+from fueling.prediction.learning.datasets.apollo_pedestrian_dataset.apollo_pedestrian_dataset \
+    import *
+from fueling.prediction.learning.models.social_interaction_model.human_trajectory_dataset \
+    import *
+from fueling.prediction.learning.models.social_interaction_model.social_interaction_model \
+    import *
 
 
 if __name__ == "__main__":
@@ -22,7 +25,8 @@ if __name__ == "__main__":
 
     # Set-up data-loader
     train_dataset = HumanTrajectoryDataset(args.train_file, obs_len=6, pred_len=10,
-                                           skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.05, verbose=True)
+                                           skip=1, min_ped=0, delim='\t', extra_sample=3,
+                                           noise_std_dev=0.05, verbose=True)
     # valid_dataset = HumanTrajectoryDataset(args.valid_file, obs_len=6, pred_len=10,\
     #     skip=1, min_ped=0, delim='\t', extra_sample=3, noise_std_dev=0.0, verbose=True)
     valid_dataset = ApolloPedestrianDataset(

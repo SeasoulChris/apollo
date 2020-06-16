@@ -196,8 +196,8 @@ class SocialPooling(nn.Module):
 
         # N x N
         mask_grid_id = torch.floor(
-            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0)) /
-            torch.tensor(self.area_span / self.grid_size))
+            (rel_pos_matrix.float() + torch.tensor(self.area_span / 2.0))
+            / torch.tensor(self.area_span / self.grid_size))
         mask_grid_id = mask_grid_id[:, :, 0] * self.grid_size + \
             mask_grid_id[:, :, 1]
         mask_grid_id *= mask_within_pooling_area
@@ -210,13 +210,13 @@ class SocialPooling(nn.Module):
         ht_pooled = torch.zeros(ht.size(0), self.grid_size ** 2, hidden_size).cuda()
 
         all_scene_ids = torch.unique(same_scene_mask).cpu().numpy().tolist()
-        #print (all_scene_ids)
+        # print (all_scene_ids)
         N_filled = 0
         for scene_id in all_scene_ids:
             # N x 1 x hidden_size
-            #print (ht.shape)
+            # print (ht.shape)
             curr_ht = ht[same_scene_mask[:, 0] == scene_id, :, :]
-            #print (curr_ht.shape)
+            # print (curr_ht.shape)
             # N x 1 x 2
             curr_pos_t = pos_t[same_scene_mask[:, 0] == scene_id, :, :]
             curr_N = curr_ht.size(0)
@@ -225,8 +225,8 @@ class SocialPooling(nn.Module):
             curr_ht = curr_ht.view(curr_N, 1, -1)
 
             mask_within_pooling_area, mask_grid_id = self.decide_grid(curr_pos_t)
-            #print (mask_within_pooling_area)
-            #print (mask_grid_id)
+            # print (mask_within_pooling_area)
+            # print (mask_grid_id)
             # N x N x hidden_size
             ht_matrix = torch.transpose(curr_ht.repeat(1, curr_N, 1), 0, 1).float()
             ht_matrix *= mask_within_pooling_area.\
@@ -236,13 +236,13 @@ class SocialPooling(nn.Module):
             mask_grid_id = mask_grid_id.\
                 reshape((curr_N, curr_N, 1)).repeat(1, 1, hidden_size)
             curr_ht_pooled = torch.zeros(curr_N, self.grid_size ** 2, hidden_size).cuda()
-            #print ('=================')
-            #print (mask_grid_id)
-            #print (mask_grid_id.max())
-            #print (mask_grid_id.min())
-            #print (mask_grid_id.shape)
-            #print (curr_ht_pooled.shape)
-            #print (ht_matrix.shape)
+            # print ('=================')
+            # print (mask_grid_id)
+            # print (mask_grid_id.max())
+            # print (mask_grid_id.min())
+            # print (mask_grid_id.shape)
+            # print (curr_ht_pooled.shape)
+            # print (ht_matrix.shape)
             curr_ht_pooled = curr_ht_pooled.scatter_add(1, mask_grid_id, ht_matrix)
 
             ht_pooled[N_filled:N_filled + curr_N, :, :] = curr_ht_pooled
@@ -372,12 +372,12 @@ class ProbablisticTrajectoryLoss:
 
         z = ((x - mux) / (eps + sigma_x))**2 + ((y - muy) / (eps + sigma_y))**2 - \
             2 * corr * (x - mux) * (y - muy) / (sigma_x * sigma_y + eps)
-        #print (z)
+        # print (z)
         P = 1 / (2 * np.pi * sigma_x * sigma_y * torch.sqrt(1 - corr**2) + eps) * \
             torch.exp(-z / (2 * (1 - corr**2)))
 
         loss = torch.clamp(P, min=eps)
-        #print (loss)
+        # print (loss)
         loss = -loss.log()
         return torch.sum(loss) / N
 

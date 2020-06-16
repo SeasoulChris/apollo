@@ -76,8 +76,8 @@ def do_training(source_save_paths):
         logging.info("Not using CUDA.")
 
     # Model training
-    model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss,
-                                optimizer, scheduler, epochs, "junction_mlp_model.pt", train_batch=1024)
+    model = train_valid_vanilla(X_train, Y_train, X_test, Y_test, model, loss, optimizer,
+                                scheduler, epochs, "junction_mlp_model.pt", train_batch=1024)
     traced_script_module = torch.jit.trace(model, X_train[0:1])
     traced_script_module.save(os.path.join(save_dir_path, "junction_mlp_model.pt"))
 
