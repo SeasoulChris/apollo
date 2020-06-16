@@ -22,6 +22,7 @@ from modules.planning.proto.planning_pb2 import ADCTrajectory
 from modules.prediction.proto.prediction_obstacle_pb2 import PredictionObstacles
 from modules.routing.proto.routing_pb2 import RoutingResponse
 
+import fueling.common.localization_utils as localization_utils
 import fueling.common.logging as logging
 import fueling.common.time_utils as time_utils
 
@@ -219,3 +220,12 @@ def filter_last_n_days_records(n):
         logging.error('Invalid path pattern: ' + record_path)
         return False
     return filter
+
+
+def get_localization_scaling(record_file_path, start_time_ns=0, end_time_ns=1844674407370955161):
+    """Calculate localization scaling rate by using poses in given record"""
+    read_record_func = read_record([LOCALIZATION_CHANNEL])
+    poses = [message_to_proto(msg) for msg in read_record_func(record_file_path)]
+    optimized_scaling = localization_utils.find_optimized_imu_scaling(poses)
+    logging.info(F'optimized scaling settings: {optimized_scaling}')
+    return optimized_scaling

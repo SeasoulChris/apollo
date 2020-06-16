@@ -5,7 +5,6 @@ py_library(
     srcs = ["base_pipeline.py"],
     deps = [
         "//apps/k8s/spark_submitter:client",
-        "//fueling/common:job_utils",
         "//fueling/common:kubectl_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common/storage:bazel_filesystem",
@@ -53,15 +52,6 @@ py_library(
 )
 
 py_library(
-    name = "job_utils",
-    srcs = ["job_utils.py"],
-    deps = [
-        ":mongo_utils",
-        ":record_utils",
-    ],
-)
-
-py_library(
     name = "json_utils",
     srcs = ["json_utils.py"],
     deps = [
@@ -102,6 +92,7 @@ py_library(
     name = "record_utils",
     srcs = ["record_utils.py"],
     deps = [
+        ":localization_utils",
         ":time_utils",
     ],
 )
@@ -145,3 +136,7 @@ py_library(
     srcs = ["kubectl_utils.py"],
 )
 
+py_library(
+    name = "localization_utils",
+    srcs = ["localization_utils.py"],
+)
