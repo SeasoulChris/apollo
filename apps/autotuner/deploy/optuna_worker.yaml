@@ -14,7 +14,7 @@ spec:
           image: __IMG__
           imagePullPolicy: Always
           command:
-            - "/fuel/apps/optuna/deploy/optuna_entrypoint.sh"
+            - "/fuel/apps/autotuner/deploy/optuna_entrypoint.sh"
             - "__CLUSTER__"
           env:
             - name: MY_POD_NAME
