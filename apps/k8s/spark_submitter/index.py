@@ -124,6 +124,11 @@ class SparkSubmitJob(flask_restful.Resource):
         if not flags.FLAGS.debug:
             job_record = JobRecord(id=job_id, arg=arg)
             Mongo().job_collection().insert_one(proto_utils.pb_to_dict(job_record))
+            Mongo().fuel_job_collection().insert_one({'job_id': job_id,
+                                                      'is_valid': True,
+                                                      'start_time': datetime.now(),
+                                                      'status': 'Running',
+                                                      'progress': 0})
 
         # Partner storage.
         if arg.partner.storage_writable:

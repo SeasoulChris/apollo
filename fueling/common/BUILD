@@ -56,6 +56,7 @@ py_library(
     name = "job_utils",
     srcs = ["job_utils.py"],
     deps = [
+        ":logging",
         ":mongo_utils",
         ":record_utils",
     ],

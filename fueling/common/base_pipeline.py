@@ -103,10 +103,6 @@ class BasePipeline(object):
             FLAGS.job_id = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         # Member variables are available on both driver and executors.
         self.FLAGS = FLAGS.flag_values_dict()
-        if flags.FLAGS.running_mode == 'PROD':
-            JobUtils(FLAGS.job_id).save_job_submit_info(bool(self.is_partner_job()))
-            logging.info(f'Create fuel job {FLAGS.job_id} in mongodb')
-
         logging.info('Running job with owner={}, id={}'.format(FLAGS.job_owner, FLAGS.job_id))
 
     @staticmethod
