@@ -20,11 +20,11 @@ cost_params {
 cost_metrics {
   weighting_metric {
     metric_name: "station_err_std"
-    weighting_factor: 0.2
+    weighting_factor: 0.4
   }
   weighting_metric {
     metric_name: "speed_err_std"
-    weighting_factor: 0.2
+    weighting_factor: 0.1
   }
   weighting_metric {
     metric_name: "lateral_err_std"
@@ -40,11 +40,11 @@ cost_metrics {
   }
   weighting_metric {
     metric_name: "station_err_std_harsh"
-    weighting_factor: 0.2
+    weighting_factor: 0.4
   }
   weighting_metric {
     metric_name: "speed_err_std_harsh"
-    weighting_factor: 0.2
+    weighting_factor: 0.1
   }
   weighting_metric {
     metric_name: "lateral_err_std_harsh"
@@ -70,7 +70,7 @@ cost_metrics {
   }
   weighting_metric {
     metric_name: "lateral_err_peak"
-    weighting_factor: 4.0
+    weighting_factor: 5.0
     dim_2_idx: 0
   }
   weighting_metric {
