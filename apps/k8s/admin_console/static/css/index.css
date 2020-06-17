@@ -1,0 +1,10 @@
+#sidebar-wrapper{
+    background: rgb(240, 240, 240);
+    width: 20%;
+    float: left;
+}
+
+.jobs-table{
+    float: right;
+    width: 75%;
+}
