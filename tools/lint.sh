@@ -13,6 +13,7 @@ CMD="pycodestyle --max-line-length 100 --show-source --ignore=${IGNORES}"
 function LintDir {
   find "$1" -type f -name '*.py' | \
       grep -v '_pb2.py$' | \
+      grep -v 'fueling/archive' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       xargs ${CMD}
 }
@@ -21,7 +22,6 @@ PATH_ARG=$1
 if [ -z "${PATH_ARG}" ]; then
   LintDir /fuel/apps
   LintDir /fuel/fueling
-  LintDir /fuel/learning_algorithms
 elif [ -d "${PATH_ARG}" ]; then
   LintDir "${PATH_ARG}"
 else

@@ -21,24 +21,24 @@ if [ -z "${HOME}" ]; then
   HOME=$( cd; pwd )
 fi
 
-docker ps -a --format "{{.Names}}" | grep ${CONTAINER} > /dev/null
+docker ps -a --format "{{.Names}}" | grep -v gocloud | grep ${CONTAINER} > /dev/null
 if [ $? -eq 0 ]; then
   echo "Found existing container. If you need a fresh one, run 'docker rm -f ${CONTAINER}' first."
 else
   # Mount required volumes.
-  required_volumes="-v $(pwd):/fuel"
+  FUEL_ROOT="$(pwd)"
+  required_volumes="-v ${FUEL_ROOT}:/fuel"
   APOLLO_ROOT="$(cd ../apollo-bazel2.x; pwd)"
   required_volumes="-v ${APOLLO_ROOT}:/apollo ${required_volumes}"
+
+  # Populate user.bazelrc.
+  mkdir -p local
+  echo "startup --output_user_root=${FUEL_ROOT}/local/bazel_cache" > local/user.bazelrc
+  required_volumes="-v ${FUEL_ROOT}/local:${FUEL_ROOT}/local ${required_volumes}"
 
   USER_ID=$(id -u)
   GRP=$(id -g -n)
   GRP_ID=$(id -g)
-
-  # To support multi-containers on shared host.
-  LOCAL_CACHE_DIR="${HOME}/.cache/bazel/${CONTAINER}"
-  CONTAINER_CACHE_DIR="/home/.bazel_cache"
-  mkdir -p ${LOCAL_CACHE_DIR}
-  required_volumes="-v ${LOCAL_CACHE_DIR}:${CONTAINER_CACHE_DIR} ${required_volumes}"
 
   # Mount optional volumes.
   optional_volumes=""

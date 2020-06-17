@@ -28,22 +28,6 @@ echo "######################### Test #########################"
 bazel test //...
 
 echo "######################### Lint #########################"
-
-bash /fuel/tools/lint.sh /fuel/apps
-bash /fuel/tools/lint.sh /fuel/fueling/common
-bash /fuel/tools/lint.sh /fuel/fueling/control
-bash /fuel/tools/lint.sh /fuel/fueling/data
-bash /fuel/tools/lint.sh /fuel/fueling/demo
-bash /fuel/tools/lint.sh /fuel/fueling/learning
-bash /fuel/tools/lint.sh /fuel/fueling/map
-bash /fuel/tools/lint.sh /fuel/fueling/perception
-bash /fuel/tools/lint.sh /fuel/fueling/planning
-bash /fuel/tools/lint.sh /fuel/fueling/prediction
-bash /fuel/tools/lint.sh /fuel/fueling/profiling
-bash /fuel/tools/lint.sh /fuel/fueling/simulation
-bash /fuel/tools/lint.sh /fuel/fueling/streaming
-
-# TODO(?): bash /fuel/tools/lint.sh /fuel/learning_algorithms
-# TODO(?): bash /fuel/tools/lint.sh /fuel/fueling  # Finally
+bash /fuel/tools/lint.sh
 
 echo "######################### All check passed! #########################"
