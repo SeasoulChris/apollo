@@ -315,6 +315,30 @@ class GoldenSetEvaluation():
         # ground_truth with same shape
         return math.sqrt(np.sum((predicted_result[nth_frame, :] - ground_truth[nth_frame, :])**2))
 
+    def plot_IMU(self):
+        fig, axs = plt.subplots(figsize=[8, 8])
+        plt.xlabel('x (m)', fontdict={'size': 12})
+        plt.ylabel('y (m)', fontdict={'size': 12})
+        plt.axis('equal')
+        # location from GPS
+        x_position = self.features[:, segment_index['x']]
+        y_position = self.features[:, segment_index['y']]
+        # log info of accumulated error
+        logging.info(f'{x_position[0]}, {y_position[0]}' )
+        logging.info(f'{self.imu_xy[0][0]},{self.imu_xy[1][0]}')
+        plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
+        plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1]
+                 - self.imu_xy[1][0], 'm.', label='IMU')
+        plt.plot(0, 0, 'x', markersize=6, color='k')
+        plt.legend(fontsize=12, numpoints=5, frameon=False)
+        plt.title("Trajectory Comparison")
+        plt.grid(True)
+        figure_file = os.path.join(os.path.dirname(
+            self.features_file_path), 'cmp_GPS_imu.png')
+        plt.savefig(figure_file)
+        logging.info(f'plot is saved at {figure_file}')
+        plt.show()
+
     def plot(self):
         fig, axs = plt.subplots(figsize=[8, 8])
         plt.xlabel('x (m)', fontdict={'size': 12})
@@ -328,8 +352,8 @@ class GoldenSetEvaluation():
             self.DM10_xy = np.load(self.args.dm10_result_path, allow_pickle=True)
         # location from echo Lincoln model
         if self.echo_lincoln_xy is None:
-            logging.info(self.args.echo_lincoln_result_path)
-            self.echo_lincoln_xy = np.load(self.args.echo_lincoln_result_path, allow_pickle=True)
+            logging.info(self.echo_lincoln_result_file)
+            self.echo_lincoln_xy = np.load(self.echo_lincoln_result_file, allow_pickle=True)
         # log info of accumulated error
         xy_position = self.features[:, segment_index['x']:segment_index['y'] + 1]
         logging.info(f'Ground truth trajectory shape is : {xy_position.shape}')
@@ -429,11 +453,11 @@ if __name__ == '__main__':
     parser.add_argument('--compute_normalize_factors', type=bool, default=True)
     parser.add_argument('--compare', type=str, default="model")
 
-    # argment to train or test gp
+    # argument to train or test gp
     parser.add_argument('--train_gp', type=bool, default=True)
     parser.add_argument('--test_gp', type=bool, default=True)
 
-    # argment to use cuda or not
+    # argument to use cuda or not
     parser.add_argument('--use_cuda', type=bool, default=False)
 
     # golden set file path
@@ -447,10 +471,11 @@ if __name__ == '__main__':
     evaluator = GoldenSetEvaluation(args.golden_set_data_dir,
                                     args.normalization_factor_file_path, args)
     evaluator.load_data()
-    evaluator.get_DM10_result()
     evaluator.get_imu_result()
-    evaluator.get_echo_lincoln_result()
-    evaluator.get_DM20_result_from_features()
-    evaluator.correct_non_overlap_data()
-    evaluator.get_error_analyses()
-    evaluator.plot()
+    evaluator.plot_IMU()
+    # evaluator.get_DM10_result()
+    # # evaluator.get_echo_lincoln_result()
+    # evaluator.get_DM20_result_from_features()
+    # evaluator.correct_non_overlap_data()
+    # evaluator.get_error_analyses()
+    # evaluator.plot()

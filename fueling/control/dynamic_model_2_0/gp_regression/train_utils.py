@@ -44,9 +44,9 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
         train_loss.backward()
         optimizer.step()
         loss_history.append(train_loss.item())
-    train_loss = np.mean(loss_history)
-    print(f'train loss is {train_loss}')
-    return train_loss
+    loss_history_mean = np.mean(loss_history)
+    print(f'train loss is {loss_history_mean}')
+    return loss_history_mean
 
 
 def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
@@ -63,7 +63,7 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
     epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
     for i in epochs_iter:
         # Within each iteration, we will go over each minibatch of data
-        minibatch_iter = tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
+        tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
         train_loss = basic_train_loop(train_loader, model, loss, optimizer, is_transpose)
         scheduler.step(train_loss)
         if i == 10:
