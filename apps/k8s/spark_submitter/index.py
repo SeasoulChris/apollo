@@ -145,6 +145,8 @@ class SparkSubmitJob(flask_restful.Resource):
         confs = (
             # Overall
             '--conf spark.kubernetes.memoryOverheadFactor=0 '
+            '--conf spark.kubernetes.executor.volumes.emptyDir.shm.mount.path=/dev/shm '
+            '--conf spark.kubernetes.executor.volumes.emptyDir.shm.options.medium=Memory '
             '--conf yarn.log-aggregation-enable=true '
             '--conf spark.eventLog.enabled=true '
             f'--conf spark.eventLog.dir={EVENTLOG_DIR} '
