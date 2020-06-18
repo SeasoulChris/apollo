@@ -8,6 +8,7 @@ import math
 from pyproj import Proj
 
 from fueling.common.mongo_utils import Mongo
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
@@ -42,7 +43,6 @@ class JobUtils(object):
         """Init"""
         self.job_id = job_id
         self.db = Mongo().fuel_job_collection()
-        logging.info("Init Job Utils")
 
     def save_job_submit_info(self):
         """Save job submit info"""
@@ -51,6 +51,20 @@ class JobUtils(object):
                             'start_time': datetime.now(),
                             'status': 'Running',
                             'progress': 0})
+        logging.info(f"save_job_submit_info: {self.job_id}")
+
+    def save_job_partner(self, is_partner):
+        """Save job partner label (boolean)"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'is_partner': is_partner}})
+        logging.info(f"save_job_partner: {is_partner}")
+
+    def save_job_input_data_size(self, source_dir):
+        """Save job input data size"""
+        input_date_size = file_utils.getDirSize(source_dir)
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'input_date_size': input_date_size}})
+        logging.info(f"save_job_input_data_size: {source_dir}: {input_date_size}")
 
     def save_job_location(self, filename, zone_id=50, hemisphere='N'):
         """Save job location to mongodb"""
@@ -67,6 +81,8 @@ class JobUtils(object):
                                {'$set': {'localization': {'x': x,
                                                           'y': y,
                                                           'zone_id': zone_id}}})
+            logging.info(f"save_job_location: {filename}: x: {x}, y: {y}, "
+                         f"zone_id: {zone_id}")
             break
 
     def save_job_progress(self, progress):
@@ -77,6 +93,7 @@ class JobUtils(object):
             return
         self.db.update_one({'job_id': self.job_id},
                            {'$set': {'progress': progress}})
+        logging.info(f"save_job_progress: {progress}")
 
     def save_job_operations(self, email, comments, is_valid):
         """Save job operations
@@ -89,6 +106,9 @@ class JobUtils(object):
                                        'comments': comments,
                                        'action': {'type': action_type}}},
                             '$set': {'is_valid': is_valid}})
+        logging.info(f"save_job_operations: email: {email},"
+                     f"comments: {comments},"
+                     f"is_valid: {is_valid}")
 
     def save_job_phase(self, status):
         """Save job status
@@ -103,3 +123,4 @@ class JobUtils(object):
             self.db.update_one({'job_id': self.job_id},
                                {'$set': {'status': status,
                                          'end_time': datetime.now()}})
+        logging.info(f"save_job_phase: {status}")
