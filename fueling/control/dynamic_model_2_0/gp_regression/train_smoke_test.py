@@ -26,12 +26,13 @@ from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset \
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
+from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_utils
 
 
 train_model = True
-test_type = "toy_test"
+test_type = "full_test"
 if test_type == "full_test":
     config = training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
@@ -47,8 +48,8 @@ else:
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test"
 # time
 timestr = time.strftime('%Y%m%d-%H%M')
-model_path = os.path.join(validation_data_path, f'{timestr}_gp_model.pth')
-
+offline_model_path = os.path.join(validation_data_path, f'{timestr}','gp_model.pth')
+online_model_path = os.path.join(validation_data_path, f'{timestr}','gp_model.pt')
 
 # setup data loader
 train_dataset = DynamicModelDataset(training_data_path)
@@ -73,6 +74,14 @@ for idx, (features, labels) in enumerate(train_loader):
 inducing_points = torch.cat((inducing_points, inducing_points), 0)
 logging.info(inducing_points.shape)
 
+
+# validate loader
+valid_dataset = DynamicModelDataset(validation_data_path)
+# reduce batch size when memory is not enough
+# valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
+valid_loader = DataLoader(valid_dataset, batch_size=1024)
+
+
 # encoder
 encoder_net_model = Encoder(u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss = train_utils.init_train(
@@ -86,10 +95,15 @@ if train_model:
         loss, optimizer, is_transpose=True)
 
     # test save and load model
-    save_model_state_dict(model, likelihood, model_path)
+    save_model_state_dict(model, likelihood, offline_model_path)
+    # save model as jit script
+    for idx, (test_features, test_labels) in enumerate(valid_loader):
+        test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
+        break
+    save_model_torch_script(model, likelihood, test_features, online_model_path)
 else:
     # load model
-    train_utils.load_model(model_path, encoder_net_model, model, likelihood)
+    train_utils.load_model(offline_model_path, encoder_net_model, model, likelihood)
 
 # validation
 # Set into eval mode
@@ -97,9 +111,6 @@ model.eval()
 likelihood.eval()
 
 
-valid_dataset = DynamicModelDataset(validation_data_path)
-# reduce batch size when memory is not enough
-valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
 # use all validation data
 # Make predictions
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
