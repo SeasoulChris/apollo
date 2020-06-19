@@ -73,7 +73,7 @@ class GoldenSetEvaluation():
         inputs_standardized = (inputs - input_mean) / input_std
         return inputs_standardized
 
-    def get_non_overlapping_features(self):
+    def get_non_overlapping_features(self, non_overlapping_features=False):
         # features file are 100 frame with 99 frame overlapping
         hdf5_files = file_utils.list_files_with_suffix(self.feature_dir, '.hdf5')
 
@@ -90,8 +90,12 @@ class GoldenSetEvaluation():
             else:
                 # [feature, 1*23]
                 updated_features = h5_utils.read_h5(hdf5_file)
-                self.features = np.concatenate(
-                    (self.features, np.expand_dims(updated_features[-1, :], axis=0)), axis=0)
+                if non_overlapping_features:
+                    self.features = np.concatenate(
+                        (self.features, updated_features), axis=0)
+                else:
+                    self.features = np.concatenate(
+                        (self.features, np.expand_dims(updated_features[-1, :], axis=0)), axis=0)
         logging.info(self.features.shape)
         np.save(self.features_file_path, self.features)
 
@@ -124,6 +128,7 @@ class GoldenSetEvaluation():
         imu_data.feature = self.features
         imu_data.data_dim = self.features.shape[0]
         self.imu_xy = imu_data.imu_location()
+        self.imu_acc = imu_data.acc()
 
     def get_echo_lincoln_result(self, is_save=True):
         echo_lincoln_x, echo_lincoln_y = self.raw_data_visualization.echo_lincoln_location()
@@ -316,7 +321,9 @@ class GoldenSetEvaluation():
         return math.sqrt(np.sum((predicted_result[nth_frame, :] - ground_truth[nth_frame, :])**2))
 
     def plot_IMU(self):
-        fig, axs = plt.subplots(figsize=[8, 8])
+        logging.info(self.features.shape)
+        fig = plt.figure(figsize=(12, 8))
+        ax1 = fig.add_subplot(2, 1, 1)
         plt.xlabel('x (m)', fontdict={'size': 12})
         plt.ylabel('y (m)', fontdict={'size': 12})
         plt.axis('equal')
@@ -324,20 +331,39 @@ class GoldenSetEvaluation():
         x_position = self.features[:, segment_index['x']]
         y_position = self.features[:, segment_index['y']]
         # log info of accumulated error
-        logging.info(f'{x_position[0]}, {y_position[0]}' )
-        logging.info(f'{self.imu_xy[0][0]},{self.imu_xy[1][0]}')
-        plt.plot(x_position - x_position[0], y_position - y_position[0], 'b.', label='GPS')
-        plt.plot(self.imu_xy[0] - self.imu_xy[0][0], self.imu_xy[1]
+        logging.info(
+            f'GPS data shape is {len(x_position)} and first data point is'
+            + '{x_position[0]}, {y_position[0]}')
+        logging.info(
+            f'IMU data shape is {self.imu_xy[0].shape[0]} and first data point is'
+            + f'{self.imu_xy[0][0]}, {self.imu_xy[1][0]}')
+        plt.plot(x_position[::100] - x_position[0],
+                 y_position[::100] - y_position[0], 'b.', label='GPS')
+        plt.plot(self.imu_xy[0][::100] - self.imu_xy[0][0], self.imu_xy[1][::100]
                  - self.imu_xy[1][0], 'm.', label='IMU')
+
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
         plt.grid(True)
+        ax2 = fig.add_subplot(2, 1, 2)
+        normalized_heading_angle = []
+        for heading_angle in self.features[:200, 0]:
+            normalized_heading_angle.append(self._normalize_angle(heading_angle))
+        logging.info(self.imu_acc.shape)
+        logging.info(self.imu_acc[1, :])
+        plt.plot(self.imu_acc[:200, 0], 'g.', label='heading angle')
         figure_file = os.path.join(os.path.dirname(
-            self.features_file_path), 'cmp_GPS_imu.png')
+            self.features_file_path), 'cmp_GPS_imu_multi_plot.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
         plt.show()
+
+    def _normalize_angle(self, theta):
+        theta = theta % (2 * math.pi)
+        if theta > math.pi:
+            theta = theta - 2 * math.pi
+        return theta
 
     def plot(self):
         fig, axs = plt.subplots(figsize=[8, 8])
@@ -473,9 +499,9 @@ if __name__ == '__main__':
     evaluator.load_data()
     evaluator.get_imu_result()
     evaluator.plot_IMU()
-    # evaluator.get_DM10_result()
-    # # evaluator.get_echo_lincoln_result()
-    # evaluator.get_DM20_result_from_features()
-    # evaluator.correct_non_overlap_data()
-    # evaluator.get_error_analyses()
-    # evaluator.plot()
+    evaluator.get_DM10_result()
+    evaluator.get_echo_lincoln_result()
+    evaluator.get_DM20_result_from_features()
+    evaluator.correct_non_overlap_data()
+    evaluator.get_error_analyses()
+    evaluator.plot()

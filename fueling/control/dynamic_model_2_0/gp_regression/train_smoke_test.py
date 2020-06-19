@@ -32,7 +32,7 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 
 
 train_model = True
-test_type = "full_test"
+test_type = "toy_test"
 if test_type == "full_test":
     config = training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
@@ -78,8 +78,7 @@ logging.info(inducing_points.shape)
 # validate loader
 valid_dataset = DynamicModelDataset(validation_data_path)
 # reduce batch size when memory is not enough
-# valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
-valid_loader = DataLoader(valid_dataset, batch_size=1024)
+valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
 
 
 # encoder
