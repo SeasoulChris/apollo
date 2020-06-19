@@ -92,6 +92,7 @@ def write_segment(output_data_path, task_id_group):
     if not task_id_group:
         return
     task, group_id, group = task_id_group
+    group_id = F'{group_id}_{group[-1].chasis_msg.header.timestamp_sec}'
     output_data_path = os.path.join(output_data_path, os.path.basename(task))
     # If the to-be-written file exists already, something is wrong, throw it
     HDF5_SUFFIX = '.hdf5'
