@@ -23,7 +23,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import training_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import toy_test_training_config
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset \
     import DynamicModelDataset
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder, DilatedEncoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
@@ -48,8 +48,8 @@ else:
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test"
 # time
 timestr = time.strftime('%Y%m%d-%H%M')
-offline_model_path = os.path.join(validation_data_path, f'{timestr}','gp_model.pth')
-online_model_path = os.path.join(validation_data_path, f'{timestr}','gp_model.pt')
+offline_model_path = os.path.join(validation_data_path, f'{timestr}', 'gp_model.pth')
+online_model_path = os.path.join(validation_data_path, f'{timestr}', 'gp_model.pt')
 
 # setup data loader
 train_dataset = DynamicModelDataset(training_data_path)
@@ -83,7 +83,8 @@ valid_loader = DataLoader(valid_dataset, batch_size=1024)
 
 
 # encoder
-encoder_net_model = Encoder(u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
+encoder_net_model = DilatedEncoder(
+    u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
