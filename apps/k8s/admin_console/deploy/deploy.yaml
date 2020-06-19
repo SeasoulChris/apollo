@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-admin-console
+  labels:
+    app: admin-console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-console
+  template:
+    metadata:
+      labels:
+        app: admin-console
+    spec:
+      imagePullSecrets:
+      - name: baidubce
+      nodeSelector:
+        nodezone: czone
+      containers:
+      - name: admin-console
+        image: hub.baidubce.com/apollofuel/admin_console:20200618_2340
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: user
+        - name: MONGO_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: passwd
+        - name: BOS_ASK_ACCESS
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: ak
+        - name: BOS_ASK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: bos-ask-secret
+              key: sk        
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: admin-console-service
+spec:
+  selector:
+    app: admin-console
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
