@@ -15,3 +15,11 @@ py_library(
         ":base",
     ],
 )
+
+py_library(
+    name = "job_db",
+    srcs = ["__init__.py"],
+    deps = [
+        ":job",
+    ],
+)

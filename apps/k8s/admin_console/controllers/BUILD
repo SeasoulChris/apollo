@@ -4,6 +4,6 @@ py_library(
     name = "job",
     srcs = ["job.py"],
     deps = [
-        "//apps/k8s/admin_console/db:job",
+        "//apps/k8s/admin_console/db:job_db",
     ],
 )
