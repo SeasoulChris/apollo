@@ -16,7 +16,7 @@ import numpy as np
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, imu_scaling
 from fueling.control.dynamic_model_2_0.conf.model_conf import \
-    feature_config, input_index, output_index
+    feature_config, label_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -102,7 +102,7 @@ def generate_gp_data(model_path, segment):
         GlobalModels.add_model(model_weights_path, model)
 
     input_segment = np.zeros([INPUT_LENGTH, DIM_INPUT])
-    output_segment = np.zeros([DIM_OUTPUT])
+    output_segment = np.zeros([INPUT_LENGTH, DIM_OUTPUT])
     # Initialize the first frame's data
     # speed from GPS
     predicted_v = segment[0, segment_index["v_x"]] * np.cos(segment[0, segment_index["heading"]]) +\
@@ -149,17 +149,20 @@ def generate_gp_data(model_path, segment):
         prev_v = predicted_v  # previous speed
         predicted_w_prev = predicted_w
         predicted_a_prev = predicted_a
+
+        output_segment[k, output_index["d_x"]] = segment[k, segment_index["x"]] - predicted_x 
+        output_segment[k, output_index["d_y"]] = segment[k, segment_index["y"]] - predicted_y 
+        logging.debug(F"Residual Error x:{output_segment[k][0]}, y:{output_segment[k][1]}")
+
     # The residual error on x and y prediction
     logging.debug(
         f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
-        ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
+         ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
     logging.debug(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
-    output_segment[output_index["d_x"]] = segment[INPUT_LENGTH
-                                                  - 1, segment_index["x"]] - predicted_x
-    output_segment[output_index["d_y"]] = segment[INPUT_LENGTH
-                                                  - 1, segment_index["y"]] - predicted_y
-    logging.debug("Residual Error x:{}, y:{}".format(output_segment[0], output_segment[1]))
-    return (input_segment, output_segment)
+
+    if label_config["label_all_frames"]:
+        return (input_segment, output_segment)
+    return (input_segment, output_segment[-1])
 
 
 def generate_mlp_output(inputs, model, norms, gear_status=1):

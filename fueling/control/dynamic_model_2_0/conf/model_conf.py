@@ -43,6 +43,10 @@ feature_config = {
     "SAMPLE_SIZE": 6000,  # Maximum data points for each category
 }
 
+label_config = {
+    "label_all_frames": True, # If label each of the input frames
+}
+
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""
 """ sequence_length = DELTA_T / delta_t = 100, input_feature_dim = 5"""
 input_index = {
