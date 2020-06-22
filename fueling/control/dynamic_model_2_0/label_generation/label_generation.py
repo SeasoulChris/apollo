@@ -150,14 +150,14 @@ def generate_gp_data(model_path, segment):
         predicted_w_prev = predicted_w
         predicted_a_prev = predicted_a
 
-        output_segment[k, output_index["d_x"]] = segment[k, segment_index["x"]] - predicted_x 
-        output_segment[k, output_index["d_y"]] = segment[k, segment_index["y"]] - predicted_y 
+        output_segment[k, output_index["d_x"]] = segment[k, segment_index["x"]] - predicted_x
+        output_segment[k, output_index["d_y"]] = segment[k, segment_index["y"]] - predicted_y
         logging.debug(F"Residual Error x:{output_segment[k][0]}, y:{output_segment[k][1]}")
 
     # The residual error on x and y prediction
     logging.debug(
         f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
-         ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
+        ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
     logging.debug(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
 
     if label_config["label_all_frames"]:

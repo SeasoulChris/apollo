@@ -44,7 +44,7 @@ feature_config = {
 }
 
 label_config = {
-    "label_all_frames": True, # If label each of the input frames
+    "label_all_frames": True,  # If label each of the input frames
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""
