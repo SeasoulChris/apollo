@@ -66,6 +66,14 @@ semantic_map_config = {
             'resolution': 0.1,
             'distance_buffer': 100
         },
+        'houston': {
+            'lower_left_x': 244400,
+            'lower_left_y': 3285100,
+            'horizontal_pixel_size': 72600,
+            'vertical_pixel_size': 24300,
+            'resolution': 0.1,
+            'distance_buffer': 200
+        },
         'baidudasha': {
             'lower_left_x': 439600,
             'lower_left_y': 4433150,
