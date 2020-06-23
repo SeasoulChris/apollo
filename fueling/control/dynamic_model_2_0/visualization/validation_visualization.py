@@ -20,7 +20,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
     DynamicModelDataset
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder, DilatedEncoder
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
@@ -54,7 +54,7 @@ class ValidationVisualization():
         logging.info(f"Loading GP model from {file_path}")
         model_state_dict, likelihood_state_dict = torch.load(file_path)
         # encoder model
-        encoder_net_model = Encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
+        encoder_net_model = DilatedEncoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         # TODO(Shu): check if it is necessary to use training data for initialization
         self.model = GPModel(self.inducing_points, encoder_net_model,
                              self.kernel_dim, self.output_dim)

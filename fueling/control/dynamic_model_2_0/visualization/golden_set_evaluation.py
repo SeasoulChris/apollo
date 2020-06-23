@@ -262,7 +262,8 @@ class GoldenSetEvaluation():
             self.gp_corrected_xy = np.load(self.analyses_result_file, allow_pickle=True)
 
         # 1s, 10s, 30s and end of trajectory error
-        time_frame_ranges = [99, 999, 2999, self.features.shape[0] - 1]
+        time_frame_ranges = [99, 999, min(
+            2999, self.features.shape[0] - 1), self.features.shape[0] - 1]
         analyses_result = dict()
         analyses_result["echo_lincoln_cates"] = []
         analyses_result["echo_lincoln_mates"] = []
@@ -273,30 +274,30 @@ class GoldenSetEvaluation():
         for time_frame in time_frame_ranges:
             echo_lincoln_mate = self.calc_mate(self.echo_lincoln_xy, xy_position, time_frame)
             analyses_result["echo_lincoln_mates"].append(echo_lincoln_mate)
-            logging.info(f'Echo_lincoln: {time_frame}th time frame Mate is {echo_lincoln_mate}')
+            logging.info(f'Echo_lincoln: {time_frame}th time frame Mate is {echo_lincoln_mate:.4f}')
             echo_lincoln_cate = self.calc_cate(self.echo_lincoln_xy, xy_position, time_frame)
             analyses_result["echo_lincoln_cates"].append(echo_lincoln_cate)
-            logging.info(f'Echo_lincoln: {time_frame}th time frame Cate is {echo_lincoln_cate}')
+            logging.info(f'Echo_lincoln: {time_frame}th time frame Cate is {echo_lincoln_cate:.4f}')
 
             DM10_mate = self.calc_mate(self.DM10_xy, xy_position, time_frame)
             analyses_result["DM10_mates"].append(DM10_mate)
-            logging.info(f'DM10: {time_frame}th time frame Mate is {DM10_mate}')
+            logging.info(f'DM10: {time_frame}th time frame Mate is {DM10_mate:.4f}')
             DM10_cate = self.calc_cate(self.DM10_xy, xy_position, time_frame)
             analyses_result["DM10_cates"].append(DM10_cate)
-            logging.info(f'DM10: {time_frame}th time frame Cate is {DM10_cate}')
+            logging.info(f'DM10: {time_frame}th time frame Cate is {DM10_cate:.4f}')
 
             DM20_mate = (self.calc_mate(
                 self.gp_corrected_xy, xy_position[::self.data_frame_length, :],
                 min(int(time_frame / self.data_frame_length + 1),
                     self.gp_corrected_xy.shape[0] - 1)) / self.data_frame_length)
             analyses_result["DM20_mates"].append(DM20_mate)
-            logging.info(f'DM20: {time_frame}th time frame Mate is {DM20_mate}')
+            logging.info(f'DM20: {time_frame}th time frame Mate is {DM20_mate:.4f}')
             DM20_cate = self.calc_cate(
                 self.gp_corrected_xy, xy_position[::self.data_frame_length, :],
                 min(int(time_frame / self.data_frame_length + 1),
                     self.gp_corrected_xy.shape[0] - 1))
             analyses_result["DM20_cates"].append(DM20_cate)
-            logging.info(f'DM20: {time_frame}th time frame Cate is {DM20_cate}')
+            logging.info(f'DM20: {time_frame}th time frame Cate is {DM20_cate:.4f}')
 
         np.save(self.analyses_result_file, analyses_result)
 
