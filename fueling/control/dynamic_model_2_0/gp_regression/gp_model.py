@@ -8,7 +8,6 @@ from gpytorch.variational import MultitaskVariationalStrategy, VariationalStrate
 import gpytorch
 import torch
 
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder
 import fueling.common.logging as logging
 
 

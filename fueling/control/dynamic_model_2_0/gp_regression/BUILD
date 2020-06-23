@@ -53,7 +53,6 @@ py_library(
     name = "gp_model",
     srcs = ["gp_model.py"],
     deps = [
-        ":encoder",
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
