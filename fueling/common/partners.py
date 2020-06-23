@@ -52,4 +52,6 @@ partners = {
                              bos_bucket='archiplab', bos_region='bj'),
     'd-kit-cqjt-36': Partner(name='CQJT36', email='16925652@qq.com',
                              bos_bucket='jiaodawurenche', bos_region='bj'),
+    'd-kit-sk-ncdx-01': Partner(name='SK-NCDX01', email='57186830@qq.com',
+                                bos_bucket='ncuapollodkit', bos_region='su'),
 }
