@@ -8,6 +8,7 @@ import glob
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
+from fueling.common.job_utils import JobUtils
 
 
 def execute_task(source_dir):
@@ -75,6 +76,7 @@ class SimMapPipeline(BasePipeline):
             logging.warning('topo_creator: {} not exists'.format(routing_creator_path))
         # RDD(tasks), the tasks without src_prefix as prefix
         self.to_rdd([source_path]).foreach(execute_task)
+        JobUtils(job_id).save_job_progress(50)
 
 
 if __name__ == '__main__':

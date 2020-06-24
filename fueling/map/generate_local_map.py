@@ -10,8 +10,9 @@ import glob
 from absl import flags
 import pyspark_utils.helper as spark_helper
 
-from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
+from fueling.common.partners import partners
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
@@ -79,7 +80,7 @@ class LocalMapPipeline(BasePipeline):
             title = 'Your localmap is not generated!'
             email_utils.send_email_info(title, content, receivers)
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'failed', 'sub_type': 'Base map'}
+                           'job_status': 'failed', 'sub_type': 'base_map'}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             return
 
@@ -93,13 +94,14 @@ class LocalMapPipeline(BasePipeline):
             title = 'Your localmap is not generated!'
             logging.warning('local_map folder: {} not exists'.format(path))
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
-                           'job_status': 'failed', 'sub_type': 'Base map'}
+                           'job_status': 'failed', 'sub_type': 'base_map'}
         else:
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'success', 'sub_type': 'All'}
 
         email_utils.send_email_info(title, content, receivers)
         redis_utils.redis_extend_dict(redis_key, redis_value)
+        JobUtils(job_id).save_job_progress(100)
 
     def run_internal(self, todo_records, src_prefix, dst_prefix, zone_id, lidar_type):
         """Run the pipeline with given arguments."""

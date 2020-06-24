@@ -27,6 +27,7 @@ import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
+from fueling.common.job_utils import JobUtils
 
 flags.DEFINE_float('lane_width', 3.0, 'lane width.')
 flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')
@@ -90,6 +91,7 @@ class MapGenSingleLine(BasePipeline):
 
         logging.info("source_prefix: {}".format(source_dir))
 
+        JobUtils(job_id).save_job_input_data_size(source_dir)
         job_type, job_size = 'VIRTUAL_LANE_GENERATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
@@ -107,6 +109,7 @@ class MapGenSingleLine(BasePipeline):
             logging.warning('base_map.txt: {} not genterated'.format(path))
 
         logging.info('base_map.txt generated: Done, PROD')
+        JobUtils(job_id).save_job_progress(20)
 
     def run_internal(self, todo_records, src_prefix, dst_prefix):
         """Run the pipeline with given arguments."""
@@ -126,7 +129,13 @@ class MapGenSingleLine(BasePipeline):
         fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
         logging.info('fbags: {}'.format(fbags))
         reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
+        i = 0
         for fbag in fbags:
+            if(i == 0):
+                job_id = self.FLAGS.get('job_id')
+                zone_id = self.FLAGS.get('zone_id')
+                JobUtils(job_id).save_job_location(fbag, zone_id)
+                i += 1
             for msg in reader(fbag):
                 pos = record_utils.message_to_proto(msg).pose.position
                 points.append((pos.x, pos.y))

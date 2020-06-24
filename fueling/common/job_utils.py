@@ -83,7 +83,7 @@ class JobUtils(object):
                                                           'zone_id': zone_id}}})
             logging.info(f"save_job_location: {filename}: x: {x}, y: {y}, "
                          f"zone_id: {zone_id}")
-            break
+            return longitude, latitude
 
     def save_job_progress(self, progress):
         """Save job running progress
@@ -99,16 +99,16 @@ class JobUtils(object):
         """Save job operations
         """
         action_type = 'valid' if is_valid else 'invalid'
-        self.db.update_one({'job_id': self.job_id},
-                           {'$push': {'operations':
-                                      {'email': email,
-                                       'time': datetime.now(),
-                                       'comments': comments,
-                                       'action': {'type': action_type}}},
-                            '$set': {'is_valid': is_valid}})
+        result = self.db.update_one({'job_id': self.job_id},
+                                    {'$push': {'operations': {'email': email,
+                                                              'time': datetime.now(),
+                                                              'comments': comments,
+                                                              'action': {'type': action_type}}},
+                                     '$set': {'is_valid': is_valid}})
         logging.info(f"save_job_operations: email: {email},"
                      f"comments: {comments},"
                      f"is_valid: {is_valid}")
+        return result.raw_result['nModified']
 
     def save_job_phase(self, status):
         """Save job status
@@ -124,3 +124,21 @@ class JobUtils(object):
                                {'$set': {'status': status,
                                          'end_time': datetime.now()}})
         logging.info(f"save_job_phase: {status}")
+
+    def get_job_info(self):
+        """get job info"""
+        result = []
+        for job_data in self.db.find({'job_id': self.job_id}):
+            job_data['_id'] = job_data['_id'].__str__()
+            result.append(job_data)
+        logging.info(f"get job info result: {result}")
+        return result
+
+    def get_jobs_list(self):
+        """get job list info"""
+        result = []
+        for job_data in self.db.find():
+            job_data['_id'] = job_data['_id'].__str__()
+            result.append(job_data)
+        logging.info(f"get job list result: {result}")
+        return result
