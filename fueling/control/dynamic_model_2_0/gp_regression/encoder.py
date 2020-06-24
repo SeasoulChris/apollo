@@ -61,11 +61,11 @@ class DilatedEncoder(nn.Module):
 
 
 class AttenEcoder(nn.Module):
-    def __init__(self, u_dim, kernel_dim, batch_size=1, seq=100):
+    def __init__(self, u_dim, kernel_dim, batch_size, seq=100):
         """Network initialization"""
         super().__init__()
         self.encoder = Encoder(u_dim, kernel_dim)
-        self.attn = ScaledDotProductAttention(batch_size, seq, u_dim)
+        self.attn = ScaledDotProductAttention()
         self.k_mat = torch.rand(batch_size, seq, u_dim)
         self.v_mat = torch.rand(batch_size, seq, u_dim)
 
@@ -79,13 +79,10 @@ class AttenEcoder(nn.Module):
 
 
 class ScaledDotProductAttention(nn.Module):
-    def __init__(self, batch=1, seq=100, feature=6, dropout=0.1):
+    def __init__(self, dropout=0.1):
         """Network initialization"""
         super().__init__()
         self.dropout = nn.Dropout(dropout)
-        self.batch = batch
-        self.seq = seq
-        self.feature = feature
 
     def forward(self, q, k, v, mask=None):
         """ q: query; k: key; v: value"""
@@ -123,3 +120,118 @@ class ScaledDotProductAttention(nn.Module):
         # STEP 5: Matmul with value matrix
         output = torch.bmm(score_attn, v)  # (Batch, Seq, Feature)
         return output
+
+
+class AttentionHead(nn.Module):
+
+    def __init__(self, d_model, d_feature, dropout=0.1):
+        super().__init__()
+        self.attn = ScaledDotProductAttention(dropout)
+        self.query_tfm = nn.Linear(d_model, d_feature)
+        self.key_tfm = nn.Linear(d_model, d_feature)
+        self.value_tfm = nn.Linear(d_model, d_feature)
+
+    def forward(self, queries, keys, values, mask=None):
+        Q = self.query_tfm(queries)  # (Batch, Seq, Feature)
+        K = self.key_tfm(keys)  # (Batch, Seq, Feature)
+        V = self.value_tfm(values)  # (Batch, Seq, Feature)
+        # compute multiple attention weighted sums
+        output = self.attn(Q, K, V)
+        return output
+
+
+class MultiHeadAttention(nn.Module):
+
+    def __init__(self, d_model, d_feature, n_heads, dropout=0.1):
+        super().__init__()
+        self.d_model = d_model
+        self.d_feature = d_feature
+        self.n_heads = n_heads
+        assert d_model == d_feature * n_heads
+
+        # Note that this is very inefficient:
+        # TODO(Shu): refactor this part
+        self.attn_heads = nn.ModuleList([
+            AttentionHead(d_model, d_feature, dropout) for _ in range(n_heads)
+        ])
+        # shrink to original feature size (?)
+        self.projection = nn.Linear(d_feature * n_heads, d_model)
+
+    def forward(self, queries, keys, values, mask=None):
+        output = [attn(queries, keys, values, mask=mask)  # (Batch, Seq, Feature)
+                  for i, attn in enumerate(self.attn_heads)]
+
+        # reconcatenate
+        output = torch.cat(output, dim=2)  # (Batch, Seq, D_Feature * n_heads)
+
+        # Final linear operation
+        output = self.projection(output)  # (Batch, Seq, D_Model)
+        return output
+
+
+class LayerNorm(nn.Module):
+    def __init__(self, d_model, eps=1e-8):
+        super().__init__()
+        self.gamma = nn.Parameter(torch.ones(d_model))
+        self.beta = nn.Parameter(torch.zeros(d_model))
+        self.eps = eps
+
+    def forward(self, x):
+        mean = x.mean(-1, keepdim=True)
+        std = x.std(-1, keepdim=True)
+        return self.gamma * (x - mean) / (std + self.eps) + self.beta
+
+
+class EncoderBlock(nn.Module):
+
+    def __init__(self, d_model, d_feature, d_ff, n_heads, dropout=0.1):
+        super().__init__()
+
+        self.attn_head = MultiHeadAttention(d_model, d_feature, n_heads, dropout)
+
+        self.layer_norm1 = LayerNorm(d_model)
+        self.dropout = nn.Dropout(dropout)
+
+        self.position_wise_feed_forward = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.ReLU(),
+            nn.Linear(d_ff, d_model),
+        )
+
+        self.layer_norm2 = LayerNorm(d_model)
+
+    def forward(self, x, mask=None):
+
+        # STEP 1
+        att = self.attn_head(x, x, x, mask=mask)
+
+        # STEP 2
+        # Apply normalization and residual connection
+        x = x + self.dropout(self.layer_norm1(att))
+        logging.info(f'x shape is {x.shape}')
+
+        # STEP 3
+        # Apply position-wise feedforward network
+        pos = self.position_wise_feed_forward(x)
+
+        # STEP 4
+        # Apply normalization and residual connection
+        x = x + self.dropout(self.layer_norm2(pos))
+        return x
+
+
+class TransformerEncoder(nn.Module):
+    """ transformer encoder """
+
+    def __init__(self, n_blocks, d_model, n_heads, d_ff, dropout=0.1):
+        super().__init__()
+        self.encoders = nn.ModuleList([
+            EncoderBlock(d_model=d_model, d_feature=d_model // n_heads, n_heads=n_heads,
+                         d_ff=d_ff, dropout=dropout)
+            for _ in range(n_blocks)
+        ])
+
+    def forward(self, x: torch.FloatTensor, mask=None):
+        for encoder in self.encoders:
+            x = encoder(x)
+        return x
