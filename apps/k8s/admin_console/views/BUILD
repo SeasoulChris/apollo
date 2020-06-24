@@ -5,7 +5,6 @@ py_library(
     srcs = ["index.py"],
     data = ["//apps/k8s/admin_console:resource"],
     deps = [
-        "//apps/k8s/admin_console/uuap_sso:__init__",
     ],
 )
 

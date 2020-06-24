@@ -5,9 +5,6 @@ View functions for Index
 
 import flask
 
-import uuap_sso
-
-
 # Blueprint of index
 blue_index = flask.Blueprint("index", __name__,
                              template_folder="templates",
@@ -15,9 +12,8 @@ blue_index = flask.Blueprint("index", __name__,
 
 
 @blue_index.route('/index', methods=["GET", "POST"])
-@uuap_sso.auth.login_required
 def index():
     """
     A demo function of index
     """
-    return flask.Response(flask.render_template('index.html', username=flask.session["username"]))
+    return flask.render_template('index.html')
