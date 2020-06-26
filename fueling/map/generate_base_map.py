@@ -73,6 +73,8 @@ class MapGenSingleLine(BasePipeline):
 
         if src_prefix == dst_prefix:
             logging.error('The input data path must be different from the output data path!')
+            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                 'base map not generated', False)
             return
 
         # Access partner's storage if provided.
@@ -92,6 +94,7 @@ class MapGenSingleLine(BasePipeline):
         logging.info("source_prefix: {}".format(source_dir))
 
         JobUtils(job_id).save_job_input_data_size(source_dir)
+        JobUtils(job_id).save_job_sub_type('')
         job_type, job_size = 'VIRTUAL_LANE_GENERATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
@@ -107,9 +110,12 @@ class MapGenSingleLine(BasePipeline):
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
+            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                 'base map not generated', False)
 
         logging.info('base_map.txt generated: Done, PROD')
         JobUtils(job_id).save_job_progress(20)
+        JobUtils(job_id).save_job_sub_type('base_map')
 
     def run_internal(self, todo_records, src_prefix, dst_prefix):
         """Run the pipeline with given arguments."""

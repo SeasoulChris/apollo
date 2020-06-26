@@ -17,6 +17,7 @@ import numpy as np
 
 from fueling.common.partners import partners
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.control.common.training_conf import output_folder
 from fueling.control.common.training_conf import inter_result_folder
 import fueling.common.logging as logging
@@ -154,6 +155,7 @@ class MultiJobDataDistribution(BasePipeline):
         redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                        'job_status': 'success'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
+        JobUtils(job_id).save_job_progress(100)
 
     def run_internal(self, hdf5_file, target_dir):
         # PairRDD(vehicle, features)

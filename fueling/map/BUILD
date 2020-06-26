@@ -6,6 +6,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",        
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
     ]
@@ -24,8 +25,9 @@ py_binary(
     srcs = ["generate_local_map.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:file_utils",
         "//fueling/common:email_utils",
+        "//fueling/common:file_utils",
+        "//fueling/common:job_utils",        
         "//fueling/common:redis_utils",
         "//fueling/common:partners",
     ]
@@ -44,6 +46,7 @@ py_binary(
     srcs = ["generate_sim_routing_map.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
     ]
 )
 

@@ -8,6 +8,7 @@ import shutil
 import time
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
 from fueling.perception.sensor_calibration.calibration_config import CalibrationConfig
 import fueling.common.email_utils as email_utils
@@ -91,6 +92,8 @@ class SensorCalibrationPipeline(BasePipeline):
                        'job_size': job_size,
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
+        JobUtils(job_id).save_job_input_data_size(source_dir)
+        JobUtils(job_id).save_job_sub_type('')
         try:
             result_files, sub_type = self.run_internal(self.FLAGS.get('input_data_path'))
         except BaseException as e:
@@ -123,6 +126,14 @@ class SensorCalibrationPipeline(BasePipeline):
                            'job_status': 'failed', 'sub_type': sub_job_type}
             redis_utils.redis_extend_dict(redis_key, redis_value)
             logging.fatal('Failed to process sensor calibration job')
+        result = JobUtils(job_id).get_job_info()
+        for job_info in result:
+            if (datetime.now() - job_info['start_time']) < 60:
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     'The input data path may not be correct',
+                                                     False)
+        JobUtils(job_id).save_job_sub_type(sub_job_type)
+        JobUtils(job_id).save_job_progress(100)
 
     def run_internal(self, job_dir):
         # If it's a partner job, move origin data to our storage before processing.
@@ -150,6 +161,8 @@ class SensorCalibrationPipeline(BasePipeline):
                          self.our_storage().abs_path(executable_dir))
                         for j in subjobs]
 
+        job_id = self.FLAGS.get('job_id')
+        JobUtils(job_id).save_job_progress(20)
         # Run the pipeline with given parameters.
         result_dirs = self.to_rdd(message_meta).map(execute_task).collect()
 

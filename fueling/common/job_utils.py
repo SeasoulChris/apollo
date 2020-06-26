@@ -36,6 +36,16 @@ def transform_utm_to_lat_lon(x, y, zone_id=50, hemisphere='N'):
     return longitude, latitude
 
 
+def get_jobs_list():
+    """get job list info"""
+    result = []
+    for job_data in Mongo().fuel_job_collection().find():
+        job_data['_id'] = job_data['_id'].__str__()
+        result.append(job_data)
+    logging.info(f"get job list result: {result}")
+    return result
+
+
 class JobUtils(object):
     """fuel job utils"""
 
@@ -58,6 +68,12 @@ class JobUtils(object):
         self.db.update_one({'job_id': self.job_id},
                            {'$set': {'is_partner': is_partner}})
         logging.info(f"save_job_partner: {is_partner}")
+
+    def save_job_sub_type(self, sub_type):
+        """Save job sub_type"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'sub_type': sub_type}})
+        logging.info(f"save_job_sub_type: {sub_type}")
 
     def save_job_input_data_size(self, source_dir):
         """Save job input data size"""
@@ -132,13 +148,4 @@ class JobUtils(object):
             job_data['_id'] = job_data['_id'].__str__()
             result.append(job_data)
         logging.info(f"get job info result: {result}")
-        return result
-
-    def get_jobs_list(self):
-        """get job list info"""
-        result = []
-        for job_data in self.db.find():
-            job_data['_id'] = job_data['_id'].__str__()
-            result.append(job_data)
-        logging.info(f"get job list result: {result}")
         return result

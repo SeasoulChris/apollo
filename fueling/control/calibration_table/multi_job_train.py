@@ -10,6 +10,7 @@ import numpy as np
 import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.control.common.training_conf import inter_result_folder
 from fueling.control.common.training_conf import output_folder
 import fueling.common.logging as logging
@@ -161,6 +162,7 @@ class MultiJobTrain(BasePipeline):
                        brake_train_files, brake_test_files)
 
         self.run_internal(feature_dir, origin_vehicle_conf_dir, target_dir)
+        JobUtils(job_id).save_job_progress(50)
 
     def run_internal(self, feature_dir, origin_vehicle_conf_dir, target_dir):
 

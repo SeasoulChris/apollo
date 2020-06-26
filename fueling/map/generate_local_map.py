@@ -98,6 +98,7 @@ class LocalMapPipeline(BasePipeline):
         else:
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'success', 'sub_type': 'All'}
+            JobUtils(job_id).save_job_sub_type('all')
 
         email_utils.send_email_info(title, content, receivers)
         redis_utils.redis_extend_dict(redis_key, redis_value)

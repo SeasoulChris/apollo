@@ -6,6 +6,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:partners",
         "//fueling/common:redis_utils",
         "//fueling/control/common:training_conf",
@@ -21,6 +22,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:partners",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
@@ -43,6 +45,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:h5_utils",
+        "//fueling/common:job_utils",
         "//fueling/common:partners",
         "//fueling/control/common:multi_job_utils",
         "//fueling/control/common:multi_vehicle_plot_utils",
@@ -56,6 +59,7 @@ py_binary(
     srcs = ["multi_job_train.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:job_utils",
         "//fueling/common:proto_utils",
         "//fueling/control/common:multi_job_utils",
         "//fueling/control/common:multi_vehicle_utils",

@@ -11,6 +11,7 @@ import pyspark_utils.op as spark_op
 import modules.common.configs.proto.vehicle_config_pb2 as vehicle_config_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
 from fueling.control.features.feature_extraction_utils import pair_cs_pose
 from fueling.control.common.sanity_check import sanity_check  # include sanity check
@@ -160,6 +161,7 @@ class MultiJobFeatureExtraction(BasePipeline):
                        'job_size': job_size,
                        'job_status': 'running'}
         redis_utils.redis_extend_dict(redis_key, redis_value)
+        JobUtils(job_id).save_job_input_data_size(origin_dir)
 
         # Add sanity check
         partner = partners.get(job_owner)
@@ -257,6 +259,7 @@ class MultiJobFeatureExtraction(BasePipeline):
         todo_task_dirs = todo_task_dirs.subtract(processed_dirs)
 
         self.run_internal(todo_task_dirs, vehicle_param_conf, origin_dir, target_dir)
+        JobUtils(job_id).save_job_progress(25)
 
     def run_internal(self, todo_task_dirs, vehicle_conf_folder, origin_prefix, target_prefix):
 
