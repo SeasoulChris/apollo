@@ -3,14 +3,23 @@
 The logical control of the Job in front of the view
 """
 
-import db
+from fueling.common import mongo_utils
+
+job_collection = mongo_utils.Mongo().fuel_job_collection()
 
 
-def get_jobs_dict():
+def get_jobs_dict(first=None, last=None):
     """
-    Get the data from job return dict
+    Get the list of job to pre page
     """
-    jobs_dict = {"data": []}
-    for job_data in db.job_db.find_all():
-        jobs_dict["data"].append(job_data)
-    return jobs_dict
+    jobs = []
+    for job_data in job_collection.find():
+        jobs.append(job_data)
+    return jobs[first:last]
+
+
+def get_jobs_count():
+    """
+    Get the total numbers of jobs
+    """
+    return job_collection.count()

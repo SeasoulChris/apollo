@@ -1,33 +1,116 @@
 {% extends 'base.html' %}
 
-{% block content%}
-<table class="table table-hover">
-    <tr>
-        <th>Job Type</th>
-        <th>Job ID</th>
-        <th>Status</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-        <th>Duration</th>
-        <th>is Valid</th>
-        <th>input Data Size</th>
-        <th>File Cause</th>
-    </tr>
-    {% for job_data in jobs_dict.values() %}
-        {% for job in job_data %}
+{% block content %}
+
+    <!-- The comment on the modal box -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Invalid Job </h4>
+                </div>
+                <div class="modal-body text-center">
+                    <p style="color: rgb(175, 175, 175)">Do you want to invalid this Job?</p>
+                    <p><span style="color: red">*</span> Comments:
+                        <textarea id="comment_text" cols="25" rows="1" style="line-height: 25px"></textarea>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel_job btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="comment_job btn btn-primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The table of job list -->
+    <table class="table table-hover">
         <tr>
-            <td>{{ job.job_type }}</td>
-            <td>{{ job.job_id }}</td>
-            <td>{{ job.status }}</td>
-            <td>{{ job.start_time }}</td>
-            <td>{{ job.end_time }}</td>
-            <td>8h</td>
-            <td>{{ job.is_valid }}</td>
-            <td>{{ job.input_data_size }}</td>
-            <td>{{ job.vehicle_sn }}</td>
-            <td></td>
+            <th>Job Type</th>
+            <th>Job ID</th>
+            <th>Status</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Progress</th>
+            <th>is Valid</th>
+            <th>input Data Size</th>
+            <th>File Cause</th>
+            <th>Action</th>
+            <th>Collapse/Expand</th>
         </tr>
+        {% for job in jobs_list %}
+            <tr>
+                <td>{{ job.job_type }}</td>
+                <td>{{ job.job_id }}</td>
+                <td>{{ job.status }}</td>
+                <td>{{ job.start_time }}</td>
+                <td>{{ job.end_time }}</td>
+                <td>{{ job.progress }}</td>
+                <td>{{ job.is_valid }}</td>
+                <td>{{ job.input_data_size }}</td>
+                <td>{{ job.vehicle_sn }}</td>
+                <td><button  data-toggle="modal" data-target="#myModal">{{ job.is_valid }}</button></td>
+                <td><button class="job_expand">Expand</button><button class="job_collapse">Collapse</button></td>
+            </tr>
+
+            <!-- The service information -->
+            <tr style="display: none" class="service_tr">
+                <td align="left" colspan="11" > <b>Service information:</b></td>
+            </tr>
+
+            <tr  style="display: none" class="service_span">
+                <td colspan="11" >Vehicle Calibration Status:Enabled  Used:2  Quota:20</td>
+            </tr>
+
+            <tr style="display: none" class="operation_tr">
+                <td align="left" colspan="11" > <b>Operation History:</b></td>
+            </tr>
+
+            <!-- The history record of job operation -->
+            {% for opt in job.operation %}
+                <tr  style="display: none" class="operation_span">
+                    <td colspan="11" >Job is set to {{ opt.action }} by {{ opt.operator_email }} on {{ opt.operator_time }}. Comments: {{ opt.comments }}.</td>
+                </tr>
+            {% endfor  %}
+            <tr class="flag"></tr>
         {% endfor %}
-    {% endfor %}
-</table>
+    </table>
+
+    <!-- The pagination -->
+    <div id="bagin">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if current_page.has_previous() %}
+                    <li class="previous">
+                        <a href="?page={{ current_page.previous_page_number() }}" aria-label="Previous">
+                            <span aria-hidden="true">上一页</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="previous disabled">
+                        <a href="#">上一页</a>
+                    </li>
+                {% endif %}
+                {% for i in current_page.page_nums() %}
+                    {% if i == page %}
+                        <li class="active"><a href="?page={{ i }}">{{ i }}</a></li>
+                    {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if current_page.has_next() %}
+                    <li class="next">
+                        <a href="?page={{ current_page.next_page_number() }}" aria-label="Next">
+                            <span aria-hidden="true">下一页</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="next disabled">
+                        <a href="#" aria-label="Next">下一页</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
 {% endblock %}

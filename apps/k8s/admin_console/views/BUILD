@@ -14,6 +14,6 @@ py_binary(
     data = ["//apps/k8s/admin_console:resource"],
     deps = [
         "//apps/k8s/admin_console/controllers:job",
-        "//apps/k8s/admin_console/db:job_db",
+        "//apps/k8s/admin_console/common:paginator",
     ],
 )
