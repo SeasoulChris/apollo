@@ -235,3 +235,59 @@ class TransformerEncoder(nn.Module):
         for encoder in self.encoders:
             x = encoder(x)
         return x
+
+
+class DecoderBlock(nn.Module):
+
+    def __init__(self, d_model, d_feature, d_ff, n_heads, dropout=0.1):
+        super().__init__()
+        self.masked_attn_head = MultiHeadAttention(d_model, d_feature, n_heads, dropout)
+
+        self.attn_head = MultiHeadAttention(d_model, d_feature, n_heads, dropout)
+
+        self.position_wise_feed_forward = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.ReLU(),
+            nn.Linear(d_ff, d_model),
+        )
+
+        self.layer_norm1 = LayerNorm(d_model)
+        self.layer_norm2 = LayerNorm(d_model)
+        self.layer_norm3 = LayerNorm(d_model)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, enc_out, src_mask=None, tgt_mask=None):
+        # Step 1
+        # Apply attention to inputs
+        att = self.masked_attn_head(x, x, x, mask=src_mask)
+        x = x + self.dropout(self.layer_norm1(att))
+
+        # Step 2
+        # Apply attention to the encoder outputs and outputs of the previous layer
+        att = self.attn_head(queries=x, keys=enc_out, values=enc_out, mask=tgt_mask)
+        x = x + self.dropout(self.layer_norm2(att))
+
+        # Step 3
+        # Apply position-wise feedforward network
+        pos = self.position_wise_feed_forward(x)
+        x = x + self.dropout(self.layer_norm2(pos))
+        return x
+
+
+class TransformerDecoder(nn.Module):
+    def __init__(self, n_blocks, d_model, d_feature,
+                 d_ff, n_heads, dropout=0.1):
+        super().__init__()
+        # self.position_embedding = PositionalEmbedding(d_model)
+        self.decoders = nn.ModuleList([
+            DecoderBlock(d_model=d_model, d_feature=d_model // n_heads, n_heads=n_heads,
+                         d_ff=d_ff, dropout=dropout)
+            for _ in range(n_blocks)
+        ])
+
+    def forward(self, x: torch.FloatTensor,
+                enc_out: torch.FloatTensor,
+                src_mask=None, tgt_mask=None):
+        for decoder in self.decoders:
+            x = decoder(x, enc_out, src_mask=src_mask, tgt_mask=tgt_mask)
+        return x
