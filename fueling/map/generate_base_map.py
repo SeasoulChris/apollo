@@ -71,11 +71,11 @@ class MapGenSingleLine(BasePipeline):
         self.lane_width = self.FLAGS.get('lane_width')
         self.extra_roi_extension = self.FLAGS.get('extra_roi_extension')
 
-        if src_prefix == dst_prefix:
-            logging.error('The input data path must be different from the output data path!')
-            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 'base map not generated', False)
-            return
+        # if src_prefix == dst_prefix:
+        #     logging.error('The input data path must be different from the output data path!')
+        #     JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+        #                                          'base map not generated', False)
+        #     return
 
         # Access partner's storage if provided.
         object_storage = self.partner_storage() or self.our_storage()
@@ -95,6 +95,9 @@ class MapGenSingleLine(BasePipeline):
 
         JobUtils(job_id).save_job_input_data_size(source_dir)
         JobUtils(job_id).save_job_sub_type('')
+        if file_utils.getInputDirDataSize(source_dir) >= 5 * 1024 * 1024 * 1024:
+            JobUtils(job_id).save_job_failure_code('E300')
+            return
         job_type, job_size = 'VIRTUAL_LANE_GENERATION', file_utils.getDirSize(source_dir)
         redis_key = F'External_Partner_Job.{job_owner}.{job_type}.{job_id}'
         redis_value = {'begin_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
@@ -110,8 +113,6 @@ class MapGenSingleLine(BasePipeline):
         path = os.path.join(target_dir, 'base_map.txt')
         if not os.path.exists(path):
             logging.warning('base_map.txt: {} not genterated'.format(path))
-            JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 'base map not generated', False)
 
         logging.info('base_map.txt generated: Done, PROD')
         JobUtils(job_id).save_job_progress(20)
@@ -136,12 +137,17 @@ class MapGenSingleLine(BasePipeline):
         logging.info('fbags: {}'.format(fbags))
         reader = record_utils.read_record([record_utils.LOCALIZATION_CHANNEL])
         i = 0
+        job_id = self.FLAGS.get('job_id')
+        if len(fbags) == 0:
+            JobUtils(job_id).save_job_failure_code('E301')
         for fbag in fbags:
             if(i == 0):
-                job_id = self.FLAGS.get('job_id')
                 zone_id = self.FLAGS.get('zone_id')
                 JobUtils(job_id).save_job_location(fbag, zone_id)
                 i += 1
+            logging.info('reader({fbag}) channel num: {}'.format(len(reader(fbag))))
+            if(len(reader(fbag)) == 0):
+                JobUtils(job_id).save_job_failure_code('E302')
             for msg in reader(fbag):
                 pos = record_utils.message_to_proto(msg).pose.position
                 points.append((pos.x, pos.y))

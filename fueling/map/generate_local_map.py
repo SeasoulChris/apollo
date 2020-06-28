@@ -17,9 +17,15 @@ import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.redis_utils as redis_utils
+import fueling.common.record_utils as record_utils
 
 flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
 flags.DEFINE_string('lidar_type', 'lidar16', 'compensator pointcloud topic.')
+
+
+def get_message_by_topic(messages, topic):
+    """Get the first message from list that has specific topic"""
+    return next((message for message in messages if message.topic == topic), None)
 
 
 class LocalMapPipeline(BasePipeline):
@@ -82,7 +88,22 @@ class LocalMapPipeline(BasePipeline):
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'failed', 'sub_type': 'base_map'}
             redis_utils.redis_extend_dict(redis_key, redis_value)
+            JobUtils(job_id).save_job_failure_code('E303')
             return
+
+        fbags = sorted(glob.glob(os.path.join(source_dir, '*.record*')))
+        lidar_channel = F'/apollo/sensor/{lidar_type}/compensator/PointCloud2'
+        reader = record_utils.read_record([lidar_channel,
+                                           record_utils.GNSS_ODOMETRY_CHANNEL,
+                                           record_utils.GNSS_INS_STAT_CHANNEL])
+        for fbag in fbags:
+            logging.info('reader(fbag) channel num: {}'.format(len(reader(fbag))))
+            messages = reader(fbag)
+            lidar_message = get_message_by_topic(messages, lidar_channel)
+            odometry_message = get_message_by_topic(messages, record_utils.GNSS_ODOMETRY_CHANNEL)
+            ins_stat_message = get_message_by_topic(messages, record_utils.GNSS_INS_STAT_CHANNEL)
+            if not (lidar_message and odometry_message and ins_stat_message):
+                JobUtils(job_id).save_job_failure_code('E304')
 
         # RDD(tasks), the tasks without source_dir as prefix
         # RDD(record_path)
@@ -95,6 +116,16 @@ class LocalMapPipeline(BasePipeline):
             logging.warning('local_map folder: {} not exists'.format(path))
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'failed', 'sub_type': 'base_map'}
+            result = JobUtils(job_id).get_job_info()
+            for job_info in result:
+                if (datetime.now() - job_info['start_time']) > 259200:
+                    JobUtils(job_id).save_job_failure_code('E305')
+                else:
+                    JobUtils(job_id).save_job_failure_code('E306')
+                JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
+                                                     'Unknow error, \
+                                                     please contact after-sales technical support',
+                                                     False)
         else:
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'success', 'sub_type': 'All'}

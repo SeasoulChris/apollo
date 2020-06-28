@@ -97,3 +97,12 @@ def getDirSize(path):
         size = os.path.getsize(file)
         sumsize += size
     return formatSize(sumsize)
+
+
+def getInputDirDataSize(path):
+    sumsize = 0
+    filelist = list_files(path)
+    for file in filelist:
+        size = os.path.getsize(file)
+        sumsize += size
+    return int(sumsize)

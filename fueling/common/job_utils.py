@@ -141,6 +141,12 @@ class JobUtils(object):
                                          'end_time': datetime.now()}})
         logging.info(f"save_job_phase: {status}")
 
+    def save_job_failure_code(self, err_code):
+        """Save job err_code"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'failure_code': err_code}})
+        logging.info(f"save_job_failure_code: {err_code}")
+
     def get_job_info(self):
         """get job info"""
         result = []
