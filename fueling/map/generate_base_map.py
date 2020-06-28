@@ -53,7 +53,7 @@ class MapGenSingleLine(BasePipeline):
         logging.info("source_prefix: {}".format(src_dir))
         # RDD(record_path)
         todo_records = self.to_rdd([src_dir])
-        self.run_internal(todo_records, src_dir, dst_prefix)
+        # self.run_internal(todo_records, src_dir, dst_prefix)
 
         path = os.path.join(dst_prefix, 'base_map.txt')
         if not os.path.exists(path):
