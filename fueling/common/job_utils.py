@@ -10,7 +10,6 @@ from pyproj import Proj
 from fueling.common.mongo_utils import Mongo
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.record_utils as record_utils
 
 
 def transform_utm_to_lat_lon(x, y, zone_id=50, hemisphere='N'):
@@ -20,9 +19,9 @@ def transform_utm_to_lat_lon(x, y, zone_id=50, hemisphere='N'):
     """
     h_north = False
     h_south = False
-    if (hemisphere == 'N'):
+    if hemisphere == 'N':
         h_north = True
-    elif (hemisphere == 'S'):
+    elif hemisphere == 'S':
         h_south = True
 
     proj_in = Proj(proj='utm', zone=zone_id, ellps='WGS84', south=h_south, north=h_north,
@@ -82,24 +81,22 @@ class JobUtils(object):
                            {'$set': {'input_date_size': input_date_size}})
         logging.info(f"save_job_input_data_size: {source_dir}: {input_date_size}")
 
-    def save_job_location(self, filename, zone_id=50, hemisphere='N'):
-        """Save job location to mongodb"""
-        msg_reader = record_utils.read_record(
-            [record_utils.LOCALIZATION_CHANNEL])
-        for msg in msg_reader(filename):
-            localization = record_utils.message_to_proto(msg)
-            if localization is None:
-                return
-            pose = localization.pose
-            x, y = pose.position.x, pose.position.y
-            longitude, latitude = transform_utm_to_lat_lon(x, y, zone_id, hemisphere)
-            self.db.update_one({'job_id': self.job_id},
-                               {'$set': {'localization': {'x': x,
-                                                          'y': y,
-                                                          'zone_id': zone_id}}})
-            logging.info(f"save_job_location: {filename}: x: {x}, y: {y}, "
-                         f"zone_id: {zone_id}")
-            return longitude, latitude
+    def save_job_location(self, x, y, zone_id=50, hemisphere='N'):
+        """Save job location to mongodb
+        params: UTM-Coordinates
+        """
+        longitude, latitude = transform_utm_to_lat_lon(x, y, zone_id, hemisphere)
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'localization': {'x': x,
+                                                      'y': y,
+                                                      'longitude': longitude,
+                                                      'latitude': latitude,
+                                                      'zone_id': zone_id}}})
+        logging.info(f"save_job_location: x: {x}, y: {y}, "
+                     f"zone_id: {zone_id}"
+                     f"longitude: {longitude}"
+                     f"latitude: {latitude}")
+        return longitude, latitude
 
     def save_job_progress(self, progress):
         """Save job running progress

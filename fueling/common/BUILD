@@ -59,7 +59,6 @@ py_library(
         ":file_utils",
         ":logging",
         ":mongo_utils",
-        ":record_utils",
     ],
 )
 

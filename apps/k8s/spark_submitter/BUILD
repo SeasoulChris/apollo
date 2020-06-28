@@ -12,6 +12,7 @@ py_binary(
     srcs = ["index.py"],
     deps = [
         ":spark_submit_arg_pb2",
+        "//fueling/common:job_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
     ],
