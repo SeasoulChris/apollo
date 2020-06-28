@@ -16,7 +16,7 @@ import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.conf.model_conf import \
-    segment_index, feature_config, input_index, output_index
+    segment_index, feature_config, label_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
@@ -83,25 +83,40 @@ class PipelineLabelGenerator(BasePipeline):
     def process_file(self, category, src_prefix, dst_prefix, model_path):
         """Process category group and generate h5 files"""
         category_id, segments = category
-        print(F'category id: {category_id}, segment length: {len(segments)}')
+        logging.info(F'category id: {category_id}, segment length: {len(segments)}')
 
         dst_prefix = os.path.join(dst_prefix, category_id)
-        segmnets_count_for_each_category = feature_config['SAMPLE_SIZE']
+        segmnets_count_for_each_category = label_config['SAMPLE_SIZE']
         for hdf5_file, segment in segments:
             # Get destination file
             dst_dir = os.path.dirname(hdf5_file).replace(src_prefix, dst_prefix, 1)
             file_utils.makedirs(dst_dir)
-            dst_h5_file = os.path.join(dst_dir, os.path.basename(hdf5_file).replace('hdf5', 'h5'))
 
-            self.write_single_h5_file(dst_h5_file, segment, model_path)
+            sub_segments = self.get_sub_segments(segment)
+            logging.info(F'{dst_dir}, segment: {segment.shape[0]}, sub: {len(sub_segments)}')
 
-            segmnets_count_for_each_category -= 1
-            if segmnets_count_for_each_category == 0:
-                break
+            for sub_segment_id, sub_segment in enumerate(sub_segments):
+                dst_h5_file = os.path.join(
+                    dst_dir,
+                    F'{os.path.basename(hdf5_file)[:-4]}_{sub_segment_id}.h5')
+                self.write_single_h5_file(dst_h5_file, sub_segment, model_path)
+
+                segmnets_count_for_each_category -= 1
+                if segmnets_count_for_each_category == 0:
+                    break
+
+    def get_sub_segments(self, segment):
+        """Split a two dimensional numpy array (N x 23) into multiple pieces"""
+        return [segment[idx: idx + label_config['LABEL_SEGMENT_LEN']]
+                for idx in range(
+                    0,
+                    segment.shape[0] - label_config['LABEL_SEGMENT_LEN'] + 1,
+                    label_config['LABEL_SEGMENT_STEP'])]
 
     def write_single_h5_file(self, dst_h5_file, segment, model_path):
         """Write segment into a single h5 file"""
         model_path = file_utils.fuel_path(model_path)
+
         input_segment, output_segment = label_generation.generate_gp_data(model_path, segment)
 
         with h5py.File(dst_h5_file, 'w') as h5_file:

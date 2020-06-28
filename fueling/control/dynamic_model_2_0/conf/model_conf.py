@@ -31,20 +31,23 @@ feature_config = {
     "output_dim": 2,  # Output dimension
     "input_window_size": 100,  # input window size
     "mlp_input_dim": 5,  # Input dimension of DM 1.0
-    "delta_t": 0.01,  # updating cycle delta_t for input data
-    "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "window_size": 51,  # window_size for savgol_filter
     "polynomial_order": 3,  # polynomial_order for savgol_filter
+    "delta_t": 0.01,  # updating cycle delta_t for input data
+    "DELTA_T": 1.0,  # updating cycle DELTA_T for output data (residual correction)
     "SEGMENT_OVERLAP": 0,  # The overlap between each two groups for augment
+    "FIXED_SEGMENT_LEN": False,  # If extract fixed length of segment
     "MAX_POSE_DELTA": 0.02,  # The maximum gap between pose and chasis timestamp, in seconds
     "COMPENSATE_CHASIS": True,  # Whether compensate chasis with poses
     "CHASIS_DELTA_T": 0.011,  # The max gap between chasis messages, in seconds
     "CHASIS_DELTA_TOLERANCE_RATE": 0.25,  # Discard task if more than this rate of chasis have gaps
-    "SAMPLE_SIZE": 6000,  # Maximum data points for each category
 }
 
 label_config = {
-    "label_all_frames": True,  # If label each of the input frames
+    "LABEL_ALL_FRAMES": True,  # If label each of the input frames
+    "LABEL_SEGMENT_LEN": 100,  # The segment length for each labeling
+    "LABEL_SEGMENT_STEP": 20,  # New steps ahead between 2 labeling
+    "SAMPLE_SIZE": 8000,  # Maximum data points for each category
 }
 
 """ Input index is a 2-D matrix of size [sequence_length][input_feature_dim]"""

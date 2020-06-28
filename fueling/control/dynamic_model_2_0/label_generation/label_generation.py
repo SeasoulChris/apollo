@@ -23,7 +23,6 @@ import fueling.common.logging as logging
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
 # Every 100 frames Input Vector correspond to 1 frame of output.
-INPUT_LENGTH = 100
 DIM_INPUT = feature_config["input_dim"]
 MLP_DIM_INPUT = feature_config["mlp_input_dim"]
 DIM_OUTPUT = feature_config["output_dim"]
@@ -61,9 +60,6 @@ def generate_segment(h5_file):
                 segment = np.array(ds)
             else:
                 segment = np.concatenate((segment, np.array(ds)), axis=0)
-    if segment.shape[0] != INPUT_LENGTH:
-        raise Exception('File {} has illegal number of frames: {}'.format(h5_file,
-                                                                          segment.shape[0]))
     return segment
 
 
@@ -100,8 +96,10 @@ def generate_gp_data(model_path, segment):
         model = load_model(model_weights_path)
         GlobalModels.add_model(model_weights_path, model)
 
-    input_segment = np.zeros([INPUT_LENGTH, DIM_INPUT])
-    output_segment = np.zeros([INPUT_LENGTH, DIM_OUTPUT])
+    input_length = segment.shape[0]
+
+    input_segment = np.zeros([input_length, DIM_INPUT])
+    output_segment = np.zeros([input_length, DIM_OUTPUT])
     # Initialize the first frame's data
     # speed from GPS
     predicted_v = segment[0, segment_index["v_x"]] * np.cos(segment[0, segment_index["heading"]]) +\
@@ -113,7 +111,7 @@ def generate_gp_data(model_path, segment):
     predicted_a_prev = None
     predicted_w_prev = None
     prev_v = None
-    for k in range(INPUT_LENGTH):
+    for k in range(input_length):
         input_segment[k, input_index["v"]] = segment[k, segment_index["speed"]]
         # add scaling to acceleration
         input_segment[k, input_index["a"]] = imu_scaling["acc"] * segment[k, segment_index["a_x"]] \
@@ -155,11 +153,11 @@ def generate_gp_data(model_path, segment):
 
     # The residual error on x and y prediction
     logging.debug(
-        f'GPS end pose({segment[INPUT_LENGTH - 1, segment_index["x"]]}'
-        ', {segment[INPUT_LENGTH - 1, segment_index["y"]]})')
+        f'GPS end pose({segment[input_length - 1, segment_index["x"]]}'
+        ', {segment[input_length - 1, segment_index["y"]]})')
     logging.debug(f'Dynamic model 1.0 end pose({predicted_x}, {predicted_y})')
 
-    if label_config["label_all_frames"]:
+    if label_config["LABEL_ALL_FRAMES"]:
         return (input_segment, output_segment)
     return (input_segment, output_segment[-1])
 

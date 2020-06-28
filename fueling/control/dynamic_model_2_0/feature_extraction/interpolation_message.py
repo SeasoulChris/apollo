@@ -138,6 +138,9 @@ class InterPolationMessageList(object):
         """Check the group and split/add it into groups if it's valid"""
         if len(group) < SEGMENT_LEN:
             return
+        if not config['FIXED_SEGMENT_LEN']:
+            valid_groups.append(group)
+            return
         sub_groups = [group[idx: idx + SEGMENT_LEN]
                       for idx in range(0, len(group), SEGMENT_LEN - config['SEGMENT_OVERLAP'])]
         for sub_group in sub_groups:
