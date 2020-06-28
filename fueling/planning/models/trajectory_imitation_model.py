@@ -609,8 +609,11 @@ class TrajectoryImitationCNNFCLSTM(nn.Module):
     def forward(self, X):
         img_feature, hist_points, hist_points_step = X
         batch_size = img_feature.size(0)
-        ht, ct = self.h0.repeat(1, batch_size, 1),\
-            self.c0.repeat(1, batch_size, 1)
+        # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
+        h0 = self.h0.unsqueeze(0)
+        c0 = self.c0.unsqueeze(0)
+        ht, ct = h0.repeat(1, batch_size, 1),\
+            c0.repeat(1, batch_size, 1)
 
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
@@ -627,8 +630,8 @@ class TrajectoryImitationCNNFCLSTM(nn.Module):
                 cur_pose_step = self.output_fc_layer(
                     pred_input).float().clone()
                 cur_pose = cur_pose + cur_pose_step
-                pred_points = torch.cat(
-                    (pred_points, pred_point.clone().unsqueeze(1)), dim=1)
+                pred_traj = torch.cat(
+                    (pred_traj, cur_pose.clone().unsqueeze(1)), dim=1)
 
             disp_embedding = self.embedding_fc_layer(
                 cur_pose_step.clone()).view(batch_size, 1, -1)

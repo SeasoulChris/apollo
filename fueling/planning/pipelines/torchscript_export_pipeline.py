@@ -18,12 +18,17 @@ from fueling.learning.train_utils import cuda
 
 
 def export_torchscript(torch_model_file, jit_model_file, device):
+    # model = TrajectoryImitationCNNModel()
     model = TrajectoryImitationRNNModel([200, 200])
+    # model = TrajectoryImitationCNNFCLSTM(10, 10)
     model_state_dict = torch.load(torch_model_file)
     model.load_state_dict(model_state_dict)
     model.eval()
+    # X = torch.ones([1, 12, 200, 200])
     X = (torch.ones([1, 12, 200, 200]), torch.ones(
         [1, 1, 200, 200]), torch.ones([1, 1, 200, 200]))
+    # X = (torch.ones([1, 12, 200, 200]), torch.ones(
+    #     [1, 10, 4]), torch.ones([1, 10, 4]))
     traced_model = None
     if device == 'gpu':
         traced_model = torch.jit.trace(model.cuda(), (cuda(X),))
