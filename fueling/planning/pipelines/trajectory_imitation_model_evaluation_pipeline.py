@@ -299,7 +299,6 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                      imgs_dir,
                                                      map_path,
                                                      region,
-                                                     input_data_agumentation=False,
                                                      evaluate_mode=True)
     elif model_type == 'rnn':
         model = TrajectoryImitationRNNModel(
@@ -309,7 +308,6 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                      imgs_dir,
                                                      map_path,
                                                      region,
-                                                     input_data_agumentation=False,
                                                      evaluate_mode=True)
     elif model_type == 'cnn+fc_lstm':
         model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
@@ -319,7 +317,6 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                                            imgs_dir,
                                                            map_path,
                                                            region,
-                                                           input_data_agumentation=False,
                                                            history_point_num=10,
                                                            ouput_point_num=10,
                                                            evaluate_mode=True)

@@ -27,7 +27,8 @@ import fueling.common.proto_utils as proto_utils
 
 
 def training(model_type, train_dir, valid_dir, renderer_config_file,
-             imgs_dir, input_data_augmentation, model_save_dir, region, map_path):
+             imgs_dir, img_feature_rotation, past_motion_dropout, model_save_dir,
+             region, map_path):
     logging.info(
         'training directory:{} validation directory:{}'.format(train_dir, valid_dir))
 
@@ -47,14 +48,16 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation,
+                                                      img_feature_rotation,
+                                                      past_motion_dropout,
                                                       ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation,
+                                                      img_feature_rotation,
+                                                      past_motion_dropout,
                                                       ouput_point_num=10)
         model = TrajectoryImitationCNNModel(pred_horizon=10)
         loss = TrajectoryImitationCNNLoss()
@@ -65,14 +68,16 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation,
+                                                      img_feature_rotation,
+                                                      past_motion_dropout,
                                                       ouput_point_num=10)
         valid_dataset = TrajectoryImitationRNNDataset(valid_dir,
                                                       renderer_config_file,
                                                       imgs_dir,
                                                       map_path,
                                                       region,
-                                                      input_data_augmentation,
+                                                      img_feature_rotation,
+                                                      past_motion_dropout,
                                                       ouput_point_num=10)
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
@@ -84,7 +89,8 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                             imgs_dir,
                                                             map_path,
                                                             region,
-                                                            input_data_augmentation,
+                                                            img_feature_rotation,
+                                                            past_motion_dropout,
                                                             history_point_num=10,
                                                             ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNFCLSTMDataset(valid_dir,
@@ -92,7 +98,8 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                                             imgs_dir,
                                                             map_path,
                                                             region,
-                                                            input_data_augmentation,
+                                                            img_feature_rotation,
+                                                            past_motion_dropout,
                                                             history_point_num=10,
                                                             ouput_point_num=10)
         model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
@@ -113,10 +120,13 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=3, min_lr=1e-9, verbose=True, mode='min')
 
+    # random number seed
+    torch.manual_seed(0)
     # CUDA setup:
     if torch.cuda.is_available():
         logging.info("Using CUDA to speed up training.")
         model.cuda()
+        torch.cuda.manual_seed(0)
     else:
         logging.info("Not using CUDA.")
 
@@ -141,7 +151,8 @@ if __name__ == "__main__":
 
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
-    parser.add_argument('model_type', type=str, help='model type, cnn, rnn or cnn+fc_lstm')
+    parser.add_argument('model_type', type=str,
+                        help='model type, cnn, rnn or cnn+fc_lstm')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
@@ -151,8 +162,10 @@ if __name__ == "__main__":
     parser.add_argument('-imgs_dir', '--imgs_dir', type=str,
                         default='/fuel/testdata/planning/semantic_map_features',
                         help='location to store input base img or output img')
-    parser.add_argument('-input_data_augmentation', '--input_data_augmentation', type=bool,
-                        default=False, help='whether to do input data augmentation')
+    parser.add_argument('-img_feature_rotation', '--img_feature_rotation', type=bool,
+                        default=False, help='whether to do random img rotation')
+    parser.add_argument('-past_motion_dropout', '--past_motion_dropout', type=bool,
+                        default=False, help='whether to do past motion dropout')
     parser.add_argument('-save_dir', '--save_dir', type=str, default='./',
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
@@ -165,7 +178,8 @@ if __name__ == "__main__":
              args.valid_file,
              args.renderer_config_file,
              args.imgs_dir,
-             args.input_data_augmentation,
+             args.img_feature_rotation,
+             args.past_motion_dropout,
              args.save_dir,
              region,
              map_path)

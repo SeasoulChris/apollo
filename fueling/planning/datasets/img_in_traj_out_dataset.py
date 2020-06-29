@@ -23,7 +23,8 @@ from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_genera
 
 class TrajectoryImitationCNNDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
-                 input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
+                 img_feature_rotation=False, past_motion_dropout=False,
+                 ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -46,7 +47,8 @@ class TrajectoryImitationCNNDataset(Dataset):
         self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
                                                                             imgs_dir,
                                                                             region, map_path)
-        self.input_data_agumentation = input_data_agumentation
+        self.img_feature_rotation = img_feature_rotation
+        self.past_motion_dropout = past_motion_dropout
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
             renderer_config_file, renderer_config)
@@ -65,11 +67,13 @@ class TrajectoryImitationCNNDataset(Dataset):
             frame_name, learning_data_pb2.LearningDataFrame())
 
         coordinate_heading = 0.
-        past_motion_dropout = False
-        if self.input_data_agumentation:
-            coordinate_heading = np.random.uniform(
-                -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
-            past_motion_dropout = np.random.uniform(0, 1) > 0.5
+        if self.img_feature_rotation:
+            coordinate_heading = torch.rand(
+                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+
+        is_past_motion_dropout = False
+        if self.past_motion_dropout:
+            is_past_motion_dropout = torch.rand(1) > 0.5
 
         # use adc_trajectory_point rather than localization
         # because of the use of synthesizing sometimes
@@ -89,7 +93,7 @@ class TrajectoryImitationCNNDataset(Dataset):
                                         frame.routing.local_routing_lane_id,
                                         frame.traffic_light_detection.traffic_light,
                                         coordinate_heading,
-                                        past_motion_dropout)
+                                        is_past_motion_dropout)
         transformed_img_feature = self.img_transform(img_feature)
 
         ref_coords = [current_x,
@@ -128,7 +132,8 @@ class TrajectoryImitationCNNDataset(Dataset):
 
 class TrajectoryImitationRNNDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
-                 input_data_agumentation=False, ouput_point_num=10, evaluate_mode=False):
+                 img_feature_rotation=False, past_motion_dropout=False,
+                 ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -157,13 +162,13 @@ class TrajectoryImitationRNNDataset(Dataset):
                                          region,
                                          map_path,
                                          base_map_update_flag=False)
-        self.input_data_agumentation = input_data_agumentation
+        self.img_feature_rotation = img_feature_rotation
+        self.past_motion_dropout = past_motion_dropout
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
             renderer_config_file, renderer_config)
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
-        np.random.seed(0)
         self.img_size = [renderer_config.width, renderer_config.height]
         self.ouput_point_num = ouput_point_num
         self.evaluate_mode = evaluate_mode
@@ -178,11 +183,13 @@ class TrajectoryImitationRNNDataset(Dataset):
             frame_name, learning_data_pb2.LearningDataFrame())
 
         coordinate_heading = 0.
-        past_motion_dropout = False
-        if self.input_data_agumentation:
-            coordinate_heading = np.random.uniform(
-                -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
-            past_motion_dropout = np.random.uniform(0, 1) > 0.5
+        if self.img_feature_rotation:
+            coordinate_heading = torch.rand(
+                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+
+        is_past_motion_dropout = False
+        if self.past_motion_dropout:
+            is_past_motion_dropout = torch.rand(1) > 0.5
 
         # use adc_trajectory_point rather than localization
         # because of the use of synthesizing sometimes
@@ -202,7 +209,7 @@ class TrajectoryImitationRNNDataset(Dataset):
                                         frame.routing.local_routing_lane_id,
                                         frame.traffic_light_detection.traffic_light,
                                         coordinate_heading,
-                                        past_motion_dropout)
+                                        is_past_motion_dropout)
         transformed_img_feature = self.img_feature_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.\
@@ -308,8 +315,8 @@ class TrajectoryImitationRNNDataset(Dataset):
 
 class TrajectoryImitationCNNFCLSTMDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
-                 input_data_agumentation=False, history_point_num=10, ouput_point_num=10,
-                 evaluate_mode=False):
+                 img_feature_rotation=False, past_motion_dropout=False,
+                 history_point_num=10, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -329,7 +336,8 @@ class TrajectoryImitationCNNFCLSTMDataset(Dataset):
         self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
                                                                             imgs_dir,
                                                                             region, map_path)
-        self.input_data_agumentation = input_data_agumentation
+        self.img_feature_rotation = img_feature_rotation
+        self.past_motion_dropout = past_motion_dropout
         renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
             renderer_config_file, renderer_config)
@@ -349,11 +357,13 @@ class TrajectoryImitationCNNFCLSTMDataset(Dataset):
             frame_name, learning_data_pb2.LearningDataFrame())
 
         coordinate_heading = 0.
-        past_motion_dropout = False
-        if self.input_data_agumentation:
-            coordinate_heading = np.random.uniform(
-                -self.max_rand_coordinate_heading, self.max_rand_coordinate_heading)
-            past_motion_dropout = np.random.uniform(0, 1) > 0.5
+        if self.img_feature_rotation:
+            coordinate_heading = torch.rand(
+                1) * 2 * self.max_rand_coordinate_heading - self.max_rand_coordinate_heading
+
+        is_past_motion_dropout = False
+        if self.past_motion_dropout:
+            is_past_motion_dropout = torch.rand(1) > 0.5
 
         # use adc_trajectory_point rather than localization
         # because of the use of synthesizing sometimes
@@ -373,7 +383,7 @@ class TrajectoryImitationCNNFCLSTMDataset(Dataset):
                                         frame.routing.local_routing_lane_id,
                                         frame.traffic_light_detection.traffic_light,
                                         coordinate_heading,
-                                        past_motion_dropout)
+                                        is_past_motion_dropout)
         transformed_img_feature = self.img_transform(img_feature)
 
         ref_coords = [current_x,
