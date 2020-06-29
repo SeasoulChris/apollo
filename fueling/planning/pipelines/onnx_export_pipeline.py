@@ -37,6 +37,7 @@ def export_onnx(torch_model_file, onnx_file, device):
     else:
         torch.onnx.export(model.cpu(), (X,), onnx_file)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='pipeline')
     parser.add_argument('torch_model_file', type=str, help='torch model file')
