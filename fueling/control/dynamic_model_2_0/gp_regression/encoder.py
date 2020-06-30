@@ -73,7 +73,6 @@ class AttenEcoder(nn.Module):
         """Define forward computation and activation functions"""
         data = self.attn(data, self.k_mat, self.v_mat)
         data = torch.transpose(data, -2, -3)
-        logging.info(data.shape)
         data = self.encoder(data)
         return data
 
@@ -88,7 +87,6 @@ class ScaledDotProductAttention(nn.Module):
         """ q: query; k: key; v: value"""
         # (Batch, seq, feature)
         # Check if key and query size are the same
-        logging.info(q.shape)
         d_k = k.size(-1)
         if q.size(-1) != d_k:
             logging.error(f'query size {q.size(-1)} is different from key size {d_k}')
@@ -208,7 +206,6 @@ class EncoderBlock(nn.Module):
         # STEP 2
         # Apply normalization and residual connection
         x = x + self.dropout(self.layer_norm1(att))
-        logging.info(f'x shape is {x.shape}')
 
         # STEP 3
         # Apply position-wise feedforward network
@@ -291,3 +288,27 @@ class TransformerDecoder(nn.Module):
         for decoder in self.decoders:
             x = decoder(x, enc_out, src_mask=src_mask, tgt_mask=tgt_mask)
         return x
+
+
+class TransformerEncoderCNN(nn.Module):
+    def __init__(self, u_dim, kernel_dim, dim_head=1):
+        """Network initialization"""
+        super().__init__()
+        self.d_head = dim_head
+        self.d_model = u_dim * dim_head
+        self.encoder = TransformerEncoder(n_blocks=1, d_model=self.d_model,
+                                          d_ff=1024, n_heads=dim_head)
+        self.conv1 = nn.Conv1d(self.d_model, 100, self.d_model, stride=4)
+        self.conv2 = nn.Conv1d(100, 50, self.d_model, stride=4)
+        self.fc = nn.Linear(250, kernel_dim)
+
+    def forward(self, data):
+        """Define forward computation and activation functions"""
+        # original data shape: [sequency/window_size, batch_size, channel]
+        encoded_data = self.encoder(data.repeat(1, 1, self.d_head))
+        # conv_input shape: [batch_size, channel, sequency/window_size]
+        conv1_input = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)
+        data = F.relu(self.conv1(conv1_input))
+        data = F.relu(self.conv2(data))
+        data = self.fc(data.view(data.shape[0], -1))
+        return data
