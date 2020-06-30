@@ -3,8 +3,6 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "base_setting",
     srcs = ["base_setting.py"],
-    deps = [
-    ],
 )
 
 py_binary(

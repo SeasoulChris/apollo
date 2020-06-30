@@ -2,6 +2,60 @@
 
 {% block content %}
 
+    <!-- filter and search -->
+    <div class="row">
+
+        <!-- job-type filter -->
+        <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
+            <form action="/jobs" method="get" id="job-type-form">
+                <select name="job_selected" class="btn btn-default"
+                        style="height:34px" id="type-select">
+                    {% for type in job_type %}
+                        {% if type == current_type %}
+                            <option value="{{ type }}" selected> {{ type }}</option>
+                        {% else %}
+                            <option value="{{ type }}"> {{ type }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- time-field filter -->
+        <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
+            <form action="/jobs" method="get" id="time-form">
+                <select name="time_selected" class="btn btn-default"
+                        style="height:34px" id="time-select">
+                    {% for field in time_field %}
+                        {% if field == current_time %}
+                            <option value="{{ field }}" selected> {{ field }}</option>
+                        {% else %}
+                            <option value="{{ field }}"> {{ field }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- vehicle sn search -->
+        <div class="col-lg-3" style="width:50%; float: right">
+            <div class="input-group">
+                <form action="/jobs" method="get" id="search-form">
+                    <input type="text" id="sn-search" name="vehicle_sn" class="form-control"
+                           placeholder="Search by vehicle SN">
+                </form>
+                <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="search-btn">Go</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- blank div -->
+    <div style="height: 60px; width: 100%">
+    </div>
+
     <!-- The comment on the modal box -->
     <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -11,7 +65,7 @@
                     <h4 class="modal-title" id="myModalLabel">Invalid Job </h4>
                 </div>
                 <div class="modal-body text-center">
-                    <p style="color: rgb(175, 175, 175)">Do you want to invalid this Job?</p>
+                    <p style="color: rgb(175, 175, 175)" class="comment-title">Do you want to invalid this Job?</p>
                     <p><span style="color: red">*</span> Comments:
                         <textarea id="comment_text" cols="25" rows="1" style="line-height: 25px"></textarea>
                     </p>
@@ -35,7 +89,7 @@
             <th>Progress</th>
             <th>is Valid</th>
             <th>input Data Size</th>
-            <th>File Cause</th>
+            <th>Vehicle SN</th>
             <th>Action</th>
             <th>Collapse/Expand</th>
         </tr>
@@ -50,29 +104,51 @@
                 <td>{{ job.is_valid }}</td>
                 <td>{{ job.input_data_size }}</td>
                 <td>{{ job.vehicle_sn }}</td>
-                <td><button  data-toggle="modal" data-target="#myModal">{{ job.is_valid }}</button></td>
-                <td><button class="job_expand">Expand</button><button class="job_collapse">Collapse</button></td>
+                <td>
+                    <button id={{ job.job_id }} class="job-modal" data-toggle="modal" data-target="#myModal"
+                            value="{% if job.is_valid == True %}
+                            Invalid
+                        {% elif job.is_valid == False %}
+                            Valid
+                         {% else %}
+                            Error
+                        {% endif %}">
+                        {% if job.is_valid == True %}
+                            Invalid
+                        {% elif job.is_valid == False %}
+                            Valid
+                        {% else %}
+                            Error
+                        {% endif %}
+                    </button>
+                </td>
+                <td>
+                    <button class="job_expand">Expand</button>
+                    <button class="job_collapse">Collapse</button>
+                </td>
             </tr>
 
             <!-- The service information -->
             <tr style="display: none" class="service_tr">
-                <td align="left" colspan="11" > <b>Service information:</b></td>
+                <td align="left" colspan="11"><b>Service information:</b></td>
             </tr>
 
-            <tr  style="display: none" class="service_span">
-                <td colspan="11" >Vehicle Calibration Status:Enabled  Used:2  Quota:20</td>
+            <tr style="display: none" class="service_span">
             </tr>
 
             <tr style="display: none" class="operation_tr">
-                <td align="left" colspan="11" > <b>Operation History:</b></td>
+                <td align="left" colspan="11"><b>Operation History:</b></td>
             </tr>
 
             <!-- The history record of job operation -->
-            {% for opt in job.operation %}
-                <tr  style="display: none" class="operation_span">
-                    <td colspan="11" >Job is set to {{ opt.action }} by {{ opt.operator_email }} on {{ opt.operator_time }}. Comments: {{ opt.comments }}.</td>
+            {% for opt in job.operations %}
+                <tr style="display: none" class="operation_span">
+                    <td colspan="11" style="border-top: none">Job is set to {{ opt.action.type }} by {{ opt.email }}
+                        on {{ opt.time }}.
+                        Comments: {{ opt.comments }}.
+                    </td>
                 </tr>
-            {% endfor  %}
+            {% endfor %}
             <tr class="flag"></tr>
         {% endfor %}
     </table>
@@ -93,7 +169,7 @@
                     </li>
                 {% endif %}
                 {% for i in current_page.page_nums() %}
-                    {% if i == page %}
+                    {% if i == current_page.current_page %}
                         <li class="active"><a href="?page={{ i }}">{{ i }}</a></li>
                     {% else %}
                         <li><a href="?page={{ i }}">{{ i }}</a></li>

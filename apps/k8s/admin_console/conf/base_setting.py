@@ -15,7 +15,6 @@ class Config(object):
     TESTING = False
     SECRET_KEY = os.urandom(24)
 
-    # MongoDB config
-    DB_HOST = ""
-    DB_PORT = 27017
-    DB_NAME = "fuel"
+    # Job config
+    JOB_TYPE = ["All", "Vehicle Calibration", "Sensor Calibration", "Control Profiling"]
+    TIME_FIELD = {"All": 0, "7 days before": 7, "30 days before": 30, "A year ago": 365}

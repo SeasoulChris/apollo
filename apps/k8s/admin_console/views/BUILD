@@ -4,8 +4,6 @@ py_library(
     name = "index",
     srcs = ["index.py"],
     data = ["//apps/k8s/admin_console:resource"],
-    deps = [
-    ],
 )
 
 py_binary(
@@ -13,7 +11,9 @@ py_binary(
     srcs = ["job.py"],
     data = ["//apps/k8s/admin_console:resource"],
     deps = [
+        "//apps/k8s/admin_console:application",
         "//apps/k8s/admin_console/controllers:job",
         "//apps/k8s/admin_console/common:paginator",
+        "//fueling/common:job_utils",
     ],
 )
