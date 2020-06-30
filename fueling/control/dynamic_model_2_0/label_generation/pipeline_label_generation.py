@@ -100,7 +100,6 @@ class PipelineLabelGenerator(BasePipeline):
         """Get how many items for certain category from Redis"""
         redis_instance = redis_utils.get_redis_instance()
         category_seq = None
-        logging.info('entering into lock area for {}'.format(category_id))
         lock_key = F'{category_id}-lock'
         with redis_instance.lock(lock_key):
             if not redis_instance.hexists(redis_key, category_id):
@@ -108,7 +107,6 @@ class PipelineLabelGenerator(BasePipeline):
                 redis_instance.hmset(redis_key, {category_id: 0})
             redis_instance.hincrby(redis_key, category_id)
             category_seq = redis_instance.hget(redis_key, category_id)
-        logging.info('left lock area for {}'.format(category_id))
         logging.log_every_n(logging.INFO, F'category seq {category_seq} for {category_id}', 10)
         return category_seq
 
