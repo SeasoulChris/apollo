@@ -45,6 +45,17 @@ def get_jobs_list():
     return result
 
 
+def extract_flags(flags):
+    """extract flags string to dict"""
+    flags_list = flags.split('--')
+    flags_dict = {}
+    for item in flags_list:
+        if '=' in item:
+            key, val = item.strip().split('=')
+            flags_dict[key.strip()] = val.strip()
+    return flags_dict
+
+
 class JobUtils(object):
     """fuel job utils"""
 
@@ -62,11 +73,23 @@ class JobUtils(object):
                             'progress': 0})
         logging.info(f"save_job_submit_info: {self.job_id}")
 
+    def save_job_vehicle_sn(self, vehicle_sn):
+        """Save job vehicle_sn"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'vehicle_sn': vehicle_sn}})
+        logging.info(f"save_job_vehicle_sn: {vehicle_sn}")
+
     def save_job_partner(self, is_partner):
         """Save job partner label (boolean)"""
         self.db.update_one({'job_id': self.job_id},
                            {'$set': {'is_partner': is_partner}})
         logging.info(f"save_job_partner: {is_partner}")
+
+    def save_job_type(self, job_type):
+        """Save job type info"""
+        self.db.update_one({'job_id': self.job_id},
+                           {'$set': {'job_type': job_type}})
+        logging.info(f"save_job_type: {job_type}")
 
     def save_job_sub_type(self, sub_type):
         """Save job sub_type"""

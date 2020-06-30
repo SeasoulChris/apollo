@@ -20,8 +20,8 @@ import flask_restful
 import google.protobuf.json_format as json_format
 
 from apps.k8s.spark_submitter.spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
-from fueling.common.job_utils import JobUtils
 from fueling.common.mongo_utils import Mongo
+import fueling.common.job_utils as job_utils
 import fueling.common.proto_utils as proto_utils
 
 
@@ -125,7 +125,15 @@ class SparkSubmitJob(flask_restful.Resource):
         if not flags.FLAGS.debug:
             job_record = JobRecord(id=job_id, arg=arg)
             Mongo().job_collection().insert_one(proto_utils.pb_to_dict(job_record))
-            JobUtils(job_id).save_job_submit_info()
+            jobUtils = job_utils.JobUtils(job_id)
+            jobUtils.save_job_submit_info()
+            job_flags_dict = job_utils.extract_flags(arg.job.flags)
+            logging.info('job_flags_dict:')
+            logging.info(job_flags_dict)
+            if 'job_type' in job_flags_dict:
+                jobUtils.save_job_type(job_flags_dict['job_type'])
+            if 'vehicle' in job_flags_dict:
+                jobUtils.save_job_vehicle_sn(job_flags_dict['vehicle'])
 
         # Partner storage.
         if arg.partner.storage_writable:
