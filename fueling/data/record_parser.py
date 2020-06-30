@@ -60,16 +60,23 @@ class RecordParser(object):
         for bucket, cnt in parser._planning_latency_analyzer.get_hist().items():
             record.stat.planning_stat.latency.latency_hist[bucket] = cnt
 
+        int_max = (1 << 31) - 1
         for speed, jerk_cnt in parser._lon_stability_analyzer.get_speed_jerk_cnt().items():
             speed_jerk = record.stat.planning_stat.stability.speed_jerk.add()
             speed_jerk.speed = speed
             for jerk, cnt in jerk_cnt.items():
+                if jerk > int_max or jerk < -int_max:
+                    logging.error(F'unable to process jerk {jerk}, cnt {cnt}')
+                    continue
                 speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
         for speed, jerk_cnt in parser._lat_stability_analyzer.get_speed_jerk_cnt().items():
             speed_jerk = record.stat.planning_stat.stability.lat_speed_jerk.add()
             speed_jerk.speed = speed
             for jerk, cnt in jerk_cnt.items():
+                if jerk > int_max or jerk < -int_max:
+                    logging.error(F'unable to process jerk {jerk}, cnt {cnt}')
+                    continue
                 speed_jerk.jerk_cnt.add(jerk=jerk, cnt=cnt)
 
         record.stat.planning_stat.stability.imu_stability_score = \
