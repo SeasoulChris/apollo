@@ -141,16 +141,16 @@ class MapGenSingleLine(BasePipeline):
         if len(fbags) == 0:
             JobUtils(job_id).save_job_failure_code('E301')
         for fbag in fbags:
-            if(i == 0):
-                zone_id = self.FLAGS.get('zone_id')
-                JobUtils(job_id).save_job_location(fbag, zone_id)
-                i += 1
             logging.info('reader({fbag}) channel num: {}'.format(len(reader(fbag))))
             if(len(reader(fbag)) == 0):
                 JobUtils(job_id).save_job_failure_code('E302')
             for msg in reader(fbag):
                 pos = record_utils.message_to_proto(msg).pose.position
                 points.append((pos.x, pos.y))
+                if(i == 0):
+                    zone_id = self.FLAGS.get('zone_id')
+                    JobUtils(job_id).save_job_location(pso.x, pos.y, zone_id)
+                    i += 1
 
         logging.info('Success to read localization pose points {}'.format(len(points)))
         return points

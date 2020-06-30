@@ -38,6 +38,8 @@ py_library(
     name = "jobs",
     srcs = ["jobs.py"],
     deps = [
+        ":saas_job_arg_pb2",
+        "//fueling/common:partners",
         "//apps/k8s/spark_submitter:client",
     ],
 )
