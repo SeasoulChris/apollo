@@ -7,6 +7,7 @@ py_binary(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/common:redis_utils",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
 )

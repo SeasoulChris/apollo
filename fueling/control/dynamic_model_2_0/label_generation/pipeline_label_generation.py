@@ -19,6 +19,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import \
     segment_index, feature_config, label_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.redis_utils as redis_utils 
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
     feature_utils_2_0
 import fueling.control.features.feature_extraction_utils as feature_utils
@@ -43,6 +44,7 @@ class PipelineLabelGenerator(BasePipeline):
 
     def run(self):
         """Run."""
+        REDIS_KEY = 'control.dm20.label.counters'
         timestr = time.strftime('%Y-%m-%d-%H')
         src_prefix = flags.FLAGS.DM20_features
         dst_prefix = os.path.join(flags.FLAGS.DM20_labeled_features, timestr)
@@ -53,7 +55,8 @@ class PipelineLabelGenerator(BasePipeline):
         model_path = flags.FLAGS.DM10_forward_mlp_model
 
         logging.info(F'src: {src_prefix}, dst: {dst_prefix}, model path: {model_path}')
-
+        redis_utils.redis_remove_key(REDIS_KEY)
+        redis_utils.redis_extend_dict(REDIS_KEY, {})
         hdf5_files = spark_helper.cache_and_log(
             'OutputRecords',
             # RDD(end_files)
@@ -61,67 +64,72 @@ class PipelineLabelGenerator(BasePipeline):
             # RDD(hdf5 files)
             .filter(spark_op.filter_path(['*.hdf5'])))
 
-        categories = spark_helper.cache_and_log(
-            'CalculatedCategories',
-            # RDD(hdf5 files)
-            hdf5_files
+        all_segments = (hdf5_files
             # PairRDD(hdf5 file, hdf5 file)
             .keyBy(lambda hdf5_file: hdf5_file)
             # PairRDD(hdf5 file, segment)
             .mapValues(label_generation.generate_segment)
-            # PairRDD(category_id, (hdf5 file, segment))
-            .map(lambda file_segment: (self.calculate_category_id(
-                                       file_segment[1]), (file_segment[0], file_segment[1])))
-            # PairRDD(category_id, (hdf5 file, segment)s)
-            .groupByKey())
+            # PairRDD(hdf5 file, sub_segment)
+            .flatMapValues(self.get_sub_segments)
+            # PairRDD(hdf5 file, sub_segment)
+            .map(lambda file_segment:
+                 self.process_file(file_segment, src_prefix, dst_prefix,
+                                   model_path, REDIS_KEY))
+            .count())
 
-        partitions = int(os.environ.get('APOLLO_EXECUTORS', 15))
-        (categories
-            .repartition(partitions)
-            .foreach(lambda cate: self.process_file(cate, src_prefix, dst_prefix, model_path)))
+        logging.info(F'Done with control label generation, {all_segments} segments generated')
 
-    def process_file(self, category, src_prefix, dst_prefix, model_path):
+    def process_file(self, file_segment, src_prefix, dst_prefix, model_path, redis_key):
         """Process category group and generate h5 files"""
-        category_id, segments = category
-        logging.info(F'category id: {category_id}, segment length: {len(segments)}')
-
+        hdf5_file, segment = file_segment
+        category_id = self.calculate_category_id(segment)
         dst_prefix = os.path.join(dst_prefix, category_id)
-        segmnets_count_for_each_category = label_config['SAMPLE_SIZE']
-        for hdf5_file, segment in segments:
-            # Get destination file
-            dst_dir = os.path.dirname(hdf5_file).replace(src_prefix, dst_prefix, 1)
-            file_utils.makedirs(dst_dir)
+        dst_dir = os.path.dirname(hdf5_file).replace(src_prefix, dst_prefix, 1)
+        file_utils.makedirs(dst_dir)
+        category_seq = self.get_category_seq(redis_key, category_id)
+        if category_seq is None or not str.isdigit(category_seq):
+            logging.fatal(F'errors occurred when get {category_seq} from Redis for {category_id}')
+        if int(category_seq) >= label_config['SAMPLE_SIZE']:
+            logging.info(F'got enough segments for category {category_id}')
+            return 0
+        dst_h5_file = os.path.join(dst_dir, F'{os.path.basename(hdf5_file)[:-5]}_{category_seq}.h5')
+        self.write_single_h5_file(dst_h5_file, segment, model_path)
+        return 1
 
-            sub_segments = self.get_sub_segments(segment)
-            logging.info(F'{dst_dir}, segment: {segment.shape[0]}, sub: {len(sub_segments)}')
-
-            for sub_segment_id, sub_segment in enumerate(sub_segments):
-                dst_h5_file = os.path.join(
-                    dst_dir,
-                    F'{os.path.basename(hdf5_file)[:-4]}_{sub_segment_id}.h5')
-                self.write_single_h5_file(dst_h5_file, sub_segment, model_path)
-
-                segmnets_count_for_each_category -= 1
-                if segmnets_count_for_each_category == 0:
-                    break
+    def get_category_seq(self, redis_key, category_id):
+        """Get how many items for certain category from Redis"""
+        redis_instance = redis_utils.get_redis_instance()
+        category_seq = None
+        logging.info('entering into lock area for {}'.format(category_id))
+        lock_key = F'{category_id}-lock'
+        with redis_instance.lock(lock_key):
+            if not redis_instance.hexists(redis_key, category_id):
+                logging.info(F'{category_id} does not exist, create new one')
+                redis_instance.hmset(redis_key, {category_id: 0})
+            redis_instance.hincrby(redis_key, category_id)
+            category_seq = redis_instance.hget(redis_key, category_id)
+        logging.info('left lock area for {}'.format(category_id))
+        logging.log_every_n(logging.INFO, F'category seq {category_seq} for {category_id}', 10)
+        return category_seq
 
     def get_sub_segments(self, segment):
         """Split a two dimensional numpy array (N x 23) into multiple pieces"""
-        return [segment[idx: idx + label_config['LABEL_SEGMENT_LEN']]
-                for idx in range(
-                    0,
-                    segment.shape[0] - label_config['LABEL_SEGMENT_LEN'] + 1,
-                    label_config['LABEL_SEGMENT_STEP'])]
+        sub_segments = [segment[idx: idx + label_config['LABEL_SEGMENT_LEN']]
+                        for idx in range(
+                            0,
+                            segment.shape[0] - label_config['LABEL_SEGMENT_LEN'] + 1,
+                            label_config['LABEL_SEGMENT_STEP'])]
+        logging.info(F'got {len(sub_segments)} sub segments from {segment.shape[0]} frames')
+        return sub_segments
 
     def write_single_h5_file(self, dst_h5_file, segment, model_path):
         """Write segment into a single h5 file"""
         model_path = file_utils.fuel_path(model_path)
-
         input_segment, output_segment = label_generation.generate_gp_data(model_path, segment)
-
         with h5py.File(dst_h5_file, 'w') as h5_file:
             h5_file.create_dataset('input_segment', data=input_segment)
             h5_file.create_dataset('output_segment', data=output_segment)
+        logging.log_every_n(logging.INFO, F'wrote single file {dst_h5_file}', 10)
 
     def calculate_category_id(self, segment):
         """Calculate category id by given segment"""

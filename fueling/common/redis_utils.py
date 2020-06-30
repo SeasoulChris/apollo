@@ -173,6 +173,15 @@ def redis_sync_incr_dict_value(redis_key, dict_key, lock_key):
     return val
 
 
+def redis_remove_key(redis_key):
+    """Delete the key from redis"""
+    redis_instance = get_redis_instance()
+    if not redis_instance:
+        logging.error('unable to create redis instance')
+        return None
+    return _retry(redis_instance.delete, [redis_key])
+
+
 def _retry(func, params):
     """A wrapper for exponential retry in case redis connection is not stable"""
     cur_retries, max_retries = 0, 3
