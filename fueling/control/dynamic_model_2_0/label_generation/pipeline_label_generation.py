@@ -19,7 +19,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import \
     segment_index, feature_config, label_config, input_index, output_index
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
-import fueling.common.redis_utils as redis_utils 
+import fueling.common.redis_utils as redis_utils
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
     feature_utils_2_0
 import fueling.control.features.feature_extraction_utils as feature_utils
@@ -64,7 +64,8 @@ class PipelineLabelGenerator(BasePipeline):
             # RDD(hdf5 files)
             .filter(spark_op.filter_path(['*.hdf5'])))
 
-        all_segments = (hdf5_files
+        all_segments = (
+            hdf5_files
             # PairRDD(hdf5 file, hdf5 file)
             .keyBy(lambda hdf5_file: hdf5_file)
             # PairRDD(hdf5 file, segment)
