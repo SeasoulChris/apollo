@@ -7,6 +7,8 @@ import os
 import shutil
 import time
 
+from absl import flags
+
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.common.partners import partners
@@ -16,6 +18,9 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
 import fueling.common.storage.bos_client as bos_client
+
+flags.DEFINE_string('vehicle_sn', None, ' verhicle_sn of parner users.')
+flags.DEFINE_string('job_type', 'verhicle_calibration', 'job type.')
 
 
 class SensorCalibrationPipeline(BasePipeline):

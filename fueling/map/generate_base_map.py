@@ -31,6 +31,8 @@ from fueling.common.job_utils import JobUtils
 
 flags.DEFINE_float('lane_width', 3.0, 'lane width.')
 flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')
+flags.DEFINE_string('vehicle_sn', None, ' verhicle_sn of parner users.')
+flags.DEFINE_string('job_type', 'verhicle_calibration', 'job type.')
 
 
 class MapGenSingleLine(BasePipeline):
