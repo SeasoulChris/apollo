@@ -31,6 +31,7 @@ from fueling.common.job_utils import JobUtils
 
 flags.DEFINE_float('lane_width', 3.0, 'lane width.')
 flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')
+flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
 flags.DEFINE_string('vehicle_sn', None, ' verhicle_sn of parner users.')
 flags.DEFINE_string('job_type', 'verhicle_calibration', 'job type.')
 
@@ -143,7 +144,7 @@ class MapGenSingleLine(BasePipeline):
         if len(fbags) == 0:
             JobUtils(job_id).save_job_failure_code('E301')
         for fbag in fbags:
-            logging.info('reader({fbag}) channel num: {}'.format(len(reader(fbag))))
+            logging.info('reader(fbag) channel num: {}'.format(len(reader(fbag))))
             if(len(reader(fbag)) == 0):
                 JobUtils(job_id).save_job_failure_code('E302')
             for msg in reader(fbag):
@@ -151,7 +152,7 @@ class MapGenSingleLine(BasePipeline):
                 points.append((pos.x, pos.y))
                 if(i == 0):
                     zone_id = self.FLAGS.get('zone_id')
-                    JobUtils(job_id).save_job_location(pso.x, pos.y, zone_id)
+                    JobUtils(job_id).save_job_location(pos.x, pos.y, zone_id)
                     i += 1
 
         logging.info('Success to read localization pose points {}'.format(len(points)))

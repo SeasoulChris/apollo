@@ -19,7 +19,6 @@ import fueling.common.email_utils as email_utils
 import fueling.common.redis_utils as redis_utils
 import fueling.common.record_utils as record_utils
 
-flags.DEFINE_integer('zone_id', 50, 'the zone id of local.')
 flags.DEFINE_string('lidar_type', 'lidar16', 'compensator pointcloud topic.')
 
 
