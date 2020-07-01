@@ -166,6 +166,19 @@ py_binary(
 )
 
 py_binary(
+    name = "combine_frame_env_and_cross_road",
+    srcs = ["combine_frame_env_and_cross_road.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+        "//fueling/common:logging",
+        "//fueling/common:record_utils",
+        "//fueling/prediction/common:configure",
+    ]
+)
+
+py_binary(
     name = "clean_and_balance_training_data",
     srcs = ["clean_and_balance_training_data.py"],
     deps = [

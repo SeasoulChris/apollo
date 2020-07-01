@@ -55,6 +55,7 @@ class LabelGenerator(object):
         self.cruise_label_dict = dict()
         self.junction_label_dict = dict()
         self.visited_lane_segment_dict = dict()
+        self.cross_road_dict = dict()
 
     def LoadFeaturePBAndSaveLabelFiles(self, input_filepath):
         '''
@@ -163,6 +164,9 @@ class LabelGenerator(object):
             # Update the obstacle trajectory:
             # Only update for consecutive (sampling rate = 0.1sec) points.
             # IMPORTANT NOTE: APPEND ONLY to add new items
+            in_lane = 0
+            if len(feature_sequence[j].within_lane_id) > 0:
+                in_lane = 1
             obs_traj.append((feature_sequence[j].position.x,
                              feature_sequence[j].position.y,
                              feature_sequence[j].velocity_heading,
@@ -170,7 +174,8 @@ class LabelGenerator(object):
                              feature_sequence[j].length,
                              feature_sequence[j].width,
                              feature_sequence[j].timestamp,
-                             feature_sequence[j].acc))
+                             feature_sequence[j].acc,
+                             in_lane))
 
             if not enable_lane_related_labeling:
                 continue
@@ -402,6 +407,23 @@ class LabelGenerator(object):
                 self.future_status_dict[key] = observed_val['obs_traj']
         np.save(self.filepath + '.future_status.npy', self.future_status_dict)
 
+    def LabelCrossRoad(self):
+        output_features = offline_features_pb2.Features()
+        for obs_id, feature_sequence in self.feature_dict.items():
+            for idx, feature in enumerate(feature_sequence):
+                if "{}@{:.3f}".format(feature.id, feature.timestamp) not in self.observation_dict:
+                    continue
+                key = "{}@{:.3f}".format(feature.id, feature.timestamp)
+                observed_val = self.observation_dict["{}@{:.3f}".format(
+                    feature.id, feature.timestamp)]
+                cross_road = 0
+                for fea in observed_val['obs_traj']:
+                    if fea[8] == 1:
+                        cross_road = 1
+                        break
+                self.cross_road_dict[key] = cross_road
+        np.save(self.filepath + '.cross_road.npy', self.future_status_dict)
+
     def LabelVisitedLaneSegment(self):
         output_features = offline_features_pb2.Features()
         for obs_id, feature_sequence in self.feature_dict.items():
@@ -483,6 +505,7 @@ class LabelGenerator(object):
 
     def Label(self):
         self.LabelTrajectory()
+        self.LabelCrossRoad()
         if enable_lane_related_labeling:
             self.LabelVisitedLaneSegment()
             self.LabelSingleLane()
