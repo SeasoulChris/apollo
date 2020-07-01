@@ -132,8 +132,8 @@ class SparkSubmitJob(flask_restful.Resource):
             logging.info(job_flags_dict)
             if 'job_type' in job_flags_dict:
                 jobUtils.save_job_type(job_flags_dict['job_type'])
-            if 'vehicle' in job_flags_dict:
-                jobUtils.save_job_vehicle_sn(job_flags_dict['vehicle'])
+            if 'vehicle_sn' in job_flags_dict:
+                jobUtils.save_job_vehicle_sn(job_flags_dict['vehicle_sn'])
 
         # Partner storage.
         if arg.partner.storage_writable:
