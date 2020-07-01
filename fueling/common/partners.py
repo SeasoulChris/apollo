@@ -60,5 +60,12 @@ partners = {
                                 bos_bucket='ncuapollodkit', bos_region='su',
                                 vehicle_sn='SK2020001'),
     'd-kit-sk-gksb-02': Partner(name='SK-GKSB02', email='yangguodong@cyber-ai.co',
-                                bos_bucket='cyber-ai', bos_region='bj', vehicle_sn='SK2020002'),
+                                bos_bucket='cyber-ai', bos_region='bj',
+                                vehicle_sn='SK2020002'),
+    'd-kit-shhc-2020003': Partner(name='SHHC03', email='haoxuan_geng@huacenav.com',
+                                  bos_bucket='gps-imu', bos_region='bj',
+                                  vehicle_sn='CH2020003'),
+    'd-kit-bzl-2020011': Partner(name='BZL11', email='1014896847@qq.com',
+                                 bos_bucket='ljq-apollo', bos_region='gz',
+                                 vehicle_sn='CH2020011'),
 }
