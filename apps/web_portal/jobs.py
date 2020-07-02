@@ -54,7 +54,7 @@ class VehicleCalibration(BaseJob):
         job_flags = {
             'input_data_path': job_arg.flags.get("input_data_path"),
             'vehicle_sn': partners.get(job_arg.partner.id).vehicle_sn,
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type),
+            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
         return (entrypoint, client_flags, job_flags)
 
@@ -70,7 +70,7 @@ class SensorCalibration(BaseJob):
             'input_data_path': job_arg.flags.get("input_data_path"),
             'output_data_path': job_arg.flags.get("output_data_path"),
             'vehicle_sn': partners.get(job_arg.partner.id).vehicle_sn,
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type),
+            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
         return (entrypoint, client_flags, job_flags)
 
@@ -90,6 +90,6 @@ class VirtualLaneGeneration(BaseJob):
             'lane_width': job_arg.flags.get("lane_width"),
             'extra_roi_extension': job_arg.flags.get("extra_roi_extension"),
             'vehicle_sn': partners.get(job_arg.partner.id).vehicle_sn,
-            'job_type': SaasJobArg.JobType.Name(job_arg.job_type),
+            'job_type': SaasJobArg.JobType.Name(job_arg.job_type).lower(),
         }
         return (entrypoint, client_flags, job_flags)
