@@ -85,6 +85,7 @@ class ScaledDotProductAttention(nn.Module):
 
     def forward(self, q, k, v, mask=None):
         """ q: query; k: key; v: value"""
+
         # (Batch, seq, feature)
         # Check if key and query size are the same
         d_k = k.size(-1)
@@ -96,6 +97,7 @@ class ScaledDotProductAttention(nn.Module):
         # and position in the sequence
         k = k.transpose(1, 2)
         score_attn = torch.bmm(q, k)  # (Batch, Seq, Seq)
+        tmp0 = score_attn
         # we get an attention score between each position in the sequence for each batch
 
         # STEP 2: Divide by sqrt(Dk)
@@ -110,8 +112,14 @@ class ScaledDotProductAttention(nn.Module):
             score_attn = score_attn.masked_fill(mask, 0)
 
         # STEP 4: Softmax
-        score_attn = torch.exp(score_attn)
-        score_attn = score_attn / score_attn.sum(dim=-1, keepdim=True)
+        score_attn_exp = torch.exp(score_attn)
+        # score_attn_exp = score_attn_exp * (score_attn == 0).float()  # this step masks
+        tmp = score_attn_exp.sum(dim=-1, keepdim=True)
+        score_attn = score_attn_exp / tmp
+        isnan = torch.isnan(score_attn)
+        if isnan.any():
+            raise NameError(
+                f'AttentionHead: {torch.flatten(tmp)} results NaN score_attn.')
 
         score_attn = self.dropout(score_attn)
 
@@ -135,7 +143,66 @@ class AttentionHead(nn.Module):
         V = self.value_tfm(values)  # (Batch, Seq, Feature)
         # compute multiple attention weighted sums
         output = self.attn(Q, K, V)
+        isnan = torch.isnan(output)
+        if isnan.any():
+            raise NameError(f'AttentionHead: {Q} results NaN output.')
         return output
+
+
+class MultiHeadAttentionFast(nn.Module):
+    """https://github.com/SamLynnEvans/Transformer"""
+    """ explain https://towardsdatascience.com/how-to-code-the-transformer-in-pytorch-24db27c8f9ec"""
+
+    def __init__(self, d_model, d_feature, n_heads, dropout=0.1):
+        super().__init__()
+        self.d_model = d_model
+        self.d_k = d_model // n_heads
+        self.n_head = n_heads
+
+        self.q_linear = nn.Linear(d_model, d_model)
+        self.v_linear = nn.Linear(d_model, d_model)
+        self.k_linear = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
+        self.out = nn.Linear(d_model, d_model)
+
+        # self.attn = ScaledDotProductAttention(dropout)
+
+    def forward(self, q, k, v, mask=None):
+
+        bs = q.size(0)  # batch size
+
+        # perform linear operation and split into n heads
+        k = self.k_linear(k).view(bs, -1, self.n_head, self.d_k)
+        q = self.q_linear(q).view(bs, -1, self.n_head, self.d_k)
+        v = self.v_linear(v).view(bs, -1, self.n_head, self.d_k)
+
+        # transpose to get dimensions bs * h * sl * d_model
+        k = k.transpose(1, 2)
+        q = q.transpose(1, 2)
+        v = v.transpose(1, 2)
+        scores = attention(q, k, v, self.d_k, mask, self.dropout)
+        # concatenate heads and put through final linear layer
+        concat = scores.transpose(1, 2).contiguous().view(bs, -1, self.d_model)
+
+        output = self.out(concat)
+
+        return output
+
+
+def attention(q, k, v, d_k, mask=None, dropout=None):
+
+    scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
+    if mask is not None:
+        mask = mask.unsqueeze(1)
+        scores = scores.masked_fill(mask == 0, -1e9)
+
+    scores = F.softmax(scores, dim=-1)
+
+    if dropout is not None:
+        scores = dropout(scores)
+
+    output = torch.matmul(scores, v)
+    return output
 
 
 class MultiHeadAttention(nn.Module):
@@ -152,12 +219,17 @@ class MultiHeadAttention(nn.Module):
         self.attn_heads = nn.ModuleList([
             AttentionHead(d_model, d_feature, dropout) for _ in range(n_heads)
         ])
-        # shrink to original feature size (?)
+        # d_feature * n_heads =  original feature size
         self.projection = nn.Linear(d_feature * n_heads, d_model)
 
     def forward(self, queries, keys, values, mask=None):
         output = [attn(queries, keys, values, mask=mask)  # (Batch, Seq, Feature)
                   for i, attn in enumerate(self.attn_heads)]
+
+        for i, attn in enumerate(self.attn_heads):
+            isnan = torch.isnan(attn(queries, keys, values, mask=mask))
+            if isnan.any():
+                raise NameError(f'Encoder: {queries} results NaN data.')
 
         # reconcatenate
         output = torch.cat(output, dim=2)  # (Batch, Seq, D_Feature * n_heads)
@@ -185,12 +257,13 @@ class EncoderBlock(nn.Module):
     def __init__(self, d_model, d_feature, d_ff, n_heads, dropout=0.1):
         super().__init__()
 
-        self.attn_head = MultiHeadAttention(d_model, d_feature, n_heads, dropout)
+        self.attn_head = MultiHeadAttentionFast(d_model, d_feature, n_heads, dropout)
 
         self.layer_norm1 = LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
         self.position_wise_feed_forward = nn.Sequential(
+            # d_model is the original feature size
             nn.Linear(d_model, d_ff),
             nn.ReLU(),
             nn.Linear(d_ff, d_model),
@@ -202,6 +275,9 @@ class EncoderBlock(nn.Module):
 
         # STEP 1
         att = self.attn_head(x, x, x, mask=mask)
+        isnan = torch.isnan(att)
+        if isnan.any():
+            raise NameError(f'Encoder: {att} results NaN data.')
 
         # STEP 2
         # Apply normalization and residual connection
@@ -228,8 +304,11 @@ class TransformerEncoder(nn.Module):
             for _ in range(n_blocks)
         ])
 
-    def forward(self, x: torch.FloatTensor, mask=None):
+    def forward(self, x, mask=None):
         for encoder in self.encoders:
+            isnan = torch.isnan(x)
+            if isnan.any():
+                raise NameError(f'Encoder: {x} results NaN data.')
             x = encoder(x)
         return x
 
@@ -291,13 +370,13 @@ class TransformerDecoder(nn.Module):
 
 
 class TransformerEncoderCNN(nn.Module):
-    def __init__(self, u_dim, kernel_dim, dim_head=1):
+    def __init__(self, u_dim, kernel_dim, dim_head=6):
         """Network initialization"""
         super().__init__()
         self.d_head = dim_head
-        self.d_model = u_dim * dim_head
+        self.d_model = u_dim
         self.encoder = TransformerEncoder(n_blocks=1, d_model=self.d_model,
-                                          d_ff=1024, n_heads=dim_head)
+                                          d_ff=100, n_heads=dim_head)
         self.conv1 = nn.Conv1d(self.d_model, 100, self.d_model, stride=4)
         self.conv2 = nn.Conv1d(100, 50, self.d_model, stride=4)
         self.fc = nn.Linear(250, kernel_dim)
@@ -305,7 +384,13 @@ class TransformerEncoderCNN(nn.Module):
     def forward(self, data):
         """Define forward computation and activation functions"""
         # original data shape: [sequency/window_size, batch_size, channel]
-        encoded_data = self.encoder(data.repeat(1, 1, self.d_head))
+        encoded_data = self.encoder(data)
+        isnan = torch.isnan(encoded_data)
+        if isnan.any():
+            logging.info(f'Encoder: {data} results NaN data.')
+
+        # encoded_data = data
+        # logging.info(f'encoded_data shape is {encoded_data.shape}')
         # conv_input shape: [batch_size, channel, sequency/window_size]
         conv1_input = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)
         data = F.relu(self.conv1(conv1_input))
