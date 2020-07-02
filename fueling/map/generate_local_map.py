@@ -6,6 +6,7 @@ This is a module to gen local map
 from datetime import datetime
 import os
 import glob
+import time
 
 from absl import flags
 import pyspark_utils.helper as spark_helper
@@ -117,7 +118,8 @@ class LocalMapPipeline(BasePipeline):
                            'job_status': 'failed', 'sub_type': 'base_map'}
             result = JobUtils(job_id).get_job_info()
             for job_info in result:
-                if (datetime.now() - job_info['start_time']) > 259200:
+                if (int(time.mktime(datetime.now())
+                        - time.mktime(job_info['start_time']))) > 259200:
                     JobUtils(job_id).save_job_failure_code('E305')
                 else:
                     JobUtils(job_id).save_job_failure_code('E306')
