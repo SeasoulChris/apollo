@@ -99,10 +99,10 @@ class JobUtils(object):
 
     def save_job_input_data_size(self, source_dir):
         """Save job input data size"""
-        input_date_size = file_utils.getDirSize(source_dir)
+        input_data_size = file_utils.getDirSize(source_dir)
         self.db.update_one({'job_id': self.job_id},
-                           {'$set': {'input_date_size': input_date_size}})
-        logging.info(f"save_job_input_data_size: {source_dir}: {input_date_size}")
+                           {'$set': {'input_data_size': input_data_size}})
+        logging.info(f"save_job_input_data_size: {source_dir}: {input_data_size}")
 
     def save_job_location(self, x, y, zone_id=50, hemisphere='N'):
         """Save job location to mongodb
