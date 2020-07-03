@@ -17,3 +17,8 @@ py_library(
         "//fueling/common:logging",
     ]
 )
+
+py_library(
+    name = "backbone",
+    srcs = ["backbone.py"],
+)
