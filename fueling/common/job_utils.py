@@ -135,16 +135,19 @@ class JobUtils(object):
         """Save job operations
         """
         action_type = 'valid' if is_valid else 'invalid'
+        update_dict = {'email': email,
+                       'time': datetime.now(),
+                       'comments': comments,
+                       'action': {'type': action_type}}
         result = self.db.update_one({'job_id': self.job_id},
-                                    {'$push': {'operations': {'email': email,
-                                                              'time': datetime.now(),
-                                                              'comments': comments,
-                                                              'action': {'type': action_type}}},
+                                    {'$push': {'operations': update_dict},
                                      '$set': {'is_valid': is_valid}})
         logging.info(f"save_job_operations: email: {email},"
                      f"comments: {comments},"
                      f"is_valid: {is_valid}")
-        return result.raw_result['nModified']
+        if result.raw_result['nModified'] == 1:
+            update_dict['is_valid'] = is_valid
+            return update_dict
 
     def save_job_phase(self, status):
         """Save job status

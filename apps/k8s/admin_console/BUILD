@@ -13,6 +13,7 @@ py_binary(
     srcs = ["application.py"],
     data = [":resource"],
     deps = [
+	"//apps/k8s/admin_console/common:filter",
         "//apps/k8s/admin_console/conf:develop_setting",
     ],
 )

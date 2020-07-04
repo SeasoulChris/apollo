@@ -10,7 +10,8 @@ def get_datetime_str(date_obj):
     Converts the time object to a string
     """
     if isinstance(date_obj, datetime.datetime):
-        return date_obj.strftime("%Y-%m-%d %H:%m:%S")
+        cn_time = date_obj.astimezone(datetime.timezone(datetime.timedelta(hours=8)))
+        return cn_time.strftime("%Y-%m-%d %H:%M:%S")
     return date_obj
 
 

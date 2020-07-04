@@ -22,6 +22,10 @@ def format_job_time(objs):
             job_data["start_time"] = time_utils.get_datetime_str(job_data["start_time"])
         if end_time:
             job_data["end_time"] = time_utils.get_datetime_str(job_data["end_time"])
+        job_data["duration_time"] = (0, 0)
+        if start_time and end_time:
+            duration_time = end_time - start_time
+            job_data["duration_time"] = (duration_time.days, duration_time.seconds)
         if operations:
             for opt in operations:
                 opt["time"] = time_utils.get_datetime_str(opt["time"])
