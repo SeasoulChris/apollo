@@ -95,8 +95,8 @@ class SensorCalibrationPipeline(BasePipeline):
             logging.fatal('Failed to process sensor calibration job')
         result = JobUtils(job_id).get_job_info()
         for job_info in result:
-            if (int(time.mktime(datetime.now())
-                    - time.mktime(job_info['start_time']))) > 259200:
+            if (int(time.mktime(datetime.now().timetuple())
+                    - time.mktime(job_info['start_time'].timetuple()))) > 259200:
                 JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
                                                      'Calibration error, \
                                                      please contact after-sales technical support',
