@@ -26,5 +26,6 @@ py_binary(
         ":application",
         "//apps/k8s/admin_console/views:index",
         "//apps/k8s/admin_console/views:job",
+        "//apps/k8s/admin_console/views:statistics",
     ],
 )

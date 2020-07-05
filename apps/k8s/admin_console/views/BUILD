@@ -17,3 +17,16 @@ py_binary(
         "//fueling/common:job_utils",
     ],
 )
+
+py_library(
+    name = "statistics",
+    srcs = ["statistics.py"],
+    data = ["//apps/k8s/admin_console:resource"],
+    deps = [
+        "//apps/k8s/admin_console:application",
+        "//apps/k8s/admin_console/controllers:job",
+        "//apps/k8s/admin_console/utils:time_utils",
+        "//fueling/common:job_utils",
+        "//fueling/common:logging",
+    ],
+)

@@ -17,6 +17,7 @@ RUN pip3 install --no-cache-dir \
         mpld3 \
         protobuf \
         pymongo \
+        pyproj \
         pytz \
         redis
 

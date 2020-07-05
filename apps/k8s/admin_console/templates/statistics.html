@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content%}
+     <!-- filter and search -->
+     <div class="row">
+        <form action="/statistics" method="get" id="statictics-form">
+
+            <!-- job-type filter -->
+            <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
+                <select name="job_selected" class="selectpicker"
+                        style="height:34px; font-size: 12px" id="statistics-type-select">
+                    {% for type, value in job_type.items() %}
+                        {% if type == current_type %}
+                            <option value="{{ type }}" style="font-size: 12px" selected> {{ value }}</option>
+                        {% else %}
+                            <option value="{{ type }}" style="font-size: 12px"> {{ value }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- time-field filter -->
+            <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
+                <select name="time_selected" class="selectpicker"
+                        style="height:34px; font-size: 12px" id="statistics-time-select">
+                    {% for field, value in time_field.items() %}
+                        {% if field == current_time %}
+                            <option value="{{ field }}" style="font-size: 12px" selected> {{ value }}</option>
+                        {% else %}
+                            <option value="{{ field }}" style="font-size: 12px" > {{ value }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- aggregated-field filter -->
+            <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
+                <select name="aggregated_selected" class="selectpicker"
+                        style="height:34px; font-size: 12px" id="aggregated-select">
+                    {% for aggregated in aggregated_by %}
+                        {% if aggregated == current_aggregated %}
+                            <option value="{{ aggregated }}" selected> {{ aggregated }}</option>
+                        {% else %}
+                            <option value="{{ aggregated }}"> {{ aggregated }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- vehicle sn search -->
+            <div class="col-lg-3" style="width:40%; float: left; padding-left: 20px;">
+                <div class="input-group">
+                    <input type="search" id="statistics-sn-search" name="vehicle_sn" class="form-control"
+                            placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 34px;">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="statistics-search-btn" style="font-size: 12px;height: 34px;border-radius: 0; ">搜索</button>
+                    </span>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="statistics-filter-message-close" style="font-size: 12px;height: 34px;display: inline">清空</button>
+                    </span>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- blank div -->
+    <div style="height: 60px; width: 100%">
+    </div>
+
+    <!-- search message and update message -->
+    {% if vehicle_sn %}
+        <p>
+            <span id="statistics-filter-message"
+                 style="color:red"> 通过车辆编号{{ vehicle_sn }}搜索出以下统计结果：
+            </span>
+        </p>
+    {% endif %}
+
+    <table class="table table-hover">
+        <tr>
+        {% for label in lable_list %}            
+            <th>{{ label }}</th>            
+        {% endfor %}
+        </tr>
+        {% for job_type in job_type_list %}
+            <tr>
+                <td>{{ job_type }}</td>
+                {% for num in num_list[job_type] %}       
+                    <td>{{ num }}</td>
+                {% endfor %}
+            </tr>            
+        {% endfor %}
+    </table>
+{% endblock %}

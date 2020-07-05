@@ -31,6 +31,33 @@ $(document).ready(function () {
         $("#job-form").submit();
     });
 
+    // close search message
+    $("#statistics-filter-message-close").click(function () {
+        $("#statistics-filter-message").text("");
+        $("#statictics-form").submit();
+    });
+
+    // submit the job-type select
+    $('#statistics-type-select').change(function () {
+        $("#statictics-form").submit();
+    });
+
+    // submit the time-field select
+    $('#statistics-time-select').change(function () {
+        $("#statictics-form").submit();
+    });
+
+    // submit the search by vehicle SN
+    $("#statistics-search-btn").click(function () {
+        $("#statictics-form").submit();
+    });
+
+
+    // submit the aggregate-field select
+    $('#aggregated-select').change(function () {
+        $("#statictics-form").submit();
+    });
+
     // Modal box of comment
     $('#identifier').modal()
 

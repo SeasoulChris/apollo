@@ -41,7 +41,7 @@ def get_jobs_list():
     for job_data in Mongo().fuel_job_collection().find():
         job_data['_id'] = job_data['_id'].__str__()
         result.append(job_data)
-    logging.info(f"get job list result: {result}")
+    logging.info(f"get job list num: {len(result)}")
     return result
 
 
