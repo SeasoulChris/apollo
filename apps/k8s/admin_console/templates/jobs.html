@@ -35,16 +35,18 @@
             </div>
 
             <!-- vehicle sn search -->
-            <div class="col-lg-3" style="width:40%; float: left; padding-left: 20px;">
+            <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
                 <div class="input-group">
                     <input type="search" id="sn-search" name="vehicle_sn" class="form-control"
                            placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 34px;">
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button" id="search-btn" style="font-size: 12px;height: 34px;border-radius: 0; ">搜索</button>
                     </span>
+                     {% if vehicle_sn %}
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button" id="filter-message-close" style="font-size: 12px;height: 34px;display: inline">清空</button>
                     </span>
+                    {% endif %}
                 </div>
             </div>
         </form>
@@ -98,26 +100,26 @@
             <th>起始时间</th>
             <th>结束时间</th>
             <th>持续时间</th>
+            <th>失败原因</th>
             <th>当前进度</th>
             <th>是否有效</th>
             <th>输入数据大小</th>
-            <th>失败原因</th>
             <th>动作</th>
             <th>展开/收缩</th>
         </tr>
         {% for job in jobs_list %}
             <tr>
                 <td>{{ job.vehicle_sn }}</td>
-                <td>{{ job.job_type | show_type }}</td>
-                <td>{{ job.job_id }}</td>
+                <td>{{ job.job_type| show_type }}</td>
+                <td class="td-job-id">...{{ job.job_id | show_id }}</td>
                 <td>{{ job.status }}</td>
                 <td>{{ job.start_time }}</td>
                 <td>{{ job.end_time }}</td>
                 <td>{{ job.duration_time | show_duration }}</td>
+                <td class="failure-code">{{ job.failure_code }}</td>
                 <td>{{ job.progress }}</td>
                 <td id="is-valid-{{ job.job_id }}">{{ job.is_valid }}</td>
                 <td>{{ job.input_data_size }}</td>
-                <td>{{ job.failure_code }}</td>
                 <td>
                     <a style="width: 100%" id="button-{{ job.job_id }}" class="job-modal" data-toggle="modal"
                        data-target="#myModal">
@@ -128,6 +130,8 @@
                     <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
                     <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收缩</a>
                 </td>
+                <td class="failure-all" style="display: none">{{ job.failure_code | show_failure_cause }}</td>
+                <td class="job-id-all" style="display: none">{{ job.job_id }}</td>
             </tr>
 
             <!-- The service information -->

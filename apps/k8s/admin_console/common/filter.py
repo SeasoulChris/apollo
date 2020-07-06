@@ -3,6 +3,8 @@
 about filter function
 """
 
+import application
+
 
 def get_show_job_type(job):
     """
@@ -49,3 +51,12 @@ def get_duration(time_tuple):
     if seconds:
         re += str(seconds) + "秒"
     return re
+
+
+def get_failure_cause(code):
+    failure_cause = application.app.config.get("FAILURE_CAUSE")
+    return failure_cause[code] if code else ""
+
+
+def truncation_job_id(job_id):
+    return job_id[-6:] if job_id else ""

@@ -4,6 +4,9 @@ py_library(
     name = "filter",
     srcs = ["filter.py"],
     data = ["//apps/k8s/admin_console:resource"],
+    deps = [
+        "//apps/k8s/admin_console:application",
+    ],
 )
 
 py_library(

@@ -3,6 +3,56 @@ $(document).ready(function () {
     // select drop-down box
     $('select').selectpicker();
 
+    // failure cause mouseover
+    $(".failure-code").mouseover(function (e) {
+        $(this).siblings(".failure-all").css(
+            {"position": "absolute", "top": e.pageY + 10, "left": e.pageX + 10, "display": "table-row"}
+        );
+    });
+
+    // failure cause mousemove
+    $(".failure-code").mousemove(function (e) {
+        $(this).siblings(".failure-all").css({
+            "border-top": "none",
+            "color": "fff",
+            "position": "absolute",
+            "opacity": "0.9",
+            "background-color": "white",
+            "top": e.pageY + 10,
+            "left": e.pageX + 10
+        });
+    });
+
+    // failure cause mouseout
+    $(".failure-code").mouseout(function () {
+        $(this).siblings(".failure-all").css({"display": "none"});
+    });
+
+    // job-id mouseover
+    $(".td-job-id").mouseover(function (e) {
+        $(this).siblings(".job-id-all").css(
+            {"position": "absolute", "top": e.pageY + 5, "left": e.pageX + 5, "display": "table-row"}
+        );
+    });
+
+    // job-id mousemove
+    $(".td-job-id").mousemove(function (e) {
+        $(this).siblings(".job-id-all").css({
+            "border-top": "none",
+            "color": "fff",
+            "position": "absolute",
+            "opacity": "0.9",
+            "background-color": "white",
+            "top": e.pageY + 5,
+            "left": e.pageX + 5
+        });
+    });
+
+    // job-id mouseout
+    $(".td-job-id").mouseout(function () {
+        $(this).siblings(".job-id-all").css({"display": "none"});
+    });
+
     // close update message
     $("#update-message-close").click(function () {
         $("#update-message").text("");
@@ -78,7 +128,7 @@ $(document).ready(function () {
         }
         $(this).append('<div id=' + job_id + ' class="job-id"></div><div id="job-action" class=' + en_action + '></div>');
         $("#myModalLabel").text("设置" + action);
-        $(".comment-title").text("你想要把当前任务设置为" + action + "吗?");
+        $(".comment-title").text("你确认把当前任务设置为" + action + "吗?");
     })
 
     // Click the cancel button
