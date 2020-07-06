@@ -38,7 +38,6 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
         optimizer.zero_grad()
         if is_transpose:
             x_batch = torch.transpose(x_batch, 0, 1).type(torch.FloatTensor)
-        # logging.info(x_batch.shape)  # ([100, 64, 6])
         output = model(x_batch)
         # train loss
         train_loss = -loss(output, y_batch)

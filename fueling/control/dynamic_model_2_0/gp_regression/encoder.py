@@ -85,7 +85,6 @@ class ScaledDotProductAttention(nn.Module):
 
     def forward(self, q, k, v, mask=None):
         """ q: query; k: key; v: value"""
-
         # (Batch, seq, feature)
         # Check if key and query size are the same
         d_k = k.size(-1)
@@ -113,7 +112,6 @@ class ScaledDotProductAttention(nn.Module):
 
         # STEP 4: Softmax
         score_attn_exp = torch.exp(score_attn)
-        # score_attn_exp = score_attn_exp * (score_attn == 0).float()  # this step masks
         tmp = score_attn_exp.sum(dim=-1, keepdim=True)
         score_attn = score_attn_exp / tmp
         isnan = torch.isnan(score_attn)
@@ -129,7 +127,6 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class AttentionHead(nn.Module):
-
     def __init__(self, d_model, d_feature, dropout=0.1):
         super().__init__()
         self.attn = ScaledDotProductAttention(dropout)
@@ -151,7 +148,6 @@ class AttentionHead(nn.Module):
 
 class MultiHeadAttentionFast(nn.Module):
     """https://github.com/SamLynnEvans/Transformer"""
-    """ explain https://towardsdatascience.com/how-to-code-the-transformer-in-pytorch-24db27c8f9ec"""
 
     def __init__(self, d_model, d_feature, n_heads, dropout=0.1):
         super().__init__()
@@ -164,8 +160,6 @@ class MultiHeadAttentionFast(nn.Module):
         self.k_linear = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Linear(d_model, d_model)
-
-        # self.attn = ScaledDotProductAttention(dropout)
 
     def forward(self, q, k, v, mask=None):
 
@@ -190,7 +184,7 @@ class MultiHeadAttentionFast(nn.Module):
 
 
 def attention(q, k, v, d_k, mask=None, dropout=None):
-
+    """ attention function """
     scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
     if mask is not None:
         mask = mask.unsqueeze(1)
@@ -386,11 +380,7 @@ class TransformerEncoderCNN(nn.Module):
         # original data shape: [sequency/window_size, batch_size, channel]
         encoded_data = self.encoder(data)
         isnan = torch.isnan(encoded_data)
-        if isnan.any():
-            logging.info(f'Encoder: {data} results NaN data.')
 
-        # encoded_data = data
-        # logging.info(f'encoded_data shape is {encoded_data.shape}')
         # conv_input shape: [batch_size, channel, sequency/window_size]
         conv1_input = torch.transpose(torch.transpose(encoded_data, -2, -3), -2, -1)
         data = F.relu(self.conv1(conv1_input))

@@ -36,14 +36,10 @@ class GPModel(ApproximateGP):
 
     def forward(self, input_data):
         # to void loop for jit script
-        # logging.info(input_data.shape)
         warpped_input_date = torch.cat(
             (self.warping(input_data[0, :]).unsqueeze(0),
              self.warping(input_data[1, :]).unsqueeze(0)), 0)
-        #(batch_size, sequence, channel)
-        # 2 80 20
-        # logging.info(warpped_input_date.shape)
-
+        # (batch_size, sequence, channel)
         mean_x = self.mean_module(warpped_input_date)
         covar_x = self.covar_module(warpped_input_date)
         return MultivariateNormal(mean_x, covar_x)

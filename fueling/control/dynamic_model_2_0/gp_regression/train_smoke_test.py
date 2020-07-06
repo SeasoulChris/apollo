@@ -24,7 +24,7 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import toy_test_training_
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset \
     import DynamicModelDataset
 from fueling.control.dynamic_model_2_0.gp_regression.encoder import Encoder, DilatedEncoder
-from fueling.control.dynamic_model_2_0.gp_regression.encoder import TransformerEncoder, TransformerEncoderCNN
+from fueling.control.dynamic_model_2_0.gp_regression.encoder import TransformerEncoderCNN
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_state_dict
 from fueling.control.dynamic_model_2_0.gp_regression.train import save_model_torch_script
@@ -33,7 +33,7 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 
 
 train_model = True
-test_type = "full_test"
+test_type = "toy_test"
 if test_type == "full_test":
     config = training_config
     training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
@@ -83,8 +83,7 @@ valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
 
 
 # encoder
-# encoder_net_model = Encoder(
-# u_dim=feature_config["input_dim"], kernel_dim=config["kernel_dim"])
+# TransformerEncoderCNN
 encoder_net_model = TransformerEncoderCNN(u_dim=feature_config["input_dim"],
                                           kernel_dim=config["kernel_dim"])
 model, likelihood, optimizer, loss = train_utils.init_train(
