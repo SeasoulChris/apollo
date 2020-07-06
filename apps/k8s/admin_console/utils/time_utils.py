@@ -20,3 +20,25 @@ def days_ago(day):
     Get the past timestamp
     """
     return datetime.datetime.now() - datetime.timedelta(days=day)
+
+
+# weekflag format is 201435（year:2014 week:35）
+def getfirstday(weekflag):
+    """
+    Get the firt day date of week
+    """
+    yearnum = weekflag[0:4]   # get year
+    weeknum = weekflag[4:len(weekflag)]   # get week
+    stryearstart = yearnum + '0101'   # the firt day of the year
+    yearstart = datetime.datetime.strptime(stryearstart, '%Y%m%d')  # format the date
+    yearstartcalendarmsg = yearstart.isocalendar()  # the week info of the firt day
+    yearstartweek = yearstartcalendarmsg[1]
+    yearstartweekday = yearstartcalendarmsg[2]
+    yearstartyear = yearstartcalendarmsg[0]
+    if yearstartyear < int(yearnum):
+        daydelat = (8 - int(yearstartweekday)) + (int(weeknum) - 1) * 7
+    else:
+        daydelat = (8 - int(yearstartweekday)) + (int(weeknum) - 2) * 7
+
+    firtdate = (yearstart + datetime.timedelta(days=daydelat)).date()
+    return firtdate

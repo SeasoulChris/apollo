@@ -53,7 +53,6 @@ def statistics():
             find_filter["vehicle_sn"] = {'$ne': black_sn}
 
     selc_aggregated = aggregated_selected
-    logging.info(f"selc_aggregated: {selc_aggregated}")
 
     if job_selected:
         if job_selected not in job_selected:
@@ -61,10 +60,10 @@ def statistics():
         elif job_selected != "A":
             job_type_list = [job_type[job_selected]]
         else:
-            job_type_list = job_type.values()
+            job_type_list = list(job_type.values())
             aggregated_filed = aggregated_by
     else:
-        job_type_list = job_type.values()
+        job_type_list = list(job_type.values())
         aggregated_filed = aggregated_by
 
     logging.info(f"job_selected: {job_selected}")
@@ -89,6 +88,7 @@ def statistics():
     logging.info(f"time_selected: {time_selected}")
     logging.info(f"selc_aggregated: {selc_aggregated}")
     logging.info(f"job_type_list: {job_type_list}")
+    job_type_list.sort(reverse=True)
     for job_type in job_type_list:
         num_list_temp[job_type] = {}
         if job_type != "All":
@@ -98,22 +98,41 @@ def statistics():
         if not selc_aggregated:
             selc_aggregated = "Week"
         aggregated = f"$" + selc_aggregated.lower()
-        logging.info(f"aggregated: {aggregated}")
         logging.info(f"find_filter: {find_filter}")
 
-        subquery = job.job_collection.aggregate([{"$match": find_filter},
-                                                 {"$group": {"_id": {aggregated: "$start_time"},
-                                                             "count": {"$sum": 1}}},
-                                                 {"$sort": {"_id": 1}}])
+        operator = []
+        if selc_aggregated != "Year":
+            operator = [{"$match": find_filter},
+                        {"$group": {"_id": {selc_aggregated.lower(): {aggregated: "$start_time"},
+                                            "year": {"$year": "$start_time"}},
+                                    "count": {"$sum": 1}}},
+                        {"$sort": {"_id": 1}}]
+        else:
+            operator = [{"$match": find_filter},
+                        {"$group": {"_id": {aggregated: "$start_time"},
+                                    "count": {"$sum": 1}}},
+                        {"$sort": {"_id": 1}}]
+
+        subquery = job.job_collection.aggregate(operator)
         results = [doc for doc in subquery]
-        years = []
-        for doc in results:
-            if doc['_id'] not in labels_aggregated:
-                labels_aggregated.append(doc['_id'])
-            num_list_temp[job_type][doc['_id']] = doc['count']
-            # years.append(doc['retval'])
         logging.info(f"get aggregated: {results}")
-        logging.info(f"get years: {years}")
+        for doc in results:
+            labedate = ''
+            if selc_aggregated == "Week":
+                weekdate = str(doc['_id']["year"]) + str(doc['_id']["week"])
+                labedate = time_utils.getfirstday(weekdate)
+            elif selc_aggregated == "Month":
+                if doc['_id']["month"] < 10:
+                    labedate = str(doc['_id']["year"]) + "-0" + str(doc['_id']["month"])
+                else:
+                    labedate = str(doc['_id']["year"]) + "-" + str(doc['_id']["month"])
+            else:
+                labedate = doc['_id']
+
+            if labedate not in labels_aggregated:
+                labels_aggregated.append(labedate)
+            num_list_temp[job_type][labedate] = doc['count']
+
         logging.info(f"get labels_aggregated: {labels_aggregated}")
         logging.info(f"get num_list_temp: {num_list_temp}")
     labels_aggregated.sort()
