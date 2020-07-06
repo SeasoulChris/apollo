@@ -112,6 +112,7 @@ py_binary(
         ":dynamic_model_dataset",
         ":encoder",
         ":train_utils",
+        ":train",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
 )
