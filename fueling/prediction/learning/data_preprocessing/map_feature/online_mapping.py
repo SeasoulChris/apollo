@@ -35,13 +35,14 @@ class ObstacleMapping(object):
 
         self.world_coord = world_coord
         self.obstacles_history = obstacles_history
+        self.ego_history = ego_history
         self.base_point = np.array(center_point) - 100
         self.GRID = [2000, 2000]
         self.resolution = 0.1
         self.feature_map = base_map[center_idx[1] - 1000:center_idx[1] + 1000,
                                     center_idx[0] - 1000:center_idx[0] + 1000].copy()
         self.draw_obstacles_history()
-        self.draw_ego_history(ego_history)
+        self.draw_ego_history(self.ego_history)
 
     def get_trans_point(self, p):
         point = np.round((p - self.base_point) / self.resolution)
@@ -106,6 +107,15 @@ class ObstacleMapping(object):
             points = [self.get_trans_point(point) for point in points]
             cv.fillPoly(self.feature_map, [np.int32(points)],
                         color=tuple(c * (1 / history_size * i) for c in color))
+
+    def crop_ego_center(self, color = (0, 0, 255)):
+        self.draw_ego_history(self.ego_history, color)
+        center = tuple(self.get_trans_point(self.world_coord[0:2]))
+        heading_angle = self.world_coord[2] * 180 / np.pi
+        M = cv.getRotationMatrix2D(center, 90 - heading_angle, 1.0)
+        rotated = cv.warpAffine(self.feature_map, M, tuple(self.GRID))
+        output = rotated[center[1] - 600:center[1] + 200, center[0] - 400:center[0] + 400]
+        return output
 
     def crop_area(self, feature_map, world_coord):
         center = tuple(self.get_trans_point(world_coord[0:2]))
