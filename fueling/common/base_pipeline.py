@@ -112,7 +112,7 @@ class BasePipeline(object):
             BasePipeline.SPARK_CONTEXT.stop()
             BasePipeline.SPARK_CONTEXT = None
 
-    def __cloud_job_post_process__(self):
+    def __cloud_job_post_process__(self, job_failed=False):
         kubectl = Kubectl()
         driver_pod_name_pattern = F'job-{flags.FLAGS.job_id}-*-driver'
         driver_pod = kubectl.get_pods_by_pattern(driver_pod_name_pattern)
@@ -124,11 +124,13 @@ class BasePipeline(object):
             else:
                 pod_log = kubectl.logs(pod_name, pod_namespace)
                 pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
-                if pod_desc['status']['phase'] == 'Running':
-                    phase = 'Succeeded'
-                    pod_desc['status']['phase'] = phase
+                if job_failed:
+                    pod_desc['status']['phase'] = phase = 'Failed'
                 else:
-                    phase = pod_desc['status']['phase']
+                    if pod_desc['status']['phase'] == 'Running':
+                        pod_desc['status']['phase'] = phase = 'Succeeded'
+                    else:
+                        phase = pod_desc['status']['phase']
                 creation_timestamp = (dateutil.parser
                                       .parse(pod_desc['metadata']['creationTimestamp'])
                                       .replace(tzinfo=timezone.utc))
@@ -152,15 +154,19 @@ class BasePipeline(object):
         if flags.FLAGS.cloud:
             SparkSubmitterClient(self.entrypoint).submit()
             return
+        job_failed = False
         try:
             self.init()
             self.run()
         except Exception as ex:
+            job_failed = True
             logging.error(str(ex))
         finally:
             self.stop()
         if flags.FLAGS.running_mode == 'PROD':
-            self.__cloud_job_post_process__()
+            self.__cloud_job_post_process__(job_failed)
+        if job_failed:
+            sys.exit(1)
 
     def main(self):
         """Kick off everything."""
@@ -236,3 +242,4 @@ class BasePipelineTest(absltest.TestCase):
     def tearDown(self):
         self.pipeline.stop()
         super().tearDown()
+
