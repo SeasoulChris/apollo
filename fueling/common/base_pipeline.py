@@ -155,6 +155,8 @@ class BasePipeline(object):
         try:
             self.init()
             self.run()
+        except Exception as ex:
+            logging.error(str(ex))
         finally:
             self.stop()
         if flags.FLAGS.running_mode == 'PROD':
