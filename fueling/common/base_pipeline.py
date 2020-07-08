@@ -242,4 +242,3 @@ class BasePipelineTest(absltest.TestCase):
     def tearDown(self):
         self.pipeline.stop()
         super().tearDown()
-
