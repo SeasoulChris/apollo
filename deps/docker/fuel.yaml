@@ -11,10 +11,13 @@ dependencies:
   - conda-forge::casadi
   - conda-forge::eventlet
   - conda-forge::flask-restful
+  - conda-forge::librosa
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar
+  - conda-forge::pydub
   - conda-forge::python-kubernetes
+  - conda-forge::pywavelets
   - flask
   - flask-socketio
   - graphviz
@@ -38,10 +41,12 @@ dependencies:
   - redis-py
   - requests
   - scikit-learn
+  - seaborn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
   - torchvision
   - tqdm
 
   - pip:
+    - eyeD3
     - pyspark-utils
