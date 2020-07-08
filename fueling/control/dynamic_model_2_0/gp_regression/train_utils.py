@@ -7,6 +7,8 @@ import gpytorch
 import torch
 import tqdm
 
+import matplotlib.pyplot as plt
+
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
 import fueling.common.logging as logging
 
@@ -50,7 +52,7 @@ def basic_train_loop(train_loader, model, loss, optimizer, is_transpose=False):
 
 
 def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
-                           loss, optimizer, is_transpose=False):
+                           loss, optimizer, fig_file_path=None, is_transpose=False):
     # adjust learning rate
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10,
                                   verbose=False, threshold=0.0001, threshold_mode='rel',
@@ -60,15 +62,33 @@ def train_with_adjusted_lr(num_epochs, train_loader, model, likelihood,
     model.train()
     likelihood.train()
 
+    # save train loss
+    train_loss_all = []
     epochs_iter = tqdm.tqdm(range(num_epochs), desc="Epoch")
     for i in epochs_iter:
         # Within each iteration, we will go over each minibatch of data
         tqdm.tqdm(train_loader, desc="Minibatch", leave=False)
         train_loss = basic_train_loop(train_loader, model, loss, optimizer, is_transpose)
         scheduler.step(train_loss)
+        train_loss_all.append(train_loss)
         if i == 10:
             gpytorch.settings.tridiagonal_jitter(1e-4)
+    plot_train_loss(train_loss_all, fig_file_path)
     return model, likelihood
+
+
+def plot_train_loss(train_losses, fig_file_path):
+    fig = plt.figure(figsize=(12, 8))
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.set_xlabel('epoch', fontdict={'size': 12})
+    ax1.set_ylabel('loss', fontdict={'size': 12})
+    ax1.plot(train_losses, label=f"training loss")
+    plt.legend(fontsize=12, numpoints=5, frameon=False)
+    plt.title("Training Loss")
+    plt.grid(True)
+    if fig_file_path is not None:
+        plt.savefig(fig_file_path)
+    plt.show()
 
 
 def load_model(file_path, encoder_net_model, model, likelihood):

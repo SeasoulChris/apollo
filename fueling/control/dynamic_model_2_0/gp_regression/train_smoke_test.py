@@ -49,8 +49,13 @@ else:
     validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/gp_regression/testdata/test"
 # time
 timestr = time.strftime('%Y%m%d-%H%M')
-offline_model_path = os.path.join(validation_data_path, f'{timestr}', 'gp_model.pth')
-online_model_path = os.path.join(validation_data_path, f'{timestr}', 'gp_model.pt')
+# save files at
+result_folder = os.path.join(validation_data_path, f'{timestr}')
+if not os.path.exists(result_folder):
+    os.makedirs(result_folder)
+offline_model_path = os.path.join(result_folder, 'gp_model.pth')
+online_model_path = os.path.join(result_folder, 'gp_model.pt')
+
 
 # setup data loader
 train_dataset = DynamicModelDataset(training_data_path)
@@ -90,11 +95,11 @@ model, likelihood, optimizer, loss = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
 
-
+train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
     model, likelihood = train_utils.train_with_adjusted_lr(
         config["num_epochs"], train_loader, model, likelihood,
-        loss, optimizer, is_transpose=True)
+        loss, optimizer, fig_file_path=train_loss_plot, is_transpose=True)
 
     # test save and load model
     save_model_state_dict(model, likelihood, offline_model_path)
@@ -147,6 +152,8 @@ ax.plot(train_y[:, 0], train_y[:, 1],
 ax.plot(mean[:, 0], mean[:, 1], 's', color='r', label='Predicted mean')
 ax.legend(fontsize=12, frameon=False)
 ax.grid(True)
+# save validation figures to folder
+plt.savefig(os.path.join(validation_data_path, f'{timestr}', 'validation.png'))
 plt.show()
 
 
