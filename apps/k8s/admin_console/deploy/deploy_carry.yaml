@@ -20,7 +20,7 @@ spec:
         nodezone: czone
       containers:
       - name: admin-console-carry
-        image: hub.baidubce.com/apollofuel/admin_console:20200704_0844
+        image: hub.baidubce.com/apollofuel/admin_console:20200707_0628
         ports:
         - containerPort: 8000
         env:

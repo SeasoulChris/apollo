@@ -36,11 +36,11 @@
             <div class="btn-group" style="width:20%; float: left; padding-left: 20px;">
                 <select name="aggregated_selected" class="selectpicker"
                         style="height:34px; font-size: 12px" id="aggregated-select">
-                    {% for aggregated in aggregated_by %}
-                        {% if aggregated == current_aggregated %}
-                            <option value="{{ aggregated }}" selected> {{ aggregated }}</option>
+                    {% for field, value in aggregated_by.items() %}
+                        {% if field == current_aggregated %}
+                            <option value="{{ field }}" style="font-size: 12px" selected> {{ value }}</option>
                         {% else %}
-                            <option value="{{ aggregated }}"> {{ aggregated }}</option>
+                            <option value="{{ field }}" style="font-size: 12px" > {{ value }}</option>
                         {% endif %}
                     {% endfor %}
                 </select>
@@ -50,12 +50,12 @@
             <div class="col-lg-3" style="width:40%; float: left; padding-left: 20px;">
                 <div class="input-group">
                     <input type="search" id="statistics-sn-search" name="vehicle_sn" class="form-control"
-                            placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 34px;">
+                            placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 32px;">
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="statistics-search-btn" style="font-size: 12px;height: 34px;border-radius: 0; ">搜索</button>
+                        <button class="btn btn-default" type="button" id="statistics-search-btn" style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
                     </span>
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="statistics-filter-message-close" style="font-size: 12px;height: 34px;display: inline">清空</button>
+                        <button class="btn btn-default" type="button" id="statistics-filter-message-close" style="font-size: 12px;height: 32px;display: inline">清空</button>
                     </span>
                 </div>
             </div>
@@ -81,10 +81,10 @@
             <th>{{ label }}</th>            
         {% endfor %}
         </tr>
-        {% for job_type in job_type_list %}
+        {% for type, value in job_type_list.items() %}
             <tr>
-                <td>{{ job_type }}</td>
-                {% for num in num_list[job_type] %}       
+                <td>{{ value }}</td>
+                {% for num in num_list[type] %}       
                     <td>{{ num }}</td>
                 {% endfor %}
             </tr>            

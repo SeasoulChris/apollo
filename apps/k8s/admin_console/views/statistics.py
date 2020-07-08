@@ -23,11 +23,12 @@ def statistics():
     """
     The fuction of statistics
     """
-    job_type = application.app.config.get("JOB_TYPE")
+    job_type_filed = application.app.config.get("JOB_TYPE")
     time_field = application.app.config.get("TIME_FIELD")
     show_time_field = application.app.config.get("SHOW_TIME_FIELD")
     show_job_type = application.app.config.get("SHOW_JOB_TYPE")
     black_list = application.app.config.get("BLACK_LIST")
+    show_aggregated_by = application.app.config.get("AGGREGATED_FIELD")
     aggregated_by = application.app.config.get("AGGREGATED_BY")
     job_selected = flask.request.args.get("job_selected")
     time_selected = flask.request.args.get("time_selected")
@@ -39,12 +40,14 @@ def statistics():
     weeks = []
     num_list = {}
     num_list_temp = {}
+    show_job_type_list = {}
     job_type_list = []
     labels_aggregated = []
-    aggregated_filed = []
+    aggregated_filed = {}
+    selc_aggregated = ""
 
-    # find_filter["is_partner"] = True
-    find_filter["is_valid"] = True
+    find_filter["is_partner"] = True
+    # find_filter["is_valid"] = True
 
     if vehicle_sn:
         find_filter["vehicle_sn"] = vehicle_sn
@@ -52,19 +55,25 @@ def statistics():
         for black_sn in black_list:
             find_filter["vehicle_sn"] = {'$ne': black_sn}
 
-    selc_aggregated = aggregated_selected
+    if aggregated_selected:
+        selc_aggregated = aggregated_by[aggregated_selected]
+    else:
+        selc_aggregated = "week"
 
     if job_selected:
         if job_selected not in job_selected:
             return flask.render_template("error.html", error="Invalid parameter")
         elif job_selected != "A":
-            job_type_list = [job_type[job_selected]]
+            job_type_list = [job_selected]
+            show_job_type_list = {job_selected: show_job_type[job_selected]}
         else:
-            job_type_list = list(job_type.values())
-            aggregated_filed = aggregated_by
+            job_type_list = list(show_job_type.keys())
+            show_job_type_list = show_job_type
     else:
-        job_type_list = list(job_type.values())
-        aggregated_filed = aggregated_by
+        job_type_list = list(show_job_type.keys())
+        show_job_type_list = show_job_type
+
+    aggregated_filed = show_aggregated_by
 
     logging.info(f"job_selected: {job_selected}")
     if time_selected:
@@ -72,38 +81,45 @@ def statistics():
             return flask.render_template("error.html", error="Invalid parameter")
         elif time_selected != "All":
             if time_field[time_selected] == 7:
-                aggregated_filed = ["Week"]
+                aggregated_filed = {"W": "周"}
             elif time_field[time_selected] == 30:
-                aggregated_filed = ["Week", "Month"]
+                aggregated_filed = {"W": "周", "M": "月"}
             else:
-                aggregated_filed = aggregated_by
+                aggregated_filed = show_aggregated_by
             days_ago = time_utils.days_ago(time_field[time_selected])
             find_filter["start_time"] = {"$gt": days_ago}
-            selc_aggregated = aggregated_selected
+            selc_aggregated = aggregated_by[aggregated_selected]
     else:
-        aggregated_filed = aggregated_by
-        selc_aggregated = "Week"
+        aggregated_filed = show_aggregated_by
+        selc_aggregated = "week"
 
     labels.append('Job Type')
     logging.info(f"time_selected: {time_selected}")
     logging.info(f"selc_aggregated: {selc_aggregated}")
     logging.info(f"job_type_list: {job_type_list}")
     job_type_list.sort(reverse=True)
+    list_dict = sorted(show_job_type_list.items(),
+                       key=lambda show_job_type_list: show_job_type_list[0],
+                       reverse=True)
+    show_job_type_list.clear()
+    for temp in list_dict:
+        show_job_type_list[temp[0]] = temp[1]
     for job_type in job_type_list:
         num_list_temp[job_type] = {}
-        if job_type != "All":
-            find_filter["job_type"] = job_type
+        if job_type != "A":
+            find_filter["job_type"] = job_type_filed[job_type]
         else:
-            find_filter["job_type"] = None
+            find_filter["job_type"] = {"$in": [job_type_filed[type_job]
+                                               for type_job in job_type_list if type_job != "A"]}
         if not selc_aggregated:
-            selc_aggregated = "Week"
-        aggregated = f"$" + selc_aggregated.lower()
+            selc_aggregated = "week"
+        aggregated = f"$" + selc_aggregated
         logging.info(f"find_filter: {find_filter}")
 
         operator = []
-        if selc_aggregated != "Year":
+        if selc_aggregated != "year":
             operator = [{"$match": find_filter},
-                        {"$group": {"_id": {selc_aggregated.lower(): {aggregated: "$start_time"},
+                        {"$group": {"_id": {selc_aggregated: {aggregated: "$start_time"},
                                             "year": {"$year": "$start_time"}},
                                     "count": {"$sum": 1}}},
                         {"$sort": {"_id": 1}}]
@@ -118,10 +134,10 @@ def statistics():
         logging.info(f"get aggregated: {results}")
         for doc in results:
             labedate = ''
-            if selc_aggregated == "Week":
+            if selc_aggregated == "week":
                 weekdate = str(doc['_id']["year"]) + str(doc['_id']["week"])
                 labedate = time_utils.getfirstday(weekdate)
-            elif selc_aggregated == "Month":
+            elif selc_aggregated == "month":
                 if doc['_id']["month"] < 10:
                     labedate = str(doc['_id']["year"]) + "-0" + str(doc['_id']["month"])
                 else:
@@ -143,14 +159,13 @@ def statistics():
         for label in labels_aggregated:
             if label not in num_list_temp[job_type]:
                 num_list_temp[job_type][label] = 0
-        temp_dic = dict(sorted(num_list_temp[job_type].items(), key=lambda item: item[1]))
-        num_list[job_type].extend(temp_dic.values())
+            num_list[job_type].append(num_list_temp[job_type][label])
     logging.info(f"get new labels_aggregated: {labels_aggregated}")
     logging.info(f"get new num_list: {num_list_temp}")
     logging.info(f"get num_list: {num_list}")
     return flask.render_template('statistics.html', lable_list=labels,
                                  labels_aggregated=labels_aggregated, num_list=num_list,
-                                 job_type=show_job_type, job_type_list=job_type_list,
+                                 job_type=show_job_type, job_type_list=show_job_type_list,
                                  time_field=show_time_field, aggregated_by=aggregated_filed,
                                  current_type=job_selected, current_time=time_selected,
                                  current_aggregated=aggregated_selected)

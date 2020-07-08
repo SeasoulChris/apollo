@@ -36,9 +36,9 @@ def getfirstday(weekflag):
     yearstartweekday = yearstartcalendarmsg[2]
     yearstartyear = yearstartcalendarmsg[0]
     if yearstartyear < int(yearnum):
-        daydelat = (8 - int(yearstartweekday)) + (int(weeknum) - 1) * 7
+        daydelat = (8 - int(yearstartweekday)) + int(weeknum) * 7
     else:
-        daydelat = (8 - int(yearstartweekday)) + (int(weeknum) - 2) * 7
+        daydelat = (8 - int(yearstartweekday)) + (int(weeknum) - 1) * 7
 
     firtdate = (yearstart + datetime.timedelta(days=daydelat)).date()
     return firtdate
