@@ -115,21 +115,19 @@ def jobs():
     show_job_type = application.app.config.get("SHOW_JOB_TYPE")
     black_list = application.app.config.get("BLACK_LIST")
     current_page = int(flask.request.args.get("page", 1))
-    job_selected = flask.request.args.get("job_selected")
-    time_selected = flask.request.args.get("time_selected")
+    job_selected = flask.request.args.get("job_selected", "A")
+    time_selected = flask.request.args.get("time_selected", "All")
     vehicle_sn = flask.request.args.get("vehicle_sn")
     find_filter = [{"is_partner": True}]
-    if job_selected:
-        if job_selected not in job_selected:
-            return flask.render_template("error.html", error="Invalid parameter")
-        elif job_selected != "A":
-            find_filter.append({"job_type": job_type[job_selected]})
-    if time_selected:
-        if time_selected not in time_field:
-            return flask.render_template("error.html", error="Invalid parameter")
-        elif time_selected != "All":
-            days_ago = time_utils.days_ago(time_field[time_selected])
-            find_filter.append({"start_time": {"$gt": days_ago}})
+    if job_selected not in job_type:
+        return flask.render_template("error.html", error="Invalid parameter")
+    elif job_selected != "A":
+        find_filter.append({"job_type": job_type[job_selected]})
+    if time_selected not in time_field:
+        return flask.render_template("error.html", error="Invalid parameter")
+    elif time_selected != "All":
+        days_ago = time_utils.days_ago(time_field[time_selected])
+        find_filter.append({"start_time": {"$gt": days_ago}})
     if vehicle_sn:
         find_filter.append({"vehicle_sn": vehicle_sn})
     else:

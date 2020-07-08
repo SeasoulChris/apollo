@@ -61,6 +61,7 @@ $(document).ready(function () {
 
     // close search message
     $("#filter-message-close").click(function () {
+        $("#sn-search").attr("value","");
         $("#filter-message").text("");
         $("#comment_text").text();
         $("#job-form").submit();

@@ -38,7 +38,7 @@
             <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
                 <div class="input-group">
                     <input type="search" id="sn-search" name="vehicle_sn" class="form-control"
-                           placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 32px;">
+                           placeholder="搜索：通过vehicle SN" {% if vehicle_sn %} value={{ vehicle_sn }} {% endif %} style="font-size: 12px;height: 32px;">
                     <span class="input-group-btn">
                         <button class="btn btn-default" type="button" id="search-btn" style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
                     </span>
@@ -136,20 +136,20 @@
 
             <!-- The service information -->
             {#            <tr style="display: none" class="service_tr">#}
-            {#                <td align="left" colspan="11"><b>Service information:</b></td>#}
+            {#                <td align="left" colspan="13"><b>Service information:</b></td>#}
             {#            </tr>#}
 
             <tr style="display: none" class="service_span">
             </tr>
 
             <tr style="display: none" class="operation_tr">
-                <td align="left" colspan="11"><b>操作历史：</b></td>
+                <td align="left" colspan="13"><b>操作历史：</b></td>
             </tr>
 
             <!-- The history record of job operation -->
             {% for opt in job.operations %}
                 <tr style="display: none" class="operation_span">
-                    <td colspan="11" style="border-top: none">
+                    <td colspan="13" style="border-top: none">
                         任务被{{ opt.email }}在{{ opt.time }}设置为{{ opt.action.type | show_cn_action }}。备注是：{{ opt.comments }}。
                     </td>
                 </tr>
