@@ -38,13 +38,13 @@
             <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
                 <div class="input-group">
                     <input type="search" id="sn-search" name="vehicle_sn" class="form-control"
-                           placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 34px;">
+                           placeholder="搜索：通过vehicle SN" style="font-size: 12px;height: 32px;">
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="search-btn" style="font-size: 12px;height: 34px;border-radius: 0; ">搜索</button>
+                        <button class="btn btn-default" type="button" id="search-btn" style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
                     </span>
                      {% if vehicle_sn %}
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="filter-message-close" style="font-size: 12px;height: 34px;display: inline">清空</button>
+                        <button class="btn btn-default" type="button" id="filter-message-close" style="font-size: 12px;height: 32px;display: inline">清空</button>
                     </span>
                     {% endif %}
                 </div>
@@ -164,7 +164,7 @@
             <ul class="pagination">
                 {% if current_page.has_previous() %}
                     <li class="previous">
-                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}page={{ current_page.previous_page_number() }}"
+                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.previous_page_number() }}"
                            aria-label="Previous">
                             <span aria-hidden="true">上一页</span>
                         </a>
@@ -177,17 +177,17 @@
                 {% for i in current_page.page_nums() %}
                     {% if i == current_page.current_page %}
                         <li class="active"><a
-                                href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}page={{ i }}">{{ i }}</a>
+                                href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
                         </li>
                     {% else %}
                         <li>
-                            <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}page={{ i }}">{{ i }}</a>
+                            <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
                 {% if current_page.has_next() %}
                     <li class="next">
-                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}page={{ current_page.next_page_number() }}"
+                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.next_page_number() }}"
                            aria-label="Next">
                             <span aria-hidden="true">下一页</span>
                         </a>
