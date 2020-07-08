@@ -122,7 +122,7 @@ class BasePipeline(object):
             if flags.FLAGS.auto_delete_driver_pod:
                 kubectl.delete_pod(pod_name, pod_namespace)
             else:
-                pod_log = kubectl.logs(pod_name, pod_namespace)
+                JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
                 pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
                 if job_failed:
                     pod_desc['status']['phase'] = phase = 'Failed'
@@ -134,6 +134,8 @@ class BasePipeline(object):
                 creation_timestamp = (dateutil.parser
                                       .parse(pod_desc['metadata']['creationTimestamp'])
                                       .replace(tzinfo=timezone.utc))
+                JobUtils(flags.FLAGS.job_id).save_job_phase(phase)
+                pod_log = kubectl.logs(pod_name, pod_namespace)
                 Mongo().job_log_collection().insert_one(
                     {'logs': pod_log,
                      'desc': json.dumps(pod_desc, sort_keys=True, indent=4,
@@ -143,8 +145,6 @@ class BasePipeline(object):
                      'pod_name': pod_name,
                      'namespace': pod_namespace,
                      'creation_timestamp': creation_timestamp.timestamp()})
-                JobUtils(flags.FLAGS.job_id).save_job_phase(phase)
-                JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
                 logging.info(F'Save driver log success')
         else:
             logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
@@ -160,7 +160,7 @@ class BasePipeline(object):
             self.run()
         except Exception as ex:
             job_failed = True
-            logging.error(str(ex))
+            logging.error(traceback.format_exc())
         finally:
             self.stop()
         if flags.FLAGS.running_mode == 'PROD':
