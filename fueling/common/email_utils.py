@@ -46,7 +46,6 @@ QA_TEAM = [
 D_KIT_TEAM = [
     'hukuang@baidu.com',
     'machao20@baidu.com',
-    'v_lishuanghua@baidu.com',
     'v_panxuechao@baidu.com',
     'v_zhangheyi@baidu.com',
     'wangxitong01@baidu.com',

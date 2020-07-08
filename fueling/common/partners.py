@@ -68,4 +68,7 @@ partners = {
     'd-kit-bzl-2020011': Partner(name='BZL11', email='1014896847@qq.com',
                                  bos_bucket='ljq-apollo', bos_region='gz',
                                  vehicle_sn='CH2020011'),
+    'd-kit-szy-2019091': Partner(name='SZY91', email='903381468@qq.com',
+                                 bos_bucket='apollocar', bos_region='gz',
+                                 vehicle_sn='CH2019091'),
 }

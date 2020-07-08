@@ -30,7 +30,7 @@ def statistics():
     black_list = application.app.config.get("BLACK_LIST")
     show_aggregated_by = application.app.config.get("AGGREGATED_FIELD")
     aggregated_by = application.app.config.get("AGGREGATED_BY")
-    job_selected = flask.request.args.get("job_selected")
+    job_selected = flask.request.args.get("job_selected", "A")
     time_selected = flask.request.args.get("time_selected")
     vehicle_sn = flask.request.args.get("vehicle_sn")
     aggregated_selected = flask.request.args.get("aggregated_selected")
@@ -93,7 +93,7 @@ def statistics():
         aggregated_filed = show_aggregated_by
         selc_aggregated = "week"
 
-    labels.append('Job Type')
+    labels.append('任务类型')
     logging.info(f"time_selected: {time_selected}")
     logging.info(f"selc_aggregated: {selc_aggregated}")
     logging.info(f"job_type_list: {job_type_list}")

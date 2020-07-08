@@ -63,6 +63,15 @@ py_library(
 )
 
 py_library(
+    name = "admin_utils",
+    srcs = ["admin_utils.py"],
+    deps = [
+        ":logging",
+        ":mongo_utils",
+    ],
+)
+
+py_library(
     name = "json_utils",
     srcs = ["json_utils.py"],
     deps = [

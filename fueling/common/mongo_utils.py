@@ -58,6 +58,10 @@ class Mongo(object):
         """Get fuel job collection"""
         return self.collection('fuel_job')
 
+    def admin_collection(self):
+        """Get admin_console admin collection"""
+        return self.collection('dkit_admins')
+
 
 if __name__ == '__main__':
     def main(argv):
