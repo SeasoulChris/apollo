@@ -693,6 +693,20 @@ class TrajectoryImitationRNNLoss():
 
 
 class TrajectoryImitationWithEnvRNNLoss():
+    def __init__(self,
+                 pos_dist_loss_weight=1,
+                 box_loss_weight=1,
+                 pos_reg_loss_weight=1,
+                 collision_loss_weight=1,
+                 offroad_loss_weight=1,
+                 imitation_dropout=False):
+        self.pos_dist_loss_weight = pos_dist_loss_weight
+        self.box_loss_weight = box_loss_weight
+        self.pos_reg_loss_weight = pos_reg_loss_weight
+        self.collision_loss_weight = collision_loss_weight
+        self.offroad_loss_weight = offroad_loss_weight
+        self.imitation_dropout = imitation_dropout
+
     def loss_fn(self, y_pred, y_true):
         batch_size = y_pred[0].shape[0]
         pred_pos_dists = y_pred[0].view(batch_size, -1)
@@ -714,8 +728,12 @@ class TrajectoryImitationWithEnvRNNLoss():
 
         offroad_loss = torch.mean(pred_boxs * true_offroad_mask)
 
-        return pos_dist_loss + box_loss + pos_reg_loss + \
-            collision_loss + offroad_loss
+        return (0 if self.imitation_dropout and torch.rand(1) > 0.5 else 1) * \
+            (self.pos_dist_loss_weight * pos_dist_loss
+             + self.box_loss_weight * box_loss
+             + self.pos_reg_loss_weight * pos_reg_loss) + \
+            self.collision_loss_weight * collision_loss + \
+            self.offroad_loss_weight * offroad_loss
 
     def loss_info(self, y_pred, y_true):
         # Focus on pose displacement error

@@ -82,6 +82,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         model = TrajectoryImitationRNNModel(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         loss = TrajectoryImitationRNNLoss(1, 1, 1)
+        # loss = TrajectoryImitationWithEnvRNNLoss(1, 1, 1, 1, 1, True)
 
     elif model_type == 'cnn+fc_lstm':
         train_dataset = TrajectoryImitationCNNFCLSTMDataset(train_dir,
@@ -126,7 +127,6 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     if torch.cuda.is_available():
         logging.info("Using CUDA to speed up training.")
         model.cuda()
-        torch.cuda.manual_seed(0)
     else:
         logging.info("Not using CUDA.")
 
