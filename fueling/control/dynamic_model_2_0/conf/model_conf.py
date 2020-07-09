@@ -44,7 +44,7 @@ feature_config = {
 }
 
 label_config = {
-    "LABEL_ALL_FRAMES": True,  # If label each of the input frames
+    "LABEL_ALL_FRAMES": False,  # If label each of the input frames
     "LABEL_SEGMENT_LEN": 100,  # The segment length for each labeling
     "LABEL_SEGMENT_STEP": 20,  # New steps ahead between 2 labeling
     "SAMPLE_SIZE": 8000,  # Maximum data points for each category

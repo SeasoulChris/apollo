@@ -33,7 +33,6 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
         "//fueling/control/dynamic_model_2_0/gp_regression:dataset",
-        "//fueling/control/dynamic_model_2_0/gp_regression:evaluation",
         "//fueling/control/dynamic_model_2_0/gp_regression:gp_model",
         "//fueling/control/dynamic_model_2_0/label_generation",
     ],

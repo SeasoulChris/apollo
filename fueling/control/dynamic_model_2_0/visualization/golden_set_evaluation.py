@@ -21,7 +21,6 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import \
     feature_config, input_index, output_index
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.gp_model import GPModel
-from fueling.control.dynamic_model_2_0.gp_regression.evaluation import evaluation
 from fueling.control.dynamic_model_2_0.visualization.raw_data_visualization import \
     RawDataVisualization
 from fueling.control.dynamic_model_2_0.visualization.validation_visualization import \
@@ -35,15 +34,19 @@ import fueling.common.logging as logging
 class GoldenSetEvaluation():
     """ golden set evaluation results """
 
-    def __init__(self, feature_dir, standardization_factors_file, args):
+    def __init__(self, feature_dir, standardization_factors_file, args, model_id):
         super().__init__()
         # features numpy file include all paired data points; dimension is 23
         self.feature_dir = feature_dir
+        # make dir
+        self.result_folder = os.path.join(feature_dir, model_id)
+        if not os.path.exists(self.result_folder):
+            os.makedirs(self.result_folder)
         self.features_file_path = os.path.join(self.feature_dir, 'features.npy')
         self.DM10_result_file = os.path.join(feature_dir, 'DM10_results.npy')
         self.echo_lincoln_result_file = os.path.join(feature_dir, 'Echo_Lincoln_results.npy')
-        self.DM20_result_file = os.path.join(feature_dir, 'DM20_results.py')
-        self.analyses_result_file = os.path.join(self.feature_dir, 'analyses_result.py')
+        self.DM20_result_file = os.path.join(self.result_folder, 'DM20_results.py')
+        self.analyses_result_file = os.path.join(self.result_folder, 'analyses_result.py')
 
         self.features = None
         self.get_non_overlapping_features()
@@ -61,6 +64,8 @@ class GoldenSetEvaluation():
         self.DM20.load_model()
         self.get_DM20_normalization_factors(standardization_factors_file)
         self.label = None
+        self.lower = None
+        self.upper = None
 
     def get_DM20_normalization_factors(self, standardization_factors_file):
         self.standardization_factors = np.load(
@@ -157,22 +162,6 @@ class GoldenSetEvaluation():
         # (dm10_x, dm10_y)
         return DM10_in_DM20.dynamic_model_10_location(updated_loc)
 
-    def get_DM20_result(self, is_save=True):
-        """ To retired
-            load dynamic model 2.0,
-            make prediction,
-            and generate pose correction for each point (100:)"""
-        dataset = GPDataSet(self.args)
-        self.DM20_dx_dy = evaluation(self.args, dataset, GPModel, is_plot=False)
-        logging.info(f'Dynamic model 2.0 results\' shape is {self.DM20_dx_dy.shape}')
-        logging.info(f'Data points in dynamic model 2.0 looks like {self.DM20_dx_dy[0,:]}')
-        if is_save:
-            # write to npy
-            dst_dir = os.path.dirname(self.features_file_path)
-            dst_file = os.path.join(dst_dir, 'DM20_results.npy')
-            logging.info(f'Dynamic model 2.0 results are saved to file {dst_file}')
-            np.save(dst_file, self.DM20_dx_dy)
-
     def get_DM20_result_from_features(self):
         # read features
         dm20_hdf5_file = self.hdf5_files
@@ -182,38 +171,40 @@ class GoldenSetEvaluation():
             # normalized input_segment
             input_segment = torch.from_numpy(self.standardize(input_segment))
             # generate predicted results
-            predict_result = torch.from_numpy(self.DM20.predict(input_segment)).float()
+            predict_result, lower, upper = self.DM20.predict(input_segment)
 
             if idx == 0:
                 self.DM20_dx_dy = predict_result
-                self.label = torch.from_numpy(dm01_output_segment)
+                self.label = dm01_output_segment
+                self.lower = lower
+                self.upper = upper
             else:
-                self.DM20_dx_dy = torch.cat((self.DM20_dx_dy, predict_result), 0)
-                self.label = torch.cat((self.label, torch.from_numpy(dm01_output_segment)), 0)
-        dst_label_file = os.path.join(self.feature_dir, 'label.npy')
+                self.DM20_dx_dy = np.concatenate((self.DM20_dx_dy, predict_result), axis=0)
+                self.label = np.concatenate((self.label, dm01_output_segment), axis=0)
+                self.lower = np.concatenate((self.lower, lower), axis=0)
+                self.upper = np.concatenate((self.upper, upper), axis=0)
+        dst_label_file = os.path.join(self.result_folder, 'label.npy')
         np.save(dst_label_file, self.label)
-        dst_DM20_dxdy_file = os.path.join(self.feature_dir, 'DM20_dxdy.npy')
+        dst_DM20_dxdy_file = os.path.join(self.result_folder, 'DM20_dxdy.npy')
         np.save(dst_DM20_dxdy_file, self.DM20_dx_dy)
+        np.save(os.path.join(self.result_folder, 'lower.npy'), self.lower)
+        np.save(os.path.join(self.result_folder, 'upper.npy'), self.upper)
 
     def correct_non_overlap_data(self):
         DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
         gp_DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
         # compasant every 100 frames
         if self.label is None:
-            self.label = np.load(os.path.join(self.feature_dir, 'label.npy'), allow_pickle=True)
-            d_correction = self.label[::self.data_frame_length, :]
-        else:
-            # correction value for every 100 frames
-            d_correction = self.label.detach().numpy()[::self.data_frame_length, :]
+            self.label = np.load(os.path.join(self.result_folder, 'label.npy'), allow_pickle=True)
+        # correction value for every 100 frames
+        d_correction = self.label[::self.data_frame_length, :]
         logging.debug(f'model label is {d_correction}')
         # gp result
         if self.DM20_dx_dy is None:
             self.DM20_dx_dy = np.load(os.path.join(
-                self.feature_dir, 'DM20_dxdy.npy'), allow_pickle=True)
-            gp_d_correction = self.DM20_dx_dy[::self.data_frame_length, :]
-        else:
-            # correction value for every 100 frames
-            gp_d_correction = self.DM20_dx_dy.detach().numpy()[::self.data_frame_length, :]
+                self.result_folder, 'DM20_dxdy.npy'), allow_pickle=True)
+        # correction value for every 100 frames
+        gp_d_correction = self.DM20_dx_dy[::self.data_frame_length, :]
         logging.debug(f'model output is {gp_d_correction}')
         # loop over feature files
         # get DM10 output with updated pos
@@ -381,6 +372,9 @@ class GoldenSetEvaluation():
         if self.echo_lincoln_xy is None:
             logging.info(self.echo_lincoln_result_file)
             self.echo_lincoln_xy = np.load(self.echo_lincoln_result_file, allow_pickle=True)
+        if self.lower is None:
+            self.lower = np.load(os.path.join(self.result_folder, 'lower.npy'), allow_pickle=True)
+            self.upper = np.load(os.path.join(self.result_folder, 'upper.npy'), allow_pickle=True)
         # log info of accumulated error
         xy_position = self.features[:, segment_index['x']:segment_index['y'] + 1]
         logging.info(f'Ground truth trajectory shape is : {xy_position.shape}')
@@ -406,15 +400,16 @@ class GoldenSetEvaluation():
                  self.label_corrected_xy[:, 1] - self.DM10_xy[0, 1], 'k.',
                  label='Corrected result with label')
         # correct DM1.0 result (using gp model)
-        plt.plot(self.gp_corrected_xy[:, 0] - self.DM10_xy[0, 0],
-                 self.gp_corrected_xy[:, 1] - self.DM10_xy[0, 1], 'rx',
-                 label=f'Corrected result with GP model, error is {DM20_error:.3f} m')
+        axs.errorbar(self.gp_corrected_xy[1:, 0] - self.DM10_xy[0, 0],
+                     self.gp_corrected_xy[1:, 1] - self.DM10_xy[0, 1],
+                     yerr=[abs(self.lower[::100, 1]), self.upper[::100, 1]],
+                     xerr=[abs(self.lower[::100, 0]), self.upper[::100, 0]], fmt='rx', capsize=5,
+                     label=f'Corrected result with GP model, error is {DM20_error:.3f} m')
         plt.plot(0, 0, 'x', markersize=6, color='k')
         plt.legend(fontsize=12, numpoints=5, frameon=False)
         plt.title("Trajectory Comparison")
         plt.grid(True)
-        figure_file = os.path.join(os.path.dirname(
-            self.features_file_path), 'trajectory_plot_scaled_imu.png')
+        figure_file = os.path.join(self.result_folder, 'trajectory_plot_scaled_imu.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
         plt.show()
@@ -493,10 +488,10 @@ if __name__ == '__main__':
     parser.add_argument('--normalization_factor_file_path', type=str)
 
     args = parser.parse_args()
-
+    model_id = '20200706-1722'
     # loop over each golden set scenarios
     evaluator = GoldenSetEvaluation(args.golden_set_data_dir,
-                                    args.normalization_factor_file_path, args)
+                                    args.normalization_factor_file_path, args, model_id)
     evaluator.load_data()
     evaluator.get_imu_result()
     evaluator.plot_IMU()
