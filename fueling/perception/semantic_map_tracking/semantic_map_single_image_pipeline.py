@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
-
-import torch
-import argparse
-
+import cv2 as cv
 import torch
 
 from fueling.common.learning.train_utils import *
 from fueling.common.learning.loss_utils import *
 from semantic_map_single_image_dataset import *
 from semantic_map_single_image_model import *
-import cv2 as cv
 
 
 # for documentation: http://wiki.baidu.com/display/AutoDrive/semantic+map+object+tracking
