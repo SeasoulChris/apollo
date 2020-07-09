@@ -108,7 +108,7 @@ class ObstacleMapping(object):
             cv.fillPoly(self.feature_map, [np.int32(points)],
                         color=tuple(c * (1 / history_size * i) for c in color))
 
-    def crop_ego_center(self, color = (0, 0, 255)):
+    def crop_ego_center(self, color=(0, 0, 255)):
         self.draw_ego_history(self.ego_history, color)
         center = tuple(self.get_trans_point(self.world_coord[0:2]))
         heading_angle = self.world_coord[2] * 180 / np.pi

@@ -125,7 +125,6 @@ class PedestrianIntentionDataset(Dataset):
                     curr_obs_polygons[0, -1, :, :] = curr_history[0, 4:].reshape([20, 2])
                     cross_polygons.append(curr_obs_polygons)
 
-
         obs_polygons = np.concatenate(obs_polygons)
         cross_polygons = np.concatenate(cross_polygons)
         world_coord = ego_history[-1]
@@ -134,7 +133,8 @@ class PedestrianIntentionDataset(Dataset):
         feature_img = obs_mapping.crop_ego_center()
 
         cross_img = ObstacleMapping(map_region, np.zeros_like(self.base_map[map_region]),
-                                       world_coord, cross_polygons, ego_history).crop_ego_center(color=(0,0,0))
+                                    world_coord, cross_polygons,
+                                    ego_history).crop_ego_center(color=(0, 0, 0))
         cross_img = np.sum(cross_img, axis=2)
         cross_img = cross_img / np.max(cross_img) * 1.0
         # cv.imwrite('/fuel/hehe.png', feature_img)
