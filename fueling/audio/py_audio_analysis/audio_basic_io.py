@@ -11,7 +11,9 @@ from pydub import AudioSegment
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName=False):
     '''
-    This function converts the MP3 files stored in a folder to WAV. If required, the output names of the WAV files are based on MP3 tags, otherwise the same names are used.
+    This function converts the MP3 files stored in a folder to WAV.
+    If required, the output names of the WAV files are based on MP3 tags,
+    otherwise the same names are used.
     ARGUMENTS:
      - dirName:     the path of the folder where the MP3s are stored
      - Fs:          the sampling rate of the generated WAV files
@@ -33,8 +35,8 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName=False):
             title = audioFile.tag.title
             if artist is not None and title is not None:
                 if len(title) > 0 and len(artist) > 0:
-                    wavFileName = ntpath.split(
-                        f)[0] + os.sep + artist.replace(",", " ") + " --- " + title.replace(",", " ") + ".wav"
+                    wavFileName = ntpath.split(f)[0] + os.sep + artist.replace(",", " ") + \
+                        " --- " + title.replace(",", " ") + ".wav"
                 else:
                     wavFileName = f.replace(".mp3", ".wav")
             else:
@@ -49,7 +51,8 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName=False):
 
 def convertFsDirWavToWav(dirName, Fs, nC):
     '''
-    This function converts the WAV files stored in a folder to WAV using a different sampling freq and number of channels.
+    This function converts the WAV files stored in a folder to WAV using
+    a different sampling freq and number of channels.
     ARGUMENTS:
      - dirName:     the path of the folder where the WAVs are stored
      - Fs:          the sampling rate of the generated WAV files
@@ -77,20 +80,19 @@ def convertFsDirWavToWav(dirName, Fs, nC):
 
 def readAudioFile(path):
     '''
-    This function returns a numpy array that stores the audio samples of a specified WAV of AIFF file
+    This function returns a numpy array that stores the audio samples of
+    a specified WAV of AIFF file
     '''
     extension = os.path.splitext(path)[1]
 
     try:
-        # if extension.lower() == '.wav':
-        #[Fs, x] = wavfile.read(path)
         if extension.lower() == '.aif' or extension.lower() == '.aiff':
             s = aifc.open(path, 'r')
             nframes = s.getnframes()
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':
+        elif extension.lower() in ['.mp3', '.wav', '.au']:
             try:
                 audiofile = AudioSegment.from_file(path)
             # except pydub.exceptions.CouldntDecodeError:
