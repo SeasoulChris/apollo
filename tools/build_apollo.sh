@@ -3,7 +3,6 @@
 cd /apollo
 bash apollo.sh build_py
 bazel build -c opt \
-    //cyber/python/internal:_cyber_record_wrapper.so \
     //cyber/python/cyber_py3:record \
     //modules/drivers/video/tools/decode_video/... \
     //modules/localization/msf/local_tool/data_extraction/... \
@@ -11,7 +10,8 @@ bazel build -c opt \
     //modules/map/tools:sim_map_generator \
     //modules/planning/pipeline/... \
     //modules/prediction/pipeline/... \
-    //modules/routing/topo_creator
+    //modules/routing/topo_creator \
+    $( bazel query 'kind("py_library", //...)' | grep pb2$ )
 
 SIMULATOR="/apollo-simulator"
 if [ -d "${SIMULATOR}" ]; then

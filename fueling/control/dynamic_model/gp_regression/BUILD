@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "dataset",
     srcs = ["dataset.py"],
@@ -20,7 +18,6 @@ py_library(
     name = "dreamview_server",
     srcs = ["dreamview_server.py"],
     deps = [
-        requirement("pyro-ppl"),
         ":train",
     ],
 )
@@ -38,9 +35,6 @@ py_library(
 py_library(
     name = "gaussian_process",
     srcs = ["gaussian_process.py"],
-    deps = [
-        requirement("pyro-ppl"),
-    ],
 )
 
 py_binary(
@@ -72,9 +66,6 @@ py_library(
 py_library(
     name = "predict",
     srcs = ["predict.py"],
-    deps = [
-        requirement("pyro-ppl"),
-    ],
 )
 
 py_library(
@@ -84,6 +75,5 @@ py_library(
         ":deep_encoding_net",
         ":model_conf",
         ":predict",
-        requirement("pyro-ppl"),
     ],
 )

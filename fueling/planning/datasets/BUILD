@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "semantic_map_dataset",
     srcs = ["semantic_map_dataset.py"],
@@ -107,9 +105,6 @@ py_binary(
 py_binary(
     name = "trajectory_perturbation_synthesizer",
     srcs = ["trajectory_perturbation_synthesizer.py"],
-    deps = [
-        requirement("casadi"),
-    ],
 )
 
 py_binary(

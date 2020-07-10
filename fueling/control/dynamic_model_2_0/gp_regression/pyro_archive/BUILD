@@ -1,13 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@default_deps//:requirements.bzl", "requirement")
-
 py_library(
     name = "predict",
     srcs = ["predict.py"],
-    deps = [
-        requirement("pyro-ppl"),
-    ],
 )
 
 py_library(
@@ -21,9 +16,6 @@ py_library(
 py_library(
     name = "gaussian_process",
     srcs = ["gaussian_process.py"],
-    deps = [
-        requirement("pyro-ppl"),
-    ],
 )
 
 
@@ -34,7 +26,6 @@ py_library(
         ":encoder",
         ":predict",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
-        requirement("pyro-ppl"),
     ],
 )
 
@@ -44,7 +35,6 @@ py_library(
     deps = [
         ":encoder",
         "//fueling/common:logging",
-        requirement("pyro-ppl"),
     ],
 )
 

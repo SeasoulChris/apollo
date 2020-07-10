@@ -34,7 +34,7 @@ cc_library(
         ":define",
         ":error_code",
         ":macros",
-        "//deps:boost",
+        "@boost",
     ],
 )
 

@@ -1,8 +1,5 @@
-bayesian-optimization
-casadi
-gpytorch >= 1.1
 liegroups
 psycopg2-binary
-pyro-ppl
-pypcd
-pyproj
+
+# TODO(xiaoxq): Required by data/libeling
+# pypcd

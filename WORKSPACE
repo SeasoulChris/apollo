@@ -71,6 +71,12 @@ http_archive(
     strip_prefix = "glog-0.4.0",
 )
 
+new_local_repository(
+    name = "boost",
+    build_file = "external/boost.BUILD",
+    path = "/opt/apollo/sysroot/include",
+)
+
 # TODO(xiaoxq): We'll refer apollo as dependency soon.
 # Import apollo.
 #local_repository(

@@ -15,12 +15,15 @@ set -e
 
 # Build widely-used apollo modules.
 pushd /apollo
-  ./apollo.sh build_py
-  bazel build --distdir="/apollo/.cache/distdir" -c opt //cyber/python/internal:_cyber_record_wrapper.so
+  bazel build --distdir="/apollo/.cache/distdir" -c opt \
+      //cyber/python/cyber_py3:record \
+      $( bazel query 'kind("py_library", //...)' | grep pb2$ )
 popd
 
 if [ -f "WORKSPACE.bazel" ]; then
   echo "###### You are building with local pip-cache! ######"
 fi
 
-bazel build --distdir="${TOP_DIR}/.cache/distdir" ${TARGET}
+DISTDIR="${TOP_DIR}/.cache/distdir"
+mkdir -p "${DISTDIR}"
+bazel build --distdir="${DISTDIR}" ${TARGET}

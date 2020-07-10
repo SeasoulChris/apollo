@@ -21,9 +21,6 @@ py_binary(
 py_binary(
     name = "bayesian_optimization_visual_utils",
     srcs = ["bayesian_optimization_visual_utils.py"],
-    deps = [
-        requirement("bayesian-optimization"),
-    ],
 )
 
 
@@ -53,7 +50,6 @@ py_binary(
         "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
         "//fueling/learning/autotuner/tuner:base_tuner",
         "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
-        requirement("bayesian-optimization"),
     ],
 )
 

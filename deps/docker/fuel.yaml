@@ -1,6 +1,6 @@
 name: fuel
 dependencies:
-  - python = 3.7     # Align with Ubuntu 18.04 default.
+  - python = 3.6     # Align with Ubuntu 18.04 default.
   - pip
   - pyspark = 2.4.4  # Align with pre-built server image.
 
@@ -11,6 +11,7 @@ dependencies:
   - conda-forge::casadi
   - conda-forge::eventlet
   - conda-forge::flask-restful
+  - conda-forge::gpytorch
   - conda-forge::librosa
   - conda-forge::optuna
   - conda-forge::opt-einsum
@@ -22,6 +23,7 @@ dependencies:
   - flask-socketio
   - graphviz
   - gunicorn
+  - gwerbin::pyro-ppl
   - h5py
   - keras-gpu
   - matplotlib
@@ -37,6 +39,7 @@ dependencies:
   - pycodestyle
   - pymongo
   - pyproj
+  - pytorch::pytorch
   - pytz
   - redis-py
   - requests
@@ -50,5 +53,3 @@ dependencies:
   - pip:
     - eyeD3
     - pyspark-utils
-    - torch == 1.5.1  # Temporarily put in pip section, since conda/conda-forge not able to 
-                      # find version 1.5.1 but just 1.5.0, which fails running with cuda 10.2
