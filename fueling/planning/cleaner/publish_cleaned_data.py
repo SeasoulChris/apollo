@@ -22,9 +22,7 @@ class PubishCleanedData(BasePipeline):
         """Run prod."""
 
         prefixes = [
-            # '/mnt/bos/modules/planning/cleaned_data_test/',
-            # 2019, Nov01-10, 10days data with routing based filtering
-            '/mnt/bos/modules/planning/cleaned_data_temp/cleaned_data_20200420_151548/',
+            '/mnt/bos/modules/planning/temp/cleaned_data/batch_20200710_131432/',
         ]
 
         self.to_rdd(prefixes).map(self.process_folder).count()
@@ -32,10 +30,7 @@ class PubishCleanedData(BasePipeline):
         logging.info('Processing is done')
 
     def process_folder(self, temp_cleaned_data):
-        # target_folder =  '/mnt/bos/modules/planning/cleaned_data/test/'
-        # target_folder =  '/mnt/bos/modules/planning/cleaned_data_temp/test/'
         target_folder = '/mnt/bos/modules/planning/cleaned_data/'
-        # target_folder = '/mnt/bos/modules/planning/cleaned_data_test/'
         try:
             shutil.rmtree(target_folder)
         except BaseException:

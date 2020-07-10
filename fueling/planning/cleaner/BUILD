@@ -1,3 +1,8 @@
+filegroup(
+    name = "task_list",
+    srcs = ["task_list.txt"],
+)
+
 py_binary(
     name = "data_cleaner",
     srcs = [
@@ -12,7 +17,10 @@ py_binary(
         "msg_freq_analyzer.py",
         "routing_update_analyzer.py",
     ],
-    data = ["//fueling/planning/analytics:analytics"],
+    data = [
+        "//fueling/planning/analytics:analytics",
+        "//fueling/planning/cleaner:task_list",
+    ],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",

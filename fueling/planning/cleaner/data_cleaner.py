@@ -2,30 +2,22 @@
 """Clean records."""
 
 import os
-import sys
-from datetime import datetime, timedelta
-import time
 import resource
+import sys
 from os import path
+from datetime import datetime, timedelta
 
 sys.path.append('fueling/planning/analytics/planning_analytics.zip')
 sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
 
-from planning_analytics.route_analyzer.route_analyzer import RouteAnalyzer
+from planning_analytics.cleaner.record_cleaner import RecordCleaner
+from cyber_py3.record import RecordWriter
 
-from cyber_py3.record import RecordReader, RecordWriter
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.planning.apollo_record_reader.apollo_record_reader import ApolloRecordReader
-from fueling.planning.cleaner.analyzer_hmi import HmiAnalyzer
-from fueling.planning.cleaner.analyzer_localization import LocalizationAnalyzer
-from fueling.planning.cleaner.analyzer_chassis import ChassisAnalyzer
-from fueling.planning.cleaner.analyzer_perception import PerceptionAnalyzer
-
-from fueling.planning.cleaner.analyzer_prediction import PredictionAnalyzer
 
 
 class CleanPlanningRecords(BasePipeline):
@@ -37,34 +29,9 @@ class CleanPlanningRecords(BasePipeline):
         now = datetime.now() - timedelta(hours=7)
         dt_string = now.strftime("%Y%m%d_%H%M%S")
         self.dst_prefix = '/mnt/bos/modules/planning/temp/cleaned_data/batch_' + dt_string + "/"
-        self.topics = [
-            '/apollo/canbus/chassis',
-            '/apollo/localization/pose',
-            '/apollo/hmi/status',
-            '/apollo/perception/obstacles',
-            '/apollo/perception/traffic_light',
-            '/apollo/prediction',
-            '/apollo/routing_request',
-            '/apollo/routing_response',
-            '/apollo/routing_response_history',
-        ]
-        self.map_file = '/mnt/bos/code/baidu/adu-lab/apollo-map/yizhuangdaluwang/sim_map.bin'
 
         self.cnt = 1
-        self.msgs = list()
-        self.topic_descs = {}
-        self.current_hmi_status_msg = None
-        self.current_routing_response = None
-        self.has_routing = False
-
-        self.routing_analyzer = None
-        self.hmi_analyzer = None
-
-        self.localization_analyzer = None
-        self.chassis_analyzer = None
-
-        self.perception_analyzer = None
-        self.prediction_analyzer = None
+        self.cleaner = None
 
     def run_test(self):
         """Run test."""
@@ -76,96 +43,38 @@ class CleanPlanningRecords(BasePipeline):
 
     def run(self):
         """Run prod."""
-        date_tasks = [
-            # 'small-records/2019/2019-11-01/',
-            # 'small-records/2019/2019-11-02/',
-            # 'small-records/2019/2019-11-03/',
-            # 'small-records/2019/2019-11-04/',
-            # 'small-records/2019/2019-11-05/',
-            # 'small-records/2019/2019-11-06/',
-            # 'small-records/2019/2019-11-07/',
-            # 'small-records/2019/2019-11-08/',
-            # 'small-records/2019/2019-11-09/',
-            # 'small-records/2019/2019-11-10/',
+        task_list_file = path.dirname(path.abspath(__file__)) + "/task_list.txt"
+        logging.info(task_list_file)
 
-            # 'small-records/2019/2019-11-11/',
-            # 'small-records/2019/2019-11-12/',
-            # 'small-records/2019/2019-11-13/',
-            # 'small-records/2019/2019-11-14/',
-            # 'small-records/2019/2019-11-15/',
-            # 'small-records/2019/2019-11-16/',
-            # 'small-records/2019/2019-11-17/',
-            # 'small-records/2019/2019-11-18/',
-            # 'small-records/2019/2019-11-19/',
-            # 'small-records/2019/2019-11-20/',
-            # 'small-records/2019/2019-11-21/',
-            # 'small-records/2019/2019-11-22/',
-            # 'small-records/2019/2019-11-23/',
-            # 'small-records/2019/2019-11-24/',
-            # 'small-records/2019/2019-11-25/',
-            # 'small-records/2019/2019-11-26/',
-            # 'small-records/2019/2019-11-27/',
-            # 'small-records/2019/2019-11-28/',
-            # 'small-records/2019/2019-11-29/',
-            # 'small-records/2019/2019-11-30/',
-        ]
-
-        individual_tasks = [
-            # 'small-records/2019/2019-10-17/2019-10-17-13-36-41/',
-            # 'small-records/2018/2018-09-11/2018-09-11-11-10-30/',
-            ('modules/planning/temp/converted_data_with_routing/'
-             + 'batch_20200513_204330/MKZ173_20200121122216/'),
-            ('modules/planning/temp/converted_data_with_routing/'
-             + 'batch_20200513_204330/MKZ170_20200121120310/'),
-            ('modules/planning/temp/converted_data_with_routing/'
-             + 'batch_20200513_204330/MKZ167_20200121131624/')
-        ]
-        prefix = "/mnt/bos/"
-
-        final_tasks = []
-        for day_folder in date_tasks:
-            day_abs_folder = prefix + day_folder
-            if not os.path.exists(day_abs_folder):
-                continue
-            for filename in os.listdir(day_abs_folder):
-                file_path = os.path.join(day_abs_folder, filename)
-                try:
-                    if os.path.isdir(file_path):
-                        final_task = file_path.replace(prefix, "")
-                        logging.info("found a task: " + final_task)
-                        final_tasks.append(final_task)
-
-                except Exception as e:
-                    print('Failed to delete %s. Reason: %s' % (file_path, e))
-
-        for task in individual_tasks:
-            final_tasks.append(task)
+        tasks_descs = []
+        with open(task_list_file, 'r') as f:
+            for line in f:
+                tasks_descs.append(line)
 
         if self.RUN_IN_DRIVER:
-            for task in final_tasks:
-                self.process_task(task)
+            for task_desc in tasks_descs:
+                self.process_task(task_desc)
         else:
-            self.to_rdd(final_tasks).map(self.process_task).count()
+            self.to_rdd(tasks_descs).map(self.process_task).count()
 
         logging.info('Processing is done')
 
-    def process_task(self, task_folder):
+    def process_task(self, task_desc):
+        task_elements = task_desc.replace("\n", "").split(" ")
+        task_folder = task_elements[0]
+        task_map = task_elements[1]
+        map_file = None
+        if task_map == "san_mateo":
+            map_file = "/mnt/bos/code/baidu/adu-lab/apollo-map/san_mateo/sim_map.bin"
+        elif task_map == "sunnyvale_with_two_offices":
+            map_file \
+                = "/mnt/bos/code/baidu/adu-lab/apollo-map/sunnyvale_with_two_offices/sim_map.bin"
+
+        self.cleaner = RecordCleaner(map_file)
+
         self.cnt = 1
         files = self.our_storage().list_files(task_folder)
         logging.info('found file num = ' + str(len(files)))
-
-        del self.msgs
-        self.msgs = list()
-        self.topic_descs = dict()
-
-        self.routing_analyzer = RouteAnalyzer(self.map_file)
-        self.hmi_analyzer = HmiAnalyzer()
-
-        self.localization_analyzer = LocalizationAnalyzer()
-        self.chassis_analyzer = ChassisAnalyzer()
-
-        self.perception_analyzer = PerceptionAnalyzer()
-        self.prediction_analyzer = PredictionAnalyzer()
 
         file_cnt = 0
         total_file_cnt = len(files)
@@ -182,108 +91,25 @@ class CleanPlanningRecords(BasePipeline):
                 + fn)
 
             if record_utils.is_record_file(fn):
-                self.process_file2(fn, task_folder)
+                self.cleaner.process_file(fn)
+                msgs_list = self.cleaner.get_matured_msg_list()
+                for msgs in msgs_list:
+                    self.write_msgs(task_folder, msgs)
+                self.cleaner.clean_mature_msg_list()
 
-            # TODO this is for testing data
             if self.cnt > 10 and self.IS_TEST_DATA:
                 break
 
-        self.write_msgs(task_folder)
+        self.write_msgs(task_folder, self.cleaner.msgs[-1])
 
-        logging.info("total {} original msg".format(len(self.msgs)))
+        logging.info("task is done!")
 
-    def process_file2(self, filename, task_folder):
-        print_current_memory_usage("ProcessFile-before")
+    def write_msgs(self, task_folder, msgs):
 
-        reader = ApolloRecordReader()
-        logging.info("start reading messages...")
-        for msg in reader.read_messages(filename):
-            if msg.topic not in self.topics:
-                continue
-
-            if msg.topic == '/apollo/routing_response':
-                if self.routing_analyzer.get_routing_response_msg() is not None:
-                    self.write_msgs(task_folder)
-
-                self.routing_analyzer.set(msg)
-
-            if msg.topic == '/apollo/routing_response_history':
-                if self.routing_analyzer.get_routing_response_msg() is None:
-                    self.routing_analyzer.set(msg)
-
-            if msg.topic == "/apollo/hmi/status":
-                self.hmi_analyzer.update(msg)
-
-            if msg.topic == '/apollo/perception/obstacles':
-
-                perception_timestamp = PerceptionAnalyzer.get_msg_timstamp(msg)
-                last_perception_timestamp = self.perception_analyzer.get_last_perception_timestamp()
-                last_chassis_timestamp = self.chassis_analyzer.get_last_chassis_timestamp()
-                last_localization_timestamp = \
-                    self.localization_analyzer.get_last_localization_timestamp()
-                last_prediction_timestamp = self.prediction_analyzer.get_last_prediction_timestamp()
-
-                if abs(perception_timestamp - last_chassis_timestamp) > 0.05 \
-                        or abs(perception_timestamp - last_localization_timestamp) > 0.05 \
-                        or abs(perception_timestamp - last_prediction_timestamp) > 0.5 \
-                        or abs(perception_timestamp - last_perception_timestamp) > 0.5:
-                    # logging.info("Some msg is missing! ")
-                    self.write_msgs(task_folder)
-
-                    routing_msg = self.routing_analyzer.get_routing_response_msg()
-                    if routing_msg is not None:
-                        self.msgs.append(routing_msg)
-                        if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                            self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-
-                self.perception_analyzer.update(msg)
-
-            if msg.topic == '/apollo/prediction':
-                self.prediction_analyzer.update(msg)
-
-            if msg.topic == '/apollo/localization/pose':
-                localization = self.localization_analyzer.get_localization_estimate(msg)
-                if self.routing_analyzer.get_routing_response_msg() is not None and \
-                        not self.routing_analyzer.is_adv_on_routing(localization):
-                    # logging.info("ADV is not on routing! ")
-                    self.write_msgs(task_folder)
-
-                    self.msgs.append(self.routing_analyzer.get_routing_response_msg())
-                    if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                        self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-
-                self.localization_analyzer.update(msg)
-
-            if msg.topic == '/apollo/canbus/chassis':
-                self.chassis_analyzer.update(msg)
-
-            if self.routing_analyzer.get_routing_response_msg() is not None:
-                self.msgs.append(msg)
-
-            if len(self.msgs) >= 200 * 60 * 5:
-                self.write_msgs(task_folder)
-
-                self.msgs.append(self.routing_analyzer.get_routing_response_msg())
-                if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                    self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-
-        channels = reader.get_channels()
-        for channel in channels:
-            self.topic_descs[channel.name] = (channel.message_type, channel.proto_desc)
-
-        print_current_memory_usage("ProcessFile-after")
-        logging.info("")
-
-    def write_msgs(self, task_folder):
-
-        if len(self.msgs) < 200 * 10:
-            # logging.info("len(self.msgs) < 200 * 10 ... " + "write_msgs end")
-            del self.msgs
-            self.msgs = list()
-            # logging.info("write_msgs end")
+        if len(msgs) < 200 * 10:
             return
 
-        logging.info("write_msgs start: msgs num = " + str(len(self.msgs)))
+        logging.info("write_msgs start: msgs num = " + str(len(msgs)))
 
         if len(task_folder.split("/")[-1]) == 0:
             task_id = task_folder.split("/")[-2]
@@ -294,14 +120,14 @@ class CleanPlanningRecords(BasePipeline):
         self.cnt += 1
 
         logging.info("Writing output file: " + dst_record_fn)
-        # Write to record.
+
         file_utils.makedirs(os.path.dirname(dst_record_fn))
         writer = RecordWriter(0, 0)
         try:
             writer.open(dst_record_fn)
-            for topic, (data_type, desc) in self.topic_descs.items():
+            for topic, (data_type, desc) in self.cleaner.topic_descs.items():
                 writer.write_channel(topic, data_type, desc)
-            for msg in self.msgs:
+            for msg in msgs:
                 if msg is None:
                     print("msg is None")
                 writer.write_message(msg.topic, msg.message, msg.timestamp)
@@ -310,99 +136,7 @@ class CleanPlanningRecords(BasePipeline):
             return None
         finally:
             writer.close()
-            del self.msgs
-            self.msgs = list()
         logging.info("write_msgs end")
-
-    def process_file(self, filename, task_folder):
-
-        print_current_memory_usage("ProcessFile-before")
-
-        reader = RecordReader(filename)
-        time.sleep(5)
-        logging.info("start reading messages...")
-        for msg in reader.read_messages():
-            if msg.topic not in self.topics:
-                continue
-
-            if msg.topic not in self.topic_descs:
-                self.topic_descs[msg.topic] = (msg.data_type, reader.get_protodesc(msg.topic))
-
-            if msg.topic == '/apollo/routing_response':
-                if self.routing_analyzer.get_routing_response_msg() is not None:
-                    self.write_msgs(task_folder)
-
-                self.routing_analyzer.update(msg)
-
-            if msg.topic == '/apollo/routing_response_history':
-                if self.routing_analyzer.get_routing_response_msg() is None:
-                    self.routing_analyzer.update(msg)
-
-            if msg.topic == "/apollo/hmi/status":
-                self.hmi_analyzer.update(msg)
-
-            if msg.topic == '/apollo/perception/obstacles':
-
-                perception_timestamp = PerceptionAnalyzer.get_msg_timstamp(msg)
-                last_perception_timestamp = self.perception_analyzer.get_last_perception_timestamp()
-                last_chassis_timestamp = self.chassis_analyzer.get_last_chassis_timestamp()
-                last_localization_timestamp = \
-                    self.localization_analyzer.get_last_localization_timestamp()
-                last_prediction_timestamp = self.prediction_analyzer.get_last_prediction_timestamp()
-
-                if abs(perception_timestamp - last_chassis_timestamp) > 0.05 \
-                        or abs(perception_timestamp - last_localization_timestamp) > 0.05 \
-                        or abs(perception_timestamp - last_prediction_timestamp) > 0.5 \
-                        or abs(perception_timestamp - last_perception_timestamp) > 0.5:
-                    # logging.info("Some msg is missing! ")
-                    self.write_msgs(task_folder)
-                    if self.routing_analyzer.get_routing_response_msg() is not None:
-                        self.msgs.append(self.routing_analyzer.get_routing_response_msg())
-                        if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                            self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-                if self.msgs[-1] is None:
-                    print("/apollo/perception/obstacles  is None")
-
-                self.perception_analyzer.update(msg)
-
-            if msg.topic == '/apollo/prediction':
-                self.prediction_analyzer.update(msg)
-
-            if msg.topic == '/apollo/localization/pose':
-                localization = self.localization_analyzer.get_localization_estimate(msg)
-                if self.routing_analyzer.get_routing_response_msg() is not None and \
-                        not self.routing_analyzer.is_adv_on_routing(localization):
-                    # logging.info("ADV is not on routing! ")
-                    self.write_msgs(task_folder)
-
-                    self.msgs.append(self.routing_analyzer.get_routing_response_msg())
-                    if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                        self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-
-                if self.msgs[-1] is None:
-                    print("/apollo/localization/pose  is None")
-                self.localization_analyzer.update(msg)
-
-            if msg.topic == '/apollo/canbus/chassis':
-                self.chassis_analyzer.update(msg)
-
-            if self.routing_analyzer.get_routing_response_msg() is not None:
-                self.msgs.append(msg)
-
-            if len(self.msgs) >= 200 * 60 * 5:
-                self.write_msgs(task_folder)
-
-                self.msgs.append(self.routing_analyzer.get_routing_response_msg())
-                if self.hmi_analyzer.get_hmi_status_msg() is not None:
-                    self.msgs.append(self.hmi_analyzer.get_hmi_status_msg())
-
-        reader.reset()
-        del reader
-        time.sleep(5)
-        logging.info("deleted reader")
-
-        print_current_memory_usage("ProcessFile-after")
-        logging.info("")
 
 
 def print_current_memory_usage(step_name):
