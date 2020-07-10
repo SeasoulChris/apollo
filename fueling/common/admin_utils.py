@@ -11,7 +11,7 @@ class AdminUtils(object):
 
     def save_admin_info(self, name, password, role, email):
         """Save admin info"""
-        self.db.insert_one({'name': name,
+        self.db.insert_one({'username': name,
                             'password': password,
                             'role': role,
                             'email': email})

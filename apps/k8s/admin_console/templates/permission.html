@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% for role, role_urls in roles.items() %}
+        <form action="/allocate_permission" method="post">
+            <p>{{ role }}:</p>
+            <input type="text" name="role" value="{{ role }}" style="display: none">
+            {% for url in urls %}
+                {% if url in role_urls %}
+                    <input name="urls" checked type="checkbox" class="url-check" value="{{ url }}"> {{ url }}
+                {% else %}
+                    <input name="urls" type="checkbox" class="url-check" value="{{ url }}"> {{ url }}
+                {% endif %}
+            {% endfor %}
+            <p><input type="submit" value="修改"><span style="color: red">{{ msg }}</span></p>
+        </form>
+    {% endfor %}
+{% endblock %}

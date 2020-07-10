@@ -111,12 +111,12 @@
             <tr>
                 <td>{{ job.vehicle_sn }}</td>
                 <td>{{ job.job_type| show_type }}</td>
-                <td class="td-job-id">...{{ job.job_id | show_id }}</td>
+                <td class="td-job-id" title="{{ job.job_id }}" data-toggle="tooltip">...{{ job.job_id | show_id }}</td>
                 <td>{{ job.status }}</td>
                 <td>{{ job.start_time }}</td>
                 <td>{{ job.end_time }}</td>
                 <td>{{ job.duration_time | show_duration }}</td>
-                <td class="failure-code">{{ job.failure_code }}</td>
+                <td class="failure-code" title="{{ job.failure_code | show_failure_cause }}" data-toggle="tooltip">{{ job.failure_code }}</td>
                 <td>{{ job.progress }}</td>
                 <td id="is-valid-{{ job.job_id }}">{{ job.is_valid }}</td>
                 <td>{{ job.input_data_size }}</td>
@@ -130,8 +130,6 @@
                     <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
                     <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收缩</a>
                 </td>
-                <td class="failure-all" style="display: none">{{ job.failure_code | show_failure_cause }}</td>
-                <td class="job-id-all" style="display: none">{{ job.job_id }}</td>
             </tr>
 
             <!-- The service information -->

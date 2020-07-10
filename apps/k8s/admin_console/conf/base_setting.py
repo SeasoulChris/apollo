@@ -40,3 +40,11 @@ class Config(object):
                      "E202": "输入文件中缺少XXX配置文件。请按照使用文档提供相关文件。",
                      "E203": "配置文件XXX中缺少XXX配置项。请按照使用文档提供正确的配置文件",
                      "E204": "传感器标定出错，请联系售后技术支持。"}
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+    SUPER_USER_NAME = "apollo"
+    ROLE_TYPE = {
+        "all": [],
+        "system_admin": ["/index", "/jobs", "/reset_pwd", "/submit_job"],
+        "service_specialist": ["/index", "/jobs"]
+    }
+    WHITE_URL = ["/static", "/login", "/logout"]

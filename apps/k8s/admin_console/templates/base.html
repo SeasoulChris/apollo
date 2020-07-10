@@ -58,9 +58,15 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                           aria-expanded="false">个人用户<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">注销</a></li>
+                           aria-expanded="false">{{ username }}<span class="caret"></span></a>
+                        <ul class="dropdown-menu" style="width: 20%">
+                            <li><a href="/reset_pwd">重置密码</a></li>
+                            {% if username=="apollo" %}
+                                <li><a href="/create_admin">创建管理员</a></li>
+                                <li><a href="/allocate_permission">分配权限</a></li>
+                                <li><a href="/admins">查看管理员</a></li>
+                            {% endif %}
+                            <li><a href="/logout">注销</a></li>
                         </ul>
                     </li>
                 </ul>

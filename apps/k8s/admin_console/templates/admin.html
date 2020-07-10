@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form action="/create_admin" method="post">
+        <p>用户名：<input type="text" name="admin_name" placeholder="请输入用户名"></p>
+        <p>邮箱：<input type="text" name="email" placeholder="请输入邮箱"></p>
+        <div>
+            <select name="role_selected">
+                {% for value in role_type %}
+                    {% if value == current_role %}
+                        <option value="{{ value }}" style="font-size: 12px" selected> {{ value }}</option>
+                    {% else %}
+                        <option value="{{ value }}" style="font-size: 12px"> {{ value }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <p><input type="submit" value="提交"><span style="color: red">{{ msg }}</span></p>
+    </form>
+{% endblock %}

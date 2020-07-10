@@ -5,12 +5,17 @@ The entry module of the program
 
 import application
 from common import filter
+from middleware import before_request
+from views import admin
 from views import index
 from views import job
 from views import statistics
 
 
+application.app.before_request(before_request.process_request)
+
 # Register blueprint
+application.app.register_blueprint(admin.blue_admin)
 application.app.register_blueprint(index.blue_index)
 application.app.register_blueprint(job.blue_job)
 application.app.register_blueprint(statistics.blue_statistics)

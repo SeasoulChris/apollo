@@ -13,7 +13,6 @@ from common import paginator
 from fueling.common import job_utils
 from utils import time_utils
 
-
 # Blueprint of job
 blue_job = flask.Blueprint("job", __name__,
                            template_folder="templates",
@@ -84,9 +83,9 @@ def submit_job():
         job_obj = job.get_job_by_id(job_id)
         # Todo: get the email from user account
         job_is_valid = job_obj.get("is_valid")
-        email = "123.baidu.com"
-        if (job_is_valid and action.lower() == "invalid") or \
-                (not job_is_valid and action.lower() == "valid"):
+        email = flask.session.get("user_info").get("email")
+        if ((job_is_valid and action.lower() == "invalid") or
+                (not job_is_valid and action.lower() == "valid")):
             comment_dict = job_utils.JobUtils(job_id).\
                 save_job_operations(email, comment, not job_is_valid)
             if comment_dict:
@@ -146,4 +145,5 @@ def jobs():
     return flask.render_template("jobs.html", jobs_list=job_list,
                                  current_page=current_page, job_type=show_job_type,
                                  time_field=show_time_field, current_type=job_selected,
-                                 current_time=time_selected, vehicle_sn=vehicle_sn)
+                                 current_time=time_selected, vehicle_sn=vehicle_sn,
+                                 username=flask.session.get("user_info").get("username"))

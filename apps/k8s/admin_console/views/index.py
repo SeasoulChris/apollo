@@ -16,4 +16,5 @@ def index():
     """
     A demo function of index
     """
-    return flask.render_template('index.html')
+    return flask.render_template('index.html',
+                                 username=flask.session.get("user_info").get("username"))

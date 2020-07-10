@@ -43,7 +43,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: bos-ask-secret
-              key: sk        
+              key: sk
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: admin-password
+              key: password
 
 ---
 

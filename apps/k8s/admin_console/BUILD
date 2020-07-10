@@ -24,6 +24,8 @@ py_binary(
     deps = [
         ":application",
         "//apps/k8s/admin_console/common:filter",
+        "//apps/k8s/admin_console/middleware:before_request",
+        "//apps/k8s/admin_console/views:admin",
         "//apps/k8s/admin_console/views:index",
         "//apps/k8s/admin_console/views:job",
         "//apps/k8s/admin_console/views:statistics",
