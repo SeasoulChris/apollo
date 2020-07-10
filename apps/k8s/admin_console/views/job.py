@@ -84,8 +84,8 @@ def submit_job():
         # Todo: get the email from user account
         job_is_valid = job_obj.get("is_valid")
         email = flask.session.get("user_info").get("email")
-        if ((job_is_valid and action.lower() == "invalid") or
-                (not job_is_valid and action.lower() == "valid")):
+        if ((job_is_valid and action.lower() == "invalid")
+                or (not job_is_valid and action.lower() == "valid")):
             comment_dict = job_utils.JobUtils(job_id).\
                 save_job_operations(email, comment, not job_is_valid)
             if comment_dict:
