@@ -3,8 +3,7 @@ def py_proto(name, src, with_grpc=False, deps=[]):
     pb2_file = src.replace(".proto", "_pb2.py")
     pb2_path = "$$(dirname {})/{}".format(proto_path, pb2_file)
 
-    # TODO(xiaoxq): Change to /usr/bin/python3.
-    executable = "/usr/local/miniconda/bin/python -m grpc_tools.protoc -I/fuel -I/apollo --python_out=."
+    executable = "/usr/bin/python3 -m grpc_tools.protoc -I/fuel -I/apollo --python_out=."
     native.genrule(
         name = name + "_rule",
         srcs = [src],

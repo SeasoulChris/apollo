@@ -28,7 +28,7 @@ else
   # Mount required volumes.
   FUEL_ROOT="$(pwd)"
   required_volumes="-v ${FUEL_ROOT}:/fuel"
-  APOLLO_ROOT="$(cd ../apollo-bazel2.x; pwd)"
+  APOLLO_ROOT="$(cd ../apollo; pwd)"
   required_volumes="-v ${APOLLO_ROOT}:/apollo ${required_volumes}"
 
   # Populate user.bazelrc.
@@ -78,7 +78,7 @@ else
       -e DOCKER_GRP=$GRP -e DOCKER_GRP_ID=$GRP_ID \
       ${IMAGE} bash
   if [ "${USER}" != "root" ]; then
-    docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_adduser.sh'
+    docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_start_user.sh'
   fi
   docker exec ${CONTAINER} bash -c "cat /home/libs/bash.rc >> ${HOME}/.bashrc"
 fi

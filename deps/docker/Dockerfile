@@ -1,14 +1,17 @@
-FROM apolloauto/apollo:dev-18.04-x86_64-20200331_0146
+FROM apolloauto/apollo:dev-x86_64-18.04-20200708_2316
 
 RUN apt update -y && \
     apt install -y iputils-ping openjdk-8-jre vim \
         libunwind-dev \
-        libpcap-dev && \
+        libpcap-dev \
+        python3-pip && \
     apt clean -y
 
 
 COPY docker/fuel.yaml /tmp/fuel.yaml
-RUN /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
+RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
     /usr/local/miniconda/bin/conda clean -a -y && \
     chmod -R 777 /usr/local/miniconda/envs/fuel
 

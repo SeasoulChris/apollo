@@ -16,7 +16,7 @@ set -e
 # Build widely-used apollo modules.
 pushd /apollo
   ./apollo.sh build_py
-  bazel build --distdir="/apollo/.cache/distdir" -c opt //cyber/py_wrapper:_cyber_record_py3.so
+  bazel build --distdir="/apollo/.cache/distdir" -c opt //cyber/python/internal:_cyber_record_wrapper.so
 popd
 
 if [ -f "WORKSPACE.bazel" ]; then

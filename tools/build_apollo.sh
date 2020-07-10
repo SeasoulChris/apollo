@@ -3,7 +3,8 @@
 cd /apollo
 bash apollo.sh build_py
 bazel build -c opt \
-    //cyber/py_wrapper:_cyber_record_py3.so \
+    //cyber/python/internal:_cyber_record_wrapper.so \
+    //cyber/python/cyber_py3:record \
     //modules/drivers/video/tools/decode_video/... \
     //modules/localization/msf/local_tool/data_extraction/... \
     //modules/localization/msf/local_tool/map_creation/... \
