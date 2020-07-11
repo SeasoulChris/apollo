@@ -2,3 +2,5 @@
 
 source /usr/local/miniconda/bin/activate fuel
 source /etc/bash_completion.d/bazel
+
+source /apollo/scripts/apollo_base.sh

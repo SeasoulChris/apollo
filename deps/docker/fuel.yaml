@@ -39,7 +39,7 @@ dependencies:
   - pycodestyle
   - pymongo
   - pyproj
-  - pytorch::pytorch
+  - pytorch::pytorch = 1.5.1
   - pytz
   - redis-py
   - requests

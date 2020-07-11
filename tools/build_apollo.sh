@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 
+function build_py_proto() {
+  if [ -d "./py_proto" ];then
+    rm -rf py_proto
+  fi
+  mkdir py_proto
+  find modules/ cyber/ -name "*.proto" \
+      | grep -v node_modules \
+      | xargs /opt/apollo/sysroot/bin/protoc --python_out=py_proto
+  find modules/ cyber/ -name "*_service.proto" \
+      | grep -v node_modules \
+      | xargs /usr/bin/python3 -m grpc_tools.protoc --proto_path=. --python_out=py_proto --grpc_python_out=py_proto
+  find py_proto/* -type d -exec touch "{}/__init__.py" \;
+}
+
 cd /apollo
-bash apollo.sh build_py
+build_py_proto
 bazel build -c opt \
     //cyber/python/cyber_py3:record \
     //modules/drivers/video/tools/decode_video/... \
