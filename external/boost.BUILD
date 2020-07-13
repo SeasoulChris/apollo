@@ -10,9 +10,10 @@ cc_library(
     includes = ["."],
     linkopts = [
         "-L/opt/apollo/sysroot/lib",
-        "-lboost_system",
         "-lboost_filesystem",
         "-lboost_program_options",
+        "-lboost_regex",
+        "-lboost_system",
         "-lboost_thread",
     ],
 )
