@@ -26,7 +26,7 @@ dependencies:
   - keras-gpu
   - matplotlib
   - mpld3
-  - numba = 0.48
+  - numba = 0.48  # To be compatible with librosa
   - numpy
   - opencv
   - pillow = 6.1  # To be compatible with torchvision
