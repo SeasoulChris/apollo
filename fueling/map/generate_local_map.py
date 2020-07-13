@@ -104,6 +104,9 @@ class LocalMapPipeline(BasePipeline):
             ins_stat_message = get_message_by_topic(messages, record_utils.GNSS_INS_STAT_CHANNEL)
             if not (lidar_message and odometry_message and ins_stat_message):
                 JobUtils(job_id).save_job_failure_code('E304')
+                title = 'Your localmap is not generated!'
+                email_utils.send_email_info(title, content, receivers)
+                return
 
         # RDD(tasks), the tasks without source_dir as prefix
         # RDD(record_path)
