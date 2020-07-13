@@ -45,3 +45,8 @@ py_library(
         "//fueling/common:file_utils",
     ],
 )
+
+py_library(
+    name = "siren_net",
+    srcs = ["siren_net.py"],
+)

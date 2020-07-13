@@ -3,8 +3,20 @@
 from collections import OrderedDict
 
 import torch
+from torch.utils.data import Dataset
 import torch.nn as nn
 import torchaudio
+
+
+class SirenNetDataset(Dataset):
+    def __init__(self, data_dir):
+        pass  # TODO(kechxu)
+
+    def __len__(self):
+        pass  # TODO(kechxu)
+
+    def __getitem__(self, idx):
+        pass  # TODO(kechxu)
 
 
 class WaveNet(nn.Module):
