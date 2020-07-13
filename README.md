@@ -2,16 +2,15 @@
 
 ## Setup Env
 
-1. Find a proper folder to clone the following two repos:
+1. Clone the following repo along with apollo repo: 
 
    ```bash
-   git clone --single-branch --branch bazel2.x git@github.com:ApolloAuto/apollo.git apollo-bazel2.x
    git clone git@github.com:<YourAccount>/apollo-fuel.git
    ```
 
    So that you have a workspace which looks like:
 
-   - apollo-bazel2.x
+   - apollo
    - apollo-fuel
 
 1. Then go to the apollo-fuel repo, start a container.
@@ -22,7 +21,7 @@
    ```
 
    Now you should be in `/fuel` which maps to apollo-fuel, and there is also `/apollo` which maps to
-   apollo-bazel2.x.
+   apollo.
 
 1. Please note that if you run `login_container.sh` again you are entering the same container. In
    case a fresh container is needed, please run the following command first.

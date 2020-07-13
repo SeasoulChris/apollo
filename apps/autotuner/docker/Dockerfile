@@ -11,7 +11,7 @@ RUN apt update -y && \
 # Set up apollo
 RUN mkdir -p /root/.cache && touch /root/.cache/.apollo_agreement.txt && \
     rm -rf /apollo && \
-    git clone --depth 1 --branch bazel2.x https://github.com/ApolloAuto/apollo.git
+    git clone --depth 1 --branch master https://github.com/ApolloAuto/apollo.git
 
 WORKDIR /apollo
 RUN echo "source /apollo/scripts/apollo_base.sh" > ~/.bash_profile && \
