@@ -68,10 +68,10 @@ def statistics():
             show_job_type_list = {job_selected: show_job_type[job_selected]}
         else:
             job_type_list = list(show_job_type.keys())
-            show_job_type_list = show_job_type
+            show_job_type_list = show_job_type.copy()
     else:
         job_type_list = list(show_job_type.keys())
-        show_job_type_list = show_job_type
+        show_job_type_list = show_job_type.copy()
 
     aggregated_filed = show_aggregated_by
 

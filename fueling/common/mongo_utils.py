@@ -62,6 +62,10 @@ class Mongo(object):
         """Get admin_console admin collection"""
         return self.collection('dkit_admins')
 
+    def account_collection(self):
+        """Get admin_console account collection"""
+        return self.collection('dkit_accounts')
+
 
 if __name__ == '__main__':
     def main(argv):
