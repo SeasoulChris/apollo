@@ -83,13 +83,22 @@ class Urbansound8K(object):
 
 class SirenNetDataset(Dataset):
     def __init__(self, data_dir):
-        pass  # TODO(kechxu)
+        self.data_dir = data_dir
+        files = file_utils.list_files(data_dir)
+        self.all_features = []
+        for file in files:
+            features = np.load(file, allow_pickle=True).tolist()
+            for feature in features:
+                self.all_features.append(feature)
 
     def __len__(self):
-        pass  # TODO(kechxu)
+        return len(self.all_features)
 
     def __getitem__(self, idx):
-        pass  # TODO(kechxu)
+        feature = self.all_features[i]
+        data_for_learn = feature[0]
+        label = feature[1] * np.ones((1, 1))
+        return ((torch.from_numpy(data_for_learn)), torch.from_numpy(label))
 
 
 class WaveNet(nn.Module):
