@@ -17,3 +17,8 @@
 .filter-option{
     font-size: 12px;
 }
+
+.tooltip-inner{
+    max-width: 300px;
+    text-align:left
+}
