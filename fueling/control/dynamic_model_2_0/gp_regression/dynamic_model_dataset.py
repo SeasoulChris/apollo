@@ -23,7 +23,6 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, outpu
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
 # Every 100 frames Input Vector correspond to 1 frame of output.
-INPUT_LENGTH = 100
 INPUT_DIM = feature_config["input_dim"]
 OUTPUT_DIM = feature_config["output_dim"]
 WINDOW_SIZE = feature_config["window_size"]
@@ -82,7 +81,7 @@ class DynamicModelDataset(Dataset):
             self.pre_input_mean = np.array(model_norms_file.get('input_mean'))
             self.pre_input_std = np.array(model_norms_file.get('input_std'))
 
-    def get_datasets(self):
+    def get_datasets_w_pre_denormalization(self):
         """Extract datasets from data path"""
         # list of dataset = (input_tensor, output_tensor)
         self.datasets = []
@@ -93,7 +92,7 @@ class DynamicModelDataset(Dataset):
                 # Get input data
                 input_segment = np.array(model_norms_file.get('input_segment'))
                 if np.isnan(np.sum(input_segment)):
-                    logging.error(f'file {h5_file} contains NAN data in input segment')
+                    raise Exception(f'file {h5_file} contains NAN data in input segment')
                 # denormalize input data from DM10
                 input_segment[:, range(0, 5)] = input_segment[:, range(0, 5)] * \
                     self.pre_input_std + self.pre_input_mean
@@ -102,7 +101,23 @@ class DynamicModelDataset(Dataset):
                 # Get output data
                 output_segment = np.array(model_norms_file.get('output_segment'))
                 if np.isnan(np.sum(output_segment)):
-                    logging.error(f'file {h5_file} contains NAN data in output segment')
+                    raise Exception(f'file {h5_file} contains NAN data in output segment')
+                self.datasets.append((input_segment, output_segment))
+
+    def get_datasets(self):
+        """ when input data for DM1.0 is not normalized """
+        self.datasets = []
+        h5_files = file_utils.list_files_with_suffix(self.data_dir, '.h5')
+        for idx, h5_file in enumerate(h5_files):
+            logging.debug(f'h5_file: {h5_file}')
+            with h5py.File(h5_file, 'r') as model_norms_file:
+                # Get input data
+                input_segment = np.array(model_norms_file.get('input_segment'))
+                if np.isnan(np.sum(input_segment)):
+                    raise Exception(f'file {h5_file} contains NAN data in input segment')
+                output_segment = np.array(model_norms_file.get('output_segment'))
+                if np.isnan(np.sum(output_segment)):
+                    raise Exception(f'file {h5_file} contains NAN data in output segment')
                 self.datasets.append((input_segment, output_segment))
 
     def __len__(self):
