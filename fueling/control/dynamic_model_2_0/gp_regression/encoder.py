@@ -387,3 +387,46 @@ class TransformerEncoderCNN(nn.Module):
         data = F.relu(self.conv2(data))
         data = self.fc(data.view(data.shape[0], -1))
         return data
+
+
+class LSTMEncoder(nn.Module):
+    """using lstm to encoder N*6 input to M*1 output"""
+
+    def __init__(self, u_dim, hidden_dim, kernel_dim, num_layers=1):
+        """Network initialization"""
+        super().__init__()
+        self.num_layers = num_layers
+        # initialize hidden states
+        h0 = torch.zeros(self.num_layers, 1, hidden_dim)
+        c0 = torch.zeros(self.num_layers, 1, hidden_dim)
+        nn.init.xavier_normal_(h0, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_normal_(c0, gain=nn.init.calculate_gain('relu'))
+        self.h0 = nn.Parameter(h0, requires_grad=True)
+        self.c0 = nn.Parameter(c0, requires_grad=True)
+        # RNN
+        self.lstm = nn.LSTM(input_size=u_dim, hidden_size=hidden_dim, num_layers=num_layers)
+        self.encode = torch.nn.Sequential(
+            nn.Linear(hidden_dim * 1, kernel_dim),
+            nn.ReLU(),
+        )
+
+    def forward(self, features):
+        '''Forward function
+            - features: (seq_len, batch, input_dim) 100 x N x 6
+
+            output: N x 20 x 1
+        '''
+        N = features.size(0)
+        logging.info(f'{N}')
+        logging.info(f'self.h0 shape is {self.h0.shape}')
+        # Run through RNN.
+        # h0 and c0: (num_layers * num_directions, batch, hidden_size)
+        h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
+        logging.info(f'h0 shape is {h0.shape}')
+
+        # Forward propagate LSTM
+        # (100 x N x hidden_size)
+        states, _ = self.lstm(features.transpose(-2, -3), (h0, c0))
+        back_states = states[-1, :, :]
+        out = self.encode(back_states)
+        return out
