@@ -2,6 +2,8 @@
 
 export PATH=${PATH}:/apollo/scripts:/usr/local/miniconda/bin
 
-source /apollo/scripts/apollo_base.sh
-source /usr/local/miniconda/bin/activate fuel
+if [ -e "/apollo/scripts/apollo_base.sh" ]; then
+  source /apollo/scripts/apollo_base.sh
+fi
+
 bash /fuel/tools/check.sh
