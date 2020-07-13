@@ -46,7 +46,10 @@ py_library(
     ],
 )
 
-py_library(
+py_binary(
     name = "siren_net",
     srcs = ["siren_net.py"],
+    deps = [
+        "//fueling/common:file_utils",
+    ],
 )

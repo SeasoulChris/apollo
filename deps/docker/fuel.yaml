@@ -26,6 +26,7 @@ dependencies:
   - keras-gpu
   - matplotlib
   - mpld3
+  - numba = 0.48
   - numpy
   - opencv
   - pillow = 6.1  # To be compatible with torchvision

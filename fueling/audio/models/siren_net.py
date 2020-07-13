@@ -1,11 +1,84 @@
 #!/usr/bin/env python
 
-from collections import OrderedDict
+import os
 
+from collections import OrderedDict
+from fnmatch import fnmatch
+
+import librosa
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 import torch.nn as nn
 import torchaudio
+
+from fueling.common import file_utils
+import fueling.common.logging as logging
+
+
+class Urbansound8K(object):
+    def __init__(self, data_dir, sample_rate=22050, length=1.5, stride=0.5):
+        self.data_dir = data_dir
+        self.sample_rate = sample_rate
+        self.length = length
+        self.stride = 0.5
+        self.signal_length = int(sample_rate * length)
+        self.signal_stride = int(sample_rate * stride)
+
+    def label_file(self, filepath, dest_pos_dir, dest_neg_dir):
+        label = 0
+        if fnmatch(filepath, '*-8-*-*.wav'):
+            label = 1
+        signals = librosa.load(filepath, sr=self.sample_rate)
+        if signals is None:
+            logging.info('None signals found')
+            return None, None
+        signals = signals[0]
+        total_len = signals.shape[0]
+        logging.info('total length = {}'.format(total_len))
+        if total_len < self.signal_length:
+            logging.info('Total length is too short')
+            return None, None
+        features = []
+        for i in range(0, total_len - self.signal_length + 1, self.signal_stride):
+            feature = signals[i:(i + self.signal_length)]
+            feature = feature.reshape(1, self.signal_length)
+            features.append((feature, label))
+        return features, label
+
+    def preprocess(self):
+        files = file_utils.list_files(self.data_dir)
+        pos_file_count = 0
+        neg_file_count = 0
+        pos_data_count = 0
+        neg_data_count = 0
+        for file in files:
+            if file.find('.wav') == -1:
+                continue
+            logging.info('--- Dealing with {} ---'.format(file))
+            origin_dir = os.path.dirname(file)
+            dest_pos_dir = origin_dir.replace('audio', 'features/positive', 1)
+            dest_neg_dir = origin_dir.replace('audio', 'features/negative', 1)
+            os.makedirs(dest_pos_dir, exist_ok=True)
+            os.makedirs(dest_neg_dir, exist_ok=True)
+            features, label = self.label_file(file, dest_pos_dir, dest_neg_dir)
+            if features is None or label is None:
+                logging.info('Skip none data')
+                continue
+            dest_dir = None
+            if label == 1:
+                pos_file_count += 1
+                pos_data_count += len(features)
+                dest_dir = dest_pos_dir
+            else:
+                neg_file_count += 1
+                neg_data_count += len(features)
+                dest_dir = dest_neg_dir
+            _, origin_file_name = os.path.split(file)
+            dest_file_name = origin_file_name.replace('wav', 'npy', 1)
+            np.save(os.path.join(dest_dir, dest_file_name), features)
+            logging.info('File (pos, neg) = ({}, {})'.format(pos_file_count, neg_file_count))
+            logging.info('Data (pos, neg) = ({}, {})'.format(pos_data_count, neg_data_count))
 
 
 class SirenNetDataset(Dataset):
@@ -109,6 +182,9 @@ class SirenNet(nn.Module):
 
 
 if __name__ == '__main__':
-    input = torch.ones([1, 1, 33075])
-    model = SirenNet()
-    print(model(input))
+    # input = torch.ones([1, 1, 33075])
+    # model = SirenNet()
+    # print(model(input))
+    # TODO(kechxu) add flag to switch preprocess and training
+    urbansound = Urbansound8K('/fuel/UrbanSound8K/audio/')
+    urbansound.preprocess()
