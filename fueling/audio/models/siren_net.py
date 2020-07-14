@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
-import os
-
 from collections import OrderedDict
 from fnmatch import fnmatch
+import os
 
 import librosa
 import numpy as np
 import torch
-from torch.utils.data import Dataset
 import torch.nn as nn
+from torch.utils.data import Dataset
 import torchaudio
 
 from fueling.common import file_utils
@@ -28,6 +27,8 @@ class Urbansound8K(object):
     def label_file(self, filepath, dest_pos_dir, dest_neg_dir):
         label = 0
         if fnmatch(filepath, '*-8-*-*.wav'):
+            label = 1
+        if filepath.find('ambulance') != -1 or filepath.find('firetruck') != -1:
             label = 1
         signals = librosa.load(filepath, sr=self.sample_rate)
         if signals is None:
@@ -194,6 +195,6 @@ if __name__ == '__main__':
     # input = torch.ones([1, 1, 33075])
     # model = SirenNet()
     # print(model(input))
-    # TODO(kechxu) add flag to switch preprocess and training
-    urbansound = Urbansound8K('/fuel/UrbanSound8K/audio/')
+
+    urbansound = Urbansound8K('/fuel/ESC/audio/')
     urbansound.preprocess()
