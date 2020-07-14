@@ -40,6 +40,6 @@ if [ -f "WORKSPACE.bazel" ]; then
   echo "###### You are building with local pip-cache! ######"
 fi
 
-DISTDIR="${TOP_DIR}/.cache/distdir"
+DISTDIR="/fuel/.cache/distdir"
 mkdir -p "${DISTDIR}"
 bazel build --distdir="${DISTDIR}" ${TARGET}

@@ -9,7 +9,15 @@ cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 # For CI robot.
 if [ "$1" == "--ci" ]; then
   source ./tools/docker_version.sh
-  APOLLO_ROOT="/home/apollo/apollo-bazel2.x"
+  APOLLO_ROOT="/home/apollo/apollo"
+  if [ -d ${APOLLO_ROOT} ]; then
+    pushd ${APOLLO_ROOT}
+      git pull -f origin master
+    popd
+  else
+    git clone --depth 1 git@github.com:ApolloAuto/apollo.git ${APOLLO_ROOT}
+  fi
+
   docker run --privileged --rm \
       --net host \
       -v $(pwd):/fuel \
