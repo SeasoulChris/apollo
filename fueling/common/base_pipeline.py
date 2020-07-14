@@ -158,7 +158,7 @@ class BasePipeline(object):
         try:
             self.init()
             self.run()
-        except Exception as ex:
+        except BaseException as ex:
             job_failed = True
             logging.error(traceback.format_exc())
         finally:
