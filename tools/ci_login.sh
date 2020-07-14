@@ -19,7 +19,14 @@ if [ $? -eq 0 ]; then
 else
   # Mount required volumes.
   required_volumes="-v $(pwd):/fuel"
-  APOLLO_ROOT="/home/apollo/apollo-bazel2.x"
+
+  APOLLO_ROOT="/home/apollo/apollo"
+  if [ -d ${APOLLO_ROOT} ]; then
+    cd ${APOLLO_ROOT}
+    git pull origin master
+  else
+    git clone --depth 1 git@github.com:ApolloAuto/apollo.git ${APOLLO_ROOT}
+  fi
   required_volumes="-v ${APOLLO_ROOT}:/apollo ${required_volumes}"
 
   USER_ID=$(id -u)

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO(xiaoxq): Retire after py_proto_library fixed in apollo.
 function build_py_proto() {
   if [ -d "./py_proto" ];then
     rm -rf py_proto
