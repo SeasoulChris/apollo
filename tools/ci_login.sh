@@ -23,7 +23,7 @@ else
   APOLLO_ROOT="/home/apollo/apollo"
   if [ -d ${APOLLO_ROOT} ]; then
     cd ${APOLLO_ROOT}
-    git pull origin master
+    git pull -f origin master
   else
     git clone --depth 1 git@github.com:ApolloAuto/apollo.git ${APOLLO_ROOT}
   fi

@@ -31,7 +31,7 @@ dependencies:
   - numba = 0.48  # To be compatible with librosa
   - numpy
   - opencv
-  - pillow = 6.1  # To be compatible with torchvision
+  - pillow
   - plotly
   - plotly::plotly-orca
   - protobuf
@@ -40,6 +40,7 @@ dependencies:
   - pymongo
   - pyproj
   - pytorch::pytorch = 1.5.1
+  - pytorch::torchvision
   - pytz
   - redis-py
   - requests
@@ -47,7 +48,6 @@ dependencies:
   - seaborn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
-  - torchvision
   - tqdm
 
   - pip:

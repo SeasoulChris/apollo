@@ -7,7 +7,6 @@ RUN apt update -y && \
         python3-pip && \
     apt clean -y
 
-
 COPY docker/fuel.yaml /tmp/fuel.yaml
 RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda && \
