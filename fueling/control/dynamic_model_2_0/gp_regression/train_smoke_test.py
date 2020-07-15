@@ -83,24 +83,24 @@ logging.info(inducing_points.shape)
 
 # validate loader
 valid_dataset = DynamicModelDataset(validation_data_path)
-# reduce batch size when memory is not enough
-valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset.datasets))
+# reduce batch size when memory is not enough len(valid_dataset.datasets)
+valid_loader = DataLoader(valid_dataset, batch_size=1024)
 
 
 # encoder
-# TransformerEncoderCNN
-encoder_net_model = TransformerEncoderCNN(u_dim=feature_config["input_dim"],
-                                          kernel_dim=config["kernel_dim"])
-model, likelihood, optimizer, loss = train_utils.init_train(
+# bench mark encoder
+encoder_net_model = Encoder(u_dim=feature_config["input_dim"],
+                            kernel_dim=config["kernel_dim"])
+model, likelihood, optimizer, loss_fn = train_utils.init_train(
     inducing_points, encoder_net_model, feature_config["output_dim"],
     total_train_number, config["lr"], kernel_dim=config["kernel_dim"])
 
 train_loss_plot = os.path.join(validation_data_path, f'{timestr}', 'train_loss.png')
 if train_model:
-    model, likelihood = train_utils.train_with_adjusted_lr(
+    model, likelihood, final_train_loss = train_utils.train_with_adjusted_lr(
         config["num_epochs"], train_loader, model, likelihood,
-        loss, optimizer, fig_file_path=train_loss_plot, is_transpose=True)
-
+        loss_fn, optimizer, fig_file_path=train_loss_plot, is_transpose=True)
+    print(f'final train loss is {final_train_loss}')
     # test save and load model
     save_model_state_dict(model, likelihood, offline_model_path)
     # save model as jit script
