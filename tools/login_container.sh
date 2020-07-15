@@ -76,6 +76,7 @@ else
       -e DISPLAY=$DISPLAY \
       -e DOCKER_USER=$USER -e DOCKER_USER_ID=$USER_ID \
       -e DOCKER_GRP=$GRP -e DOCKER_GRP_ID=$GRP_ID \
+      -e PYTHONPATH="/apollo/py_proto:/apollo/cyber/python:/apollo/bazel-bin/cyber/python/internal" \
       ${IMAGE} bash
   if [ "${USER}" != "root" ]; then
     docker exec ${CONTAINER} bash -c '/apollo/scripts/docker_start_user.sh'
