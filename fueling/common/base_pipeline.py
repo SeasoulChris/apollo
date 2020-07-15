@@ -122,7 +122,6 @@ class BasePipeline(object):
             if flags.FLAGS.auto_delete_driver_pod:
                 kubectl.delete_pod(pod_name, pod_namespace)
             else:
-                JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
                 pod_desc = kubectl.describe_pod(pod_name, pod_namespace, tojson=True)
                 if job_failed:
                     pod_desc['status']['phase'] = phase = 'Failed'
@@ -154,11 +153,16 @@ class BasePipeline(object):
         if flags.FLAGS.cloud:
             SparkSubmitterClient(self.entrypoint).submit()
             return
+        try:
+            if flags.FLAGS.running_mode == 'PROD':
+                JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
+        except Exception as ex:
+            logging.error('save job partner failed')
         job_failed = False
         try:
             self.init()
             self.run()
-        except BaseException as ex:
+        except Exception as ex:
             job_failed = True
             logging.error(traceback.format_exc())
         finally:

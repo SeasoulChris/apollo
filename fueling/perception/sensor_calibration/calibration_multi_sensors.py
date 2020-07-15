@@ -92,7 +92,7 @@ class SensorCalibrationPipeline(BasePipeline):
             redis_value = {'end_time': datetime.now().strftime('%Y-%m-%d-%H:%M:%S'),
                            'job_status': 'failed', 'sub_type': sub_job_type}
             redis_utils.redis_extend_dict(redis_key, redis_value)
-            logging.fatal('Failed to process sensor calibration job')
+            logging.error('Failed to process sensor calibration job')
         result = JobUtils(job_id).get_job_info()
         for job_info in result:
             if (int(time.mktime(datetime.now().timetuple())
@@ -112,7 +112,7 @@ class SensorCalibrationPipeline(BasePipeline):
 
             job_output_dir = self.partner_storage().abs_path(self.FLAGS.get('output_data_path'))
             if not job_output_dir.startswith(bos_client.PARTNER_BOS_MOUNT_PATH):
-                logging.fatal(F'Wrong job_output_dir {job_output_dir}')
+                logging.error(F'Wrong job_output_dir {job_output_dir}')
 
             file_utils.makedirs(job_output_dir)
             # TODO: Quick check on partner data.
