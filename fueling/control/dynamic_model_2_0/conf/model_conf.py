@@ -77,11 +77,17 @@ imu_scaling = {
 training_config = {
     # Training configs for DM2.0
     "use_cuda": False,
+<<<<<<< HEAD
     "num_inducing_point": 128,  # No. of inducing points
     "kernel_dim": 20,  # kernel dimension
     "num_epochs": 50,  # training epochs
+=======
+    "num_inducing_point": 256,  # No. of inducing points
+    "kernel_dim": 20,  # kernel dimension
+    "num_epochs": 400,  # training epochs
+>>>>>>> e15c7246... DM2.0: updated training confs
     "lr": 0.01,  # default learning rate
-    "batch_size": 512,  # default batch size
+    "batch_size": 1024,  # default batch size
     "epoch_set_tridiagonal_jitter": 10,  # default epoch number to set tridiagonal jitter
     "tridiagonal_jitter": 1e-4,  # default tridiagonal jitter value
 }
