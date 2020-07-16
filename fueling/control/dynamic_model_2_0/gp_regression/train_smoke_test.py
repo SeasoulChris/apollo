@@ -33,15 +33,18 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 
 
 train_model = True
-test_type = "toy_test"
+test_type = "smoke_test"
+platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
+data_dir = '0707_smoke_test'
+
 if test_type == "full_test":
     config = training_config
-    training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/train"
-    validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603/test"
+    training_data_path = os.path.join(platform_dir, data_dir, 'train')
+    validation_data_path = os.path.join(platform_dir, data_dir, 'test')
 elif test_type == "smoke_test":
     config = smoke_test_training_config
-    training_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/train"
-    validation_data_path = "/fuel/fueling/control/dynamic_model_2_0/testdata/0603_smoke_test/test"
+    training_data_path = os.path.join(platform_dir, data_dir, 'train')
+    validation_data_path = os.path.join(platform_dir, data_dir, 'test')
 else:
     # default toy test
     config = toy_test_training_config
@@ -108,6 +111,8 @@ if train_model:
         test_features = torch.transpose(test_features, 0, 1).type(torch.FloatTensor)
         break
     save_model_torch_script(model, likelihood, test_features, online_model_path)
+    # save inducing points for load model
+    np.save(os.path.join(result_folder, 'inducing_points.npy'), inducing_points)
 else:
     # load model
     train_utils.load_model(offline_model_path, encoder_net_model, model, likelihood)
