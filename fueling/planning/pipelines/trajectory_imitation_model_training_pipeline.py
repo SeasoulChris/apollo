@@ -12,7 +12,8 @@ import fueling.common.logging as logging
 from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.img_in_traj_out_dataset \
     import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset, \
-    TrajectoryImitationCNNFCLSTMDataset
+    TrajectoryImitationCNNFCLSTMDataset, \
+    TrajectoryImitationCNNFCLSTMWithAENDataset
 from fueling.planning.models.trajectory_imitation_model \
     import TrajectoryImitationCNNModel, \
     TrajectoryImitationRNNModel, \
@@ -20,9 +21,11 @@ from fueling.planning.models.trajectory_imitation_model \
     TrajectoryImitationRNNUnetResnet18Modelv1, \
     TrajectoryImitationRNNUnetResnet18Modelv2, \
     TrajectoryImitationCNNFCLSTM, \
+    TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet, \
     TrajectoryImitationCNNLoss, \
     TrajectoryImitationRNNLoss, \
-    TrajectoryImitationWithEnvRNNLoss
+    TrajectoryImitationWithEnvRNNLoss, \
+    TrajectoryImitationWithAuxiliaryEnvRNNLoss
 import fueling.common.proto_utils as proto_utils
 
 
@@ -84,7 +87,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         loss = TrajectoryImitationRNNLoss(1, 1, 1)
         # loss = TrajectoryImitationWithEnvRNNLoss(1, 1, 1, 1, 1, True)
 
-    elif model_type == 'cnn+fc_lstm':
+    elif model_type == 'cnn_lstm':
         train_dataset = TrajectoryImitationCNNFCLSTMDataset(train_dir,
                                                             renderer_config_file,
                                                             imgs_dir,
@@ -107,6 +110,33 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                                              hidden_size=128)
         loss = TrajectoryImitationCNNLoss()
 
+    elif model_type == 'cnn_lstm_aux':
+        train_dataset = TrajectoryImitationCNNFCLSTMWithAENDataset(train_dir,
+                                                                   renderer_config_file,
+                                                                   imgs_dir,
+                                                                   map_path,
+                                                                   region,
+                                                                   img_feature_rotation,
+                                                                   past_motion_dropout,
+                                                                   history_point_num=10,
+                                                                   ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNFCLSTMWithAENDataset(valid_dir,
+                                                                   renderer_config_file,
+                                                                   imgs_dir,
+                                                                   map_path,
+                                                                   region,
+                                                                   img_feature_rotation,
+                                                                   past_motion_dropout,
+                                                                   history_point_num=10,
+                                                                   ouput_point_num=10)
+        model = TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet(input_img_size=[
+            renderer_config.height,
+            renderer_config.width],
+            history_len=10,
+            pred_horizon=10,
+            embed_size=64,
+            hidden_size=128)
+        loss = TrajectoryImitationWithAuxiliaryEnvRNNLoss()
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -139,7 +169,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     torch.autograd.set_detect_anomaly(True)
 
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer,
-                           scheduler, epochs=20, save_name=model_save_dir, print_period=50)
+                           scheduler, epochs=50, save_name=model_save_dir, print_period=50)
 
 
 if __name__ == "__main__":
@@ -152,7 +182,7 @@ if __name__ == "__main__":
     # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
     parser.add_argument('model_type', type=str,
-                        help='model type, cnn, rnn or cnn+fc_lstm')
+                        help='model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
