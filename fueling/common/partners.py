@@ -71,4 +71,13 @@ partners = {
     'd-kit-szy-2019091': Partner(name='SZY91', email='903381468@qq.com',
                                  bos_bucket='apollocar', bos_region='gz',
                                  vehicle_sn='CH2019091'),
+    'd-kit-cdpf-2019095': Partner(name='CDPF95', email='xuzuq@qq.com',
+                                  bos_bucket='pfapollo', bos_region='gz',
+                                  vehicle_sn='CH2019095'),
+    'd-kit-czyt-2019053': Partner(name='CZYT53', email='lwh6408@163.com',
+                                  bos_bucket='apollo-yuntu', bos_region='bj',
+                                  vehicle_sn='CH2019053'),
+    'd-kit-nylg-2020008': Partner(name='NYLG08', email='liuyuan8601@163.com',
+                                  bos_bucket='nit-car', bos_region='bj',
+                                  vehicle_sn='CH2020008'),
 }
