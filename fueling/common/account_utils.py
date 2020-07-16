@@ -72,12 +72,14 @@ class AccountUtils(object):
                        'action': {'type': action_type}}
         self.db.update_one({'_id': ObjectId(account_id)},
                            {'$push': {'operations': update_dict}})
-        logging.info(f"save_account_operation: {operations}")
+        logging.info(f"save_account_operation: {update_dict}")
 
-    def get_account_info(self, account_id):
+    def get_account_info(self, prefix):
         """get account info"""
         result = []
-        for data in self.db.find({'_id': ObjectId(account_id)}):
+        if prefix.get("_id"):
+            prefix["_id"] = ObjectId(prefix["_id"])
+        for data in self.db.find(prefix):
             data['_id'] = data['_id'].__str__()
             result.append(data)
         logging.info(f"get_account_info: {result}")

@@ -54,9 +54,30 @@ def get_duration(time_tuple):
 
 
 def get_failure_cause(code):
+    """
+    Get failure cause of job
+    """
     failure_cause = application.app.config.get("FAILURE_CAUSE")
     return failure_cause[code] if code else ""
 
 
 def truncation_job_id(job_id):
+    """
+    Truncation the job id
+    """
     return job_id[-6:] if job_id else ""
+
+
+def get_account_action(status):
+    """
+    Get the status
+    """
+    status_dict = {
+        "Pending": "Reject",
+        "Rejected": "",
+        "Enabled": ("Edit", "Disable"),
+        "Disabled": "Enable",
+        "Over-quota": "Edit",
+        "Expired": "Edit"
+    }
+    return status_dict[status]

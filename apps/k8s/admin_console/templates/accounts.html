@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- filter and search -->
+<div class="row">
+    <form action="/accounts" method="get" id="account-form">
+        <!-- vehicle sn search -->
+        <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
+            <div class="input-group">
+                <input type="search" id="account-sn-search" name="vehicle_sn" class="form-control"
+                       placeholder="搜索：通过车辆编号" {% if vehicle_sn %} value={{ vehicle_sn }} {% endif %}
+                       style="font-size: 12px;height: 32px;">
+                <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="account-search-btn"
+                                style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
+                    </span>
+                {% if vehicle_sn %}
+                <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="account-message-close"
+                                style="font-size: 12px;height: 32px;display: inline">清空</button>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- blank div -->
+<div style="height: 60px; width: 100%">
+</div>
+
+<!-- The comment on the modal box -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel"></h4>
+            </div>
+            <div class="modal-body text-center">
+                <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
+                <p><span style="color: red">*</span>备注：
+                    <textarea id="account_comment_text" cols="25" rows="1" style="line-height: 25px"></textarea>
+                </p>
+                <p id="comments-error" style="display: none"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel_job btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="comment_job btn btn-primary">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- search message and update message -->
+{% if vehicle_sn %}
+<p>
+            <span id="account-filter-message"
+                  style="color:red"> 通过车辆编号{{ vehicle_sn }}搜索出以下结果：
+            </span>
+</p>
+{% endif %}
+<p style="color:red;"><span id='update-message'></span><span id="update-message-close"
+                                                             class="glyphicon glyphicon-remove"
+                                                             style="display: none"></span></p>
+<!-- The table of job list -->
+<table class="table table-hover">
+    <tr>
+        <th>车辆编号</th>
+        <th>公司名称</th>
+        <th>公司邮箱</th>
+        <th>bucket名称</th>
+        <th>bucket区域</th>
+        <th>账户状态</th>
+        <th>申请时间</th>
+        <th>截止时间</th>
+        <th>动作</th>
+        <th>展开/收缩</th>
+    </tr>
+    {% for account in account_list %}
+    <tr>
+        <td>{{ account.vehicle_sn }}</td>
+        <td>{{ account.com_name }}</td>
+        <td>{{ account.com_email }}</td>
+        <td>{{ account.bos_bucker_name }}</td>
+        <td>{{ account.bos_region }}</td>
+        <td>{{ account.status }}</td>
+        <td>{{ account.apply_date }}</td>
+        <td>{{ account.due_date }}</td>
+        <td>
+            {% if account.status == "Enabled" %}
+            <a style="width: 100%" id="account-action1-{{ account._id }}" class="account-modal" data-toggle="modal"
+               data-target="#myModal">
+                Disable
+            </a>
+            <a style="width: 100%" id="account-action2-{{ account._id }}" class="account-modal" data-toggle="modal"
+               data-target="#myModal">
+                Edit
+            </a>
+            {% else %}
+            <a style="width: 100%" id="account-action-{{ account._id }}" class="account-modal" data-toggle="modal"
+               data-target="#myModal">
+                {{ account.status | show_account_action }}
+            </a>
+            {% endif %}
+        </td>
+        <td>
+            <a id="expand-{{ account._id }}" class="account_expand" style="display: inline">展开</a>
+            <a id="collapse-{{ account._id }}" class="account_collapse" style="display: none">收缩</a>
+        </td>
+    </tr>
+
+    <!-- The service information -->
+    <tr style="display: none" class="service_tr">
+        <td align="left" colspan="10"><b>服务信息:</b></td>
+    </tr>
+
+    {% for se in account.services %}
+    <tr style="display: none" class="service_span">
+        <td colspan="10" style="border-top: none">
+            {{se.job_type}}:{{se.status}} used:{{se.used}} Remaining Quota:{{account.remaining_quota}}
+        </td>
+    </tr>
+    {% endfor %}
+
+    <tr style="display: none" class="operation_tr">
+        <td align="left" colspan="10"><b>操作历史：</b></td>
+    </tr>
+
+    <!-- The history record of account operation -->
+    {% for opt in account.operations %}
+    <tr style="display: none" class="account_operation_span">
+        <td colspan="10" style="border-top: none">
+            任务被{{ opt.email }}在{{ opt.time }}设置为{{ opt.action.type }}。备注是：{{ opt.comments }}。
+        </td>
+    </tr>
+    {% endfor %}
+
+    <tr class="account_flag" id="flag-{{ account._id }}"></tr>
+    {% endfor %}
+</table>
+
+<!-- The pagination -->
+<div id="bagin">
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if current_page.has_previous() %}
+            <li class="previous">
+                <a href="?{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.previous_page_number() }}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">上一页</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="previous disabled">
+                <a href="#">上一页</a>
+            </li>
+            {% endif %}
+            {% for i in current_page.page_nums() %}
+            {% if i == current_page.current_page %}
+            <li class="active"><a
+                    href="?{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
+            </li>
+            {% else %}
+            <li>
+                <a href="?{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            {% if current_page.has_next() %}
+            <li class="next">
+                <a href="?{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.next_page_number() }}"
+                   aria-label="Next">
+                    <span aria-hidden="true">下一页</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="next disabled">
+                <a href="#" aria-label="Next">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

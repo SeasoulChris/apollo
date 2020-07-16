@@ -1,6 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "account",
+    srcs = ["account.py"],
+    data = ["//apps/k8s/admin_console:resource"],
+    deps = [
+        "//apps/k8s/admin_console:application",
+        "//apps/k8s/admin_console/common:paginator",
+        "//apps/k8s/admin_console/controllers:account",
+    ],
+)
+
+py_library(
     name = "admin",
     srcs = ["admin.py"],
     data = ["//apps/k8s/admin_console:resource"],

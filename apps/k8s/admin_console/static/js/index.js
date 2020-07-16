@@ -30,9 +30,22 @@ $(document).ready(function () {
         $("#job-form").submit();
     });
 
-    // submit the search by vehicle SN
+    // submit the search by vehicle SN in job
     $("#search-btn").click(function () {
         $("#job-form").submit();
+    });
+
+    // submit the search by vehicle SN in account
+    $("#account-search-btn").click(function () {
+        $("#account-form").submit();
+    });
+
+    // clear the vehicle in account
+    $("#account-message-close").click(function () {
+        $("#account-sn-search").attr("value","");
+        $("#account-filter-message").text("");
+        $("#account_comment_text").text();
+        $("#account-form").submit();
     });
 
     // close search message
@@ -167,5 +180,19 @@ $(document).ready(function () {
         $(this).css("display", "none");
         $(this).prev().css("display", "inline");
         $(this).parent().parent().nextUntil(".flag").css("display", "none")
+    })
+
+    // account click the expand
+    $(".account_expand").click(function () {
+        $(this).css("display", "none");
+        $(this).next().css("display", "inline");
+        $(this).parent().parent().nextUntil(".account_flag").css("display", "table-row")
+    })
+
+    // account click the collapse
+    $(".account_collapse").click(function () {
+        $(this).css("display", "none");
+        $(this).prev().css("display", "inline");
+        $(this).parent().parent().nextUntil(".account_flag").css("display", "none")
     })
 })
