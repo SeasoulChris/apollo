@@ -7,6 +7,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/learning/autotuner/common:utils",
         "//fueling/learning/autotuner/proto:cost_computation_service_py_pb2",
+        "//fueling/learning/autotuner/proto:cost_computation_service_py_pb2_grpc",
     ],
 )
 
