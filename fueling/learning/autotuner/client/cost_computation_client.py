@@ -37,8 +37,10 @@ class CostComputationClient(object):
         self.running_role_postfix = running_role_postfix
         self.first_cost_computation = True
 
-        if commit_id and scenario_ids and dynamic_model:
+        if commit_id and scenario_ids and isinstance(dynamic_model, int):
             self.initialize(commit_id, scenario_ids, dynamic_model)
+        else:
+            logging.info(f"Missing necessary inputs to initialize the Client")
 
     def __enter__(self):
         return self
