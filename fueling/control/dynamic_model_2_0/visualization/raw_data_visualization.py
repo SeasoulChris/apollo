@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import argparse
 import math
 import os
 
@@ -20,13 +19,13 @@ import fueling.common.logging as logging
 class RawDataVisualization():
     """ visualize feature and label """
 
-    def __init__(self, data_file, args):
+    def __init__(self, data_file, plot_path, dm10_model_path):
         self.data_file = data_file
         self.feature = None
         self.data_dim = None
-        self.training_data_path = args.training_data_path
-        self.plot_path = args.plot_path
-        self.model_path = args.dm10_model_path
+        self.training_data_path = data_file
+        self.plot_path = plot_path
+        self.model_path = dm10_model_path
         # debug
         self.dm_acc = None
         self.dm_w = None
@@ -229,7 +228,7 @@ class RawDataVisualization():
             plt.legend(fontsize=12, numpoints=5, frameon=False)
             plt.title("GPS and IMU comparison")
             plt.grid(True)
-            plt.savefig(self.plot_path + dataset_name + "imu_plot.png")
+            plt.savefig(os.path.join(self.plot_path, dataset_name + "imu_plot.png"))
             plt.show()
         else:
             plt.figure()
@@ -262,39 +261,19 @@ class RawDataVisualization():
             plt.legend(fontsize=12, numpoints=5, frameon=False)
             plt.title("Trajectory for " + dataset_name)
             plt.grid(True)
-            plt.savefig(self.plot_path + dataset_name + "plot.png")
+            plt.savefig(os.path.join(self.plot_path, dataset_name + "plot.png"))
             plt.show()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='visualization')
-    # paths
-    parser.add_argument('-train',
-                        '--training_data_path',
-                        type=str,
-                        default="/apollo/data/DM20/new_features/2_3")
-    parser.add_argument('-plot',
-                        '--plot_path',
-                        type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/plots")
-    parser.add_argument('-dm10',
-                        '--dm10_model_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/"
-                                + "label_generation/mlp_model")
-    args = parser.parse_args()
-    h5_file_list = []
-    for file in file_utils.list_files(args.training_data_path):
-        if file.endswith(".hdf5"):
-            h5_file_list.append(file)
-            logging.info(file)
-            logging.info(int(os.path.basename(file).split('.')[0]))
-    # sort w.r.t file ID
-    h5_file_list.sort(key=lambda file: int(os.path.basename(file).split('.')[0]))
-    logging.info(h5_file_list)
-    # combine as combined.npy
-    combine_h5_to_npy(h5_file_list, args.training_data_path)
-    cur_h5_file = (f'/apollo/data/DM20/new_features/2_3/combined.npy')
-    raw_data_evaluation = RawDataVisualization(cur_h5_file, args)
+    platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
+    #
+    data_dir = '0706'
+    data_file = os.path.join(platform_dir, data_dir, 'chassis1594069328.937.hdf5')
+    training_data_path = os.path.join(platform_dir, data_dir)
+    plot_path = os.path.join(platform_dir, data_dir, 'plots')
+    dm10_model_path = "/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model"
+    raw_data_evaluation = RawDataVisualization(data_file, plot_path, dm10_model_path)
     raw_data_evaluation.get_data()
     logging.info(raw_data_evaluation.feature.shape)
     raw_data_evaluation.dynamic_model_10_location()
