@@ -6,6 +6,7 @@ py_library(
     deps = [
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -28,6 +29,8 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 

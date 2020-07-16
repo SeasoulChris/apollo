@@ -12,6 +12,6 @@ py_library(
         "//fueling/common:proto_utils",
         "//fueling/profiling/common:stats_utils",
         "//fueling/profiling/conf:open_space_planner_conf",
-        "//fueling/profiling/proto:open_space_planner_profiling_pb2",
+        "//fueling/profiling/proto:open_space_planner_profiling_py_pb2",
     ],
 )

@@ -6,7 +6,7 @@ py_library(
     deps = [
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/dynamic_model/data_generator:holistic_data_generator",
-        "//fueling/control/proto:dynamic_model_evaluation_pb2",
+        "//fueling/control/proto:dynamic_model_evaluation_py_pb2",
     ],
 )
 
@@ -16,6 +16,6 @@ py_library(
     deps = [
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/dynamic_model/data_generator:non_holistic_data_generator",
-        "//fueling/control/proto:dynamic_model_evaluation_pb2",
+        "//fueling/control/proto:dynamic_model_evaluation_py_pb2",
     ],
 )

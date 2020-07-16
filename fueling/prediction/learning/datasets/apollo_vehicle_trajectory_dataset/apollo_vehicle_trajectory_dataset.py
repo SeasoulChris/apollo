@@ -6,12 +6,13 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from modules.prediction.proto.offline_features_pb2 import ListDataForLearning
+
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.file_utils as file_utils
 from fueling.prediction.learning.data_preprocessing.map_feature.online_mapping \
     import ObstacleMapping
 
-from modules.prediction.proto.offline_features_pb2 import ListDataForLearning
 
 obs_hist_size = 20
 obs_unit_feature_size = 40 + 9

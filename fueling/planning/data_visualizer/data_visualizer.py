@@ -8,7 +8,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from cyber_py3.record import RecordReader
+from cyber.python.cyber_py3.record import RecordReader
 from modules.localization.proto import localization_pb2
 from modules.perception.proto import perception_obstacle_pb2
 from modules.routing.proto.routing_pb2 import RoutingResponse

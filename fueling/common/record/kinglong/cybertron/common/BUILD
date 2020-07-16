@@ -57,7 +57,7 @@ cc_library(
         ":define",
         ":error_code",
         ":macros",
-        "//fueling/common/record/kinglong/proto/cybertron:proto_desc_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:proto_desc_cc_proto",
     ],
 )
 
@@ -70,7 +70,7 @@ cc_library(
         ":error_code",
         ":macros",
         ":protobuf_factory",
-        "//fueling/common/record/kinglong/proto/cybertron:cyber_header_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:cyber_header_cc_proto",
         "@com_google_protobuf//:protobuf",
     ],
 )

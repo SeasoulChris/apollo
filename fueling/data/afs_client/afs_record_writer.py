@@ -3,7 +3,8 @@
 
 import os
 
-from cyber_py3.record import RecordWriter
+from cyber.python.cyber_py3.record import RecordWriter
+
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.data.afs_client.config as afs_config

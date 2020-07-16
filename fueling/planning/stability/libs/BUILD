@@ -5,7 +5,7 @@ py_library(
     srcs = ["chassis_speed.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -18,7 +18,7 @@ py_library(
     srcs = ["imu_acc.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -26,7 +26,7 @@ py_library(
     srcs = ["imu_angular_velocity.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -36,7 +36,7 @@ py_library(
         ":imu_angular_velocity",
         ":imu_speed",
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -45,7 +45,7 @@ py_library(
     deps = [
         ":imu_speed",
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -53,7 +53,7 @@ py_library(
     srcs = ["imu_speed_jerk.py"],
     deps = [
         ":imu_speed_acc",
-    ]
+    ],
 )
 
 py_library(
@@ -61,7 +61,7 @@ py_library(
     srcs = ["imu_speed.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -70,7 +70,7 @@ py_library(
     deps = [
         ":planning_speed",
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -80,7 +80,7 @@ py_library(
         ":planning_kappa",
         ":planning_speed",
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -88,7 +88,7 @@ py_library(
     srcs = ["planning_dav.py"],
     deps = [
         ":planning_av",
-    ]
+    ],
 )
 
 py_library(
@@ -96,7 +96,7 @@ py_library(
     srcs = ["planning_jerk.py"],
     deps = [
         ":planning_acc",
-    ]
+    ],
 )
 
 py_library(
@@ -104,7 +104,7 @@ py_library(
     srcs = ["planning_kappa.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -113,7 +113,7 @@ py_library(
     deps = [
         ":planning_acc",
         ":planning_dav",
-    ]
+    ],
 )
 
 py_library(
@@ -121,7 +121,7 @@ py_library(
     srcs = ["planning_speed.py"],
     deps = [
         ":record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -129,5 +129,9 @@ py_library(
     srcs = ["record_reader.py"],
     deps = [
         "//fueling/common:record_utils",
-    ]
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/canbus/proto:chassis_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+        "@apollo//modules/planning/proto:planning_py_pb2",
+    ],
 )

@@ -5,10 +5,10 @@ import time
 
 import pyspark_utils.op as spark_op
 
+from modules.planning.proto import learning_data_pb2
+
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
-
-from modules.planning.proto import learning_data_pb2
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
 

@@ -46,6 +46,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
     ],
 )
 
@@ -56,6 +57,7 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/planning/data_visualizer",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
     ],
 )
 
@@ -78,6 +80,7 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
     ],
 )
 
@@ -89,6 +92,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/planning/datasets/semantic_map_feature:chauffeur_net_feature_generator",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
+        "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",
     ],
 )
 
@@ -99,6 +104,7 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
     ],
 )
 
@@ -116,5 +122,6 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
     ],
 )

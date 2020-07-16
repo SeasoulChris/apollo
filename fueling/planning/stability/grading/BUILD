@@ -16,7 +16,7 @@ py_library(
         "//fueling/planning/stability/libs:imu_angular_velocity",
         "//fueling/planning/stability/libs:imu_speed_jerk",
         "//fueling/planning/stability/libs:record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -26,7 +26,9 @@ py_library(
         ":imu_stability_grader",
         "//fueling/planning/stability/libs:imu_angular_velocity",
         "//fueling/planning/stability/libs:imu_speed_jerk",
-    ]
+        "@apollo//cyber/python/cyber_py3:cyber",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+    ],
 )
 
 py_library(
@@ -41,7 +43,7 @@ py_library(
         "//fueling/planning/stability/libs:planning_jerk",
         "//fueling/planning/stability/libs:planning_lat_jerk",
         "//fueling/planning/stability/libs:record_reader",
-    ]
+    ],
 )
 
 py_library(
@@ -55,5 +57,5 @@ py_library(
         "//fueling/planning/stability/libs:imu_angular_velocity",
         "//fueling/planning/stability/libs:imu_speed_jerk",
         "//fueling/planning/stability/libs:record_reader",
-    ]
+    ],
 )

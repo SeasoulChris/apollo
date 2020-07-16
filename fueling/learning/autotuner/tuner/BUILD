@@ -2,7 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@default_deps//:requirements.bzl", "requirement")
 
-
 py_binary(
     name = "optuna_tuner",
     srcs = ["optuna_tuner.py"],
@@ -10,19 +9,26 @@ py_binary(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
-      requirement("psycopg2-binary"),
-      "//fueling/common:file_utils",
-      "//fueling/common:proto_utils",
-      "//fueling/learning/autotuner/client:cost_computation_client",
-      "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
-    ]
+        "//fueling/common:file_utils",
+        "//fueling/common:proto_utils",
+        "//fueling/learning/autotuner/client:cost_computation_client",
+        "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
+        "@apollo//modules/control/proto:control_conf_py_pb2",
+        "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",
+        "@apollo//modules/control/proto:lat_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:leadlag_conf_py_pb2",
+        "@apollo//modules/control/proto:lon_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mpc_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mrac_conf_py_pb2",
+        "@apollo//modules/control/proto:pid_conf_py_pb2",
+        requirement("psycopg2-binary"),
+    ],
 )
 
 py_binary(
     name = "bayesian_optimization_visual_utils",
     srcs = ["bayesian_optimization_visual_utils.py"],
 )
-
 
 py_library(
     name = "base_tuner",
@@ -38,7 +44,6 @@ py_library(
     ],
 )
 
-
 py_binary(
     name = "bayesian_optimization_tuner",
     srcs = ["bayesian_optimization_tuner.py"],
@@ -46,13 +51,20 @@ py_binary(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        ":base_tuner",
+        ":bayesian_optimization_visual_utils",
         "//fueling/common:logging",
-        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
-        "//fueling/learning/autotuner/tuner:base_tuner",
-        "//fueling/learning/autotuner/tuner:bayesian_optimization_visual_utils",
+        "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
+        "@apollo//modules/control/proto:control_conf_py_pb2",
+        "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",
+        "@apollo//modules/control/proto:lat_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:leadlag_conf_py_pb2",
+        "@apollo//modules/control/proto:lon_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mpc_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mrac_conf_py_pb2",
+        "@apollo//modules/control/proto:pid_conf_py_pb2",
     ],
 )
-
 
 py_binary(
     name = "optuna_optimization_tuner",
@@ -61,9 +73,17 @@ py_binary(
         "//fueling/learning/autotuner/config",
     ],
     deps = [
+        ":base_tuner",
         "//fueling/common:logging",
-        "//fueling/learning/autotuner/proto:tuner_param_config_pb2",
-        "//fueling/learning/autotuner/tuner:base_tuner",
+        "//fueling/learning/autotuner/proto:tuner_param_config_py_pb2",
+        "@apollo//modules/control/proto:control_conf_py_pb2",
+        "@apollo//modules/control/proto:gain_scheduler_conf_py_pb2",
+        "@apollo//modules/control/proto:lat_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:leadlag_conf_py_pb2",
+        "@apollo//modules/control/proto:lon_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mpc_controller_conf_py_pb2",
+        "@apollo//modules/control/proto:mrac_conf_py_pb2",
+        "@apollo//modules/control/proto:pid_conf_py_pb2",
     ],
 )
 
@@ -71,8 +91,8 @@ py_binary(
     name = "optuna_super_tuner",
     srcs = ["optuna_super_tuner.py"],
     deps = [
-        requirement("psycopg2-binary"),
+        ":optuna_optimization_tuner",
         "//fueling/common:logging",
-        "//fueling/learning/autotuner/tuner:optuna_optimization_tuner",
+        requirement("psycopg2-binary"),
     ],
 )

@@ -14,7 +14,7 @@ import numpy as np
 import pypcd
 import yaml
 
-from cyber_py3.record import RecordReader
+from cyber.python.cyber_py3.record import RecordReader
 from modules.data.proto import frame_pb2
 from modules.common.proto.geometry_pb2 import Point3D
 from modules.common.proto.geometry_pb2 import PointENU

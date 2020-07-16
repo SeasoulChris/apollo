@@ -13,6 +13,10 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
-        "//fueling/planning/map_reader:map_reader",
+        "//fueling/planning/map_reader",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+        "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
+        "@apollo//modules/routing/proto:routing_py_pb2",
     ],
 )

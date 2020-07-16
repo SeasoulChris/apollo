@@ -8,7 +8,7 @@ import time
 
 import yaml
 
-from cyber_py3.record import RecordReader
+from cyber.python.cyber_py3.record import RecordReader
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging

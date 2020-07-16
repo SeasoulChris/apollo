@@ -14,6 +14,7 @@ py_library(
     srcs = ["serialize_utils.py"],
     deps = [
         ":streaming_utils",
+        "@apollo//cyber/python/cyber_py3:record",
         # TODO: yaml
     ],
 )

@@ -13,8 +13,8 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/profiling/conf:control_channel_conf",
-        "//fueling/profiling/proto:control_profiling_pb2",
-        "//fueling/profiling/proto:control_profiling_data_pb2",
+        "//fueling/profiling/proto:control_profiling_data_py_pb2",
+        "//fueling/profiling/proto:control_profiling_py_pb2",
     ],
 )
 

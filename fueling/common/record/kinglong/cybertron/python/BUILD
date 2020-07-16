@@ -9,8 +9,8 @@ cc_library(
         "//fueling/common/record/kinglong/cybertron/recorder:data_iterator",
         "//fueling/common/record/kinglong/cybertron/recorder:datafile",
         "//fueling/common/record/kinglong/cybertron/recorder:py_message_shifter",
-        "//fueling/common/record/kinglong/proto/cybertron:cyber_header_proto",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:cyber_header_cc_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -42,7 +42,13 @@ py_library(
     srcs = ["convert.py"],
     deps = [
         ":bag",
-        "//fueling/common/record/kinglong/proto/modules:localization_pose_pb2",
-        "//fueling/common/record/kinglong/proto/modules:perception_obstacle_pb2",
+        "//fueling/common/record/kinglong/proto/modules:localization_pose_py_pb2",
+        "//fueling/common/record/kinglong/proto/modules:perception_obstacle_py_pb2",
+        "@apollo//cyber/proto:record_py_pb2",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/common/proto:geometry_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+        "@apollo//modules/localization/proto:pose_py_pb2",
+        "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
     ],
 )

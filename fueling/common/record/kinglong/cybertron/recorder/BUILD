@@ -15,7 +15,7 @@ cc_library(
     hdrs = ["param.h"],
     deps = [
         "//fueling/common/record/kinglong/cybertron/common:macros",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -26,7 +26,7 @@ cc_library(
     deps = [
         ":param",
         "//fueling/common/record/kinglong/cybertron/common:define",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -36,7 +36,7 @@ cc_library(
     hdrs = ["compress.h"],
     deps = [
         "//fueling/common/record/kinglong/cybertron/common:macros",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -46,7 +46,7 @@ cc_library(
     hdrs = ["filter.h"],
     deps = [
         "//fueling/common/record/kinglong/cybertron/common:macros",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -60,7 +60,7 @@ cc_library(
         "//fueling/common/record/kinglong/cybertron/common:file_util",
         "//fueling/common/record/kinglong/cybertron/common:macros",
         "//fueling/common/record/kinglong/cybertron/common:md5",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -79,8 +79,8 @@ cc_library(
         "//fueling/common/record/kinglong/cybertron/common:md5",
         "//fueling/common/record/kinglong/cybertron/common:protobuf_factory",
         "//fueling/common/record/kinglong/cybertron/common:raw_message",
-        "//fueling/common/record/kinglong/proto/cybertron:parameter_proto",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:parameter_cc_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )
 
@@ -91,7 +91,7 @@ cc_library(
     deps = [
         ":datafile",
         ":filter",
-        "//fueling/common/record/kinglong/proto/cybertron:parameter_proto",
-        "//fueling/common/record/kinglong/proto/cybertron:record_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:parameter_cc_proto",
+        "//fueling/common/record/kinglong/proto/cybertron:record_cc_proto",
     ],
 )

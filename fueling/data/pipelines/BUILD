@@ -8,6 +8,7 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "@apollo//cyber/python/cyber_py3:record",
     ],
 )
 
@@ -17,7 +18,7 @@ py_test(
     data = ["//fueling/demo/testdata:small_record"],
     deps = [
         ":generate_small_records",
-    ]
+    ],
 )
 
 py_binary(
@@ -45,6 +46,7 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
         "//fueling/common:time_utils",
+        "@apollo//cyber/python/cyber_py3:record",
     ],
 )
 
@@ -54,5 +56,5 @@ py_test(
     data = ["//fueling/demo/testdata:small_record"],
     deps = [
         ":reorg_small_records",
-    ]
+    ],
 )

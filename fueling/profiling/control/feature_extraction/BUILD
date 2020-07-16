@@ -14,6 +14,6 @@ py_library(
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/common:sanity_check",
         "//fueling/profiling/conf:control_channel_conf",
-        "//fueling/profiling/proto:control_profiling_pb2",
+        "//fueling/profiling/proto:control_profiling_py_pb2",
     ],
 )

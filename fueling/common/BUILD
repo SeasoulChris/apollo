@@ -4,10 +4,10 @@ py_library(
     name = "base_pipeline",
     srcs = ["base_pipeline.py"],
     deps = [
+        ":job_utils",
+        ":kubectl_utils",
+        ":mongo_utils",
         "//apps/k8s/spark_submitter:client",
-        "//fueling/common:job_utils",
-        "//fueling/common:kubectl_utils",
-        "//fueling/common:mongo_utils",
         "//fueling/common/storage:bazel_filesystem",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",
@@ -24,7 +24,7 @@ py_library(
     srcs = ["db_backed_utils.py"],
     deps = [
         ":proto_utils",
-        "//fueling/data/proto:record_meta_pb2",
+        "//fueling/data/proto:record_meta_py_pb2",
     ],
 )
 
@@ -123,6 +123,18 @@ py_library(
     deps = [
         ":localization_utils",
         ":time_utils",
+        "@apollo//cyber/proto:record_py_pb2",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/canbus/proto:chassis_py_pb2",
+        "@apollo//modules/control/proto:control_cmd_py_pb2",
+        "@apollo//modules/dreamview/proto:hmi_status_py_pb2",
+        "@apollo//modules/drivers/proto:conti_radar_py_pb2",
+        "@apollo//modules/drivers/proto:pointcloud_py_pb2",
+        "@apollo//modules/drivers/proto:sensor_image_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+        "@apollo//modules/planning/proto:planning_py_pb2",
+        "@apollo//modules/prediction/proto:prediction_obstacle_py_pb2",
+        "@apollo//modules/routing/proto:routing_py_pb2",
     ],
 )
 

@@ -10,6 +10,8 @@ import time
 from absl import flags
 import pyspark_utils.op as spark_op
 
+from modules.planning.proto.planning_config_pb2 import ScenarioConfig
+
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
@@ -24,7 +26,6 @@ from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_
 from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import \
     latency_grading, merge_grading_results, output_grading, stage_grading, trajectory_grading, \
     zigzag_grading
-from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 
 flags.DEFINE_boolean('open_space_planner_profiling_generate_report', False,

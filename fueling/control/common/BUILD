@@ -9,7 +9,8 @@ py_library(
         "//fueling/common:h5_utils",
         "//fueling/common:proto_utils",
         "//fueling/control/features:calibration_table_utils",
-        "//fueling/control/proto:calibration_table_pb2",
+        "//fueling/control/proto:calibration_table_py_pb2",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -20,6 +21,7 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/control/dynamic_model/conf:model_config",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -30,7 +32,8 @@ py_library(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
-        "//fueling/control/proto:calibration_table_pb2",
+        "//fueling/control/proto:calibration_table_py_pb2",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -43,6 +46,8 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 

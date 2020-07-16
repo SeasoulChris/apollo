@@ -3,6 +3,7 @@
 import json
 
 import modules.map.proto.map_pb2 as map_pb2
+
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils

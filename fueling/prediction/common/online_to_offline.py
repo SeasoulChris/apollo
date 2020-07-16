@@ -8,8 +8,9 @@ import numpy as np
 from google.protobuf.internal import decoder
 from google.protobuf.internal import encoder
 
-import fueling.common.proto_utils as proto_utils
 from modules.prediction.proto import offline_features_pb2
+
+import fueling.common.proto_utils as proto_utils
 from fueling.prediction.common.bounding_rectangle import BoundingRectangle
 from fueling.prediction.common.configure import parameters
 

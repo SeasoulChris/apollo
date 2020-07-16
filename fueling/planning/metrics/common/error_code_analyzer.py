@@ -14,8 +14,7 @@ class ErrorCodeAnalyzer:
 
     def put(self, error_code):
         """put"""
-        error_code_name = \
-            error_code_pb2.ErrorCode.Name(error_code)
+        error_code_name = error_code_pb2.ErrorCode.Name(error_code)
         if error_code_name not in self.error_code_count:
             self.error_code_count[error_code_name] = 1
         else:

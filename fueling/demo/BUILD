@@ -5,7 +5,7 @@ py_binary(
     srcs = ["simplest_demo.py"],
     deps = [
         "//fueling/common:base_pipeline",
-    ]
+    ],
 )
 
 py_test(
@@ -13,7 +13,7 @@ py_test(
     srcs = ["simplest_demo_test.py"],
     deps = [
         ":simplest_demo",
-    ]
+    ],
 )
 
 py_binary(
@@ -23,7 +23,8 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-    ]
+        "@apollo//cyber/python/cyber_py3:record",
+    ],
 )
 
 py_binary(
@@ -31,7 +32,7 @@ py_binary(
     srcs = ["gpu_training_with_pytorch.py"],
     deps = [
         "//fueling/common:base_pipeline",
-    ]
+    ],
 )
 
 py_binary(
@@ -42,7 +43,7 @@ py_binary(
         "//fueling/common:distributed_data_parallel",
         "//fueling/common:socket_utils",
         "//fueling/common/storage:bos_client",
-    ]
+    ],
 )
 
 py_binary(
@@ -51,7 +52,7 @@ py_binary(
     data = ["//fueling/demo/testdata:mnist"],
     deps = [
         "//fueling/common:base_pipeline",
-    ]
+    ],
 )
 
 py_binary(
@@ -60,7 +61,9 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/data:record_parser",
-    ]
+        "@apollo//modules/canbus/proto:chassis_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
+    ],
 )
 
 py_test(
@@ -69,5 +72,5 @@ py_test(
     data = ["//fueling/demo/testdata:small_record"],
     deps = [
         ":stat_auto_mileage",
-    ]
+    ],
 )

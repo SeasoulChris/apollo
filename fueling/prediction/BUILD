@@ -6,7 +6,8 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
-    ]
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+    ],
 )
 
 py_binary(
@@ -15,7 +16,8 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
-    ]
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+    ],
 )
 
 py_binary(
@@ -24,7 +26,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -32,11 +34,11 @@ py_binary(
     srcs = ["data_for_learning.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:mongo_utils",
         "//fueling/common:db_backed_utils",
         "//fueling/common:logging",
+        "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -44,11 +46,11 @@ py_binary(
     srcs = ["data_for_tuning.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:mongo_utils",
         "//fueling/common:db_backed_utils",
         "//fueling/common:logging",
+        "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -57,7 +59,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -65,10 +67,10 @@ py_binary(
     srcs = ["dump_feature_proto.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:mongo_utils",
         "//fueling/common:db_backed_utils",
+        "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -76,7 +78,10 @@ py_binary(
     srcs = ["evaluate_performance.py"],
     deps = [
         "//fueling/common:base_pipeline",
-    ]
+        "@apollo//modules/prediction/proto:feature_py_pb2",
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+        "@apollo//modules/prediction/proto:prediction_conf_py_pb2",
+    ],
 )
 
 py_binary(
@@ -84,11 +89,11 @@ py_binary(
     srcs = ["frame_env.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:mongo_utils",
         "//fueling/common:db_backed_utils",
         "//fueling/common:logging",
+        "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -99,7 +104,7 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/prediction/common:bounding_rectangle",
         "//fueling/prediction/common:online_to_offline",
-    ]
+    ],
 )
 
 py_binary(
@@ -108,18 +113,18 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_binary(
     name = "prediction_app_data_labeling",
     srcs = ["prediction_app_data_labeling.py"],
     deps = [
-        "//fueling/common:base_pipeline",
         ":dump_feature_proto",
         ":generate_labels",
         ":merge_labels",
-    ]
+        "//fueling/common:base_pipeline",
+    ],
 )
 
 py_binary(
@@ -127,17 +132,17 @@ py_binary(
     srcs = ["prediction_app_junction_mlp_pipeline.py"],
     deps = [
         #TODO
-    ]
+    ],
 )
 
 py_binary(
     name = "prediction_app_performance_evaluation",
     srcs = ["prediction_app_performance_evaluation.py"],
     deps = [
-        "//fueling/common:base_pipeline",
-        ":prediction_result",
         ":evaluate_performance",
-    ]
+        ":prediction_result",
+        "//fueling/common:base_pipeline",
+    ],
 )
 
 py_binary(
@@ -145,11 +150,11 @@ py_binary(
     srcs = ["prediction_result.py"],
     deps = [
         "//fueling/common:base_pipeline",
-        "//fueling/common:mongo_utils",
         "//fueling/common:db_backed_utils",
         "//fueling/common:logging",
+        "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -158,11 +163,13 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-        "//fueling/common:proto_utils",
         "//fueling/common:logging",
+        "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
         "//fueling/prediction/common:configure",
-    ]
+        "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+    ],
 )
 
 py_binary(
@@ -171,11 +178,13 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-        "//fueling/common:proto_utils",
         "//fueling/common:logging",
+        "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
         "//fueling/prediction/common:configure",
-    ]
+        "@apollo//modules/perception/proto:perception_obstacle_py_pb2",
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+    ],
 )
 
 py_binary(

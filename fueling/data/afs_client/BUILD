@@ -4,11 +4,11 @@ py_library(
     name = "client",
     srcs = ["client.py"],
     deps = [
-        "//apps/afs_data_service/proto:afs_data_service_pb2", 
+        "//apps/afs_data_service/proto:afs_data_service_py_pb2",
         "//fueling/common:file_utils",
-        "//fueling/common:logging", 
+        "//fueling/common:logging",
         "//fueling/data/afs_client:afs_record_writer",
-    ]
+    ],
 )
 
 py_library(
@@ -20,11 +20,11 @@ py_library(
     name = "conversions",
     srcs = ["conversions.py"],
     deps = [
-        "//fueling/common:logging", 
+        "//fueling/common:logging",
         "//fueling/common/record/kinglong/cybertron/python:convert",
-        "//fueling/common/record/kinglong/proto/modules:localization_pose_pb2",
-        "//fueling/common/record/kinglong/proto/modules:perception_obstacle_pb2",
-    ]
+        "//fueling/common/record/kinglong/proto/modules:localization_pose_py_pb2",
+        "//fueling/common/record/kinglong/proto/modules:perception_obstacle_py_pb2",
+    ],
 )
 
 py_library(
@@ -32,10 +32,11 @@ py_library(
     srcs = ["afs_record_writer.py"],
     deps = [
         "//fueling/common:file_utils",
-        "//fueling/common:logging", 
+        "//fueling/common:logging",
         "//fueling/data/afs_client:config",
         "//fueling/data/afs_client:conversions",
-    ]
+        "@apollo//cyber/python/cyber_py3:record",
+    ],
 )
 
 py_binary(
@@ -45,7 +46,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-    ]
+    ],
 )
 
 py_binary(
@@ -55,7 +56,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-    ]
+    ],
 )
 
 py_binary(
@@ -65,7 +66,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
         "//fueling/data/afs_client:client",
-    ]
+    ],
 )
 
 py_binary(
@@ -75,10 +76,8 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
-        "//fueling/common:logging", 
+        "//fueling/common:logging",
         "//fueling/data/afs_client:client",
         "//fueling/data/afs_client:config",
-    ]
+    ],
 )
-
-

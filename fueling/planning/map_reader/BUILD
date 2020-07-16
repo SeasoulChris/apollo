@@ -18,5 +18,6 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:redis_utils",
+        "@apollo//modules/map/proto:map_py_pb2",
     ],
 )

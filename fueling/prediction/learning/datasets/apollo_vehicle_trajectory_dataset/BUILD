@@ -7,6 +7,7 @@ py_library(
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
         "//fueling/prediction/learning/data_preprocessing/map_feature:online_mapping",
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
     ],
 )
 
@@ -20,7 +21,7 @@ py_binary(
     srcs = ["test_apollo_vehicle_trajectory_dataset.py"],
     deps = [
         ":apollo_vehicle_trajectory_dataset",
-        "//fueling/prediction/learning/models/semantic_map_model:semantic_map_model",
+        "//fueling/prediction/learning/models/semantic_map_model",
     ],
 )
 
@@ -29,6 +30,6 @@ py_binary(
     srcs = ["visualize_model.py"],
     deps = [
         ":apollo_vehicle_trajectory_dataset",
-        "//fueling/prediction/learning/models/semantic_map_model:semantic_map_model",
+        "//fueling/prediction/learning/models/semantic_map_model",
     ],
 )

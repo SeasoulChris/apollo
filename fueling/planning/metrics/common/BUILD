@@ -13,6 +13,7 @@ py_library(
     srcs = ["error_code_analyzer.py"],
     deps = [
         ":distribution_analyzer",
+        "@apollo//modules/common/proto:error_code_py_pb2",
     ],
 )
 
@@ -21,6 +22,7 @@ py_library(
     srcs = ["error_msg_analyzer.py"],
     deps = [
         ":distribution_analyzer",
+        "@apollo//modules/common/proto:error_code_py_pb2",
     ],
 )
 

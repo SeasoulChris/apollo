@@ -3,11 +3,12 @@ py_binary(
     srcs = [
         "data_converter.py",
     ],
-    data = ["//fueling/planning/analytics:analytics"],
+    data = ["//fueling/planning/analytics"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
+        "@apollo//cyber/python/cyber_py3:record",
     ],
 )

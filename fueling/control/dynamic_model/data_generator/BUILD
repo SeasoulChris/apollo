@@ -17,6 +17,8 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "//fueling/control/dynamic_model/conf:model_config",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
+        "@apollo//modules/control/proto:control_conf_py_pb2",
     ],
 )
 
@@ -29,6 +31,8 @@ py_library(
         "//fueling/common:proto_utils",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/utils:echo_lincoln",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
+        "@apollo//modules/control/proto:control_conf_py_pb2",
     ],
 )
 

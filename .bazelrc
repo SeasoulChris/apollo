@@ -6,5 +6,3 @@ try-import %workspace%/local/user.bazelrc
 
 build --build_python_zip
 build --spawn_strategy=standalone
-
-test --action_env=PYTHONPATH=/apollo/py_proto:/apollo/cyber/python:/apollo/bazel-bin/cyber/python/internal

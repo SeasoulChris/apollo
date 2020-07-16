@@ -6,6 +6,7 @@ py_library(
     deps = [
         ":calibration_table_utils",
         ":neural_network_tf",
+        "@apollo//modules/control/proto:calibration_table_py_pb2",
     ],
 )
 
@@ -18,7 +19,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:h5_utils",
         "//fueling/common:proto_utils",
-        "//fueling/control/proto:calibration_table_pb2",
+        "//fueling/control/proto:calibration_table_py_pb2",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -50,7 +52,11 @@ py_library(
         "//fueling/common:record_utils",
         "//fueling/common:time_utils",
         "//fueling/control/dynamic_model/conf:model_config",
-        "//fueling/control/proto:feature_key_pb2",
+        "//fueling/control/proto:feature_key_py_pb2",
+        "@apollo//modules/canbus/proto:chassis_py_pb2",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
+        "@apollo//modules/dreamview/proto:hmi_status_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
     ],
 )
 

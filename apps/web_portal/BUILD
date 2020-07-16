@@ -1,6 +1,7 @@
-package(default_visibility = ["//visibility:public"])
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@apollo//tools:python_rules.bzl", "py_proto_library")
 
-load("//tools:py_proto.bzl", "py_proto")
+package(default_visibility = ["//visibility:public"])
 
 filegroup(
     name = "resource",
@@ -25,7 +26,7 @@ py_library(
     srcs = ["job_processor.py"],
     deps = [
         ":jobs",
-        ":saas_job_arg_pb2",
+        ":saas_job_arg_py_pb2",
         "//fueling/common:partners",
         "//fueling/control/calibration_table:vehicle_calibration",
         "//fueling/map:generate_maps",
@@ -38,16 +39,24 @@ py_library(
     name = "jobs",
     srcs = ["jobs.py"],
     deps = [
-        ":saas_job_arg_pb2",
-        "//fueling/common:partners",
+        ":saas_job_arg_py_pb2",
         "//apps/k8s/spark_submitter:client",
+        "//fueling/common:partners",
     ],
 )
 
-py_proto(
-    name = "saas_job_arg_pb2",
-    src = "saas_job_arg.proto",
+proto_library(
+    name = "saas_job_arg_proto",
+    srcs = ["saas_job_arg.proto"],
     deps = [
-        "//apps/k8s/spark_submitter:spark_submit_arg_pb2",
+        "//apps/k8s/spark_submitter:spark_submit_arg_proto",
+    ],
+)
+
+py_proto_library(
+    name = "saas_job_arg_py_pb2",
+    deps = [
+        ":saas_job_arg_proto",
+        "//apps/k8s/spark_submitter:spark_submit_arg_py_pb2",
     ],
 )

@@ -14,6 +14,7 @@ py_library(
     deps = [
         "//fueling/common:matplotlib_using_agg",
         "//fueling/common:redis_utils",
+        "@apollo//modules/common/proto:drive_event_py_pb2",
     ],
 )
 
@@ -61,6 +62,6 @@ py_library(
     name = "records_util",
     srcs = ["records_util.py"],
     deps = [
-        "//fueling/data/proto:record_meta_pb2",
+        "//fueling/data/proto:record_meta_py_pb2",
     ],
 )

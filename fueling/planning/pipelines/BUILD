@@ -21,5 +21,6 @@ py_binary(
         "//fueling/learning:train_utils",
         "//fueling/planning/datasets:img_in_traj_out_dataset",
         "//fueling/planning/models:trajectory_imitation_model",
+        "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",
     ],
 )

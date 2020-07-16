@@ -6,7 +6,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -19,5 +19,7 @@ py_binary(
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
         "//fueling/streaming:streaming_utils",
-    ]
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/drivers/proto:sensor_image_py_pb2",
+    ],
 )

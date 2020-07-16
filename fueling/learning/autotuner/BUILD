@@ -5,6 +5,6 @@ py_binary(
     srcs = ["test_cost_client.py"],
     deps = [
         "//fueling/learning/autotuner/client:cost_computation_client",
-        "//fueling/learning/autotuner/proto:dynamic_model_info_pb2",
+        "//fueling/learning/autotuner/proto:dynamic_model_info_py_pb2",
     ],
 )

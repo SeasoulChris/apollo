@@ -10,6 +10,12 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common/storage:bos_client",
         "//fueling/streaming:streaming_utils",
+        "@apollo//cyber/python/cyber_py3:record",
+        "@apollo//modules/data/proto:frame_py_pb2",
+        "@apollo//modules/common/proto:geometry_py_pb2",
+        "@apollo//modules/drivers/proto:conti_radar_py_pb2",
+        "@apollo//modules/drivers/proto:pointcloud_py_pb2",
+        "@apollo//modules/localization/proto:localization_py_pb2",
         # TODO(xiaoxq): Fix it.
         # requirement("pypcd"),
     ],

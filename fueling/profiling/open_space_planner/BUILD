@@ -22,6 +22,7 @@ py_binary(
         "//fueling/profiling/open_space_planner/feature_extraction:feature_extraction_utils",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_visualization_utils",
         "//fueling/profiling/open_space_planner/metrics_utils:evaluation_method_util",
+        "@apollo//modules/planning/proto:planning_config_py_pb2",
     ],
 )
 

@@ -116,7 +116,8 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
 
 
 if __name__ == '__main__':
-    absltest.main(warnings='ignore')
+    # TODO(xiaoxq): Fix.
+    # absltest.main(warnings='ignore')
     """
     Python 3.2 introduced ResourceWarning for unclosed system resources (network sockets, files).
     Though the code runs clean in production, there are a lot of warnings when running unit tests

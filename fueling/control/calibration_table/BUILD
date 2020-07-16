@@ -9,9 +9,9 @@ py_binary(
         "//fueling/common:job_utils",
         "//fueling/common:partners",
         "//fueling/common:redis_utils",
-        "//fueling/control/common:training_conf",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/common:multi_vehicle_utils",
+        "//fueling/control/common:training_conf",
     ],
 )
 
@@ -35,6 +35,7 @@ py_binary(
         "//fueling/control/features:calibration_table_utils",
         "//fueling/control/features:feature_extraction_rdd_utils",
         "//fueling/control/features:feature_extraction_utils",
+        "@apollo//modules/common/configs/proto:vehicle_config_py_pb2",
     ],
 )
 
@@ -66,7 +67,7 @@ py_binary(
         "//fueling/control/common:training_conf",
         "//fueling/control/features:calibration_table_train_utils",
         "//fueling/control/features:calibration_table_utils",
-        "//fueling/control/proto:calibration_table_pb2",
+        "//fueling/control/proto:calibration_table_py_pb2",
     ],
 )
 

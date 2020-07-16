@@ -6,10 +6,13 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
-        "//fueling/common:job_utils",        
+        "//fueling/common:job_utils",
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
-    ]
+        "@apollo//modules/map/proto:map_lane_py_pb2",
+        "@apollo//modules/map/proto:map_py_pb2",
+        "@apollo//modules/map/proto:map_road_py_pb2",
+    ],
 )
 
 py_test(
@@ -17,7 +20,7 @@ py_test(
     srcs = ["generate_base_map_test.py"],
     deps = [
         ":generate_base_map",
-    ]
+    ],
 )
 
 py_binary(
@@ -28,10 +31,10 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:job_utils",
-        "//fueling/common:record_utils",        
-        "//fueling/common:redis_utils",
         "//fueling/common:partners",
-    ]
+        "//fueling/common:record_utils",
+        "//fueling/common:redis_utils",
+    ],
 )
 
 py_test(
@@ -39,7 +42,7 @@ py_test(
     srcs = ["generate_local_map_test.py"],
     deps = [
         ":generate_local_map",
-    ]
+    ],
 )
 
 py_binary(
@@ -48,7 +51,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:job_utils",
-    ]
+    ],
 )
 
 py_test(
@@ -56,7 +59,7 @@ py_test(
     srcs = ["generate_sim_routing_map_test.py"],
     deps = [
         ":generate_sim_routing_map",
-    ]
+    ],
 )
 
 py_binary(
@@ -66,5 +69,5 @@ py_binary(
         ":generate_base_map",
         ":generate_local_map",
         ":generate_sim_routing_map",
-    ]
+    ],
 )

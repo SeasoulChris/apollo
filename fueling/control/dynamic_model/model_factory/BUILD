@@ -15,6 +15,6 @@ py_library(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/control/dynamic_model/conf:model_config",
-        "//fueling/control/proto:fnn_model_pb2",
+        "//fueling/control/proto:fnn_model_py_pb2",
     ],
 )

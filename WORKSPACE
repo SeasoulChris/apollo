@@ -1,34 +1,52 @@
 workspace(name = "fuel")
 
-
-# Import loaders.
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-
-# Import common rules with bazel_federation: https://github.com/bazelbuild/bazel-federation
-http_archive(
-    name = "bazel_federation",
-    url = "file:///fuel/deps/libs/bazel-federation-0.0.1.tar.gz",
-    sha256 = "e9326b089c10b2a641099b1c366788f7df7c714ff71495a70f45b20c4fe1b521",
-    strip_prefix = "bazel-federation-0.0.1",
+local_repository(
+    name = "apollo",
+    path = "/apollo",
 )
 
-# C++ rules.
-load("@bazel_federation//:repositories.bzl", "rules_cc")
-rules_cc()
-load("@bazel_federation//setup:rules_cc.bzl", "rules_cc_setup")
-rules_cc_setup()
+load("@apollo//tools:workspace.bzl", "apollo_repositories")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# Python rules from latest code to have python3 supported.
+apollo_repositories()
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "1dde365491125a3db70731e25658dfdd3bc5dbdfd11b840b3e987ecf043c7ca0",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/0.9.0/bazel_skylib-0.9.0.tar.gz"],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
+    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+    ],
+)
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
+rules_proto_dependencies()
+
+rules_proto_toolchains()
+
 http_archive(
     name = "rules_python",
     url = "file:///fuel/deps/libs/rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047.tar.gz",
     sha256 = "701b8d84d05c8b867d510d1778bbe12cc6ac79d09274c6bd71db77f053c16bca",
     strip_prefix = "rules_python-8e9004ee8360d541abfcbecb60ba8a6902a53047",
 )
+
 load("@rules_python//python:repositories.bzl", "py_repositories")
+
 py_repositories()
+
 load("@rules_python//python:pip.bzl", "pip_repositories")
 pip_repositories()
 
@@ -45,34 +63,18 @@ pip3_import(
 load("@default_deps//:requirements.bzl", "pip_install")
 pip_install()
 
-# Proto rules: https://github.com/bazelbuild/rules_proto
+# grpc
 http_archive(
-    name = "rules_proto",
-    # 2019-08-01
-    url = "file:///fuel/deps/libs/rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
-    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
-    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
-)
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-rules_proto_dependencies()
-rules_proto_toolchains()
-
-http_archive(
-    name = "com_github_gflags_gflags",
-    url = "file:///fuel/deps/libs/gflags-2.2.2.tar.gz",
-    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
-    strip_prefix = "gflags-2.2.2",
+    name = "com_github_grpc_grpc",
+    sha256 = "419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9",
+    strip_prefix = "grpc-1.30.0",
+    urls = ["https://github.com/grpc/grpc/archive/v1.30.0.tar.gz"],
 )
 
-new_local_repository(
-    name = "boost",
-    build_file = "external/boost.BUILD",
-    path = "/opt/apollo/sysroot/include",
-)
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 
-# TODO(xiaoxq): We'll refer apollo as dependency soon.
-# Import apollo.
-#local_repository(
-#    name = "apollo",
-#    path = "/apollo",
-#)
+grpc_deps()
+
+load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
+
+grpc_extra_deps()

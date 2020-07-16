@@ -5,9 +5,9 @@ py_library(
     srcs = ["bounding_rectangle.py"],
     deps = [
         ":rotation2d",
-        ":vector2d",
         ":util",
-    ]
+        ":vector2d",
+    ],
 )
 
 py_library(
@@ -22,7 +22,8 @@ py_library(
         ":bounding_rectangle",
         ":configure",
         "//fueling/common:proto_utils",
-    ]
+        "@apollo//modules/prediction/proto:offline_features_py_pb2",
+    ],
 )
 
 py_library(
@@ -30,7 +31,7 @@ py_library(
     srcs = ["rotation2d.py"],
     deps = [
         ":vector2d",
-    ]
+    ],
 )
 
 py_library(

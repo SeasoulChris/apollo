@@ -8,6 +8,6 @@ py_library(
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
         "//fueling/profiling/conf:control_channel_conf",
-        "//fueling/profiling/proto:control_profiling_pb2",
+        "//fueling/profiling/proto:control_profiling_py_pb2",
     ],
 )

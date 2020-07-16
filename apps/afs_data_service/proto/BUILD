@@ -1,9 +1,22 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@apollo//tools:python_rules.bzl", "py_grpc_library", "py_proto_library")
+
 package(default_visibility = ["//visibility:public"])
 
-load("//tools:py_proto.bzl", "py_proto")
+proto_library(
+    name = "afs_data_service_proto",
+    srcs = ["afs_data_service.proto"],
+)
 
-py_proto(
-    name = "afs_data_service_pb2",
-    src = "afs_data_service.proto",
-    with_grpc = True,
+py_grpc_library(
+    name = "afs_data_service_py_pb2_grpc",
+    srcs = [":afs_data_service_proto"],
+    deps = [":afs_data_service_py_pb2"],
+)
+
+py_proto_library(
+    name = "afs_data_service_py_pb2",
+    deps = [
+        ":afs_data_service_proto",
+    ],
 )

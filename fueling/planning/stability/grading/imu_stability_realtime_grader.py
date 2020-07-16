@@ -6,7 +6,7 @@ import threading
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-from cyber_py import cyber
+from cyber.python.cyber_py3 import cyber
 from modules.localization.proto import localization_pb2
 
 from fueling.planning.stability.grading import imu_stability_grader
