@@ -44,6 +44,7 @@ py_binary(
     deps = [
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/control/dynamic_model_2_0/gp_regression:dynamic_model_dataset",
         "//fueling/control/dynamic_model_2_0/gp_regression:encoder",
         "//fueling/control/dynamic_model_2_0/gp_regression:evaluation",
         "//fueling/control/dynamic_model_2_0/gp_regression:gp_model",
