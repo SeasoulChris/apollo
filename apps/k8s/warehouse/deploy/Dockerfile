@@ -20,7 +20,6 @@ RUN pip3 install --no-cache-dir \
         redis
 
 COPY index.zip /home/warehouse/index.zip
-COPY py_proto /home/warehouse/
 ENV PYTHONPATH=/home/warehouse
 
 WORKDIR /home/warehouse
