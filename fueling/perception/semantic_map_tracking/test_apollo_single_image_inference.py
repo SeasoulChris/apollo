@@ -49,9 +49,14 @@ if __name__ == '__main__':
         # print ('=======================')
         model = TrajectoryPredictionSingle(10, 20)
         model_path = "fueling/perception/semantic_map_tracking/test/model_epoch2_valloss7.153702.pt"
-        model.load_state_dict(torch.load(model_path))
-        model.cuda().eval()
-        pred = model.forward(cuda(X))
+        if torch.cuda.is_available():
+            model.load_state_dict(torch.load(model_path))
+            model.cuda().eval()
+            pred = model.forward(cuda(X))
+        else:
+            model.load_state_dict(torch.load(model_path, map_location='cpu'))
+            model.eval()
+            pred = model.forward(X)
         ref_pos = X[0][2].cpu().detach().numpy()
         img = X[0][5].cpu().numpy()
         labels = torch.cat(y).numpy()
