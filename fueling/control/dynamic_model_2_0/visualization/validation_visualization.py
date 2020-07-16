@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import argparse
 import glob
 import os
 import time
@@ -17,6 +16,7 @@ import torch.nn as nn
 
 from fueling.common import file_utils
 from fueling.control.dynamic_model_2_0.conf.model_conf import feature_config
+from fueling.control.dynamic_model_2_0.conf.model_conf import smoke_test_training_config as config
 from fueling.control.dynamic_model_2_0.gp_regression.dataset import GPDataSet
 from fueling.control.dynamic_model_2_0.gp_regression.dynamic_model_dataset import \
     DynamicModelDataset
@@ -29,19 +29,19 @@ import fueling.common.logging as logging
 class ValidationVisualization():
     """ visualize validation results """
 
-    def __init__(self, args):
+    def __init__(self, gp_model_path, validation_data_path, validation_result_path):
         super().__init__()
         self.model = None
         self.likelihood = None
         self.inducing_points = None
-        self.model_path = args.gp_model_path
-        self.validation_data_path = args.validation_data_path
-        self.inducing_point_file = os.path.join(self.validation_data_path, 'inducing_points.npy')
-        self.dst_file_path = args.validation_result_path
+        self.model_path = gp_model_path
+        self.validation_data_path = validation_data_path
+        self.inducing_point_file = os.path.join(self.model_path, 'inducing_points.npy')
+        self.dst_file_path = validation_result_path
         self.validation_result_file = None
 
         # parameters
-        self.kernel_dim = args.kernel_dim
+        self.kernel_dim = config["kernel_dim"]
         self.input_dim = feature_config["input_dim"]
         self.output_dim = feature_config["output_dim"]
         self.timestr = time.strftime('%Y%m%d-%H%M%S')
@@ -55,9 +55,9 @@ class ValidationVisualization():
         logging.info(f"Loading GP model from {file_path}")
         model_state_dict, likelihood_state_dict = torch.load(file_path)
         # encoder model
+        encoder_net_model = Encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         # encoder_net_model = DilatedEncoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        encoder_net_model = TransformerEncoderCNN(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        # TODO(Shu): check if it is necessary to use training data for initialization
+        # encoder_net_model = TransformerEncoderCNN(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         self.model = GPModel(self.inducing_points, encoder_net_model,
                              self.kernel_dim, self.output_dim)
         self.model.load_state_dict(model_state_dict)
@@ -116,7 +116,7 @@ class ValidationVisualization():
             validation_result['variance'] = variance.detach().numpy()
             validation_result['upper'] = upper.detach().numpy()
             validation_result['lower'] = lower.detach().numpy()
-            np.save(os.path.join(args.validation_data_path,
+            np.save(os.path.join(self.validation_data_path,
                                  f'{set_id}_validation_result.npy'), validation_result)
         return mean.detach().numpy()
 
@@ -171,7 +171,7 @@ class ValidationVisualization():
         self.load_model()
         # check if validation result exists
         logging.info(f'Validating set {set_id}')
-        self.validation_result_file = os.path.join(args.validation_data_path,
+        self.validation_result_file = os.path.join(self.validation_data_path,
                                                    f'{set_id}_validation_result.npy')
         self.get_validation_result(test_features, test_labels, set_id, train_labels)
         logging.info(f'Validation results are saved at {self.validation_result_file}')
@@ -187,37 +187,24 @@ class ValidationVisualization():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='validation')
-    # paths
-    parser.add_argument(
-        '-t',
-        '--training_data_path',
-        type=str)
-    parser.add_argument(
-        '-v',
-        '--validation_data_path',
-        type=str)
-    parser.add_argument(
-        '--gp_model_path',
-        type=str)
-    parser.add_argument(
-        '--validation_result_path',
-        type=str,
-        default="/fuel/fueling/control/dynamic_model_2_0/testdata/evaluation_results")
+    platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
+    model_id = '20200716-1912'
+    data_dir = '0707_smoke_test'
+    training_data_path = os.path.join(platform_dir, data_dir, 'train')
 
-    # model parameters
-    parser.add_argument('--kernel_dim', type=int, default=20)
-    parser.add_argument('-b', '--batch_size', type=int, default=1024)
-
-    args = parser.parse_args()
-    validator = ValidationVisualization(args)
+    validation_data_path = os.path.join(platform_dir, data_dir, 'test')
+    logging.info(f'validation data path is {validation_data_path}')
+    # DM2.0 model
+    gp_model_path = os.path.join(validation_data_path, model_id)
+    validation_result_path = os.path.join(platform_dir, 'results', data_dir, model_id)
+    validator = ValidationVisualization(gp_model_path, validation_data_path, validation_result_path)
 
     # setup data-loader
-    train_dataset = DynamicModelDataset(args.training_data_path)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
+    train_dataset = DynamicModelDataset(training_data_path)
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"],
                               shuffle=True, drop_last=True)
-    valid_dataset = DynamicModelDataset(args.validation_data_path)
-    valid_loader = DataLoader(valid_dataset, batch_size=args.batch_size,
+    valid_dataset = DynamicModelDataset(validation_data_path)
+    valid_loader = DataLoader(valid_dataset, batch_size=config["batch_size"],
                               shuffle=True, drop_last=True)
 
     for i, (X, y) in enumerate(train_loader):
