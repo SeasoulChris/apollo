@@ -1,62 +1,40 @@
-small-records/2020/2020-06-16/2020-06-16-14-17-27 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-10-27-04 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-11-24-42 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-12-08-23 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-14-07-42 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-14-08-08 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-15-16-15 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-15-20-00 sunnyvale_with_two_offices
-small-records/2020/2020-06-18/2020-06-18-16-26-57 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-10-30-43 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-10-58-36 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-11-11-18 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-11-37-44 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-14-35-17 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-14-39-50 sunnyvale_with_two_offices
-small-records/2020/2020-06-19/2020-06-19-15-34-26 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-10-45-41 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-11-15-44 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-13-06-54 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-13-17-58 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-16-34-33 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-16-40-31 sunnyvale_with_two_offices
-small-records/2020/2020-06-22/2020-06-22-17-22-50 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-10-18-43 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-10-24-03 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-11-37-09 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-12-11-55 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-12-15-41 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-13-16-39 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-13-24-48 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-14-37-35 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-15-44-59 sunnyvale_with_two_offices
-small-records/2020/2020-06-23/2020-06-23-18-52-19 sunnyvale_with_two_offices
-small-records/2020/2020-06-24/2020-06-24-10-30-09 sunnyvale_with_two_offices
-small-records/2020/2020-06-24/2020-06-24-10-46-55 sunnyvale_with_two_offices
-small-records/2020/2020-06-24/2020-06-24-13-13-58 sunnyvale_with_two_offices
-small-records/2020/2020-06-24/2020-06-24-15-32-18 sunnyvale_with_two_offices
-small-records/2020/2020-06-24/2020-06-24-16-05-47 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-10-52-37 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-11-05-30 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-11-36-57 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-11-40-49 san_mateo
-small-records/2020/2020-06-25/2020-06-25-12-43-12 san_mateo
-small-records/2020/2020-06-25/2020-06-25-13-13-41 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-13-23-27 sunnyvale_with_two_offices
-small-records/2020/2020-06-25/2020-06-25-15-02-29 san_mateo
-small-records/2020/2020-06-25/2020-06-25-16-03-14 sunnyvale_with_two_offices
-small-records/2020/2020-06-26/2020-06-26-13-34-29 sunnyvale_with_two_offices
-small-records/2020/2020-06-26/2020-06-26-14-11-10 san_mateo
-small-records/2020/2020-06-26/2020-06-26-15-01-34 sunnyvale_with_two_offices
-small-records/2020/2020-06-29/2020-06-29-10-41-35 sunnyvale_with_two_offices
-small-records/2020/2020-06-29/2020-06-29-14-05-29 san_mateo
-small-records/2020/2020-06-30/2020-06-30-14-40-27 sunnyvale_with_two_offices
-small-records/2020/2020-06-30/2020-06-30-14-59-09 sunnyvale_with_two_offices
-small-records/2020/2020-06-30/2020-06-30-15-49-04 sunnyvale_with_two_offices
-small-records/2020/2020-06-30/2020-06-30-16-45-50 sunnyvale_with_two_offices
-small-records/2020/2020-06-30/2020-06-30-16-58-50 sunnyvale_with_two_offices
-small-records/2020/2020-07-01/2020-07-01-15-21-06 sunnyvale_with_two_offices
-small-records/2020/2020-07-01/2020-07-01-16-09-52 sunnyvale_with_two_offices
-small-records/2020/2020-07-06/2020-07-06-11-01-57 sunnyvale_with_two_offices
-small-records/2020/2020-07-06/2020-07-06-11-53-46 sunnyvale_with_two_offices
-small-records/2020/2020-07-06/2020-07-06-15-16-36 sunnyvale_with_two_offices
+small-records/2020/2020-07-07/2020-07-07-10-53-37 sunnyvale_with_two_offices 26.00 0:59:35
+small-records/2020/2020-07-07/2020-07-07-13-17-43 sunnyvale_with_two_offices 50.09 3:49:19
+small-records/2020/2020-07-07/2020-07-07-13-19-35 sunnyvale_with_two_offices 40.44 2:28:59
+small-records/2020/2020-07-07/2020-07-07-17-13-51 sunnyvale_with_two_offices 14.56 0:49:36
+small-records/2020/2020-07-08/2020-07-08-10-50-45 sunnyvale_with_two_offices 25.20 1:00:59
+small-records/2020/2020-07-08/2020-07-08-13-09-33 sunnyvale_with_two_offices 55.01 4:49:59
+small-records/2020/2020-07-08/2020-07-08-13-20-53 sunnyvale_with_two_offices 52.35 2:13:49
+small-records/2020/2020-07-08/2020-07-08-17-38-53 sunnyvale_with_two_offices 10.73 0:32:59
+small-records/2020/2020-07-09/2020-07-09-10-53-02 sunnyvale_with_two_offices 34.62 1:19:59
+small-records/2020/2020-07-09/2020-07-09-11-36-39 sunnyvale_with_two_offices 16.74 0:51:59
+small-records/2020/2020-07-09/2020-07-09-14-03-31 sunnyvale_with_two_offices 1.77 0:04:04
+small-records/2020/2020-07-09/2020-07-09-14-28-04 sunnyvale_with_two_offices 45.63 1:41:11
+small-records/2020/2020-07-09/2020-07-09-14-31-07 san_mateo 30.45 1:51:59
+small-records/2020/2020-07-09/2020-07-09-16-40-55 san_mateo 14.83 1:28:59
+small-records/2020/2020-07-09/2020-07-09-17-35-31 sunnyvale_with_two_offices 13.12 0:33:59
+small-records/2020/2020-07-10/2020-07-10-10-24-58 sunnyvale_with_two_offices 31.13 1:11:59
+small-records/2020/2020-07-10/2020-07-10-10-37-37 sunnyvale_with_two_offices 40.34 1:19:59
+small-records/2020/2020-07-10/2020-07-10-11-43-22 sunnyvale_with_two_offices 13.29 0:31:15
+small-records/2020/2020-07-10/2020-07-10-12-07-03 sunnyvale_with_two_offices 1.18 0:11:37
+small-records/2020/2020-07-10/2020-07-10-13-10-04 sunnyvale_with_two_offices 67.49 2:33:59
+small-records/2020/2020-07-10/2020-07-10-14-01-02 sunnyvale_with_two_offices 92.46 3:53:41
+small-records/2020/2020-07-10/2020-07-10-14-57-38 sunnyvale_with_two_offices 38.12 1:32:59
+small-records/2020/2020-07-10/2020-07-10-17-12-31 sunnyvale_with_two_offices 19.41 0:49:59
+small-records/2020/2020-07-13/2020-07-13-10-56-35 sunnyvale_with_two_offices 25.58 1:03:59
+small-records/2020/2020-07-13/2020-07-13-11-30-38 sunnyvale_with_two_offices 20.02 0:44:59
+small-records/2020/2020-07-13/2020-07-13-11-55-38 sunnyvale_with_two_offices 4.26 0:14:59
+small-records/2020/2020-07-13/2020-07-13-13-12-57 sunnyvale_with_two_offices 42.06 1:30:59
+small-records/2020/2020-07-13/2020-07-13-13-53-48 sunnyvale_with_two_offices 40.32 1:48:59
+small-records/2020/2020-07-13/2020-07-13-13-58-31 sunnyvale_with_two_offices 31.01 1:07:59
+small-records/2020/2020-07-13/2020-07-13-14-53-05 sunnyvale_with_two_offices 16.64 0:32:59
+small-records/2020/2020-07-13/2020-07-13-15-13-14 sunnyvale_with_two_offices 26.46 1:16:29
+small-records/2020/2020-07-13/2020-07-13-15-34-13 sunnyvale_with_two_offices 63.83 2:28:48
+small-records/2020/2020-07-13/2020-07-13-16-14-13 sunnyvale_with_two_offices 47.20 1:55:58
+small-records/2020/2020-07-13/2020-07-13-17-14-15 sunnyvale_with_two_offices 10.11 0:21:59
+small-records/2020/2020-07-13/2020-07-13-17-36-39 sunnyvale_with_two_offices 0.12 0:00:59
+small-records/2020/2020-07-13/2020-07-13-17-46-09 sunnyvale_with_two_offices 17.53 0:42:59
+small-records/2020/2020-07-14/2020-07-14-11-13-58 sunnyvale_with_two_offices 20.75 0:54:59
+small-records/2020/2020-07-14/2020-07-14-11-15-22 sunnyvale_with_two_offices 19.46 0:44:59
+small-records/2020/2020-07-14/2020-07-14-13-46-47 sunnyvale_with_two_offices 44.63 1:41:59
+small-records/2020/2020-07-14/2020-07-14-15-43-17 sunnyvale_with_two_offices 53.04 1:58:59
