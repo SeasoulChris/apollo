@@ -78,3 +78,11 @@ grpc_deps()
 load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 
 grpc_extra_deps()
+
+http_archive(
+    name = "planning_analytics",
+    url = "file:///fuel/deps/libs/planning_analytics.zip",
+    sha256 = "6f3754abd99fe5bc6dc0c10c9685c52d9491f28e3f84b3d5c4625d8aca1e108d",
+    build_file = "planning_analytics.BUILD",
+    strip_prefix = "planning_analytics",
+)

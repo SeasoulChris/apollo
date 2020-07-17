@@ -7,17 +7,13 @@ import sys
 from os import path
 from datetime import datetime, timedelta
 
-sys.path.append('fueling/planning/analytics/planning_analytics.zip')
-sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
-
-from planning_analytics.cleaner.record_cleaner import RecordCleaner
 from cyber.python.cyber_py3.record import RecordWriter
+from planning_analytics.cleaner.record_cleaner import RecordCleaner
 
+from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
-
-from fueling.common.base_pipeline import BasePipeline
 
 
 class CleanPlanningRecords(BasePipeline):

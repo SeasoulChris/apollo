@@ -5,11 +5,8 @@ filegroup(
 
 py_binary(
     name = "data_cleaner",
-    srcs = [
-        "data_cleaner.py",
-    ],
+    srcs = ["data_cleaner.py"],
     data = [
-        "//fueling/planning/analytics",
         "//fueling/planning/cleaner:task_list",
     ],
     deps = [
@@ -17,8 +14,18 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
+        "@planning_analytics",
     ],
 )
+
+# TODO(yifei): Fix it so that we can guarantee in future.
+#py_test(
+#    name = "data_cleaner_test",
+#    srcs = ["data_cleaner_test.py"],
+#    deps = [
+#        ":data_cleaner",
+#    ],
+#)
 
 py_binary(
     name = "empty_folder",

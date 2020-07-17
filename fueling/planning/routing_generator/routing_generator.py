@@ -7,18 +7,14 @@ import sys
 from datetime import datetime, timedelta
 from os import path
 
-sys.path.append('/fuel/fueling/planning/analytics/planning_analytics.zip')
-sys.path.append('fueling/planning/analytics/planning_analytics.zip')
-sys.path.append(path.dirname(path.abspath(__file__)) + "/../analytics/planning_analytics.zip")
-
 from cyber.python.cyber_py3.record import RecordWriter
+from planning_analytics.apl_record_reader.apl_record_reader import AplRecordReader
+from planning_analytics.route_generator.route_generator import RouteGenerator
+
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.file_utils as file_utils
 from fueling.common.base_pipeline import BasePipeline
-
-from planning_analytics.apl_record_reader.apl_record_reader import AplRecordReader
-from planning_analytics.route_generator.route_generator import RouteGenerator
 
 
 class RoutingGenerator(BasePipeline):
