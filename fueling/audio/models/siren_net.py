@@ -134,7 +134,7 @@ class WaveNet(nn.Module):
             ('fc2', nn.Linear(512, 64)),
             ('dropout2', nn.Dropout(0.5)),
             ('relu', nn.ReLU()),
-            ('output', nn.Linear(64, 3)),
+            ('output', nn.Linear(64, 2)),
             ('softmax', nn.Softmax(dim=1)),
         ]))
 
@@ -162,7 +162,7 @@ class MLNet(nn.Module):
             ('fc2', nn.Linear(512, 64)),
             ('dropout2', nn.Dropout(0.5)),
             ('relu', nn.ReLU()),
-            ('output', nn.Linear(64, 3)),
+            ('output', nn.Linear(64, 2)),
             ('softmax', nn.Softmax(dim=1)),
         ]))
 
@@ -191,10 +191,26 @@ class SirenNet(nn.Module):
         return out
 
 
+class SirenNetLoss():
+    def loss_fn(self, y_pred, y_true):
+        true_label = y_true.topk(1)[1].view(-1)
+        loss_func = nn.CrossEntropyLoss()
+        return loss_func(y_pred, true_label)
+
+    def loss_info(self, y_pred, y_true):
+        y_pred = y_pred.cpu()
+        y_true = y_true.cpu()
+        pred_label = y_pred.topk(1)[1]
+        true_label = y_true.topk(1)[1]
+        accuracy = (pred_label == true_label).type(torch.float).mean().item()
+        print("Accuracy is {:.3f} %".format(100 * accuracy))
+        return
+
+
 if __name__ == '__main__':
     # input = torch.ones([1, 1, 33075])
     # model = SirenNet()
     # print(model(input))
 
-    urbansound = Urbansound8K('/fuel/ESC/audio/')
+    urbansound = Urbansound8K('/data/UrbanSound8K/audio/')
     urbansound.preprocess()

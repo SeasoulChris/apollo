@@ -53,3 +53,12 @@ py_binary(
         "//fueling/common:file_utils",
     ],
 )
+
+py_binary(
+    name = "audio_pipeline",
+    srcs = ["audio_pipeline.py"],
+    deps = [
+        ":siren_net",
+        "//fueling/learning:train_utils",
+    ],
+)
