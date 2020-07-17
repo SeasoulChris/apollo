@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-IMAGE="apolloauto/fuel-client:20200714_1306"
+IMAGE="apolloauto/fuel-client:20200717_1512"

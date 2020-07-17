@@ -28,7 +28,7 @@ dependencies:
   - keras-gpu
   - matplotlib
   - mpld3
-  - numba = 0.48  # To be compatible with librosa
+  - numba
   - numpy
   - opencv
   - pillow
@@ -39,7 +39,7 @@ dependencies:
   - pycodestyle
   - pymongo
   - pyproj
-  - pytorch::pytorch = 1.5.1
+  - pytorch::pytorch
   - pytorch::torchaudio
   - pytorch::torchvision
   - pytz

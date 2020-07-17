@@ -3,4 +3,5 @@
 source /usr/local/miniconda/bin/activate fuel
 source /etc/bash_completion.d/bazel
 
+# Retire after we resolve all LD_LIBRARY_PATH.
 source /apollo/scripts/apollo_base.sh
