@@ -1,0 +1,72 @@
+git_info {
+  commit_id: "e753fc2775391f62434faddf00e6d28b50e1edfc"
+  repo: "https://github.com/ApolloAuto/apollo.git"
+}
+tuner_parameters {
+  user_tuning_module: OPEN_SPACE_PLANNING
+  user_conf_filename: "/apollo/modules/planning/conf/planner_open_space_config.pb.txt"
+  utility {
+    utility_name: "ucb"
+    kappa: 1.0
+    xi: 1.0
+  }
+  n_iter: 200
+  init_points_1D: 0
+  opt_max: true
+  flag {
+    flag_name: "estimate_bound"
+    flag_dir: "iterative_anchoring_smoother_config"
+    enable: false
+  }
+  # Tuning Parameters
+  parameter {
+    parameter_name: "acc_weight"
+    parameter_dir: "iterative_anchoring_smoother_config.s_curve_config"
+    min: 0.1
+    max: 10.0
+  }
+  parameter {
+    parameter_name: "jerk_weight"
+    parameter_dir: "iterative_anchoring_smoother_config.s_curve_config"
+    min: 0.1
+    max: 10.0
+  }
+  parameter {
+    parameter_name: "ref_s_weight"
+    parameter_dir: "iterative_anchoring_smoother_config.s_curve_config"
+    min: 1.0
+    max: 100.0
+  }
+  # Constant Parameters
+  parameter {
+    parameter_name: "ref_v_weight"
+    parameter_dir: "iterative_anchoring_smoother_config.s_curve_config"
+    constant: 0.0
+  }
+}
+scenarios {
+# demo-test scenarios
+  id: 909
+  id: 910
+  id: 911
+  id: 912
+  id: 913
+  id: 914
+  id: 915
+# complete-test scenarios
+#  id: 916
+#  id: 917
+#  id: 918
+#  id: 919
+#  id: 920
+#  id: 921
+#  id: 922
+#  id: 923
+#  id: 924
+#  id: 925
+#  id: 926
+#  id: 927
+#  id: 928
+#  id: 929
+}
+dynamic_model: ECHO_LINCOLN

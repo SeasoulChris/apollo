@@ -3,8 +3,8 @@ git_info {
   repo: "https://github.com/ApolloAuto/apollo.git"
 }
 tuner_parameters {
-  default_conf_proto: "/apollo/modules/control/proto/control_conf.proto"
-  default_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
+  user_tuning_module: CONTROL
+  user_conf_filename: "/apollo/modules/control/conf/control_conf.pb.txt"
   utility {
     utility_name: "ucb"
     kappa: 1.0

@@ -44,11 +44,11 @@ flags.DEFINE_string(
 class BaseTuner():
     """Basic functionality for NLP."""
 
-    def __init__(self, UserConfClass):
+    def __init__(self, UserConfClassDict):
         tic_start = time.perf_counter()
         logging.info(f"Init Optimization Tuner.")
 
-        self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClass)
+        self.tuner_param_config_pb, self.algorithm_conf_pb = self.read_configs(UserConfClassDict)
 
         # Bounded region or desired constant value of parameter space
         self.pbounds = {}
@@ -92,7 +92,7 @@ class BaseTuner():
 
         logging.info(f"Timer: initialize_tuner - {time.perf_counter() - tic_start: 0.04f} sec")
 
-    def read_configs(self, UserConfClass):
+    def read_configs(self, UserConfClassDict):
         tuner_config_filename = flags.FLAGS.tuner_param_config_filename
         if not file_utils.file_exists(tuner_config_filename):
             raise Exception(f"No such config file found: {tuner_config_filename}")
@@ -107,10 +107,19 @@ class BaseTuner():
             logging.error(f"Failed to parse autotune config: {error}")
             sys.exit(1)
 
+        user_module = tuner_conf.tuner_parameters.user_tuning_module # user module Enum
+        try:
+            UserConfClass = UserConfClassDict[user_module]
+            logging.debug(f"Assign user module proto {UserConfClass}")
+
+        except Exception as error:
+            logging.error(f"Failed to assign user module proto: {error}")
+            sys.exit(1)
+
         user_conf = UserConfClass()  # Basic configuration corresponding to user module
         try:
             proto_utils.get_pb_from_text_file(
-                tuner_conf.tuner_parameters.default_conf_filename, user_conf,
+                tuner_conf.tuner_parameters.user_conf_filename, user_conf,
             )
             logging.debug(f"Parsed user config files {user_conf}")
 
@@ -142,7 +151,7 @@ class BaseTuner():
         iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
-                {tuner_param_config_pb.tuner_parameters.default_conf_filename:
+                {tuner_param_config_pb.tuner_parameters.user_conf_filename:
                     text_format.MessageToString(algorithm_conf_pb)},
             }
         )

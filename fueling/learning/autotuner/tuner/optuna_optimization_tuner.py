@@ -8,6 +8,7 @@ import numpy as np
 import optuna
 from optuna.samplers import TPESampler
 
+# Configurations from the Control Module
 from modules.control.proto.control_conf_pb2 import ControlConf
 from modules.control.proto.lat_controller_conf_pb2 import LatControllerConf
 from modules.control.proto.lon_controller_conf_pb2 import LonControllerConf
@@ -17,8 +18,19 @@ from modules.control.proto.leadlag_conf_pb2 import LeadlagConf
 from modules.control.proto.mrac_conf_pb2 import MracConf
 from modules.control.proto.pid_conf_pb2 import PidConf
 
+# Configurations from the Open-Space Planning Module
+from modules.planning.proto.planner_open_space_config_pb2 import \
+     PlannerOpenSpaceConfig, WarmStartConfig, DualVariableWarmStartConfig, \
+     DistanceApproachConfig, IterativeAnchoringConfig, TrajectoryPartitionConfig, \
+     ROIConfig, OSQPConfig, IpoptConfig
+from modules.planning.proto.math.fem_pos_deviation_smoother_config_pb2 import \
+     FemPosDeviationSmootherConfig
+from modules.planning.proto.task_config_pb2 import PiecewiseJerkSpeedOptimizerConfig
+
+# Configurations from the Autotune Tool
 from fueling.learning.autotuner.proto.tuner_param_config_pb2 import TunerConfigs
 from fueling.learning.autotuner.tuner.base_tuner import BaseTuner
+
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
@@ -28,7 +40,11 @@ class OptunaOptimizationTuner(BaseTuner):
     """Basic functionality of Optuna Tuner for Control Module."""
 
     def __init__(self):
-        BaseTuner.__init__(self, ControlConf)
+        # Conf Enum correspoding to the tunning modules:
+        # 0--Control, 1--Open-Space Planning, 2--On-Lane Planning, 3--Dynamic Model
+        user_conf_class_dict = {0: ControlConf,
+                                1: PlannerOpenSpaceConfig}
+        BaseTuner.__init__(self, user_conf_class_dict)
 
     def init_optimizer_visualizer(self, tuner_parameters):
         self.optimizer = optuna.create_study(sampler=TPESampler())

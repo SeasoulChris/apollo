@@ -82,7 +82,7 @@ class OptunaBaseTuner():
 
         try:
             proto_utils.get_pb_from_text_file(
-                tuner_conf.tuner_parameters.default_conf_filename, user_conf,
+                tuner_conf.tuner_parameters.user_conf_filename, user_conf,
             )
             logging.debug(f"Parsed user config files {user_conf}")
 
@@ -113,7 +113,7 @@ class OptunaBaseTuner():
         iteration_id, weighted_score = self.cost_client.compute_cost(
             {  # list of config_id : {path, config} pairs
                 config_id:
-                {self.tuner_param_config_pb.tuner_parameters.default_conf_filename:
+                {self.tuner_param_config_pb.tuner_parameters.user_conf_filename:
                     text_format.MessageToString(self.algorithm_conf_pb)},
             }
         )
