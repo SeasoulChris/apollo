@@ -2,10 +2,20 @@
 
 This folder contains all the files for Reinforcement Learning (RL).
 
-The overall coding framework is in `main.py`.
+## main
+The `main.py` includes:
+* the Ornstein-Uhlenbeck process to add time-correlated noise to the actions taken by the deterministic policy
+* the replay buffer for RL
+* the RLNetwork is a two-headed network including both the policy network and the target network
+* the main training loop 
 
-The `environment.py` defines an interactive simulator with openAI gym interface. 
+## rl
+The `rl.py` has RL algorithms, including:
+* DDPG
 
+## environment
+The `environment.py` defines an interactive simulator with the openAI gym interface. 
+Please put all the code related with our simulator here.
 
 ## Demo
 The `DDPG_demo.ipynb` is a demo for our first step coding.
