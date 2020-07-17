@@ -40,6 +40,7 @@ dependencies:
   - pymongo
   - pyproj
   - pytorch::pytorch = 1.5.1
+  - pytorch::torchaudio
   - pytorch::torchvision
   - pytz
   - redis-py
