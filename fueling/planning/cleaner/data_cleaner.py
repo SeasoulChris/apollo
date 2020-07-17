@@ -31,7 +31,11 @@ class CleanPlanningRecords(BasePipeline):
 
     def run_test(self):
         """Run test."""
-        self.dst_prefix = '/fuel/data/planning/cleaned_data_temp/'
+        record_file = '/fuel/data/20200707105339.record'
+        map_file = '/fuel/data/sim_map.bin'
+
+        self.cleaner = RecordCleaner(map_file)
+        self.cleaner.process_file(record_file)
 
         records = ['/fuel/data/broken/']
         # self.to_rdd(records).map(self.process_task).count()
