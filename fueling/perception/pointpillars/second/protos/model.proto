@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package second.protos;
+import "fueling/perception/pointpillars/second/protos/second.proto";
+message DetectionModel{
+    oneof model {
+        VoxelNet second = 1;
+    }
+}
