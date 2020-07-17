@@ -96,7 +96,7 @@ class SirenNetDataset(Dataset):
         return len(self.all_features)
 
     def __getitem__(self, idx):
-        feature = self.all_features[i]
+        feature = self.all_features[idx]
         data_for_learn = feature[0]
         label = feature[1] * np.ones((1, 1))
         return ((torch.from_numpy(data_for_learn)), torch.from_numpy(label))

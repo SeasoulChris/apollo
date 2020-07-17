@@ -26,10 +26,10 @@ if __name__ == "__main__":
 
     train_dataset = SirenNetDataset(args.train_file)
     valid_dataset = SirenNetDataset(args.valid_file)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
-                                               num_workers=1, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=32, shuffle=True,
-                                               num_workers=1, drop_last=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True,
+                                               num_workers=4, drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=4, shuffle=True,
+                                               num_workers=4, drop_last=True)
 
     model = SirenNet()
     loss = SirenNetLoss()
@@ -47,4 +47,4 @@ if __name__ == "__main__":
 
     # Model training:
     train_valid_dataloader(train_loader, valid_loader, model, loss, optimizer, scheduler,
-                           epochs=50, save_name=args.save_path, print_period=200, save_mode=2)
+                           epochs=50, save_name=args.save_path, print_period=50, save_mode=2)
