@@ -2,6 +2,7 @@ import threading
 
 import keyboard
 
+from fueling.learning.network_utils import generate_lstm_states
 from cyber.python.cyber_py3 import cyber, cyber_time
 
 
@@ -9,7 +10,11 @@ class ADSEnv(object):
     def __init__(self, hidden_size=128):
         self.hidden = generate_lstm_states()
         self.state = self.semantic_map()
+
+        # for reward and done in function step
         self.reward = 0
+        self.violation_rule = False
+        self.arrival = False
 
         # for callback_planning
         self.pointx = []
@@ -31,7 +36,11 @@ class ADSEnv(object):
                                             grading_result.FrameResult, self.callback_planning)
 
     def step(self, action):
-        """return next state, reward, done, info"""
+        """
+        output: next_state, reward, done, info
+        done: an indicator denotes whether this episode is finished
+        info: debug information
+        """
         # key input: space
         keyboard.press_and_release('space')
         # send planning msg (action)
@@ -48,8 +57,16 @@ class ADSEnv(object):
             time.sleep(0.1)  # second
 
         next_state = self.semantic_map()
-        # TODO (Songyang): generate reward
-        return next_state, reward, done, info
+
+        if self.arrival or self.violation_rule or self.collision:
+            done = True
+        else:
+            done = False
+
+        # Add debug information to info when in demand
+        info = None
+
+        return next_state, self.reward, done, info
 
     def received(self, msg):
         """env msg (perception, prediction, chassis, ...)"""
@@ -104,36 +121,39 @@ class ADSEnv(object):
 
     def callback_grading(self, entity):
         self.reward = 0
-        violation_rule = False
+        # the lane width is defined according to the standard freeway
+        self.width_lane = 3.6
+
         for result in entity.detailed_result:
             if result.name == "Collision" and result.is_pass is False:
                 self.reward -= 500
+                self.collision = True
             if result.name == "DistanceToLaneCenter":
                 dist_lane_center = result.score
 
             # test whether the vehicle violates the traffic rule
             if result.name == "AccelerationLimit" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
             if result.name == "RunRedLight" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
             if result.name == "SpeedLimit" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
             if result.name == "ChangeLaneAtJunction" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
             if result.name == "CrosswalkYieldToPedestrians" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
             if result.name == "RunStopSign" and result.is_pass is False:
-                violation_rule = True
+                self.violation_rule = True
 
             if result.name == "DistanceToEnd":
                 dist_end = result.score
 
-        # TODO: confirm WIDTH_LANE
-        if dist_lane_center >= 0.75 * WIDTH_LANE:
+        if dist_lane_center >= 0.75 * self.width_lane:
             self.reward -= 250
-        if violation_rule:
+        if self.violation_rule:
             self.reward -= 250
-        # TODO: check this threshold
+        # Note: check this threshold (dist_end) in experiment
         if dist_end <= 10:
             self.reward += 100
+            self.arrival = True
         self.reward -= 0.1 * dist_lane_center

@@ -1,5 +1,6 @@
 import random
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,7 +8,6 @@ import numpy as np
 
 from fueling.learning.network_utils import generate_lstm
 from fueling.learning.network_utils import generate_lstm_states
-
 from fueling.planning.reinforcement_learning.environment import *
 
 # if gpu is to be used
@@ -21,6 +21,7 @@ BUFFER_CAPACITY = 1000000     # capacity of replay buffer, integer!
 
 class OUNoise(object):
     """the Ornstein-Uhlenbeck process"""
+
     def __init__(self, action_space, mu=0.0, theta=0.15, max_sigma=0.3,
                  min_sigma=0.3, decay_period=100000):
         self.mu = mu
@@ -46,8 +47,8 @@ class OUNoise(object):
     def choose_action(self, action, t=0):
         """Adding time-correlated noise to the actions taken by the deterministic policy"""
         ou_state = self.evolve_state()
-        self.sigma = (self.max_sigma - self.min_sigma) * min(1.0, t / self.decay_period)
-        self.sigma = self.max_sigma - self.sigma
+        self.sigma = self.max_sigma - (self.max_sigma - self.min_sigma) * \
+            min(1.0, t / self.decay_period)
         return np.clip(action + ou_state, self.low, self.high)
 
 
@@ -57,15 +58,19 @@ class ReplayBuffer(object):
         self.replay_buffer = []
         self.position = 0
 
-    def store(self, *args):
-        """Saves a transition experience."""
+    def store(self, state, hidden, action, reward, next_state, next_hidden, done):
+        """Saves a transition experience"""
         if len(self.replay_buffer) < self.capacity:
             self.replay_buffer.append(None)
-        self.replay_buffer[self.position] = Transition(*args)
+        self.replay_buffer[self.position] = (state, hidden, action, reward, next_state,
+                                             next_hidden, done)
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
-        return random.sample(self.replay_buffer, batch_size)
+        batch = random.sample(self.replay_buffer, batch_size)
+        state, hidden, action, reward, next_state, next_hidden, done = \
+            map(np.stack, zip(*batch))
+        return state, hidden, action, reward, next_state, next_hidden, done
 
     def __len__(self):
         return len(self.replay_buffer)
@@ -73,6 +78,7 @@ class ReplayBuffer(object):
 
 class RLNetwork(nn.Module):
     """modified from TrajectoryImitationCNNFCLSTM"""
+
     def __init__(self, history_len, pred_horizon, embed_size=64,
                  hidden_size=128, cnn_net=models.mobilenet_v2,
                  pretrained=True, num_actions=4):
@@ -216,17 +222,17 @@ if __name__ == '__main__':
     rl = DDPG()  # initiate the RL framework
 
     for i_episode in range(1000):
-        state = env.reset()
+        state, hidden = env.reset()
         time_count = 1
         while True:
 
-            action = rl.choose_action(state)
+            action, next_hidden = rl.choose_action(state, hidden)
 
             # select action and get feedback
             next_state, reward, done, info = env.step(action)
 
             # store transition experience into replay buffer
-            rl.replay_buffer.store(state, action, reward, next_state, done)
+            rl.replay_buffer.store(state, hidden, action, reward, next_state, next_hidden, done)
 
             # learning
             rl.learn()
@@ -236,6 +242,7 @@ if __name__ == '__main__':
                 break
 
             state = next_state
+            hidden = next_hidden
             time_count += 1
         if i_episode % 50 == 0:
             print("Episode finished after {} timesteps".format(time_count + 1))
