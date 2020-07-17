@@ -107,7 +107,7 @@ class BaseTuner():
             logging.error(f"Failed to parse autotune config: {error}")
             sys.exit(1)
 
-        user_module = tuner_conf.tuner_parameters.user_tuning_module # user module Enum
+        user_module = tuner_conf.tuner_parameters.user_tuning_module  # user module Enum
         try:
             UserConfClass = UserConfClassDict[user_module]
             logging.debug(f"Assign user module proto {UserConfClass}")

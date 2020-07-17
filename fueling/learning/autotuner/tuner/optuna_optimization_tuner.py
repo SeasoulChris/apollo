@@ -20,11 +20,11 @@ from modules.control.proto.pid_conf_pb2 import PidConf
 
 # Configurations from the Open-Space Planning Module
 from modules.planning.proto.planner_open_space_config_pb2 import \
-     PlannerOpenSpaceConfig, WarmStartConfig, DualVariableWarmStartConfig, \
-     DistanceApproachConfig, IterativeAnchoringConfig, TrajectoryPartitionConfig, \
-     ROIConfig, OSQPConfig, IpoptConfig
+    PlannerOpenSpaceConfig, WarmStartConfig, DualVariableWarmStartConfig, \
+    DistanceApproachConfig, IterativeAnchoringConfig, TrajectoryPartitionConfig, \
+    ROIConfig, OSQPConfig, IpoptConfig
 from modules.planning.proto.math.fem_pos_deviation_smoother_config_pb2 import \
-     FemPosDeviationSmootherConfig
+    FemPosDeviationSmootherConfig
 from modules.planning.proto.task_config_pb2 import PiecewiseJerkSpeedOptimizerConfig
 
 # Configurations from the Autotune Tool
