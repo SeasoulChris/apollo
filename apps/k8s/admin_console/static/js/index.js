@@ -1,5 +1,13 @@
 $(document).ready(function () {
 
+    // show the message
+    if (widget.messageBar.init()){
+         $(document).on("widget.mb.show",function(e, options){
+             widget.messageBar.show(options);
+         });
+    }
+
+    // tooltip
     $('.failure-code').tooltip({container: 'body'});
     $('.td-job-id').tooltip({container: 'body'});
 
@@ -16,7 +24,6 @@ $(document).ready(function () {
     $("#filter-message-close").click(function () {
         $("#sn-search").attr("value","");
         $("#filter-message").text("");
-        $("#comment_text").text();
         $("#job-form").submit();
     });
 
@@ -69,61 +76,36 @@ $(document).ready(function () {
         $("#statictics-form").submit();
     });
 
-
     // submit the aggregate-field select
     $('#aggregated-select').change(function () {
         $("#statictics-form").submit();
     });
 
-    // Modal box of comment
-    $('#identifier').modal()
-
-    // Click the body
-    $('body').click(function () {
-        $("#comment_text").val("");
-    });
-
-    // Click the job-modal
-    $(".job-modal").click(function () {
-        var job_id = $(this).attr("id").split("-")[1];
-        var action = $(this).text().trim().slice(2, 4);
-        var en_action = "";
-        if (action == "无效") {
-            en_action = "Invalid"
-        } else if (action == "有效") {
-            en_action = "Valid"
+    // show the modal
+    $('#myModal').on('show.bs.modal', function (e) {
+        var button = $(e.relatedTarget);
+        var job_data = {};
+        var map_cn_action = {
+            "Invalid": "无效",
+            "Valid": "有效"
+        };
+        var map_not_action = {
+            "Invalid": "Valid",
+            "Valid": "Invalid"
         }
-        $(this).append('<div id=' + job_id + ' class="job-id"></div><div id="job-action" class=' + en_action + '></div>');
-        $("#myModalLabel").text("设置" + action);
-        $(".comment-title").text("你确认把当前任务设置为" + action + "吗?");
-    })
+        // Get the job-id and action from dialog
+        job_data["job_id"] = button.data("job-id");
+        job_data["action"] = button.data("job-action");
 
-    // Click the cancel button
-    $(".cancel_job").click(function () {
-        $("#comment_text").val("");
-        $('#myModal').modal("hide")
-    })
+        // Apply the chinese action
+        $("#myModalLabel").text("设置" + map_cn_action[job_data["action"]]);
+        $(".comment-title").text("你确认把当前任务设置为" + map_cn_action[job_data["action"]] + "吗?");
 
-    // Click the x button
-    $(".close").click(function () {
-        $("#comment_text").val("");
-        $('#myModal').modal("hide")
-    })
-
-    // Click the submit button
-    $(".comment_job").click(function () {
-        var comment = $("#comment_text").val();
-        if (comment == "") {
-            $('#comments-error').text("不能为空!")
-            $('#comments-error').css({"color": "red"}).show(300).delay(3000).hide(300);
-        } else {
-            var job_id = $(".job-id").attr("id");
-            var action = $("#job-action").attr("class");
-            $(".job-id").remove();
-            $("#job-action").remove();
-            var job_data = {"comment": comment, "job_id": job_id, "action": action};
+        // Submit the form for verification field and post ajax request
+        $("form", this).first().one("submit", function(e){
+            job_data["comment"] = $("#comment_text").val();
             $.ajax({
-                url: "http://usa-data.baidu.com:8001/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/submit_job",
+                url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/submit_job",
                 dataType: "json",
                 type: "POST",
                 data: job_data,
@@ -131,41 +113,51 @@ $(document).ready(function () {
                     $("#comment_text").attr("disabled", "disabled");
                 },
                 success: function (result) {
-                    $("#comment_text").val("");
-                    $("#comment_text").removeAttr("disabled");
-                    $('#myModal').modal("hide");
-                    var action = result["operation"]["action"]["type"];
-                    var app_action = ""
-                    if (action == "invalid") {
-                        app_action = "设置有效"
-                        action = "无效"
-                    } else if (action == "valid") {
-                        app_action = "设置无效"
-                        action = "有效"
-                    } else {
-                        app_action = "错误"
-                        action = "错误"
-                    }
-                    $("#button-" + job_id).text(app_action);
-                    $("#flag-" + job_id).before('<tr style="display: none" class="operation_span">' +
+                     // The action to be executed
+                     var not_action = map_not_action[job_data["action"]];
+                     // The is_valid to be set
+                     var is_valid = result["operation"]["is_valid"].toString();
+                     is_valid = is_valid.substring(0, 1).toUpperCase() + is_valid.substring(1); // 返回的is_valid
+
+                     // Blank form
+                     $("#comment_text").val("");
+                     // Cancel the disabled
+                     $("#comment_text").removeAttr("disabled");
+                     // Hide modal box
+                     $('#myModal').modal("hide");
+
+                     // Set the data-job-action attr
+                     $("#button-"+job_data["job_id"]).attr("data-job-action", not_action);
+                     // Set the job-action of button data
+                     button.data("job-action", not_action);
+
+                     // update the table
+                     // Update the is_valid
+                     $("#is-valid-" + job_data["job_id"]).text(is_valid);
+                     // Update the action
+                     $("#button-" + job_data["job_id"]).text("设置"+map_cn_action[not_action]);
+                     // Update the action history
+                     $("#flag-" + job_data["job_id"]).before('<tr style="display: none" class="operation_span">' +
                         '<td colspan="11" style="border-top: none">' +
                         "任务被" + result["operation"]["email"] + "在" + result["operation"]["time"] +
-                        "设置为" + action + "。备注是：" + result["operation"]["comments"] + "</td></tr>");
-                    var is_valid = result["operation"]["is_valid"].toString()
-                    is_valid = is_valid.substring(0, 1).toUpperCase() + is_valid.substring(1)
-                    $("#is-valid-" + job_id).text(is_valid);
-                    $('#update-message').text("任务（序号："+job_id+"）被设置为"+action);
-                    $("#update-message-close").css("display", "inline");
-                    $("#expand-" + job_id).css("display", "none");
-                    $("#collapse-" + job_id).css("display", "inline");
-                    $("#button-" + job_id).parent().parent().nextUntil(".flag").css("display", "table-row");
-                },
-                error: function (xhr, textStatus, errorThrown) {
-                    $('#update-message').text("任务（序号：" + job_id + "）提交失败");
-                    $("#update-message-close").css("display", "inline");
+                        "设置为" + map_cn_action[job_data["action"]] + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
+
+                     // Update the message
+                     $(document).trigger("widget.mb.show", {type:"ok",message:"任务（序号："+job_data["job_id"]+"）被设置为"+map_cn_action[job_data["action"]]});
+
+                     // Expand the history action
+                     $("#expand-" + job_data["job_id"]).css("display", "none");
+                     $("#collapse-" + job_data["job_id"]).css("display", "inline");
+                     $("#button-" + job_data["job_id"]).parent().parent().nextUntil(".flag").css("display", "table-row");
                 }
-            })
-        }
+            });
+            return false;
+         })
+        });
+
+    // hide the modal
+    $('#myModal').on('hide.bs.modal', function (e) {
+         $("#comment_text").val("");
     })
 
     // Click the expand
@@ -195,4 +187,43 @@ $(document).ready(function () {
         $(this).prev().css("display", "inline");
         $(this).parent().parent().nextUntil(".account_flag").css("display", "none")
     })
-})
+});
+
+var widget = {};
+widget["messageBar"] = {};
+widget.messageBar["init"] = function(){
+    var domMB = $("#messageBar");
+    if (!domMB ) return false;
+    domMB.children().last().on("click",function(e){
+      widget.messageBar.hide();
+   })
+  return true;
+};
+
+// when click the icon, the hide event will be triggered
+widget.messageBar["hide"] = function(){
+    var domMB = $("#messageBar");
+    if (!domMB ) return false;
+    domMB.css("display","none");
+   return true;
+};
+
+// When ajax success, the show event will be triggered
+widget.messageBar["show"] = function(options){
+    var domMB = $("#messageBar");
+    if (!domMB || !options) return false;
+   domMB.children().first().text(options.message);
+   domMB.css("display", "block");
+    switch (options.type) {
+      case "ok":
+        // set ok icon
+        break;
+      case "error":
+        // set error icon
+        break;
+      case "warning":
+        // set error icon
+        break;
+    }
+    return true;
+};

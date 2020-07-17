@@ -64,17 +64,20 @@
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="myModalLabel"></h4>
                 </div>
+                <form>
                 <div class="modal-body text-center">
                     <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
                     <p><span style="color: red">*</span>备注：
-                        <textarea id="comment_text" cols="25" rows="1" style="line-height: 25px"></textarea>
+                        <textarea id="comment_text" cols="25" rows="1" style="line-height: 25px" required></textarea>
                     </p>
                     <p id="comments-error" style="display: none"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="cancel_job btn btn-default" data-dismiss="modal">取消</button>
-                    <button type="button" class="comment_job btn btn-primary">确认</button>
+                    <button type="submit" class="btn btn-primary">确认</button>
                 </div>
+                </form>
+
             </div>
         </div>
     </div>
@@ -87,9 +90,13 @@
             </span>
         </p>
     {% endif %}
-    <p style="color:red;"><span id='update-message'></span><span id="update-message-close"
-                                                                 class="glyphicon glyphicon-remove"
-                                                                 style="display: none"></span></p>
+
+    <!-- history action message -->
+    <div id="messageBar" style="color:red; display: none">
+       <span class="message"></span>
+       <span class="icon glyphicon glyphicon-remove"></span>
+    </div>
+
     <!-- The table of job list -->
     <table class="table table-hover">
         <tr>
@@ -122,7 +129,7 @@
                 <td>{{ job.input_data_size }}</td>
                 <td>
                     <a style="width: 100%" id="button-{{ job.job_id }}" class="job-modal" data-toggle="modal"
-                       data-target="#myModal">
+                       data-target="#myModal" data-job-id="{{ job.job_id }}" data-job-action="{{ job.is_valid | show_en_action }}">
                         {{ job.is_valid | show_action }}
                     </a>
                 </td>

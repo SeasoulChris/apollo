@@ -20,6 +20,13 @@ def get_action(is_valid):
     return "设置无效" if is_valid else "设置有效"
 
 
+def get_en_action(is_valid):
+    """
+    Get english action
+    """
+    return "Invalid" if is_valid else "Valid"
+
+
 def get_cn_action(en_action):
     """
     Get chinese action
