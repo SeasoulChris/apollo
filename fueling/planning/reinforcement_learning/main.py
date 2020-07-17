@@ -1,5 +1,6 @@
 import random
 import math
+import copy
 
 import torch
 import torch.nn as nn
@@ -9,6 +10,7 @@ import numpy as np
 from fueling.learning.network_utils import generate_lstm
 from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.reinforcement_learning.environment import *
+from fueling.planning.reinforcement_learning.rl import *
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -17,6 +19,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 BATCH_SIZE = 256
 LR = 0.01                   # learning rate
 BUFFER_CAPACITY = 1000000     # capacity of replay buffer, integer!
+TARGET_REPLACE_ITER = 100   # regulate frequency to update the target network
 
 
 class OUNoise(object):
@@ -155,68 +158,7 @@ class RLNetwork(nn.Module):
         return pred_traj[:, 1:, :], (ht, ct), x
 
 
-class DDPG(object):
-    def __init__(self):
-        self.eval_net, self.target_net = CriticNetwork().to(device), CriticNetwork().to(device)
-        self.policy_net = ActorNetwork().to(device)
-        self.learn_step_counter = 0     # counter to update target network
-        self.replay_buffer = ReplayBuffer(BUFFER_CAPACITY)
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
-        self.loss_func = nn.MSELoss()
-
-    def choose_action(self, x):
-        """select an action based on the current observation"""
-        pass
-
-    def learn(self):
-        """update actor and critic network"""
-        if len(self.replay_buffer) < BATCH_SIZE:
-            return
-
-        state, hidden, action, reward, next_state, next_hidden, done = \
-            self.replay_buffer.sample(BATCH_SIZE)
-
-        state = torch.FloatTensor(state).to(device)
-        next_state = torch.FloatTensor(next_state).to(device)
-        hidden = torch.FloatTensor(hidden).to(device)
-        next_hidden = torch.FloatTensor(next_hidden).to(device)
-        action = torch.FloatTensor(action).to(device)
-        reward = torch.FloatTensor(reward).unsqueeze(1).to(device)
-        done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
-
-        pred_traj, _, _ = self.rl_net(state, rl=True, hidden=hidden)
-        _, _, policy_loss = self.rl_net(state, rl=True, action=pred_traj[:, 0])
-        policy_loss = -policy_loss.mean()
-
-        next_pred_traj, _, _ = self.target_rl_net(next_state, rl=True, hidden=next_hidden)
-        next_action = next_pred_traj[:, 0]
-        _, _, target_value = self.target_rl_net(next_state, rl=True, next_action.detach())
-        expected_value = reward + (1.0 - done) * gamma * target_value
-        expected_value = torch.clamp(expected_value, min_value, max_value)
-
-        _, _, value = self.ls_net(state, rl=True, action=action)
-        value_loss = self.value_loss_func(value, expected_value.detach())
-
-        self.optimizer.zero_grad()
-        policy_loss.backward()
-        value_loss.backward()
-        self.optimizer.step()
-
-        # update target net
-        if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
-            self.target_rl_net.load_state_dict(self.rl_net.state_dict())
-        self.learn_step_counter += 1
-
-    def save(self, filename):
-        """save model"""
-        pass
-
-    def load(self):
-        """load model"""
-        pass
-
-
-if __name__ == '__main__':
+def main():
     # training loop
     env = ADSEnv()
     rl = DDPG()  # initiate the RL framework
@@ -247,3 +189,7 @@ if __name__ == '__main__':
         if i_episode % 50 == 0:
             print("Episode finished after {} timesteps".format(time_count + 1))
     env.close()
+
+
+if __name__ == '__main__':
+    main()
