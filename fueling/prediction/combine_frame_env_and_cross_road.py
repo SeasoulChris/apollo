@@ -97,7 +97,7 @@ class CombineFrameEnvAndCrossRoad(BasePipeline):
     def process_dir(self, frame_env_dir):
         logging.info(frame_env_dir)
         label_dir = frame_env_dir.replace('frame_envs', 'labels', 1)
-        output_dir = frame_env_dir.replace('frame_envs', 'train', 1)
+        output_dir = frame_env_dir.replace('frame_envs', 'train_cross_road', 1)
         # file_utils.makedirs(output_dir)
         mkdir_cmd = 'sudo mkdir -p {}'.format(output_dir)
         chmod_cmd = 'sudo chmod 777 {}'.format(output_dir)
