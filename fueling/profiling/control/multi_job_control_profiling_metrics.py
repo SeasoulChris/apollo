@@ -41,7 +41,9 @@ flags.DEFINE_boolean('ctl_metrics_filter_by_MRAC', False,
                      'decide whether filtering out all the data without enabling MRAC control')
 flags.DEFINE_string('ctl_metrics_weighted_score', 'MRAC_SCORE',
                     'select the score weighting method from control_channel_conf.py')
-flags.DEFINE_boolean('ctl_metrics_save_report', True, 'whether to save h5 files')
+
+flags.DEFINE_boolean('ctl_metrics_save_report', True,
+                     'whether to save h5 files')
 
 
 class MultiJobControlProfilingMetrics(BasePipeline):
@@ -53,38 +55,54 @@ class MultiJobControlProfilingMetrics(BasePipeline):
 
         if flags.FLAGS.ctl_metrics_simulation_only_test:
             """Control Profiling: works on the 'auto-tuner + simulation' mode"""
-            origin_dir = flags.FLAGS.input_data_path
-            target_dir = flags.FLAGS.output_data_path
-            todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks.split(',')
+
+            """Step 1: Path initialization to generate the input/output paths:"""
+            #   (1) target_dir: abs path
+            #   (2) todo_task_dir: abs path where the base_dir is task_name
+            our_storage = self.our_storage()
+            origin_dir = our_storage.abs_path(flags.FLAGS.input_data_path)
+            target_dir = our_storage.abs_path(flags.FLAGS.output_data_path)
+            conf_dir = our_storage.abs_path(flags.FLAGS.ctl_metrics_conf_path)
+            todo_tasks = flags.FLAGS.ctl_metrics_todo_tasks.replace(
+                ' ', '', 1).split(',')
             vehicle_type = flags.FLAGS.ctl_metrics_simulation_vehicle
-            job_email = ''
-            # RDD(vehicle_type, tasks), the task dirs
-            todo_task_dirs = self.to_rdd([
-                os.path.join(origin_dir, task) for task in todo_tasks
-            ]).keyBy(lambda dirs: vehicle_type)
-            if logging.level_debug():
-                logging.debug(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
-            # RDD(target_vehicle_path), the target_vehicle dirs for .conf file
-            generated_vehicle_dir = self.to_rdd([
-                os.path.join(target_dir, vehicle_type)
-            ])
-            if logging.level_debug():
-                logging.debug(F'generated_vehicle_dir: {generated_vehicle_dir.collect()}')
+            # RDD(targets, tasks), the target_task dirs
+            complete_target_task = self.to_rdd([
+                (os.path.join(target_dir, task), os.path.join(origin_dir, task))
+                for task in todo_tasks])
 
+            if logging.level_debug():
+                logging.debug(
+                    F'complete_target_task: {complete_target_task.collect()}')
+
+            if not complete_target_task.collect():
+                logging.info('Control Profiling Metrics: No Results')
+                return
+
+            """Step 2: Copy the vehicle_param conf to target folder"""
+            #   source_path: vehicle_type dir of the given conf path
+            #   destination_path: the output path
             # PairRDD(source_vehicle_param_conf, dest_vehicle_param_conf))
-            src_dst_rdd = generated_vehicle_dir.keyBy(
-                lambda path: os.path.join(self.FLAGS.get('ctl_metrics_conf_path'),
-                                          os.path.basename(path).lower().replace(' ', '_', 1)))
+            src_dst_rdd = complete_target_task.keys().keyBy(
+                lambda dst: os.path.join(conf_dir, vehicle_type.lower().replace(' ', '_', 1)))
 
-            # Create dst dirs and copy conf file to them.
+            # Copy conf file to destination folder.
             src_dst_rdd.values().foreach(file_utils.makedirs)
             src_dst_rdd.foreach(
                 lambda src_dst: shutil.copyfile(
                     os.path.join(src_dst[0], feature_utils.CONF_FILE),
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
+
+            """Step 3: Process data with profiling algorithm"""
+            self.process(complete_target_task)
+
         else:
             """Control Profiling: works on the 'external/internal-user road-test' mode"""
+
+            """Step 1: Path initialization to generate the input/output paths:"""
+            #   (1) target_dir: abs path with the base_dir of data-processing date
+            #   (2) origin_dir: abs path with the base_dir of test_name
             original_prefix = (self.FLAGS.get('input_data_path')
                                or 'modules/control/profiling/multi_job')
 
@@ -93,7 +111,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             # processing same data repeatedly
             job_id = (self.FLAGS.get('job_id') if self.is_partner_job() else
                       self.FLAGS.get('job_id')[:4])
-            job_email = partners.get(job_owner).email if self.is_partner_job() else ''
+            job_email = partners.get(
+                job_owner).email if self.is_partner_job() else ''
             logging.info(F'email address of job owner: {job_email}')
 
             output_prefix = (self.FLAGS.get('output_data_path')
@@ -113,17 +132,24 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             #             partner: /mnt/partner/profiling/multi_job
             logging.info(F'origin_dir: {origin_dir}')
 
-            # Sanity Check
+            """Step 2: Sanity Check"""
+            #   Exit with error emails if doesn't pass the sanity check
             sanity_status = sanity_check(origin_dir,
                                          feature_utils.CONF_FILE, feature_utils.CHANNELS)
             if sanity_status is 'OK':
                 logging.info('Sanity_Check: Passed.')
             else:
                 logging.error(sanity_status)
-                summarize_tasks([], origin_dir, target_dir, job_email, sanity_status)
+                summarize_tasks([], origin_dir, target_dir,
+                                job_email, sanity_status)
                 logging.info('Control Profiling Metrics: No Results')
                 return
 
+            """Step 3: Parse multiple vehicle types to extend the input/output paths: """
+            #   (1) origin_vehicle_dir: key: vehicle_type,
+            #                           value: relative path with base_dir of vehicle type
+            #   (2) target_vehicle_dir: key: vehicle_type,
+            #                           value: relative path with base_dir of vehicle type
             # RDD(origin_dir)
             origin_vehicle_dir = spark_helper.cache_and_log(
                 'origin_vehicle_dir',
@@ -147,8 +173,12 @@ class MultiJobControlProfilingMetrics(BasePipeline):
             )
             # target_vehicle_abs_dir: [('Mkz7',
             # '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7'),...]
-            logging.info(F'target_vehicle_abs_dir: {target_vehicle_abs_dir.collect()}')
+            logging.info(
+                F'target_vehicle_abs_dir: {target_vehicle_abs_dir.collect()}')
 
+            """Step 4: Copy the vehicle_param conf to vehicle_type folder"""
+            #   source_path: vehicle_type dir of the input path
+            #   destination_path: vehicle_type of the output path
             origin_vehicle_abs_dir = origin_vehicle_dir.mapValues(
                 object_storage.abs_path)
             # PairRDD(origin_vehicle_abs_dir, dest_vehicle_abs_dir)
@@ -165,7 +195,9 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                     os.path.join(src_dst[0], feature_utils.CONF_FILE),
                     os.path.join(src_dst[1], feature_utils.CONF_FILE)))
 
-            """ get todo jobs """
+            """Step 5: for input path, generate the detailed todo_task dirs"""
+            #   todo_task_dirs: key: vehicle_type
+            #                   value: abs path with the base_dir of scenatio-timestamp
             todo_task_dirs = spark_helper.cache_and_log(
                 'todo_jobs',
                 # PairRDD(vehicle_type, relative_path_to_vehicle_type)
@@ -179,8 +211,11 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 .mapValues(os.path.dirname)
                 .distinct()
             )
+            # todo_task_dirs:[('Mkz7', '/mnt/bos/modules/control/profiling/multi_job
+            #   /Mkz7/2019-05-01/20190501110414'), ...]
             logging.info(F'todo_task_dirs: {todo_task_dirs.collect()}')
 
+            # Addtional process for internal daily-test
             if not self.is_partner_job():
                 processed_dirs = spark_helper.cache_and_log(
                     'processed_dirs',
@@ -202,7 +237,7 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                 )
                 # if processed same key before, result just like
                 # [('Mkz7', '/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19
-                # /Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414'),...]
+                #   /Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414'),...]
                 logging.info(F'processed_dirs: {processed_dirs.collect()}')
 
                 if not processed_dirs.isEmpty():
@@ -211,9 +246,11 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                         """to vehicle=>abs target"""
                         # parameter vehicle_controller_parsed like
                         # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
-                        vehicle, (vehicle_controller_parsed, task) = target_task
+                        vehicle, (vehicle_controller_parsed,
+                                  task) = target_task
                         # vehicle = vehicle_controller_parsed.split('/')[0]
-                        target_ = os.path.join(target_dir, vehicle_controller_parsed)
+                        target_ = os.path.join(
+                            target_dir, vehicle_controller_parsed)
                         return vehicle, target_
 
                     target_vehicle_dir = spark_helper.cache_and_log(
@@ -233,10 +270,13 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                         .map(_reorg_rdd_by_vehicle)
                         .distinct()
                     )
-                    logging.info(F'target_vehicle_dir: {target_vehicle_dir.collect()}')
+                    logging.info(
+                        F'target_vehicle_dir: {target_vehicle_dir.collect()}')
 
-                    todo_task_dirs = target_vehicle_dir.subtract(processed_dirs)
-                    logging.info(F'todo_task_dirs after subtracting: {todo_task_dirs.collect()}')
+                    todo_task_dirs = target_vehicle_dir.subtract(
+                        processed_dirs)
+                    logging.info(
+                        F'todo_task_dirs after subtracting: {todo_task_dirs.collect()}')
 
                     # REMOVE CONTROLLER AND REPLACE ORIGIN PREFIX
                     todo_task_dirs = spark_helper.cache_and_log(
@@ -247,48 +287,64 @@ class MultiJobControlProfilingMetrics(BasePipeline):
                         # PairRDD(vehicle_type, origin directory)
                         .mapValues(multi_vehicle_utils.get_target_removed_controller)
                     )
-                    logging.info(F'todo_task_dirs after postprocess: {todo_task_dirs.collect()}')
+                    logging.info(
+                        F'todo_task_dirs after postprocess: {todo_task_dirs.collect()}')
 
-            logging.info(F'todo_tasks to run: {todo_task_dirs.values().collect()}')
+            logging.info(
+                F'todo_tasks to run: {todo_task_dirs.values().collect()}')
 
             if not todo_task_dirs.collect():
                 error_msg = 'No grading results: no new qualified data uploaded.'
-                summarize_tasks([], origin_dir, target_dir, job_email, error_msg)
+                summarize_tasks([], origin_dir, target_dir,
+                                job_email, error_msg)
+                logging.info('Control Profiling Metrics: No Results')
+                return
 
-        if not todo_task_dirs.collect():
-            logging.info('Control Profiling Metrics: No Results')
-            return
+            """Step 6: for output path, generate the complete target dir paired with task dir"""
+            #   complete_target_task: key: abs target path with the base_dir of timestamp
+            #                         value: abs task path with the base_dir of timestamp
+            def _reorg_target_dir(target_task):
+                """Reorganize RDD key from vehicle/controller/record_prefix to absolute path"""
+                # parameter vehicle_controller_parsed like
+                # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
+                vehicle_controller_parsed, task = target_task
+                complete_target_dir = os.path.join(
+                    target_dir, vehicle_controller_parsed)
+                return complete_target_dir, task
 
-        self.process(todo_task_dirs.values(), origin_dir, target_dir, job_email)
-        logging.info(f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
+            # RDD tasks
+            complete_target_task = (todo_task_dirs.values()
+                                    # PairRDD(vehicle_controller_parsed, tasks)
+                                    .map(lambda task:
+                                         feature_utils.parse_vehicle_controller(task, self.FLAGS))
+                                    # PairRDD(vehicle_controller_parsed, tasks)
+                                    .filter(spark_op.filter_value(lambda task:
+                                                                  os.path.exists(task)))
+                                    # PairRDD(target_dir, task)
+                                    .map(_reorg_target_dir))
+            # complete_target_task:[
+            #  ('/mnt/bos/modules/control/tmp/results/apollo/2019-11-25-10-47-19/Mkz7
+            #                                  /Lon_Lat_Controller/2019-05-01/20190501110414',
+            #   '/mnt/bos/modules/control/profiling/multi_job/Mkz7/2019-05-01/20190501110414'),...]
+            logging.info(F'complete_target_task after _reorg_target_dir:'
+                         F'{complete_target_task.collect()}')
+
+            """Step 7: Process data with profiling algorithm"""
+            self.process(complete_target_task)
+
+            """Step 8: Summarize by scanning the target directory and send out emails"""
+            summarize_tasks(complete_target_task.keys().collect(),
+                            origin_dir, target_dir, job_email)
+
+        logging.info(
+            f"Timer: total run() - {time.perf_counter() - tic_start: 0.04f} sec")
         logging.info('Control Profiling Metrics: All Done')
 
-    def process(self, todo_tasks, original_prefix, target_prefix, job_email=''):
-        """Run the pipeline with given parameters"""
+    def process(self, target_task):
+        """Process data with profiling algorithm: feature extraction and grading evaluation"""
         tic_start = time.perf_counter()
 
-        def _reorg_target_dir(target_task):
-            """Reorganize RDD key from vehicle/controller/record_prefix to absolute path"""
-            # parameter vehicle_controller_parsed like
-            # Mkz7/Lon_Lat_Controller/2019-05-01/20190501110414
-            vehicle_controller_parsed, task = target_task
-            target_dir = os.path.join(target_prefix, vehicle_controller_parsed)
-            return target_dir, task
-
-        # RDD tasks
-        reorganized_target = (todo_tasks
-                              # PairRDD(vehicle_controller_parsed, tasks)
-                              .map(lambda task:
-                                   feature_utils.parse_vehicle_controller(task, self.FLAGS))
-                              # PairRDD(vehicle_controller_parsed, tasks)
-                              .filter(spark_op.filter_value(lambda task: os.path.exists(task)))
-                              # PairRDD(target_dir, task)
-                              .map(_reorg_target_dir))
-        if logging.level_debug():
-            logging.debug(F'reorganized_target after _reorg_target_dir:'
-                          F'{reorganized_target.collect()}')
-
-        (reorganized_target
+        (target_task
          # PairRDD(target_dir, record_file)
          .flatMapValues(lambda task: glob.glob(os.path.join(task, '*record*'))
                         + glob.glob(os.path.join(task, '*bag*')))
@@ -313,12 +369,8 @@ class MultiJobControlProfilingMetrics(BasePipeline):
          .foreach(lambda grading_results:
                   grading_utils.output_gradings(grading_results, self.FLAGS)))
 
-        reorganized_target_keys = reorganized_target.keys().collect()
-
-        # Summarize by scanning the target directory
-        if not flags.FLAGS.ctl_metrics_simulation_only_test:
-            summarize_tasks(reorganized_target_keys, original_prefix, target_prefix, job_email)
-        logging.info(f"Timer: total process() - {time.perf_counter() - tic_start: 0.04f} sec")
+        logging.info(
+            f"Timer: total process() - {time.perf_counter() - tic_start: 0.04f} sec")
 
     def partition_data(self, target_msgs):
         """Divide the messages to groups each of which has exact number of messages"""
@@ -339,7 +391,8 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
         'Summary', [
             'Task', 'Records', 'HDF5s', 'Profling', 'Primary_Gradings', 'Sample_Sizes'])
     title = 'Control Profiling Gradings Results'
-    receivers = email_utils.DATA_TEAM + email_utils.CONTROL_TEAM + email_utils.D_KIT_TEAM
+    receivers = email_utils.DATA_TEAM + \
+        email_utils.CONTROL_TEAM + email_utils.D_KIT_TEAM
     receivers.append(job_email)
     if targets:
         email_content = []
@@ -353,7 +406,8 @@ def summarize_tasks(targets, original_prefix, target_prefix, job_email='', error
             target_postfix = target_dir.replace(target_prefix, '', 1)
             vehicle = target_postfix.split('/')[1]
             controller = target_postfix.split('/')[2]
-            task = original_prefix + target_postfix.replace('/' + controller, '', 1)
+            task = original_prefix + \
+                target_postfix.replace('/' + controller, '', 1)
             logging.info(F'task_dir in summarize_tasks: {task}')
             target_file = glob.glob(os.path.join(
                 target_dir, '*performance_grading.txt'))

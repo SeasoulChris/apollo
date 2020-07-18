@@ -23,7 +23,10 @@ def compute_h5_and_gradings(target_groups, flags):
     target, group_id, msgs = target_groups
     logging.info(F'computing {len(msgs)} messages for target {target}')
     profiling_conf = feature_utils.get_config_control_profiling()
-    vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(target)
+    if flags['ctl_metrics_simulation_only_test']:
+        vehicle_param = multi_vehicle_utils.get_vehicle_param(target)
+    else:
+        vehicle_param = multi_vehicle_utils.get_vehicle_param_by_target(target)
     grading_mtx = feature_utils.extract_data_at_multi_channels(msgs, flags,
                                                                profiling_conf.driving_mode,
                                                                profiling_conf.gear_position,
@@ -98,7 +101,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         station_err_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['acceleration_reference'],
-            filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             filter_mode=[0],
             norm_name='station_error',
             denorm_name=['speed_reference'],
@@ -116,7 +120,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         speed_err_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['acceleration_reference'],
-            filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             filter_mode=[0],
             norm_name='speed_error',
             denorm_name=['speed_reference'],
@@ -136,7 +141,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         lateral_err_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['curvature_reference'],
-            filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             filter_mode=[0],
             norm_name='lateral_error',
             denorm_name=['curvature_reference', 'speed_reference'],
@@ -157,7 +163,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         lateral_err_rate_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['curvature_reference'],
-            filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             filter_mode=[0],
             norm_name='lateral_error_rate',
             denorm_name=['curvature_reference', 'speed_reference'],
@@ -177,7 +184,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         heading_err_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['curvature_reference'],
-            filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             filter_mode=[0],
             norm_name='heading_error',
             denorm_name=['curvature_reference', 'speed_reference'],
@@ -197,7 +205,8 @@ def compute_h5_and_gradings(target_groups, flags):
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         heading_err_rate_std_harsh=compute_rms(grading_mtx, GradingArguments(
             filter_name=['curvature_reference'],
-            filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             filter_mode=[0],
             norm_name='heading_error',
             denorm_name=['curvature_reference', 'speed_reference'],
@@ -313,21 +322,24 @@ def compute_h5_and_gradings(target_groups, flags):
         throttle_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
             feature_name='throttle_cmd',
             filter_name=['acceleration_reference'],
-            filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             filter_mode=[0],
             weight=profiling_conf.control_command_pct
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         brake_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
             feature_name='brake_cmd',
             filter_name=['acceleration_reference'],
-            filter_value=[profiling_conf.control_metrics.acceleration_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.acceleration_harsh_limit],
             filter_mode=[0],
             weight=profiling_conf.control_command_pct
         ), profiling_conf.min_sample_size, FEATURE_IDX),
         steering_control_usage_harsh=compute_usage(grading_mtx, GradingArguments(
             feature_name='steering_cmd',
             filter_name=['curvature_reference'],
-            filter_value=[profiling_conf.control_metrics.curvature_harsh_limit],
+            filter_value=[
+                profiling_conf.control_metrics.curvature_harsh_limit],
             filter_mode=[0],
             weight=profiling_conf.control_command_pct
         ), profiling_conf.min_sample_size, FEATURE_IDX),
@@ -452,8 +464,13 @@ def output_gradings(target_grading, flags):
     """Write the grading results to files in coresponding target dirs"""
     target_dir, grading = target_grading
     # get copied vehicle parameter conf
-    vehicle_type = multi_vehicle_utils.get_vehicle_by_target(target_dir)
-    controller_type = multi_vehicle_utils.get_controller_by_target(target_dir)
+    if flags['ctl_metrics_simulation_only_test']:
+        vehicle_type = flags['ctl_metrics_simulation_vehicle']
+        controller_type = 'Sim_Controller'
+    else:
+        vehicle_type = multi_vehicle_utils.get_vehicle_by_target(target_dir)
+        controller_type = multi_vehicle_utils.get_controller_by_target(
+            target_dir)
     # Get control prifiling conf
     profiling_conf = feature_utils.get_config_control_profiling()
     grading_output_path = os.path.join(target_dir,
@@ -481,14 +498,16 @@ def output_gradings(target_grading, flags):
         # Parse and compute the penalty metrics from control profiling results
         penalty_dict = WEIGHTED_SCORE['penalty_metrics']
         for key, penalty_score in penalty_dict.items():
-            score += grading_dict[key][0] * grading_dict[key][1] * penalty_score
+            score += grading_dict[key][0] * \
+                grading_dict[key][1] * penalty_score
         # Parse and compute the fail metrics from control profiling results
         fail_dict = WEIGHTED_SCORE['fail_metrics']
         for key, fail_score in fail_dict.items():
             if grading_dict[key][0] > 0:
                 score = fail_score
         grading_dict.update({'weighted_score': (score, sample)})
-        logging.info(F'writing grading output {grading_dict} to {grading_output_path}')
+        logging.info(
+            F'writing grading output {grading_dict} to {grading_output_path}')
         with open(grading_output_path, 'w') as grading_file:
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
@@ -544,7 +563,8 @@ def highlight_gradings(task, grading_file):
         profiling_conf.vehicle_type, profiling_conf.controller_type)
 
     if not grading_file:
-        logging.warning(F'No grading files found under the targeted path for task: {task}')
+        logging.warning(
+            F'No grading files found under the targeted path for task: {task}')
         return ([], [])
     for file in grading_file:
         logging.info(F'Loading {file}')
