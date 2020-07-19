@@ -152,14 +152,17 @@ class CombineFrameEnvAndCrossRoad(BasePipeline):
                     continue
                 scene_output.append(ego_output)
 
+                positive_count = 0
                 for obstacle_history in frame_env.obstacles_history:
                     obstacle_output = self.GetObstacleOutput(obstacle_history,
                                                              cross_road_dict_merged)
                     if obstacle_output is None:
                         continue
                     scene_output.append(obstacle_output)
-
-                data_output.append(scene_output)
+                    if obstacle_output[2][0] > 0:
+                        positive_count += 1
+                if positive_count > 0:
+                    data_output.append(scene_output)
 
             logging.info('So far, data_output length = {}'.format(len(data_output)))
 

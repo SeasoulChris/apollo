@@ -30,7 +30,11 @@ class Urbansound8K(object):
             label = 1
         if filepath.find('ambulance') != -1 or filepath.find('firetruck') != -1:
             label = 1
-        signals = librosa.load(filepath, sr=self.sample_rate)
+        try:
+            signals = librosa.load(filepath, sr=self.sample_rate)
+        except:
+            logging.info("Skip too short signal")
+            return None, None
         if signals is None:
             logging.info('None signals found')
             return None, None

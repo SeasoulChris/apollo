@@ -100,6 +100,8 @@ class DumpFeatureProto(BasePipeline):
             return "XiaMen"
         if "feifengshan" in path_lower:
             return "FuZhouFeiFengShan"
+        if "houston" in path_lower:
+            return "houston"
         return "demo"
 
     def get_dirs_map(self, record_dirs):
