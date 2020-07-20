@@ -32,7 +32,7 @@ class Urbansound8K(object):
             label = 1
         try:
             signals = librosa.load(filepath, sr=self.sample_rate)
-        except(Exception)::
+        except(Exception):
             logging.info("Skip too short signal")
             return None, None
         if signals is None:
