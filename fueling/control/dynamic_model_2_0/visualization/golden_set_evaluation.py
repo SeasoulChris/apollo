@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import argparse
 import glob
 import math
 import os
+import time
 
 
 from matplotlib.collections import PatchCollection
@@ -34,12 +34,15 @@ import fueling.common.logging as logging
 class GoldenSetEvaluation():
     """ golden set evaluation results """
 
-    def __init__(self, feature_dir, standardization_factors_file, args, model_id):
+    def __init__(self, feature_dir, standardization_factors_file, gp_model_path, model_id,
+                 dm10_model_path='/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model'):
         super().__init__()
         # features numpy file include all paired data points; dimension is 23
         self.feature_dir = feature_dir
+        self.dm10_model_path = dm10_model_path
         # make dir
-        self.result_folder = os.path.join(feature_dir, model_id)
+        timestr = time.strftime('%Y%m%d-%H%M')
+        self.result_folder = os.path.join(feature_dir, model_id, timestr)
         if not os.path.exists(self.result_folder):
             os.makedirs(self.result_folder)
         self.features_file_path = os.path.join(self.feature_dir, 'features.npy')
@@ -51,14 +54,15 @@ class GoldenSetEvaluation():
         self.features = None
         self.get_non_overlapping_features()
         # TODO(Shu): expand this
-        self.args = args
+        # self.args = args
         self.DM10_xy = None
         self.DM20_dx_dy = None
         self.echo_lincoln_xy = None
         self.data_frame_length = 100
         self.raw_data_visualization = None
         self.imu_xy = None
-        self.DM20 = ValidationVisualization(self.args)
+        # gp_model_path, validation_data_path, validation_result_path
+        self.DM20 = ValidationVisualization(gp_model_path, self.feature_dir, self.feature_dir)
         # get inducing points for model initialization
         self.DM20.load_data()  # inducing points
         self.DM20.load_model()
@@ -119,17 +123,18 @@ class GoldenSetEvaluation():
         input_segment[:, input_index["u_3"]] = features[:, segment_index["steering"]]
         input_segment[:, input_index["phi"]] = features[:, segment_index["heading"]]
         _, dm01_output_segment = generate_gp_data(
-            self.args.dm10_model_path, features.copy())
+            self.dm10_model_path, features.copy())
         return input_segment, np.expand_dims(dm01_output_segment, axis=0)
 
     def load_data(self):
         logging.info(f'total data points is {len(self.features)}')
-        self.raw_data_visualization = RawDataVisualization(self.features_file_path, self.args)
+        self.raw_data_visualization = RawDataVisualization(
+            self.features_file_path, self.dm10_model_path)
         self.raw_data_visualization.feature = self.features
         self.raw_data_visualization.data_dim = self.features.shape[0]
 
     def get_imu_result(self):
-        imu_data = RawDataVisualization(self.features_file_path, self.args)
+        imu_data = RawDataVisualization(self.features_file_path, self.dm10_model_path)
         imu_data.feature = self.features
         imu_data.data_dim = self.features.shape[0]
         self.imu_xy = imu_data.imu_location()
@@ -191,8 +196,8 @@ class GoldenSetEvaluation():
         np.save(os.path.join(self.result_folder, 'upper.npy'), self.upper)
 
     def correct_non_overlap_data(self):
-        DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
-        gp_DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.args)
+        DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.dm10_model_path)
+        gp_DM10_in_DM20 = RawDataVisualization(self.features_file_path, self.dm10_model_path)
         # compasant every 100 frames
         if self.label is None:
             self.label = np.load(os.path.join(self.result_folder, 'label.npy'), allow_pickle=True)
@@ -367,7 +372,7 @@ class GoldenSetEvaluation():
         y_position = self.features[:, segment_index['y']]
         # location from dynamic model
         if self.DM10_xy is None:
-            self.DM10_xy = np.load(self.args.dm10_result_path, allow_pickle=True)
+            self.DM10_xy = np.load(self.dm10_result_path, allow_pickle=True)
         # location from echo Lincoln model
         if self.echo_lincoln_xy is None:
             logging.info(self.echo_lincoln_result_file)
@@ -412,7 +417,7 @@ class GoldenSetEvaluation():
         figure_file = os.path.join(self.result_folder, 'trajectory_plot_scaled_imu.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
-        plt.show()
+        # plt.show()
 
     def calc_accumulated_error(self, ref_trajectory, actual_trajectory):
         """ ref_trajectory[num_of_data_points, dim_of point]"""
@@ -426,78 +431,33 @@ class GoldenSetEvaluation():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='visualization')
-    # paths
-    parser.add_argument('-train',
-                        '--training_data_path',
-                        type=str)
-    parser.add_argument('-v',
-                        '--validation_data_path',
-                        type=str)
-    parser.add_argument('--validation_result_path',
-                        type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/"
-                                + "testdata/evaluation_results")
-    parser.add_argument('-plot',
-                        '--plot_path',
-                        type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/testdata/plots")
-    parser.add_argument('-dm10',
-                        '--dm10_model_path', type=str,
-                        default="/fuel/fueling/control/dynamic_model_2_0/"
-                                + "label_generation/mlp_model")
-
-    parser.add_argument('-dm10_result',
-                        '--dm10_result_path', type=str)
-
-    parser.add_argument('-dm20_result',
-                        '--dm20_result_path', type=str)
-
-    parser.add_argument('--echo_lincoln_result_path', type=str)
-
-    parser.add_argument(
-        '-test',
-        '--testing_data_path',
-        type=str)
-
-    parser.add_argument(
-        '-md',
-        '--gp_model_path',
-        type=str)
-
-    # model parameters
-    parser.add_argument('--delta_t', type=float, default=0.01)
-    parser.add_argument('--Delta_t', type=float, default=1)
-    parser.add_argument('--num_inducing_point', type=int, default=128)
-    parser.add_argument('--kernel_dim', type=int, default=20)
-
-    # optimizer parameters
-    parser.add_argument('--compute_normalize_factors', type=bool, default=True)
-    parser.add_argument('--compare', type=str, default="model")
-
-    # argument to train or test gp
-    parser.add_argument('--train_gp', type=bool, default=True)
-    parser.add_argument('--test_gp', type=bool, default=True)
-
-    # argument to use cuda or not
-    parser.add_argument('--use_cuda', type=bool, default=False)
-
-    # golden set file path
-    parser.add_argument('--golden_set_data_dir', type=str)
-    # training data standardization_factors file path
-    parser.add_argument('--normalization_factor_file_path', type=str)
-
-    args = parser.parse_args()
-    model_id = '20200706-1722'
-    # loop over each golden set scenarios
-    evaluator = GoldenSetEvaluation(args.golden_set_data_dir,
-                                    args.normalization_factor_file_path, args, model_id)
-    evaluator.load_data()
-    evaluator.get_imu_result()
-    evaluator.plot_IMU()
-    evaluator.get_DM10_result()
-    evaluator.get_echo_lincoln_result()
-    evaluator.get_DM20_result_from_features()
-    evaluator.correct_non_overlap_data()
-    evaluator.get_error_analyses()
-    evaluator.plot()
+    # model info
+    # model training data normalization factors
+    normalization_factor_file_path = '//fuel/fueling/control/dynamic_model_2_0/testdata/0708_2/train/standardization_factors.npy'
+    # DM2.0 model path
+    platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
+    # model id
+    model_id = '20200714-2009'
+    # data id
+    data_dir = '0708_2'
+    validation_data_path = os.path.join(platform_dir, data_dir, 'test')
+    logging.info(f'validation data path is {validation_data_path}')
+    # DM2.0 model
+    gp_model_path = os.path.join(validation_data_path, model_id)
+    # golden set scenarios
+    golden_set = '//fuel/fueling/control/dynamic_model_2_0/testdata/0602_golden_set'
+    for scenario in os.listdir(golden_set):
+        golden_set_data_dir = os.path.join(golden_set, scenario)
+        print(golden_set_data_dir)
+        # loop over each golden set scenarios
+        evaluator = GoldenSetEvaluation(golden_set_data_dir,
+                                        normalization_factor_file_path, gp_model_path, model_id)
+        evaluator.load_data()
+        evaluator.get_imu_result()
+        evaluator.plot_IMU()
+        evaluator.get_DM10_result()
+        evaluator.get_echo_lincoln_result()
+        evaluator.get_DM20_result_from_features()
+        evaluator.correct_non_overlap_data()
+        evaluator.get_error_analyses()
+        evaluator.plot()

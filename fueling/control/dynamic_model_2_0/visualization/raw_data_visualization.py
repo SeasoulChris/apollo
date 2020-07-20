@@ -19,12 +19,16 @@ import fueling.common.logging as logging
 class RawDataVisualization():
     """ visualize feature and label """
 
-    def __init__(self, data_file, plot_path, dm10_model_path):
+    def __init__(self, data_file, dm10_model_path, plot_path=None):
         self.data_file = data_file
         self.feature = None
         self.data_dim = None
         self.training_data_path = data_file
-        self.plot_path = plot_path
+        if plot_path is not None:
+            self.plot_path = plot_path
+        else:
+            # save plots in the data folder when not specified
+            self.plot_path = os.path.dirname(self.data_file)
         self.model_path = dm10_model_path
         # debug
         self.dm_acc = None
@@ -270,10 +274,9 @@ if __name__ == '__main__':
     #
     data_dir = '0706'
     data_file = os.path.join(platform_dir, data_dir, 'chassis1594069328.937.hdf5')
-    training_data_path = os.path.join(platform_dir, data_dir)
     plot_path = os.path.join(platform_dir, data_dir, 'plots')
     dm10_model_path = "/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model"
-    raw_data_evaluation = RawDataVisualization(data_file, plot_path, dm10_model_path)
+    raw_data_evaluation = RawDataVisualization(data_file, dm10_model_path, plot_path)
     raw_data_evaluation.get_data()
     logging.info(raw_data_evaluation.feature.shape)
     raw_data_evaluation.dynamic_model_10_location()
