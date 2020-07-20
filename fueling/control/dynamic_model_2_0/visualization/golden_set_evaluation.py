@@ -35,7 +35,7 @@ class GoldenSetEvaluation():
     """ golden set evaluation results """
 
     def __init__(self, feature_dir, standardization_factors_file, gp_model_path, model_id,
-                 dm10_model_path='/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model'):
+                 dm10_model_path):
         super().__init__()
         # features numpy file include all paired data points; dimension is 23
         self.feature_dir = feature_dir
@@ -53,8 +53,6 @@ class GoldenSetEvaluation():
 
         self.features = None
         self.get_non_overlapping_features()
-        # TODO(Shu): expand this
-        # self.args = args
         self.DM10_xy = None
         self.DM20_dx_dy = None
         self.echo_lincoln_xy = None
@@ -417,7 +415,6 @@ class GoldenSetEvaluation():
         figure_file = os.path.join(self.result_folder, 'trajectory_plot_scaled_imu.png')
         plt.savefig(figure_file)
         logging.info(f'plot is saved at {figure_file}')
-        # plt.show()
 
     def calc_accumulated_error(self, ref_trajectory, actual_trajectory):
         """ ref_trajectory[num_of_data_points, dim_of point]"""
@@ -432,14 +429,17 @@ class GoldenSetEvaluation():
 
 if __name__ == '__main__':
     # model info
-    # model training data normalization factors
-    normalization_factor_file_path = '//fuel/fueling/control/dynamic_model_2_0/testdata/0708_2/train/standardization_factors.npy'
+    DM10_model_path = '/fuel/fueling/control/dynamic_model_2_0/label_generation/mlp_model'
     # DM2.0 model path
     platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
     # model id
     model_id = '20200714-2009'
     # data id
     data_dir = '0708_2'
+    # model training data normalization factors
+    normalization_factor_file_path = os.path.join(
+        platform_dir, data_dir, 'train', standardization_factors.npy)
+
     validation_data_path = os.path.join(platform_dir, data_dir, 'test')
     logging.info(f'validation data path is {validation_data_path}')
     # DM2.0 model
@@ -451,7 +451,8 @@ if __name__ == '__main__':
         print(golden_set_data_dir)
         # loop over each golden set scenarios
         evaluator = GoldenSetEvaluation(golden_set_data_dir,
-                                        normalization_factor_file_path, gp_model_path, model_id)
+                                        normalization_factor_file_path, gp_model_path, model_id,
+                                        DM10_model_path)
         evaluator.load_data()
         evaluator.get_imu_result()
         evaluator.plot_IMU()

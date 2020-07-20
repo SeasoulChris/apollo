@@ -33,7 +33,7 @@ import fueling.control.dynamic_model_2_0.gp_regression.train_utils as train_util
 
 
 train_model = True
-test_type = "smoke_test"
+test_type = "toy_test"
 platform_dir = '/fuel/fueling/control/dynamic_model_2_0/testdata'
 data_dir = '0707_smoke_test'
 

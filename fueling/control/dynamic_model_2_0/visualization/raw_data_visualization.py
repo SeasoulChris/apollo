@@ -232,7 +232,7 @@ class RawDataVisualization():
             plt.legend(fontsize=12, numpoints=5, frameon=False)
             plt.title("GPS and IMU comparison")
             plt.grid(True)
-            plt.savefig(os.path.join(self.plot_path, dataset_name + "imu_plot.png"))
+            plt.savefig(os.path.join(self.plot_path, f"{dataset_name}_imu_plot.png"))
             plt.show()
         else:
             plt.figure()
@@ -263,9 +263,9 @@ class RawDataVisualization():
                      - y_position[0], 'y.', label='Echo-lincoln')
             plt.plot(0, 0, 'x', markersize=6, color='k')
             plt.legend(fontsize=12, numpoints=5, frameon=False)
-            plt.title("Trajectory for " + dataset_name)
+            plt.title(f"Trajectory for {dataset_name}")
             plt.grid(True)
-            plt.savefig(os.path.join(self.plot_path, dataset_name + "plot.png"))
+            plt.savefig(os.path.join(self.plot_path, f"{dataset_name}_plot.png"))
             plt.show()
 
 

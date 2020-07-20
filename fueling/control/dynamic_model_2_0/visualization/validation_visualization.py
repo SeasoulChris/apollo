@@ -57,7 +57,8 @@ class ValidationVisualization():
         # encoder model
         encoder_net_model = Encoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         # encoder_net_model = DilatedEncoder(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
-        # encoder_net_model = TransformerEncoderCNN(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
+        # encoder_net_model =
+        # TransformerEncoderCNN(u_dim=self.input_dim, kernel_dim=self.kernel_dim)
         self.model = GPModel(self.inducing_points, encoder_net_model,
                              self.kernel_dim, self.output_dim)
         self.model.load_state_dict(model_state_dict)
