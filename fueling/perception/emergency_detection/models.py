@@ -1,25 +1,10 @@
-#!/usr/bin/env python
-"""
-A simplest demo to calculate square sum of 1...n.
-
-Run at local:
-    bazel run //fueling/demo:simplest_demo
-    bazel run //fueling/demo:simplest_demo -- --square_sum_of_n=1000
-
-Run in cloud:
-    bazel run //fueling/demo:simplest_demo -- --cloud
-    bazel run //fueling/demo:simplest_demo -- --cloud --square_sum_of_n=1000
-"""
-
-from absl import flags
-
-from fueling.common.base_pipeline import BasePipeline
-
 import torch
 from torch import nn
 import torch.nn.functional as F
 from tool.torch_utils import *
 from tool.yolo_layer import YoloLayer
+import sys
+import cv2
 
 
 class Mish(torch.nn.Module):
@@ -462,9 +447,7 @@ class Yolov4(nn.Module):
         output = self.head(x20, x13, x6)
         return output
 
-def inference_yolov4():
-    import sys
-    import cv2
+if __name__ == "__main__":
 
     namesfile = None
     if len(sys.argv) == 6:
@@ -481,16 +464,8 @@ def inference_yolov4():
         width = int(sys.argv[5])
         namesfile = int(sys.argv[6])
     else:
-        print('use default value ')
-        #print('  python models.py num_classes weightfile imgfile namefile')
-        n_classes = 80
-        THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-        weightfile = os.path.join(THIS_FOLDER, 'pretrain_model/yolov4.pth')
-        #weightfile = 'pretrain_model/yolov4.pth'
-        imgfile = 'data/dog.jpg'
-        height = 320
-        width = 512
-
+        print('Usage: ')
+        print('  python models.py num_classes weightfile imgfile namefile')
 
     model = Yolov4(yolov4conv137weight=None, n_classes=n_classes, inference=True)
 
@@ -528,14 +503,3 @@ def inference_yolov4():
 
     class_names = load_class_names(namesfile)
     plot_boxes_cv2(img, boxes[0], 'predictions.jpg', class_names)
-
-class EmergencyVehicleDetector(BasePipeline):
-    """Demo pipeline."""
-
-    def run(self):
-        inference_yolov4()
-
-
-if __name__ == '__main__':
-    #EmergencyVehicleDetector().main()
-    inference_yolov4()

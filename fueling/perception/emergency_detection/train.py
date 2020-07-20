@@ -1,19 +1,3 @@
-#!/usr/bin/env python
-"""
-A simplest demo to calculate square sum of 1...n.
-
-Run at local:
-    bazel run //fueling/demo:simplest_demo
-    bazel run //fueling/demo:simplest_demo -- --square_sum_of_n=1000
-
-Run in cloud:
-    bazel run //fueling/demo:simplest_demo -- --cloud
-    bazel run //fueling/demo:simplest_demo -- --cloud --square_sum_of_n=1000
-"""
-
-from absl import flags
-
-from fueling.common.base_pipeline import BasePipeline
 # -*- coding: utf-8 -*-
 '''
 @Time          : 2020/05/06 15:07
@@ -41,7 +25,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch import optim
 from torch.nn import functional as F
-#from tensorboardX import SummaryWriter
+from tensorboardX import SummaryWriter
 from easydict import EasyDict as edict
 
 from dataset import Yolo_dataset
@@ -54,18 +38,8 @@ from tool.tv_reference.coco_utils import convert_to_coco_api
 from tool.tv_reference.coco_eval import CocoEvaluator
 
 
-
 from absl import flags
-flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
-flags.DEFINE_string('load', None, 'Load model from a .pth file')
 flags.DEFINE_integer('gpu_id', -1, 'GPU')
-flags.DEFINE_string('data_dir', None, 'dataset dir')
-flags.DEFINE_string('pretrained', None, 'pretrained yolov4.conv.137')
-flags.DEFINE_integer('classes', 80, 'number of classes')
-flags.DEFINE_string('train_label_path', 'train.txt', 'train label path')
-flags.DEFINE_string('optimizer', 'adam', 'training optimizer')
-flags.DEFINE_string('iou_type', 'iou', 'iou type (iou, giou, diou, ciou)')
-flags.DEFINE_integer('keep_checkpoint_max', 10, 'maximum number of checkpoints to keep. If set 0, all checkpoints will be kept')
 
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True, GIoU=False, DIoU=False, CIoU=False):
@@ -319,7 +293,6 @@ def collate(batch):
 
 
 def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=20, img_scale=0.5):
-    print(config)
     train_dataset = Yolo_dataset(config.train_label, config, train=True)
     val_dataset = Yolo_dataset(config.val_label, config, train=False)
 
@@ -332,12 +305,9 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
     val_loader = DataLoader(val_dataset, batch_size=config.batch // config.subdivisions, shuffle=True, num_workers=8,
                             pin_memory=True, drop_last=True, collate_fn=val_collate)
 
-    '''
     writer = SummaryWriter(log_dir=config.TRAIN_TENSORBOARD_DIR,
                            filename_suffix=f'OPT_{config.TRAIN_OPTIMIZER}_LR_{config.learning_rate}_BS_{config.batch}_Sub_{config.subdivisions}_Size_{config.width}',
                            comment=f'OPT_{config.TRAIN_OPTIMIZER}_LR_{config.learning_rate}_BS_{config.batch}_Sub_{config.subdivisions}_Size_{config.width}')
-    '''
-
     # writer.add_images('legend',
     #                   torch.from_numpy(train_dataset.label2colorlegend2(cfg.DATA_CLASSES).transpose([2, 0, 1])).to(
     #                       device).unsqueeze(0))
@@ -359,7 +329,6 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
         Train label path:{config.train_label}
         Pretrained:
     ''')
-
 
     # learning rate setup
     def burnin_schedule(i):
@@ -424,7 +393,6 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
                     model.zero_grad()
 
                 if global_step % (log_step * config.subdivisions) == 0:
-                    '''
                     writer.add_scalar('train/Loss', loss.item(), global_step)
                     writer.add_scalar('train/loss_xy', loss_xy.item(), global_step)
                     writer.add_scalar('train/loss_wh', loss_wh.item(), global_step)
@@ -432,7 +400,6 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
                     writer.add_scalar('train/loss_cls', loss_cls.item(), global_step)
                     writer.add_scalar('train/loss_l2', loss_l2.item(), global_step)
                     writer.add_scalar('lr', scheduler.get_lr()[0] * config.batch, global_step)
-                    '''
                     pbar.set_postfix(**{'loss (batch)': loss.item(), 'loss_xy': loss_xy.item(),
                                         'loss_wh': loss_wh.item(),
                                         'loss_obj': loss_obj.item(),
@@ -448,9 +415,7 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
                                           scheduler.get_lr()[0] * config.batch))
 
                 pbar.update(images.shape[0])
-                break
 
-            '''
             if cfg.use_darknet_cfg:
                 eval_model = Darknet(cfg.cfgfile, inference=True)
             else:
@@ -477,7 +442,6 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
             writer.add_scalar('train/AR_small', stats[9], global_step)
             writer.add_scalar('train/AR_medium', stats[10], global_step)
             writer.add_scalar('train/AR_large', stats[11], global_step)
-            '''
 
             if save_cp:
                 try:
@@ -497,7 +461,7 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp=True, log_step=
                     except:
                         logging.info(f'failed to remove {model_to_remove}')
 
-    #writer.close()
+    writer.close()
 
 
 @torch.no_grad()
@@ -565,8 +529,6 @@ def evaluate(model, data_loader, cfg, device, logger=None, **kwargs):
 
 def get_args(**kwargs):
     cfg = kwargs
-    
-    '''
     parser = argparse.ArgumentParser(description='Train the Model on images and target masks',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=2,
@@ -595,23 +557,6 @@ def get_args(**kwargs):
         help='maximum number of checkpoints to keep. If set 0, all checkpoints will be kept',
         dest='keep_checkpoint_max')
     args = vars(parser.parse_args())
-    '''
-
-    '''
-    args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/mnt/bos/modules/perception/emergency_detection/data/coins', 
-    'pretrained': '/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
-    'train_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/train.txt', 
-    'val_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/val.txt', 
-    'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
-    
-
-    '''
-    args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/fuel/fueling/perception/emergency_detection/data/coins', 
-    'pretrained': '/fuel/fueling/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
-    'train_label': '/fuel/fueling/perception/emergency_detection/data/coins/train.txt', 
-    'val_label': '/fuel/fueling/perception/emergency_detection/data/coins/val.txt', 
-    'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
-    
 
     # for k in args.keys():
     #     cfg[k] = args.get(k)
@@ -659,7 +604,8 @@ def _get_date_str():
     now = datetime.datetime.now()
     return now.strftime('%Y-%m-%d_%H-%M')
 
-def train_yolov4():
+
+if __name__ == "__main__":
     logging = init_logger(log_dir='log')
     cfg = get_args(**Cfg)
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
@@ -687,15 +633,3 @@ def train_yolov4():
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-
-
-class EmergencyVehicleDetector(BasePipeline):
-    """Demo pipeline."""
-
-    def run(self):
-        train_yolov4()
-
-
-if __name__ == '__main__':
-    EmergencyVehicleDetector().main()
-    #train_yolov4()
