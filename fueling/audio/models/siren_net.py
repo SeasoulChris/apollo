@@ -186,9 +186,10 @@ class SirenNet(nn.Module):
                                                              hop_length=512, n_mels=64)
 
     def forward(self, X):
+        eps = 1e-8
         wavenet_out = self.wavenet(X)
         mfcc_out = self.mfcc(X)
-        log_mel_out = torch.log(self.mel_spec(X))
+        log_mel_out = torch.log(self.mel_spec(X) + eps)
         spec_features = torch.cat([mfcc_out, log_mel_out], -2)
         mlnet_out = self.mlnet(spec_features)
         out = (wavenet_out + mlnet_out) / 2.0
