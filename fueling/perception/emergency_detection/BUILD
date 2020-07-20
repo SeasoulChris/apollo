@@ -41,6 +41,14 @@ py_binary(
     ]
 )
 
+py_binary(
+    name = "dataloader_cloud_test",
+    srcs = ["dataloader_cloud_test.py"],
+    deps = [
+        "//fueling/common:base_pipeline"
+    ]
+)
+
 py_test(
     name = "emergency_detection_test",
     srcs = ["emergency_detection_test.py"],
