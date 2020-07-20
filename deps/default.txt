@@ -3,3 +3,9 @@ psycopg2-binary
 
 # TODO(xiaoxq): Required by data/libeling
 # pypcd
+
+
+# TODO(v_shenyu01): Required by emergency vehicle detection
+tensorboardX
+easydict
+pycocotools
