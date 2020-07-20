@@ -1,4 +1,5 @@
 import threading
+import math
 
 import keyboard
 
@@ -15,25 +16,15 @@ class ADSEnv(object):
         self.reward = 0
         self.violation_rule = False
         self.arrival = False
-
-        # for callback_planning
-        self.pointx = []
-        self.pointy = []
-        self.pointspeed = []
-        self.pointtime = []
-        self.pointtheta = []
-        self.pointcurvature = []
-        self.pointacceleration = []
-        self.planningavailable = False
-        self.lock = threading.Lock()
+        self.speed = 0
+        self.is_env_ready = False
 
         cyber.init()
         rl_node = cyber.Node("rl_node")
-        # TODO (Una/Yifei): Confirm the location of the proto
-        gradingsub = rl_node.create_reader("/apollo/simulator",
+        gradingsub = rl_node.create_reader("/apollo/grading",
                                            grading_result.FrameResult, self.callback_grading)
-        planningsub = rl_node.create_reader("/apollo/planning",
-                                            grading_result.FrameResult, self.callback_planning)
+        chassissub = rl_node.create_reader("/apollo/canbus/chassis",
+                                           chassis.Chassis, self.callback_chassis)
 
     def step(self, action):
         """
@@ -41,6 +32,7 @@ class ADSEnv(object):
         done: an indicator denotes whether this episode is finished
         info: debug information
         """
+        self.is_env_ready = False
         # key input: space
         keyboard.press_and_release('space')
         # send planning msg (action)
@@ -49,11 +41,47 @@ class ADSEnv(object):
         planning.header.timestamp_sec = cyber_time.Time.now().to_sec()
         planning.header.module_name = "planning"
         planning.total_path_time = 2
-        planning.trajectory_point = action
-        planning.path_point = 10
+
+        # TODO(Jinyun): check the decomposition of action
+        # TODO(Jiaming): revise and add more info for the traj_point
+        for dx, dy, dheading, speed in action:
+            point = planning.trajectory_point.add()
+            point.path_point.x = dx
+            point.path_point.y = dy
+            point.path_point.theta = dheading
+            point.v = speed
+            point.relative_time = 0.2
+            plannning.trajectory_point.append(point)
+
+        accumulated_s = 0.0
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            accumulated_s += math.sqrt((nextpoint.x - point.x) ** 2 + (nextpoint.y - point.y) ** 2)
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            point.a = (nextpoint.v - point.v) / 0.2
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            point.da = (nextpoint.a - point.a) / 0.2
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            point.kappa = nextpoint.theta - point.theta
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            point.dkappa = (nextpoint.theta - point.theta) / (nextpoint.s - point.s)
+        for i in range(0, len(planning.trajectory_point)):
+            point = planning.trajectory_point[i]
+            nextpoint = planning.trajectory_point[i + 1]
+            point.ddkappa = (nextpoint.dkappa - point.dkappa) / (nextpoint.s - point.s)
+
         writer.write(planning)
 
-        while not self.is_env_ready():
+        while not self.is_env_ready:
             time.sleep(0.1)  # second
 
         next_state = self.semantic_map()
@@ -68,10 +96,6 @@ class ADSEnv(object):
 
         return next_state, self.reward, done, info
 
-    def received(self, msg):
-        """env msg (perception, prediction, chassis, ...)"""
-        pass
-
     def reset(self):
         self.close()
         self.__init__()
@@ -85,39 +109,6 @@ class ADSEnv(object):
     def semantic_map():
         # TODO (Jinyun): generate semantic_map/img_feature
         return self.state
-
-    def callback_planning(self, entity):
-        """
-        New Planning Trajectory
-        """
-        basetime = entity.header.timestamp_sec
-        numpoints = len(entity.trajectory_point)
-        with self.lock:
-            self.pointx = numpy.zeros(numpoints)
-            self.pointy = numpy.zeros(numpoints)
-            self.pointspeed = numpy.zeros(numpoints)
-            self.pointtime = numpy.zeros(numpoints)
-            self.pointtheta = numpy.zeros(numpoints)
-            self.pointcurvature = numpy.zeros(numpoints)
-            self.pointacceleration = numpy.zeros(numpoints)
-
-            for idx in range(numpoints):
-                self.pointx[idx] = entity.trajectory_point[idx].path_point.x
-                self.pointy[idx] = entity.trajectory_point[idx].path_point.y
-                self.pointspeed[idx] = entity.trajectory_point[idx].v
-                self.pointtheta[idx] = entity.trajectory_point[
-                    idx].path_point.theta
-                self.pointcurvature[idx] = entity.trajectory_point[
-                    idx].path_point.kappa
-                self.pointacceleration[idx] = entity.trajectory_point[
-                    idx].a
-                self.pointtime[
-                    idx] = entity.trajectory_point[idx].relative_time + basetime
-
-        if numpoints == 0:
-            self.planningavailable = False
-        else:
-            self.planningavailable = True
 
     def callback_grading(self, entity):
         self.reward = 0
@@ -157,3 +148,8 @@ class ADSEnv(object):
             self.reward += 100
             self.arrival = True
         self.reward -= 0.1 * dist_lane_center
+        self.reward += 0.1 * self.speed
+        self.is_env_ready = True
+
+    def callback_chassis(self. entity):
+        self.speed = entity.speed_mps
