@@ -64,15 +64,20 @@ class AccountUtils(object):
                                          'services': services}})
         logging.info(f"save_account_service: {services}")
 
-    def save_account_operation(self, account_id, email, comments, action_type):
+    def save_account_operation(self, account_id, email, comments, action_type, status=None):
         """Save account operation"""
         update_dict = {'email': email,
                        'time': datetime.datetime.now(),
                        'comments': comments,
                        'action': {'type': action_type}}
-        self.db.update_one({'_id': ObjectId(account_id)},
-                           {'$push': {'operations': update_dict}})
-        logging.info(f"save_account_operation: {update_dict}")
+        result = self.db.update_one({'_id': ObjectId(account_id)},
+                                    {'$push': {'operations': update_dict},
+                                     '$set': {'status': status}})
+        logging.info(f"save_account_operation: {update_dict},"
+                     f"status: {status}")
+        if result.raw_result['nModified'] == 1:
+            update_dict['status'] = status
+            return update_dict
 
     def get_account_info(self, prefix):
         """get account info"""

@@ -8,6 +8,10 @@ py_library(
         "//apps/k8s/admin_console:application",
         "//apps/k8s/admin_console/common:paginator",
         "//apps/k8s/admin_console/controllers:account",
+        "//apps/k8s/admin_console/utils:time_utils",
+        "//fueling/common:account_utils",
+        "//fueling/common:logging",
+
     ],
 )
 

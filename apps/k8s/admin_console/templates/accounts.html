@@ -31,24 +31,38 @@
 </div>
 
 <!-- The comment on the modal box -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="accountModal" tabindex="-1" role="dialog" aria-labelledby="accountModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel"></h4>
+                <h4 class="modal-title" id="accountModalLabel">user</h4>
             </div>
-            <div class="modal-body text-center">
-                <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
-                <p><span style="color: red">*</span>备注：
-                    <textarea id="account-comment-text" cols="25" rows="1" style="line-height: 25px"></textarea>
-                </p>
-                <p id="comments-error" style="display: none"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="cancel_job btn btn-default" data-dismiss="modal">取消</button>
-                <button type="button" class="comment_job btn btn-primary">确认</button>
-            </div>
+            <form>
+                <div class="modal-body">
+                    <p style="text-align: center">
+                        <label for="action-name" class="action-label">你确定要禁用这个用户吗?</label>
+                    </p>
+                    <p>
+                        <span style="font-weight:bold">基本信息</span>
+                        <span class="verhicle-sn" style="display: block">车辆信息</span>
+                        <span class="com-name" style="display: block">公司名字</span>
+                        <span class="com-email" style="display: block">公司邮箱</span>
+                        <span class="bos-name" style="display: block">BOS名字</span>
+                        <span class="bos-region" style="display: block">BOS区域</span>
+                        <span class="account-status" style="display: block">账号状态</span>
+                    </p>
+                    <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
+                    <p><span style="color: red">*</span>备注：
+                        <textarea id="account-comment-text" cols="25" rows="1" style="line-height: 25px"></textarea>
+                    </p>
+                    <p id="comments-error" style="display: none"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn-account-action btn btn-primary">确认</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -85,22 +99,41 @@
         <td>{{ account.com_email }}</td>
         <td>{{ account.bos_bucker_name }}</td>
         <td>{{ account.bos_region }}</td>
-        <td>{{ account.status }}</td>
+        <td id="status-{{ account._id }}">{{ account.status }}</td>
         <td>{{ account.apply_date }}</td>
         <td>{{ account.due_date }}</td>
         <td>
             {% if account.status == "Enabled" %}
-            <a style="width: 100%" id="account-action1-{{ account._id }}" class="account-modal" data-toggle="modal"
-               data-target="#myModal">
-                Disable
-            </a>
-            <a style="width: 100%" id="account-action2-{{ account._id }}" class="account-modal" data-toggle="modal"
-               data-target="#myModal">
+            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
+                data-target="#accountModal" data-label="Disable" data-verhicle_sn="{{ account.vehicle_sn }}"
+                data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
+                data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
+                data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
+                 Disable
+             </a>             
+            <a style="width: 100%" id="button-edit-{{ account._id }}" class="account-modal" data-toggle="modal">
                 Edit
+            </a>
+            {% elif account.status == "Pending" or "Disabled" %}
+                {% if account.status == "Pending" %}
+                    <a style="width: 100%" id="button-reject-{{ account._id }}" class="account-modal" data-toggle="modal"
+                    data-target="#accountModal" data-label="Reject" data-verhicle_sn="{{ account.vehicle_sn }}"
+                    data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
+                    data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
+                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
+                        Reject
+                    </a>
+                {% endif %}
+            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
+               data-target="#accountModal" data-label="Enable" data-verhicle_sn="{{ account.vehicle_sn }}"
+               data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
+               data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
+               data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
+                Enable
             </a>
             {% else %}
             <a style="width: 100%" id="account-action-{{ account._id }}" class="account-modal" data-toggle="modal"
-               data-target="#myModal">
+               data-target="#accountModal" data-label="{{ account.status }}" data-account_id="{{ account._id }}">
                 {{ account.status | show_account_action }}
             </a>
             {% endif %}
@@ -132,7 +165,7 @@
     {% for opt in account.operations %}
     <tr style="display: none" class="account_operation_span">
         <td colspan="10" style="border-top: none">
-            任务被{{ opt.email }}在{{ opt.time }}设置为{{ opt.action.type }}。备注是：{{ opt.comments }}。
+            用户账号被{{ opt.email }}在{{ opt.time }}{{ opt.action.type }}。备注是：{{ opt.comments }}。
         </td>
     </tr>
     {% endfor %}

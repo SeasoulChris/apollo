@@ -82,6 +82,127 @@ $(document).ready(function () {
     });
 
     // show the modal
+    $('#accountModal').on('show.bs.modal', function (e) {
+        var button = $(e.relatedTarget);
+        var account_data = {};
+        var label_action = {
+            "Enable": "开通",
+            "Reject": "打回",
+            "Disable": "停用"
+        };
+
+        var status_action = {
+            "Enable": "Enabled",
+            "Reject": "Rejected",
+            "Disable": "Disabled"
+        };
+
+        var status_btn_action = {
+            "Enabled": "Disable",
+            "Rejected": "",
+            "Disabled": "Enable"
+        };
+
+        // Get the user basic infomation from dialog
+        account_data["label"] = button.data("label");
+        account_data["verhicle_sn"] = button.data("verhicle_sn");
+        account_data["com_name"] = button.data("com_name");
+        account_data["com_email"] = button.data("com_email");
+        account_data["bos_bucker_name"] = button.data("bos_bucker_name");
+        account_data["bos_region"] = button.data("bos_region");
+        account_data["account_status"] = button.data("account_status");
+        account_data["account_id"] = button.data("account_id");
+        account_data["action"] = status_action[account_data["label"]];
+
+        var modal = $(this);
+        
+        var str_label = label_action[account_data["label"]];
+        var str_label_type = account_data["label"] == "Reject" ? "申请" : "服务";
+
+        // Apply the chinese action
+        modal.find('.modal-title').text(str_label + "用户" + str_label_type);
+        modal.find('.action-label').text("您确定要" + str_label + "这个用户" + str_label_type + "吗？");
+        modal.find('.verhicle-sn').text("车辆信息:" + account_data["verhicle_sn"]);
+        modal.find('.com-name').text("公司名字:" + account_data["com_name"]);
+        modal.find('.com-email').text("公司邮箱:" + account_data["com_email"]);
+        modal.find('.bos-name').text("BOS名字:" + account_data["bos_bucker_name"]);
+        modal.find('.bos-region').text("BOS区域:" + account_data["bos_region"]);
+        modal.find('.account-status').text("账号状态:" + account_data["account_status"]);
+        modal.find('.btn-account-action').text(str_label);
+
+        // Submit the form for verification field and post ajax request
+        $("form", this).first().one("submit", function(e){
+            account_data["comment"] = $("#account-comment-text").val();
+            $.ajax({
+                url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/update_status",
+                dataType: "json",
+                type: "POST",
+                data: account_data,
+                beforeSend: function () {
+                    $("#account-comment-text").attr("disabled", "disabled");
+                },
+                success: function (result) {
+                     // The action to be executed
+                     var not_action = status_btn_action[account_data["action"]];
+                     // The status to be set
+                     var status = result["operation"]["status"].toString();
+
+                     // Blank form
+                     $("#account-comment-text").val("");
+                     // Cancel the disabled
+                     $("#account-comment-text").removeAttr("disabled");
+                     // Hide modal box
+                     $('#accountModal').modal("hide");
+
+                     // Set the data-label attr
+                     if (not_action.length !== 0)
+                     {
+                        $("#button-action-" + account_data["account_id"]).attr("data-label", not_action);
+                        // Set the lable of button data
+                        button.data("label", not_action);
+                     }
+                     else
+                     {
+                        $("#button-reject-" +  + account_data["account_id"]).css('display', 'none');
+                     }
+
+                     // update the table
+                     // Update the status
+                     $("#status-" + account_data["account_id"]).text(status);
+                     // Update the action
+                     if (not_action.length !== 0)
+                     {
+                        $("#button-action-" + account_data["account_id"]).text(not_action);
+                     }
+                     // Update the action history
+                     $("#flag-" + account_data["account_id"]).before('<tr style="display: none" class="operation_span">' +
+                        '<td colspan="11" style="border-top: none">' +
+                        "用户账号被" + result["operation"]["email"] + "在" + result["operation"]["time"] +
+                        str_label + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
+
+                     // Update the message
+                     $(document).trigger("widget.mb.show", {type:"ok",message:"用户账号（序号："+account_data["account_id"]+"）被"+str_label});
+
+                     // Expand the history action
+                     $("#expand-" + account_data["account_id"]).css("display", "none");
+                     $("#collapse-" + account_data["account_id"]).css("display", "inline");
+                     if (not_action.length !== 0)
+                     {
+                        // $("#button-" + account_data["label"].toLowerCase() + "-" + account_data["account_id"]).parent().parent().nextUntil(".account_flag").css("display", "table-row");
+                        $("#button-action-" + account_data["account_id"]).parent().parent().nextUntil(".account_flag").css("display", "table-row");
+                    }                    
+                }
+            });
+            return false;
+         })
+        });
+
+    // hide the modal
+    $('#accountModal').on('hide.bs.modal', function (e) {
+         $("#account-comment-text").val("");
+    })
+
+    // show the modal
     $('#myModal').on('show.bs.modal', function (e) {
         var button = $(e.relatedTarget);
         var job_data = {};
