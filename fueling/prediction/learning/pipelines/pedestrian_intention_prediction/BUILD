@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "pedestrian_intention_dataset",
     srcs = ["pedestrian_intention_dataset.py"],
     deps = [
@@ -9,4 +9,9 @@ py_binary(
         "//fueling/common:file_utils",
         "//fueling/prediction/learning/data_preprocessing/map_feature:online_mapping",
     ]
+)
+
+py_library(
+    name = "key_pedestrian_model",
+    srcs = ["key_pedestrian_model.py"],
 )
