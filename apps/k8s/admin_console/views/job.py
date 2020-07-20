@@ -117,7 +117,9 @@ def jobs():
     job_selected = flask.request.args.get("job_selected", "A")
     time_selected = flask.request.args.get("time_selected", "All")
     vehicle_sn = flask.request.args.get("vehicle_sn")
-    find_filter = [{"is_partner": True}]
+    filter_job_type = list(job_type.values())
+    filter_job_type.remove("All")
+    find_filter = [{"is_partner": True}, {"job_type": {"$in": filter_job_type}}]
     if job_selected not in job_type:
         return flask.render_template("error.html", error="Invalid parameter")
     elif job_selected != "A":

@@ -80,11 +80,11 @@ def get_account_action(status):
     Get the status
     """
     status_dict = {
-        "Pending": "Reject",
+        "Pending": ("Enable", "Reject"),
         "Rejected": "",
         "Enabled": ("Edit", "Disable"),
         "Disabled": "Enable",
         "Over-quota": "Edit",
-        "Expired": "Edit"
+        "Expired": "Edit",
     }
     return status_dict[status]

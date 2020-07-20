@@ -2,73 +2,76 @@
 
 {% block content %}
 
-    <!-- filter and search -->
-    <div class="row">
-        <form action="/jobs" method="get" id="job-form">
+<!-- filter and search -->
+<div class="row">
+    <form action="/jobs" method="get" id="job-form">
 
-            <!-- job-type filter -->
-            <div class="btn-group" style="width:30%; float: left; padding-left: 20px;">
-                <select name="job_selected" class="selectpicker"
-                        style="height:34px; font-size: 12px" id="type-select">
-                    {% for type, value in job_type.items() %}
-                        {% if type == current_type %}
-                            <option value="{{ type }}" style="font-size: 12px" selected> {{ value }}</option>
-                        {% else %}
-                            <option value="{{ type }}" style="font-size: 12px"> {{ value }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- job-type filter -->
+        <div class="btn-group" style="width:30%; float: left; padding-left: 20px;">
+            <select name="job_selected" class="selectpicker"
+                    style="height:34px; font-size: 12px" id="type-select">
+                {% for type, value in job_type.items() %}
+                {% if type == current_type %}
+                <option value="{{ type }}" style="font-size: 12px" selected> {{ value }}</option>
+                {% else %}
+                <option value="{{ type }}" style="font-size: 12px"> {{ value }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
 
-            <!-- time-field filter -->
-            <div class="btn-group" style="width:30%; float: left; padding-left: 20px;">
-                <select name="time_selected" class="selectpicker"
-                        style="height:34px; font-size: 12px" id="time-select">
-                    {% for field, value in time_field.items() %}
-                        {% if field == current_time %}
-                            <option value="{{ field }}" style="font-size: 12px" selected> {{ value }}</option>
-                        {% else %}
-                            <option value="{{ field }}" style="font-size: 12px" > {{ value }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- time-field filter -->
+        <div class="btn-group" style="width:30%; float: left; padding-left: 20px;">
+            <select name="time_selected" class="selectpicker"
+                    style="height:34px; font-size: 12px" id="time-select">
+                {% for field, value in time_field.items() %}
+                {% if field == current_time %}
+                <option value="{{ field }}" style="font-size: 12px" selected> {{ value }}</option>
+                {% else %}
+                <option value="{{ field }}" style="font-size: 12px"> {{ value }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
 
-            <!-- vehicle sn search -->
-            <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
-                <div class="input-group">
-                    <input type="search" id="sn-search" name="vehicle_sn" class="form-control"
-                           placeholder="搜索：通过车辆编号" {% if vehicle_sn %} value={{ vehicle_sn }} {% endif %} style="font-size: 12px;height: 32px;">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="search-btn" style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
+        <!-- vehicle sn search -->
+        <div class="col-lg-3" style="width:30%; float: left;padding-left: 20px;">
+            <div class="input-group">
+                <input type="search" id="sn-search" name="vehicle_sn" class="form-control"
+                       placeholder="搜索：通过车辆编号" {% if vehicle_sn %} value={{ vehicle_sn }} {% endif %}
+                       style="font-size: 12px;height: 32px;">
+                <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="search-btn"
+                                style="font-size: 12px;height: 32px;border-radius: 0; ">搜索</button>
                     </span>
-                     {% if vehicle_sn %}
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" id="filter-message-close" style="font-size: 12px;height: 32px;display: inline">清空</button>
+                {% if vehicle_sn %}
+                <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="filter-message-close"
+                                style="font-size: 12px;height: 32px;display: inline">清空</button>
                     </span>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 
-    <!-- blank div -->
-    <div style="height: 60px; width: 100%">
-    </div>
+<!-- blank div -->
+<div style="height: 60px; width: 100%">
+</div>
 
-    <!-- The comment on the modal box -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel"></h4>
-                </div>
-                <form>
+<!-- The comment on the modal box -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel"></h4>
+            </div>
+            <form>
                 <div class="modal-body text-center">
                     <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
                     <p><span style="color: red">*</span>备注：
-                        <textarea id="comment_text" cols="25" rows="1" style="line-height: 25px" required></textarea>
+                        <textarea id="comment-text" cols="25" rows="1" style="line-height: 25px" required></textarea>
                     </p>
                     <p id="comments-error" style="display: none"></p>
                 </div>
@@ -76,125 +79,130 @@
                     <button type="button" class="cancel_job btn btn-default" data-dismiss="modal">取消</button>
                     <button type="submit" class="btn btn-primary">确认</button>
                 </div>
-                </form>
+            </form>
 
-            </div>
         </div>
     </div>
+</div>
 
-    <!-- search message and update message -->
-    {% if vehicle_sn %}
-        <p>
-            <span id="filter-message"
-                 style="color:red"> 通过车辆编号{{ vehicle_sn }}搜索出以下结果：
-            </span>
-        </p>
-    {% endif %}
+<!-- search message and update message -->
+{% if vehicle_sn %}
+<p>
+    <span id="filter-message"
+          style="color:red"> 通过车辆编号{{ vehicle_sn }}搜索出以下结果：
+    </span>
+</p>
+{% endif %}
 
-    <!-- history action message -->
-    <div id="messageBar" style="color:red; display: none">
-       <span class="message"></span>
-       <span class="icon glyphicon glyphicon-remove"></span>
-    </div>
+<!-- history action message -->
+<div id="messageBar" style="color:red; display: none">
+    <span class="message"></span>
+    <span class="icon glyphicon glyphicon-remove"></span>
+</div>
 
-    <!-- The table of job list -->
-    <table class="table table-hover">
-        <tr>
-            <th>车辆编号</th>
-            <th>任务类型</th>
-            <th>任务序号</th>
-            <th>状态</th>
-            <th>起始时间</th>
-            <th>结束时间</th>
-            <th>持续时间</th>
-            <th>失败原因</th>
-            <th>当前进度</th>
-            <th>是否有效</th>
-            <th>输入数据大小</th>
-            <th>动作</th>
-            <th>展开/收缩</th>
-        </tr>
-        {% for job in jobs_list %}
-            <tr>
-                <td>{{ job.vehicle_sn }}</td>
-                <td>{{ job.job_type| show_type }}</td>
-                <td class="td-job-id" title="{{ job.job_id }}" data-toggle="tooltip">...{{ job.job_id | show_id }}</td>
-                <td>{{ job.status }}</td>
-                <td>{{ job.start_time }}</td>
-                <td>{{ job.end_time }}</td>
-                <td>{{ job.duration_time | show_duration }}</td>
-                <td class="failure-code" title="{{ job.failure_code | show_failure_cause }}" data-toggle="tooltip">{{ job.failure_code }}</td>
-                <td>{{ job.progress }}</td>
-                <td id="is-valid-{{ job.job_id }}">{{ job.is_valid }}</td>
-                <td>{{ job.input_data_size }}</td>
-                <td>
-                    <a style="width: 100%" id="button-{{ job.job_id }}" class="job-modal" data-toggle="modal"
-                       data-target="#myModal" data-job-id="{{ job.job_id }}" data-job-action="{{ job.is_valid | show_en_action }}">
-                        {{ job.is_valid | show_action }}
-                    </a>
-                </td>
-                <td>
-                    <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
-                    <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收缩</a>
-                </td>
-            </tr>
+<!-- The table of job list -->
+<table class="table table-hover">
+    <tr>
+        <th>车辆编号</th>
+        <th>任务类型</th>
+        <th>任务序号</th>
+        <th>状态</th>
+        <th>起始时间</th>
+        <th>结束时间</th>
+        <th>持续时间</th>
+        <th>失败原因</th>
+        <th>当前进度</th>
+        <th>是否有效</th>
+        <th>输入数据大小</th>
+        <th>动作</th>
+        <th>展开/收缩</th>
+    </tr>
+    {% for job in jobs_list %}
+    <tr>
+        <td>{{ job.vehicle_sn }}</td>
+        <td>{{ job.job_type| show_type }}</td>
+        <td class="td-job-id" title="{{ job.job_id }}" data-toggle="tooltip">...{{ job.job_id | show_id }}</td>
+        <td>{{ job.status }}</td>
+        <td>{{ job.start_time }}</td>
+        <td>{{ job.end_time }}</td>
+        <td>{{ job.duration_time | show_duration }}</td>
+        <td class="failure-code" title="{{ job.failure_code | show_failure_cause }}" data-toggle="tooltip">{{
+            job.failure_code }}
+        </td>
+        <td>{{ job.progress }}</td>
+        <td id="is-valid-{{ job.job_id }}">{{ job.is_valid }}</td>
+        <td>{{ job.input_data_size }}</td>
+        <td>
+            <a style="width: 100%" id="button-{{ job.job_id }}" class="job-modal" data-toggle="modal"
+               data-target="#myModal" data-job-id="{{ job.job_id }}"
+               data-job-action="{{ job.is_valid | show_en_action }}">
+                {{ job.is_valid | show_action }}
+            </a>
+        </td>
+        <td>
+            <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
+            <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收缩</a>
+        </td>
+    </tr>
 
-            <tr style="display: none" class="operation_tr">
-                <td align="left" colspan="13"><b>操作历史：</b></td>
-            </tr>
+    <tr style="display: none" class="operation_tr">
+        <td align="left" colspan="13"><b>操作历史：</b></td>
+    </tr>
 
-            <!-- The history record of job operation -->
-            {% for opt in job.operations %}
-                <tr style="display: none" class="operation_span">
-                    <td colspan="13" style="border-top: none">
-                        任务被{{ opt.email }}在{{ opt.time }}设置为{{ opt.action.type | show_cn_action }}。备注是：{{ opt.comments }}。
-                    </td>
-                </tr>
+    <!-- The history record of job operation -->
+    {% for opt in job.operations %}
+    <tr style="display: none" class="operation_span">
+        <td colspan="13" style="border-top: none">
+            任务被{{ opt.email }}在{{ opt.time }}设置为{{ opt.action.type | show_cn_action }}。备注是：{{ opt.comments }}。
+        </td>
+    </tr>
+    {% endfor %}
+    <tr class="flag" id="flag-{{ job.job_id }}"></tr>
+    {% endfor %}
+</table>
+
+<!-- The pagination -->
+<div id="bagin">
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if current_page.has_previous() %}
+            <li class="previous">
+                <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.previous_page_number() }}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">上一页</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="previous disabled">
+                <a href="#">上一页</a>
+            </li>
+            {% endif %}
+            {% for i in current_page.page_nums() %}
+            {% if i == current_page.current_page %}
+            <li class="active"><a
+                    href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{
+                i }}</a>
+            </li>
+            {% else %}
+            <li>
+                <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{
+                    i }}</a>
+            </li>
+            {% endif %}
             {% endfor %}
-            <tr class="flag" id="flag-{{ job.job_id }}"></tr>
-        {% endfor %}
-    </table>
-
-    <!-- The pagination -->
-    <div id="bagin">
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                {% if current_page.has_previous() %}
-                    <li class="previous">
-                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.previous_page_number() }}"
-                           aria-label="Previous">
-                            <span aria-hidden="true">上一页</span>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="previous disabled">
-                        <a href="#">上一页</a>
-                    </li>
-                {% endif %}
-                {% for i in current_page.page_nums() %}
-                    {% if i == current_page.current_page %}
-                        <li class="active"><a
-                                href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
-                        </li>
-                    {% else %}
-                        <li>
-                            <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ i }}">{{ i }}</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-                {% if current_page.has_next() %}
-                    <li class="next">
-                        <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.next_page_number() }}"
-                           aria-label="Next">
-                            <span aria-hidden="true">下一页</span>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="next disabled">
-                        <a href="#" aria-label="Next">下一页</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
+            {% if current_page.has_next() %}
+            <li class="next">
+                <a href="?{% if current_type %}job_selected={{ current_type }}&{% endif %}{% if current_time %}time_selected={{ current_time }}&{% endif %}{% if vehicle_sn %}vehicle_sn={{ vehicle_sn }}&{% endif %}page={{ current_page.next_page_number() }}"
+                   aria-label="Next">
+                    <span aria-hidden="true">下一页</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="next disabled">
+                <a href="#" aria-label="Next">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 {% endblock %}

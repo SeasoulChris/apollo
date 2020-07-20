@@ -52,25 +52,19 @@ def get_job_used(objs):
         services = obj.get("services")
         job_filters = [{"$match": {"vehicle_sn": obj["vehicle_sn"]}},
                        {"$group": {"_id": "$job_type", "count": {"$sum": 1}}}]
-        logging.info(f"services:{services}")
-        counts = job.job_collection.aggregate(job_filters)
-        for c in counts:
-            logging.info(f"count:{c}")
+        job_type_counts = job.job_collection.aggregate(job_filters)
+        job_counts_dict = {}
+        for job_type_count in job_type_counts:
+            job_counts_dict[job_type_count["_id"]] = job_type_count["count"]
+
         if services:
             sum_counts = 0
-            logging.info(f"name:{obj['com_email']}")
-            for count in counts:
-                for service in services:
-                    if service["job_type"] == count["_id"]:
-                        logging.info(f"count:{count}")
-                        logging.info(f"service:{service}")
-                        job_count = count["count"]
-                        service["used"] = job_count
-                        sum_counts += job_count
+            for service in services:
+                job_type_used = job_counts_dict.get(service["job_type"])
+                if job_type_used:
+                    service["used"] = job_type_used
+                    sum_counts += job_type_used
             obj["remaining_quota"] = obj["quota"] - sum_counts
-            logging.info(f"quota:{obj['quota']}")
-            logging.info(f"sum_counts:{sum_counts}")
-
             if is_over_quota(sum_counts, obj.get("quota")) and obj["status"] == "Enabled":
                 obj["status"] = "Over-quota"
             if is_expired(obj["due_date"]):

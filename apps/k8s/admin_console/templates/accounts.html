@@ -41,7 +41,7 @@
             <div class="modal-body text-center">
                 <p style="color: rgb(175, 175, 175)" class="comment-title"></p>
                 <p><span style="color: red">*</span>备注：
-                    <textarea id="account_comment_text" cols="25" rows="1" style="line-height: 25px"></textarea>
+                    <textarea id="account-comment-text" cols="25" rows="1" style="line-height: 25px"></textarea>
                 </p>
                 <p id="comments-error" style="display: none"></p>
             </div>
@@ -119,7 +119,7 @@
     {% for se in account.services %}
     <tr style="display: none" class="service_span">
         <td colspan="10" style="border-top: none">
-            {{se.job_type}}:{{se.status}} used:{{se.used}} Remaining Quota:{{account.remaining_quota}}
+            {{se.job_type}}:{{se.status}} 使用:{{se.used}} 剩余配额:{{account.remaining_quota}}
         </td>
     </tr>
     {% endfor %}

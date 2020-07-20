@@ -51,7 +51,7 @@ $(document).ready(function () {
     $("#account-message-close").click(function () {
         $("#account-sn-search").attr("value","");
         $("#account-filter-message").text("");
-        $("#account_comment_text").text();
+        $("#account-comment-text").text();
         $("#account-form").submit();
     });
 
@@ -85,44 +85,44 @@ $(document).ready(function () {
     $('#myModal').on('show.bs.modal', function (e) {
         var button = $(e.relatedTarget);
         var job_data = {};
-        var map_cn_action = {
+        var action_label = {
             "Invalid": "无效",
             "Valid": "有效"
         };
-        var map_not_action = {
+        var action_not_label = {
             "Invalid": "Valid",
             "Valid": "Invalid"
-        }
+        };
         // Get the job-id and action from dialog
         job_data["job_id"] = button.data("job-id");
         job_data["action"] = button.data("job-action");
 
         // Apply the chinese action
-        $("#myModalLabel").text("设置" + map_cn_action[job_data["action"]]);
-        $(".comment-title").text("你确认把当前任务设置为" + map_cn_action[job_data["action"]] + "吗?");
+        $("#myModalLabel").text("设置" + action_label[job_data["action"]]);
+        $(".comment-title").text("你确认把当前任务设置为" + action_label[job_data["action"]] + "吗?");
 
         // Submit the form for verification field and post ajax request
         $("form", this).first().one("submit", function(e){
-            job_data["comment"] = $("#comment_text").val();
+            job_data["comment"] = $("#comment-text").val();
             $.ajax({
                 url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/submit_job",
                 dataType: "json",
                 type: "POST",
                 data: job_data,
                 beforeSend: function () {
-                    $("#comment_text").attr("disabled", "disabled");
+                    $("#comment-text").attr("disabled", "disabled");
                 },
                 success: function (result) {
                      // The action to be executed
-                     var not_action = map_not_action[job_data["action"]];
+                     var not_action = action_not_label[job_data["action"]];
                      // The is_valid to be set
                      var is_valid = result["operation"]["is_valid"].toString();
                      is_valid = is_valid.substring(0, 1).toUpperCase() + is_valid.substring(1); // 返回的is_valid
 
                      // Blank form
-                     $("#comment_text").val("");
+                     $("#comment-text").val("");
                      // Cancel the disabled
-                     $("#comment_text").removeAttr("disabled");
+                     $("#comment-text").removeAttr("disabled");
                      // Hide modal box
                      $('#myModal').modal("hide");
 
@@ -135,15 +135,15 @@ $(document).ready(function () {
                      // Update the is_valid
                      $("#is-valid-" + job_data["job_id"]).text(is_valid);
                      // Update the action
-                     $("#button-" + job_data["job_id"]).text("设置"+map_cn_action[not_action]);
+                     $("#button-" + job_data["job_id"]).text("设置"+action_label[not_action]);
                      // Update the action history
                      $("#flag-" + job_data["job_id"]).before('<tr style="display: none" class="operation_span">' +
                         '<td colspan="11" style="border-top: none">' +
                         "任务被" + result["operation"]["email"] + "在" + result["operation"]["time"] +
-                        "设置为" + map_cn_action[job_data["action"]] + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
+                        "设置为" + action_label[job_data["action"]] + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
 
                      // Update the message
-                     $(document).trigger("widget.mb.show", {type:"ok",message:"任务（序号："+job_data["job_id"]+"）被设置为"+map_cn_action[job_data["action"]]});
+                     $(document).trigger("widget.mb.show", {type:"ok",message:"任务（序号："+job_data["job_id"]+"）被设置为"+action_label[job_data["action"]]});
 
                      // Expand the history action
                      $("#expand-" + job_data["job_id"]).css("display", "none");
@@ -157,7 +157,7 @@ $(document).ready(function () {
 
     // hide the modal
     $('#myModal').on('hide.bs.modal', function (e) {
-         $("#comment_text").val("");
+         $("#comment-text").val("");
     })
 
     // Click the expand
@@ -195,25 +195,25 @@ widget.messageBar["init"] = function(){
     var domMB = $("#messageBar");
     if (!domMB ) return false;
     domMB.children().last().on("click",function(e){
-      widget.messageBar.hide();
-   })
-  return true;
+        widget.messageBar.hide();
+    })
+    return true;
 };
 
-// when click the icon, the hide event will be triggered
+// hide event
 widget.messageBar["hide"] = function(){
     var domMB = $("#messageBar");
     if (!domMB ) return false;
     domMB.css("display","none");
-   return true;
+    return true;
 };
 
-// When ajax success, the show event will be triggered
+// show event
 widget.messageBar["show"] = function(options){
     var domMB = $("#messageBar");
     if (!domMB || !options) return false;
-   domMB.children().first().text(options.message);
-   domMB.css("display", "block");
+    domMB.children().first().text(options.message);
+    domMB.css("display", "block");
     switch (options.type) {
       case "ok":
         // set ok icon
