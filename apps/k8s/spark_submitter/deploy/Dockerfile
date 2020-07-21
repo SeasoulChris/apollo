@@ -1,4 +1,4 @@
-FROM apolloauto/fuel-client:20200516_1300
+FROM apolloauto/fuel-client:20200720_1535
 
 # Basic tools.
 RUN apt update -y && \
@@ -14,7 +14,7 @@ RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add 
 
 # Resource.
 # Get dest path with `python -c "import site; print(site.getsitepackages()[0])"`
-COPY spark-kubernetes_2.11-2.4.4.jar \
+COPY spark-kubernetes_2.12-3.0.0.jar \
     /usr/local/miniconda/envs/fuel/lib/python3.6/site-packages/pyspark/jars/
 COPY kube.config /root/.kube/config
 COPY index.zip /home/spark_submitter/index.zip

@@ -2,7 +2,7 @@ name: fuel
 dependencies:
   - python = 3.6     # Align with Ubuntu 18.04 default.
   - pip
-  - pyspark = 2.4.4  # Align with pre-built server image.
+  - pyspark = 3.0.0  # Align with pre-built server image.
 
   - absl-py
   - ansi2html
@@ -30,11 +30,11 @@ dependencies:
   - mpld3
   - numba
   - numpy
-  - opencv
+  - opencv >= 3.4.2
   - pillow
   - plotly
   - plotly::plotly-orca
-  - protobuf
+  - protobuf = 3.12.3
   - psutil
   - pycodestyle
   - pymongo
