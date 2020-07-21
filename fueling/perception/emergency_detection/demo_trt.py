@@ -9,7 +9,7 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import pycuda.autoinit
 
-from tool.utils import *
+from fueling.perception.emergency_detection.tool.utils import *
 
 try:
     # Sometimes python2 does not understand FileNotFoundError

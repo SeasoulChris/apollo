@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 import onnxruntime
 
-from tool.utils import *
-from tool.darknet2onnx import *
+from fueling.perception.emergency_detection.tool.utils import *
+from fueling.perception.emergency_detection.tool.darknet2onnx import *
 
 
 def main(cfg_file, weight_file, image_path, batch_size):

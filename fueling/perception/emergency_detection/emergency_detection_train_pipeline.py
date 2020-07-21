@@ -44,14 +44,13 @@ from torch.nn import functional as F
 #from tensorboardX import SummaryWriter
 from easydict import EasyDict as edict
 
-from dataset import Yolo_dataset
-from cfg import Cfg
-from models import Yolov4
-from tool.darknet2pytorch import Darknet
-
-from tool.tv_reference.utils import collate_fn as val_collate
-from tool.tv_reference.coco_utils import convert_to_coco_api
-from tool.tv_reference.coco_eval import CocoEvaluator
+from fueling.perception.emergency_detection.dataset import Yolo_dataset
+from fueling.perception.emergency_detection.cfg import Cfg
+from fueling.perception.emergency_detection.models import Yolov4
+from fueling.perception.emergency_detection.tool.darknet2pytorch import Darknet
+from fueling.perception.emergency_detection.tool.tv_reference.utils import collate_fn as val_collate
+from fueling.perception.emergency_detection.tool.tv_reference.coco_utils import convert_to_coco_api
+from fueling.perception.emergency_detection.tool.tv_reference.coco_eval import CocoEvaluator
 
 
 
@@ -597,6 +596,7 @@ def get_args(**kwargs):
     args = vars(parser.parse_args())
     '''
 
+    '''
     args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/mnt/bos/modules/perception/emergency_detection/data/coins', 
     'pretrained': '/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
     'train_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/train.txt', 
@@ -610,7 +610,6 @@ def get_args(**kwargs):
     'train_label': '/fuel/fueling/perception/emergency_detection/data/coins/train.txt', 
     'val_label': '/fuel/fueling/perception/emergency_detection/data/coins/val.txt', 
     'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
-    '''
     
 
     # for k in args.keys():
