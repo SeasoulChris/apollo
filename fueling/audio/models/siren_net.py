@@ -209,7 +209,7 @@ class SirenNetLoss():
         true_label = y_true.topk(1)[1]
         accuracy = (pred_label == true_label).type(torch.float).mean().item()
         print("Accuracy is {:.3f} %".format(100 * accuracy))
-        return
+        return accuracy
 
 
 if __name__ == '__main__':
