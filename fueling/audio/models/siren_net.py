@@ -98,7 +98,7 @@ class SirenNetDataset(Dataset):
     def __getitem__(self, idx):
         feature = self.all_features[idx]
         data_for_learn = feature[0]
-        label = np.ones((1, 2))
+        label = np.zeros((1, 2))
         if feature[1] < 0.5:
             label[0, 0] = 1
         else:
