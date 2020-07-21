@@ -9,12 +9,14 @@ from torchvision import transforms
 
 from cyber.python.cyber_py3 import cyber, cyber_time
 from modules.planning.proto import learning_data_pb2
+from modules.planning.proto import planning_pb2
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.logging as logging
 from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
 from fueling.learning.network_utils import generate_lstm_states
+from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
 
 
 class ADSEnv(object):
@@ -36,10 +38,12 @@ class ADSEnv(object):
                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
         self.birdview_feature_input = None
 
-        # TODO(Songyang): specify hidden_state_size and point histpry len
+        # TODO(Songyang): specify hidden_state_size and point histpry len here or somewhere
         self.hidden = generate_lstm_states()
         self.history_point_num = 10
+        self.delta_t = 0.2
         self.state = None
+        self.current_adv_pose = None
 
         # for reward and done in function step
         self.reward = 0
@@ -71,53 +75,61 @@ class ADSEnv(object):
         # key input: space
         keyboard.press_and_release('space')
         # send planning msg (action)
-        writer = rl_node.crete_writter("/apollo/planning", ADCTrajectory)
-        planning = ADCTrajectory()
-        planning.header.timestamp_sec = cyber_time.Time.now().to_sec()
-        planning.header.module_name = "planning"
-        planning.total_path_time = 2
+        writer = rl_node.crete_writter(
+            "/apollo/planning", planning_pb2.ADCTrajectory)
+        planning_message = planning_pb2.ADCTrajectory()
+        planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
+        planning_message.header.module_name = "planning"
+        planning_message.total_path_time = 2
 
-        # TODO(Jinyun): check the decomposition of action
-        # TODO(Jiaming): revise and add more info for the traj_point
-        for dx, dy, dheading, speed in action:
-            point = planning.trajectory_point.add()
-            point.path_point.x = dx
-            point.path_point.y = dy
-            point.path_point.theta = dheading
-            point.v = speed
-            point.relative_time = 0.2
-            plannning.trajectory_point.append(point)
+        current_x, current_y, current_theta = self.current_adv_pose
+        point_relative_time = 0.0
+        # action in shape of [time_horizon, [dx, dy, dtheta, v]]
+        for i in range(action.shape[0]):
+            point = planning_message.trajectory_point.add()
+            dx = action[i][0]
+            dy = action[i][1]
+            dtheta = action[i][2]
+            point.path_point.x = dx * math.cos(current_theta) - \
+                dy * math.sin(current_theta) + current_x
+            point.path_point.y = dx * math.sin(current_theta) + \
+                dy * math.cos(current_theta) + current_y
+            point.path_point.theta = NormalizeAngle(current_theta + dtheta)
+            point.v = action[i][3]
+            point.relative_time = point_relative_time
+            point_relative_time += self.delta_t
 
         accumulated_s = 0.0
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
             accumulated_s += math.sqrt((nextpoint.x - point.x)
                                        ** 2 + (nextpoint.y - point.y) ** 2)
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
-            point.a = (nextpoint.v - point.v) / 0.2
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
-            point.da = (nextpoint.a - point.a) / 0.2
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
-            point.kappa = nextpoint.theta - point.theta
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
-            point.dkappa = (nextpoint.theta - point.theta) / \
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.a = (nextpoint.v - point.v) / self.delta_t
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.da = (nextpoint.a - point.a) / self.delta_t
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.kappa = (nextpoint.theta - point.theta) / \
                 (nextpoint.s - point.s)
-        for i in range(0, len(planning.trajectory_point)):
-            point = planning.trajectory_point[i]
-            nextpoint = planning.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
+            point.dkappa = (nextpoint.kappa - point.kappa) / \
+                (nextpoint.s - point.s)
+        for i in range(0, len(planning_message.trajectory_point)):
+            point = planning_message.trajectory_point[i]
+            nextpoint = planning_message.trajectory_point[i + 1]
             point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
                 (nextpoint.s - point.s)
 
-        writer.write(planning)
+        writer.write(planning_message)
 
         while not self.is_grading_done or not self.is_input_ready:
             time.sleep(0.1)  # second
@@ -230,5 +242,7 @@ class ADSEnv(object):
         hist_points_step = np.zeros_like(hist_points)
         hist_points_step[1:, :] = hist_points[1:, :] - hist_points[:-1, :]
 
-        self.state = tuple([birdview_feature_input, hist_points, hist_points_step])
+        self.state = tuple(
+            [birdview_feature_input, hist_points, hist_points_step])
+        self.current_adv_pose = tuple(ref_coords)
         self.is_input_ready = True

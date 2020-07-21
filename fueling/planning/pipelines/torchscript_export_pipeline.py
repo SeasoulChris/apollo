@@ -28,11 +28,11 @@ def export_torchscript(torch_model_file, jit_model_file, device):
     model.eval()
     # X = torch.ones([1, 12, 200, 200])
     # X = (torch.ones([1, 12, 200, 200]), torch.ones(
-        # [1, 1, 200, 200]), torch.ones([1, 1, 200, 200]))
+    # [1, 1, 200, 200]), torch.ones([1, 1, 200, 200]))
     # X = (torch.ones([1, 12, 200, 200]), torch.ones(
-        # [1, 10, 4]), torch.ones([1, 10, 4]))
+    # [1, 10, 4]), torch.ones([1, 10, 4]))
     # X = (torch.ones([1, 12, 200, 200]), torch.ones(
-        # [1, 10, 4]), torch.ones([1, 10, 4]))
+    # [1, 10, 4]), torch.ones([1, 10, 4]))
     y = model.forward(X)
     traced_model = None
     if device == 'gpu':

@@ -25,7 +25,7 @@ class DDPG(object):
         hidden = torch.FloatTensor(hidden).unsqueeze(0).to(device)
         action, next_hidden, _ = self.rl_net.forward(
             state, rl=True, hidden=hidden)
-        return action.detach().cpu().numpy()[0, 0], next_hidden.detach().cpu().numpy()[0, 0]
+        return action.detach().cpu().numpy()[0], next_hidden.detach().cpu().numpy()[0]
 
     def learn(self):
         """update actor and critic network"""
