@@ -84,6 +84,7 @@ py_binary(
         "@apollo//modules/control/proto:mpc_controller_conf_py_pb2",
         "@apollo//modules/control/proto:mrac_conf_py_pb2",
         "@apollo//modules/control/proto:pid_conf_py_pb2",
+        "@apollo//modules/planning/proto:planner_open_space_config_py_pb2",
     ],
 )
 

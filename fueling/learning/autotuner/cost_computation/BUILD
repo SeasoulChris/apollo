@@ -26,6 +26,7 @@ py_binary(
         "//fueling/learning/autotuner/cost_computation/job:k8s_cost_job",
         "//fueling/learning/autotuner/cost_computation/job:local_cost_job",
         "//fueling/learning/autotuner/proto:cost_computation_service_py_pb2",
+        "//fueling/learning/autotuner/proto:cost_computation_service_py_pb2_grpc",
     ],
 )
 

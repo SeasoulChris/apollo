@@ -21,6 +21,12 @@ py_proto_library(
     ],
 )
 
+py_grpc_library(
+    name = "sim_service_py_pb2_grpc",
+    srcs = [":sim_service_proto"],
+    deps = [":sim_service_py_pb2"],
+)
+
 proto_library(
     name = "dynamic_model_info_proto",
     srcs = ["dynamic_model_info.proto"],
