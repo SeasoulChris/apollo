@@ -30,11 +30,11 @@ dependencies:
   - mpld3
   - numba
   - numpy
-  - opencv >= 3.4.2
+  - opencv >= 3.4.2  # It downgrades to 3.4.1 if we rely on conda adjust which causes conflicts
   - pillow
   - plotly
   - plotly::plotly-orca
-  - protobuf = 3.12.3
+  - protobuf = 3.12.3  # It downgrades to 3.11.2 if we rely on conda adjust which causes conflicts
   - psutil
   - pycodestyle
   - pymongo
