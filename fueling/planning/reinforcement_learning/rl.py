@@ -20,9 +20,11 @@ class DDPG(object):
         select an action based on the current state and hidden
         return action and next_hidden
         """
-        state = torch.FloatTensor(state).unsqueeze(0).to(device)
+        state = tuple([torch.FloatTensor(state_element).unsqueeze(
+            0).to(device) for state_element in state])
         hidden = torch.FloatTensor(hidden).unsqueeze(0).to(device)
-        action, next_hidden, _ = self.rl_net.forward(state, rl=True, hidden=hidden)
+        action, next_hidden, _ = self.rl_net.forward(
+            state, rl=True, hidden=hidden)
         return action.detach().cpu().numpy()[0, 0], next_hidden.detach().cpu().numpy()[0, 0]
 
     def learn(self):
@@ -45,7 +47,8 @@ class DDPG(object):
         _, _, policy_loss = self.rl_net(state, rl=True, action=pred_traj[:, 0])
         policy_loss = -policy_loss.mean()
 
-        next_pred_traj, _, _ = self.target_net(next_state, rl=True, hidden=next_hidden)
+        next_pred_traj, _, _ = self.target_net(
+            next_state, rl=True, hidden=next_hidden)
         next_action = next_pred_traj[:, 0]
         _, _, target_value = self.target_net(next_state, rl=True, next_action.detach())
         expected_value = reward + (1.0 - done) * gamma * target_value

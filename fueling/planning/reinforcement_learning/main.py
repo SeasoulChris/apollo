@@ -130,7 +130,7 @@ class RLNetwork(nn.Module):
 
         for t in range(1, self.history_len + self.pred_horizon):
             if t < self.history_len:
-                cur_pose_step = hist_points_step[:, t, :].flo at()
+                cur_pose_step = hist_points_step[:, t, :].float()
                 cur_pose = hist_points[:, t, :].float()
             else:
                 pred_input = torch.cat(

@@ -9,6 +9,8 @@ from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 from modules.planning.proto.learning_data_pb2 import LearningData
+from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator \
+    import ChauffeurNetFeatureGenerator
 
 LABEL_TRAJECTORY_POINT_NUM = 20
 
