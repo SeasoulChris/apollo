@@ -35,7 +35,7 @@ partners = {
     'd-kit-szds-77': Partner(name='SZDS77', email='hummerautosys@gmail.com',
                              bos_bucket='hummerautosysbj', bos_region='bj',
                              vehicle_sn='CH2019077'),
-    'd-kit-zkyzdhs-13': Partner(name='ZKYZDHS13', email='gaohongfeinn＠gmail.com',
+    'd-kit-zkyzdhs-13': Partner(name='ZKYZDHS13', email='gaohongfeinn@gmail.com',
                                 bos_bucket='drl-coolhigh', bos_region='bj',
                                 vehicle_sn='CH2019013'),
     'd-kit-qdsz-82': Partner(name='QDSZ82', email='1049892376@qq.com',
