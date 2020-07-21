@@ -15,7 +15,7 @@ if [ "$1" == "--ci" ]; then
       git pull -f origin master
     popd
   else
-    git clone --depth 1 git@github.com:ApolloAuto/apollo.git ${APOLLO_ROOT}
+    git clone --depth 1 https://github.com/ApolloAuto/apollo.git ${APOLLO_ROOT}
   fi
 
   docker run --privileged --rm \

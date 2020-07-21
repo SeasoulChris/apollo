@@ -1,7 +1,6 @@
 name: fuel
 dependencies:
   - python = 3.6     # Align with Ubuntu 18.04 default.
-  - pip
   - pyspark = 3.0.0  # Align with pre-built server image.
 
   - absl-py
@@ -9,6 +8,7 @@ dependencies:
   - boto3
   - conda-forge::bayesian-optimization
   - conda-forge::casadi
+  - conda-forge::easydict
   - conda-forge::eventlet
   - conda-forge::flask-restful
   - conda-forge::gpytorch
@@ -16,6 +16,7 @@ dependencies:
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar
+  - conda-forge::pycocotools
   - conda-forge::pydub
   - conda-forge::python-kubernetes
   - conda-forge::pywavelets
@@ -32,6 +33,7 @@ dependencies:
   - numpy
   - opencv >= 3.4.2  # It downgrades to 3.4.1 if we rely on conda adjust which causes conflicts
   - pillow
+  - pip
   - plotly
   - plotly::plotly-orca
   - protobuf = 3.12.3  # It downgrades to 3.11.2 if we rely on conda adjust which causes conflicts
