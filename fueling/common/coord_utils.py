@@ -14,7 +14,7 @@ class CoordUtils(object):
         """Convert UTM (x, y) to (lat, lon)."""
         projector = cls.PROJECTOR
         if utm_zone_id is not None and utm_zone_id != cls.UTM_ZONE_ID:
-            projector = pyproj.Proj(proj='utm', zone=UTM_ZONE_ID, ellps='WGS84')
+            projector = pyproj.Proj(proj='utm', zone=utm_zone_id, ellps='WGS84')
         lon, lat = projector(x, y, inverse=True)
         return (lat, lon)
 
@@ -23,7 +23,7 @@ class CoordUtils(object):
         """Convert (lat, lon) to UTM (x, y)."""
         projector = cls.PROJECTOR
         if utm_zone_id is not None and utm_zone_id != cls.UTM_ZONE_ID:
-            projector = pyproj.Proj(proj='utm', zone=UTM_ZONE_ID, ellps='WGS84')
+            projector = pyproj.Proj(proj='utm', zone=utm_zone_id, ellps='WGS84')
         return projector(lon, lat)
 
     @staticmethod

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """File processor."""
 
-import sys
-
 import google.protobuf.json_format as json_format
 
 

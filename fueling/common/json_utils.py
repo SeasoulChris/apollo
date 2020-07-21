@@ -4,10 +4,7 @@
 import json
 import os
 
-import numpy as np
-
 import fueling.common.file_utils as file_utils
-import fueling.common.proto_utils as proto_utils
 
 
 def write_json(out_data, folder_path, file_name):

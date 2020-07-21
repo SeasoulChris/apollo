@@ -8,14 +8,21 @@
 # E402: Module level import not at top of file
 # W503: line break before binary operator
 IGNORES="E402,W503"
-CMD="pycodestyle --max-line-length 100 --show-source --ignore=${IGNORES}"
+LINT="pycodestyle --max-line-length 100 --show-source --ignore=${IGNORES}"
+FLAKE="pyflakes"
 
 function LintDir {
   find "$1" -type f -name '*.py' | \
-      grep -v '_pb2.py$' | \
       grep -v 'fueling/archive' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
-      xargs ${CMD}
+      grep -v 'prediction/learning/datasets/apollo_pedestrian_dataset/data_for_learning_pb2.py' | \
+      xargs ${LINT}
+
+  # TODO(all): Cover all code.
+  # find "$1" -type f -name '*.py' | \
+  #    grep -v 'fueling/common/logging.py' | \
+  #    grep 'fueling/common' | \
+  #    xargs ${FLAKE}
 }
 
 PATH_ARG=$1
@@ -25,5 +32,7 @@ if [ -z "${PATH_ARG}" ]; then
 elif [ -d "${PATH_ARG}" ]; then
   LintDir "${PATH_ARG}"
 else
-  ${CMD} "${PATH_ARG}"
+  ${LINT} "${PATH_ARG}"
+  # TODO(all): Enable.
+  # ${FLAKE} "${PATH_ARG}"
 fi

@@ -144,7 +144,7 @@ class BasePipeline(object):
                      'pod_name': pod_name,
                      'namespace': pod_namespace,
                      'creation_timestamp': creation_timestamp.timestamp()})
-                logging.info(F'Save driver log success')
+                logging.info('Save driver log success')
         else:
             logging.info(F'Failed to find exact driver pod for "{driver_pod_name_pattern}"')
 
@@ -156,13 +156,13 @@ class BasePipeline(object):
         try:
             if flags.FLAGS.running_mode == 'PROD':
                 JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
-        except Exception as ex:
+        except Exception:
             logging.error('save job partner failed')
         job_failed = False
         try:
             self.init()
             self.run()
-        except Exception as ex:
+        except Exception:
             job_failed = True
             logging.error(traceback.format_exc())
         finally:

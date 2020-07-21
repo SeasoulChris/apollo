@@ -4,7 +4,6 @@
 import collections
 import fnmatch
 import os
-import sys
 
 from cyber.proto.record_pb2 import Header
 from cyber.python.cyber_py3.record import RecordReader

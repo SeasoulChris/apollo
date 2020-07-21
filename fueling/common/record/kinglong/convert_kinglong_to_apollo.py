@@ -67,7 +67,7 @@ class ConvertKinglongToApollo(BasePipeline):
             convert_kinglong_to_apollo(record_filepath, target_filepath)
             logging.info('Successfully labeled {}'.format(record_filepath))
             return 1
-        except BaseException as e:
+        except BaseException:
             logging.error('Failed to process {}'.format(record_filepath))
         return 0
 

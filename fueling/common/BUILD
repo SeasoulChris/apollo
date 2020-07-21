@@ -87,7 +87,6 @@ py_library(
     srcs = ["json_utils.py"],
     deps = [
         ":file_utils",
-        ":proto_utils",
     ],
 )
 

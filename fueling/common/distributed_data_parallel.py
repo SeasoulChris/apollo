@@ -5,7 +5,6 @@ Distributed data parallel converters and utils.
 """
 
 import os
-import time
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler

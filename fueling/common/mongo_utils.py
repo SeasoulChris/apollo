@@ -7,7 +7,6 @@ Requirements: pymongo 3.x
 """
 import os
 
-import google.protobuf.json_format as json_format
 import pymongo
 
 import fueling.common.logging as logging
