@@ -596,11 +596,12 @@ def get_args(**kwargs):
     args = vars(parser.parse_args())
     '''
 
-    '''
     args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/mnt/bos/modules/perception/emergency_detection/data/coins', 
     'pretrained': '/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
     'train_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/train.txt', 
     'val_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/val.txt', 
+    'checkpoints': '/mnt/bos/modules/perception/emergency_detection/checkpoints', 
+    'TRAIN_TENSORBOARD_DIR': '/mnt/bos/modules/perception/emergency_detection/logs', 
     'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
     
 
@@ -610,6 +611,7 @@ def get_args(**kwargs):
     'train_label': '/fuel/fueling/perception/emergency_detection/data/coins/train.txt', 
     'val_label': '/fuel/fueling/perception/emergency_detection/data/coins/val.txt', 
     'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
+    '''
     
 
     # for k in args.keys():
@@ -659,7 +661,7 @@ def _get_date_str():
     return now.strftime('%Y-%m-%d_%H-%M')
 
 def train_yolov4():
-    logging = init_logger(log_dir='log')
+    logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
     cfg = get_args(**Cfg)
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
