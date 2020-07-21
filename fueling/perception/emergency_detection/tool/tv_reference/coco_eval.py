@@ -50,7 +50,10 @@ class CocoEvaluator(object):
     def synchronize_between_processes(self):
         for iou_type in self.iou_types:
             self.eval_imgs[iou_type] = np.concatenate(self.eval_imgs[iou_type], 2)
-            create_common_coco_eval(self.coco_eval[iou_type], self.img_ids, self.eval_imgs[iou_type])
+            create_common_coco_eval(
+                self.coco_eval[iou_type],
+                self.img_ids,
+                self.eval_imgs[iou_type])
 
     def accumulate(self):
         for coco_eval in self.coco_eval.values():
@@ -76,7 +79,7 @@ class CocoEvaluator(object):
         for original_id, prediction in predictions.items():
             if len(prediction) == 0:
                 continue
-            
+
             if self.bbox_fmt == 'coco':
                 boxes = prediction["boxes"].tolist()
             else:
@@ -166,7 +169,7 @@ def convert_to_xywh(boxes, fmt='voc'):
         return torch.stack((xmin, ymin, xmax - xmin, ymax - ymin), dim=1)
     elif fmt.lower() == 'yolo':
         xcen, ycen, w, h = boxes.unbind(1)
-        return torch.stack((xcen-w/2, ycen-h/2, w, h), dim=1)
+        return torch.stack((xcen - w / 2, ycen - h / 2, w, h), dim=1)
 
 
 def merge(img_ids, eval_imgs):
@@ -257,16 +260,17 @@ def loadRes(self, resFile):
     # tic = time.time()
     if isinstance(resFile, torch._six.string_classes):
         anns = json.load(open(resFile))
-    elif type(resFile) == np.ndarray:
+    elif isinstance(resFile, np.ndarray):
         anns = self.loadNumpyAnnotations(resFile)
     else:
         anns = resFile
-    assert type(anns) == list, 'results in not an array of objects'
+    assert isinstance(anns, list), 'results in not an array of objects'
     annsImgIds = [ann['image_id'] for ann in anns]
     assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
         'Results do not correspond to current coco set'
     if 'caption' in anns[0]:
-        imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
+        imgIds = set([img['id'] for img in res.dataset['images']]
+                     ) & set([ann['image_id'] for ann in anns])
         res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
         for id, ann in enumerate(anns):
             ann['id'] = id + 1

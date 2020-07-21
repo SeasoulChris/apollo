@@ -108,8 +108,12 @@ class EmergencyVehicleDetector(BasePipeline):
     """Demo pipeline."""
 
     def run(self):
-        train_yolov4()
+        #train_yolov4()
+        self.to_rdd(range(1)).foreach(self.train)
 
+    @staticmethod
+    def train(instance_id):
+        train_yolov4()
 
 if __name__ == '__main__':
     EmergencyVehicleDetector().main()
