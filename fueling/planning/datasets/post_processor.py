@@ -3,8 +3,6 @@ import operator
 import os
 import time
 
-import pyspark_utils.op as spark_op
-
 from modules.planning.proto import learning_data_pb2
 
 from fueling.common.base_pipeline import BasePipeline

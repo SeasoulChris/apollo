@@ -3,12 +3,12 @@ import operator
 import os
 import time
 
-import pyspark_utils.op as spark_op
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.planning.datasets.label_generator import LabelGenerator
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.spark_op as spark_op
+
 
 SKIP_EXISTING_DST_FILE = False
 SRC_DIR_PREFIX = 'modules/planning/learning_data'

@@ -3,11 +3,12 @@
 import datetime
 
 from absl import flags
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.data.afs_client.client import AfsClient
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
+
 
 flags.DEFINE_string('start_date', '', 'copy date from what date')
 flags.DEFINE_string('end_date', '', 'copy date to what date')

@@ -3,12 +3,11 @@ from datetime import date
 import glob
 import os
 
-import pyspark_utils.helper as spark_helper
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_extraction, feature_config
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
 import fueling.control.dynamic_model.conf.model_config as model_config
 import fueling.control.dynamic_model.flag
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils

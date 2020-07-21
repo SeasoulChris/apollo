@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -9,6 +11,7 @@ py_binary(
         "//fueling/common:job_utils",
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
+        "//fueling/common:spark_helper",
         "@apollo//modules/map/proto:map_lane_py_pb2",
         "@apollo//modules/map/proto:map_py_pb2",
         "@apollo//modules/map/proto:map_road_py_pb2",
@@ -34,6 +37,7 @@ py_binary(
         "//fueling/common:partners",
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
+        "//fueling/common:spark_helper",
     ],
 )
 

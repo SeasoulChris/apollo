@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -19,6 +21,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:h5_utils",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/dynamic_model_2_0/feature_extraction:feature_extraction_utils",
     ],

@@ -2,11 +2,10 @@
 import glob
 import os
 
-import pyspark_utils.op as spark_op
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.storage.bos_client import BosClient
 import fueling.common.record_utils as record_utils
+import fueling.common.spark_op as spark_op
 
 
 def get_todo_tasks(origin_prefix, target_prefix,

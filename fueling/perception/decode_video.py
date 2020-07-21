@@ -10,7 +10,6 @@ import sys
 import time
 
 import cv2
-import pyspark_utils.helper as spark_helper
 
 from cyber.python.cyber_py3.record import RecordReader, RecordWriter
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
@@ -21,6 +20,7 @@ import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
+import fueling.common.spark_helper as spark_helper
 import fueling.common.storage.bos_client as bos_client
 import fueling.streaming.streaming_utils as streaming_utils
 

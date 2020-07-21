@@ -1,5 +1,6 @@
-package(default_visibility = ["//visibility:public"])
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
+package(default_visibility = ["//visibility:public"])
 
 py_binary(
     name = "control_profiling",
@@ -17,6 +18,8 @@ py_library(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/control/feature_visualization:control_feature_scenario_oriented_visualization_utils",
     ],
@@ -31,6 +34,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:partners",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/control/feature_visualization:control_feature_visualization_utils",
@@ -47,6 +52,8 @@ py_library(
         "//fueling/common:logging",
         "//fueling/common:mongo_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/control/feature_extraction:multi_job_control_feature_extraction_utils",
     ],
@@ -61,6 +68,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:partners",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/control/feature_visualization:control_feature_visualization_utils",
@@ -77,6 +86,8 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/common:partners",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/common:multi_vehicle_utils",
         "//fueling/profiling/common:sanity_check",
@@ -84,7 +95,6 @@ py_binary(
         "//fueling/profiling/control/grading_evaluation:multi_job_control_performance_grading_utils",
     ],
 )
-
 
 py_test(
     name = "multi_job_control_profiling_metrics_test",

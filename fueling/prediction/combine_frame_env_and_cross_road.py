@@ -5,16 +5,15 @@ import os
 
 from absl import flags
 import numpy as np
-import pyspark_utils.op as spark_op
 
-from modules.prediction.proto import offline_features_pb2
 from modules.perception.proto import perception_obstacle_pb2
+from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+from fueling.prediction.common.configure import semantic_map_config
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
-from fueling.prediction.common.configure import semantic_map_config
 
 
 TARGET_OBSTACLE_TYPE = perception_obstacle_pb2.PerceptionObstacle.PEDESTRIAN
@@ -24,6 +23,7 @@ MAX_NUM_FRAME_ENV_FILE = 100
 
 OFFSET_X = semantic_map_config['offset_x']
 OFFSET_Y = semantic_map_config['offset_y']
+
 
 '''
 [scene, scene, ..., scene]

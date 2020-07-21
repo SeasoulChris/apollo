@@ -55,4 +55,3 @@ dependencies:
 
   - pip:
     - eyeD3 == 0.9.5
-    - pyspark-utils == 1.8.0

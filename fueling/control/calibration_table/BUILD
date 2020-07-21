@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -9,6 +11,7 @@ py_binary(
         "//fueling/common:job_utils",
         "//fueling/common:partners",
         "//fueling/common:redis_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/common:multi_vehicle_utils",
         "//fueling/control/common:training_conf",
@@ -27,6 +30,8 @@ py_binary(
         "//fueling/common:proto_utils",
         "//fueling/common:record_utils",
         "//fueling/common:redis_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/common:time_utils",
         "//fueling/control/common:multi_job_utils",
         "//fueling/control/common:multi_vehicle_utils",
@@ -48,6 +53,7 @@ py_binary(
         "//fueling/common:h5_utils",
         "//fueling/common:job_utils",
         "//fueling/common:partners",
+        "//fueling/common:spark_helper",
         "//fueling/control/common:multi_job_utils",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/common:multi_vehicle_utils",
@@ -62,6 +68,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:job_utils",
         "//fueling/common:proto_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/common:multi_job_utils",
         "//fueling/control/common:multi_vehicle_utils",
         "//fueling/control/common:training_conf",

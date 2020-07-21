@@ -3,12 +3,12 @@ import glob
 import os
 
 import numpy as np
-import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
+import fueling.common.spark_op as spark_op
 
 
 class FeaturesAndLabelsCombine(BasePipeline):

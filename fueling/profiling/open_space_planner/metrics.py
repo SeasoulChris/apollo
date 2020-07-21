@@ -8,16 +8,11 @@ import tarfile
 import time
 
 from absl import flags
-import pyspark_utils.op as spark_op
 
 from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.email_utils as email_utils
-import fueling.common.file_utils as file_utils
-import fueling.common.logging as logging
 from fueling.common.partners import partners
-import fueling.common.record_utils as record_utils
 from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
     plot
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
@@ -26,6 +21,11 @@ from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_
 from fueling.profiling.open_space_planner.metrics_utils.evaluation_method_util import \
     latency_grading, merge_grading_results, output_grading, stage_grading, trajectory_grading, \
     zigzag_grading
+import fueling.common.email_utils as email_utils
+import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
+import fueling.common.record_utils as record_utils
+import fueling.common.spark_op as spark_op
 
 
 flags.DEFINE_boolean('open_space_planner_profiling_generate_report', False,

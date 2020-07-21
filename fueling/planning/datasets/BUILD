@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -69,6 +71,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/common:spark_op",
     ],
 )
 

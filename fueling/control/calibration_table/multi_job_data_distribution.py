@@ -8,7 +8,6 @@ import time
 from absl import flags
 import matplotlib
 matplotlib.use('Agg')
-import pyspark_utils.helper as spark_helper
 
 from matplotlib.backends.backend_pdf import PdfPages
 import h5py
@@ -20,9 +19,10 @@ from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
 from fueling.control.common.training_conf import output_folder
 from fueling.control.common.training_conf import inter_result_folder
-import fueling.common.logging as logging
 import fueling.common.email_utils as email_utils
+import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
+import fueling.common.spark_helper as spark_helper
 import fueling.control.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.control.common.multi_vehicle_plot_utils as multi_vehicle_plot_utils
 

@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -15,7 +17,7 @@ py_library(
     srcs = ["train_utils.py"],
     deps = [
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_library(

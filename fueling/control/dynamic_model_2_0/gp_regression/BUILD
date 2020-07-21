@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -30,11 +32,11 @@ py_library(
 py_binary(
     name = "dynamic_model_dataset_visualization",
     srcs = ["dynamic_model_dataset_visualization.py"],
-    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
+    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata"],
     deps = [
         ":dynamic_model_dataset",
         "//fueling/common:h5_utils",
-    ]
+    ],
 )
 
 py_binary(
@@ -101,16 +103,15 @@ py_binary(
     ],
 )
 
-
 py_binary(
     name = "train_smoke_test",
     srcs = ["train_smoke_test.py"],
-    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata:testdata"],
+    data = ["//fueling/control/dynamic_model_2_0/gp_regression/testdata"],
     deps = [
         ":dynamic_model_dataset",
         ":encoder",
-        ":train_utils",
         ":train",
+        ":train_utils",
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
     ],
 )

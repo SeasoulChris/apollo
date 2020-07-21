@@ -5,13 +5,13 @@ import operator
 import os
 
 import numpy as np
-import pyspark_utils.op as spark_op
 
 from modules.prediction.proto import offline_features_pb2
 from modules.prediction.proto import prediction_conf_pb2
 from modules.prediction.proto import feature_pb2
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.spark_op as spark_op
 
 
 TIME_RANGES = [3.0, 1.0, 8.0]

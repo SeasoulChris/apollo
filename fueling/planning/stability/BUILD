@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -5,7 +7,7 @@ py_binary(
     srcs = ["dreamland.py"],
     deps = [
         "//fueling/planning/stability/grading:planning_stability_grader",
-    ]
+    ],
 )
 
 py_library(

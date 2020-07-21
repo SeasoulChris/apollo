@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -19,6 +21,7 @@ py_binary(
         "//fueling/common:logging",
         "//fueling/common:partners",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_op",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_extraction_utils",
         "//fueling/profiling/open_space_planner/feature_extraction:feature_visualization_utils",
         "//fueling/profiling/open_space_planner/metrics_utils:evaluation_method_util",

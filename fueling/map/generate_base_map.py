@@ -5,29 +5,26 @@ Run with:
     ./tools/submit-job-to-k8s.py --main=fueling/map/generate_base_map.py --memory=8 --disk=10
 """
 
-# Standard packages
 from datetime import datetime
 import glob
 import math
 import os
 
-# Third-party packages
 from absl import flags
 from shapely.geometry import LineString, Point
-import pyspark_utils.helper as spark_helper
 
-# Apollo packages
 from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
 from modules.map.proto import map_road_pb2
 
-# Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
+from fueling.common.job_utils import JobUtils
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
 import fueling.common.redis_utils as redis_utils
-from fueling.common.job_utils import JobUtils
+import fueling.common.spark_helper as spark_helper
+
 
 flags.DEFINE_float('lane_width', 3.0, 'lane width.')
 flags.DEFINE_float('extra_roi_extension', 0.5, 'extra roi extension.')

@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 py_binary(
     name = "routing_generator",
     srcs = ["routing_generator.py"],

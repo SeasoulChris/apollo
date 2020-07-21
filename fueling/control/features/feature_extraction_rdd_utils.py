@@ -2,11 +2,9 @@ from collections import Counter
 import operator
 import os
 
-import pyspark_utils.op as spark_op
-
-
 import fueling.common.file_utils as file_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.spark_op as spark_op
 import fueling.control.features.feature_extraction_utils as feature_extraction_utils
 
 

@@ -10,14 +10,14 @@ import tarfile
 import time
 
 from absl import flags
-import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
 import fueling.common.email_utils as email_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
+import fueling.common.spark_op as spark_op
 import fueling.profiling.common.dir_utils as dir_utils
 import fueling.profiling.common.multi_vehicle_utils as multi_vehicle_utils
 import fueling.profiling.control.feature_visualization.control_feature_visualization_utils \

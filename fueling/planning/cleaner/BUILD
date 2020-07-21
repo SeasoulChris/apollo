@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 filegroup(
     name = "task_list",
     srcs = ["task_list.txt"],

@@ -55,4 +55,3 @@ dependencies:
 
   - pip:
     - eyeD3
-    - pyspark-utils

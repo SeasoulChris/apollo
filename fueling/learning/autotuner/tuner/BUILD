@@ -1,6 +1,7 @@
-package(default_visibility = ["//visibility:public"])
-
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@default_deps//:requirements.bzl", "requirement")
+
+package(default_visibility = ["//visibility:public"])
 
 py_binary(
     name = "optuna_tuner",

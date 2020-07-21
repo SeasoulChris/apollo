@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -5,7 +7,7 @@ py_library(
     srcs = ["base_cost_job.py"],
     deps = [
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_library(
@@ -13,7 +15,7 @@ py_library(
     srcs = ["local_cost_job.py"],
     deps = [
         ":base_cost_job",
-    ]
+    ],
 )
 
 py_library(
@@ -24,5 +26,5 @@ py_library(
         "//apps/k8s/spark_submitter:client",
         "//fueling/common:logging",
         "//fueling/learning/autotuner/common:utils",
-    ]
+    ],
 )

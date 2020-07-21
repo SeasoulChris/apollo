@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -15,7 +17,7 @@ py_library(
     srcs = ["feature_extraction_utils.py"],
     deps = [
         "//fueling/control/dynamic_model_2_0/conf:model_conf",
-    ]
+    ],
 )
 
 py_binary(
@@ -25,6 +27,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:h5_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/dynamic_model_2_0/feature_extraction:feature_extraction_utils",
         "//fueling/control/dynamic_model_2_0/feature_extraction:interpolation_message",
         "//fueling/control/features:feature_extraction_rdd_utils",

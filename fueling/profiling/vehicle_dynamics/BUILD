@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -8,6 +10,8 @@ py_library(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/vehicle_dynamics/feature_visualization:vehicle_dynamics_feature_visualization_utils",
     ],
@@ -22,6 +26,8 @@ py_library(
         "//fueling/common:file_utils",
         "//fueling/common:logging",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/profiling/common:dir_utils",
         "//fueling/profiling/vehicle_dynamics/feature_extraction:vehicle_dynamics_feature_extraction_utils",
         "//fueling/profiling/vehicle_dynamics/grading_evaluation:vehicle_dynamics_grading_utils",

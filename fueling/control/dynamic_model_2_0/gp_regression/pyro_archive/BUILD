@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -17,7 +19,6 @@ py_library(
     name = "gaussian_process",
     srcs = ["gaussian_process.py"],
 )
-
 
 py_library(
     name = "train",
@@ -51,8 +52,8 @@ py_binary(
     name = "main",
     srcs = ["main.py"],
     deps = [
-        ":evaluation",
         ":dataset",
+        ":evaluation",
         ":gaussian_process",
         ":train",
     ],

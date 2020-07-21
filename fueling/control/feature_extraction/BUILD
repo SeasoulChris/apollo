@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -7,6 +9,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/features:dir_utils",
         "//fueling/control/features:feature_extraction_rdd_utils",
         "//fueling/control/features:feature_extraction_utils",
@@ -25,6 +28,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/features:dir_utils",
         "//fueling/control/features:feature_extraction_rdd_utils",
         "//fueling/control/features:feature_extraction_utils",
@@ -38,6 +42,8 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/features:feature_extraction_rdd_utils",
         "//fueling/control/features:feature_extraction_utils",
@@ -51,6 +57,7 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/features:dir_utils",
         "//fueling/control/features:feature_extraction_rdd_utils",
         "//fueling/control/features:feature_extraction_utils",
@@ -63,6 +70,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:h5_utils",
+        "//fueling/common:spark_helper",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/features:feature_extraction_utils",
     ],

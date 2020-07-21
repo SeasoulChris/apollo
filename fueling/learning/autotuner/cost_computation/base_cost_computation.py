@@ -1,40 +1,31 @@
 #!/usr/bin/env python
 """Auto Tuner Base"""
 
-# standard packages
 import json
 import uuid
 import os
 import time
 
-# third party packages
 from absl import flags
-import pyspark_utils.op as spark_op
 
-# Apollo-fuel packages
 from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
 from fueling.learning.autotuner.common.utils import run_with_retry
+import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
+import fueling.common.spark_op as spark_op
 import fueling.learning.autotuner.proto.sim_service_pb2 as sim_service_pb2
 import fueling.learning.autotuner.proto.cost_computation_service_pb2 as cost_service_pb2
-import fueling.common.proto_utils as proto_utils
-import fueling.common.file_utils as file_utils
 
-# Flags
+
 flags.DEFINE_string("token", None, "Sim service token.")
 flags.DEFINE_string("iteration_id", None, "A unique id")
+flags.DEFINE_string("mnt_root_dir", "/mnt/bos", "BOS directory")
 flags.DEFINE_string(
-    "mnt_root_dir", "/mnt/bos", "BOS directory"
-)
-flags.DEFINE_string(
-    "record_output_dir",
-    "autotuner",
-    "The relative path to the BOS directory that stores output record files from simulation",
-)
-flags.DEFINE_string(
-    "sim_service_url", "localhost:50051", "channel url to sim service"
-)
+    "record_output_dir", "autotuner",
+    "The relative path to the BOS directory that stores output record files from simulation")
+flags.DEFINE_string("sim_service_url", "localhost:50051", "channel url to sim service")
 
 
 class BaseCostComputation(BasePipeline):

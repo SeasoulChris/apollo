@@ -5,11 +5,11 @@ import time
 
 from absl import flags
 import numpy as np
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.h5_utils import read_h5
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
 import fueling.control.common.multi_vehicle_plot_utils as plot_utils
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
     feature_utils

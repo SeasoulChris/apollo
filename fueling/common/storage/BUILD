@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -11,7 +13,7 @@ py_library(
     deps = [
         ":base_storage",
         "//fueling/common:logging",
-    ]
+    ],
 )
 
 py_library(
@@ -21,7 +23,7 @@ py_library(
     ],
     deps = [
         ":base_storage",
-    ]
+    ],
 )
 
 py_library(
@@ -32,5 +34,5 @@ py_library(
     deps = [
         ":base_storage",
         ":filesystem",
-    ]
+    ],
 )

@@ -48,6 +48,7 @@ py_proto_library(
         ":voxel_generator_proto",
     ],
 )
+
 cc_proto_library(
     name = "sampler_cc_proto",
     deps = [
@@ -66,8 +67,8 @@ proto_library(
 py_proto_library(
     name = "sampler_py_pb2",
     deps = [
-        ":sampler_proto",
         ":preprocess_py_pb2",
+        ":sampler_proto",
     ],
 )
 
@@ -89,6 +90,7 @@ py_proto_library(
         ":anchors_proto",
     ],
 )
+
 cc_proto_library(
     name = "pipeline_cc_proto",
     deps = [
@@ -109,9 +111,9 @@ proto_library(
 py_proto_library(
     name = "pipeline_py_pb2",
     deps = [
-        ":pipeline_proto",
         ":input_reader_py_pb2",
         ":model_py_pb2",
+        ":pipeline_proto",
         ":train_py_pb2",
     ],
 )
@@ -127,8 +129,8 @@ proto_library(
     name = "second_proto",
     srcs = ["second.proto"],
     deps = [
-        ":losses_proto",
         ":box_coder_proto",
+        ":losses_proto",
         ":target_proto",
         ":voxel_generator_proto",
     ],
@@ -137,9 +139,9 @@ proto_library(
 py_proto_library(
     name = "second_py_pb2",
     deps = [
-        ":second_proto",
-        ":losses_py_pb2",
         ":box_coder_py_pb2",
+        ":losses_py_pb2",
+        ":second_proto",
         ":target_py_pb2",
         ":voxel_generator_py_pb2",
     ],
@@ -163,6 +165,7 @@ py_proto_library(
         ":box_coder_proto",
     ],
 )
+
 cc_proto_library(
     name = "target_cc_proto",
     deps = [
@@ -182,9 +185,9 @@ proto_library(
 py_proto_library(
     name = "target_py_pb2",
     deps = [
-        ":target_proto",
         ":anchors_py_pb2",
         ":similarity_py_pb2",
+        ":target_proto",
     ],
 )
 
@@ -206,6 +209,7 @@ py_proto_library(
         ":optimizer_proto",
     ],
 )
+
 cc_proto_library(
     name = "similarity_cc_proto",
     deps = [
@@ -224,6 +228,7 @@ py_proto_library(
         ":similarity_proto",
     ],
 )
+
 cc_proto_library(
     name = "train_cc_proto",
     deps = [
@@ -243,9 +248,9 @@ proto_library(
 py_proto_library(
     name = "train_py_pb2",
     deps = [
-        ":train_proto",
         ":optimizer_py_pb2",
         ":preprocess_py_pb2",
+        ":train_proto",
     ],
 )
 
@@ -267,6 +272,7 @@ py_proto_library(
         ":preprocess_proto",
     ],
 )
+
 cc_proto_library(
     name = "model_cc_proto",
     deps = [

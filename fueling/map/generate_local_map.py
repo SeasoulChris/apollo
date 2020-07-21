@@ -9,7 +9,6 @@ import glob
 import time
 
 from absl import flags
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.job_utils import JobUtils
@@ -19,6 +18,8 @@ import fueling.common.file_utils as file_utils
 import fueling.common.email_utils as email_utils
 import fueling.common.redis_utils as redis_utils
 import fueling.common.record_utils as record_utils
+import fueling.common.spark_helper as spark_helper
+
 
 flags.DEFINE_string('lidar_type', 'lidar16', 'compensator pointcloud topic.')
 

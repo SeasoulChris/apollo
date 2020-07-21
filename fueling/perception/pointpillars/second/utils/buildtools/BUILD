@@ -1,12 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "pybind11_build",
     srcs = ["pybind11_build.py"],
     deps = [
-        "//fueling/perception/pointpillars/second/utils:loader",
+        ":command",
         "//fueling/perception/pointpillars/second/utils:find",
-        ":command"
+        "//fueling/perception/pointpillars/second/utils:loader",
     ],
 )
 
@@ -17,5 +19,3 @@ py_library(
         "//fueling/perception/pointpillars/second/utils:find",
     ],
 )
-
-

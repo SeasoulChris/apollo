@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -6,6 +8,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_op",
         "@apollo//modules/prediction/proto:offline_features_py_pb2",
     ],
 )
@@ -16,6 +19,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_op",
         "@apollo//modules/prediction/proto:offline_features_py_pb2",
     ],
 )
@@ -78,6 +82,7 @@ py_binary(
     srcs = ["evaluate_performance.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:spark_op",
         "@apollo//modules/prediction/proto:feature_py_pb2",
         "@apollo//modules/prediction/proto:offline_features_py_pb2",
         "@apollo//modules/prediction/proto:prediction_conf_py_pb2",
@@ -102,6 +107,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_op",
         "//fueling/prediction/common:bounding_rectangle",
         "//fueling/prediction/common:online_to_offline",
     ],
@@ -193,6 +199,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_op",
         "//fueling/prediction/common:configure",
     ],
 )

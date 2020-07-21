@@ -7,11 +7,12 @@ import os
 
 from absl import flags
 import numpy as np
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
 from fueling.prediction.common.configure import semantic_map_config
+import fueling.common.logging as logging
+import fueling.common.spark_op as spark_op
+
 
 LINEAR_ACC_THRESHOLD = 100
 ANGULAR_VEL_THRESHOLD = 0.50
@@ -19,6 +20,7 @@ TURNING_ANGLE_THRESHOLD = np.pi / 6
 
 OFFSET_X = semantic_map_config['offset_x']
 OFFSET_Y = semantic_map_config['offset_y']
+
 
 '''
 [scene, scene, ..., scene]

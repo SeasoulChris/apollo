@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -30,6 +32,7 @@ py_library(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_op",
     ],
 )
 
@@ -38,6 +41,7 @@ py_library(
     srcs = ["feature_extraction_rdd_utils.py"],
     deps = [
         ":feature_extraction_utils",
+        "//fueling/common:spark_op",
     ],
 )
 

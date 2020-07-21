@@ -3,11 +3,11 @@
 import io
 import sys
 
-import pyspark_utils.helper as spark_helper
-
 from fueling.common.base_pipeline import BasePipeline
 from fueling.data.afs_client.client import AfsClient
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
+
 
 # print chinese characters
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')

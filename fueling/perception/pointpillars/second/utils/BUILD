@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -13,8 +15,8 @@ py_library(
     name = "eval",
     srcs = ["eval.py"],
     deps = [
-        "//fueling/perception/pointpillars/second/core/non_max_suppression:nms_gpu",
         "//fueling/perception/pointpillars/second/core:box_np_ops",
+        "//fueling/perception/pointpillars/second/core/non_max_suppression:nms_gpu",
     ],
 )
 
@@ -44,7 +46,6 @@ py_library(
     deps = [
         "//fueling/perception/pointpillars/second/core:box_np_ops",
     ],
-
 )
 
 py_library(
@@ -56,4 +57,3 @@ py_library(
     name = "loader",
     srcs = ["loader.py"],
 )
-

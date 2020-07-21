@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -5,6 +7,7 @@ py_binary(
     srcs = ["dynamic_model_data_visualization.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:spark_helper",
         "//fueling/control/common:multi_vehicle_plot_utils",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/dynamic_model/data_generator:feature_extraction",
@@ -42,8 +45,8 @@ py_binary(
     name = "dynamic_model",
     srcs = ["dynamic_model.py"],
     deps = [
-        ":dynamic_model_training",
         ":dynamic_model_data_visualization",
+        ":dynamic_model_training",
         "//fueling/control/dynamic_model/feature_extraction:sample_set",
         "//fueling/control/dynamic_model/feature_extraction:uniform_set",
     ],
@@ -59,6 +62,7 @@ py_binary(
     srcs = ["IMU_evaluation.py"],
     deps = [
         "//fueling/common:base_pipeline",
+        "//fueling/common:spark_helper",
         "//fueling/control/dynamic_model/conf:model_config",
         "//fueling/control/dynamic_model/data_generator:feature_extraction",
         "//fueling/control/dynamic_model/offline_evaluator:non_holistic_model_evaluator",

@@ -11,8 +11,6 @@ from absl import flags
 from keras.models import load_model
 import h5py
 import numpy as np
-import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.conf.model_conf import \
@@ -20,6 +18,8 @@ from fueling.control.dynamic_model_2_0.conf.model_conf import \
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
+import fueling.common.spark_helper as spark_helper
+import fueling.common.spark_op as spark_op
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
     feature_utils_2_0
 import fueling.control.features.feature_extraction_utils as feature_utils

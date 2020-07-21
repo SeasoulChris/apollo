@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -8,6 +10,8 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "@apollo//cyber/python/cyber_py3:record",
     ],
 )
@@ -45,6 +49,8 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:record_utils",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/common:time_utils",
         "@apollo//cyber/python/cyber_py3:record",
     ],

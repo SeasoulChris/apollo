@@ -1,13 +1,14 @@
-package(default_visibility = ["//visibility:public"])
-
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@default_deps//:requirements.bzl", "requirement")
+
+package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "dataset",
     srcs = ["dataset.py"],
     deps = [
         requirement("liegroups"),
-    ]
+    ],
 )
 
 py_binary(
@@ -20,7 +21,7 @@ py_library(
     srcs = ["filter.py"],
     deps = [
         requirement("liegroups"),
-    ]
+    ],
 )
 
 py_library(
@@ -30,7 +31,7 @@ py_library(
         ":dataset",
         ":filter",
         ":train",
-    ]
+    ],
 )
 
 py_library(
@@ -38,7 +39,7 @@ py_library(
     srcs = ["train.py"],
     deps = [
         ":utils",
-    ]
+    ],
 )
 
 py_library(

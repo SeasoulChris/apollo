@@ -4,7 +4,6 @@ import operator
 import os
 
 import cv2 as cv
-import pyspark_utils.op as spark_op
 
 from map_feature.obstacle_mapping import ObstacleMapping
 from modules.prediction.proto import offline_features_pb2
@@ -12,6 +11,7 @@ from modules.prediction.proto import offline_features_pb2
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.spark_op as spark_op
 
 
 class GenerateImgs(BasePipeline):

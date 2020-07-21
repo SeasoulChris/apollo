@@ -6,11 +6,11 @@ import re
 
 import h5py
 import numpy as np
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging
+import fueling.common.spark_helper as spark_helper
 import fueling.control.dynamic_model.data_generator.feature_extraction as feature_extraction
 import fueling.control.dynamic_model.offline_evaluator.non_holistic_model_evaluator as evaluator
 

@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -45,6 +47,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
         "//fueling/data/afs_client:client",
     ],
 )
@@ -55,6 +58,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
         "//fueling/data/afs_client:client",
     ],
 )
@@ -65,6 +69,7 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
         "//fueling/data/afs_client:client",
     ],
 )
@@ -77,6 +82,8 @@ py_binary(
         "//fueling/common:email_utils",
         "//fueling/common:file_utils",
         "//fueling/common:logging",
+        "//fueling/common:spark_helper",
+        "//fueling/common:spark_op",
         "//fueling/data/afs_client:client",
         "//fueling/data/afs_client:config",
     ],

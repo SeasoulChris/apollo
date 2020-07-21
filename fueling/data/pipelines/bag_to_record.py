@@ -7,13 +7,13 @@ import fnmatch
 import os
 
 from absl import flags
-import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+import fueling.common.spark_helper as spark_helper
+import fueling.common.spark_op as spark_op
 
 
 BINARY = '/apollo/bazel-bin/modules/data/tools/rosbag_to_record/rosbag_to_record'

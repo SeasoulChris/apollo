@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -18,10 +20,10 @@ py_library(
     name = "pointpillars",
     srcs = ["pointpillars.py"],
     deps = [
-        ":voxel_encoder",
         ":middle",
+        ":voxel_encoder",
+        "//fueling/perception/pointpillars/torchplus:tools",
         "//fueling/perception/pointpillars/torchplus/nn/modules:common",
-	    "//fueling/perception/pointpillars/torchplus:tools",
     ],
 )
 
@@ -47,18 +49,13 @@ py_library(
     name = "voxelnet",
     srcs = ["voxelnet.py"],
     deps = [
-        "//fueling/perception/pointpillars/torchplus/nn:functional",
-        "//fueling/perception/pointpillars/torchplus:metrics",
-        "//fueling/perception/pointpillars/second/pytorch/core:box_torch_ops",
-        "//fueling/perception/pointpillars/second/pytorch/core:losses",
         ":middle",
         ":pointpillars",
         ":rpn",
         ":voxel_encoder",
+        "//fueling/perception/pointpillars/second/pytorch/core:box_torch_ops",
+        "//fueling/perception/pointpillars/second/pytorch/core:losses",
+        "//fueling/perception/pointpillars/torchplus:metrics",
+        "//fueling/perception/pointpillars/torchplus/nn:functional",
     ],
 )
-
-
-
-
-

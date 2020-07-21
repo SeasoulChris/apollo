@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -10,6 +12,7 @@ py_library(
         "//fueling/common:base_pipeline",
         "//fueling/common:file_utils",
         "//fueling/common:proto_utils",
+        "//fueling/common:spark_op",
         "//fueling/learning/autotuner/client:sim_client",
         "//fueling/learning/autotuner/common:utils",
         "//fueling/learning/autotuner/proto:cost_computation_service_py_pb2",

@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -13,8 +15,8 @@ py_library(
     name = "input_reader_builder",
     srcs = ["input_reader_builder.py"],
     deps = [
-        "//fueling/perception/pointpillars/second/protos:input_reader_py_pb2",
         "//fueling/perception/pointpillars/second/builder:dataset_builder",
+        "//fueling/perception/pointpillars/second/protos:input_reader_py_pb2",
     ],
 )
 
@@ -30,9 +32,9 @@ py_library(
     name = "optimizer_builder",
     srcs = ["optimizer_builder.py"],
     deps = [
+        "//fueling/perception/pointpillars/torchplus/train:fastai_optim",
         "//fueling/perception/pointpillars/torchplus/train:learning_schedules",
         "//fueling/perception/pointpillars/torchplus/train:optim",
-        "//fueling/perception/pointpillars/torchplus/train:fastai_optim",
     ],
 )
 
@@ -41,8 +43,8 @@ py_library(
     srcs = ["losses_builder.py"],
     deps = [
         "//fueling/perception/pointpillars/second/protos:losses_py_pb2",
-        "//fueling/perception/pointpillars/second/pytorch/core:losses",
         "//fueling/perception/pointpillars/second/pytorch/core:ghm_loss",
+        "//fueling/perception/pointpillars/second/pytorch/core:losses",
     ],
 )
 
@@ -52,7 +54,7 @@ py_library(
     deps = [
         ":losses_builder",
         "//fueling/perception/pointpillars/second/protos:second_py_pb2",
+        "//fueling/perception/pointpillars/second/pytorch/models:net_multi_head",
         "//fueling/perception/pointpillars/second/pytorch/models:voxelnet",
-	"//fueling/perception/pointpillars/second/pytorch/models:net_multi_head",
     ],
 )

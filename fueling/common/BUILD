@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -160,6 +162,19 @@ py_library(
     deps = [
         ":logging",
     ],
+)
+
+py_library(
+    name = "spark_helper",
+    srcs = ["spark_helper.py"],
+    deps = [
+        ":logging",
+    ],
+)
+
+py_library(
+    name = "spark_op",
+    srcs = ["spark_op.py"],
 )
 
 py_library(

@@ -3,8 +3,6 @@
 import os
 
 import numpy as np
-import pyspark_utils.helper as spark_helper
-import pyspark_utils.op as spark_op
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.feature_extraction.interpolation_message import \
@@ -14,6 +12,7 @@ from fueling.control.features.feature_extraction_utils import pair_cs_pose
 import fueling.common.h5_utils as h5_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
+import fueling.common.spark_helper as spark_helper
 import fueling.control.dynamic_model_2_0.feature_extraction.feature_extraction_utils as \
     feature_utils
 

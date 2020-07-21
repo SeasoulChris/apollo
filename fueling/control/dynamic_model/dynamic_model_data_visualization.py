@@ -11,9 +11,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import pyspark_utils.helper as spark_helper
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.spark_helper as spark_helper
 from fueling.control.dynamic_model.conf.model_config import segment_index, input_index
 from fueling.control.dynamic_model.conf.model_config import feature_config
 import fueling.common.logging as logging

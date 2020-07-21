@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
@@ -8,9 +10,9 @@ py_binary(
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",
         "//fueling/common:job_utils",
-        "//fueling/common:redis_utils",
         "//fueling/common:partners",
-    ]
+        "//fueling/common:redis_utils",
+    ],
 )
 
 py_library(
@@ -18,5 +20,5 @@ py_library(
     srcs = ["calibration_config.py"],
     deps = [
         "//fueling/common:file_utils",
-    ]
+    ],
 )
