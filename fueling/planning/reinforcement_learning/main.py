@@ -111,7 +111,7 @@ class RLNetwork(nn.Module):
         self.valuenet_fc2_layer = nn.Linear(hidden_size, hidden_size)
         self.valuenet_fc3_layer = nn.Linear(hidden_size, 1)
 
-    def forward(self, X, rl=False, hidden=0, action=[0, 0, 0, 0]):
+    def forward(self, X, rl=False, hidden=0, action=[[0, 0, 0, 0]]):
         img_feature, hist_points, hist_points_step = X
         batch_size = img_feature.size(0)
         if rl:
@@ -148,12 +148,12 @@ class RLNetwork(nn.Module):
 
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
-            # the following calculates the output for value network branch
-            # here the action only includes the first point of pred_traj
-            x = torch.cat([img_embedding, action], 1)
-            x = F.relu(self.valuenet_fc1_layer(x))
-            x = F.relu(self.valuenet_fc2_layer(x))
-            x = self.valuenet_fc3_layer(x)
+        # the following calculates the output for value network branch
+        # here the action only includes the first point of pred_traj
+        x = torch.cat([img_embedding, action], 1)
+        x = F.relu(self.valuenet_fc1_layer(x))
+        x = F.relu(self.valuenet_fc2_layer(x))
+        x = self.valuenet_fc3_layer(x)
 
         return pred_traj[:, 1:, :], (ht, ct), x
 
@@ -161,7 +161,7 @@ class RLNetwork(nn.Module):
 def main():
     # training loop
     env = ADSEnv()
-    rl = DDPG()  # initiate the RL framework
+    rl = DDPG(history_len, pred_horizon)  # initiate the RL framework
 
     for i_episode in range(1000):
         state, hidden = env.reset()

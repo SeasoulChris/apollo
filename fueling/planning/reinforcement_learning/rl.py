@@ -4,7 +4,7 @@ import torch
 
 
 class DDPG(object):
-    def __init__(self):
+    def __init__(self, history_len, pred_horizon):
         self.learn_step_counter = 0     # counter to update target network
 
         self.rl_net = RLNetwork(history_len, pred_horizon).to(device)
@@ -44,17 +44,17 @@ class DDPG(object):
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
         pred_traj, _, _ = self.rl_net(state, rl=True, hidden=hidden)
-        _, _, policy_loss = self.rl_net(state, rl=True, action=pred_traj[:, 0])
+        _, _, policy_loss = self.rl_net(state, rl=True, action=pred_traj[:, 0, :])
         policy_loss = -policy_loss.mean()
 
         next_pred_traj, _, _ = self.target_net(
             next_state, rl=True, hidden=next_hidden)
-        next_action = next_pred_traj[:, 0]
-        _, _, target_value = self.target_net(next_state, rl=True, next_action.detach())
+        next_action = next_pred_traj[:, 0, :]
+        _, _, target_value = self.target_net(next_state, rl=True, action=next_action.detach())
         expected_value = reward + (1.0 - done) * gamma * target_value
         expected_value = torch.clamp(expected_value, min_value, max_value)
 
-        _, _, value = self.ls_net(state, rl=True, action=action)
+        _, _, value = self.rl_net(state, rl=True, action=action[:, 0, :])
         value_loss = self.value_loss_func(value, expected_value.detach())
 
         self.optimizer.zero_grad()
