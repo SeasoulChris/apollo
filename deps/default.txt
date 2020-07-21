@@ -7,5 +7,5 @@ psycopg2-binary
 
 # TODO(v_shenyu01): Required by emergency vehicle detection
 # tensorboardX
-easydict
-pycocotools
+# easydict
+# pycocotools

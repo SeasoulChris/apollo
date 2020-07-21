@@ -23,8 +23,6 @@ py_binary(
             "tool/tv_reference/coco_eval.py",
             "tool/tv_reference/transforms.py"],
     deps = [
-        requirement("easydict"),
-        requirement("pycocotools"),
         "//fueling/common:base_pipeline"
     ]
 )
