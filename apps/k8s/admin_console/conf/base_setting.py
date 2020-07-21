@@ -48,3 +48,23 @@ class Config(object):
         "service_specialist": ["/index", "/jobs"]
     }
     WHITE_URL = ["/static", "/login", "/logout"]
+    ACCOUNT_SHOW_ACTION = {
+        "Pending": ("Enable", "Reject"),
+        "Rejected": (),
+        "Enabled": ("Edit", "Disable"),
+        "Disabled": ("Enable",),
+        "Over-quota": ("Edit",),
+        "Expired": ("Edit",)
+    }
+    SHOW_SERVICE_PACKAGE = {
+        "TO": "试用包",
+        "OY": "一年包"
+    }
+    ACCOUNT_SERVICE_QUOTA = {
+        "TO": 15,
+        "OY": 50
+    }
+    ACCOUNT_SERVICE_DAYS = {
+        "TO": 30,
+        "OY": 365
+    }

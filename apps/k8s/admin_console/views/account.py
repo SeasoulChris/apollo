@@ -20,9 +20,10 @@ blue_account = flask.Blueprint("account", __name__,
 @blue_account.route("/accounts", methods=["GET", "POST"])
 def accounts():
     """
-
+    account list
     """
     black_list = application.app.config.get("BLACK_LIST")
+    account_show_action = application.app.config.get("ACCOUNT_SHOW_ACTION")
     current_page = int(flask.request.args.get("page", 1))
     vehicle_sn = flask.request.args.get("vehicle_sn")
     find_filter = []
@@ -38,11 +39,12 @@ def accounts():
     accounts = account.account_db.get_account_info(filters)
     account_used = account.get_job_used(accounts)
     account_objs = account.format_account_time(account_used)
-    account_nums = len(account_objs)
+    account_add_show_actions = account.get_show_action(account_show_action, account_objs)
+    account_nums = len(account_add_show_actions)
     account_paginator = paginator.Pagination(account_nums, 20)
     current_page = paginator.CurrentPaginator(current_page, account_paginator)
     first, last = current_page.get_index_content()
-    account_list = sorted(account_objs, key=lambda x: x["apply_date"], reverse=True)[first: last]
+    account_list = sorted(account_objs, key=lambda x: x["due_date"])[first: last]
     return flask.render_template("accounts.html", account_list=account_list,
                                  current_page=current_page, vehicle_sn=vehicle_sn,
                                  username=flask.session.get("user_info").get("username"))
@@ -85,4 +87,36 @@ def update_status():
             res["code"] = 400
             res["msg"] = "update failure"
     logging.info(f"res:{res}")
+    return json.dumps(res)
+
+
+@blue_account.route("/edit_quota", methods=["GET", "post"])
+def edit_quota():
+    """
+    edit the quota
+    """
+    package_dict = application.app.config.get("ACCOUNT_SERVICE_QUOTA")
+    days_dict = application.app.config.get("ACCOUNT_SERVICE_DAYS")
+    res = {}
+    data = flask.request.form
+    selected_package = data["service_package"]
+    account_id = data["account_id"]
+    if selected_package not in package_dict:
+        res["code"] = 201
+        res["msg"] = "The package not in services"
+        return json.dumps(res)
+    add_quota = package_dict[selected_package]
+    account_objs = account.account_db.get_account_info({"_id": account_id})
+    if not account_objs:
+        res["code"] = 202
+        res["msg"] = "The account id is error"
+        return json.dumps(res)
+    accounts_add_used = account.get_job_used(account_objs)
+    accounts_add_quota = account.add_quota(accounts_add_used, add_quota)
+    accounts_add_due_date = account.extension_date(accounts_add_quota, days_dict[selected_package])
+    accounts_format_time = account.format_account_time(accounts_add_due_date)
+    account_data = accounts_format_time[0]
+    res["code"] = 200
+    res["msg"] = "success"
+    res["data"] = account_data
     return json.dumps(res)

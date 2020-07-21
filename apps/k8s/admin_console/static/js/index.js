@@ -11,8 +11,78 @@ $(document).ready(function () {
     $('.failure-code').tooltip({container: 'body'});
     $('.td-job-id').tooltip({container: 'body'});
 
-    // select drop-down box
-    $('select').selectpicker();
+    // change the edit checkbox
+    $("#package-div input").change(function(){
+        switchSelect(this);
+    });
+
+    // hide the edit modal
+    $('#editModal').on('hide.bs.modal', function (e) {
+        var job_check = $("#editModal").children().children().children("form").children(".modal-body").children().first("div");
+        job_check.empty();
+        var inputDom = $("#package-div input");
+        inputDom.removeAttr("checked");
+        switchSelect(inputDom);
+    })
+
+    // show the edit modal
+    $('#editModal').on('show.bs.modal', function (e) {
+        var button = $(e.relatedTarget);
+        var account_services = eval(button.data("account-services"));
+        var account_data = {};
+        var account_body = $("#editModal").children().children().children("form").children(".modal-body")
+        var account_body_job = account_body.children().first("div");
+        var account_body_check = account_body.children().last("div");
+        account_data["account_id"] = button.data("account-id");
+        $("#editModalLabel").text("修改服务信息");
+        for (j = 0; j<account_services.length; j++){
+            console.log(account_services[j], "service")
+            var show_job_type = account_services[j]["job_type"];
+            var show_used = 0;
+            if (account_services[j].used){
+                show_used = account_services[j]["used"]
+            }
+            var show_dom = "<div style={'display': 'block'}><input name='account-job-type' type='checkbox' checked value="
+             + show_job_type + "><span>" + show_job_type + "    "+ "used:" + show_used+ "</span></div>";
+            account_body_job.prepend(show_dom);
+        }
+        account_body_check.css("display", "block");
+
+        $(".edit_quota").one("click", function(e){
+            if ($("#package-div input").is(":checked")){
+                var package_selected = $("#package-select option:selected").val();
+                console.log(package_selected);
+                account_data["service_package"] = package_selected;
+                console.log(account_data,"account_data");
+                $.ajax({
+                    url: "/edit_quota",
+                    dataType: "json",
+                    type: "POST",
+                    data: account_data,
+                    success: function (result) {
+                        $("#editModal").modal("hide");
+                        var account_data = result["data"];
+                        var service_dom = $("#service-tr-"+account_data["_id"]).nextUntil("#operation-tr-"+account_data["_id"])
+                        var services = account_data["services"]
+
+                        for (i=0; i<service_dom.length; i++){
+                            console.log(service_dom[i]);
+                            $(service_dom[i]).children().text(services[i]["job_type"]+":"+services[i]["status"]+"使用:"+services[i]["used"]+"剩余配额:"+account_data["remaining_quota"]);
+                        };
+
+                        $("#due-date-"+account_data["_id"]).text(account_data["due_date"]);
+                        $("#edit-action-"+account_data["_id"]).attr("data-account-services", services);
+                        button.data("account-services", services);
+                        $(document).trigger("widget.mb.show", {type:"ok",message:"用户（邮箱："+account_data["com_email"]+"）剩余配额"+account_data["remaining_quota"]});
+                    }
+                })
+            }
+            else{
+                $(document).trigger("widget.mb.show", {type:"ok",message:"配额没有修改"});
+            };
+            return false;
+        })
+    });
 
     // close update message
     $("#update-message-close").click(function () {
@@ -347,4 +417,14 @@ widget.messageBar["show"] = function(options){
         break;
     }
     return true;
+};
+
+// switch the select disabled attr
+function switchSelect(input) {
+    if($(input).is(":checked")){
+        $("#package-select").removeAttr("disabled");
+    }
+    else{
+        $("#package-select").attr("disabled",true);
+    }
 };

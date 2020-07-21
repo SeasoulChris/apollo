@@ -89,3 +89,10 @@ class AccountUtils(object):
             result.append(data)
         logging.info(f"get_account_info: {result}")
         return result
+
+    def save_account_due_date(self, account_id, date):
+        """save account due_date"""
+        self.db.update_one({'_id': ObjectId(account_id)},
+                           {'$set': {'status': 'Enabled',
+                                     'due_date': date}})
+        logging.info(f"save_account_due_date: {account_id}")

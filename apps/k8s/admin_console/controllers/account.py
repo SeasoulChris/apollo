@@ -28,7 +28,6 @@ def format_account_time(objs):
     """
     Format the job timestamp into a string
     """
-    jobs = []
     for account_data in objs:
         start_time = account_data.get("apply_date")
         end_time = account_data.get("due_date")
@@ -40,8 +39,46 @@ def format_account_time(objs):
         if operations:
             for opt in operations:
                 opt["time"] = time_utils.get_datetime_str(opt["time"])
-        jobs.append(account_data)
-    return jobs
+    return objs
+
+
+def add_quota(objs, add_quota):
+    """
+    Add quota for the obj
+    """
+    for obj in objs:
+        quota = obj["quota"]
+        if obj["status"] == "Enabled":
+            quota += add_quota
+        elif obj["status"] in ("Over-quota", "Expired"):
+            quota = obj["used"] + add_quota
+        account_db.save_account_quota(obj["_id"], quota)
+        obj["quota"] = quota
+        obj["remaining_quota"] = quota - obj["used"]
+    return objs
+
+
+def extension_date(objs, days):
+    """
+    Modify the due_date for the obj
+    """
+    for obj in objs:
+        if obj["status"] == "Enabled":
+            obj["due_date"] = obj["due_date"] + datetime.timedelta(days=days)
+        elif obj["status"] in ("Over-quota", "Expired"):
+            obj["due_date"] = datetime.datetime.now() + datetime.timedelta(days=days)
+            obj["status"] = "Enabled"
+        account_db.save_account_due_date(obj["_id"], obj["due_date"])
+    return objs
+
+
+def get_show_action(show_action, objs):
+    """
+    Get the show_action
+    """
+    for obj in objs:
+        obj["show_action"] = show_action[obj["status"]]
+    return objs
 
 
 def get_job_used(objs):
@@ -64,6 +101,9 @@ def get_job_used(objs):
                 if job_type_used:
                     service["used"] = job_type_used
                     sum_counts += job_type_used
+                else:
+                    service["used"] = 0
+            obj["used"] = sum_counts
             obj["remaining_quota"] = obj["quota"] - sum_counts
             if is_over_quota(sum_counts, obj.get("quota")) and obj["status"] == "Enabled":
                 obj["status"] = "Over-quota"
@@ -73,8 +113,10 @@ def get_job_used(objs):
 
 
 def is_over_quota(used, quota):
+    """Whether the account is over quota"""
     return used > quota
 
 
 def is_expired(expire_date):
+    """Whether the account is expired"""
     return expire_date < datetime.datetime.now()

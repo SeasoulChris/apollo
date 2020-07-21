@@ -67,6 +67,41 @@
     </div>
 </div>
 
+<!-- edit dialog -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="editModalLabel"></h4>
+            </div>
+            <form id="modal-form">
+                <div class="modal-body">
+                    <div>
+                    </div>
+                    <div style="display: none">
+                        <div id="package-div">
+                            <input type='checkbox'><span>如果客户购买了一个新的服务，请选择</span>
+                        </div>
+                        <div class="btn-group">
+                            <select name="service_package" class="form-control"
+                                    style="height:30px; font-size: 12px" id="package-select" disabled>
+                                <option value="TO" style="font-size: 12px" selected> 试用包</option>
+                                <option value="OY" style="font-size: 12px"> 一年包</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel_account btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="submit" class="edit_quota btn btn-primary">修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <!-- search message and update message -->
 {% if vehicle_sn %}
 <p>
@@ -75,9 +110,13 @@
             </span>
 </p>
 {% endif %}
-<p style="color:red;"><span id='update-message'></span><span id="update-message-close"
-                                                             class="glyphicon glyphicon-remove"
-                                                             style="display: none"></span></p>
+
+<!-- account message -->
+<div id="messageBar" style="color:red; display: none">
+   <span class="message"></span>
+   <span class="icon glyphicon glyphicon-remove"></span>
+</div>
+
 <!-- The table of job list -->
 <table class="table table-hover">
     <tr>
@@ -101,42 +140,55 @@
         <td>{{ account.bos_region }}</td>
         <td id="status-{{ account._id }}">{{ account.status }}</td>
         <td>{{ account.apply_date }}</td>
-        <td>{{ account.due_date }}</td>
+        <td id="due-date-{{ account._id }}">{{ account.due_date }}</td>
         <td>
-            {% if account.status == "Enabled" %}
-            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
-                data-target="#accountModal" data-label="Disable" data-verhicle_sn="{{ account.vehicle_sn }}"
-                data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
-                data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
-                data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
-                 Disable
-             </a>             
-            <a style="width: 100%" id="button-edit-{{ account._id }}" class="account-modal" data-toggle="modal">
-                Edit
-            </a>
-            {% elif account.status == "Pending" or "Disabled" %}
-                {% if account.status == "Pending" %}
-                    <a style="width: 100%" id="button-reject-{{ account._id }}" class="account-modal" data-toggle="modal"
-                    data-target="#accountModal" data-label="Reject" data-verhicle_sn="{{ account.vehicle_sn }}"
-                    data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
-                    data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
-                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
-                        Reject
-                    </a>
+            {% for action in account.show_action %}
+                {% if action == "Edit" %}
+                <a style="width: 100%" id="edit-action-{{ account._id }}" class="account-edit-modal" data-toggle="modal"
+                   data-target="#editModal" data-account-services="{{account.services}}" data-account-id="{{account._id}}">
+                    {{ action }}
+                </a>
+                {% else %}
+                <a style="width: 100%" id="account-action-{{ account._id }}" class="account-modal" data-toggle="modal"
+                   data-target="#myModal">
+                    {{ action }}
+                </a>
                 {% endif %}
-            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
-               data-target="#accountModal" data-label="Enable" data-verhicle_sn="{{ account.vehicle_sn }}"
-               data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"
-               data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
-               data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">
-                Enable
-            </a>
-            {% else %}
-            <a style="width: 100%" id="account-action-{{ account._id }}" class="account-modal" data-toggle="modal"
-               data-target="#accountModal" data-label="{{ account.status }}" data-account_id="{{ account._id }}">
-                {{ account.status | show_account_action }}
-            </a>
-            {% endif %}
+            {% endfor %}
+<!--            {% if account.status == "Enabled" %}-->
+<!--            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"-->
+<!--                data-target="#accountModal" data-label="Disable" data-verhicle_sn="{{ account.vehicle_sn }}"-->
+<!--                data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"-->
+<!--                data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"-->
+<!--                data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">-->
+<!--                 Disable-->
+<!--             </a>             -->
+<!--            <a style="width: 100%" id="button-edit-{{ account._id }}" class="account-modal" data-toggle="modal">-->
+<!--                Edit-->
+<!--            </a>-->
+<!--            {% elif account.status == "Pending" or "Disabled" %}-->
+<!--                {% if account.status == "Pending" %}-->
+<!--                    <a style="width: 100%" id="button-reject-{{ account._id }}" class="account-modal" data-toggle="modal"-->
+<!--                    data-target="#accountModal" data-label="Reject" data-verhicle_sn="{{ account.vehicle_sn }}"-->
+<!--                    data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"-->
+<!--                    data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"-->
+<!--                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">-->
+<!--                        Reject-->
+<!--                    </a>-->
+<!--                {% endif %}-->
+<!--            <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"-->
+<!--               data-target="#accountModal" data-label="Enable" data-verhicle_sn="{{ account.vehicle_sn }}"-->
+<!--               data-com_name="{{ account.com_name }}" data-com_email="{{ account.com_email }}"-->
+<!--               data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"-->
+<!--               data-account_status="{{ account.status }}" data-account_id="{{ account._id }}">-->
+<!--                Enable-->
+<!--            </a>-->
+<!--            {% else %}-->
+<!--            <a style="width: 100%" id="account-action-{{ account._id }}" class="account-modal" data-toggle="modal"-->
+<!--               data-target="#accountModal" data-label="{{ account.status }}" data-account_id="{{ account._id }}">-->
+<!--                {{ account.status | show_account_action }}-->
+<!--            </a>-->
+<!--            {% endif %}-->
         </td>
         <td>
             <a id="expand-{{ account._id }}" class="account_expand" style="display: inline">展开</a>
@@ -145,7 +197,7 @@
     </tr>
 
     <!-- The service information -->
-    <tr style="display: none" class="service_tr">
+    <tr style="display: none" id="service-tr-{{ account._id }}">
         <td align="left" colspan="10"><b>服务信息:</b></td>
     </tr>
 
@@ -157,7 +209,7 @@
     </tr>
     {% endfor %}
 
-    <tr style="display: none" class="operation_tr">
+    <tr style="display: none" id="operation-tr-{{account._id}}">
         <td align="left" colspan="10"><b>操作历史：</b></td>
     </tr>
 
