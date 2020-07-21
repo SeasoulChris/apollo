@@ -21,6 +21,17 @@ if [ -z "${HOME}" ]; then
   HOME=$( cd; pwd )
 fi
 
+docker images --format "{{.Repository}}:{{.Tag}}" | grep ${IMAGE} > /dev/null
+if [ $? -eq 0 ]; then
+  echo "The lastest Image ${IMAGE} exists."
+else
+  echo "The lastest Image ${IMAGE} doesn't exists."
+  docker ps -a --format "{{.Names}}" | grep -v gocloud | grep ${CONTAINER} > /dev/null
+  if [ $? -eq 0 ]; then
+    docker rm -f ${CONTAINER} > /dev/null
+  fi
+fi
+
 docker ps -a --format "{{.Names}}" | grep -v gocloud | grep ${CONTAINER} > /dev/null
 if [ $? -eq 0 ]; then
   echo "Found existing container. If you need a fresh one, run 'docker rm -f ${CONTAINER}' first."
