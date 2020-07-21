@@ -284,7 +284,7 @@ if __name__ == "__main__":
         os.mkdir(output_dir)
         print("Making output directory: " + output_dir)
 
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
         current_y = current_path_point.y

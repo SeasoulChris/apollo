@@ -53,7 +53,7 @@ class DataInspector:
             learning_data_frames = learning_data_pb2.LearningData()
             with open(file_path, 'rb') as file_in:
                 learning_data_frames.ParseFromString(file_in.read())
-            for learning_data_frame in learning_data_frames.learning_data:
+            for learning_data_frame in learning_data_frames.learning_data_frame:
                 self.instances.append(learning_data_frame)
 
         self.total_num_instances = len(self.instances)

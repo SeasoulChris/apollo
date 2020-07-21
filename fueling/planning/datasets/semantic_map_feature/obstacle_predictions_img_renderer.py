@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
     ego_pos_dict = dict()
     obstacle_predictions_mapping = ObstaclePredictionsImgRenderer(config_file)
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = obstacle_predictions_mapping.draw_obstacle_box_prediction(
             frame.adc_trajectory_point[-1].timestamp_sec, frame.obstacle)
         key = "{}@{:.3f}".format(

@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     speedlimit_mapping = SpeedLimitImgRenderer(
         config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = speedlimit_mapping.draw_speedlimit(
             frame.localization.position.x,
             frame.localization.position.y,

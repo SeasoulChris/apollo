@@ -110,7 +110,7 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     routing_mapping = RoutingImgRenderer(
         config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = routing_mapping.draw_local_routing(
             frame.localization.position.x, frame.localization.position.y,
             frame.localization.heading, frame.routing.local_routing_lane_id)

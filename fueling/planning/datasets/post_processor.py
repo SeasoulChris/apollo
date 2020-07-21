@@ -81,7 +81,7 @@ class PostProcessor(BasePipeline):
         file_utils.makedirs(dst_dir)
         logging.info(f'start writing to folder {dst_dir}')
         for data_frame in data_frames:
-            learning_data.learning_data.add().CopyFrom(data_frame)
+            learning_data.learning_data_frame.add().CopyFrom(data_frame)
             frame_count += 1
             if frame_count == frame_len:
                 file_count += 1
@@ -93,11 +93,11 @@ class PostProcessor(BasePipeline):
                     bin_f.write(learning_data.SerializeToString())
                 if is_debug:
                     txt_file_name = f'{file_count}.txt'
-                    proto_utils.write_pb_to_text_file(learning_data.learning_data[0],
+                    proto_utils.write_pb_to_text_file(learning_data.learning_data_frame[0],
                                                       os.path.join(dst_dir, txt_file_name))
                 # clear learning_data
                 learning_data = learning_data_pb2.LearningData()
-        if len(learning_data.learning_data):
+        if len(learning_data.learning_data_frame):
             # rest data frames
             file_count += 1
             file_name = f'{file_count}.bin'
@@ -111,7 +111,7 @@ class PostProcessor(BasePipeline):
         offline_features = proto_utils.get_pb_from_bin_file(
             bin_file, learning_data_pb2.LearningData())
         # get learning data sequence
-        learning_data_sequence = offline_features.learning_data
+        learning_data_sequence = offline_features.learning_data_frame
         logging.info(len(learning_data_sequence))
         return learning_data_sequence
 

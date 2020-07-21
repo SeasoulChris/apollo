@@ -159,7 +159,7 @@ if __name__ == "__main__":
     ego_pos_dict = dict()
     agent_future_mapping = AgentPosesFutureImgRenderer(config_file)
 
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
                                                          frame.localization.position.y,
                                                          frame.localization.heading,

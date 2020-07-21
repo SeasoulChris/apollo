@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     offroad_mask_mapping = OffroadMaskImgRenderer(
         config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = offroad_mask_mapping.draw_offroad_mask(
             frame.localization.position.x,
             frame.localization.position.y, frame.localization.heading)

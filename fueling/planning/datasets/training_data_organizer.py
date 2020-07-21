@@ -53,7 +53,8 @@ class TrainingDataOrganizer:
             learning_data_frames = proto_utils.get_pb_from_bin_file(
                 file_path, learning_data_pb2.LearningData())
             frames_base_name = os.path.basename(file_path)
-            for frame_num, learning_data_frame in enumerate(learning_data_frames.learning_data):
+            for frame_num, learning_data_frame in \
+                    enumerate(learning_data_frames.learning_data_frame):
                 frame_name = os.path.join(
                     self.output_dir, frames_base_name + ".frame_num_{}.bin".format(frame_num))
                 proto_utils.write_pb_to_bin_file(

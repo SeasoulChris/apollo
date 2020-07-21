@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     ego_pos_dict = dict()
     traffic_lights_mapping = TrafficLightsImgRenderer(config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data:
+    for frame in offline_frames.learning_data_frame:
         img = traffic_lights_mapping.draw_traffic_lights(
             frame.localization.position.x,
             frame.localization.position.y,

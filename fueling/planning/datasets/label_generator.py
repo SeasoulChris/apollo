@@ -45,7 +45,7 @@ class LabelGenerator(object):
         offline_features = proto_utils.get_pb_from_bin_file(
             self.src_filepath, learning_data_pb2.LearningData())
         # get learning data sequence
-        learning_data_sequence = offline_features.learning_data
+        learning_data_sequence = offline_features.learning_data_frame
         origin_data_len = len(learning_data_sequence)  # origin data length
         logging.debug(len(learning_data_sequence))
 
@@ -55,7 +55,7 @@ class LabelGenerator(object):
             extra_offline_features = proto_utils.get_pb_from_bin_file(
                 self.secondary_filepath, offline_features)
             # learning_data from current bin + learning data from next bin
-            learning_data_sequence.extend(extra_offline_features.learning_data)
+            learning_data_sequence.extend(extra_offline_features.learning_data_frame)
             logging.debug(len(learning_data_sequence))
         return learning_data_sequence, origin_data_len
 
@@ -82,10 +82,10 @@ class LabelGenerator(object):
         # get all trajectory points from feature_sequence
         adc_trajectory = []
         timestamps = []
-        for idx, learning_data in enumerate(learning_data_sequence):
+        for idx, learning_data_frame in enumerate(learning_data_sequence):
             # key + feature
-            for adc_trajectory_point in learning_data.adc_trajectory_point:
-                # for adc_trajectory_point in reversed(learning_data.adc_trajectory_point):
+            for adc_trajectory_point in learning_data_frame.adc_trajectory_point:
+                # for adc_trajectory_point in reversed(learning_data_frame.adc_trajectory_point):
                 # assuming last point is the lastest/newest/current trajectory point
                 # 1. write a newer trajectory point to trajectory point tag list
                 dict_key = "adc@{:.3f}".format(adc_trajectory_point.timestamp_sec)
@@ -110,8 +110,8 @@ class LabelGenerator(object):
             logging.debug(f'No {idx} frame_key: {frame_key}')
             # key: current localization point
             if idx < origin_data_len:  # first part of the list is from origin PB file
-                # key of each learning_data is the timestamps of current trajectory point
-                self.feature_dict[frame_key] = learning_data
+                # key of each learning_data_frame is the timestamps of current trajectory point
+                self.feature_dict[frame_key] = learning_data_frame
 
         # [Feature1, Feature2, Feature3, ...] (sequentially sorted)
         adc_trajectory.sort(key=lambda x: x.timestamp_sec)
@@ -130,7 +130,7 @@ class LabelGenerator(object):
                 learning_data_frame.planning_tag.CopyFrom(self.planning_tag_dict[key])
                 # write planning tag to feature_dict
                 self.feature_dict[key] = learning_data_frame
-            features_tags.learning_data.add().CopyFrom(learning_data_frame)
+            features_tags.learning_data_frame.add().CopyFrom(learning_data_frame)
         # export proto to bin
         if is_dump2bin:
             with open(self.dst_filepath + '.with_tag.bin', 'wb') as bin_f:
@@ -139,8 +139,8 @@ class LabelGenerator(object):
             # export proto to txt
             txt_file_name = self.dst_filepath + '.with_tag.txt'
             # export single frame to txt for debug
-            proto_utils.write_pb_to_text_file(features_tags.learning_data[0], txt_file_name)
-        return len(features_tags.learning_data)
+            proto_utils.write_pb_to_text_file(features_tags.learning_data_frame[0], txt_file_name)
+        return len(features_tags.learning_data_frame)
 
     '''
     @brief: observe all feature sequences and build observation_dict.
@@ -273,10 +273,10 @@ class LabelGenerator(object):
     def GetHistoryTrajectory(self):
         """ for debug purpose """
         for key in self.feature_dict:
-            current_learning_data = self.feature_dict[key]
+            current_learning_data_frame = self.feature_dict[key]
             # get history trajectory from each learning frame
             adc_traj = []
-            for history_adc_trajectory_point in current_learning_data.adc_trajectory_point:
+            for history_adc_trajectory_point in current_learning_data_frame.adc_trajectory_point:
                 adc_traj.append((
                     history_adc_trajectory_point.timestamp_sec,
                     history_adc_trajectory_point.trajectory_point.path_point.x,
@@ -306,7 +306,7 @@ class LabelGenerator(object):
             learning_data_frame = self.feature_dict[key]
             # write label to proto
             learning_data_frame.output.CopyFrom(self.label_dict[key])
-            features_labels.learning_data.add().CopyFrom(learning_data_frame)
+            features_labels.learning_data_frame.add().CopyFrom(learning_data_frame)
             self.feature_label_dict[key] = (
                 self.label_dict[key], self.feature_dict[key])
         # export proto to bin
@@ -316,8 +316,8 @@ class LabelGenerator(object):
             # export proto to txt
             # exprot single frame for debug
             txt_file_name = self.dst_filepath + '.future_status.txt'
-            proto_utils.write_pb_to_text_file(features_labels.learning_data[0], txt_file_name)
-        return len(features_labels.learning_data)
+            proto_utils.write_pb_to_text_file(features_labels.learning_data_frame[0], txt_file_name)
+        return len(features_labels.learning_data_frame)
 
     def Label(self):
         # add tag to data frame
