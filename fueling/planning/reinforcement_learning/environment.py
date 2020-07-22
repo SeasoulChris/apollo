@@ -20,7 +20,7 @@ from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
 
 
 class ADSEnv(object):
-    def __init__(self, hidden_size=128,
+    def __init__(self, history_len=10, hidden_size=128,
                  renderer_config_file='/fuel/fueling/planning/datasets/semantic_map_feature'
                  '/planning_semantic_map_config.pb.txt',
                  region='sunnyvale_with_two_offices',
@@ -38,9 +38,7 @@ class ADSEnv(object):
                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
         self.birdview_feature_input = None
 
-        # TODO(Songyang): specify hidden_state_size and point histpry len here or somewhere
         self.hidden = generate_lstm_states()
-        self.history_point_num = 10
         self.delta_t = 0.2
         self.state = None
         self.current_adv_pose = None
@@ -227,7 +225,7 @@ class ADSEnv(object):
 
         hist_points = np.zeros((0, 4))
         for i, hist_point in enumerate(reversed(frame.adc_trajectory_point)):
-            if i + 1 > self.history_point_num:
+            if i + 1 > self.history_len:
                 break
             hist_x = hist_point.trajectory_point.path_point.x
             hist_y = hist_point.trajectory_point.path_point.y

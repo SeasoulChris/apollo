@@ -160,8 +160,12 @@ class RLNetwork(nn.Module):
 
 def main():
     # training loop
-    env = ADSEnv()
-    rl = DDPG(history_len, pred_horizon)  # initiate the RL framework
+    history_len = 10
+    pred_horizon = 10
+    hidden_size = 128
+
+    env = ADSEnv(history_len=history_len, hidden_size=hidden_size)
+    rl = DDPG(history_len, pred_horizon, hidden_size=hidden_size)  # initiate the RL framework
 
     for i_episode in range(1000):
         state, hidden = env.reset()
