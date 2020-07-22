@@ -55,7 +55,7 @@ $(document).ready(function () {
                 account_data["service_package"] = package_selected;
                 console.log(account_data,"account_data");
                 $.ajax({
-                    url: "/edit_quota",
+                    url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/edit_quota",
                     dataType: "json",
                     type: "POST",
                     data: account_data,

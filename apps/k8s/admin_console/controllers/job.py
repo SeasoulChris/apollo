@@ -3,6 +3,7 @@
 The logical control of the Job in front of the view
 """
 
+from common import paginator
 from fueling.common import mongo_utils
 from utils import time_utils
 
@@ -46,3 +47,69 @@ def get_job_by_id(job_id):
     """
     obj = job_collection.find_one({"job_id": job_id})
     return obj
+
+
+def get_job_filter(conf_dict, args_dict):
+    """
+    Get the filter about job
+    """
+    res = {}
+    filter_list = []
+    job_selected = args_dict["job_selected"]
+    job_type = conf_dict["job_type"]
+    time_selected = args_dict["time_selected"]
+    time_field = conf_dict["time_field"]
+    vehicle_sn = args_dict["vehicle_sn"]
+    black_list = conf_dict["black_list"]
+    filter_list.append({"is_partner": True})
+    filter_job_type = list(conf_dict["job_type"].values())
+    filter_job_type.remove("All")
+    filter_list.append({"job_type": {"$in": filter_job_type}})
+
+    if job_selected == "A":
+        pass
+    elif job_selected in job_type:
+        filter_list.append({"job_type": job_type[job_selected]})
+    else:
+        res["code"] = 300
+        res["msg"] = "Invalid Parameter"
+
+    if time_selected == "All":
+        pass
+    elif time_selected in time_field:
+        days_ago = time_utils.days_ago(time_field[time_selected])
+        filter_list.append({"start_time": {"$gt": days_ago}})
+    else:
+        res["code"] = 300
+        res["msg"] = "Invalid Parameter"
+    if vehicle_sn:
+        filter_list.append({"vehicle_sn": vehicle_sn})
+    else:
+        for black_sn in black_list:
+            filter_list.append({"vehicle_sn": {'$ne': black_sn}})
+    filters = {"$and": filter_list}
+    return filters, res
+
+
+def get_job_objs(filters, res):
+    """
+    Get the jobs from collection by filters
+    """
+    if not res.get("code"):
+        res["data"] = {}
+        objs = format_job_time(job_collection.find(filters))
+        sorted_objs = sorted(objs, key=lambda x: x["start_time"], reverse=True)
+        res["data"]["job_objs"] = sorted_objs
+        res["code"] = 200
+        res["msg"] = "success"
+    return res
+
+
+def get_job_paginator(current_page, nums, default_pages=10):
+    """
+    Get the current page obj and the content index
+    """
+    job_paginator = paginator.Pagination(nums, default_pages)
+    current_page = paginator.CurrentPaginator(current_page, job_paginator)
+    first, last = current_page.get_index_content()
+    return current_page, (first, last)

@@ -44,7 +44,10 @@ def accounts():
     account_paginator = paginator.Pagination(account_nums, 20)
     current_page = paginator.CurrentPaginator(current_page, account_paginator)
     first, last = current_page.get_index_content()
-    account_list = sorted(account_objs, key=lambda x: x["due_date"])[first: last]
+    account_list = sorted(account_objs,
+                          key=lambda x: x.get("due_date")
+                          if x.get("due_date") else x.get("apply_date")
+                          )[first: last]
     return flask.render_template("accounts.html", account_list=account_list,
                                  current_page=current_page, vehicle_sn=vehicle_sn,
                                  username=flask.session.get("user_info").get("username"))
@@ -102,13 +105,13 @@ def edit_quota():
     selected_package = data["service_package"]
     account_id = data["account_id"]
     if selected_package not in package_dict:
-        res["code"] = 201
+        res["code"] = 301
         res["msg"] = "The package not in services"
         return json.dumps(res)
     add_quota = package_dict[selected_package]
     account_objs = account.account_db.get_account_info({"_id": account_id})
     if not account_objs:
-        res["code"] = 202
+        res["code"] = 302
         res["msg"] = "The account id is error"
         return json.dumps(res)
     accounts_add_used = account.get_job_used(account_objs)
@@ -119,4 +122,5 @@ def edit_quota():
     res["code"] = 200
     res["msg"] = "success"
     res["data"] = account_data
+    logging.info(f"res:{res}")
     return json.dumps(res)

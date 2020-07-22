@@ -63,11 +63,16 @@ def extension_date(objs, days):
     Modify the due_date for the obj
     """
     for obj in objs:
-        if obj["status"] == "Enabled":
-            obj["due_date"] = obj["due_date"] + datetime.timedelta(days=days)
+        due_date = obj.get("due_date")
+        if not due_date:
+            continue
+        elif obj["status"] == "Enabled":
+            obj["due_date"] = due_date + datetime.timedelta(days=days)
         elif obj["status"] in ("Over-quota", "Expired"):
             obj["due_date"] = datetime.datetime.now() + datetime.timedelta(days=days)
             obj["status"] = "Enabled"
+        else:
+            continue
         account_db.save_account_due_date(obj["_id"], obj["due_date"])
     return objs
 
@@ -107,7 +112,8 @@ def get_job_used(objs):
             obj["remaining_quota"] = obj["quota"] - sum_counts
             if is_over_quota(sum_counts, obj.get("quota")) and obj["status"] == "Enabled":
                 obj["status"] = "Over-quota"
-            if is_expired(obj["due_date"]):
+            due_date = obj.get("due_date")
+            if due_date and is_expired(due_date):
                 obj["status"] = "Expired"
     return objs
 
