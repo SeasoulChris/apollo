@@ -16,6 +16,7 @@ dependencies:
   - conda-forge::optuna
   - conda-forge::opt-einsum
   - conda-forge::progressbar
+  - conda-forge::pybind11
   - conda-forge::pycocotools
   - conda-forge::pydub
   - conda-forge::python-kubernetes
