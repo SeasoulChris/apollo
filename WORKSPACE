@@ -7,6 +7,7 @@ local_repository(
 
 load("@apollo//tools:workspace.bzl", "apollo_repositories")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 apollo_repositories()
 
@@ -85,4 +86,12 @@ http_archive(
     sha256 = "e4ea28a318d5239566ff21b208b7dc3df6c18814fcb31069df891e782ff9f4e5",
     build_file = "planning_analytics.BUILD",
     strip_prefix = "planning_analytics",
+)
+
+new_git_repository(
+    name = "yolov4",
+    branch = "master",
+    remote = "git@github.com:ApolloAuto/pytorch-YOLOv4.git",
+    shallow_since = "2020-07-20",
+    build_file = "yolov4.BUILD",
 )
