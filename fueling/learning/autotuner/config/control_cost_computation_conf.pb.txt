@@ -1,6 +1,6 @@
 cost_params {
   profiling_script: "fueling/profiling/control/multi_job_control_profiling_metrics.py"
-  grading_output: "*/*/*/*grading.json"
+  grading_output: "*grading.json"
   path_flag {
     flag_name: "input_data_path"
   }
