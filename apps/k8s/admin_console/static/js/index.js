@@ -183,6 +183,8 @@ $(document).ready(function () {
         account_data["account_status"] = button.data("account_status");
         account_data["account_id"] = button.data("account_id");
         account_data["action"] = status_action[account_data["label"]];
+        first_status = button.data("first_status");
+        var account_services = button.data("account-services");
 
         var modal = $(this);
         
@@ -228,12 +230,34 @@ $(document).ready(function () {
                      if (not_action.length !== 0)
                      {
                         $("#button-action-" + account_data["account_id"]).attr("data-label", not_action);
+                        $("#button-action-" + account_data["account_id"]).attr("data-account_status", status);
                         // Set the lable of button data
                         button.data("label", not_action);
+                        button.data("account_status", status);
+                        if (status == "Enabled")
+                        {
+                            if(first_status == "Pending")
+                            {
+                                $("#button-reject-" + account_data["account_id"]).remove();
+                                var dom = '<a style="width: 100%" id="edit-action-' + account_data["account_id"] +
+                                        '" class="account-edit-modal" data-toggle="modal" data-target="#editModal" data-account-services="' +
+                                        account_services + '" data-account-id="' + account_data["account_id"] + '"> Edit </a>' 
+                                $("#button-action-" + account_data["account_id"]).after(dom);
+                            }
+                            else
+                            {
+                                $("#edit-action-" + account_data["account_id"]).css('display', 'inline');
+                            }
+                        }
+                        else if (status == "Disabled")
+                        {
+                            $("#edit-action-" + account_data["account_id"]).css('display', 'none');
+                        }
                      }
                      else
                      {
-                        $("#button-reject-" +  + account_data["account_id"]).css('display', 'none');
+                        $("#button-action-" + account_data["account_id"]).css('display', 'none');
+                        $("#button-reject-" + account_data["account_id"]).css('display', 'none');
                      }
 
                      // update the table
@@ -251,7 +275,7 @@ $(document).ready(function () {
                         str_label + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
 
                      // Update the message
-                     $(document).trigger("widget.mb.show", {type:"ok",message:"用户账号（序号："+account_data["account_id"]+"）被"+str_label});
+                     $(document).trigger("widget.mb.show", {type:"ok",message:"用户账号（车辆编号："+account_data["verhicle_sn"]+"）被"+str_label});
 
                      // Expand the history action
                      $("#expand-" + account_data["account_id"]).css("display", "none");
