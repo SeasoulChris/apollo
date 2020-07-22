@@ -56,10 +56,13 @@ class LearningDataGenerator(BasePipeline):
         else:
             dest_dir = "/".join(src_dir_elements)
 
+        map_name = "sunnyvale_with_two_offices"
+        if ('san_mateo' in dest_dir_elements):
+            map_name = "san_mateo"
+
         file_utils.makedirs(dest_dir)
 
         """Call planning C++ code."""
-        map_name = "sunnyvale_with_two_offices"
         command = (
             'cd /apollo && bash '
             'modules/tools/planning/data_pipelines/scripts/'
