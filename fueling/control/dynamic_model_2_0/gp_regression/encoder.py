@@ -20,10 +20,12 @@ class Encoder(nn.Module):
         """Define forward computation and activation functions"""
         # original data shape: [sequency/window_size, batch_size, channel]
         # conv_input shape: [batch_size, channel, sequency/window_size]
+        logging.debug(data.shape)
         conv1_input = torch.transpose(torch.transpose(data, -2, -3), -2, -1)
         data = F.relu(self.conv1(conv1_input))
         data = F.relu(self.conv2(data))
         data = self.fc(data.view(data.shape[0], -1))
+        logging.debug(data.shape)
         return data
 
 
@@ -416,9 +418,8 @@ class LSTMEncoder(nn.Module):
 
             output: N x 20 x 1
         '''
+        logging.debug(features.shape)  # 100 * 80 * 6
         N = features.size(0)
-        logging.info(f'{N}')
-        logging.info(f'self.h0 shape is {self.h0.shape}')
         # Run through RNN.
         # h0 and c0: (num_layers * num_directions, batch, hidden_size)
         h0, c0 = self.h0.repeat(1, N, 1), self.c0.repeat(1, N, 1)
@@ -427,6 +428,6 @@ class LSTMEncoder(nn.Module):
         # Forward propagate LSTM
         # (100 x N x hidden_size)
         states, _ = self.lstm(features.transpose(-2, -3), (h0, c0))
-        back_states = states[-1, :, :]
+        back_states = states[:, -1, :]
         out = self.encode(back_states)
         return out
