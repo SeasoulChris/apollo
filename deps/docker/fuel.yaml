@@ -2,6 +2,7 @@ name: fuel
 dependencies:
   - python = 3.6     # Align with Ubuntu 18.04 default.
   - pyspark = 3.0.0  # Align with pre-built server image.
+  - nvidia::cudatoolkit = 10.2  # Align with nvidia-docker base image.
 
   - absl-py
   - ansi2html
@@ -49,7 +50,6 @@ dependencies:
   - pytz
   - redis-py
   - requests
-  - scikit-learn
   - seaborn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.

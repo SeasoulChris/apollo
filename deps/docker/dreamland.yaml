@@ -1,7 +1,6 @@
 name: dreamland
 dependencies:
   - python = 3.6     # Align with Ubuntu 18.04 default.
-  - pip
   - pyspark = 3.0.0  # Align with fuel.yaml.
 
   - absl-py
@@ -11,6 +10,3 @@ dependencies:
   - numpy
   - protobuf
   - redis-py
-
-  - pip:
-    - pyspark-utils

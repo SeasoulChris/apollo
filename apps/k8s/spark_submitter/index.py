@@ -200,6 +200,7 @@ class SparkSubmitJob(flask_restful.Resource):
         logging.debug('SHELL > {}'.format(cmd))
         os.system(cmd)
 
+
 class OpenServiceSubmitJob(SparkSubmitJob):
     def post(self):
         """Accept user request, verify and process."""

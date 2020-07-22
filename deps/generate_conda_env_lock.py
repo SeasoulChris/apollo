@@ -43,6 +43,10 @@ name_mappings = {
     'pytorch': 'torch',
 }
 usage_counter.update({key : usage_counter[val] for key, val in name_mappings.items()})
+# Used in tool.
+usage_counter['pip'] += 1
+usage_counter['pycodestyle'] += 1
+usage_counter['pyflakes'] += 1
 
 
 with open(input_yaml, 'r') as fin:
