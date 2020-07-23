@@ -183,7 +183,7 @@
     {% for se in account.services %}
     <tr style="display: none" class="service_span">
         <td colspan="10" style="border-top: none">
-            {{se.job_type}}:{{se.status}} 使用:{{se.used}} 剩余配额:{{account.remaining_quota}}
+            {{se.job_type | show_type }}:{{se.status}} 使用:{{se.used}} 剩余配额:{{account.remaining_quota}}
         </td>
     </tr>
     {% endfor %}

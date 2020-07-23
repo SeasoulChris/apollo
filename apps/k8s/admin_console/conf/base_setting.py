@@ -47,7 +47,7 @@ class Config(object):
         "system_admin": ["/index", "/jobs", "/reset_pwd", "/submit_job"],
         "service_specialist": ["/index", "/jobs"]
     }
-    WHITE_URL = ["/static", "/login", "/logout"]
+    WHITE_URL = ["/static", "/login", "/logout", "/services"]
     ACCOUNT_SHOW_ACTION = {
         "Pending": ("Enable", "Reject"),
         "Rejected": (),
@@ -67,4 +67,12 @@ class Config(object):
     ACCOUNT_SERVICE_DAYS = {
         "TO": 30,
         "OY": 365
+    }
+    ACCOUNT_STATUS_FIELD = {
+        "Enabled": "启用",
+        "Pending": "待审批",
+        "Rejected": "驳回",
+        "Disabled": "停用",
+        "Expired": "过期",
+        "Over-quota": "超额"
     }

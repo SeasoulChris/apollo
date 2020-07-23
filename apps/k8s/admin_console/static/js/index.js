@@ -36,7 +36,6 @@ $(document).ready(function () {
         account_data["account_id"] = button.data("account-id");
         $("#editModalLabel").text("修改服务信息");
         for (j = 0; j<account_services.length; j++){
-            console.log(account_services[j], "service")
             var show_job_type = account_services[j]["job_type"];
             var show_used = 0;
             if (account_services[j].used){
@@ -51,9 +50,7 @@ $(document).ready(function () {
         $(".edit_quota").one("click", function(e){
             if ($("#package-div input").is(":checked")){
                 var package_selected = $("#package-select option:selected").val();
-                console.log(package_selected);
                 account_data["service_package"] = package_selected;
-                console.log(account_data,"account_data");
                 $.ajax({
                     url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/edit_quota",
                     dataType: "json",
@@ -66,7 +63,6 @@ $(document).ready(function () {
                         var services = account_data["services"]
 
                         for (i=0; i<service_dom.length; i++){
-                            console.log(service_dom[i]);
                             $(service_dom[i]).children().text(services[i]["job_type"]+":"+services[i]["status"]+"使用:"+services[i]["used"]+"剩余配额:"+account_data["remaining_quota"]);
                         };
 

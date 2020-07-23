@@ -6,6 +6,7 @@ The entry module of the program
 import application
 from common import filter
 from middleware import before_request
+from services import account_services
 from views import account
 from views import admin
 from views import index
@@ -13,6 +14,7 @@ from views import job
 from views import statistics
 
 
+application.api.add_resource(account_services.AccountService, "/account")
 application.app.before_request(before_request.process_request)
 
 # Register blueprint

@@ -19,7 +19,8 @@ RUN pip3 install --no-cache-dir \
         pymongo \
         pyproj \
         pytz \
-        redis
+        redis \
+        Flask-RESTful
 
 COPY index.zip /home/admin_console/index.zip
 ENV PYTHONPATH=/home/admin_console

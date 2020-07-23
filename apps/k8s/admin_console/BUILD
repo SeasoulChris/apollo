@@ -25,6 +25,7 @@ py_binary(
         ":application",
         "//apps/k8s/admin_console/common:filter",
         "//apps/k8s/admin_console/middleware:before_request",
+        "//apps/k8s/admin_console/services:account_services",
         "//apps/k8s/admin_console/views:account",
         "//apps/k8s/admin_console/views:admin",
         "//apps/k8s/admin_console/views:index",
