@@ -2,16 +2,6 @@ load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
-py_library(
-    name = "semantic_map_dataset",
-    srcs = ["semantic_map_dataset.py"],
-    deps = [
-        "//fueling/common:coord_utils",
-        "//fueling/common:file_utils",
-        "//fueling/prediction/learning/data_preprocessing/map_feature:online_mapping",
-    ],
-)
-
 py_binary(
     name = "learning_data_generator",
     srcs = ["learning_data_generator.py"],
