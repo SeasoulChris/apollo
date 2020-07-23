@@ -9,6 +9,7 @@ py_binary(
 py_binary(
     name = "emergency_detection_train_pipeline",
     srcs = ["emergency_detection_train_pipeline.py", 
+            "train.py",
             "dataset.py",
             "cfg.py",
             "models.py",
