@@ -32,7 +32,7 @@ function run() {
 
   # spin off worker(s)
   RUN_FILE="${DEPLOY_DIR}/optuna_worker.yaml"
-  IMG="${DEST_REPO}/${IMAGE}"
+  IMG="${DEST_REPO}/${IMAGE_NAME}"
   sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__CONFIG_FILE__|/mnt/bos/$CONFIG_FILE_DEST|g; \
           s|__ROLE__|$USER|;s|__STUDY_NAME__|$STUDY_NAME|g;s|__WORKER_COUNT__|$WORKER_COUNT|g" \
         $RUN_FILE

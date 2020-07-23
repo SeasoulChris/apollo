@@ -19,8 +19,9 @@ function deploy() {
   set -e  
   echo "Deploying..."
   DEPLOY_FILE="${DEPLOY_DIR}/costservice_deployment.yaml"
-  IMG="${DEST_REPO}/${IMAGE}"
-  sed -i "s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g" $DEPLOY_FILE
+  IMG="${DEST_REPO}/${IMAGE_NAME}"
+  local deploy_api_version=$(get_k8s_api_version "deploy")
+  sed -i "s|__DEPLOY_API_VERSION__|$deploy_api_version|g;s|__IMG__|$IMG|g;s|__CLUSTER__|$CLUSTER|g;s|__NAMESPACE__|$K8S_NAMESPACE|g" $DEPLOY_FILE
   kubectl create -f $DEPLOY_FILE
   git checkout -- $DEPLOY_FILE
 }
@@ -37,6 +38,8 @@ function init_environment() {
   sed -i "s|__NAMESPACE__|$K8S_NAMESPACE|g" $SERVICE_FILE
   kubectl create -f $SERVICE_FILE
   git checkout -- $SERVICE_FILE
+
+  echo "Done creating namespace and services, remember to create secrets (see instruction from wiki Credentials page)"
 }
 
 

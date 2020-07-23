@@ -1,6 +1,9 @@
 #!/bin/bash
 
-source ./common.sh
+cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
+
+source ./apps/autotuner/common.sh
+source ./tools/docker_version.sh
 
 function print_usage() {
     echo "Usage:
@@ -9,21 +12,21 @@ function print_usage() {
 }
 
 function build_and_push() {
-  GITHUB_VERSION=$(git log --pretty=format:'%H (%cd)' -n 1)
-  echo "Building cost_service image w/ github version $GITHUB_VERSION ..."
-  cd $( dirname "${BASH_SOURCE[0]}" )/../..
-
   set -ex
-  docker build -t ${IMAGE} --network host --build-arg GITHUB_VERSION="$GITHUB_VERSION"  -f apps/autotuner/docker/Dockerfile .
+  local github_version=$(git log --pretty=format:'%H (%cd)' -n 1)
+  local dockerfile="apps/autotuner/docker/Dockerfile"
+  sed -i "s|___FUEL_DOCKER_VERSION__|${IMAGE}|g" $dockerfile
+  docker build -t ${IMAGE_NAME} --network host --build-arg GITHUB_VERSION="${github_version}" -f $dockerfile .
+  git checkout -- $dockerfile
 
   echo 'Start pushing cost_service image ...'
   TAG="$(date +%Y%m%d_%H%M)"
-  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
-  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
+  docker tag ${IMAGE_NAME} "${DEST_REPO}/${IMAGE_NAME}:${TAG}"
+  docker push "${DEST_REPO}/${IMAGE_NAME}:${TAG}"
 
   TAG="latest"
-  docker tag ${IMAGE} "${DEST_REPO}/${IMAGE}:${TAG}"
-  docker push "${DEST_REPO}/${IMAGE}:${TAG}"
+  docker tag ${IMAGE_NAME} "${DEST_REPO}/${IMAGE_NAME}:${TAG}"
+  docker push "${DEST_REPO}/${IMAGE_NAME}:${TAG}"
 }
 
 function main() {

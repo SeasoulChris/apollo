@@ -41,7 +41,8 @@ function start_service() {
 
   # GRPC setting
   export GRPC_VERBOSITY=INFO
-  export GRPC_TRACE=call_error,client_channel_call,connectivity_state,server_channel
+  # uncomment me to debug grpc connection issues
+  # export GRPC_TRACE=call_error,client_channel_call,connectivity_state,server_channel
 
   LOG_DIR=/tmp/log
   mkdir -p $LOG_DIR

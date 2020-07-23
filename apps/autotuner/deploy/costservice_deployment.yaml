@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: __DEPLOY_API_VERSION__
 kind: Deployment
 metadata:
   name: costservice-deployment

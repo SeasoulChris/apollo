@@ -1,4 +1,7 @@
-FROM apolloauto/fuel-client:20200519_1105
+FROM ___FUEL_DOCKER_VERSION__
+
+ARG GITHUB_VERSION
+ENV GITHUB_VERSION=$GITHUB_VERSION
 
 WORKDIR /
 
@@ -15,13 +18,12 @@ RUN mkdir -p /root/.cache && touch /root/.cache/.apollo_agreement.txt && \
 
 WORKDIR /apollo
 RUN echo "source /apollo/scripts/apollo_base.sh" > ~/.bash_profile && \
-    mkdir /fuel
+    mkdir -p /fuel/local
 
 ADD . /fuel
 WORKDIR /fuel
 
-ARG GITHUB_VERSION
-ENV GITHUB_VERSION=$GITHUB_VERSION
-
 RUN cat /home/libs/bash.rc >> ~/.bashrc && \
-    ./tools/build.sh //fueling/learning/autotuner/...
+    echo "source /apollo/scripts/apollo_base.sh" > ~/.bash_profile && \
+    echo "startup --output_user_root=/fuel/local/bazel_cache" > local/user.bazelrc && \
+    ./tools/build_local.sh //fueling/learning/autotuner/...

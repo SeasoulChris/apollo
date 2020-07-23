@@ -21,8 +21,19 @@ function check_cluster() {
   fi
 }
 
+function get_k8s_api_version() {
+  local k8s_object_name=$1
+
+  if [ $? -ne 0 ]; then
+    echo "No such kubernetes object found $k8s_object_name."
+    exit 1
+  fi
+
+  echo "$(kubectl explain $k8s_object_name | grep VERSION | awk '{ print $2 }')"
+}
+
 function init_settings() {
-  IMAGE="cost_service"
+  IMAGE_NAME="cost_service"
   DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/deploy"
   case "$CLUSTER" in
     az-staging)
