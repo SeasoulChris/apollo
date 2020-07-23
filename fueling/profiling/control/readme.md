@@ -1,6 +1,6 @@
 # Profiling
 
-## 1. Control Profiling Application on Dreamland (for Simulation-Test based on Fuel 1.0 version)
+## 1. Control Profiling Application on Dreamland (for Simulation-Test based on Fuel 2.0 version)
 
 ### Command Line Format
 (The following codes are executed under the path **/fuel**)
@@ -8,14 +8,14 @@
 ```bash
 # Setup the record/bag input directory and profiling results output directory.
 # For example,
-data_path='/fuel/testdata/profiling/control_profiling/Sim_Test'
-results_path='/fuel/testdata/profiling/control_profiling/generated'
+data_path='fueling/profiling/control/testdata/sim_test'
+results_path='fueling/profiling/control/testdata/generated/sim_test'
 
 # Run the control profiling metrics command (generating performance_grading.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control/control_profiling_metrics.py -ctl_metrics_input_path_local $data_path -ctl_metrics_output_path_local $results_path
+bazel run //fueling/profiling/control:multi_job_control_profiling_metrics -- --input_data_path=$data_path --output_data_path=$results_path --ctl_metrics_simulation_only_test
 
 # Run the control profiling visualization command (generating feature_data.json file)
-./tools/submit-job-to-local.sh fueling/profiling/control/control_profiling_visualization.py -ctl_visual_input_path_local $results_path -ctl_visual_output_path_local $results_path --ctl_visual_simulation_only_test
+bazel run //fueling/profiling/control:multi_job_control_profiling_visualization -- --output_data_path=$result_path --ctl_visual_simulation_only_test
 ```
 
 ### Output Data Format
