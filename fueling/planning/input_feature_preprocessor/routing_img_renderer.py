@@ -13,7 +13,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class RoutingImgRenderer(object):
@@ -90,33 +90,3 @@ class RoutingImgRenderer(object):
                     cv.line(local_map, tuple(p0), tuple(
                         p1), color=color, thickness=12)
         return local_map
-
-
-if __name__ == "__main__":
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/learning_data.55.bin", 'rb') as file_in:
-        offline_frames.ParseFromString(file_in.read())
-    print("Finish reading proto...")
-
-    output_dir = './data_local_routing/'
-    if os.path.isdir(output_dir):
-        print(output_dir + " directory exists, delete it!")
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-    print("Making output directory: " + output_dir)
-
-    ego_pos_dict = dict()
-    routing_mapping = RoutingImgRenderer(
-        config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data_frame:
-        img = routing_mapping.draw_local_routing(
-            frame.localization.position.x, frame.localization.position.y,
-            frame.localization.heading, frame.routing.local_routing_lane_id)
-        key = "{}@{:.3f}".format(frame.frame_num, frame.timestamp_sec)
-        filename = key + ".png"
-        ego_pos_dict[key] = [frame.localization.position.x,
-                             frame.localization.position.y, frame.localization.heading]
-        cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

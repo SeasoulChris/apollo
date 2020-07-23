@@ -10,7 +10,7 @@ from modules.map.proto import map_lane_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class BaseSpeedLimitImgRenderer(object):
@@ -125,14 +125,3 @@ class BaseSpeedLimitImgRenderer(object):
                             self.resolution)
                         cv.line(self.base_map, tuple(p0), tuple(
                             p1), color=color, thickness=12)
-
-
-if __name__ == '__main__':
-    imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    mapping = BaseSpeedLimitImgRenderer(
-        config_file, "sunnyvale_with_two_offices")
-    # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(os.path.join(imgs_dir, mapping.region
-                            + "_speedlimit.png"), mapping.base_map)

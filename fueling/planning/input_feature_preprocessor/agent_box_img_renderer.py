@@ -10,7 +10,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class AgentBoxImgRenderer(object):
@@ -51,23 +51,3 @@ class AgentBoxImgRenderer(object):
                                                                 self.resolution)
         cv.fillPoly(local_map, [corner_points], color=(255))
         return local_map
-
-
-if __name__ == "__main__":
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature " \
-        "/planning_semantic_map_config.pb.txt"
-    agentbox_renderer = AgentBoxImgRenderer(config_file)
-
-    output_dir = './data_local_agent_box/'
-    if os.path.isdir(output_dir):
-        print(output_dir + " directory exists, delete it!")
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-    print("Making output directory: " + output_dir)
-
-    cv.imwrite(
-        os.path.join(
-            output_dir,
-            "agent_box.png"),
-        agentbox_renderer.draw_agent_box(
-            coordinate_heading=0.))

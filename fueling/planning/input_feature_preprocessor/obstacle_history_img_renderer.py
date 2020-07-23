@@ -10,7 +10,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class ObstacleHistoryImgRenderer(object):
@@ -68,33 +68,3 @@ class ObstacleHistoryImgRenderer(object):
                 cv.fillPoly(local_map, [np.int32(corner_points)], color=color)
 
         return local_map
-
-
-if __name__ == "__main__":
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature" \
-        "/planning_semantic_map_config.pb.txt"
-    offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/"
-              "complete/00007.record.66.bin.future_status.bin", 'rb') as file_in:
-        offline_frames.ParseFromString(file_in.read())
-    print("Finish reading proto...")
-
-    output_dir = './data_obstacle_history/'
-    if os.path.isdir(output_dir):
-        print(output_dir + " directory exists, delete it!")
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-    print("Making output directory: " + output_dir)
-
-    ego_pos_dict = dict()
-    obstacle_mapping = ObstacleHistoryImgRenderer(config_file)
-    for frame in offline_frames.learning_data_frame:
-        img = obstacle_mapping.draw_obstacle_history(
-            frame.adc_trajectory_point[-1].timestamp_sec, frame.obstacle)
-        key = "{}@{:.3f}".format(
-            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
-        filename = key + ".png"
-        ego_pos_dict[key] = [frame.localization.position.x,
-                             frame.localization.position.y, frame.localization.heading]
-        cv.imwrite(os.path.join(output_dir, filename), img)
-    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

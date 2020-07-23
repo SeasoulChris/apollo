@@ -7,33 +7,33 @@ import cv2 as cv
 
 from modules.planning.proto import learning_data_pb2
 
-from fueling.planning.datasets.semantic_map_feature.agent_box_img_renderer \
+from fueling.planning.input_feature_preprocessor.agent_box_img_renderer \
     import AgentBoxImgRenderer
-from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer \
+from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer \
     import AgentPosesFutureImgRenderer
-from fueling.planning.datasets.semantic_map_feature.agent_poses_history_img_renderer \
+from fueling.planning.input_feature_preprocessor.agent_poses_history_img_renderer \
     import AgentPosesHistoryImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_offroad_mask_img_renderer \
+from fueling.planning.input_feature_preprocessor.base_offroad_mask_img_renderer \
     import BaseOffroadMaskImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_roadmap_img_renderer \
+from fueling.planning.input_feature_preprocessor.base_roadmap_img_renderer \
     import BaseRoadMapImgRenderer
-from fueling.planning.datasets.semantic_map_feature.base_speedlimit_img_renderer \
+from fueling.planning.input_feature_preprocessor.base_speedlimit_img_renderer \
     import BaseSpeedLimitImgRenderer
-from fueling.planning.datasets.semantic_map_feature.obstacle_history_img_renderer \
+from fueling.planning.input_feature_preprocessor.obstacle_history_img_renderer \
     import ObstacleHistoryImgRenderer
-from fueling.planning.datasets.semantic_map_feature.obstacle_predictions_img_renderer \
+from fueling.planning.input_feature_preprocessor.obstacle_predictions_img_renderer \
     import ObstaclePredictionsImgRenderer
-from fueling.planning.datasets.semantic_map_feature.offroad_mask_img_renderer \
+from fueling.planning.input_feature_preprocessor.offroad_mask_img_renderer \
     import OffroadMaskImgRenderer
-from fueling.planning.datasets.semantic_map_feature.roadmap_img_renderer \
+from fueling.planning.input_feature_preprocessor.roadmap_img_renderer \
     import RoadMapImgRenderer
-from fueling.planning.datasets.semantic_map_feature.routing_img_renderer \
+from fueling.planning.input_feature_preprocessor.routing_img_renderer \
     import RoutingImgRenderer
-from fueling.planning.datasets.semantic_map_feature.speed_limit_img_renderer \
+from fueling.planning.input_feature_preprocessor.speed_limit_img_renderer \
     import SpeedLimitImgRenderer
-from fueling.planning.datasets.semantic_map_feature.traffic_lights_img_renderer \
+from fueling.planning.input_feature_preprocessor.traffic_lights_img_renderer \
     import TrafficLightsImgRenderer
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class ChauffeurNetFeatureGenerator(object):
@@ -249,54 +249,3 @@ class ChauffeurNetFeatureGenerator(object):
             coordinate_heading)
         agent_pose_img = self.agent_pose_history_mapping.draw_agent_current_pose()
         return agent_box_img, agent_pose_img
-
-
-if __name__ == "__main__":
-    offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/"
-              "test_set/00006.record.49.bin.future_status.bin", 'rb') as file_in:
-        offline_frames.ParseFromString(file_in.read())
-    print("Finish reading proto...")
-
-    region = "sunnyvale_with_two_offices"
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    imgs_dir = '/fuel/testdata/planning/semantic_map_features'
-    chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(
-        config_file,
-        imgs_dir,
-        region, base_map_update_flag=False)
-    print("Finish loading chauffeur_net_feature_generator...")
-
-    imgs_dir = '/fuel/testdata/planning/semantic_map_features'
-    output_dirs = [os.path.join(imgs_dir, 'data_local_agent_box/'),
-                   os.path.join(imgs_dir, 'data_agent_pose_history/'),
-                   os.path.join(imgs_dir, 'data_obstacles/'),
-                   os.path.join(imgs_dir, 'data_obstacle_predictions/'),
-                   os.path.join(imgs_dir, 'data_local_road_map/'),
-                   os.path.join(imgs_dir, 'data_local_routing/'),
-                   os.path.join(imgs_dir, 'data_local_speed_limit/'),
-                   os.path.join(imgs_dir, 'data_traffic_light/')]
-    for output_dir in output_dirs:
-        if os.path.isdir(output_dir):
-            print(output_dir + " directory exists, delete it!")
-            shutil.rmtree(output_dir)
-        os.mkdir(output_dir)
-        print("Making output directory: " + output_dir)
-
-    for frame in offline_frames.learning_data_frame:
-        current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
-        current_x = current_path_point.x
-        current_y = current_path_point.y
-        current_theta = current_path_point.theta
-        chauffeur_net_feature_generator.render_seperated_img_features(
-            frame.frame_num,
-            frame.adc_trajectory_point[-1].timestamp_sec,
-            frame.adc_trajectory_point,
-            frame.obstacle,
-            current_x,
-            current_y,
-            current_theta,
-            frame.routing.local_routing_lane_id,
-            frame.traffic_light_detection.traffic_light,
-            output_dirs)

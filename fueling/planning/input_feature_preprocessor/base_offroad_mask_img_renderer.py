@@ -10,7 +10,7 @@ from modules.map.proto import map_road_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class BaseOffroadMaskImgRenderer(object):
@@ -104,14 +104,3 @@ class BaseOffroadMaskImgRenderer(object):
                                     self.resolution)
                                 points = np.vstack((points, point))
                 cv.fillPoly(self.base_map, [np.int32(points)], color=color)
-
-
-if __name__ == '__main__':
-    imgs_dir = "/fuel/testdata/planning/semantic_map_features"
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    mapping = BaseOffroadMaskImgRenderer(
-        config_file, "sunnyvale_with_two_offices")
-    # using cv.imwrite to .png so we can simply use cv.imread and get the exactly same matrix
-    cv.imwrite(os.path.join(imgs_dir, mapping.region
-                            + "_offroad_mask.png"), mapping.base_map)

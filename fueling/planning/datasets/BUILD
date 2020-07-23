@@ -105,8 +105,9 @@ py_library(
     deps = [
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",
+        "//fueling/common:logging",
         "//fueling/common:proto_utils",
-        "//fueling/planning/datasets/semantic_map_feature:chauffeur_net_feature_generator",
+        "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
         "@apollo//modules/planning/proto:learning_data_py_pb2",
         "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",
     ],

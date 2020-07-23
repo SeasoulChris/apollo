@@ -10,7 +10,7 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 class AgentPosesFutureImgRenderer(object):
@@ -137,39 +137,3 @@ class AgentPosesFutureImgRenderer(object):
                                                                 self.resolution)
         cv.fillPoly(local_map, [corner_points], color=255)
         return local_map
-
-
-if __name__ == "__main__":
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/"
-              "complete/00007.record.66.bin.future_status.bin",
-              'rb') as file_in:
-        offline_frames.ParseFromString(file_in.read())
-    print("Finish reading proto...")
-
-    output_dir = './data_agent_pose_future/'
-    if os.path.isdir(output_dir):
-        print(output_dir + " directory exists, delete it!")
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-    print("Making output directory: " + output_dir)
-
-    ego_pos_dict = dict()
-    agent_future_mapping = AgentPosesFutureImgRenderer(config_file)
-
-    for frame in offline_frames.learning_data_frame:
-        img = agent_future_mapping.draw_agent_box_future(frame.localization.position.x,
-                                                         frame.localization.position.y,
-                                                         frame.localization.heading,
-                                                         frame.output.adc_future_trajectory_point,
-                                                         10)
-        key = "{}@{:.3f}".format(
-            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
-        filename = key + ".png"
-        ego_pos_dict[key] = [frame.localization.position.x,
-                             frame.localization.position.y, frame.localization.heading]
-        cv.imwrite(os.path.join(output_dir, filename), img)
-
-    np.save(os.path.join(output_dir + "/ego_pos.npy"), ego_pos_dict)

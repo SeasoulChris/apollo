@@ -13,7 +13,7 @@ from modules.planning.proto import planning_pb2
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.logging as logging
-from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator \
+from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
 from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
@@ -21,7 +21,7 @@ from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
 
 class ADSEnv(object):
     def __init__(self, history_len=10, hidden_size=128,
-                 renderer_config_file='/fuel/fueling/planning/datasets/semantic_map_feature'
+                 renderer_config_file='/fuel/fueling/planning/input_feature_preprocessor'
                  '/planning_semantic_map_config.pb.txt',
                  region='sunnyvale_with_two_offices',
                  base_map_img_dir='/fuel/testdata/planning/semantic_map_features',

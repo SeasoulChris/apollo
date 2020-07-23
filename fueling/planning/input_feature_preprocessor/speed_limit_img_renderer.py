@@ -11,16 +11,17 @@ from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.proto_utils as proto_utils
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
-class RoadMapImgRenderer(object):
-    """class of RoadMapImgRenderer to create an road map around ego vehicle with map element """
+class SpeedLimitImgRenderer(object):
+    """class of SpeedLimitImgRenderer to create a image of surrounding road speed limit"""
 
     def __init__(self, config_file, region, map_dir):
         """contruct function to init RoadMapImgRenderer object"""
         self.map_dir = map_dir  # "/fuel/testdata/planning/semantic_map_features"
-        self.base_map = cv.imread(os.path.join(self.map_dir, region + ".png"))
+        self.base_map = cv.imread(os.path.join(
+            self.map_dir, region + "_speedlimit.png"))
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
         self.resolution = config.resolution  # in meter/pixel
@@ -51,7 +52,7 @@ class RoadMapImgRenderer(object):
         self.rough_crop_radius = int(
             math.sqrt(self.local_size_h**2 + self.local_size_w**2))
 
-    def draw_roadmap(self, center_x, center_y, center_heading, coordinate_heading=0.):
+    def draw_speedlimit(self, center_x, center_y, center_heading, coordinate_heading=0.):
         center_point = np.array([center_x, center_y])
         center_basemap_idx = renderer_utils.get_img_idx(
             center_point - self.map_base_point, self.map_base_point_idx, self.resolution)
@@ -75,31 +76,3 @@ class RoadMapImgRenderer(object):
                             - self.local_base_point_w_idx:
                             center_local_idx[0] + self.local_base_point_w_idx]
         return fine_crop
-
-
-if __name__ == '__main__':
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
-        "planning_semantic_map_config.pb.txt"
-    offline_frames = learning_data_pb2.LearningData()
-    with open("/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete/"
-              "00007.record.66.bin.future_status.bin", 'rb') as file_in:
-        offline_frames.ParseFromString(file_in.read())
-    print("Finish reading proto...")
-
-    output_dir = './data_local_road_map/'
-    if os.path.isdir(output_dir):
-        print(output_dir + " directory exists, delete it!")
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-    print("Making output directory: " + output_dir)
-
-    roadmap_mapping = RoadMapImgRenderer(
-        config_file, "sunnyvale_with_two_offices")
-    for frame in offline_frames.learning_data_frame:
-        img = roadmap_mapping.draw_roadmap(
-            frame.localization.position.x,
-            frame.localization.position.y, frame.localization.heading)
-        key = "{}@{:.3f}".format(
-            frame.frame_num, frame.adc_trajectory_point[-1].timestamp_sec)
-        filename = key + ".png"
-        cv.imwrite(os.path.join(output_dir, filename), img)

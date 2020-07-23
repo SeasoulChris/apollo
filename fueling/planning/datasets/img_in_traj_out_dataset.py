@@ -17,7 +17,7 @@ from fueling.common.coord_utils import CoordUtils
 import fueling.common.logging as logging
 import fueling.common.file_utils as file_utils
 import fueling.common.proto_utils as proto_utils
-from fueling.planning.datasets.semantic_map_feature.chauffeur_net_feature_generator \
+from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
 
 
@@ -629,7 +629,7 @@ if __name__ == '__main__':
     # dump one instance image for debug
     # dataset = TrajectoryImitationCNNDataset(
     #     '/apollo/data/2019-10-17-13-36-41/')
-    config_file = "/fuel/fueling/planning/datasets/semantic_map_feature/" \
+    config_file = "/fuel/fueling/planning/input_feature_preprocessor/" \
         "planning_semantic_map_config.pb.txt"
     imgs_dir = '/fuel/testdata/planning/semantic_map_features'
     dataset = TrajectoryImitationRNNDataset(

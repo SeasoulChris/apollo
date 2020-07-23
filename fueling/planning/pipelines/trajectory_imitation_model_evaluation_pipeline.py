@@ -26,9 +26,9 @@ from fueling.planning.models.trajectory_imitation_model import \
     TrajectoryImitationRNNUnetResnet18Modelv1, \
     TrajectoryImitationRNNUnetResnet18Modelv2, \
     TrajectoryImitationCNNFCLSTM
-from fueling.planning.datasets.semantic_map_feature.agent_poses_future_img_renderer import \
+from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
-import fueling.planning.datasets.semantic_map_feature.renderer_utils as renderer_utils
+import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
 
 def calculate_cnn_displacement_error(pred, y):

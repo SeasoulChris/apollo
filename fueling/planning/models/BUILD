@@ -15,6 +15,7 @@ py_library(
     srcs = ["trajectory_imitation_model.py"],
     deps = [
         "//fueling/common:coord_utils",
+        "//fueling/common:logging",
         "//fueling/learning:network_utils",
     ],
 )
