@@ -5,8 +5,13 @@ dependencies:
 
   - absl-py
   - boto3
+  - conda-forge::python-kubernetes
   - h5py
   - matplotlib
   - numpy
   - protobuf
+  - pymongo
+  - pyproj
   - redis-py
+  - requests
+  - scipy
