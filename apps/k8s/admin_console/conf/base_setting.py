@@ -76,3 +76,14 @@ class Config(object):
         "Expired": "过期",
         "Over-quota": "超额"
     }
+    ACCOUNT_REGION_FIELD = {
+        "bj": "北京",
+        "su": "苏州",
+        "gz": "广州"
+    }
+    ACCOUNT_ACTION_FIELD = {
+        "Enable": "启用",
+        "Reject": "驳回",
+        "Edit": "编辑",
+        "Disable": "停用"
+    }

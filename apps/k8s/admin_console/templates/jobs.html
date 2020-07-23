@@ -115,7 +115,7 @@
         <th>是否有效</th>
         <th>输入数据大小</th>
         <th>动作</th>
-        <th>展开/收缩</th>
+        <th>展开/收起</th>
     </tr>
     {% for job in jobs_list %}
     <tr>
@@ -141,7 +141,7 @@
         </td>
         <td>
             <a id="expand-{{ job.job_id }}" class="job_expand" style="display: inline">展开</a>
-            <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收缩</a>
+            <a id="collapse-{{ job.job_id }}" class="job_collapse" style="display: none">收起</a>
         </td>
     </tr>
 

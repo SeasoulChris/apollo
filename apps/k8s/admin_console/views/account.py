@@ -100,24 +100,33 @@ def edit_quota():
     """
     package_dict = application.app.config.get("ACCOUNT_SERVICE_QUOTA")
     days_dict = application.app.config.get("ACCOUNT_SERVICE_DAYS")
+    job_type = application.app.config.get("JOB_TYPE")
     res = {}
     data = flask.request.form
-    selected_package = data["service_package"]
+    selected_package = data.get("service_package")
     account_id = data["account_id"]
-    if selected_package not in package_dict:
-        res["code"] = 301
-        res["msg"] = "The package not in services"
-        return json.dumps(res)
-    add_quota = package_dict[selected_package]
+
     account_objs = account.account_db.get_account_info({"_id": account_id})
+
     if not account_objs:
         res["code"] = 302
         res["msg"] = "The account id is error"
         return json.dumps(res)
-    accounts_add_used = account.get_job_used(account_objs)
-    accounts_add_quota = account.add_quota(accounts_add_used, add_quota)
-    accounts_add_due_date = account.extension_date(accounts_add_quota, days_dict[selected_package])
-    accounts_format_time = account.format_account_time(accounts_add_due_date)
+    services_list = []
+    for key in data:
+        if key in job_type.values():
+            services_list.append({"job_type": key, "status": data[key]})
+    account_services = account.update_services(account_objs, services_list)
+    accounts = account.get_job_used(account_services)
+    if selected_package:
+        if selected_package not in package_dict:
+            res["code"] = 301
+            res["msg"] = "The package not in services"
+            return json.dumps(res)
+        add_quota = package_dict[selected_package]
+        accounts_add_quota = account.add_quota(accounts, add_quota)
+        accounts = account.extension_date(accounts_add_quota, days_dict[selected_package])
+    accounts_format_time = account.format_account_time(accounts)
     account_data = accounts_format_time[0]
     res["code"] = 200
     res["msg"] = "success"

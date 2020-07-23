@@ -64,12 +64,15 @@ def extension_date(objs, days):
     """
     for obj in objs:
         due_date = obj.get("due_date")
-        if not due_date:
-            continue
-        elif obj["status"] == "Enabled":
-            obj["due_date"] = due_date + datetime.timedelta(days=days)
+        now_date = datetime.datetime.now()
+        add_date = datetime.timedelta(days=days)
+        if obj["status"] == "Enabled":
+            if due_date:
+                obj["due_date"] = due_date + add_date
+            else:
+                obj["due_date"] = now_date + add_date
         elif obj["status"] in ("Over-quota", "Expired"):
-            obj["due_date"] = datetime.datetime.now() + datetime.timedelta(days=days)
+            obj["due_date"] = now_date + add_date
             obj["status"] = "Enabled"
         else:
             continue
@@ -100,6 +103,7 @@ def get_job_used(objs):
             job_counts_dict[job_type_count["_id"]] = job_type_count["count"]
 
         if services:
+            services.sort(key=lambda x: x["job_type"])
             sum_counts = 0
             for service in services:
                 job_type_used = job_counts_dict.get(service["job_type"])
@@ -115,6 +119,14 @@ def get_job_used(objs):
             due_date = obj.get("due_date")
             if due_date and is_expired(due_date):
                 obj["status"] = "Expired"
+    return objs
+
+
+def update_services(objs, services_list):
+    """Update the account services"""
+    for obj in objs:
+        account_db.save_account_services(obj["_id"], services_list)
+        obj["services"] = services_list
     return objs
 
 

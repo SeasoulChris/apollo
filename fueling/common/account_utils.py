@@ -47,22 +47,11 @@ class AccountUtils(object):
                            {'$set': {'quota': quota}})
         logging.info(f"save_account_quota: {account_id}")
 
-    def save_account_services(self, account_id, job_type_list, status, due_date=None):
+    def save_account_services(self, account_id, services_list):
         """save account services"""
-        services = []
-        for job_type in job_type_list:
-            services.append({'job_type': job_type, 'status': status})
-        if status == 'Enabled':
-            date = due_date if due_date else datetime.datetime.now() + datetime.timedelta(days=365)
-            self.db.update_one({'_id': ObjectId(account_id)},
-                               {'$set': {'status': 'Enabled',
-                                         'due_date': date,
-                                         'services': services}})
-        else:
-            self.db.update_one({'_id': ObjectId(account_id)},
-                               {'$set': {'status': status,
-                                         'services': services}})
-        logging.info(f"save_account_service: {services}")
+        self.db.update_one({'_id': ObjectId(account_id)},
+                           {'$set': {'services': services_list}})
+        logging.info(f"save_account_service: {services_list}")
 
     def save_account_operation(self, account_id, email, comments, action_type, status=None):
         """Save account operation"""

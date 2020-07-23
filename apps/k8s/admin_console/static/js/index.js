@@ -18,65 +18,107 @@ $(document).ready(function () {
 
     // hide the edit modal
     $('#editModal').on('hide.bs.modal', function (e) {
-        var job_check = $("#editModal").children().children().children("form").children(".modal-body").children().first("div");
+        var job_check = $("#editModal").children().children().children(".modal-body").children().first("div");
         job_check.empty();
         var inputDom = $("#package-div input");
         inputDom.removeAttr("checked");
-        switchSelect(inputDom);
+        inputDom.val("Disabled");
     })
 
-    // show the edit modal
+   // show the edit modal
     $('#editModal').on('show.bs.modal', function (e) {
         var button = $(e.relatedTarget);
         var account_services = eval(button.data("account-services"));
         var account_data = {};
-        var account_body = $("#editModal").children().children().children("form").children(".modal-body")
+        var account_body = $("#editModal").children().children().children(".modal-body")
         var account_body_job = account_body.children().first("div");
         var account_body_check = account_body.children().last("div");
         account_data["account_id"] = button.data("account-id");
-        $("#editModalLabel").text("修改服务信息");
+
+        var old_status_dict = {};
+        var chose_input_dom = $("#package-div").children("input");
+        old_status_dict[chose_input_dom.attr("name")] = chose_input_dom.val();
         for (j = 0; j<account_services.length; j++){
             var show_job_type = account_services[j]["job_type"];
             var show_used = 0;
             if (account_services[j].used){
                 show_used = account_services[j]["used"]
             }
-            var show_dom = "<div style={'display': 'block'}><input name='account-job-type' type='checkbox' checked value="
-             + show_job_type + "><span>" + show_job_type + "    "+ "used:" + show_used+ "</span></div>";
-            account_body_job.prepend(show_dom);
-        }
-        account_body_check.css("display", "block");
+            var show_dom;
+            var account_service_status = account_services[j]["status"]
+            old_status_dict[show_job_type] = account_service_status;
+            if (account_service_status == "Enabled"){
+                show_dom = "<div style={'display': 'block'}><input name='"+show_job_type+"' type='checkbox' checked value="
+                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "使用:" + show_used+ "</span></div>"
+            }
+            else{
+                show_dom = "<div style={'display': 'block'}><input name='"+show_job_type+"' type='checkbox' value="
+                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "使用:" + show_used+ "</span></div>"
+            }
+            account_body_job.append(show_dom);
+        };
 
+        account_body_check.css("display", "block");
         $(".edit_quota").one("click", function(e){
-            if ($("#package-div input").is(":checked")){
-                var package_selected = $("#package-select option:selected").val();
+            setCheckboxValue(account_body_job.children());
+            checkBoxIsChecked(chose_input_dom);
+            var new_status_dict = getObjDict(account_body_job.children());
+            new_status_dict[chose_input_dom.attr("name")] = chose_input_dom.val();
+
+            if(!cmp(old_status_dict, new_status_dict)){
+
+                // when the checkbox is changed
+                if (new_status_dict["chose_package"] == "Enabled"){
+                    var package_selected = $("#package-select option:selected").val();
+                }
                 account_data["service_package"] = package_selected;
+                for(var key in new_status_dict){
+                    if(key != "chose_package"){
+                        account_data[key] =  new_status_dict[key];
+                    }
+                }
                 $.ajax({
                     url: "/api/v1/namespaces/default/services/http:admin-console-service:8000/proxy/edit_quota",
                     dataType: "json",
                     type: "POST",
                     data: account_data,
                     success: function (result) {
+
+                        // hide the editModal
                         $("#editModal").modal("hide");
+
+                        // get the data from flask
                         var account_data = result["data"];
                         var service_dom = $("#service-tr-"+account_data["_id"]).nextUntil("#operation-tr-"+account_data["_id"])
                         var services = account_data["services"]
 
+                        // update the services list
                         for (i=0; i<service_dom.length; i++){
-                            $(service_dom[i]).children().text(services[i]["job_type"]+":"+services[i]["status"]+"使用:"+services[i]["used"]+"剩余配额:"+account_data["remaining_quota"]);
+                            $(service_dom[i]).children().text(showJobType(services[i]["job_type"])+":"+showServiceStatus(services[i]["status"])+"  使用:"+services[i]["used"]);
                         };
 
+                        // update the used and remaining quota
+                        $("#used-"+account_data["_id"]).text(account_data["used"]);
+                        $("#remaining-"+account_data["_id"]).text(account_data["remaining_quota"]);
+
+                        // update the due_date
                         $("#due-date-"+account_data["_id"]).text(account_data["due_date"]);
+
+                        // update the dialog data-account-services attr
                         $("#edit-action-"+account_data["_id"]).attr("data-account-services", services);
+
+                        // update the button data
                         button.data("account-services", services);
-                        $(document).trigger("widget.mb.show", {type:"ok",message:"用户（邮箱："+account_data["com_email"]+"）剩余配额"+account_data["remaining_quota"]});
+
+                        // update the message
+                        if (new_status_dict["chose_package"] == "Enabled"){
+                            $(document).trigger("widget.mb.show", {type:"ok",message:"用户（邮箱："+account_data["com_email"]+"）剩余配额"+account_data["remaining_quota"]});
+                        };
                     }
                 })
+            } else {
+                $("#editModal").modal("hide");
             }
-            else{
-                $(document).trigger("widget.mb.show", {type:"ok",message:"配额没有修改"});
-            };
-            return false;
         })
     });
 
@@ -448,3 +490,85 @@ function switchSelect(input) {
         $("#package-select").attr("disabled",true);
     }
 };
+
+// show the job type in the page
+function showJobType(job_type) {
+    return job_type.split("_").map(function(item, index) {
+        return item.slice(0, 1).toUpperCase() + item.slice(1);
+    }).join(' ');
+}
+
+// show the status in the page
+function showServiceStatus(status){
+    var status_dict = {
+        "Enabled": "启用",
+        "Pending": "待审批",
+        "Rejected": "驳回",
+        "Disabled": "停用",
+        "Expired": "过期",
+        "Over-quota": "超额"
+    }
+    return status_dict[status]
+}
+
+// Get the formObj from form
+function getObjDict(objs) {
+    var formObj = {};
+    for(i=0; i<objs.length; i++){
+        var input_dom = $(objs[i]).children("input");
+        formObj[input_dom.attr("name")] = input_dom.val()
+    }
+    return formObj;
+}
+
+// Circulation set the value in checkbox
+function setCheckboxValue(objs){
+    for(i=0; i<objs.length; i++){
+        var input_dom = $(objs[i]).children("input");
+        checkBoxIsChecked(input_dom);
+    };
+}
+
+// Set the value in checkbox
+function checkBoxIsChecked(dom){
+    if(dom.is(":checked")){
+        dom.val("Enabled");
+    }else{
+        dom.val("Disabled");
+    }
+}
+
+// Compare two objects for equality
+function cmp( x, y ) {
+    if ( x === y ) {
+        return true;
+    }
+    if ( ! ( x instanceof Object ) || ! ( y instanceof Object ) ) {
+        return false;
+    }
+    if ( x.constructor !== y.constructor ) {
+        return false;
+    }
+    for ( var p in x ) {
+        if ( x.hasOwnProperty( p ) ) {
+            if ( ! y.hasOwnProperty( p ) ) {
+                return false;
+            }
+            if ( x[ p ] === y[ p ] ) {
+                continue;
+            }
+            if ( typeof( x[ p ] ) !== "object" ) {
+                return false;
+            }
+            if ( ! Object.equals( x[ p ],  y[ p ] ) ) {
+                return false;
+            }
+        }
+    }
+    for ( p in y ) {
+        if ( y.hasOwnProperty( p ) && ! x.hasOwnProperty( p ) ) {
+            return false;
+        }
+    }
+    return true;
+}

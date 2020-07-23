@@ -75,16 +75,28 @@ def truncation_job_id(job_id):
     return job_id[-6:] if job_id else ""
 
 
-def get_account_action(status):
+def get_account_show_status(status):
     """
-    Get the status
+    Get the account show status
     """
-    status_dict = {
-        "Pending": ("Enable", "Reject"),
-        "Rejected": "",
-        "Enabled": ("Edit", "Disable"),
-        "Disabled": "Enable",
-        "Over-quota": "Edit",
-        "Expired": "Edit",
-    }
-    return status_dict[status]
+    status_dict = application.app.config.get("ACCOUNT_STATUS_FIELD")
+    show_status = status_dict.get(status)
+    return show_status if show_status else status
+
+
+def get_account_show_region(region):
+    """
+    Get the account show region
+    """
+    region_dict = application.app.config.get("ACCOUNT_REGION_FIELD")
+    show_region = region_dict.get(region)
+    return show_region if show_region else region
+
+
+def get_account_show_action(action):
+    """
+    Get the account action
+    """
+    action_dict = application.app.config.get("ACCOUNT_ACTION_FIELD")
+    show_action = action_dict.get(action)
+    return show_action if show_action else action

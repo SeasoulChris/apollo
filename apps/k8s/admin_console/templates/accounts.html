@@ -73,15 +73,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="editModalLabel"></h4>
+                <h4 class="modal-title" id="editModalLabel">修改服务信息</h4>
             </div>
-            <form id="modal-form">
                 <div class="modal-body">
                     <div>
                     </div>
                     <div style="display: none">
                         <div id="package-div">
-                            <input type='checkbox'><span>如果客户购买了一个新的服务，请选择</span>
+                            <input name="chose_package" type='checkbox' value="Disabled"><span>如果客户购买了一个新的服务，请选择</span>
                         </div>
                         <div class="btn-group">
                             <select name="service_package" class="form-control"
@@ -96,7 +95,6 @@
                     <button type="button" class="cancel_account btn btn-default" data-dismiss="modal">取消</button>
                     <button type="submit" class="edit_quota btn btn-primary">修改</button>
                 </div>
-            </form>
         </div>
     </div>
 </div>
@@ -128,8 +126,10 @@
         <th>账户状态</th>
         <th>申请时间</th>
         <th>截止时间</th>
+        <th>使用配额</th>
+        <th>剩余配额</th>
         <th>动作</th>
-        <th>展开/收缩</th>
+        <th>展开/收起</th>
     </tr>
     {% for account in account_list %}
     <tr>
@@ -137,16 +137,18 @@
         <td>{{ account.com_name }}</td>
         <td>{{ account.com_email }}</td>
         <td>{{ account.bos_bucker_name }}</td>
-        <td>{{ account.bos_region }}</td>
-        <td id="status-{{ account._id }}">{{ account.status }}</td>
+        <td>{{ account.bos_region | show_account_region }}</td>
+        <td id="status-{{ account._id }}">{{ account.status | show_account_status }}</td>
         <td>{{ account.apply_date }}</td>
         <td id="due-date-{{ account._id }}">{{ account.due_date }}</td>
+        <td id="used-{{ account._id }}">{{ account.used }}</td>
+        <td id="remaining-{{ account._id }}">{{ account.remaining_quota}}</td>
         <td>
             {% for action in account.show_action %}
                 {% if action == "Edit" %}
                 <a style="width: 100%" id="edit-action-{{ account._id }}" class="account-edit-modal" data-toggle="modal"
                    data-target="#editModal" data-account-services="{{account.services}}" data-account-id="{{account._id}}">
-                    {{ action }}
+                    {{ action | show_account_action }}
                 </a>
                 {% elif action == "Reject" %}
                 <a style="width: 100%" id="button-reject-{{ account._id }}" class="account-modal" data-toggle="modal"
@@ -155,7 +157,7 @@
                    data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}"
                    data-first_status="{{ account.status }}" data-account-services="{{account.services}}">
-                    {{ action }}
+                    {{ action | show_account_action }}
                 </a>
                 {% else %}
                 <a style="width: 100%" id="button-action-{{ account._id }}" class="account-modal" data-toggle="modal"
@@ -164,38 +166,38 @@
                    data-bos_bucker_name="{{ account.bos_bucker_name }}" data-bos_region="{{ account.bos_region }}"
                    data-account_status="{{ account.status }}" data-account_id="{{ account._id }}"
                    data-first_status="{{ account.status }}" data-account-services="{{account.services}}">
-                    {{ action }}
+                    {{ action | show_account_action }}
                 </a>
                 {% endif %}
             {% endfor %}
         </td>
         <td>
             <a id="expand-{{ account._id }}" class="account_expand" style="display: inline">展开</a>
-            <a id="collapse-{{ account._id }}" class="account_collapse" style="display: none">收缩</a>
+            <a id="collapse-{{ account._id }}" class="account_collapse" style="display: none">收起</a>
         </td>
     </tr>
 
     <!-- The service information -->
     <tr style="display: none" id="service-tr-{{ account._id }}">
-        <td align="left" colspan="10"><b>服务信息:</b></td>
+        <td align="left" colspan="12"><b>服务信息:</b></td>
     </tr>
 
     {% for se in account.services %}
     <tr style="display: none" class="service_span">
-        <td colspan="10" style="border-top: none">
-            {{se.job_type | show_type }}:{{se.status}} 使用:{{se.used}} 剩余配额:{{account.remaining_quota}}
+        <td colspan="12" style="border-top: none">
+            {{se.job_type | show_type }}:{{se.status | show_account_status}} 使用:{{se.used}}
         </td>
     </tr>
     {% endfor %}
 
     <tr style="display: none" id="operation-tr-{{account._id}}">
-        <td align="left" colspan="10"><b>操作历史：</b></td>
+        <td align="left" colspan="12"><b>操作历史：</b></td>
     </tr>
 
     <!-- The history record of account operation -->
     {% for opt in account.operations %}
     <tr style="display: none" class="account_operation_span">
-        <td colspan="10" style="border-top: none">
+        <td colspan="12" style="border-top: none">
             用户账号被{{ opt.email }}在{{ opt.time }}{{ opt.action.type }}。备注是：{{ opt.comments }}。
         </td>
     </tr>
