@@ -327,7 +327,7 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_st
         Learning rate:   {config.learning_rate}
         Training size:   {n_train}
         Validation size: {n_val}
-        Checkpoints:     {save_cp}
+        Checkpoints step:{save_cp_step}
         Device:          {device.type}
         Images size:     {config.width}
         Optimizer:       {config.TRAIN_OPTIMIZER}
@@ -375,12 +375,10 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_st
     for epoch in range(epochs):
         # model.train()
         epoch_loss = 0
-        epoch_step = 0
 
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img', ncols=50) as pbar:
             for i, batch in enumerate(train_loader):
                 global_step += 1
-                epoch_step += 1
                 images = batch[0]
                 bboxes = batch[1]
 
@@ -455,7 +453,7 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_st
             writer.add_scalar('train/AR_large', stats[11], global_step)
             
 
-            if epoch_step % save_cp_step == 0:
+            if epoch % save_cp_step == 0:
                 try:
                     # os.mkdir(config.checkpoints)
                     os.makedirs(config.checkpoints, exist_ok=True)
@@ -573,10 +571,10 @@ def get_args(**kwargs):
     args = vars(parser.parse_args())
     '''
 
-    args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/mnt/bos/modules/perception/emergency_detection/data/coins', 
-    'pretrained': '/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
-    'train_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/train.txt', 
-    'val_label': '/mnt/bos/modules/perception/emergency_detection/data/coins/val.txt', 
+    args={'learning_rate': 0.001, 'load': None, 'gpu': '0', 'dataset_dir': '/mnt/bos/modules/perception/emergency_detection/data/emergency_vehicle/images', 
+    'pretrained': '/mnt/bos/modules/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 2, 
+    'train_label': '/mnt/bos/modules/perception/emergency_detection/data/emergency_vehicle/train.txt', 
+    'val_label': '/mnt/bos/modules/perception/emergency_detection/data/emergency_vehicle/val.txt', 
     'checkpoints': '/mnt/bos/modules/perception/emergency_detection/checkpoints', 
     'TRAIN_TENSORBOARD_DIR': '/mnt/bos/modules/perception/emergency_detection/log', 
     'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
@@ -589,11 +587,12 @@ def get_args(**kwargs):
 
     return edict(cfg)
 
-def get_args_local():
-    args={'learning_rate': 0.001, 'load': None, 'gpu': '-1', 'dataset_dir': '/fuel/fueling/perception/emergency_detection/data/coins', 
-    'pretrained': '/fuel/fueling/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 3, 
-    'train_label': '/fuel/fueling/perception/emergency_detection/data/coins/train.txt', 
-    'val_label': '/fuel/fueling/perception/emergency_detection/data/coins/val.txt', 
+def get_args_local(**kwargs):
+    cfg = kwargs
+    args={'learning_rate': 0.001, 'load': None, 'gpu': '-1', 'dataset_dir': '/fuel/fueling/perception/emergency_detection/data/emergency_vehicle/images', 
+    'pretrained': '/fuel/fueling/perception/emergency_detection/pretrained_model/yolov4.conv.137.pth', 'classes': 2, 
+    'train_label': '/fuel/fueling/perception/emergency_detection/data/emergency_vehicle/train.txt', 
+    'val_label': '/fuel/fueling/perception/emergency_detection/data/emergency_vehicle/val.txt', 
     'TRAIN_OPTIMIZER': 'adam', 'iou_type': 'iou', 'keep_checkpoint_max': 10}
 
     cfg.update(args)
@@ -644,7 +643,7 @@ def _get_date_str():
 def train_yolov4(is_local=False):
     if is_local:
         logging = init_logger(log_dir='log')
-        cfg = get_args_local()
+        cfg = get_args_local(**Cfg)
     else:
         logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
         cfg = get_args(**Cfg)
@@ -677,4 +676,4 @@ def train_yolov4(is_local=False):
 
 
 if __name__ == "__main__":
-    train_yolov4(local=True)
+    train_yolov4(is_local=True)

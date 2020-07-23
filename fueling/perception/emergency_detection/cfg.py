@@ -23,8 +23,8 @@ Cfg = EasyDict()
 Cfg.use_darknet_cfg = False
 Cfg.cfgfile = os.path.join(_BASE_DIR, 'cfg', 'yolov4-custom.cfg')
 
-Cfg.batch = 1
-Cfg.subdivisions = 1
+Cfg.batch = 64
+Cfg.subdivisions = 8
 Cfg.width = 608
 Cfg.height = 608
 Cfg.channels = 3
@@ -55,9 +55,9 @@ Cfg.flip = 1
 Cfg.blur = 0
 Cfg.gaussian = 0
 Cfg.boxes = 60  # box num
-Cfg.TRAIN_EPOCHS = 3
-Cfg.train_label = os.path.join(_BASE_DIR, 'data', 'coins', 'train.txt')
-Cfg.val_label = os.path.join(_BASE_DIR, 'data', 'coins', 'val.txt')
+Cfg.TRAIN_EPOCHS = 300
+Cfg.train_label = os.path.join(_BASE_DIR, 'data', 'emergency_vehicle', 'train.txt')
+Cfg.val_label = os.path.join(_BASE_DIR, 'data', 'emergency_vehicle', 'val.txt')
 Cfg.TRAIN_OPTIMIZER = 'adam'
 '''
 image_path1 x1,y1,x2,y2,id x1,y1,x2,y2,id x1,y1,x2,y2,id ...

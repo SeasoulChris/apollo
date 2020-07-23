@@ -31,6 +31,8 @@ py_binary(
 py_binary(
     name = "emergency_detection_infer_pipeline",
     srcs = ["emergency_detection_infer_pipeline.py", 
+            "inference.py",
+            "models.py",
             "tool/torch_utils.py",
             "tool/utils.py",
             "tool/yolo_layer.py"],
