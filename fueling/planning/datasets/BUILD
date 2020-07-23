@@ -87,6 +87,18 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "data_balancer",
+    srcs = ["data_balancer.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+        "//fueling/common:proto_utils",
+        "@apollo//modules/planning/proto:learning_data_py_pb2",
+    ],
+)
+
 py_library(
     name = "img_in_traj_out_dataset",
     srcs = ["img_in_traj_out_dataset.py"],
