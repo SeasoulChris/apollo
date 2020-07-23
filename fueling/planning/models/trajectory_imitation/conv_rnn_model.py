@@ -1,69 +1,7 @@
-#!/usr/bin/env python
-
-import glob
-import os
-
-import cv2 as cv
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from torch.utils.data import Dataset
 from torchvision import models
-
-from fueling.common.coord_utils import CoordUtils
-from fueling.learning.network_utils import generate_lstm
-import fueling.common.logging as logging
-
-'''
-========================================================================
-Model definition
-========================================================================
-'''
-
-
-class TrajectoryImitationCNNModel(nn.Module):
-    def __init__(self,
-                 cnn_net=models.mobilenet_v2, pretrained=True,
-                 pred_horizon=10):
-        super(TrajectoryImitationCNNModel, self).__init__()
-        # compressed to 3 channel
-        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
-        self.cnn = cnn_net(pretrained=pretrained)
-        for param in self.cnn.parameters():
-            param.requires_grad = True
-
-        self.feature_net_out_size = 1000
-        self.pred_horizon = pred_horizon
-
-        self.fc = nn.Sequential(
-            nn.Linear(self.feature_net_out_size, 500),
-            nn.Dropout(0.3),
-            nn.Linear(500, 120),
-            nn.Dropout(0.3),
-            nn.Linear(120, self.pred_horizon * 4)
-        )
-
-    def forward(self, X):
-        img = X
-        out = self.compression_cnn_layer(img)
-        out = self.cnn(out)
-        out = out.view(out.size(0), -1)
-        out = self.fc(out)
-        out = out.view(out.size(0), self.pred_horizon, 4)
-        return out
-
-
-class TrajectoryImitationCNNLoss():
-    def loss_fn(self, y_pred, y_true):
-        loss_func = nn.MSELoss()
-        return loss_func(y_pred, y_true)
-
-    def loss_info(self, y_pred, y_true):
-        batch_size = y_pred.size(0)
-        out = (y_pred - y_true).view(batch_size, -1, 4)
-        pose_diff = out[:, :, 0:2]
-        out = torch.mean(torch.sqrt(torch.sum(pose_diff ** 2, dim=-1)))
-        return out
 
 
 @torch.jit.script
@@ -73,12 +11,11 @@ def assign_ones(M_k_next: torch.Tensor, batch_iteration_num: torch.Tensor,
     return M_k_next
 
 
-class TrajectoryImitationRNNModel(nn.Module):
+class TrajectoryImitationConvRNN(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True,
                  pred_horizon=10):
-        super(TrajectoryImitationRNNModel, self).__init__()
-        # TODO(Jinyun): compressed to 3 channel, to be refined
+        super(TrajectoryImitationConvRNN, self).__init__()
         self.feature_compression_layer = nn.Conv2d(12, 3, 3, padding=1)
 
         self.feature_net = cnn_net(pretrained=pretrained)
@@ -197,12 +134,11 @@ class TrajectoryImitationRNNModel(nn.Module):
                 M_B_k)
 
 
-class TrajectoryImitationRNNMoreConvModel(nn.Module):
+class TrajectoryImitationDeeperConvRNN(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True,
                  pred_horizon=10):
-        super(TrajectoryImitationRNNMoreConvModel, self).__init__()
-        # TODO(Jinyun): compressed to 3 channel, to be refined
+        super(TrajectoryImitationDeeperConvRNN, self).__init__()
         self.feature_compression_layer = nn.Conv2d(12, 3, 3, padding=1)
 
         self.feature_net = cnn_net(pretrained=pretrained)
@@ -358,11 +294,11 @@ class UnetDecoder(nn.Module):
         return x1
 
 
-class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
+class TrajectoryImitationConvRNNUnetResnet18v1(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True,
                  pred_horizon=10):
-        super(TrajectoryImitationRNNUnetResnet18Modelv1, self).__init__()
+        super(TrajectoryImitationConvRNNUnetResnet18v1, self).__init__()
 
         self.pred_horizon = pred_horizon
         self.input_img_size_h = input_img_size[0]
@@ -472,11 +408,11 @@ class TrajectoryImitationRNNUnetResnet18Modelv1(nn.Module):
                 M_B_k)
 
 
-class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
+class TrajectoryImitationConvRNNUnetResnet18v2(nn.Module):
     def __init__(self, input_img_size,
                  cnn_net=models.mobilenet_v2, pretrained=True,
                  pred_horizon=10):
-        super(TrajectoryImitationRNNUnetResnet18Modelv2, self).__init__()
+        super(TrajectoryImitationConvRNNUnetResnet18v2, self).__init__()
 
         self.pred_horizon = pred_horizon
         self.input_img_size_h = input_img_size[0]
@@ -581,302 +517,9 @@ class TrajectoryImitationRNNUnetResnet18Modelv2(nn.Module):
                 M_B_k)
 
 
-class TrajectoryImitationCNNFCLSTM(nn.Module):
-    def __init__(self, history_len, pred_horizon, embed_size=64,
-                 hidden_size=128, cnn_net=models.mobilenet_v2,
-                 pretrained=True):
-        super(TrajectoryImitationCNNFCLSTM, self).__init__()
-        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
-        self.cnn = cnn_net(pretrained=pretrained)
-        self.cnn_out_size = 1000
-        for param in self.cnn.parameters():
-            param.requires_grad = True
-
-        self.history_len = history_len
-        self.pred_horizon = pred_horizon
-
-        self.embedding_fc_layer = torch.nn.Sequential(
-            nn.Linear(4, embed_size),
-            nn.ReLU(),
-        )
-
-        self.h0, self.c0, self.lstm = generate_lstm(embed_size, hidden_size)
-
-        self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size, 4),
-        )
-
-    def forward(self, X):
-        img_feature, hist_points, hist_points_step = X
-        batch_size = img_feature.size(0)
-        # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
-        h0 = self.h0.unsqueeze(0)
-        c0 = self.c0.unsqueeze(0)
-        ht, ct = h0.repeat(1, batch_size, 1),\
-            c0.repeat(1, batch_size, 1)
-
-        img_embedding = self.cnn(
-            self.compression_cnn_layer(img_feature)).view(batch_size, -1)
-        pred_traj = torch.zeros(
-            (batch_size, 1, 4), device=img_feature.device)
-
-        for t in range(1, self.history_len + self.pred_horizon):
-            if t < self.history_len:
-                cur_pose_step = hist_points_step[:, t, :].float()
-                cur_pose = hist_points[:, t, :].float()
-            else:
-                pred_input = torch.cat(
-                    (ht.view(batch_size, -1), img_embedding), 1)
-                cur_pose_step = self.output_fc_layer(
-                    pred_input).float().clone()
-                cur_pose = cur_pose + cur_pose_step
-                pred_traj = torch.cat(
-                    (pred_traj, cur_pose.clone().unsqueeze(1)), dim=1)
-
-            disp_embedding = self.embedding_fc_layer(
-                cur_pose_step.clone()).view(batch_size, 1, -1)
-
-            _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
-
-        return pred_traj[:, 1:, :]
-
-
-class TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet(nn.Module):
-    def __init__(self, history_len, pred_horizon, input_img_size, embed_size=64,
-                 hidden_size=128, cnn_net=models.mobilenet_v2,
-                 pretrained=True):
-        super(TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet, self).__init__()
-        self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
-        self.cnn = cnn_net(pretrained=pretrained)
-        self.cnn_out_size = 1000
-        for param in self.cnn.parameters():
-            param.requires_grad = True
-
-        self.history_len = history_len
-        self.pred_horizon = pred_horizon
-        self.input_img_size_h = input_img_size[0]
-        self.input_img_size_w = input_img_size[1]
-
-        self.embedding_fc_layer = torch.nn.Sequential(
-            nn.Linear(4, embed_size),
-            nn.ReLU(),
-        )
-
-        self.h0, self.c0, self.lstm = generate_lstm(embed_size, hidden_size)
-
-        self.output_fc_layer = torch.nn.Sequential(
-            nn.Linear(hidden_size + self.cnn_out_size, 4),
-        )
-
-        self.box_pred_fc_layer = torch.nn.Sequential(
-            nn.Linear(4 + self.cnn_out_size,
-                      self.input_img_size_h * self.input_img_size_w),
-        )
-
-    def forward(self, X):
-        img_feature, hist_points, hist_points_step = X
-        batch_size = img_feature.size(0)
-        # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
-        h0 = self.h0.unsqueeze(0)
-        c0 = self.c0.unsqueeze(0)
-        ht, ct = h0.repeat(1, batch_size, 1),\
-            c0.repeat(1, batch_size, 1)
-
-        img_embedding = self.cnn(
-            self.compression_cnn_layer(img_feature)).view(batch_size, -1)
-        pred_traj = torch.zeros(
-            (batch_size, 1, 4), device=img_feature.device)
-
-        for t in range(1, self.history_len + self.pred_horizon):
-            if t < self.history_len:
-                cur_pose_step = hist_points_step[:, t, :].float()
-                cur_pose = hist_points[:, t, :].float()
-            else:
-                pred_input = torch.cat(
-                    (ht.view(batch_size, -1), img_embedding), 1)
-                cur_pose_step = self.output_fc_layer(
-                    pred_input).float().clone()
-                cur_pose = cur_pose + cur_pose_step
-                pred_traj = torch.cat(
-                    (pred_traj, cur_pose.clone().unsqueeze(1)), dim=1)
-
-            disp_embedding = self.embedding_fc_layer(
-                cur_pose_step.clone()).view(batch_size, 1, -1)
-
-            _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
-
-        pred_boxs = torch.zeros(
-            (batch_size, 1, 1,
-             self.input_img_size_h, self.input_img_size_w),
-            device=img_feature.device)
-        for t in range(self.pred_horizon):
-            pred_box = torch.sigmoid(self.box_pred_fc_layer(
-                torch.cat((img_embedding, pred_traj[:, t, :]), dim=1)))
-            pred_boxs = torch.cat((pred_boxs, pred_box.clone().view(
-                batch_size, 1, 1, self.input_img_size_h, self.input_img_size_w)), dim=1)
-
-        # return pred_traj[:, 1:, :]
-
-        return pred_boxs[:, 1:, :, :, :], pred_traj[:, 1:, :]
-
-
-class TrajectoryImitationRNNLoss():
-
-    def __init__(self, pos_dist_loss_weight=1, box_loss_weight=1,
-                 pos_reg_loss_weight=1):
-        self.pos_dist_loss_weight = pos_dist_loss_weight
-        self.box_loss_weight = box_loss_weight
-        self.pos_reg_loss_weight = pos_reg_loss_weight
-
-    def loss_fn(self, y_pred, y_true):
-        batch_size = y_pred[0].shape[0]
-        pred_pos_dists = y_pred[0].view(batch_size, -1)
-        pred_boxs = y_pred[1].view(batch_size, -1)
-        pred_points = y_pred[2].view(batch_size, -1)
-        true_pos_dists = y_true[0].view(batch_size, -1)
-        true_boxs = y_true[1].view(batch_size, -1)
-        true_points = y_true[2].view(batch_size, -1)
-
-        pos_dist_loss = nn.BCELoss()(pred_pos_dists, true_pos_dists)
-
-        box_loss = nn.BCELoss()(pred_boxs, true_boxs)
-
-        pos_reg_loss = nn.L1Loss()(pred_points, true_points)
-
-        logging.info("pos_dist_loss is {}, box_loss is {}, pos_reg_loss is {}".
-                     format(
-                         pos_dist_loss,
-                         box_loss,
-                         pos_reg_loss))
-        logging.info("weighted_pos_dist_loss is {}, weighted_box_loss is {},"
-                     "weighted_pos_reg_loss is {}".
-                     format(
-                         self.pos_dist_loss_weight * pos_dist_loss,
-                         self.box_loss_weight * box_loss,
-                         self.pos_reg_loss_weight * pos_reg_loss))
-
-        return self.pos_dist_loss_weight * pos_dist_loss + \
-            self.box_loss_weight * box_loss + \
-            self.pos_reg_loss_weight * pos_reg_loss
-
-    def loss_info(self, y_pred, y_true):
-        # Focus on pose displacement error
-        pred_points = y_pred[2]
-        true_points = y_true[2]
-        points_diff = pred_points - true_points
-        pose_diff = points_diff[:, :, 0:2]
-
-        out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
-        out = torch.mean(out)
-        return out
-
-
-class TrajectoryImitationWithEnvRNNLoss():
-    def __init__(self,
-                 pos_dist_loss_weight=1,
-                 box_loss_weight=1,
-                 pos_reg_loss_weight=1,
-                 collision_loss_weight=1,
-                 offroad_loss_weight=1,
-                 imitation_dropout=False):
-        self.pos_dist_loss_weight = pos_dist_loss_weight
-        self.box_loss_weight = box_loss_weight
-        self.pos_reg_loss_weight = pos_reg_loss_weight
-        self.collision_loss_weight = collision_loss_weight
-        self.offroad_loss_weight = offroad_loss_weight
-        self.imitation_dropout = imitation_dropout
-
-    def loss_fn(self, y_pred, y_true):
-        batch_size = y_pred[0].shape[0]
-        pred_pos_dists = y_pred[0].view(batch_size, -1)
-        pred_boxs = y_pred[1].view(batch_size, -1)
-        pred_points = y_pred[2].view(batch_size, -1)
-        true_pos_dists = y_true[0].view(batch_size, -1)
-        true_boxs = y_true[1].view(batch_size, -1)
-        true_points = y_true[2].view(batch_size, -1)
-        true_pred_obs = y_true[3].view(batch_size, -1)
-        true_offroad_mask = y_true[4].view(batch_size, -1)
-
-        pos_dist_loss = nn.BCELoss()(pred_pos_dists, true_pos_dists)
-
-        box_loss = nn.BCELoss()(pred_boxs, true_boxs)
-
-        pos_reg_loss = nn.L1Loss()(pred_points, true_points)
-
-        collision_loss = torch.mean(pred_boxs * true_pred_obs)
-
-        offroad_loss = torch.mean(pred_boxs * true_offroad_mask)
-
-        return (0 if self.imitation_dropout and torch.rand(1) > 0.5 else 1) * \
-            (self.pos_dist_loss_weight * pos_dist_loss
-             + self.box_loss_weight * box_loss
-             + self.pos_reg_loss_weight * pos_reg_loss) + \
-            self.collision_loss_weight * collision_loss + \
-            self.offroad_loss_weight * offroad_loss
-
-    def loss_info(self, y_pred, y_true):
-        # Focus on pose displacement error
-        pred_points = y_pred[2]
-        true_points = y_true[2]
-        points_diff = pred_points - true_points
-        pose_diff = points_diff[:, :, 0:2]
-
-        out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
-        out = torch.mean(out)
-        return out
-
-
-class TrajectoryImitationWithAuxiliaryEnvRNNLoss():
-    def __init__(self,
-                 box_loss_weight=1,
-                 pos_reg_loss_weight=1,
-                 collision_loss_weight=1,
-                 offroad_loss_weight=1,
-                 imitation_dropout=False):
-        self.box_loss_weight = box_loss_weight
-        self.pos_reg_loss_weight = pos_reg_loss_weight
-        self.collision_loss_weight = collision_loss_weight
-        self.offroad_loss_weight = offroad_loss_weight
-        self.imitation_dropout = imitation_dropout
-
-    def loss_fn(self, y_pred, y_true):
-        batch_size = y_pred[0].shape[0]
-        pred_boxs = y_pred[0].view(batch_size, -1)
-        pred_points = y_pred[1].view(batch_size, -1)
-        true_boxs = y_true[0].view(batch_size, -1)
-        true_points = y_true[1].view(batch_size, -1)
-        true_pred_obs = y_true[2].view(batch_size, -1)
-        true_offroad_mask = y_true[3].view(batch_size, -1)
-
-        box_loss = nn.BCELoss()(pred_boxs, true_boxs)
-
-        pos_reg_loss = nn.L1Loss()(pred_points, true_points)
-
-        collision_loss = torch.mean(pred_boxs * true_pred_obs)
-
-        offroad_loss = torch.mean(pred_boxs * true_offroad_mask)
-
-        return (0 if self.imitation_dropout and torch.rand(1) > 0.5 else 1) * \
-            (self.box_loss_weight * box_loss
-             + self.pos_reg_loss_weight * pos_reg_loss) + \
-            self.collision_loss_weight * collision_loss + \
-            self.offroad_loss_weight * offroad_loss
-
-    def loss_info(self, y_pred, y_true):
-        # Focus on pose displacement error
-        pred_points = y_pred[1]
-        true_points = y_true[1]
-        points_diff = pred_points - true_points
-        pose_diff = points_diff[:, :, 0:2]
-
-        out = torch.sqrt(torch.sum(pose_diff ** 2, dim=-1))
-        out = torch.mean(out)
-        return out
-
-
 if __name__ == "__main__":
     # code snippet for model prining
-    model = models.resnet18(True)
+    model = TrajectoryImitationConvRNN([200, 200])
 
     total_param = 0
     for name, param in model.named_parameters():

@@ -19,13 +19,13 @@ class PytorchTraining(BasePipeline):
         """Run."""
         time_start = time.time()
         self.to_rdd(range(1)).foreach(self.train)
-        logging.info('Training complete in {} seconds.'.format(time.time() - time_start))
+        logging.info('Training complete in {} seconds.'.format(
+            time.time() - time_start))
 
     @staticmethod
     def train(instance_id):
         """Run training task"""
         cv.setNumThreads(0)
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
         logging.info('nvidia-smi on Executor {}:'.format(instance_id))
         if os.system('nvidia-smi') != 0:
@@ -42,16 +42,19 @@ class PytorchTraining(BasePipeline):
         valid_dir = based_dir + 'validation_data/'
         renderer_config_file \
             = based_dir + 'semantic_map_features/planning_semantic_map_config.pb.txt'
-
-        imgs_dir = based_dir + "semantic_map_features"
-        input_data_augmentation = False
+        renderer_base_map_dir = based_dir + "semantic_map_features"
+        input_data_augmentation = True
+        past_motion_dropout = True
         model_dir = based_dir + "model/"
-
         region = "sunnyvale_with_two_offices"
         map_path = "/mnt/bos/code/baidu/adu-lab/apollo-map/" + region + "/base_map.bin"
+        gpu_idx = '0'
+
+        os.environ['CUDA_VISIBLE_DEVICES'] = gpu_idx
 
         training(model_type, train_dir, valid_dir, renderer_config_file,
-                 imgs_dir, input_data_augmentation, model_dir, region, map_path)
+                 renderer_base_map_dir, input_data_augmentation, past_motion_dropout,
+                 model_dir, region, map_path)
 
 
 if __name__ == '__main__':

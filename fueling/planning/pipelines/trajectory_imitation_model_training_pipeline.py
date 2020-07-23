@@ -9,31 +9,40 @@ import torch
 from modules.planning.proto import planning_semantic_map_config_pb2
 
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 from fueling.learning.train_utils import train_valid_dataloader
 from fueling.planning.datasets.img_in_traj_out_dataset \
-    import TrajectoryImitationCNNDataset, TrajectoryImitationRNNDataset, \
-    TrajectoryImitationCNNFCLSTMDataset, \
-    TrajectoryImitationCNNFCLSTMWithAENDataset
-from fueling.planning.models.trajectory_imitation_model \
-    import TrajectoryImitationCNNModel, \
-    TrajectoryImitationRNNModel, \
-    TrajectoryImitationRNNMoreConvModel, \
-    TrajectoryImitationRNNUnetResnet18Modelv1, \
-    TrajectoryImitationRNNUnetResnet18Modelv2, \
-    TrajectoryImitationCNNFCLSTM, \
-    TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet, \
-    TrajectoryImitationCNNLoss, \
-    TrajectoryImitationRNNLoss, \
-    TrajectoryImitationWithEnvRNNLoss, \
-    TrajectoryImitationWithAuxiliaryEnvRNNLoss
-import fueling.common.proto_utils as proto_utils
+    import TrajectoryImitationCNNFCDataset, \
+    TrajectoryImitationConvRNNDataset, \
+    TrajectoryImitationCNNLSTMDataset, \
+    TrajectoryImitationCNNLSTMWithAENDataset
+from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
+    TrajectoryImitationCNNFC
+from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
+    TrajectoryImitationCNNLSTM,\
+    TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet
+from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
+    TrajectoryImitationConvRNN, \
+    TrajectoryImitationDeeperConvRNN, \
+    TrajectoryImitationConvRNNUnetResnet18v1, \
+    TrajectoryImitationConvRNNUnetResnet18v2
+from fueling.planning.models.trajectory_imitation.image_representation_loss import \
+    TrajectoryImitationConvRNNLoss, \
+    TrajectoryImitationConvRNNWithEnvLoss, \
+    TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss
+from fueling.planning.models.trajectory_imitation.trajectory_point_displacemet_loss import \
+    TrajectoryPointDisplacementMSELoss, \
+    TrajectoryPointDisplacementL1Loss
 
 
 def training(model_type, train_dir, valid_dir, renderer_config_file,
-             imgs_dir, img_feature_rotation, past_motion_dropout, model_save_dir,
+             renderer_base_map_dir, img_feature_rotation, past_motion_dropout, model_save_dir,
              region, map_path):
     logging.info(
         'training directory:{} validation directory:{}'.format(train_dir, valid_dir))
+
+    # random number seed
+    torch.manual_seed(0)
 
     # Set-up data-loader
     model = None
@@ -46,97 +55,103 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         renderer_config_file, renderer_config)
 
     if model_type == 'cnn':
-        train_dataset = TrajectoryImitationCNNDataset(train_dir,
-                                                      renderer_config_file,
-                                                      imgs_dir,
-                                                      map_path,
-                                                      region,
-                                                      img_feature_rotation,
-                                                      past_motion_dropout,
-                                                      ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNDataset(valid_dir,
-                                                      renderer_config_file,
-                                                      imgs_dir,
-                                                      map_path,
-                                                      region,
-                                                      img_feature_rotation,
-                                                      past_motion_dropout,
-                                                      ouput_point_num=10)
-        model = TrajectoryImitationCNNModel(pred_horizon=10)
-        loss = TrajectoryImitationCNNLoss()
+        train_dataset = TrajectoryImitationCNNFCDataset(train_dir,
+                                                        renderer_config_file,
+                                                        renderer_base_map_dir,
+                                                        map_path,
+                                                        region,
+                                                        img_feature_rotation,
+                                                        past_motion_dropout,
+                                                        ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNFCDataset(valid_dir,
+                                                        renderer_config_file,
+                                                        renderer_base_map_dir,
+                                                        map_path,
+                                                        region,
+                                                        img_feature_rotation,
+                                                        past_motion_dropout,
+                                                        ouput_point_num=10)
+        model = TrajectoryImitationCNNFC(pred_horizon=10)
+        loss = TrajectoryPointDisplacementMSELoss(4)
 
     elif model_type == 'rnn':
-        train_dataset = TrajectoryImitationRNNDataset(train_dir,
-                                                      renderer_config_file,
-                                                      imgs_dir,
-                                                      map_path,
-                                                      region,
-                                                      img_feature_rotation,
-                                                      past_motion_dropout,
-                                                      ouput_point_num=10)
-        valid_dataset = TrajectoryImitationRNNDataset(valid_dir,
-                                                      renderer_config_file,
-                                                      imgs_dir,
-                                                      map_path,
-                                                      region,
-                                                      img_feature_rotation,
-                                                      past_motion_dropout,
-                                                      ouput_point_num=10)
-        model = TrajectoryImitationRNNModel(
+        train_dataset = TrajectoryImitationConvRNNDataset(train_dir,
+                                                          renderer_config_file,
+                                                          renderer_base_map_dir,
+                                                          map_path,
+                                                          region,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        valid_dataset = TrajectoryImitationConvRNNDataset(valid_dir,
+                                                          renderer_config_file,
+                                                          renderer_base_map_dir,
+                                                          map_path,
+                                                          region,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          ouput_point_num=10)
+        model = TrajectoryImitationConvRNN(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationRNNLoss(1, 1, 1)
-        # loss = TrajectoryImitationWithEnvRNNLoss(1, 1, 1, 1, 1, True)
+        # model = TrajectoryImitationDeeperConvRNN(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        # model = TrajectoryImitationConvRNNUnetResnet18v1(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        # model = TrajectoryImitationConvRNNUnetResnet18v2(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        loss = TrajectoryImitationConvRNNLoss(1, 1, 1)
+        # loss = TrajectoryImitationConvRNNWithEnvLoss(1, 1, 1, 1, 1, True)
 
     elif model_type == 'cnn_lstm':
-        train_dataset = TrajectoryImitationCNNFCLSTMDataset(train_dir,
-                                                            renderer_config_file,
-                                                            imgs_dir,
-                                                            map_path,
-                                                            region,
-                                                            img_feature_rotation,
-                                                            past_motion_dropout,
-                                                            history_point_num=10,
-                                                            ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNFCLSTMDataset(valid_dir,
-                                                            renderer_config_file,
-                                                            imgs_dir,
-                                                            map_path,
-                                                            region,
-                                                            img_feature_rotation,
-                                                            past_motion_dropout,
-                                                            history_point_num=10,
-                                                            ouput_point_num=10)
-        model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
-                                             hidden_size=128)
-        loss = TrajectoryImitationCNNLoss()
+        train_dataset = TrajectoryImitationCNNLSTMDataset(train_dir,
+                                                          renderer_config_file,
+                                                          renderer_base_map_dir,
+                                                          map_path,
+                                                          region,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          history_point_num=10,
+                                                          ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNLSTMDataset(valid_dir,
+                                                          renderer_config_file,
+                                                          renderer_base_map_dir,
+                                                          map_path,
+                                                          region,
+                                                          img_feature_rotation,
+                                                          past_motion_dropout,
+                                                          history_point_num=10,
+                                                          ouput_point_num=10)
+        model = TrajectoryImitationCNNLSTM(history_len=10, pred_horizon=10, embed_size=64,
+                                           hidden_size=128)
+        loss = TrajectoryPointDisplacementMSELoss(4)
 
     elif model_type == 'cnn_lstm_aux':
-        train_dataset = TrajectoryImitationCNNFCLSTMWithAENDataset(train_dir,
-                                                                   renderer_config_file,
-                                                                   imgs_dir,
-                                                                   map_path,
-                                                                   region,
-                                                                   img_feature_rotation,
-                                                                   past_motion_dropout,
-                                                                   history_point_num=10,
-                                                                   ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNFCLSTMWithAENDataset(valid_dir,
-                                                                   renderer_config_file,
-                                                                   imgs_dir,
-                                                                   map_path,
-                                                                   region,
-                                                                   img_feature_rotation,
-                                                                   past_motion_dropout,
-                                                                   history_point_num=10,
-                                                                   ouput_point_num=10)
-        model = TrajectoryImitationCNNFCLSTMWithAuxilaryEvaluationNet(input_img_size=[
+        train_dataset = TrajectoryImitationCNNLSTMWithAENDataset(train_dir,
+                                                                 renderer_config_file,
+                                                                 renderer_base_map_dir,
+                                                                 map_path,
+                                                                 region,
+                                                                 img_feature_rotation,
+                                                                 past_motion_dropout,
+                                                                 history_point_num=10,
+                                                                 ouput_point_num=10)
+        valid_dataset = TrajectoryImitationCNNLSTMWithAENDataset(valid_dir,
+                                                                 renderer_config_file,
+                                                                 renderer_base_map_dir,
+                                                                 map_path,
+                                                                 region,
+                                                                 img_feature_rotation,
+                                                                 past_motion_dropout,
+                                                                 history_point_num=10,
+                                                                 ouput_point_num=10)
+        model = TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(input_img_size=[
             renderer_config.height,
             renderer_config.width],
             history_len=10,
             pred_horizon=10,
             embed_size=64,
             hidden_size=128)
-        loss = TrajectoryImitationWithAuxiliaryEnvRNNLoss()
+        loss = TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss()
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -151,8 +166,10 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.3, patience=3, min_lr=1e-9, verbose=True, mode='min')
 
-    # random number seed
-    torch.manual_seed(0)
+    # if train from a trained model
+    # model_file = ""
+    # model.load_state_dict(torch.load(model_file))
+
     # CUDA setup:
     if torch.cuda.is_available():
         logging.info("Using CUDA to speed up training.")
@@ -173,32 +190,32 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
 
 
 if __name__ == "__main__":
-    # TODO(Jinyun): check performance
-    cv.setNumThreads(0)
-
-    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-    # data parser:
     parser = argparse.ArgumentParser(description='pipeline')
     parser.add_argument('model_type', type=str,
                         help='model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
     parser.add_argument('train_file', type=str, help='training data')
     parser.add_argument('valid_file', type=str, help='validation data')
+    parser.add_argument('gpu_idx', type=str, help='which gpu to use')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
                         type=str, default='/fuel/fueling/planning/input_feature_preprocessor'
                                           '/planning_semantic_map_config.pb.txt',
                         help='renderer configuration file in proto.txt')
-    parser.add_argument('-imgs_dir', '--imgs_dir', type=str,
+    parser.add_argument('-renderer_base_map_dir', '--renderer_base_map_dir', type=str,
                         default='/fuel/testdata/planning/semantic_map_features',
                         help='location to store input base img or output img')
     parser.add_argument('-img_feature_rotation', '--img_feature_rotation', type=bool,
-                        default=False, help='whether to do random img rotation')
+                        default=True, help='whether to do random img rotation')
     parser.add_argument('-past_motion_dropout', '--past_motion_dropout', type=bool,
-                        default=False, help='whether to do past motion dropout')
+                        default=True, help='whether to do past motion dropout')
     parser.add_argument('-save_dir', '--save_dir', type=str, default='./',
                         help='Specify the directory to save trained models.')
     args = parser.parse_args()
+
+    # TODO(Jinyun): check performance
+    cv.setNumThreads(0)
+
+    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_idx
 
     region = "sunnyvale_with_two_offices"
     map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
@@ -207,7 +224,7 @@ if __name__ == "__main__":
              args.train_file,
              args.valid_file,
              args.renderer_config_file,
-             args.imgs_dir,
+             args.renderer_base_map_dir,
              args.img_feature_rotation,
              args.past_motion_dropout,
              args.save_dir,

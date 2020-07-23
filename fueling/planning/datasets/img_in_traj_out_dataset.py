@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-
-import re
-import os
-import shutil
-
-import cv2 as cv
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -21,7 +14,7 @@ from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator
     import ChauffeurNetFeatureGenerator
 
 
-class TrajectoryImitationCNNDataset(Dataset):
+class TrajectoryImitationCNNFCDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  img_feature_rotation=False, past_motion_dropout=False,
                  ouput_point_num=10, evaluate_mode=False):
@@ -29,8 +22,10 @@ class TrajectoryImitationCNNDataset(Dataset):
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
             # 12 channels is used
-            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
+            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
 
         logging.info('Processing directory: {}'.format(data_dir))
         self.instances = file_utils.list_files(data_dir)
@@ -130,7 +125,7 @@ class TrajectoryImitationCNNDataset(Dataset):
         return (transformed_img_feature, torch.from_numpy(pred_points).float())
 
 
-class TrajectoryImitationRNNDataset(Dataset):
+class TrajectoryImitationConvRNNDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  img_feature_rotation=False, past_motion_dropout=False,
                  ouput_point_num=10, evaluate_mode=False):
@@ -138,8 +133,10 @@ class TrajectoryImitationRNNDataset(Dataset):
         self.img_feature_transform = transforms.Compose([
             transforms.ToTensor(),
             # 12 channels is used
-            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
+            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
         self.img_bitmap_transform = transforms.Compose([
             # Normalized to [0, 1]
             transforms.ToTensor()])
@@ -313,7 +310,7 @@ class TrajectoryImitationRNNDataset(Dataset):
                  offroad_mask))
 
 
-class TrajectoryImitationCNNFCLSTMDataset(Dataset):
+class TrajectoryImitationCNNLSTMDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
@@ -321,8 +318,10 @@ class TrajectoryImitationCNNFCLSTMDataset(Dataset):
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
             # 12 channels is used
-            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
+            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
 
         logging.info('Processing directory: {}'.format(data_dir))
         self.instances = file_utils.list_files(data_dir)
@@ -448,7 +447,7 @@ class TrajectoryImitationCNNFCLSTMDataset(Dataset):
                 torch.from_numpy(pred_points).float())
 
 
-class TrajectoryImitationCNNFCLSTMWithAENDataset(Dataset):
+class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
     def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
                  img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
@@ -456,8 +455,10 @@ class TrajectoryImitationCNNFCLSTMWithAENDataset(Dataset):
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
             # 12 channels is used
-            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
-                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
+            transforms.Normalize(mean=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                                 std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                                      0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
         self.img_bitmap_transform = transforms.Compose([
             # Normalized to [0, 1]
             transforms.ToTensor()])
@@ -620,21 +621,3 @@ class TrajectoryImitationCNNFCLSTMWithAENDataset(Dataset):
                  torch.from_numpy(pred_points).float(),
                  pred_obs,
                  offroad_mask))
-
-
-if __name__ == '__main__':
-    # Given cleaned labels, preprocess the data-for-learning and generate
-    # training-data ready for torch Dataset.
-
-    # dump one instance image for debug
-    # dataset = TrajectoryImitationCNNDataset(
-    #     '/apollo/data/2019-10-17-13-36-41/')
-    config_file = "/fuel/fueling/planning/input_feature_preprocessor/" \
-        "planning_semantic_map_config.pb.txt"
-    imgs_dir = '/fuel/testdata/planning/semantic_map_features'
-    dataset = TrajectoryImitationRNNDataset(
-        '/apollo/data/output_data_evaluated/test/2019-10-17-13-36-41/complete',
-        config_file,
-        imgs_dir)
-
-    dataset[50]

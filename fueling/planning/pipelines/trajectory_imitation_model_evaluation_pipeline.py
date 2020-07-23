@@ -15,17 +15,21 @@ import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.common.file_utils as file_utils
 from fueling.learning.train_utils import cuda
-from fueling.planning.datasets.img_in_traj_out_dataset import \
-    TrajectoryImitationCNNDataset, \
-    TrajectoryImitationRNNDataset, \
-    TrajectoryImitationCNNFCLSTMDataset
-from fueling.planning.models.trajectory_imitation_model import \
-    TrajectoryImitationCNNModel, \
-    TrajectoryImitationRNNModel, \
-    TrajectoryImitationRNNMoreConvModel, \
-    TrajectoryImitationRNNUnetResnet18Modelv1, \
-    TrajectoryImitationRNNUnetResnet18Modelv2, \
-    TrajectoryImitationCNNFCLSTM
+from fueling.planning.datasets.img_in_traj_out_dataset \
+    import TrajectoryImitationCNNFCDataset, \
+    TrajectoryImitationConvRNNDataset, \
+    TrajectoryImitationCNNLSTMDataset, \
+    TrajectoryImitationCNNLSTMWithAENDataset
+from fueling.planning.models.trajectory_imitation.cnn_fc_model import \
+    TrajectoryImitationCNNFC
+from fueling.planning.models.trajectory_imitation.cnn_lstm_model import \
+    TrajectoryImitationCNNLSTM,\
+    TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet
+from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
+    TrajectoryImitationConvRNN, \
+    TrajectoryImitationDeeperConvRNN, \
+    TrajectoryImitationConvRNNUnetResnet18v1, \
+    TrajectoryImitationConvRNNUnetResnet18v2
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
@@ -83,7 +87,7 @@ def visualize_cnn_result(renderer, img_feature, coordinate_heading,
             message_timestamp_sec[i])), merged_img))
 
 
-def cnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
+def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_dir):
     with torch.no_grad():
         model.eval()
 
@@ -93,7 +97,8 @@ def cnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
 
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
-        output_dir = os.path.join(imgs_dir, "cnn_model_evaluation/")
+        output_dir = os.path.join(
+            renderer_base_map_dir, "cnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -229,7 +234,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                    last_mat)
 
 
-def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
+def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_dir):
     with torch.no_grad():
         model.eval()
 
@@ -239,7 +244,8 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
 
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
-        output_dir = os.path.join(imgs_dir, "rnn_model_evaluation/")
+        output_dir = os.path.join(
+            renderer_base_map_dir, "rnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -284,7 +290,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, imgs_dir):
 
 
 def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
-               imgs_dir, region, map_path):
+               renderer_base_map_dir, region, map_path):
     model = None
     test_dataset = None
 
@@ -293,33 +299,39 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
         renderer_config_file, renderer_config)
 
     if model_type == 'cnn':
-        model = TrajectoryImitationCNNModel(pred_horizon=10)
-        test_dataset = TrajectoryImitationCNNDataset(test_set_folder,
-                                                     renderer_config_file,
-                                                     imgs_dir,
-                                                     map_path,
-                                                     region,
-                                                     evaluate_mode=True)
+        model = TrajectoryImitationCNNFC(pred_horizon=10)
+        test_dataset = TrajectoryImitationCNNFCDataset(test_set_folder,
+                                                       renderer_config_file,
+                                                       renderer_base_map_dir,
+                                                       map_path,
+                                                       region,
+                                                       evaluate_mode=True)
     elif model_type == 'rnn':
-        model = TrajectoryImitationRNNModel(
+        model = TrajectoryImitationConvRNN(
             input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        test_dataset = TrajectoryImitationRNNDataset(test_set_folder,
-                                                     renderer_config_file,
-                                                     imgs_dir,
-                                                     map_path,
-                                                     region,
-                                                     evaluate_mode=True)
-    elif model_type == 'cnn+fc_lstm':
-        model = TrajectoryImitationCNNFCLSTM(history_len=10, pred_horizon=10, embed_size=64,
-                                             hidden_size=128)
-        test_dataset = TrajectoryImitationCNNFCLSTMDataset(test_set_folder,
-                                                           renderer_config_file,
-                                                           imgs_dir,
-                                                           map_path,
-                                                           region,
-                                                           history_point_num=10,
-                                                           ouput_point_num=10,
-                                                           evaluate_mode=True)
+        # model = TrajectoryImitationDeeperConvRNN(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        # model = TrajectoryImitationConvRNNUnetResnet18v1(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        # model = TrajectoryImitationConvRNNUnetResnet18v2(
+        #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
+        test_dataset = TrajectoryImitationConvRNNDataset(test_set_folder,
+                                                         renderer_config_file,
+                                                         renderer_base_map_dir,
+                                                         map_path,
+                                                         region,
+                                                         evaluate_mode=True)
+    elif model_type == 'cnn_fc_lstm':
+        model = TrajectoryImitationCNNLSTM(history_len=10, pred_horizon=10, embed_size=64,
+                                           hidden_size=128)
+        test_dataset = TrajectoryImitationCNNLSTM(test_set_folder,
+                                                  renderer_config_file,
+                                                  renderer_base_map_dir,
+                                                  map_path,
+                                                  region,
+                                                  history_point_num=10,
+                                                  ouput_point_num=10,
+                                                  evaluate_mode=True)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -329,12 +341,8 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                               shuffle=True,
                                               num_workers=8,
                                               drop_last=True)
+
     model_state_dict = torch.load(model_file)
-
-    # added if model was trained using nn.DataParallel
-    if args.multi_gpu_trained:
-        model = torch.nn.DataParallel(model)
-
     model.load_state_dict(model_state_dict)
 
     # CUDA setup:
@@ -346,10 +354,10 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
 
     if model_type == 'cnn' or model_type == 'cnn+fc_lstm':
         cnn_model_evaluator(test_loader, model,
-                            renderer_config_file, imgs_dir)
+                            renderer_config_file, renderer_base_map_dir)
     elif model_type == 'rnn':
         rnn_model_evaluator(test_loader, model,
-                            renderer_config_file, imgs_dir)
+                            renderer_config_file, renderer_base_map_dir)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
@@ -359,29 +367,28 @@ if __name__ == "__main__":
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
 
-    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
     parser = argparse.ArgumentParser(description='evaluation')
     parser.add_argument('model_type', type=str,
                         help='model type, cnn, rnn or cnn+fc_lstm')
     parser.add_argument('model_file', type=str, help='trained model')
     parser.add_argument('test_set_folder', type=str, help='test data')
+    parser.add_argument('gpu_idx', type=str, help='which gpu to use')
     parser.add_argument('-renderer_config_file', '--renderer_config_file',
                         type=str, default='/fuel/fueling/planning/datasets/'
                         'semantic_map_feature/planning_semantic_map_config.pb.txt',
                         help='renderer configuration file in proto.txt')
-    parser.add_argument('-imgs_dir', '--imgs_dir', type=str, default='/fuel/testdata/'
+    parser.add_argument('-renderer_base_map_dir', '--renderer_base_map_dir',
+                        type=str, default='/fuel/testdata/'
                         'planning/semantic_map_features',
                         help='location to store input base img or output img')
-    parser.add_argument('-multi_gpu_trained', '--multi_gpu_trained', type=bool,
-                        default=False, help='whether trained with multi-gpu')
-    parser.add_argument('-save_path', '--save_path', type=str, default='./',
-                        help='Specify the directory to save trained models.')
     args = parser.parse_args()
+
+    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_idx
 
     region = "sunnyvale_with_two_offices"
     map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
 
-    evaluating(args.model_type, args.model_file, args.test_set_folder, args.renderer_config_file,
-               args.imgs_dir, region, map_path)
+    evaluating(args.model_type, args.model_file, args.test_set_folder,
+               args.renderer_config_file,
+               args.renderer_base_map_dir, region, map_path)

@@ -9,13 +9,3 @@ py_library(
         "//fueling/common:coord_utils",
     ],
 )
-
-py_library(
-    name = "trajectory_imitation_model",
-    srcs = ["trajectory_imitation_model.py"],
-    deps = [
-        "//fueling/common:coord_utils",
-        "//fueling/common:logging",
-        "//fueling/learning:network_utils",
-    ],
-)
