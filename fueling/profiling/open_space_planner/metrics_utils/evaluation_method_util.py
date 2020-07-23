@@ -166,6 +166,7 @@ def output_grading(target_grading):
     logging.info(F'Writing grading output {grading} to {target_dir}')
 
     grading_dict = grading._asdict()
+    stats_dict = {}  # For dreamland analysis table rendering
     with open(grading_output_path, 'w') as grading_file:
         grading_file.write('{:<36s} {:<16s} {:<16s} {:<16s} {:<16s} {:<16s} {:<16s} {:<16s}\n'
                            .format('Metric', 'HitBoundTimes', 'Max', 'Mean', 'StdDev',
@@ -179,17 +180,36 @@ def output_grading(target_grading):
                 # it has a single value and num of elements
                 grading_file.write('{:<36s} {:<84s} {:<16.6f} {:<16n}\n'
                                    .format(name, ' ', value[0], value[-1]))
+                stats_dict[name] = {'value': value[0], 'sample_size': value[-1]}
             if len(value) == 5:
                 # it has 4 statistics and num of elements
                 grading_file.write(
                     '{:<36s} {:<16s} {:<16.3f} {:<16.3f} {:<16.3f} {:<16.3f} {:<16s} {:<16n}\n'
                     .format(name, 'N.A.', value[0], value[1], value[2], value[3],
                             'N.A.', value[-1]))
+                stats_dict[name] = {
+                    'max': value[0],
+                    'mean': value[1],
+                    'std_dev': value[2],
+                    '95pctl': value[3],
+                    'sample_size': value[-1]
+                }
             if len(value) == 6:
                 # it has 5 statistics and num of elements
                 grading_file.write(
                     '{:<36s} {:<16n} {:<16.3%} {:<16.3%} {:<16.3%} {:<16.3%} {:<16s} {:<16n}\n'
                     .format(name, value[0], value[1], value[2], value[3], value[4],
                             'N.A.', value[-1]))
+                stats_dict[name] = {
+                    'hit_bound_times': value[0],
+                    'max': value[1],
+                    'mean': value[2],
+                    'std_dev': value[3],
+                    '95pctl': value[4],
+                    'sample_size': value[-1]
+                }
+
     with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
         grading_json.write(json.dumps(grading_dict))
+    with open(os.path.join(target_dir, '__open_space_performance_stats.json'), 'w') as stats_json:
+        stats_json.write(json.dumps(stats_dict))

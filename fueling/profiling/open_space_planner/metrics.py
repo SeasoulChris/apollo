@@ -14,7 +14,7 @@ from modules.planning.proto.planning_config_pb2 import ScenarioConfig
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.partners import partners
 from fueling.profiling.open_space_planner.feature_extraction.feature_visualization_utils import \
-    plot
+    plot, save
 from fueling.profiling.open_space_planner.feature_extraction.feature_extraction_utils import \
     extract_latency_feature, extract_planning_trajectory_feature, extract_stage_feature, \
     extract_zigzag_trajectory_feature, output_features
@@ -32,6 +32,8 @@ flags.DEFINE_boolean('open_space_planner_profiling_generate_report', False,
                      'whether an email report with feature plot etc. is required')
 flags.DEFINE_boolean('open_space_planner_profiling_debug', False,
                      'whether feature HDF5 files need to be saved for debugging')
+flags.DEFINE_boolean('open_space_planner_profiling_simulation_only', False,
+                     'whether feature data need to be saved for simulation charts')
 flags.DEFINE_string('open_space_planner_profiling_vehicle_conf_path', None,
                     'storage path of vehicle_param.pb.txt')
 
@@ -244,6 +246,10 @@ class OpenSpacePlannerMetrics(BasePipeline):
             zigzag_feature.foreach(lambda group: output_features(group, 'zigzag_feature'))
             trajectory_feature.foreach(lambda group: output_features(group, 'trajectory_feature'))
 
+        if self.FLAGS['open_space_planner_profiling_simulation_only']:
+            # PairRDD(target, features), save trajectory features in json file
+            trajectory_feature.foreach(save)
+
         if self.FLAGS['open_space_planner_profiling_generate_report']:
             # PairRDD(target, planning_trajectory_features), feature plots
             trajectory_feature.foreach(plot)
@@ -270,8 +276,8 @@ class OpenSpacePlannerMetrics(BasePipeline):
             for task in tasks:
                 source = task.replace(target_prefix, origin_prefix, 1)
                 logging.info(F'task: {task}, source: {source}')
-                plot = glob.glob(os.path.join(task, '*visualization*'))
-                profiling = glob.glob(os.path.join(task, '*performance_grading*'))
+                plot = glob.glob(os.path.join(task, '*visualization.pdf'))
+                profiling = glob.glob(os.path.join(task, '*performance_grading.txt'))
                 email_content.append(SummaryTuple(
                     Task=source,
                     FeaturePlot=len(plot),

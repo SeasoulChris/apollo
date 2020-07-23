@@ -32,6 +32,7 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
             F'{flags.FLAGS.test_tmpdir}/generated')
         flags.FLAGS.open_space_planner_profiling_generate_report = True
         flags.FLAGS.open_space_planner_profiling_debug = True
+        flags.FLAGS.open_space_planner_profiling_simulation_only = True
 
         self.pipeline.init()
         self.pipeline.run()
@@ -41,6 +42,10 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         self.assertTrue(os.path.exists(grading_output))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/open_space_performance_grading.json')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.output_data_path}/__open_space_performance_stats.json')))
+        self.assertTrue(os.path.exists(file_utils.fuel_path(
+            F'{flags.FLAGS.output_data_path}/__open_space_feature_data.json')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(
             F'{flags.FLAGS.output_data_path}/stage_feature.hdf5')))
         self.assertTrue(os.path.exists(file_utils.fuel_path(

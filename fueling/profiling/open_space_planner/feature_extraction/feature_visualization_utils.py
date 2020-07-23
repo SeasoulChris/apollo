@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
@@ -68,3 +69,17 @@ def plot(data_rdd):
             plt.tight_layout()
             time_pdf.savefig()
             plt.close()
+
+
+def save(data_rdd):
+    output_dir, data = data_rdd
+    feature_dict = {
+        'labels': {'x_label': 'timestamps'},
+        'timestamps': data[:, 0].tolist()
+    }
+    for (i, feature_name) in enumerate(TRAJECTORY_FEATURE_NAMES):
+        feature_dict[feature_name] = data[:, i].tolist()
+
+    json_file = os.path.join(output_dir, '__open_space_feature_data.json')
+    with open(json_file, 'w') as feature_json:
+        feature_json.write(json.dumps(feature_dict))
