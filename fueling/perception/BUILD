@@ -14,6 +14,7 @@ py_binary(
 py_binary(
     name = "decode_video",
     srcs = ["decode_video.py"],
+    data = ["@apollo//modules/drivers/video/tools/decode_video:video2jpg"],
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:email_utils",

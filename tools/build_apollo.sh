@@ -2,7 +2,6 @@
 
 cd /apollo
 bazel build -c opt \
-    //modules/drivers/video/tools/decode_video/... \
     //modules/localization/msf/local_tool/data_extraction/... \
     //modules/localization/msf/local_tool/map_creation/... \
     //modules/map/tools:sim_map_generator \

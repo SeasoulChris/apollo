@@ -216,7 +216,8 @@ def decode_videos(message_meta):
                 h265_video_file.write(video_frame_bin.read())
     # Invoke video2jpg binary executable
     file_utils.makedirs(image_output_path)
-    video_decoder_path = '/apollo/bazel-bin/modules/drivers/video/tools/decode_video/video2jpg'
+    video_decoder_path = file_utils.apollo_path(
+        'modules/drivers/video/tools/decode_video/video2jpg')
     return_code = os.system('{} --input_video={} --output_dir={}'.format(
         video_decoder_path, h265_video_file_path, image_output_path))
     if return_code != 0:

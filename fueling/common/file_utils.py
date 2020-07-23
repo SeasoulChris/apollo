@@ -68,6 +68,11 @@ def fuel_path(path):
 
 def apollo_path(path):
     """Get real path to data which is relative to Apollo root."""
+    runfiles_path = os.path.join(FUEL_ROOT, '../apollo', path)
+    if os.path.exists(runfiles_path):
+        return os.path.abspath(runfiles_path)
+    logging.error('Cannot find apollo path in runfiles. You may need to add the target as a data '
+                  'item of your Python target.')
     return os.path.join('/apollo', path)
 
 
