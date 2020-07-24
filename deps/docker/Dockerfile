@@ -1,6 +1,7 @@
 FROM apolloauto/apollo:dev-x86_64-18.04-20200724_0021
 
 ENV LD_LIBRARY_PATH=/usr/local/fast-rtps/lib
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
 
 RUN apt update -y && \
     apt install -y \
