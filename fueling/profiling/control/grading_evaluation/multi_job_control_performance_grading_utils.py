@@ -476,6 +476,9 @@ def output_gradings(target_grading, flags):
     grading_output_path = os.path.join(target_dir,
                                        F'{vehicle_type}_{controller_type}_'
                                        F'control_performance_grading.txt')
+    sim_analysis_output_path = os.path.join(target_dir,
+                                            F'{vehicle_type}_{controller_type}_'
+                                            F'control_performance_analysis.json')
     profiling_conf_output_path = os.path.join(target_dir,
                                               F'{vehicle_type}_{controller_type}_'
                                               F'control_profiling_conf.pb.txt')
@@ -512,6 +515,7 @@ def output_gradings(target_grading, flags):
             grading_file.write('Grading_output: \t {0:<36s} {1:<16s} {2:<16s} {3:<16s}\n'
                                .format('Grading Items', 'Grading Values', 'Sampling Size',
                                        'Event Timestamp'))
+            analysis_dict = {}
             for name, value in grading_dict.items():
                 if not value:
                     logging.warning(F'grading value for {name} is None')
@@ -526,17 +530,31 @@ def output_gradings(target_grading, flags):
                                                .format(name + '_trajectory_' + str(idx),
                                                        value[0][0][idx], value[1],
                                                        value[0][1][idx]))
+                            analysis_dict[name + '_trajectory_' + str(idx)] = {
+                                'score': float('%.6f' % value[0][0][idx]),
+                                'sample_size': value[1],
+                                'timestamp': float('%.6f' % value[0][1][idx])}
                     if 'peak' in name:
                         grading_file.write('Grading_output: \t '
                                            + '{0:<36s} {1:<16.3%} {2:<16n} {3:<16.3f} \n'
                                            .format(name, value[0][0], value[1], value[0][1]))
+                        analysis_dict[name] = {'score': float('%.6f' % value[0][0]),
+                                               'sample_size': value[1],
+                                               'timestamp': float('%.6f' % value[0][1])}
                 # For the other values, the data are stored as one float variable in the first
                 # element of value tuples
                 else:
                     grading_file.write('Grading_output: \t {0:<36s} {1:<16.3%} {2:<16n} \n'
                                        .format(name, value[0], value[1]))
+                    analysis_dict[name] = {'score': float('%.6f' % value[0]),
+                                           'sample_size': value[1]}
+        # save the grading_dict as json file for scoring in autotune application
         with open(grading_output_path.replace('.txt', '.json'), 'w') as grading_json:
             grading_json.write(json.dumps(grading_dict))
+        # save the analysis_dict as json file for displalying in dreamland application
+        with open(sim_analysis_output_path, 'w') as analysis_json:
+            analysis_json.write(json.dumps(analysis_dict))
+        # save the profiling conf as txt file for record
         with open(profiling_conf_output_path, 'w') as profiling_conf_file:
             profiling_conf_file.write(F'{profiling_conf}')
 
