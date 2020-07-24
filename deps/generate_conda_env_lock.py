@@ -36,11 +36,13 @@ for path in ['fueling', 'apps']:
                 if line.startswith('import ') or line.startswith('from '):
                     usage_counter[line.split()[1].split('.')[0]] += 1
 name_mappings = {
+    'bayesian_optimization': 'bayes_opt',
     'opencv': 'cv2',
     'keras_gpu': 'keras',
     'protobuf': 'google',
     'pyro_ppl': 'pyro',
     'pytorch': 'torch',
+    'scikit_learn': 'sklearn',
 }
 usage_counter.update({key : usage_counter[val] for key, val in name_mappings.items()})
 # Used in tool.

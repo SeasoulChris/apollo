@@ -50,6 +50,8 @@ dependencies:
   - pytz
   - redis-py
   - requests
+  - scikit-learn
+  - scipy
   - seaborn
   - shapely
   - tensorflow = 1.14  # TF2 changes API.
