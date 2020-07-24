@@ -21,6 +21,7 @@ import google.protobuf.json_format as json_format
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from apps.k8s.spark_submitter.spark_submit_arg_pb2 import Env, JobRecord, SparkSubmitArg
+from apps.web_portal.job_processor import JobProcessor
 from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
 from fueling.common.mongo_utils import Mongo
 import apps.web_portal.jobs as jobs
@@ -202,60 +203,18 @@ class SparkSubmitJob(flask_restful.Resource):
 
 
 class OpenServiceSubmitJob(SparkSubmitJob):
+    """submit open service jobs"""
+
     def post(self):
         """Accept user request, verify and process."""
         try:
-            job_arg = flask.request.get_json()['job_arg']
-            job_type = flask.request.get_json()['job_type']
-            partner_id = flask.request.get_json()['partner_id']
-            JOB_PROCESSORS = {
-                SaasJobArg.CONTROL_PROFILING: jobs.ControlProfiling,
-                SaasJobArg.OPEN_SPACE_PLANNER_PROFILING: jobs.OpenSpacePlannerProfiling,
-                SaasJobArg.SENSOR_CALIBRATION: jobs.SensorCalibration,
-                SaasJobArg.VEHICLE_CALIBRATION: jobs.VehicleCalibration,
-                SaasJobArg.VIRTUAL_LANE_GENERATION: jobs.VirtualLaneGeneration,
-            }
-            processor = JOB_PROCESSORS.get(job_type)
-            if processor is None:
-                err = 'Unsupported job type'
-                logging.error(err)
-                return json.dumps({'error': err}), HTTPStatus.BAD_REQUEST
-
-            # Construct client_flags.
-            base_client_flags = {
-                'role': partner_id,
-                'node_selector': 'FOR_OPEN_SERVICES',
-            }
-            entrypoint, client_flags, job_flags = processor().parse_arg(job_arg)
-            base_client_flags.update(client_flags)
-            client = SparkSubmitterClient(entrypoint, base_client_flags, job_flags)
-            submitarg = {
-                'user': client.get_user(),
-                'env': client.get_env(),
-                'job': client.get_job(),
-                'worker': client.get_worker(),
-                'driver': client.get_driver(),
-                'partner': client.get_partner(),
-            }
-
-            arg = json_format.Parse(json.dumps(submitarg), SparkSubmitArg())
-            job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
-            # Validate args
-            if (arg.worker.count * arg.worker.memory * flags.FLAGS.min_shared_jobs
-                    >= flags.FLAGS.total_memory):
-                return json.dumps({'error': 'Too much memory requested!'}), HTTPStatus.BAD_REQUEST
-            elif (arg.worker.count * arg.worker.cpu * flags.FLAGS.min_shared_jobs
-                    >= flags.FLAGS.total_cpu):
-                return json.dumps({'error': 'Too many cpu requested!'}), HTTPStatus.BAD_REQUEST
-
-            if flags.FLAGS.debug:
-                self.spark_submit(job_id, arg)
-            else:
-                threading.Thread(target=self.spark_submit, args=(job_id, arg)).start()
-            return json.dumps({'job_id': job_id}), HTTPStatus.OK
-        except json_format.ParseError as err:
-            logging.error(err)
-            return json.dumps({'error': 'Bad SparkSubmitArg format!'}), HTTPStatus.BAD_REQUEST
+            request = flask.request.get_json()
+            job_arg = json_format.ParseDict(request, SaasJobArg())
+            http_code, msg = JobProcessor(job_arg).process()
+        except BaseException:
+            http_code = HTTPStatus.BAD_REQUEST
+            msg = 'Wrong job argument'
+        return msg, http_code
 
 
 flask_app = flask.Flask(__name__)

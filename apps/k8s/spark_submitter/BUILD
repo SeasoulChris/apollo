@@ -21,15 +21,10 @@ py_binary(
     deps = [
         ":client",
         ":spark_submit_arg_py_pb2",
-        "//apps/web_portal:jobs",
-        "//apps/web_portal:saas_job_arg_py_pb2",
+        "//apps/web_portal:job_processor",
         "//fueling/common:job_utils",
         "//fueling/common:mongo_utils",
         "//fueling/common:proto_utils",
-        "//fueling/control/calibration_table:vehicle_calibration",
-        "//fueling/map:generate_maps",
-        "//fueling/perception/sensor_calibration:calibration_multi_sensors",
-        "//fueling/profiling/control:control_profiling",
     ],
 )
 
