@@ -8,10 +8,10 @@ dependencies:
   - ansi2html = 1.5.2  # usage = 1
   - boto3 = 1.14.12  # usage = 3
   - conda-forge::bayesian-optimization = 1.1.0
-  - conda-forge::casadi = 3.5.1  # usage = 1
+  - conda-forge::casadi = 3.5.2  # usage = 1
   - conda-forge::easydict = 1.9
   - conda-forge::eventlet = 0.25.2
-  - conda-forge::flask-restful = 0.3.8  # usage = 1
+  - conda-forge::flask-restful = 0.3.8  # usage = 3
   - conda-forge::gpytorch = 1.1.1  # usage = 22
   - conda-forge::librosa = 0.8.0  # usage = 5
   - conda-forge::optuna = 1.5.0  # usage = 6
@@ -38,7 +38,7 @@ dependencies:
   - pip = 20.1.1  # usage = 1
   - plotly::plotly = 4.9.0
   - plotly::plotly-orca = 1.3.1
-  - protobuf = 3.12.3  # usage = 25
+  - protobuf = 3.12.3  # usage = 42
   - psutil = 5.7.0  # usage = 2
   - pycodestyle = 2.6.0  # usage = 1
   - pyflakes = 2.2.0  # usage = 1
