@@ -5,6 +5,7 @@ The logical control of the account in front of the view
 
 import datetime
 
+from common import paginator
 from controllers import job
 from fueling.common import account_utils
 from utils import time_utils
@@ -138,3 +139,47 @@ def is_over_quota(used, quota):
 def is_expired(expire_date):
     """Whether the account is expired"""
     return expire_date < datetime.datetime.now()
+
+
+def get_account_filter(conf_dict, args_dict):
+    """
+    Get the filter about account
+    """
+    res = {}
+    black_list = conf_dict["black_list"]
+    account_show_action = conf_dict["account_show_action"]
+    vehicle_sn = args_dict["vehicle_sn"]
+    find_filter = []
+    if vehicle_sn:
+        find_filter.append({"vehicle_sn": vehicle_sn})
+    else:
+        for black_sn in black_list:
+            find_filter.append({"vehicle_sn": {'$ne': black_sn}})
+    if find_filter:
+        filters = {"$and": find_filter}
+    else:
+        filters = {}
+    return filters
+
+
+def get_account_objs(filters):
+    """
+    Get the accounts from collection by filters
+    """
+    accounts = account_db.get_account_info(filters)
+    account_used = get_job_used(accounts)
+    account_objs = format_account_time(account_used)
+    account_list = sorted(account_objs,
+                          key=lambda x: x.get("due_date")
+                          if x.get("due_date") else x.get("apply_date"))
+    return account_list
+
+
+def get_account_paginator(current_page, nums, default_pages=10):
+    """
+    Get the current page obj and the content index
+    """
+    account_paginator = paginator.Pagination(nums, default_pages)
+    current_page = paginator.CurrentPaginator(current_page, account_paginator)
+    first, last = current_page.get_index_content()
+    return current_page, (first, last)

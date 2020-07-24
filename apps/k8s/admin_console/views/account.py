@@ -6,10 +6,11 @@ import json
 import flask
 
 import application
-from common import paginator
 from controllers import account
 from fueling.common import account_utils
 from fueling.common import logging
+from utils import args_utils
+from utils import conf_utils
 from utils import time_utils
 
 blue_account = flask.Blueprint("account", __name__,
@@ -22,34 +23,17 @@ def accounts():
     """
     account list
     """
-    black_list = application.app.config.get("BLACK_LIST")
-    account_show_action = application.app.config.get("ACCOUNT_SHOW_ACTION")
-    current_page = int(flask.request.args.get("page", 1))
-    vehicle_sn = flask.request.args.get("vehicle_sn")
-    find_filter = []
-    if vehicle_sn:
-        find_filter.append({"vehicle_sn": vehicle_sn})
-    else:
-        for black_sn in black_list:
-            find_filter.append({"vehicle_sn": {'$ne': black_sn}})
-    if find_filter:
-        filters = {"$and": find_filter}
-    else:
-        filters = {}
-    accounts = account.account_db.get_account_info(filters)
-    account_used = account.get_job_used(accounts)
-    account_objs = account.format_account_time(account_used)
-    account_add_show_actions = account.get_show_action(account_show_action, account_objs)
-    account_nums = len(account_add_show_actions)
-    account_paginator = paginator.Pagination(account_nums, 20)
-    current_page = paginator.CurrentPaginator(current_page, account_paginator)
-    first, last = current_page.get_index_content()
-    account_list = sorted(account_objs,
-                          key=lambda x: x.get("due_date")
-                          if x.get("due_date") else x.get("apply_date")
-                          )[first: last]
+    conf_dict = conf_utils.get_conf("ACCOUNT_SHOW_ACTION", "BLACK_LIST")
+    args_dict = args_utils.get_args(("page", "1"), "vehicle_sn")
+    filters = account.get_account_filter(conf_dict, args_dict)
+
+    accounts = account.get_account_objs(filters)
+    account.get_show_action(conf_dict["account_show_action"], accounts)
+    current_page, index = account.get_account_paginator(args_dict["page"], len(accounts), 20)
+    account_list = accounts[index[0]: index[1]]
+
     return flask.render_template("accounts.html", account_list=account_list,
-                                 current_page=current_page, vehicle_sn=vehicle_sn,
+                                 current_page=current_page, vehicle_sn=args_dict["vehicle_sn"],
                                  username=flask.session.get("user_info").get("username"))
 
 

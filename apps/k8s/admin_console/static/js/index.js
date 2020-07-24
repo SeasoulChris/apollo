@@ -194,8 +194,8 @@ $(document).ready(function () {
         var button = $(e.relatedTarget);
         var account_data = {};
         var label_action = {
-            "Enable": "开通",
-            "Reject": "打回",
+            "Enable": "启用",
+            "Reject": "驳回",
             "Disable": "停用"
         };
 
@@ -210,6 +210,12 @@ $(document).ready(function () {
             "Rejected": "",
             "Disabled": "Enable"
         };
+
+        var region_filed = {
+            "bj": "北京",
+            "su": "苏州",
+            "gz": "广州"
+        }
 
         // Get the user basic infomation from dialog
         account_data["label"] = button.data("label");
@@ -236,8 +242,8 @@ $(document).ready(function () {
         modal.find('.com-name').text("公司名字:" + account_data["com_name"]);
         modal.find('.com-email').text("公司邮箱:" + account_data["com_email"]);
         modal.find('.bos-name').text("BOS名字:" + account_data["bos_bucker_name"]);
-        modal.find('.bos-region').text("BOS区域:" + account_data["bos_region"]);
-        modal.find('.account-status').text("账号状态:" + account_data["account_status"]);
+        modal.find('.bos-region').text("BOS区域:" + region_filed[account_data["bos_region"]]);
+        modal.find('.account-status').text("账号状态:" + showServiceStatus(account_data["account_status"]));
         modal.find('.btn-account-action').text(str_label);
 
         // Submit the form for verification field and post ajax request
@@ -279,7 +285,7 @@ $(document).ready(function () {
                                 $("#button-reject-" + account_data["account_id"]).remove();
                                 var dom = '<a style="width: 100%" id="edit-action-' + account_data["account_id"] +
                                         '" class="account-edit-modal" data-toggle="modal" data-target="#editModal" data-account-services="' +
-                                        account_services + '" data-account-id="' + account_data["account_id"] + '"> Edit </a>' 
+                                        account_services + '" data-account-id="' + account_data["account_id"] + '"> 编辑 </a>' 
                                 $("#button-action-" + account_data["account_id"]).after(dom);
                             }
                             else
@@ -300,16 +306,16 @@ $(document).ready(function () {
 
                      // update the table
                      // Update the status
-                     $("#status-" + account_data["account_id"]).text(status);
+                     $("#status-" + account_data["account_id"]).text(showServiceStatus(status));
                      // Update the action
                      if (not_action.length !== 0)
                      {
-                        $("#button-action-" + account_data["account_id"]).text(not_action);
+                        $("#button-action-" + account_data["account_id"]).text(label_action[not_action]);
                      }
                      // Update the action history
                      $("#flag-" + account_data["account_id"]).before('<tr style="display: none" class="operation_span">' +
                         '<td colspan="11" style="border-top: none">' +
-                        "用户账号被" + result["operation"]["email"] + "在" + result["operation"]["time"] +
+                        "用户账号" + "在" + result["operation"]["time"] + "时被" + result["operation"]["email"] +
                         str_label + "。备注是：" + result["operation"]["comments"] + "。</td></tr>");
 
                      // Update the message
@@ -320,7 +326,6 @@ $(document).ready(function () {
                      $("#collapse-" + account_data["account_id"]).css("display", "inline");
                      if (not_action.length !== 0)
                      {
-                        // $("#button-" + account_data["label"].toLowerCase() + "-" + account_data["account_id"]).parent().parent().nextUntil(".account_flag").css("display", "table-row");
                         $("#button-action-" + account_data["account_id"]).parent().parent().nextUntil(".account_flag").css("display", "table-row");
                     }                    
                 }
