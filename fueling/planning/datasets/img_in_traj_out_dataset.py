@@ -15,7 +15,9 @@ from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator
 
 
 class TrajectoryImitationCNNFCDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
+    def __init__(self, data_dir, regions_list, renderer_config_file,
+                 renderer_base_map_img_dir,
+                 renderer_base_map_data_dir,
                  img_feature_rotation=False, past_motion_dropout=False,
                  ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
@@ -30,23 +32,21 @@ class TrajectoryImitationCNNFCDataset(Dataset):
         logging.info('Processing directory: {}'.format(data_dir))
         self.instances = file_utils.list_files(data_dir)
 
-        # TODO(Jinyun): add multi-map support
-        # region = "sunnyvale_with_two_offices"
-
         self.total_num_data_pt = len(self.instances)
 
         logging.info('Total number of data points = {}'.format(
             self.total_num_data_pt))
 
-        # TODO(Jinyun): recognize map_name in __getitem__
-        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
-                                                                            imgs_dir,
-                                                                            region, map_path)
+        self.chauffeur_net_feature_generator = \
+            ChauffeurNetFeatureGenerator(regions_list,
+                                         renderer_config_file,
+                                         renderer_base_map_img_dir,
+                                         renderer_base_map_data_dir)
         self.img_feature_rotation = img_feature_rotation
         self.past_motion_dropout = past_motion_dropout
-        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
-            renderer_config_file, renderer_config)
+            renderer_config_file,
+            planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
         self.ouput_point_num = ouput_point_num
@@ -60,6 +60,8 @@ class TrajectoryImitationCNNFCDataset(Dataset):
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
+
+        region = frame.map_name
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
@@ -78,7 +80,7 @@ class TrajectoryImitationCNNFCDataset(Dataset):
         current_theta = current_path_point.theta
 
         img_feature = self.chauffeur_net_feature_generator.\
-            render_stacked_img_features(frame.frame_num,
+            render_stacked_img_features(region,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
@@ -126,7 +128,9 @@ class TrajectoryImitationCNNFCDataset(Dataset):
 
 
 class TrajectoryImitationConvRNNDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
+    def __init__(self, data_dir, regions_list, renderer_config_file,
+                 renderer_base_map_img_dir,
+                 renderer_base_map_data_dir,
                  img_feature_rotation=False, past_motion_dropout=False,
                  ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
@@ -144,26 +148,21 @@ class TrajectoryImitationConvRNNDataset(Dataset):
         logging.info('Processing directory: {}'.format(data_dir))
         self.instances = file_utils.list_files(data_dir)
 
-        # TODO(Jinyun): add multi-map support
-        # region = "sunnyvale_with_two_offices"
-
         self.total_num_data_pt = len(self.instances)
 
         logging.info('Total number of data points = {}'.format(
             self.total_num_data_pt))
 
-        # TODO(Jinyun): recognize map_name in __getitem__
         self.chauffeur_net_feature_generator = \
-            ChauffeurNetFeatureGenerator(renderer_config_file,
-                                         imgs_dir,
-                                         region,
-                                         map_path,
-                                         base_map_update_flag=False)
+            ChauffeurNetFeatureGenerator(regions_list,
+                                         renderer_config_file,
+                                         renderer_base_map_img_dir,
+                                         renderer_base_map_data_dir)
         self.img_feature_rotation = img_feature_rotation
         self.past_motion_dropout = past_motion_dropout
-        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
-            renderer_config_file, renderer_config)
+            renderer_config_file,
+            planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
         self.img_size = [renderer_config.width, renderer_config.height]
@@ -178,6 +177,8 @@ class TrajectoryImitationConvRNNDataset(Dataset):
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
+
+        region = frame.map_name
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
@@ -196,7 +197,7 @@ class TrajectoryImitationConvRNNDataset(Dataset):
         current_theta = current_path_point.theta
 
         img_feature = self.chauffeur_net_feature_generator.\
-            render_stacked_img_features(frame.frame_num,
+            render_stacked_img_features(region,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
@@ -210,7 +211,8 @@ class TrajectoryImitationConvRNNDataset(Dataset):
         transformed_img_feature = self.img_feature_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.\
-            render_offroad_mask(current_x,
+            render_offroad_mask(region,
+                                current_x,
                                 current_y,
                                 current_theta,
                                 coordinate_heading)
@@ -311,7 +313,9 @@ class TrajectoryImitationConvRNNDataset(Dataset):
 
 
 class TrajectoryImitationCNNLSTMDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
+    def __init__(self, data_dir, regions_list, renderer_config_file,
+                 renderer_base_map_img_dir,
+                 renderer_base_map_data_dir,
                  img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
@@ -332,14 +336,16 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
             self.total_num_data_pt))
 
         # TODO(Jinyun): recognize map_name in __getitem__
-        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
-                                                                            imgs_dir,
-                                                                            region, map_path)
+        self.chauffeur_net_feature_generator = \
+            ChauffeurNetFeatureGenerator(regions_list,
+                                         renderer_config_file,
+                                         renderer_base_map_img_dir,
+                                         renderer_base_map_data_dir)
         self.img_feature_rotation = img_feature_rotation
         self.past_motion_dropout = past_motion_dropout
-        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
-            renderer_config_file, renderer_config)
+            renderer_config_file,
+            planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
         self.history_point_num = history_point_num
@@ -354,6 +360,8 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
+
+        region = frame.map_name
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
@@ -372,7 +380,7 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         current_theta = current_path_point.theta
 
         img_feature = self.chauffeur_net_feature_generator.\
-            render_stacked_img_features(frame.frame_num,
+            render_stacked_img_features(region,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
@@ -448,7 +456,9 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
 
 
 class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
-    def __init__(self, data_dir, renderer_config_file, imgs_dir, map_path, region,
+    def __init__(self, data_dir, regions_list, renderer_config_file,
+                 renderer_base_map_img_dir,
+                 renderer_base_map_data_dir, on,
                  img_feature_rotation=False, past_motion_dropout=False,
                  history_point_num=10, ouput_point_num=10, evaluate_mode=False):
         # TODO(Jinyun): refine transform function
@@ -471,15 +481,16 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
         logging.info('Total number of data points = {}'.format(
             self.total_num_data_pt))
 
-        # TODO(Jinyun): recognize map_name in __getitem__
-        self.chauffeur_net_feature_generator = ChauffeurNetFeatureGenerator(renderer_config_file,
-                                                                            imgs_dir,
-                                                                            region, map_path)
+        self.chauffeur_net_feature_generator = \
+            ChauffeurNetFeatureGenerator(regions_list,
+                                         renderer_config_file,
+                                         renderer_base_map_img_dir,
+                                         renderer_base_map_data_dir)
         self.img_feature_rotation = img_feature_rotation
         self.past_motion_dropout = past_motion_dropout
-        renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         renderer_config = proto_utils.get_pb_from_text_file(
-            renderer_config_file, renderer_config)
+            renderer_config_file,
+            planning_semantic_map_config_pb2.PlanningSemanticMapConfig())
         self.img_size = [renderer_config.width, renderer_config.height]
         self.max_rand_coordinate_heading = np.radians(
             renderer_config.max_rand_delta_phi)
@@ -495,6 +506,8 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
 
         frame = proto_utils.get_pb_from_bin_file(
             frame_name, learning_data_pb2.LearningDataFrame())
+
+        region = frame.map_name
 
         coordinate_heading = 0.
         if self.img_feature_rotation:
@@ -513,7 +526,7 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
         current_theta = current_path_point.theta
 
         img_feature = self.chauffeur_net_feature_generator.\
-            render_stacked_img_features(frame.frame_num,
+            render_stacked_img_features(region,
                                         frame.adc_trajectory_point[-1].timestamp_sec,
                                         frame.adc_trajectory_point,
                                         frame.obstacle,
@@ -527,7 +540,8 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
         transformed_img_feature = self.img_transform(img_feature)
 
         offroad_mask = self.chauffeur_net_feature_generator.\
-            render_offroad_mask(current_x,
+            render_offroad_mask(region,
+                                current_x,
                                 current_y,
                                 current_theta,
                                 coordinate_heading)

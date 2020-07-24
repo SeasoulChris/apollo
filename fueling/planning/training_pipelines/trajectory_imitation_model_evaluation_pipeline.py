@@ -35,12 +35,16 @@ from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
+from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
+    import ChauffeurNetFeatureGenerator
 
 flags.DEFINE_string('model_type', None,
                     'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
 flags.DEFINE_string('model_file', None, 'trained model')
 flags.DEFINE_string('test_set_folder', None, 'test set data folder')
 flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
+flags.DEFINE_bool('update_base_map', False,
+                  'Whether to redraw the base imgs needed for training')
 flags.DEFINE_string('renderer_config_file', '/fuel/fueling/planning/input_feature_preprocessor'
                     '/planning_semantic_map_config.pb.txt',
                     'renderer configuration file in pb.txt')
@@ -304,8 +308,9 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_i
         print(average_v_error)
 
 
-def evaluating(model_type, model_file, test_set_folder, gpu_idx, renderer_config_file,
-               renderer_base_map_img_dir, renderer_base_map_data_dir, region):
+def evaluating(model_type, model_file, test_set_folder, gpu_idx, update_base_map,
+               renderer_config_file, renderer_base_map_img_dir,
+               renderer_base_map_data_dir, region):
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
 
@@ -314,6 +319,11 @@ def evaluating(model_type, model_file, test_set_folder, gpu_idx, renderer_config
     model = None
     test_dataset = None
 
+    if update_base_map:
+        ChauffeurNetFeatureGenerator.draw_base_map(regions_list,
+                                                   renderer_config_file,
+                                                   renderer_base_map_img_dir,
+                                                   renderer_base_map_data_dir)
     renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
     renderer_config = proto_utils.get_pb_from_text_file(
         renderer_config_file, renderer_config)
@@ -389,6 +399,7 @@ def main(argv):
     model_file = gflag.model_file
     test_set_dir = gflag.test_set_dir
     gpu_idx = gflag.gpu_idx
+    update_base_map = gflag.update_base_map
     renderer_config_file = gflag.renderer_config_file
     renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
     region = "sunnyvale_with_two_offices"
@@ -401,6 +412,7 @@ def main(argv):
                model_file,
                test_set_dir,
                gpu_idx,
+               update_base_map,
                renderer_config_file,
                renderer_base_map_img_dir,
                renderer_base_map_data_dir,

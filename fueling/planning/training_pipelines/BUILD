@@ -10,6 +10,7 @@ py_binary(
     deps = [
         "//fueling/learning:train_utils",
         "//fueling/planning/datasets:img_in_traj_out_dataset",
+        "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
         "//fueling/planning/models/trajectory_imitation:cnn_fc_model",
         "//fueling/planning/models/trajectory_imitation:cnn_lstm_model",
         "//fueling/planning/models/trajectory_imitation:conv_rnn_model",
@@ -27,6 +28,7 @@ py_binary(
     deps = [
         "//fueling/learning:train_utils",
         "//fueling/planning/datasets:img_in_traj_out_dataset",
+        "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
         "//fueling/planning/models/trajectory_imitation:cnn_fc_model",
         "//fueling/planning/models/trajectory_imitation:cnn_lstm_model",
         "//fueling/planning/models/trajectory_imitation:conv_rnn_model",

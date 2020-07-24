@@ -35,18 +35,24 @@ from fueling.planning.models.trajectory_imitation.image_representation_loss impo
 from fueling.planning.models.trajectory_imitation.trajectory_point_displacement_loss import \
     TrajectoryPointDisplacementMSELoss, \
     TrajectoryPointDisplacementL1Loss
+from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
+    import ChauffeurNetFeatureGenerator
 
 flags.DEFINE_string('model_type', None,
                     'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
 flags.DEFINE_string('train_set_dir', None, 'training set data folder')
 flags.DEFINE_string('validation_set_dir', None, 'validation set data folder')
 flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
+flags.DEFINE_bool('update_base_map', False,
+                  'Whether to redraw the base imgs needed for training')
+flags.DEFINE_list('regions_list', 'sunnyvale, san_mateo, sunnyvale_with_two_offices',
+                  'maps supported for training')
 flags.DEFINE_string('renderer_config_file', '/fuel/fueling/planning/input_feature_preprocessor'
                     '/planning_semantic_map_config.pb.txt',
                     'renderer configuration file in pb.txt')
 flags.DEFINE_string('renderer_base_map_img_dir', '/fuel/testdata/planning/semantic_map_features',
                     'location to store map base img')
-flags.DEFINE_string('renderer_base_map_data_dir', None,
+flags.DEFINE_string('renderer_base_map_data_dir', '/apollo/modules/map/data/',
                     'location to store map base img')
 flags.DEFINE_bool('img_feature_rotation', True,
                   'whether to do random img rotation')
@@ -60,13 +66,14 @@ def training(model_type,
              train_set_dir,
              validation_set_dir,
              gpu_idx,
+             update_base_map,
+             regions_list,
              renderer_config_file,
              renderer_base_map_img_dir,
              renderer_base_map_data_dir,
              img_feature_rotation,
              past_motion_dropout,
-             model_save_dir,
-             region):
+             model_save_dir):
 
     # TODO(Jinyun): check performance
     cv.setNumThreads(0)
@@ -83,24 +90,29 @@ def training(model_type,
     train_dataset = None
     valid_dataset = None
 
+    if update_base_map:
+        ChauffeurNetFeatureGenerator.draw_base_map(regions_list,
+                                                   renderer_config_file,
+                                                   renderer_base_map_img_dir,
+                                                   renderer_base_map_data_dir)
     renderer_config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
     renderer_config = proto_utils.get_pb_from_text_file(
         renderer_config_file, renderer_config)
 
     if model_type == 'cnn':
         train_dataset = TrajectoryImitationCNNFCDataset(train_set_dir,
+                                                        regions_list,
                                                         renderer_config_file,
                                                         renderer_base_map_img_dir,
                                                         renderer_base_map_data_dir,
-                                                        region,
                                                         img_feature_rotation,
                                                         past_motion_dropout,
                                                         ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNFCDataset(validation_set_dir,
+                                                        regions_list,
                                                         renderer_config_file,
                                                         renderer_base_map_img_dir,
                                                         renderer_base_map_data_dir,
-                                                        region,
                                                         img_feature_rotation,
                                                         past_motion_dropout,
                                                         ouput_point_num=10)
@@ -109,18 +121,18 @@ def training(model_type,
 
     elif model_type == 'rnn':
         train_dataset = TrajectoryImitationConvRNNDataset(train_set_dir,
+                                                          regions_list,
                                                           renderer_config_file,
                                                           renderer_base_map_img_dir,
                                                           renderer_base_map_data_dir,
-                                                          region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           ouput_point_num=10)
         valid_dataset = TrajectoryImitationConvRNNDataset(validation_set_dir,
+                                                          regions_list,
                                                           renderer_config_file,
                                                           renderer_base_map_img_dir,
                                                           renderer_base_map_data_dir,
-                                                          region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           ouput_point_num=10)
@@ -137,19 +149,19 @@ def training(model_type,
 
     elif model_type == 'cnn_lstm':
         train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
+                                                          regions_list,
                                                           renderer_config_file,
                                                           renderer_base_map_img_dir,
                                                           renderer_base_map_data_dir,
-                                                          region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           history_point_num=10,
                                                           ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNLSTMDataset(validation_set_dir,
+                                                          regions_list,
                                                           renderer_config_file,
                                                           renderer_base_map_img_dir,
                                                           renderer_base_map_data_dir,
-                                                          region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           history_point_num=10,
@@ -160,19 +172,19 @@ def training(model_type,
 
     elif model_type == 'cnn_lstm_aux':
         train_dataset = TrajectoryImitationCNNLSTMWithAENDataset(train_set_dir,
+                                                                 regions_list,
                                                                  renderer_config_file,
                                                                  renderer_base_map_img_dir,
                                                                  renderer_base_map_data_dir,
-                                                                 region,
                                                                  img_feature_rotation,
                                                                  past_motion_dropout,
                                                                  history_point_num=10,
                                                                  ouput_point_num=10)
         valid_dataset = TrajectoryImitationCNNLSTMWithAENDataset(validation_set_dir,
+                                                                 regions_list,
                                                                  renderer_config_file,
                                                                  renderer_base_map_img_dir,
                                                                  renderer_base_map_data_dir,
-                                                                 region,
                                                                  img_feature_rotation,
                                                                  past_motion_dropout,
                                                                  history_point_num=10,
@@ -228,28 +240,27 @@ def main(argv):
     train_set_dir = gflag.train_set_dir
     validation_set_dir = gflag.validation_set_dir
     gpu_idx = gflag.gpu_idx
+    update_base_map = gflag.update_base_map
+    regions_list = gflag.regions_list
     renderer_config_file = gflag.renderer_config_file
     renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
+    renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
     img_feature_rotation = gflag.img_feature_rotation
     past_motion_dropout = gflag.past_motion_dropout
     model_save_dir = gflag.model_save_dir
-    region = "sunnyvale_with_two_offices"
-    renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
-    renderer_base_map_data_dir = "/apollo/modules/map/data/" + region + \
-        "/base_map.bin" if renderer_base_map_data_dir is None else \
-        renderer_base_map_data_dir
 
     training(model_type,
              train_set_dir,
              validation_set_dir,
              gpu_idx,
+             update_base_map,
+             regions_list,
              renderer_config_file,
              renderer_base_map_img_dir,
              renderer_base_map_data_dir,
              img_feature_rotation,
              past_motion_dropout,
-             model_save_dir,
-             region)
+             model_save_dir)
 
 
 if __name__ == "__main__":

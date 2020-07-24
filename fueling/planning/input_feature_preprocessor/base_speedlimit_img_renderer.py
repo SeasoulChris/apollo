@@ -9,6 +9,7 @@ from modules.map.proto import map_pb2
 from modules.map.proto import map_lane_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
@@ -18,7 +19,7 @@ class BaseSpeedLimitImgRenderer(object):
     class of BaseSpeedLimitImgRenderer to get a feature map according to Baidu Apollo Map Format
     """
 
-    def __init__(self, config_file, region, map_path):
+    def __init__(self, config_file, region, base_map_data_dir):
         """contruct function to init BaseRoadMapImgRenderer object"""
         config = planning_semantic_map_config_pb2.PlanningSemanticMapConfig()
         config = proto_utils.get_pb_from_text_file(config_file, config)
@@ -26,7 +27,8 @@ class BaseSpeedLimitImgRenderer(object):
         self.base_map_padding = config.base_map_padding    # in meter
 
         self.region = region
-        self.map_path = map_path
+        self.map_path = os.path.join(os.path.join(
+            base_map_data_dir, region), "base_map.bin")
 
         self.city_driving_max_speed = config.city_driving_max_speed  # 22.22 m/s /approx 80km/h
 
@@ -37,20 +39,19 @@ class BaseSpeedLimitImgRenderer(object):
         self._read_hdmap()
         self._build_canvas()
         self._draw_base_map()
-        print("Base Speed Limit Map base point is "
-              + str(self.base_point[0]) + ", " + str(self.base_point[1]))
-        print("Base Speed Limit Map W * H is "
-              + str(self.GRID[0]) + " * " + str(self.GRID[1]))
+        logging.info("Base Speed Limit Map base point is "
+                     + str(self.base_point[0]) + ", " + str(self.base_point[1]))
+        logging.info("Base Speed Limit Map W * H is "
+                     + str(self.GRID[0]) + " * " + str(self.GRID[1]))
 
     def _read_hdmap(self):
         """read the hdmap from base_map.bin"""
         self.hd_map = map_pb2.Map()
-        map_path = self.map_path  # "/apollo/modules/map/data/" + self.region + "/base_map.bin"
         try:
-            with open(map_path, 'rb') as file_in:
+            with open(self.map_path, 'rb') as file_in:
                 self.hd_map.ParseFromString(file_in.read())
         except IOError:
-            print("File at [" + map_path + "] is not accessible")
+            logging.error("File at [" + self.map_path + "] is not accessible")
             exit()
 
     def _build_canvas(self):
