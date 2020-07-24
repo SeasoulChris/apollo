@@ -4,6 +4,8 @@ import math
 import os
 import shutil
 
+from absl import app
+from absl import flags
 import cv2 as cv
 import numpy as np
 import torch
@@ -33,6 +35,19 @@ from fueling.planning.models.trajectory_imitation.conv_rnn_model import \
 from fueling.planning.input_feature_preprocessor.agent_poses_future_img_renderer import \
     AgentPosesFutureImgRenderer
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
+
+flags.DEFINE_string('model_type', None,
+                    'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
+flags.DEFINE_string('model_file', None, 'trained model')
+flags.DEFINE_string('test_set_folder', None, 'test set data folder')
+flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
+flags.DEFINE_string('renderer_config_file', '/fuel/fueling/planning/input_feature_preprocessor'
+                    '/planning_semantic_map_config.pb.txt',
+                    'renderer configuration file in pb.txt')
+flags.DEFINE_string('renderer_base_map_img_dir', '/fuel/testdata/planning/semantic_map_features',
+                    'location to store map base img')
+flags.DEFINE_string('renderer_base_map_data_dir', None,
+                    'location to store map base img')
 
 
 def calculate_cnn_displacement_error(pred, y):
@@ -87,7 +102,7 @@ def visualize_cnn_result(renderer, img_feature, coordinate_heading,
             message_timestamp_sec[i])), merged_img))
 
 
-def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_dir):
+def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_img_dir):
     with torch.no_grad():
         model.eval()
 
@@ -98,7 +113,7 @@ def cnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_d
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
         output_dir = os.path.join(
-            renderer_base_map_dir, "cnn_model_evaluation/")
+            renderer_base_map_img_dir, "cnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -234,7 +249,7 @@ def visualize_rnn_result(renderer, img_feature, coordinate_heading,
                    last_mat)
 
 
-def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_dir):
+def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_img_dir):
     with torch.no_grad():
         model.eval()
 
@@ -245,7 +260,7 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_d
         output_renderer = AgentPosesFutureImgRenderer(renderer_config)
 
         output_dir = os.path.join(
-            renderer_base_map_dir, "rnn_model_evaluation/")
+            renderer_base_map_img_dir, "rnn_model_evaluation/")
         if os.path.isdir(output_dir):
             print(output_dir + " directory exists, delete it!")
             shutil.rmtree(output_dir)
@@ -289,8 +304,13 @@ def rnn_model_evaluator(test_loader, model, renderer_config, renderer_base_map_d
         print(average_v_error)
 
 
-def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
-               renderer_base_map_dir, region, map_path):
+def evaluating(model_type, model_file, test_set_folder, gpu_idx, renderer_config_file,
+               renderer_base_map_img_dir, renderer_base_map_data_dir, region):
+    # TODO(Jinyun): check performance
+    cv.setNumThreads(0)
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_idx
+
     model = None
     test_dataset = None
 
@@ -302,8 +322,8 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
         model = TrajectoryImitationCNNFC(pred_horizon=10)
         test_dataset = TrajectoryImitationCNNFCDataset(test_set_folder,
                                                        renderer_config_file,
-                                                       renderer_base_map_dir,
-                                                       map_path,
+                                                       renderer_base_map_img_dir,
+                                                       renderer_base_map_data_dir,
                                                        region,
                                                        evaluate_mode=True)
     elif model_type == 'rnn':
@@ -317,8 +337,8 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         test_dataset = TrajectoryImitationConvRNNDataset(test_set_folder,
                                                          renderer_config_file,
-                                                         renderer_base_map_dir,
-                                                         map_path,
+                                                         renderer_base_map_img_dir,
+                                                         renderer_base_map_data_dir,
                                                          region,
                                                          evaluate_mode=True)
     elif model_type == 'cnn_fc_lstm':
@@ -326,8 +346,8 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
                                            hidden_size=128)
         test_dataset = TrajectoryImitationCNNLSTM(test_set_folder,
                                                   renderer_config_file,
-                                                  renderer_base_map_dir,
-                                                  map_path,
+                                                  renderer_base_map_img_dir,
+                                                  renderer_base_map_data_dir,
                                                   region,
                                                   history_point_num=10,
                                                   ouput_point_num=10,
@@ -354,41 +374,38 @@ def evaluating(model_type, model_file, test_set_folder, renderer_config_file,
 
     if model_type == 'cnn' or model_type == 'cnn+fc_lstm':
         cnn_model_evaluator(test_loader, model,
-                            renderer_config_file, renderer_base_map_dir)
+                            renderer_config_file, renderer_base_map_img_dir)
     elif model_type == 'rnn':
         rnn_model_evaluator(test_loader, model,
-                            renderer_config_file, renderer_base_map_dir)
+                            renderer_config_file, renderer_base_map_img_dir)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
 
-if __name__ == "__main__":
-    # TODO(Jinyun): check performance
-    cv.setNumThreads(0)
-
-    parser = argparse.ArgumentParser(description='evaluation')
-    parser.add_argument('model_type', type=str,
-                        help='model type, cnn, rnn or cnn+fc_lstm')
-    parser.add_argument('model_file', type=str, help='trained model')
-    parser.add_argument('test_set_folder', type=str, help='test data')
-    parser.add_argument('gpu_idx', type=str, help='which gpu to use')
-    parser.add_argument('-renderer_config_file', '--renderer_config_file',
-                        type=str, default='/fuel/fueling/planning/datasets/'
-                        'semantic_map_feature/planning_semantic_map_config.pb.txt',
-                        help='renderer configuration file in proto.txt')
-    parser.add_argument('-renderer_base_map_dir', '--renderer_base_map_dir',
-                        type=str, default='/fuel/testdata/'
-                        'planning/semantic_map_features',
-                        help='location to store input base img or output img')
-    args = parser.parse_args()
-
-    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_idx
-
+def main(argv):
+    gflag = flags.FLAGS
+    model_type = gflag.model_type
+    model_file = gflag.model_file
+    test_set_dir = gflag.test_set_dir
+    gpu_idx = gflag.gpu_idx
+    renderer_config_file = gflag.renderer_config_file
+    renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
     region = "sunnyvale_with_two_offices"
-    map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
+    renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
+    renderer_base_map_data_dir = "/apollo/modules/map/data/" + region + \
+        "/base_map.bin" if renderer_base_map_data_dir is None else \
+        renderer_base_map_data_dir
 
-    evaluating(args.model_type, args.model_file, args.test_set_folder,
-               args.renderer_config_file,
-               args.renderer_base_map_dir, region, map_path)
+    evaluating(model_type,
+               model_file,
+               test_set_dir,
+               gpu_idx,
+               renderer_config_file,
+               renderer_base_map_img_dir,
+               renderer_base_map_data_dir,
+               region)
+
+
+if __name__ == "__main__":
+    app.run(main)

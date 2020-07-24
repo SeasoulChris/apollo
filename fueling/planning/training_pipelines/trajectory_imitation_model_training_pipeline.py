@@ -3,6 +3,8 @@
 import argparse
 import os
 
+from absl import app
+from absl import flags
 import cv2 as cv
 import torch
 
@@ -30,16 +32,47 @@ from fueling.planning.models.trajectory_imitation.image_representation_loss impo
     TrajectoryImitationConvRNNLoss, \
     TrajectoryImitationConvRNNWithEnvLoss, \
     TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss
-from fueling.planning.models.trajectory_imitation.trajectory_point_displacemet_loss import \
+from fueling.planning.models.trajectory_imitation.trajectory_point_displacement_loss import \
     TrajectoryPointDisplacementMSELoss, \
     TrajectoryPointDisplacementL1Loss
 
+flags.DEFINE_string('model_type', None,
+                    'model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
+flags.DEFINE_string('train_set_dir', None, 'training set data folder')
+flags.DEFINE_string('validation_set_dir', None, 'validation set data folder')
+flags.DEFINE_string('gpu_idx', None, 'which gpu to use')
+flags.DEFINE_string('renderer_config_file', '/fuel/fueling/planning/input_feature_preprocessor'
+                    '/planning_semantic_map_config.pb.txt',
+                    'renderer configuration file in pb.txt')
+flags.DEFINE_string('renderer_base_map_img_dir', '/fuel/testdata/planning/semantic_map_features',
+                    'location to store map base img')
+flags.DEFINE_string('renderer_base_map_data_dir', None,
+                    'location to store map base img')
+flags.DEFINE_bool('img_feature_rotation', True,
+                  'whether to do random img rotation')
+flags.DEFINE_bool('past_motion_dropout', True,
+                  'whether to do past motion dropout')
+flags.DEFINE_string('model_save_dir', '/fuel',
+                    'specify the directory to save trained models.')
 
-def training(model_type, train_dir, valid_dir, renderer_config_file,
-             renderer_base_map_dir, img_feature_rotation, past_motion_dropout, model_save_dir,
-             region, map_path):
-    logging.info(
-        'training directory:{} validation directory:{}'.format(train_dir, valid_dir))
+
+def training(model_type,
+             train_set_dir,
+             validation_set_dir,
+             gpu_idx,
+             renderer_config_file,
+             renderer_base_map_img_dir,
+             renderer_base_map_data_dir,
+             img_feature_rotation,
+             past_motion_dropout,
+             model_save_dir,
+             region):
+
+    # TODO(Jinyun): check performance
+    cv.setNumThreads(0)
+
+    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
+    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_idx
 
     # random number seed
     torch.manual_seed(0)
@@ -55,18 +88,18 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         renderer_config_file, renderer_config)
 
     if model_type == 'cnn':
-        train_dataset = TrajectoryImitationCNNFCDataset(train_dir,
+        train_dataset = TrajectoryImitationCNNFCDataset(train_set_dir,
                                                         renderer_config_file,
-                                                        renderer_base_map_dir,
-                                                        map_path,
+                                                        renderer_base_map_img_dir,
+                                                        renderer_base_map_data_dir,
                                                         region,
                                                         img_feature_rotation,
                                                         past_motion_dropout,
                                                         ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNFCDataset(valid_dir,
+        valid_dataset = TrajectoryImitationCNNFCDataset(validation_set_dir,
                                                         renderer_config_file,
-                                                        renderer_base_map_dir,
-                                                        map_path,
+                                                        renderer_base_map_img_dir,
+                                                        renderer_base_map_data_dir,
                                                         region,
                                                         img_feature_rotation,
                                                         past_motion_dropout,
@@ -75,18 +108,18 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         loss = TrajectoryPointDisplacementMSELoss(4)
 
     elif model_type == 'rnn':
-        train_dataset = TrajectoryImitationConvRNNDataset(train_dir,
+        train_dataset = TrajectoryImitationConvRNNDataset(train_set_dir,
                                                           renderer_config_file,
-                                                          renderer_base_map_dir,
-                                                          map_path,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
                                                           region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           ouput_point_num=10)
-        valid_dataset = TrajectoryImitationConvRNNDataset(valid_dir,
+        valid_dataset = TrajectoryImitationConvRNNDataset(validation_set_dir,
                                                           renderer_config_file,
-                                                          renderer_base_map_dir,
-                                                          map_path,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
                                                           region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
@@ -103,19 +136,19 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         # loss = TrajectoryImitationConvRNNWithEnvLoss(1, 1, 1, 1, 1, True)
 
     elif model_type == 'cnn_lstm':
-        train_dataset = TrajectoryImitationCNNLSTMDataset(train_dir,
+        train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
                                                           renderer_config_file,
-                                                          renderer_base_map_dir,
-                                                          map_path,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
                                                           region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
                                                           history_point_num=10,
                                                           ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNLSTMDataset(valid_dir,
+        valid_dataset = TrajectoryImitationCNNLSTMDataset(validation_set_dir,
                                                           renderer_config_file,
-                                                          renderer_base_map_dir,
-                                                          map_path,
+                                                          renderer_base_map_img_dir,
+                                                          renderer_base_map_data_dir,
                                                           region,
                                                           img_feature_rotation,
                                                           past_motion_dropout,
@@ -126,19 +159,19 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         loss = TrajectoryPointDisplacementMSELoss(4)
 
     elif model_type == 'cnn_lstm_aux':
-        train_dataset = TrajectoryImitationCNNLSTMWithAENDataset(train_dir,
+        train_dataset = TrajectoryImitationCNNLSTMWithAENDataset(train_set_dir,
                                                                  renderer_config_file,
-                                                                 renderer_base_map_dir,
-                                                                 map_path,
+                                                                 renderer_base_map_img_dir,
+                                                                 renderer_base_map_data_dir,
                                                                  region,
                                                                  img_feature_rotation,
                                                                  past_motion_dropout,
                                                                  history_point_num=10,
                                                                  ouput_point_num=10)
-        valid_dataset = TrajectoryImitationCNNLSTMWithAENDataset(valid_dir,
+        valid_dataset = TrajectoryImitationCNNLSTMWithAENDataset(validation_set_dir,
                                                                  renderer_config_file,
-                                                                 renderer_base_map_dir,
-                                                                 map_path,
+                                                                 renderer_base_map_img_dir,
+                                                                 renderer_base_map_data_dir,
                                                                  region,
                                                                  img_feature_rotation,
                                                                  past_motion_dropout,
@@ -156,9 +189,9 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True,
                                                num_workers=8, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=128, shuffle=True,
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=2, shuffle=True,
                                                num_workers=8, drop_last=True)
 
     learning_rate = 3e-4
@@ -179,7 +212,7 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
 
     # Not suggested right now as jit trace can't trace a nn.DataParallel module
     if torch.cuda.device_count() > 1:
-        logging.info("multiple GPUs are used")
+        logging.warning("multiple GPUs are used, but not suggested")
         model = torch.nn.DataParallel(model)
 
     # Model training:
@@ -189,44 +222,35 @@ def training(model_type, train_dir, valid_dir, renderer_config_file,
                            scheduler, epochs=50, save_name=model_save_dir, print_period=50)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='pipeline')
-    parser.add_argument('model_type', type=str,
-                        help='model type, cnn, rnn, cnn_lstm, cnn_lstm_aux')
-    parser.add_argument('train_file', type=str, help='training data')
-    parser.add_argument('valid_file', type=str, help='validation data')
-    parser.add_argument('gpu_idx', type=str, help='which gpu to use')
-    parser.add_argument('-renderer_config_file', '--renderer_config_file',
-                        type=str, default='/fuel/fueling/planning/input_feature_preprocessor'
-                                          '/planning_semantic_map_config.pb.txt',
-                        help='renderer configuration file in proto.txt')
-    parser.add_argument('-renderer_base_map_dir', '--renderer_base_map_dir', type=str,
-                        default='/fuel/testdata/planning/semantic_map_features',
-                        help='location to store input base img or output img')
-    parser.add_argument('-img_feature_rotation', '--img_feature_rotation', type=bool,
-                        default=True, help='whether to do random img rotation')
-    parser.add_argument('-past_motion_dropout', '--past_motion_dropout', type=bool,
-                        default=True, help='whether to do past motion dropout')
-    parser.add_argument('-save_dir', '--save_dir', type=str, default='./',
-                        help='Specify the directory to save trained models.')
-    args = parser.parse_args()
-
-    # TODO(Jinyun): check performance
-    cv.setNumThreads(0)
-
-    # Set-up the GPU to use, single gpu is prefererd now because of jit issue
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_idx
-
+def main(argv):
+    gflag = flags.FLAGS
+    model_type = gflag.model_type
+    train_set_dir = gflag.train_set_dir
+    validation_set_dir = gflag.validation_set_dir
+    gpu_idx = gflag.gpu_idx
+    renderer_config_file = gflag.renderer_config_file
+    renderer_base_map_img_dir = gflag.renderer_base_map_img_dir
+    img_feature_rotation = gflag.img_feature_rotation
+    past_motion_dropout = gflag.past_motion_dropout
+    model_save_dir = gflag.model_save_dir
     region = "sunnyvale_with_two_offices"
-    map_path = "/apollo/modules/map/data/" + region + "/base_map.bin"
+    renderer_base_map_data_dir = gflag.renderer_base_map_data_dir
+    renderer_base_map_data_dir = "/apollo/modules/map/data/" + region + \
+        "/base_map.bin" if renderer_base_map_data_dir is None else \
+        renderer_base_map_data_dir
 
-    training(args.model_type,
-             args.train_file,
-             args.valid_file,
-             args.renderer_config_file,
-             args.renderer_base_map_dir,
-             args.img_feature_rotation,
-             args.past_motion_dropout,
-             args.save_dir,
-             region,
-             map_path)
+    training(model_type,
+             train_set_dir,
+             validation_set_dir,
+             gpu_idx,
+             renderer_config_file,
+             renderer_base_map_img_dir,
+             renderer_base_map_data_dir,
+             img_feature_rotation,
+             past_motion_dropout,
+             model_save_dir,
+             region)
+
+
+if __name__ == "__main__":
+    app.run(main)
