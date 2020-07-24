@@ -1,4 +1,4 @@
-FROM apolloauto/apollo:dev-x86_64-18.04-20200721_1840
+FROM apolloauto/apollo:dev-x86_64-18.04-20200724_0021
 
 ENV LD_LIBRARY_PATH=/usr/local/fast-rtps/lib
 
