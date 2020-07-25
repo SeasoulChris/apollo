@@ -59,7 +59,7 @@ py_library(
     ],
 )
 
-py_binary(
+py_library(
     name = "multi_job_control_profiling_visualization",
     srcs = ["multi_job_control_profiling_visualization.py"],
     deps = [
@@ -76,7 +76,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "multi_job_control_profiling_metrics",
     srcs = ["multi_job_control_profiling_metrics.py"],
     deps = [

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-TOP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-
 if [ -z "$1" ]; then
   TARGET="//..."
 else
@@ -12,7 +10,11 @@ fi
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
 
 if [ -f "WORKSPACE.bazel" ]; then
-  echo "###### You are building with local pip-cache! ######"
+  if [ "$USE_CACHE" = "YES" ]; then
+    echo "###### You are building with local pip-cache! ######"
+  else
+    rm -f "WORKSPACE.bazel"
+  fi
 fi
 
 DISTDIR="/fuel/.cache/distdir"

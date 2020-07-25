@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 import base64
 import getpass
 import json
 import os
 import pprint
 import sys
+import threading
 import time
 
 from absl import flags
 from absl import logging
 import requests
 
+from apps.k8s.spark_submitter.spark_submit_arg_pb2 import SparkSubmitArg
+from apps.k8s.spark_submitter.utils import Utils
 import fueling.common.file_utils as file_utils
-
+import fueling.common.proto_utils as proto_utils
 
 # User.
 flags.DEFINE_string('role', '', 'Running as another role instead of the job submitter.')
@@ -59,11 +63,8 @@ class SparkSubmitterClient(object):
         self.job_flags = job_flags if job_flags is not None else self.collect_job_flags()
         logging.info(F'job_flags collected as: {self.job_flags}')
         logging.info(F'Submitting zip_app {self.zip_app} for entrypoint {entrypoint}')
-
-    def submit(self):
-        """Tool entrypoint."""
         # Construct argument according to apps/k8s/spark_submitter/spark_submit_arg.proto
-        arg = {
+        self.arg = {
             'user': self.get_user(),
             'env': self.get_env(),
             'job': self.get_job(),
@@ -72,6 +73,18 @@ class SparkSubmitterClient(object):
             'partner': self.get_partner(),
         }
 
+    def submit_via_call(self, asynchronous=True):
+        """Submit via call."""
+        job_id = datetime.now().strftime('%Y%m%d%H%M%S%f')
+        arg = proto_utils.dict_to_pb(self.arg, SparkSubmitArg())
+        if asynchronous:
+            threading.Thread(target=Utils.spark_submit, args=(job_id, arg)).start()
+        else:
+            Utils.spark_submit(job_id, arg)
+
+    def submit(self):
+        """Submit via RPC."""
+        arg = self.arg
         # Submit job.
         service_url = self.client_flags.get('spark_submitter_service_url') or \
             flags.FLAGS.spark_submitter_service_url or self.get_service_url()

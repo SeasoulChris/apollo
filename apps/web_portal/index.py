@@ -8,16 +8,12 @@ import os
 from absl import app as absl_app
 from absl import flags
 import flask
-import google.protobuf.json_format as json_format
 import gunicorn.app.base
-
-from fueling.common.mongo_utils import Mongo
-from apps.web_portal.job_processor import JobProcessor
-from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
+import requests
 
 
 flags.DEFINE_boolean('debug', False, 'Start local debug instance.')
-
+flags.DEFINE_string('kube_proxy', 'localhost', 'Kube proxy.')
 
 # Web Handlers
 app = flask.Flask(__name__)
@@ -35,10 +31,13 @@ def new_job(job_type):
 
 @app.route('/submit_job', methods=['POST'])
 def submit_job():
+    kube_proxy_url = F'http://localhost:8001'
+    service_name = 'namespaces/default/services/http:spark-submitter-service:8000'
+    handler = 'open-service'
+    service_url = F'{kube_proxy_url}/api/v1/{service_name}/proxy/{handler}'
     try:
-        request = flask.request.get_json()
-        job_arg = json_format.ParseDict(request, SaasJobArg())
-        http_code, msg = JobProcessor(job_arg).process()
+        resp = requests.post(service_url, json=json.dumps(flask.request.get_json()))
+        http_code, msg = resp.status_code, resp.content
     except BaseException:
         http_code = HTTPStatus.BAD_REQUEST
         msg = 'Wrong job argument'

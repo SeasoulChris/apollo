@@ -1,8 +1,8 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "generate_base_map",
     srcs = ["generate_base_map.py"],
     deps = [
@@ -26,7 +26,7 @@ py_test(
     ],
 )
 
-py_binary(
+py_library(
     name = "generate_local_map",
     srcs = ["generate_local_map.py"],
     deps = [
@@ -49,7 +49,7 @@ py_test(
     ],
 )
 
-py_binary(
+py_library(
     name = "generate_sim_routing_map",
     srcs = ["generate_sim_routing_map.py"],
     deps = [

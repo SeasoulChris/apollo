@@ -25,4 +25,4 @@ else
   rm -f WORKSPACE.bazel
 fi
 
-bash tools/build.sh $@
+env USE_CACHE="${USE_CACHE}" bash tools/build.sh $@

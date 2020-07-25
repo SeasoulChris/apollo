@@ -13,7 +13,8 @@ RUN apt update -y && \
 
 # Install conda and create env.
 RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm -f Miniconda3-latest-Linux-x86_64.sh
 COPY docker/fuel.yaml /tmp/fuel.yaml
 RUN /usr/local/miniconda/bin/conda env update -f /tmp/fuel.yaml && \
     /usr/local/miniconda/bin/conda clean -a -y && \

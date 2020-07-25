@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from apps.k8s.spark_submitter.client import SparkSubmitterClient
-from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
+from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg
 from fueling.common.partners import partners
 
 
@@ -17,11 +17,12 @@ class BaseJob(object):
         """
         raise Exception('Not implemented!')
 
-    def submit(self, job_arg, base_client_flags):
+    def submit(self, job_arg, base_client_flags, base_job_flags):
         """Submit a job through spark_submitter service."""
         entrypoint, client_flags, job_flags = self.parse_arg(job_arg)
-        base_client_flags.update(client_flags)
-        SparkSubmitterClient(entrypoint, base_client_flags, job_flags).submit()
+        client_flags.update(base_client_flags)
+        job_flags.update(base_job_flags)
+        SparkSubmitterClient(entrypoint, client_flags, job_flags).submit_via_call()
 
 
 class ControlProfiling(BaseJob):

@@ -1,8 +1,8 @@
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
-py_binary(
+py_library(
     name = "multi_job_data_distribution",
     srcs = ["multi_job_data_distribution.py"],
     deps = [
@@ -18,7 +18,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "multi_job_feature_extraction",
     srcs = ["multi_job_feature_extraction.py"],
     deps = [
@@ -44,7 +44,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "multi_job_result_visualization",
     srcs = ["multi_job_result_visualization.py"],
     deps = [
@@ -61,7 +61,7 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "multi_job_train",
     srcs = ["multi_job_train.py"],
     deps = [

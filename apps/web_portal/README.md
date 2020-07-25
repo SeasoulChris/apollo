@@ -3,7 +3,6 @@
 ## Debug
 
 ```bash
-conda install flask gunicorn
 bazel run //apps/web_portal:index -- --debug
 ```
 

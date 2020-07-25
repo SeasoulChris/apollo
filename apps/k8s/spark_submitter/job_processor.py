@@ -9,9 +9,9 @@ import time
 from absl import flags
 from absl import logging
 
-from apps.web_portal.saas_job_arg_pb2 import SaasJobArg
+from apps.k8s.spark_submitter.saas_job_arg_pb2 import SaasJobArg
 from fueling.common.partners import partners
-import apps.web_portal.jobs as jobs
+import apps.k8s.spark_submitter.jobs as jobs
 
 
 class JobProcessor(object):
@@ -58,8 +58,10 @@ class JobProcessor(object):
             msg = 'job_arg format error!'
             logging.error(msg)
             return HTTPStatus.BAD_REQUEST, msg
-
-        processor().submit(self.job_arg, client_flags)
+        job_flags = {
+            'enable_rdd_logging': False,
+        }
+        processor().submit(self.job_arg, client_flags, job_flags)
         msg = ('Your job is in process now! You will receive a '
                'notification in your corresponding email when it is finished.')
         logging.info(msg)
