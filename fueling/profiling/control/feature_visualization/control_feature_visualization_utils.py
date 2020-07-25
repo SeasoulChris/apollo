@@ -64,7 +64,7 @@ def write_data_json_file(data_rdd):
                         .format(data.shape[1], len(ControlFeatures().DESCRIPTOR.fields)))
         return
     # define the control feature data file and feature statistics file names
-    grading_dir = glob.glob(os.path.join(dir_data, '*grading.txt'))
+    grading_dir = glob.glob(os.path.join(dir_data, '*control_performance_grading.txt'))
     if grading_dir:
         json_data_file = os.path.basename(grading_dir[0]).replace(
             'control_performance_grading.txt', 'control_feature_data')
