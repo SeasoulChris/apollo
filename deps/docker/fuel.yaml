@@ -2,7 +2,9 @@ name: fuel
 dependencies:
   - python = 3.6     # Align with Ubuntu 18.04 default.
   - pyspark = 3.0.0  # Align with pre-built server image.
-  - nvidia::cudatoolkit = 10.2  # Align with nvidia-docker base image.
+
+  # TODO: Breaks tensorflow 1.14.
+  # - nvidia::cudatoolkit = 10.2  # Align with nvidia-docker base image.
 
   - absl-py
   - ansi2html
