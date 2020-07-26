@@ -22,7 +22,7 @@ bazel run //fueling/profiling/control:multi_job_control_profiling_visualization 
 
 #### 1. Control Performance Grading .json file
 
-The dictionary data structure included in the **...control_performance_grading.json** file contains 40 grading metrics (each metrics contains several fields) with format of
+The dictionary data structure included in the **...control_performance_analysis.json** file contains 43 grading metrics (each metrics contains several fields) with format of
 
 `{"grading_metrics1": {"grading_field1": value, "grading_field2": value, ...} ...}`
 
@@ -32,7 +32,7 @@ For example,
 
 #### 2. Control Feature Data .json file
 
-The dictionary data structure included in the **...control_data_feature.json** file contains 46 control features (each feature contains a list of raw data value) and 1 additional "labels" dict structure with format of
+The dictionary data structure included in the **...control_data_feature.json** file contains 51 control features (each feature contains a list of raw data value) and 1 additional "labels" dict structure with format of
 
 `{"feature_key1": [value1, value2, value3, ...], "feature_key2": [value1, value2, value3, ...], ... , "labels": {"x_label": feature_key1, "y_label": [feature_key2, feature_key3, feature_key4, ...]}}`
 
@@ -43,7 +43,7 @@ For example,
 
 #### 3. Control Feature Statistics .json file
 
-The dictionary data structure included in the **...control_data_statistics.json** file contains 46 control features (each feature contains several statistic fields) with format of
+The dictionary data structure included in the **...control_data_statistics.json** file contains 51 control features (each feature contains several statistic fields) with format of
 
 `{"feature_key1": {"statistic_field1": value1, "statistic_field2": value2, ...}, ... }`
 
@@ -120,3 +120,20 @@ You can view the control profiling metrics by going to [Dashboard](http://usa-da
 This is the resukt of `control.profiling.Mkz7 Concord.Lon_Lat_Controller.station_err_peak`:
 
 ![](images/control_profiling_result.png)
+
+
+### Appendix: Local Data Profilig Demo Test via Command Lines (for Road-Test Data) 
+(The following codes are executed under the path **/fuel**; note: **the road-test data files path needs to strictly follow the Folder Structure Requirement mentioned above**)
+
+```bash
+# Setup the record/bag input directory and profiling results output directory.
+# For example,
+data_path='fueling/profiling/control/testdata/road_test'
+results_path='fueling/profiling/control/testdata/generated'
+
+# Run the control profiling metrics command (generating performance_grading.txt file)
+bazel run //fueling/profiling/control:multi_job_control_profiling_metrics -- --input_data_path=$data_path --output_data_path=$results_path
+
+# Run the control profiling visualization command (generating control_visualization_data.pdf file)
+bazel run //fueling/profiling/control:multi_job_control_profiling_visualization -- --output_data_path=$result_path
+
