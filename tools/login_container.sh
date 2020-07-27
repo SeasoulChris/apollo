@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Change container name if the host machine is shared by multiple users.
-CONTAINER="fuel"
+CONTAINER="fuel_${USER}"
 
 # Goto fuel root
 cd "$( dirname "${BASH_SOURCE[0]}" )/.."
