@@ -136,7 +136,7 @@ def statistics():
             labedate = ''
             if selc_aggregated == "week":
                 weekdate = str(doc['_id']["year"]) + str(doc['_id']["week"])
-                labedate = time_utils.getfirstday(weekdate)
+                labedate = time_utils.get_first_day(weekdate)
             elif selc_aggregated == "month":
                 if doc['_id']["month"] < 10:
                     labedate = str(doc['_id']["year"]) + "-0" + str(doc['_id']["month"])

@@ -53,6 +53,7 @@ class SensorCalibrationPipeline(BasePipeline):
         redis_utils.redis_extend_dict(redis_key, redis_value)
         JobUtils(job_id).save_job_input_data_size(source_dir)
         JobUtils(job_id).save_job_sub_type('')
+        self.error_text = 'Calibration error, please contact after-sales technical support'
         if file_utils.getInputDirDataSize(source_dir) >= 1 * 1024 * 1024 * 1024:
             JobUtils(job_id).save_job_failure_code('E200')
             return
@@ -61,9 +62,7 @@ class SensorCalibrationPipeline(BasePipeline):
         except BaseException as e:
             JobUtils(job_id).save_job_failure_code('E204')
             JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 'Calibration error, \
-                                                 please contact after-sales technical support',
-                                                 False)
+                                                 self.error_text, False)
             logging.error(e)
 
         # Send result to job owner.
@@ -98,9 +97,7 @@ class SensorCalibrationPipeline(BasePipeline):
             if (int(time.mktime(datetime.now().timetuple())
                     - time.mktime(job_info['start_time'].timetuple()))) > 259200:
                 JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                     'Calibration error, \
-                                                     please contact after-sales technical support',
-                                                     False)
+                                                     self.error_text, False)
                 JobUtils(job_id).save_job_failure_code('E204')
         JobUtils(job_id).save_job_sub_type(sub_job_type)
         JobUtils(job_id).save_job_progress(100)
@@ -192,9 +189,7 @@ class SensorCalibrationPipeline(BasePipeline):
 
         if not os.path.exists(executable_bin):
             JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 'Calibration error, \
-                                                 please contact after-sales technical support',
-                                                 False)
+                                                 self.error_text, False)
             JobUtils(job_id).save_job_failure_code('E204')
         # set command
         command = f'{executable_bin} --config {config_file}'
@@ -205,9 +200,7 @@ class SensorCalibrationPipeline(BasePipeline):
             logging.info('Finished sensor caliration.')
         else:
             JobUtils(job_id).save_job_operations('IDG-apollo@baidu.com',
-                                                 'Calibration error, \
-                                                 please contact after-sales technical support',
-                                                 False)
+                                                 self.error_text, False)
             JobUtils(job_id).save_job_failure_code('E204')
             logging.error('Failed to run sensor caliration for {}: {}'.format(task_name,
                                                                               return_code))

@@ -7,6 +7,7 @@ import application
 from common import filter
 from middleware import before_request
 from services import account_services
+from services import job_services
 from views import account
 from views import admin
 from views import index
@@ -15,6 +16,10 @@ from views import statistics
 
 
 application.api.add_resource(account_services.AccountService, "/account")
+application.api.add_resource(job_services.JobService,
+                             "/vehicle/<vehicle_sn>",
+                             "/vehicle/<vehicle_sn>/jobs",
+                             endpoint="vehicle")
 application.app.before_request(before_request.process_request)
 
 # Register blueprint

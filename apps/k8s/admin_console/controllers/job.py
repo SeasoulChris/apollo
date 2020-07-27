@@ -16,6 +16,7 @@ def format_job_time(objs):
     """
     jobs = []
     for job_data in objs:
+        job_data['_id'] = job_data['_id'].__str__()
         start_time = job_data.get("start_time")
         end_time = job_data.get("end_time")
         operations = job_data.get("operations")
@@ -112,4 +113,4 @@ def get_job_paginator(current_page, nums, default_pages=10):
     job_paginator = paginator.Pagination(nums, default_pages)
     current_page = paginator.CurrentPaginator(current_page, job_paginator)
     first, last = current_page.get_index_content()
-    return current_page, (first, last)
+    return current_page, (int(first), int(last))
