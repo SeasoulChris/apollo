@@ -10,6 +10,16 @@ source ./tools/docker_version.sh
 DOCKER_RUN="docker run"
 # Decide to use GPU or not.
 DOCKER_RUN="docker run"
+
+APOLLO_ROOT="/home/apollo/apollo"
+if [ -d ${APOLLO_ROOT} ]; then
+  pushd ${APOLLO_ROOT}
+    sudo -u apollo git pull -f origin master
+  popd
+else
+  sudo -u apollo git clone --depth 1 https://github.com/ApolloAuto/apollo.git ${APOLLO_ROOT}
+fi
+
 if [ -z "$(which nvidia-smi)" ]; then
   echo "No nvidia driver found"
 elif [ -z "$(which nvidia-container-toolkit)" ]; then
