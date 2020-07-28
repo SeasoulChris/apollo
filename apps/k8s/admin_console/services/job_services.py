@@ -12,7 +12,8 @@ class JobService(flask_restful.Resource):
         parser.add_argument("limit", type=int, help="one page show how many job_logs")
         parser.add_argument("offset", type=int, help="index")
         parser.add_argument("job_type", type=str, help="show job_type logs")
-        parser.add_argument("starttime", type=int, help="get the job log from greater than this time")
+        parser.add_argument("starttime", type=int,
+                            help="get the job log from greater than this time")
         parser.add_argument("endtime", type=int, help="get the job log from less than this time")
         args = parser.parse_args()
 

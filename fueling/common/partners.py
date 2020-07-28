@@ -9,12 +9,13 @@ Partner.__new__.__defaults__ = (None,) * len(_fields)
 
 partners = {
     'apollo': Partner(name='Apollo', email='xiaoxiangquan@baidu.com',
-                      bos_bucket='apollo-platform-fuel', bos_region='bj'),
+                      bos_bucket='apollo-platform-fuel', bos_region='bj', vehicle_sn='CH0000002'),
     'apollo-evangelist': Partner(name='Evangelist', email='machao20@baidu.com',
                                  bos_bucket='apollo-platform-evangelist', bos_region='bj',
                                  vehicle_sn='CH0000000'),
     'apollo-qa': Partner(name='QA', email='fuyiqun@baidu.com',
-                         bos_bucket='apollo-platform-fuel', bos_region='bj'),
+                         bos_bucket='apollo-platform-fuel', bos_region='bj',
+                         vehicle_sn='CH0000003'),
     'apollo-regression': Partner(name='AutoRegression', email='weixiao@baidu.com',
                                  bos_bucket='apollo-platform-fuel', bos_region='bj',
                                  vehicle_sn='CH0000001'),

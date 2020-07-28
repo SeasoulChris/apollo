@@ -34,6 +34,7 @@ def format_job_time(objs):
         jobs.append(job_data)
     return jobs
 
+
 def format_job_for_services(objs):
     """
     Format the job data

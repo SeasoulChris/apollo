@@ -217,7 +217,8 @@ def stamp_account_time(objs):
         new_operation = account_data.get("new_operation")
         operations = account_data.get("operations")
         if start_time:
-            account_data["apply_date"] = time_utils.get_datetime_timestamp(account_data["apply_date"])
+            account_data["apply_date"] = time_utils.\
+                get_datetime_timestamp(account_data["apply_date"])
         if end_time:
             account_data["due_date"] = time_utils.get_datetime_timestamp(account_data["due_date"])
         if operations:
