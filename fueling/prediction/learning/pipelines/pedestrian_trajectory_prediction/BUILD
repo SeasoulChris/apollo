@@ -37,3 +37,16 @@ py_binary(
         "//fueling/prediction/learning/models/semantic_map_model",
     ],
 )
+
+py_binary(
+    name = "pedestrian_trajectory_training",
+    srcs = ["pedestrian_trajectory_training.py"],
+    deps = [
+        ":pedestrian_trajectory_dataset",
+        "//fueling/common:base_pipeline",
+        "//fueling/common:logging",
+        "//fueling/learning:loss_utils",
+        "//fueling/learning:train_utils",
+        "//fueling/prediction/learning/models/semantic_map_model",
+    ],
+)
