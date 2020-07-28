@@ -16,26 +16,22 @@ class PostProcessor(BasePipeline):
         if self.is_local():
             # for Titan
             self.src_dir_prefix = 'data/output_data_evaluated'
-            self.dst_dir_prefix = 'data/output_data_categorized'
             # self.src_dir_prefix = 'titan'
-            # self.dst_dir_prefix = 'apollo/data/output_data'
             for data_folder in os.listdir(self.our_storage().abs_path(self.src_dir_prefix)):
                 src_dir_prefix = os.path.join(self.src_dir_prefix, data_folder)
                 logging.info(f'processing data folder {src_dir_prefix}')
                 self.run_internal(src_dir_prefix)
         else:
             self.src_dir_prefix = 'modules/planning/output_data_evaluated'
-            self.dst_dir_prefix = 'modules/planning/output_data_categorized'
             self.run_internal(self.src_dir_prefix)
 
     def run_internal(self, src_dir):
-        logging.info(src_dir)
         bin_files = (
             # RDD(bin_files)
             self.to_rdd(self.our_storage().list_files(src_dir, '.bin'))
             # PairedRDD((dir, original_bin_file_name), bin_files)
             .keyBy(lambda src_file: (os.path.dirname(src_file), os.path.basename(src_file))))
-        logging.info(bin_files.first())
+        logging.debug(bin_files.first())
 
         # PairedRDD((dir, origin_file_name), data_frame))
         data_frames = bin_files.flatMapValues(self._get_data_frame)
@@ -48,15 +44,12 @@ class PostProcessor(BasePipeline):
         # PairedRDD((dst_file_path, origin_file_name), data_frame)
         tag_data_frames = (
             tag_data_frames.map(
-                lambda elem: self._tagged_folder(
-                    elem,
-                    self.src_dir_prefix,
-                    self.dst_dir_prefix)))
-        logging.info(tag_data_frames.keys().first())
+                lambda elem: self._tagged_folder(elem)))
+        logging.debug(tag_data_frames.keys().first())
 
         # write single_frame to each bin to reduce memory usage
         tagged_folders = tag_data_frames.map(self._write_single_data_frame)
-        logging.info(tagged_folders.count())
+        logging.debug(tagged_folders.count())
 
     @staticmethod
     def _write_single_data_frame(folder_filename_data, is_debug=False):
@@ -64,7 +57,7 @@ class PostProcessor(BasePipeline):
         file_utils.makedirs(dst_dir)
         logging.debug(data.message_timestamp_sec)
         file_name = f'{origin_filename}_{data.message_timestamp_sec}.bin'
-        logging.info(f'start writing to folder {dst_dir}')
+        logging.info(f'{dst_dir}')
         with open(os.path.join(dst_dir, file_name), 'wb') as bin_f:
             bin_f.write(data.SerializeToString())
         if is_debug:
@@ -79,7 +72,7 @@ class PostProcessor(BasePipeline):
         frame_count = 0
         file_count = 0
         file_utils.makedirs(dst_dir)
-        logging.info(f'start writing to folder {dst_dir}')
+        logging.info(f'{dst_dir}')
         for data_frame in data_frames:
             learning_data.learning_data_frame.add().CopyFrom(data_frame)
             frame_count += 1
@@ -112,7 +105,7 @@ class PostProcessor(BasePipeline):
             bin_file, learning_data_pb2.LearningData())
         # get learning data sequence
         learning_data_sequence = offline_features.learning_data_frame
-        logging.info(len(learning_data_sequence))
+        logging.debug(len(learning_data_sequence))
         return learning_data_sequence
 
     @staticmethod
@@ -120,8 +113,7 @@ class PostProcessor(BasePipeline):
         tag_dict = proto_utils.pb_to_dict(data_frame.planning_tag)
         tag_data_frames = []
         for key in tag_dict:
-            logging.debug(key)
-            logging.debug(tag_dict[key])
+            logging.debug("{}: {}".format(key, tag_dict[key]))
             logging.debug(len(tag_dict[key]))
             if len(tag_dict[key]) == 2:
                 # overlap features
@@ -134,20 +126,28 @@ class PostProcessor(BasePipeline):
         return tag_data_frames
 
     @staticmethod
-    def _tagged_folder(dir_tag_data, src_dir, dst_dir):
+    def _tagged_folder(dir_tag_data):
         (file_path, origin_file_name), ((tag, tag_id), data) = dir_tag_data
-        logging.debug(tag)
-        # id & distance
-        logging.debug(tag_id)
+        logging.debug("file_path: {}; origin_file_name: {}".format(file_path, origin_file_name))
+        logging.debug("tag: {}; tag_id: {}".format(tag, tag_id))
         # remove complete
         # pre_fix/record_dir/complete -> pre_fix/record_dir
         origin_file_path = os.path.split(file_path)[0]
-        # dst_dir dst_pre_fix/tag/tag_id
-        dst_dir = os.path.join(dst_dir, tag, tag_id)
-        # replace: pre_fix/record_dir -> dst_pre_fix/tag/tag_id/record_dir
-        dst_file_path = origin_file_path.replace(src_dir, dst_dir)
-        logging.debug(f'dst file dir: {dst_file_path}')
-        return ((dst_file_path, origin_file_name), data)
+        logging.debug("origin_file_path: {}".format(origin_file_path))
+
+        src_dir_elements = origin_file_path.split("/")
+        dst_dir_elements = [
+            'output_data_categorized' if x
+            == 'output_data_evaluated' else x for x in src_dir_elements]
+        dst_dir_elements.insert(-1, tag)
+        dst_dir_elements.insert(-1, tag_id)
+        if ('output_data_categorized' in dst_dir_elements):
+            dst_dir = "/".join(dst_dir_elements)
+        else:
+            dst_dir = "/".join(src_dir_elements)
+
+        logging.debug("dst_dir: {}".format(dst_dir))
+        return ((dst_dir, origin_file_name), data)
 
 
 if __name__ == '__main__':
