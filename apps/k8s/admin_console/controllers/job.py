@@ -34,6 +34,31 @@ def format_job_time(objs):
         jobs.append(job_data)
     return jobs
 
+def format_job_for_services(objs):
+    """
+    Format the job data
+    """
+    jobs = []
+    for job_data in objs:
+        job_data['_id'] = job_data['_id'].__str__()
+        start_time = job_data.get("start_time")
+        end_time = job_data.get("end_time")
+        operations = job_data.get("operations")
+        if start_time:
+            job_data["start_time"] = time_utils.get_datetime_timestamp(job_data["start_time"])
+        if end_time:
+            job_data["end_time"] = time_utils.get_datetime_timestamp(job_data["end_time"])
+        job_data["duration"] = 0
+        if start_time and end_time:
+            duration_time = end_time - start_time
+            job_data["duration"] = duration_time.seconds
+        if operations:
+            for opt in operations:
+                opt["email"] = "Administrator"
+                opt["time"] = time_utils.get_datetime_timestamp(opt["time"])
+        jobs.append(job_data)
+    return jobs
+
 
 def get_jobs_count():
     """
@@ -92,13 +117,17 @@ def get_job_filter(conf_dict, args_dict):
     return filters, res
 
 
-def get_job_objs(filters, res):
+def get_job_objs(filters, res, service_flag=False):
     """
     Get the jobs from collection by filters
     """
     if not res.get("code"):
         res["data"] = {}
-        objs = format_job_time(job_collection.find(filters))
+        objs = []
+        if service_flag:
+            objs = format_job_for_services(job_collection.find(filters))
+        else:
+            objs = format_job_time(job_collection.find(filters))
         sorted_objs = sorted(objs, key=lambda x: x["start_time"], reverse=True)
         res["data"]["job_objs"] = sorted_objs
         res["code"] = 200

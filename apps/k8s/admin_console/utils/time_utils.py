@@ -15,6 +15,16 @@ def get_datetime_str(date_obj):
     return date_obj
 
 
+def get_datetime_timestamp(date_obj):
+    """
+    Converts the time object to timestamp
+    """
+    if isinstance(date_obj, datetime.datetime):
+        timestamp = date_obj.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return int(timestamp)
+    return date_obj
+
+
 def days_ago(day):
     """
     Get the past timestamp
