@@ -3,7 +3,14 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "account_services",
     srcs = ["account_services.py"],
-    data = ["//apps/k8s/admin_console:resource"],
+    data = [
+        "//apps/k8s/admin_console:resource",
+        "//apps/k8s/admin_console/conf:admin_json",
+    ],
+    deps = [
+        "//apps/k8s/admin_console/controllers:account",
+        "//apps/k8s/admin_console/utils:conf_utils",
+    ]
 )
 
 py_library(

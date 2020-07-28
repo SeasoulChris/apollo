@@ -4,6 +4,7 @@ Modules that hold global variables, eg app ..
 """
 
 import datetime
+
 import flask
 import flask_restful
 
@@ -12,4 +13,4 @@ import flask_restful
 app = flask.Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object("conf.develop_setting.DevelopConfig")
 app.secret_key = str(datetime.datetime.now())
-api = flask_restful.Api(app, prefix="/services")
+api = flask_restful.Api(app, prefix="/api")

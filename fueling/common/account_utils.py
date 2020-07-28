@@ -85,3 +85,23 @@ class AccountUtils(object):
                            {'$set': {'status': 'Enabled',
                                      'due_date': date}})
         logging.info(f"save_account_due_date: {account_id}")
+
+    def create_account_msg(self, account_dict):
+        """
+        create account msg
+        """
+        if not account_dict.get("no_vehicle_sn", None):
+            account_dict["no_vehicle_sn"] = False
+        if not account_dict.get("apply_date", None):
+            account_dict["apply_date"] = datetime.datetime.now()
+        account_dict["quota"] = 0
+        account_dict["status"] = "Pending"
+        result = self.db.insert_one(account_dict)
+        logging.info(f"apply_account_info: {result.inserted_id}")
+        return result.inserted_id
+
+    def update_account_msg(self, account_id, account_dict):
+        """update account msg"""
+        self.db.update_one({'_id': ObjectId(account_id)},
+                           {'$set': account_dict})
+        logging.info(f"update_account_msg: {account_id}")

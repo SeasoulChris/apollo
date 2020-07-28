@@ -4,6 +4,7 @@ The logical control of the account in front of the view
 """
 
 import datetime
+import json
 
 from common import paginator
 from controllers import job
@@ -102,7 +103,6 @@ def get_job_used(objs):
         job_counts_dict = {}
         for job_type_count in job_type_counts:
             job_counts_dict[job_type_count["_id"]] = job_type_count["count"]
-
         if services:
             services.sort(key=lambda x: x["job_type"])
             sum_counts = 0
@@ -183,3 +183,47 @@ def get_account_paginator(current_page, nums, default_pages=10):
     current_page = paginator.CurrentPaginator(current_page, account_paginator)
     first, last = current_page.get_index_content()
     return current_page, (first, last)
+
+
+def get_virtual_vehicle_sn(filename):
+    """
+    Get the virtual vehicle sn
+    """
+    prefix = "SK" + str(datetime.datetime.now().year)
+    with open(filename, "r+") as f:
+        conf_dict = json.load(f)
+        vehicle_sn_num = conf_dict.get("vehicle_sn_suffix")
+        vehicle_sn_suffix = str(vehicle_sn_num)
+        zero_filler = ""
+        len_vehicle_sn_suffix = len(vehicle_sn_suffix)
+        while 3 - len_vehicle_sn_suffix > 0:
+            zero_filler += "0"
+            len_vehicle_sn_suffix += 1
+        vehicle_sn_suffix = zero_filler + vehicle_sn_suffix
+        conf_dict["vehicle_sn_suffix"] = vehicle_sn_num + 1
+        f.seek(0, 0)
+        f.truncate()
+        json.dump(conf_dict, f)
+    return prefix + vehicle_sn_suffix
+
+
+def stamp_account_time(objs):
+    """
+    stamp the account time
+    """
+    for account_data in objs:
+        start_time = account_data.get("apply_date")
+        end_time = account_data.get("due_date")
+        new_operation = account_data.get("new_operation")
+        operations = account_data.get("operations")
+        if start_time:
+            account_data["apply_date"] = time_utils.get_datetime_timestamp(account_data["apply_date"])
+        if end_time:
+            account_data["due_date"] = time_utils.get_datetime_timestamp(account_data["due_date"])
+        if operations:
+            for opt in operations:
+                opt["time"] = time_utils.get_datetime_timestamp(opt["time"])
+                opt["email"] = "administrator"
+        if new_operation:
+            new_operation["time"] = time_utils.get_datetime_timestamp(new_operation["time"])
+    return objs

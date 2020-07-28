@@ -47,7 +47,7 @@ class Config(object):
         "system_admin": ["/index", "/jobs", "/reset_pwd", "/submit_job"],
         "service_specialist": ["/index", "/jobs"]
     }
-    WHITE_URL = ["/static", "/login", "/logout", "/services"]
+    WHITE_URL = ["/static", "/login", "/logout", "/api"]
     ACCOUNT_SHOW_ACTION = {
         "Pending": ("Enable", "Reject"),
         "Rejected": (),
