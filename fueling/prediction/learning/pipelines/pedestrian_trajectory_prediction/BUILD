@@ -5,6 +5,9 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "pedestrian_trajectory_dataset",
     srcs = ["pedestrian_trajectory_dataset.py"],
+    data = [
+        "//testdata/map_feature:prediction_semantic_map",
+    ],
     deps = [
         "//fueling/common:coord_utils",
         "//fueling/common:file_utils",

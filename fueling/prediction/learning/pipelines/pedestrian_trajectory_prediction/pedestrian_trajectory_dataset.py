@@ -65,9 +65,12 @@ class PedestrianTrajectoryDataset(Dataset):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])])
-        self.base_map = {"baidudasha": cv.imread("/fuel/testdata/map_feature/baidudasha.png"),
-                         "XiaMen": cv.imread("/fuel/testdata/map_feature/XiaMen.png"),
-                         "XiongAn": cv.imread("/fuel/testdata/map_feature/XiongAn.png")}
+        self.base_map = {"baidudasha": cv.imread(file_utils.fuel_path(
+                                                 "testdata/map_feature/baidudasha.png")),
+                         "XiaMen": cv.imread(file_utils.fuel_path(
+                                             "testdata/map_feature/XiaMen.png")),
+                         "XiongAn": cv.imread(file_utils.fuel_path(
+                                              "testdata/map_feature/XiongAn.png"))}
         self.shifted = shifted
 
         self.data_pt_list = []
