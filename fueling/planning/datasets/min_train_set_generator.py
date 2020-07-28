@@ -11,9 +11,10 @@ class MinTrainSetGenerator(BasePipeline):
     def run(self):
         # ratio should not be 0
         self.down_sampling_ratio = 1
-        self.train_validation_test_ratio = {'train': 0.9,
-                           'validation': 0.05,
-                           'test': 0.05}
+        self.train_validation_test_ratio = {'train': 0.81,
+                                            'to_be_synthesized': 0.09,
+                                            'validation': 0.05,
+                                            'test': 0.05}
         if self.is_local():
             # for Titan
             self.src_dir = 'data/output_data_balanced/lane_turn'
@@ -34,10 +35,11 @@ class MinTrainSetGenerator(BasePipeline):
             bin_files = bin_files.sample(False, self.down_sampling_ratio)
 
         ratio = [self.train_validation_test_ratio[key]
-                     for key in self.train_validation_test_ratio]
+                 for key in self.train_validation_test_ratio]
         logging.info(ratio)
         bin_files_dict = {}
         (bin_files_dict['train'],
+         bin_files_dict['to_be_synthesized'],
          bin_files_dict['validation'],
          bin_files_dict['test']) = bin_files.randomSplit(ratio, 4)
 
