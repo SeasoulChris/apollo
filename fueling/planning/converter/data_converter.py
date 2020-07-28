@@ -69,18 +69,16 @@ class DataConverter(BasePipeline):
 
     def run(self):
         """Run prod."""
-        individual_tasks = [
-            'modules/data/planning/MKZ167_20200121131624/',
-            'modules/data/planning/MKZ170_20200121120310/',
-            'modules/data/planning/MKZ173_20200121122216/',
-        ]
+        task_list_file = path.dirname(path.abspath(__file__)) + "/task_list.txt"
+        logging.info(task_list_file)
 
         task_files = []
-        for task in individual_tasks:
-            files = self.our_storage().list_files(task)
-            for file in files:
-                if record_utils.is_record_file(file):
-                    task_files.append(file)
+        with open(task_list_file, 'r') as f:
+            for day_task_folder in f:
+                files = self.our_storage().list_files(day_task_folder)
+                for file in files:
+                    if record_utils.is_record_file(file):
+                        task_files.append(file)
 
         if self.RUN_IN_DRIVER:
             for file in task_files:
@@ -132,6 +130,22 @@ class DataConverter(BasePipeline):
         channels = reader.get_channels()
         for channel in channels:
             self.topic_descs[channel.name] = (channel.message_type, channel.proto_desc)
+
+    def get_individual_tasks(self):
+        individual_tasks = [
+            'modules/data/planning/MKZ167_20200121131624/',
+            'modules/data/planning/MKZ170_20200121120310/',
+            'modules/data/planning/MKZ173_20200121122216/',
+        ]
+
+        task_files = []
+        for task in individual_tasks:
+            files = self.our_storage().list_files(task)
+            for file in files:
+                if record_utils.is_record_file(file):
+                    task_files.append(file)
+
+        return task_files
 
 
 def print_current_memory_usage(step_name):
