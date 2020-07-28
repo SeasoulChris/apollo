@@ -89,6 +89,16 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "min_train_set_generator",
+    srcs = ["min_train_set_generator.py"],
+    deps = [
+        "//fueling/common:base_pipeline",
+        "//fueling/common:file_utils",
+        "//fueling/common:logging",
+    ],
+)
+
 py_library(
     name = "img_in_traj_out_dataset",
     srcs = ["img_in_traj_out_dataset.py"],
