@@ -52,12 +52,12 @@ class ADSEnv(object):
         self.is_input_ready = False
 
         cyber.init()
-        rl_node = cyber.Node("rl_node")
-        gradingsub = rl_node.create_reader("/apollo/grading",
-                                           grading_result.FrameResult, self.callback_grading)
-        chassissub = rl_node.create_reader("/apollo/canbus/chassis",
-                                           chassis.Chassis, self.callback_chassis)
-        learning_data_sub = rl_node.create_reader(
+        self.rl_node = cyber.Node("rl_node")
+        gradingsub = self.rl_node.create_reader("/apollo/grading",
+                                                grading_result.FrameResult, self.callback_grading)
+        chassissub = self.rl_node.create_reader("/apollo/canbus/chassis",
+                                                chassis.Chassis, self.callback_chassis)
+        learning_data_sub = self.rl_node.create_reader(
             "/apollo/planning/learning_data",
             learning_data_pb2.LearningData,
             self.callback_learning_data)
@@ -70,10 +70,10 @@ class ADSEnv(object):
         """
         self.is_grading_done = False
         self.is_input_ready = False
-        # key input: space
-        keyboard.press_and_release('space')
+        # key input: s
+        keyboard.press_and_release('s')
         # send planning msg (action)
-        writer = rl_node.crete_writter(
+        writer = self.rl_node.create_writer(
             "/apollo/planning", planning_pb2.ADCTrajectory)
         planning_message = planning_pb2.ADCTrajectory()
         planning_message.header.timestamp_sec = cyber_time.Time.now().to_sec()
