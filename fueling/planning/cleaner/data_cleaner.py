@@ -94,17 +94,17 @@ class CleanPlanningRecords(BasePipeline):
                 self.cleaner.process_file(fn)
                 msgs_list = self.cleaner.get_matured_msg_list()
                 for msgs in msgs_list:
-                    self.write_msgs(task_folder, msgs)
+                    self.write_msgs(task_folder, msgs, task_map)
                 self.cleaner.clean_mature_msg_list()
 
             if self.cnt > 10 and self.IS_TEST_DATA:
                 break
 
-        self.write_msgs(task_folder, self.cleaner.msgs[-1])
+        self.write_msgs(task_folder, self.cleaner.msgs[-1], task_map)
 
         logging.info("task is done!")
 
-    def write_msgs(self, task_folder, msgs):
+    def write_msgs(self, task_folder, msgs, task_map):
 
         if len(msgs) < 200 * 10:
             return
@@ -116,7 +116,9 @@ class CleanPlanningRecords(BasePipeline):
         else:
             task_id = task_folder.split("/")[-1]
 
-        dst_record_fn = self.dst_prefix + task_id + "/" + str(self.cnt).zfill(5) + ".record"
+        dst_record_fn = self.dst_prefix + task_map + "/" + task_id + "/"
+        dst_record_fn += str(self.cnt).zfill(5) + ".record"
+
         self.cnt += 1
 
         logging.info("Writing output file: " + dst_record_fn)
