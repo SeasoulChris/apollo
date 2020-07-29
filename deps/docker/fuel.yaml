@@ -40,7 +40,7 @@ dependencies:
   - pip
   - plotly::plotly
   - plotly::plotly-orca
-  - protobuf = 3.12.3  # It downgrades to 3.11.2 if we rely on conda adjust which causes conflicts
+  - protobuf >= 3.12.3  # It downgrades to 3.11.2 if we rely on conda adjust which causes conflicts
   - psutil
   - pycodestyle
   - pyflakes
