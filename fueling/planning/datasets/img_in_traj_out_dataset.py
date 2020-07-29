@@ -630,7 +630,8 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
 
         return ((transformed_img_feature,
                  torch.from_numpy(hist_points).float(),
-                 torch.from_numpy(hist_points_step).float()),
+                 torch.from_numpy(hist_points_step).float(),
+                 coordinate_heading + np.pi / 2),
                 (pred_boxs,
                  torch.from_numpy(pred_points).float(),
                  pred_obs,

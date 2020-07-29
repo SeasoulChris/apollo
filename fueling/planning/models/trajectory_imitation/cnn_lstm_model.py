@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -71,9 +72,23 @@ class TrajectoryImitationCNNLSTM(nn.Module):
         return pred_traj[:, 1:, :]
 
 
+def rasterize_vehicle_box(box_center_x_idx, box_center_y_idx, box_heading,
+                          half_box_length, half_box_width, idx_mesh):
+    delta_x = idx_mesh[:, :, :, 1] - box_center_x_idx
+    delta_y = idx_mesh[:, :, :, 0] - box_center_y_idx
+    abs_transformed_delta_x = torch.abs(torch.cos(-box_heading) * delta_x
+                                        - torch.sin(-box_heading) * delta_y)
+    abs_transformed_delta_y = torch.abs(torch.sin(-box_heading) * delta_x
+                                        + torch.cos(-box_heading) * delta_y)
+    return torch.logical_and(abs_transformed_delta_x < half_box_length,
+                             abs_transformed_delta_y < half_box_width).float()
+
+
 class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
-    def __init__(self, history_len, pred_horizon, input_img_size, embed_size=64,
-                 hidden_size=128, cnn_net=models.mobilenet_v2,
+    def __init__(self, history_len, pred_horizon, input_img_size, img_resolution,
+                 initial_box_x_idx, initial_box_y_idx,
+                 vehicle_front_edge_to_center, vehicle_back_edge_to_center, vehicle_width,
+                 embed_size=64, hidden_size=128, cnn_net=models.mobilenet_v2,
                  pretrained=True):
         super(TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet, self).__init__()
         self.compression_cnn_layer = nn.Conv2d(12, 3, 3, padding=1)
@@ -98,19 +113,35 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
             nn.Linear(hidden_size + self.cnn_out_size, 4),
         )
 
-        self.box_pred_fc_layer = torch.nn.Sequential(
-            nn.Linear(4 + self.cnn_out_size,
-                      self.input_img_size_h * self.input_img_size_w),
-        )
+        # Using a fc layers to try to approximate the process of rasterization
+        # self.box_pred_fc_layer = torch.nn.Sequential(
+        #     nn.Linear(4 + self.cnn_out_size,
+        #               self.input_img_size_h * self.input_img_size_w),
+        # )
+
+        self.img_resolution = img_resolution
+        x_mesh = torch.Tensor(np.arange(self.input_img_size_w))
+        y_mesh = torch.Tensor(np.arange(self.input_img_size_h))
+        x_mesh, y_mesh = torch.meshgrid(x_mesh, y_mesh)
+        self.idx_mesh = torch.stack((x_mesh, y_mesh), dim=2)
+        self.initial_box_x_idx = initial_box_x_idx
+        self.initial_box_y_idx = initial_box_y_idx
+        self.half_box_length = (
+            vehicle_front_edge_to_center + vehicle_back_edge_to_center) / 2
+        self.half_box_width = vehicle_width
+        self.center_shift_distance = self.half_box_length - vehicle_back_edge_to_center
 
     def forward(self, X):
-        img_feature, hist_points, hist_points_step = X
+        img_feature, hist_points, hist_points_step, ego_rendering_heading = X
+        ego_rendering_heading = ego_rendering_heading.squeeze()
         batch_size = img_feature.size(0)
         # manually add the unsqueeze before repeat to avoid onnx to tensorRT parsing error
         h0 = self.h0.unsqueeze(0)
         c0 = self.c0.unsqueeze(0)
         ht, ct = h0.repeat(1, batch_size, 1),\
             c0.repeat(1, batch_size, 1)
+        idx_mesh = self.idx_mesh.repeat(
+            batch_size, 1, 1, 1).to(img_feature.device)
 
         img_embedding = self.cnn(
             self.compression_cnn_layer(img_feature)).view(batch_size, -1)
@@ -135,19 +166,58 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
 
             _, (ht, ct) = self.lstm(disp_embedding, (ht, ct))
 
+        # Using a fc layers to try to approximate the process of rasterization
+        # pred_boxs = torch.zeros(
+        #     (batch_size, 1, 1,
+        #      self.input_img_size_h, self.input_img_size_w),
+        #     device=img_feature.device)
+        # for t in range(self.pred_horizon):
+        #     pred_box = torch.sigmoid(self.box_pred_fc_layer(
+        #         torch.cat((img_embedding, pred_traj[:, t, :]), dim=1)))
+        #     pred_boxs = torch.cat((pred_boxs, pred_box.clone().view(
+        #         batch_size, 1, 1, self.input_img_size_h, self.input_img_size_w)), dim=1)
+
         pred_boxs = torch.zeros(
-            (batch_size, 1, 1,
+            (batch_size, self.pred_horizon, 1,
              self.input_img_size_h, self.input_img_size_w),
             device=img_feature.device)
         for t in range(self.pred_horizon):
-            pred_box = torch.sigmoid(self.box_pred_fc_layer(
-                torch.cat((img_embedding, pred_traj[:, t, :]), dim=1)))
-            pred_boxs = torch.cat((pred_boxs, pred_box.clone().view(
-                batch_size, 1, 1, self.input_img_size_h, self.input_img_size_w)), dim=1)
+            box_heading = (-pred_traj[:, t, 2]
+                           - ego_rendering_heading).unsqueeze(1).unsqueeze(2)
+            heading_offset = -(ego_rendering_heading - np.pi / 2)
 
-        # return pred_traj[:, 1:, :]
+            rear_to_initial_box_x_delta = (torch.cos(heading_offset) * (-pred_traj[:, t, 1])
+                                           - torch.sin(heading_offset) * (-pred_traj[:, t, 0])).\
+                unsqueeze(1).unsqueeze(2)
+            rear_to_initial_box_y_delta = (torch.sin(heading_offset) * (-pred_traj[:, t, 1])
+                                           + torch.cos(heading_offset) * (-pred_traj[:, t, 0])).\
+                unsqueeze(1).unsqueeze(2)
 
-        return pred_boxs[:, 1:, :, :, :], pred_traj[:, 1:, :]
+            center_to_rear_x_delta = torch.cos(
+                box_heading) * self.center_shift_distance
+            center_to_rear_y_delta = torch.sin(
+                box_heading) * self.center_shift_distance
+
+            center_to_initial_box_x_delta = center_to_rear_x_delta + rear_to_initial_box_x_delta
+            center_to_initial_box_y_delta = center_to_rear_y_delta + rear_to_initial_box_y_delta
+
+            box_center_x_idx = (
+                self.initial_box_x_idx + center_to_initial_box_x_delta // self.img_resolution)
+            box_center_y_idx = (
+                self.initial_box_y_idx + center_to_initial_box_y_delta // self.img_resolution)
+
+            pred_boxs[:, t, 0, :, :] = rasterize_vehicle_box(
+                box_center_x_idx,
+                box_center_y_idx,
+                box_heading,
+                self.half_box_length / self.img_resolution,
+                self.half_box_width / self.img_resolution,
+                idx_mesh)
+
+        # Using a fc layers to try to approximate the process of rasterization
+        # return pred_boxs[:, 1:, :, :, :], pred_traj[:, 1:, :]
+
+        return pred_boxs, pred_traj[:, 1:, :]
 
 
 if __name__ == "__main__":

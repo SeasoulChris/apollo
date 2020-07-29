@@ -194,6 +194,12 @@ def training(model_type,
             renderer_config.width],
             history_len=10,
             pred_horizon=10,
+            img_resolution=renderer_config.resolution,
+            initial_box_x_idx=renderer_config.ego_idx_x,
+            initial_box_y_idx=renderer_config.ego_idx_y,
+            vehicle_front_edge_to_center=3.89,
+            vehicle_back_edge_to_center=1.043,
+            vehicle_width=1.055,
             embed_size=64,
             hidden_size=128)
         loss = TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss()
