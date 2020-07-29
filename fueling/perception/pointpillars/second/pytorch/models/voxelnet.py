@@ -369,8 +369,7 @@ class VoxelNet(nn.Module):
         preds_dict = self.network_forward(voxels, num_points, coors, batch_size_dev)
         # need to check size.
         box_preds = preds_dict["box_preds"].view(batch_size_dev, -1, self._box_coder.code_size)
-        err_msg = f"num_anchors = {batch_anchors.shape[1]}, but num_output = {box_preds.shape[1]}.
-        please check size"
+        err_msg = f"num_anchors = {batch_anchors.shape[1]}, but num_output = {box_preds.shape[1]}, please check size"
         assert batch_anchors.shape[1] == box_preds.shape[1], err_msg
         if self.training:
             return self.loss(example, preds_dict)

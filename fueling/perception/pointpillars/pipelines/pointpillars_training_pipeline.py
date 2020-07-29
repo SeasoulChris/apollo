@@ -36,8 +36,7 @@ class PointPillarsTraining(BasePipeline):
         logging.info('cuda version: {}'.format(torch.version.cuda))
         logging.info('gpu device count: {}'.format(torch.cuda.device_count()))
 
-        config_path = "/fuel/fueling/perception/pointpillars/ \
-                      second/configs/nuscenes/all.pp.mhead.config"
+        config_path = "/fuel/fueling/perception/pointpillars/second/configs/nuscenes/all.pp.mhead.config"
         model_dir = "/fuel/fueling/perception/pointpillars/second/temp"
 
         train(config_path, model_dir)

@@ -3,6 +3,11 @@ import numpy as np
 from pathlib import Path
 from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 
+from perception_pointpillars.point2voxel import (
+        points_to_voxel_3d_np,
+        points_to_voxel_3d_np_mean,
+        points_to_voxel_3d_with_filtering)
+'''
 try:
     from fueling.perception.pointpillars.second.core.point2voxel import (
         points_to_voxel_3d_np,
@@ -19,7 +24,7 @@ except BaseException:
         points_to_voxel_3d_np,
         points_to_voxel_3d_np_mean,
         points_to_voxel_3d_with_filtering)
-
+'''
 
 def points_to_voxel(points,
                     voxel_size,

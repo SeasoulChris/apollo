@@ -8,7 +8,8 @@ from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build impo
 from fueling.perception.pointpillars.second.core.geometry import (
     points_in_convex_polygon_3d_jit, points_count_convex_polygon_3d_jit)
 
-
+from perception_pointpillars.box_iou import rbbox_iou, rbbox_intersection
+'''
 try:
     from fueling.perception.pointpillars.second.core.box_iou import rbbox_iou, rbbox_intersection
 except BaseException:
@@ -19,7 +20,7 @@ except BaseException:
         current_dir)
 
     from fueling.perception.pointpillars.second.core.box_iou import rbbox_iou, rbbox_intersection
-
+'''
 
 def riou_cc(rbboxes, qrbboxes, standup_thresh=0.0):
     # less than 50ms when used in second one thread. 10x slower than gpu

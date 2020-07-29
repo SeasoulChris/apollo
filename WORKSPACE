@@ -88,6 +88,14 @@ http_archive(
     strip_prefix = "planning_analytics",
 )
 
+http_archive(
+    name = "perception_pointpillars",
+    url = "file:///fuel/deps/libs/perception_pointpillars.zip",
+    sha256 = "cb18d576990a0fd708d97735a6b461062f8056b581a936778aaea65ef46a8fde",
+    build_file = "perception_pointpillars.BUILD",
+    strip_prefix = "perception_pointpillars",
+)
+
 new_git_repository(
     name = "yolov4",
     branch = "master",
@@ -95,3 +103,4 @@ new_git_repository(
     shallow_since = "2020-07-20",
     build_file = "yolov4.BUILD",
 )
+

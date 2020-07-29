@@ -6,8 +6,7 @@ import torch
 from torch import stack as tstack
 
 from fueling.perception.pointpillars.torchplus.tools import torch_to_np_dtype
-from fueling.perception.pointpillars.second.core.non_max_suppression.nms_gpu import (
-    nms_gpu_cc, rotate_iou_gpu, rotate_nms_gpu)
+from fueling.perception.pointpillars.second.core.non_max_suppression.nms_gpu import nms_gpu_cc
 from fueling.perception.pointpillars.second.core.non_max_suppression.nms_cpu import rotate_nms_cc
 
 

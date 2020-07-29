@@ -4,21 +4,23 @@ import numba
 import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
-
+from perception_pointpillars.nms import (
+        non_max_suppression_cpu, rotate_non_max_suppression_cpu)
+'''
 try:
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (
         non_max_suppression_cpu, rotate_non_max_suppression_cpu)
 except BaseException:
     current_dir = Path(__file__).resolve().parents[0]
     load_pb11(
-        ["/fuel/fueling/perception/pointpillars/second/core/cc/nms/nms_kernel.cu.cc",
+        ["/fuel/fueling/perception/pointpillars/second/core/cc/nms/nms_kernel.cu",
             "/fuel/fueling/perception/pointpillars/second/core/cc/nms/nms.cc"],
         current_dir / "nms.so",
         current_dir,
         cuda=True)
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (
         non_max_suppression_cpu, rotate_non_max_suppression_cpu)
-
+'''
 
 def nms_cc(dets, thresh):
     scores = dets[:, 4]

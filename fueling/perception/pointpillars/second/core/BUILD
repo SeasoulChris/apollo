@@ -13,6 +13,7 @@ py_library(
     deps = [
         ":geometry",
         "//fueling/perception/pointpillars/second/utils/buildtools:pybind11_build",
+	"@perception_pointpillars",
     ],
 )
 
@@ -82,6 +83,7 @@ py_library(
 py_library(
     name = "voxel_generator",
     srcs = ["voxel_generator.py"],
+    deps = ["@perception_pointpillars"],
 )
 
 py_library(
