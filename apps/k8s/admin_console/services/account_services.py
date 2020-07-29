@@ -67,7 +67,7 @@ class AccountServices(flask_restful.Resource):
         if not accounts:
             return {"desc": "Don't find the account obj, please check the id", "result": {}}
         account_obj = accounts[0]
-        if account_obj["status"] == "Pending":
+        if account_obj["status"] == "Rejected":
             parse.add_argument("com_name", type=str, required=True,
                                help="Com name cannot be blank!")
             parse.add_argument("com_email", type=str, required=True,
@@ -99,7 +99,7 @@ class AccountServices(flask_restful.Resource):
                                               account.get_virtual_vehicle_sn
                                               ("apps/k8s/admin_console/conf/admin.json"))
             account.account_db.update_account_msg(account_id, account_dict)
-        elif account_obj["status"] == "Rejected":
+        elif account_obj["status"] == "Enabled":
             parse.add_argument("com_name", type=str, required=True,
                                help="Com name cannot be blank!")
             parse.add_argument("com_email", type=str, required=True,
@@ -114,6 +114,8 @@ class AccountServices(flask_restful.Resource):
             account_dict = args.copy()
             account_dict.pop("id")
             account.account_db.update_account_msg(account_id, account_dict)
+        else:
+            return {"desc": "The status is error, the data hasn't changed"}
         new_accounts = account.account_db.get_account_info({"_id": account_id})
         accounts_used = account.get_job_used(new_accounts)
         accounts_objs = account.stamp_account_time(accounts_used)
