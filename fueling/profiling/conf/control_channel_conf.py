@@ -114,7 +114,7 @@ FEATURE_NAMES = [
     "steer_mrac_enable_status",
     "total_time",
     "total_time_exceeded",
-    "control_error_code"
+    "control_error_code",
     "timestamp_sec",
     "sequence_num",
     "localization_timestamp_sec",
