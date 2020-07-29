@@ -8,11 +8,9 @@ from utils import conf_utils
 
 
 class AccountServices(flask_restful.Resource):
-    def get(self):
+    def get(self, account_id):
         parse = reqparse.RequestParser()
         parse.add_argument("id", type=str, required=True, help="Id cannot be blank!")
-        args = parse.parse_args()
-        account_id = args.get("id")
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
             return {"desc": "Don't find the account obj, please check the id", "result": {}}
@@ -58,11 +56,9 @@ class AccountServices(flask_restful.Resource):
         accounts_objs = account.stamp_account_time(accounts_used)
         return {"desc": "success", "result": accounts_objs[0]}
 
-    def put(self):
+    def put(self, account_id):
         parse = reqparse.RequestParser()
         parse.add_argument("id", type=str, required=True, help="Id cannot be blank!")
-        args = parse.parse_args()
-        account_id = args.get("id")
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
             return {"desc": "Don't find the account obj, please check the id", "result": {}}

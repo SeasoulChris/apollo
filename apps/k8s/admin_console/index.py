@@ -15,7 +15,7 @@ from views import job
 from views import statistics
 
 
-application.api.add_resource(account_services.AccountServices, "/accounts")
+application.api.add_resource(account_services.AccountServices, "/accounts/<account_id>")
 application.api.add_resource(job_services.JobService,
                              "/vehicle/<vehicle_sn>",
                              "/vehicle/<vehicle_sn>/jobs",
