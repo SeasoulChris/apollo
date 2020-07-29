@@ -26,9 +26,9 @@ if __name__ == "__main__":
 
     train_dataset = SirenNetDataset(args.train_file)
     valid_dataset = SirenNetDataset(args.valid_file)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=4, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True,
                                                num_workers=4, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=4, shuffle=True,
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=32, shuffle=True,
                                                num_workers=4, drop_last=True)
 
     model = SirenNet()

@@ -93,6 +93,14 @@ class SirenNetDataset(Dataset):
                 self.all_features.append(feature)
 
     def __len__(self):
+        pos, neg = 0, 0
+        for feature in self.all_features:
+            if (feature[1] > 0.5):
+                pos += 1
+            else:
+                neg += 1
+        print("Got a total of " + str(len(self.all_features)) + " data points, with " + str(pos)
+              + " positive, and " + str(neg) + " negative labels.")
         return len(self.all_features)
 
     def __getitem__(self, idx):
