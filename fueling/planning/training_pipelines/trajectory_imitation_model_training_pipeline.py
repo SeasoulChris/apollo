@@ -144,8 +144,16 @@ def training(model_type,
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
         # model = TrajectoryImitationConvRNNUnetResnet18v2(
         #     input_img_size=[renderer_config.height, renderer_config.width], pred_horizon=10)
-        loss = TrajectoryImitationConvRNNLoss(1, 1, 1)
-        # loss = TrajectoryImitationConvRNNWithEnvLoss(1, 1, 1, 1, 1, True)
+        loss = TrajectoryImitationConvRNNLoss(pos_dist_loss_weight=1,
+                                              box_loss_weight=1,
+                                              pos_reg_loss_weight=1)
+        # loss = TrajectoryImitationConvRNNWithEnvLoss(pos_dist_loss_weight=1,
+        #                                              box_loss_weight=1,
+        #                                              pos_reg_loss_weight=1,
+        #                                              collision_loss_weight=1,
+        #                                              offroad_loss_weight=1,
+        #                                              onrouting_loss_weight=1,
+        #                                              imitation_dropout=False)
 
     elif model_type == 'cnn_lstm':
         train_dataset = TrajectoryImitationCNNLSTMDataset(train_set_dir,
@@ -202,14 +210,19 @@ def training(model_type,
             vehicle_width=1.055,
             embed_size=64,
             hidden_size=128)
-        loss = TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss()
+        loss = TrajectoryImitationCNNLSTMWithAuxiliaryEnvLoss(box_loss_weight=1,
+                                                              pos_reg_loss_weight=1,
+                                                              collision_loss_weight=1,
+                                                              offroad_loss_weight=1,
+                                                              onrouting_loss_weight=1,
+                                                              imitation_dropout=False)
     else:
         logging.info('model {} is not implemnted'.format(model_type))
         exit()
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=2, shuffle=True,
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True,
                                                num_workers=8, drop_last=True)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=2, shuffle=True,
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=128, shuffle=True,
                                                num_workers=8, drop_last=True)
 
     learning_rate = 3e-4

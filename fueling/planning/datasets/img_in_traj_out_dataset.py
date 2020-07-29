@@ -100,7 +100,6 @@ class TrajectoryImitationCNNFCDataset(Dataset):
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
             if i + 1 > self.ouput_point_num:
                 break
-            # TODO(Jinyun): evaluate whether use heading and acceleration
             pred_x = pred_point.trajectory_point.path_point.x
             pred_y = pred_point.trajectory_point.path_point.y
             pred_theta = pred_point.trajectory_point.path_point.theta
@@ -219,6 +218,16 @@ class TrajectoryImitationConvRNNDataset(Dataset):
         offroad_mask = self.img_bitmap_transform(offroad_mask)
         offroad_mask = offroad_mask.repeat(self.ouput_point_num, 1, 1, 1)
 
+        routing_mask = self.chauffeur_net_feature_generator.\
+            render_routing_mask(region,
+                                current_x,
+                                current_y,
+                                current_theta,
+                                frame.routing.local_routing_lane_id,
+                                coordinate_heading)
+        routing_mask = self.img_bitmap_transform(routing_mask)
+        routing_mask = routing_mask.repeat(self.ouput_point_num, 1, 1, 1)
+
         ref_coords = [current_x,
                       current_y,
                       current_theta]
@@ -233,7 +242,6 @@ class TrajectoryImitationConvRNNDataset(Dataset):
             if i + 1 > self.ouput_point_num:
                 break
 
-            # TODO(Jinyun): evaluate whether use heading and acceleration
             pred_x = pred_point.trajectory_point.path_point.x
             pred_y = pred_point.trajectory_point.path_point.y
             pred_theta = pred_point.trajectory_point.path_point.theta
@@ -309,7 +317,8 @@ class TrajectoryImitationConvRNNDataset(Dataset):
                  pred_boxs,
                  torch.from_numpy(pred_points).float(),
                  pred_obs,
-                 offroad_mask))
+                 offroad_mask,
+                 routing_mask))
 
 
 class TrajectoryImitationCNNLSTMDataset(Dataset):
@@ -335,7 +344,6 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         logging.info('Total number of data points = {}'.format(
             self.total_num_data_pt))
 
-        # TODO(Jinyun): recognize map_name in __getitem__
         self.chauffeur_net_feature_generator = \
             ChauffeurNetFeatureGenerator(regions_list,
                                          renderer_config_file,
@@ -401,7 +409,6 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         for i, hist_point in enumerate(reversed(frame.adc_trajectory_point)):
             if i + 1 > self.history_point_num:
                 break
-            # TODO(Jinyun): evaluate whether use heading and acceleration
             hist_x = hist_point.trajectory_point.path_point.x
             hist_y = hist_point.trajectory_point.path_point.y
             hist_theta = hist_point.trajectory_point.path_point.theta
@@ -423,7 +430,6 @@ class TrajectoryImitationCNNLSTMDataset(Dataset):
         for i, pred_point in enumerate(frame.output.adc_future_trajectory_point):
             if i + 1 > self.ouput_point_num:
                 break
-            # TODO(Jinyun): evaluate whether use heading and acceleration
             pred_x = pred_point.trajectory_point.path_point.x
             pred_y = pred_point.trajectory_point.path_point.y
             pred_theta = pred_point.trajectory_point.path_point.theta
@@ -548,6 +554,16 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
         offroad_mask = self.img_bitmap_transform(offroad_mask)
         offroad_mask = offroad_mask.repeat(self.ouput_point_num, 1, 1, 1)
 
+        routing_mask = self.chauffeur_net_feature_generator.\
+            render_routing_mask(region,
+                                current_x,
+                                current_y,
+                                current_theta,
+                                frame.routing.local_routing_lane_id,
+                                coordinate_heading)
+        routing_mask = self.img_bitmap_transform(routing_mask)
+        routing_mask = routing_mask.repeat(self.ouput_point_num, 1, 1, 1)
+
         ref_coords = [current_x,
                       current_y,
                       current_theta]
@@ -556,7 +572,6 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
         for i, hist_point in enumerate(reversed(frame.adc_trajectory_point)):
             if i + 1 > self.history_point_num:
                 break
-            # TODO(Jinyun): evaluate whether use heading and acceleration
             hist_x = hist_point.trajectory_point.path_point.x
             hist_y = hist_point.trajectory_point.path_point.y
             hist_theta = hist_point.trajectory_point.path_point.theta
@@ -635,4 +650,5 @@ class TrajectoryImitationCNNLSTMWithAENDataset(Dataset):
                 (pred_boxs,
                  torch.from_numpy(pred_points).float(),
                  pred_obs,
-                 offroad_mask))
+                 offroad_mask,
+                 routing_mask))

@@ -126,6 +126,7 @@ py_library(
     srcs = ["routing_img_renderer.py"],
     deps = [
         ":renderer_utils",
+        "//fueling/common:logging",
         "//fueling/common:proto_utils",
         "@apollo//modules/map/proto:map_lane_py_pb2",
         "@apollo//modules/map/proto:map_py_pb2",

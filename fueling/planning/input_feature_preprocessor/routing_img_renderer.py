@@ -11,6 +11,7 @@ from modules.map.proto import map_lane_pb2
 from modules.planning.proto import learning_data_pb2
 from modules.planning.proto import planning_semantic_map_config_pb2
 
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 import fueling.planning.input_feature_preprocessor.renderer_utils as renderer_utils
 
@@ -46,13 +47,13 @@ class RoutingImgRenderer(object):
         self.local_base_point = np.array([center_x, center_y])
         self.local_base_heading = center_heading
         if len(local_routing) == 0:
-            print("No routing provided")
+            logging.error("No routing provided")
             return local_map
         routing_color_delta = int(255 / len(local_routing))
         for i in range(len(local_routing)):
             color = int(255 - i * routing_color_delta)
             if not self.regions_lane_dict[region].__contains__(local_routing[i]):
-                print("local routing lane is not found : " + local_routing[i])
+                logging.warning("local routing lane is not found : " + local_routing[i])
                 continue
             routing_lane = self.regions_lane_dict[region][local_routing[i]]
             for segment in routing_lane.central_curve.segment:
@@ -75,4 +76,40 @@ class RoutingImgRenderer(object):
                         self.resolution))
                     cv.line(local_map, tuple(p0), tuple(
                         p1), color=color, thickness=12)
+        return local_map
+
+    def draw_constant_coloring_local_routing_mask(self, region, center_x, center_y, center_heading,
+                                                  local_routing, coordinate_heading=0):
+        local_map = 255 * np.ones(
+            [self.GRID[1], self.GRID[0], 1], dtype=np.uint8)
+        self.local_base_point = np.array([center_x, center_y])
+        self.local_base_heading = center_heading
+        if len(local_routing) == 0:
+            logging.error("No routing provided")
+            return local_map
+        for i in range(len(local_routing)):
+            if not self.regions_lane_dict[region].__contains__(local_routing[i]):
+                logging.warning("local routing lane is not found : " + local_routing[i])
+                continue
+            routing_lane = self.regions_lane_dict[region][local_routing[i]]
+            for segment in routing_lane.central_curve.segment:
+                for i in range(len(segment.line_segment.point) - 1):
+                    p0 = tuple(renderer_utils.get_img_idx(
+                        renderer_utils.point_affine_transformation(
+                            np.array([segment.line_segment.point[i].x,
+                                      segment.line_segment.point[i].y]),
+                            self.local_base_point,
+                            np.pi / 2 - self.local_base_heading + coordinate_heading),
+                        self.local_base_point_idx,
+                        self.resolution))
+                    p1 = tuple(renderer_utils.get_img_idx(
+                        renderer_utils.point_affine_transformation(
+                            np.array([segment.line_segment.point[i + 1].x,
+                                      segment.line_segment.point[i + 1].y]),
+                            self.local_base_point,
+                            np.pi / 2 - self.local_base_heading + coordinate_heading),
+                        self.local_base_point_idx,
+                        self.resolution))
+                    cv.line(local_map, tuple(p0), tuple(
+                        p1), color=0, thickness=12)
         return local_map

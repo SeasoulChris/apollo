@@ -355,6 +355,15 @@ class ChauffeurNetFeatureGenerator(object):
                                                            center_heading,
                                                            coordinate_heading)
 
+    def render_routing_mask(self, region, center_x, center_y, center_heading,
+                            routing_response, coordinate_heading=0.):
+        return self.routing_mapping.draw_constant_coloring_local_routing_mask(region,
+                                                                              center_x,
+                                                                              center_y,
+                                                                              center_heading,
+                                                                              routing_response,
+                                                                              coordinate_heading)
+
     def render_obstacle_box_prediction_frame(
             self, center_x, center_y, center_heading,
             obstacles, timestamp_idx, coordinate_heading=0.):
