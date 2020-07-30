@@ -19,10 +19,11 @@ function LintDir {
       xargs ${LINT}
 
   # TODO(all): Cover all code.
-  # find "$1" -type f -name '*.py' | \
-  #    grep -v 'fueling/common/logging.py' | \
-  #    grep 'fueling/common' | \
-  #    xargs ${FLAKE}
+  find "$1" -type f -name '*.py' | \
+      grep -v 'fueling/common/logging.py' | \
+      grep -v 'fueling/common/record/kinglong' | \
+      grep 'fueling/common' | \
+      xargs ${FLAKE}
 }
 
 PATH_ARG=$1
@@ -33,6 +34,5 @@ elif [ -d "${PATH_ARG}" ]; then
   LintDir "${PATH_ARG}"
 else
   ${LINT} "${PATH_ARG}"
-  # TODO(all): Enable.
-  # ${FLAKE} "${PATH_ARG}"
+  ${FLAKE} "${PATH_ARG}"
 fi
