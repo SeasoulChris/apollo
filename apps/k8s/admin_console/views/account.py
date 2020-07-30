@@ -110,7 +110,8 @@ def edit_quota():
         add_quota = package_dict[selected_package]
         accounts_add_quota = account.add_quota(accounts, add_quota)
         accounts = account.extension_date(accounts_add_quota, days_dict[selected_package])
-    accounts_format_time = account.format_account_time(accounts)
+    accounts_oper = account.save_operations(accounts)
+    accounts_format_time = account.format_account_time(accounts_oper)
     account_data = accounts_format_time[0]
     res["code"] = 200
     res["msg"] = "success"

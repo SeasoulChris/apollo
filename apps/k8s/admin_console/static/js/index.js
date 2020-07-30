@@ -49,11 +49,11 @@ $(document).ready(function () {
             old_status_dict[show_job_type] = account_service_status;
             if (account_service_status == "Enabled"){
                 show_dom = "<div style={'display': 'block'}><input name='"+show_job_type+"' type='checkbox' checked value="
-                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "使用:" + show_used+ "</span></div>"
+                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "已使用:" + show_used+ "</span></div>"
             }
             else{
                 show_dom = "<div style={'display': 'block'}><input name='"+show_job_type+"' type='checkbox' value="
-                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "使用:" + show_used+ "</span></div>"
+                 + account_service_status  + "><span>" + showJobType(show_job_type) + "    "+ "已使用:" + show_used+ "</span></div>"
             }
             account_body_job.append(show_dom);
         };
@@ -91,11 +91,32 @@ $(document).ready(function () {
                         var account_data = result["data"];
                         var service_dom = $("#service-tr-"+account_data["_id"]).nextUntil("#operation-tr-"+account_data["_id"])
                         var services = account_data["services"]
+                        var operation_history = ""
 
                         // update the services list
                         for (i=0; i<service_dom.length; i++){
-                            $(service_dom[i]).children().text(showJobType(services[i]["job_type"])+":"+showServiceStatus(services[i]["status"])+"  使用:"+services[i]["used"]);
+                            $(service_dom[i]).children().text(showJobType(services[i]["job_type"])+":"+showServiceStatus(services[i]["status"])+"  已使用:"+services[i]["used"]);
                         };
+
+                        // update the operation history
+                        var operation_email = account_data["new_operation"]["email"]
+                        var operation_time = account_data["new_operation"]["time"]
+                        var operation_action = account_data["new_operation"]["action"]
+                        if (operation_action["status"]){
+                            for(var i=0; i<operation_action["status"].length; i++){
+                                operation_history = operation_history + showJobType(operation_action["type"][i])+"被设置为"+showServiceStatus(operation_action["status"][i])+"。";
+                            }
+                            if (operation_action["remaining_quota"]){
+                                operation_history = operation_history + "剩余配额被设置为"+operation_action["remaining_quota"]+"，截止日期被设置为"+operation_action["due_date"]+"。"
+                            }
+                            operation_history = operation_history + "操作时间为" + operation_time +"。"
+                        }
+                        else if (operation_action["type"] && (!operation_action["remaining_quota"])){
+                            operation_history =  "用户账号被"+operation_email+"在"+operation_time+showServiceStatus(operation_action["type"])+"。备注是："+account_data["new_operation"]["comments"]+"。";
+                        };
+
+                        $("#flag-" + account_data["_id"]).before('<tr style="display: none" class="operation_span">' +
+                        '<td colspan="12" style="border-top: none">' + operation_history +"</td></tr>");
 
                         // update the used and remaining quota
                         $("#used-"+account_data["_id"]).text(account_data["used"]);
@@ -103,6 +124,9 @@ $(document).ready(function () {
 
                         // update the due_date
                         $("#due-date-"+account_data["_id"]).text(account_data["due_date"]);
+
+                        // update the status
+                        $("#status-"+account_data["_id"]).text(showServiceStatus(account_data["status"]))
 
                         // update the dialog data-account-services attr
                         $("#edit-action-"+account_data["_id"]).attr("data-account-services", services);
@@ -114,6 +138,11 @@ $(document).ready(function () {
                         if (new_status_dict["chose_package"] == "Enabled"){
                             $(document).trigger("widget.mb.show", {type:"ok",message:"用户（邮箱："+account_data["com_email"]+"）剩余配额"+account_data["remaining_quota"]});
                         };
+
+                        // expand the history operation
+                        $("#expand-" + account_data["_id"]).css("display", "none");
+                        $("#collapse-" + account_data["_id"]).css("display", "inline");
+                        $("#status-" + account_data["_id"]).parent().nextUntil(".account_flag").css("display", "table-row");
                     }
                 })
             } else {

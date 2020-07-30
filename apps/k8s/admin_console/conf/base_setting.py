@@ -24,7 +24,7 @@ class Config(object):
     SHOW_TIME_FIELD = {"All": "所有", "7d": "过去7天", "30d": "过去30天", "1y": "1年前"}
     AGGREGATED_FIELD = {"W": "周", "M": "月", "Y": "年"}
     AGGREGATED_BY = {"W": "week", "M": "month", "Y": "year"}
-    BLACK_LIST = ["CH0000000", "CH0000001", "CH0000002", "CH0000003"]
+    BLACK_LIST = ["CH0000000", "CH0000001", "CH0000002", "CH0000003", "None"]
     FAILURE_CAUSE = {"E300": "数据包超过大小限制！请按照使用文档要求上传小于5G的数据包。",
                      "E301": "找不到所需要的输入文件！请按照使用文档检查输入文件的目录结构是否正确以及相应文件是否齐全。",
                      "E302": "数据包中缺少/apollo/localization/pose 消息！请按照使用文档要求录制正确的数据包。",

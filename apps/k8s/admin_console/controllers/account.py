@@ -6,11 +6,13 @@ The logical control of the account in front of the view
 import datetime
 import json
 
+import flask
+
 from common import paginator
 from controllers import job
 from fueling.common import account_utils
-from utils import time_utils
 from fueling.common import logging
+from utils import time_utils
 
 account_db = account_utils.AccountUtils()
 
@@ -33,6 +35,7 @@ def format_account_time(objs):
     for account_data in objs:
         start_time = account_data.get("apply_date")
         end_time = account_data.get("due_date")
+        new_operation = account_data.get("new_operation")
         operations = account_data.get("operations")
         if start_time:
             account_data["apply_date"] = time_utils.get_datetime_str(account_data["apply_date"])
@@ -41,6 +44,18 @@ def format_account_time(objs):
         if operations:
             for opt in operations:
                 opt["time"] = time_utils.get_datetime_str(opt["time"])
+                try:
+                    opt["action"]["due_date"] = time_utils.get_datetime_str(
+                        opt["action"]["due_date"])
+                except KeyError:
+                    pass
+        if new_operation:
+            new_operation["time"] = time_utils.get_datetime_str(new_operation["time"])
+            try:
+                new_operation["action"]["due_date"] = (time_utils.get_datetime_str(
+                    new_operation["action"]["due_date"]))
+            except KeyError:
+                pass
     return objs
 
 
@@ -57,6 +72,7 @@ def add_quota(objs, add_quota):
         account_db.save_account_quota(obj["_id"], quota)
         obj["quota"] = quota
         obj["remaining_quota"] = quota - obj["used"]
+        obj["add_quota"] = True
     return objs
 
 
@@ -79,6 +95,29 @@ def extension_date(objs, days):
         else:
             continue
         account_db.save_account_due_date(obj["_id"], obj["due_date"])
+    return objs
+
+
+def save_operations(objs):
+    """
+    Save the operations
+    """
+    for obj in objs:
+        update_dict = {}
+        email = flask.session.get("user_info").get("email")
+        update_dict["email"] = email
+        is_add_quota = obj.get("add_quota")
+        if is_add_quota:
+            remaining_quota = obj["remaining_quota"]
+            due_date = obj["due_date"]
+            update_dict["action"] = {"remaining_quota": remaining_quota, "due_date": due_date}
+        else:
+            update_dict["action"] = {}
+        diff_dict = obj.get("diff_services")
+        if diff_dict:
+            update_dict["action"].update(diff_dict)
+        update_dict = account_db.save_account_operation_msg(obj["_id"], update_dict)
+        obj["new_operation"] = update_dict
     return objs
 
 
@@ -126,8 +165,11 @@ def get_job_used(objs):
 def update_services(objs, services_list):
     """Update the account services"""
     for obj in objs:
-        account_db.save_account_services(obj["_id"], services_list)
-        obj["services"] = services_list
+        diff_dict = compare_services(obj["services"], services_list)
+        if diff_dict:
+            account_db.save_account_services(obj["_id"], services_list)
+            obj["services"] = services_list
+            obj["diff_services"] = diff_dict
     return objs
 
 
@@ -223,8 +265,38 @@ def stamp_account_time(objs):
             account_data["due_date"] = time_utils.get_datetime_timestamp(account_data["due_date"])
         if operations:
             for opt in operations:
-                opt["time"] = time_utils.get_datetime_timestamp(opt["time"])
-                opt["email"] = "administrator"
+                opt["time"] = time_utils.get_datetime_stamp(opt["time"])
+                try:
+                    opt["action"]["due_date"] = time_utils.get_datetime_timestamp(
+                        opt["action"]["due_date"])
+                except KeyError:
+                    pass
         if new_operation:
             new_operation["time"] = time_utils.get_datetime_timestamp(new_operation["time"])
+            try:
+                new_operation["action"]["due_date"] = (time_utils.time_utils.get_datetime_timestamp
+                                                       (new_operation["action"]["due_date"]))
+            except KeyError:
+                pass
     return objs
+
+
+def compare_services(old_services, new_services):
+    """
+    compare the list diff services
+    """
+    old_set = set()
+    new_set = set()
+    for service in old_services:
+        old_set.add((service["job_type"], service["status"]))
+    for service in new_services:
+        new_set.add((service["job_type"], service["status"]))
+    diff_set = new_set - old_set
+    if diff_set:
+        diff_dict = {"type": [], "status": []}
+        for diff in diff_set:
+            diff_dict["type"].append(diff[0])
+            diff_dict["status"].append(diff[1])
+    else:
+        diff_dict = {}
+    return diff_dict

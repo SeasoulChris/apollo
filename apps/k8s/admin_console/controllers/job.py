@@ -88,7 +88,7 @@ def get_job_filter(conf_dict, args_dict):
     time_field = conf_dict["time_field"]
     vehicle_sn = args_dict["vehicle_sn"]
     black_list = conf_dict["black_list"]
-    filter_list.append({"is_partner": True})
+    filter_list.append({"vehicle_sn": {"$exists": True}})
     filter_job_type = list(conf_dict["job_type"].values())
     filter_job_type.remove("All")
     filter_list.append({"job_type": {"$in": filter_job_type}})

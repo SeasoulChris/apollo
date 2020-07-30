@@ -105,3 +105,13 @@ class AccountUtils(object):
         self.db.update_one({'_id': ObjectId(account_id)},
                            {'$set': account_dict})
         logging.info(f"update_account_msg: {account_id}")
+
+    def save_account_operation_msg(self, account_id, operation_dict):
+        """Save account operation"""
+        if not operation_dict.get("time"):
+            operation_dict["time"] = datetime.datetime.now()
+        result = self.db.update_one({'_id': ObjectId(account_id)},
+                                    {'$push': {'operations': operation_dict}})
+        logging.info(f"save_account_operation: {operation_dict},")
+        if result.raw_result['nModified'] == 1:
+            return operation_dict
