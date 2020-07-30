@@ -22,6 +22,7 @@ except BaseException:
     from fueling.perception.pointpillars.second.core.box_iou import rbbox_iou, rbbox_intersection
 '''
 
+
 def riou_cc(rbboxes, qrbboxes, standup_thresh=0.0):
     # less than 50ms when used in second one thread. 10x slower than gpu
     boxes_corners = center_to_corner_box2d(rbboxes[:, :2], rbboxes[:, 2:4],

@@ -5,7 +5,7 @@ import numpy as np
 from fueling.perception.pointpillars.second.core import box_np_ops
 from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 from perception_pointpillars.nms import (
-        non_max_suppression_cpu, rotate_non_max_suppression_cpu)
+    non_max_suppression_cpu, rotate_non_max_suppression_cpu)
 '''
 try:
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (
@@ -21,6 +21,7 @@ except BaseException:
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (
         non_max_suppression_cpu, rotate_non_max_suppression_cpu)
 '''
+
 
 def nms_cc(dets, thresh):
     scores = dets[:, 4]

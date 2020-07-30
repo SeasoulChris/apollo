@@ -6,7 +6,7 @@ import numpy as np
 from numba import cuda
 from fueling.perception.pointpillars.second.utils.buildtools.pybind11_build import load_pb11
 from perception_pointpillars.nms import (
-        non_max_suppression)
+    non_max_suppression)
 '''
 try:
     from fueling.perception.pointpillars.second.core.non_max_suppression.nms import (
@@ -23,6 +23,7 @@ except BaseException:
         non_max_suppression)
 '''
 
+
 def nms_gpu_cc(dets, nms_overlap_thresh, device_id=0):
     boxes_num = dets.shape[0]
     keep = np.zeros(boxes_num, dtype=np.int32)
@@ -33,7 +34,6 @@ def nms_gpu_cc(dets, nms_overlap_thresh, device_id=0):
                                   device_id)
     keep = keep[:num_out]
     return list(order[keep])
-
 
 
 def rotate_iou_gpu_eval(boxes, query_boxes, criterion=-1, device_id=0):

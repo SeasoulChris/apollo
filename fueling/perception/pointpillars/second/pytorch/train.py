@@ -673,6 +673,7 @@ def mcnms_parameters_search(config_path,
 
 if __name__ == '__main__':
 
-    config_path = "/fuel/fueling/perception/pointpillars/second/configs/nuscenes/all.pp.mhead.config"
+    config_path = "/fuel/fueling/perception/pointpillars/second/configs/nuscenes/"\
+                  "all.pp.mhead.config"
     model_dir = "/fuel/fueling/perception/pointpillars/second/temp"
     train(config_path, model_dir)
