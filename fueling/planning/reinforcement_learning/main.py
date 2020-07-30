@@ -5,12 +5,13 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 import numpy as np
 
 from fueling.learning.network_utils import generate_lstm
 from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.reinforcement_learning.environment import *
-from fueling.planning.reinforcement_learning.rl import *
+from fueling.planning.reinforcement_learning.rl_algorithm import *
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,7 +44,8 @@ class OUNoise(object):
 
     def evolve_state(self):
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(self.action_dim)
+        dx = self.theta * (self.mu - x) + self.sigma * \
+            np.random.randn(self.action_dim)
         self.state = x + dx
         return self.state
 
@@ -107,7 +109,8 @@ class RLNetwork(nn.Module):
         )
 
         # the following layers belong to the value network branch
-        self.valuenet_fc1_layer = nn.Linear(self.cnn_out_size + num_actions, hidden_size)
+        self.valuenet_fc1_layer = nn.Linear(
+            self.cnn_out_size + num_actions, hidden_size)
         self.valuenet_fc2_layer = nn.Linear(hidden_size, hidden_size)
         self.valuenet_fc3_layer = nn.Linear(hidden_size, 1)
 
@@ -165,7 +168,8 @@ def main():
     hidden_size = 128
 
     env = ADSEnv(history_len=history_len, hidden_size=hidden_size)
-    rl = DDPG(history_len, pred_horizon, hidden_size=hidden_size)  # initiate the RL framework
+    # initiate the RL framework
+    rl = DDPG(history_len, pred_horizon, hidden_size=hidden_size)
 
     for i_episode in range(1000):
         state, hidden = env.reset()
@@ -178,7 +182,8 @@ def main():
             next_state, reward, done, info = env.step(action)
 
             # store transition experience into replay buffer
-            rl.replay_buffer.store(state, hidden, action, reward, next_state, next_hidden, done)
+            rl.replay_buffer.store(state, hidden, action,
+                                   reward, next_state, next_hidden, done)
 
             # learning
             rl.learn()

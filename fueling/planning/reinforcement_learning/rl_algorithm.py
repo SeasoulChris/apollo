@@ -44,13 +44,15 @@ class DDPG(object):
         done = torch.FloatTensor(np.float32(done)).unsqueeze(1).to(device)
 
         pred_traj, _, _ = self.rl_net(state, rl=True, hidden=hidden)
-        _, _, policy_loss = self.rl_net(state, rl=True, action=pred_traj[:, 0, :])
+        _, _, policy_loss = self.rl_net(
+            state, rl=True, action=pred_traj[:, 0, :])
         policy_loss = -policy_loss.mean()
 
         next_pred_traj, _, _ = self.target_net(
             next_state, rl=True, hidden=next_hidden)
         next_action = next_pred_traj[:, 0, :]
-        _, _, target_value = self.target_net(next_state, rl=True, action=next_action.detach())
+        _, _, target_value = self.target_net(
+            next_state, rl=True, action=next_action.detach())
         expected_value = reward + (1.0 - done) * gamma * target_value
         expected_value = torch.clamp(expected_value, min_value, max_value)
 
@@ -129,13 +131,16 @@ class TD3(object):
         next_pred_traj, _, _ = self.target_net1(
             next_state, rl=True, hidden=next_hidden)
         next_action = next_pred_traj[:, 0, :]
-        noise = torch.normal(torch.zeros(next_action.size()), noise_std).to(device)
+        noise = torch.normal(torch.zeros(
+            next_action.size()), noise_std).to(device)
         noise = torch.clamp(noise, -noise_clip, noise_clip)
         next_action += noise
 
         # clipped double-Q learning
-        _, _, target_value1 = self.target_net1(next_state, rl=True, action=next_action.detach())
-        _, _, target_value2 = self.target_net2(next_state, rl=True, action=next_action.detach())
+        _, _, target_value1 = self.target_net1(
+            next_state, rl=True, action=next_action.detach())
+        _, _, target_value2 = self.target_net2(
+            next_state, rl=True, action=next_action.detach())
         target_value = torch.min(target_value1, target_value2)
         expected_value = reward + (1.0 - done) * gamma * target_value
 
@@ -155,7 +160,8 @@ class TD3(object):
         # delayed update
         if self.learn_step_counter % policy_update == 0:
             pred_traj, _, _ = self.rl_net1(state, rl=True, hidden=hidden)
-            _, _, policy_loss = self.rl_net1(state, rl=True, action=pred_traj[:, 0, :])
+            _, _, policy_loss = self.rl_net1(
+                state, rl=True, action=pred_traj[:, 0, :])
             policy_loss = -policy_loss.mean()
 
             self.optimizer1.zero_grad()
@@ -169,7 +175,8 @@ class TD3(object):
 
     def soft_update(self, net, target_net, soft_tau=1e-2):
         for target_param, param in zip(target_net.parameters(), net.parameters()):
-            target_param.data.copy_(target_param.data * (1.0 - soft_tau) + param.data * soft_tau)
+            target_param.data.copy_(
+                target_param.data * (1.0 - soft_tau) + param.data * soft_tau)
 
     def save(self, filename):
         """save model"""
@@ -182,9 +189,11 @@ class TD3(object):
     def load(self):
         """load model"""
         self.rl_net1.load_state_dict(torch.load(filename + "_net1.pt"))
-        self.optimizer1.load_state_dict(torch.load(filename + "_optimizer1.pt"))
+        self.optimizer1.load_state_dict(
+            torch.load(filename + "_optimizer1.pt"))
         self.target_net1 = copy.deepcopy(self.rl_net1)
 
         self.rl_net2.load_state_dict(torch.load(filename + "_net2.pt"))
-        self.optimizer2.load_state_dict(torch.load(filename + "_optimizer2.pt"))
+        self.optimizer2.load_state_dict(
+            torch.load(filename + "_optimizer2.pt"))
         self.target_net2 = copy.deepcopy(self.rl_net2)

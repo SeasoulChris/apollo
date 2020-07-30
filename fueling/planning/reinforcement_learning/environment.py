@@ -2,33 +2,41 @@
 
 import threading
 import math
+import time
 
 import keyboard
 import numpy as np
 from torchvision import transforms
 
 from cyber.python.cyber_py3 import cyber, cyber_time
-from modules.planning.proto import learning_data_pb2
-from modules.planning.proto import planning_pb2
+from modules.canbus.proto import chassis_pb2
+from modules.planning.proto import learning_data_pb2, planning_pb2
 
 from fueling.common.coord_utils import CoordUtils
 import fueling.common.logging as logging
+from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
-from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
 
 
 class ADSEnv(object):
     def __init__(self, history_len=10, hidden_size=128,
+                 regions_list=['sunnyvale'],
                  renderer_config_file='/fuel/fueling/planning/input_feature_preprocessor'
                  '/planning_semantic_map_config.pb.txt',
-                 region='sunnyvale_with_two_offices',
                  base_map_img_dir='/fuel/testdata/planning/semantic_map_features',
-                 map_data_path="/apollo/modules/map/data/sunnyvale_with_two_officesbase_map.bin"):
-        self.birdview_feature_renderer = ChauffeurNetFeatureGenerator(renderer_config_file,
+                 base_map_data_dir='/apollo/modules/map/data',
+                 is_base_map_img_rendered=False):
+        self.birdview_feature_renderer = ChauffeurNetFeatureGenerator(regions_list,
+                                                                      renderer_config_file,
                                                                       base_map_img_dir,
-                                                                      region, map_data_path)
+                                                                      base_map_data_dir)
+        if not is_base_map_img_rendered:
+            ChauffeurNetFeatureGenerator.draw_base_map(regions_list,
+                                                       renderer_config_file,
+                                                       base_map_img_dir,
+                                                       base_map_data_dir)
         self.img_transform = transforms.Compose([
             transforms.ToTensor(),
             # 12 channels is used
@@ -37,6 +45,7 @@ class ADSEnv(object):
                                  std=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
                                       0.5, 0.5, 0.5, 0.5, 0.5, 0.5])])
         self.birdview_feature_input = None
+        self.history_len = history_len
 
         self.hidden = generate_lstm_states()
         self.delta_t = 0.2
@@ -53,13 +62,15 @@ class ADSEnv(object):
 
         cyber.init()
         self.rl_node = cyber.Node("rl_node")
-        gradingsub = self.rl_node.create_reader("/apollo/grading",
-                                                grading_result.FrameResult, self.callback_grading)
-        chassissub = self.rl_node.create_reader("/apollo/canbus/chassis",
-                                                chassis.Chassis, self.callback_chassis)
-        learning_data_sub = self.rl_node.create_reader(
+        self.gradingsub = self.rl_node.create_reader("/apollo/grading",
+                                                     grading_result.FrameResult,
+                                                     self.callback_grading)
+        self.chassissub = self.rl_node.create_reader("/apollo/canbus/chassis",
+                                                     chassis_pb2.Chassis,
+                                                     self.callback_chassis)
+        self.learning_data_sub = self.rl_node.create_reader(
             "/apollo/planning/learning_data",
-            learning_data_pb2.LearningData,
+            learning_data_pb2.PlanningLearningData,
             self.callback_learning_data)
 
     def step(self, action):
@@ -197,12 +208,14 @@ class ADSEnv(object):
         self.speed = entity.speed_mps
 
     def callback_learning_data(self, entity):
-        frames_num = len(entity.learning_data.learning_data)
+        logging.info('PlanningLearningData message received at time {}'
+                     .format(entity.header.timestamp_sec))
+        frames_num = len(entity.learning_data.learning_data_frame)
         if frames_num != 1:
             logging.info(
                 "learning_data_frame's size is {}, not accepted by renderer".format(frames_num))
 
-        frame = entity.learning_data.learning_data[0]
+        frame = entity.learning_data.learning_data_frame[0]
         current_path_point = frame.adc_trajectory_point[-1].trajectory_point.path_point
         current_x = current_path_point.x
         current_y = current_path_point.y

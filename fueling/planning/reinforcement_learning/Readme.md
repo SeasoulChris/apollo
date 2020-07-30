@@ -9,8 +9,8 @@ The `main.py` includes:
 * the RLNetwork is a two-headed network including both the policy network and the target network
 * the main training loop 
 
-## rl
-The `rl.py` has RL algorithms, including:
+## rl_algorithm
+The `rl_algorithm.py` has RL algorithms, including:
 * DDPG
 
 ## environment
