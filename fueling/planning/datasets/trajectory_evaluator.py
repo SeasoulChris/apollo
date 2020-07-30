@@ -13,37 +13,27 @@ class TrajectoryEvaluator(BasePipeline):
             'modules/planning/output_data/',
         ]
 
-    def run_test(self):
-        """Run Test"""
-        self.src_dir_prefixs = [
-            '/fuel/data/output_data/test/',
-        ]
-
-        src_dirs_set = set([])
-        for prefix in self.src_dir_prefixs:
-            for root, dirs, files in os.walk(prefix):
-                for file in files:
-                    src_dirs_set.add(root)
-
-        processed_dirs = self.to_rdd(src_dirs_set).map(self.process_dir)
-
-        logging.info('Processed {}/{} folders'.format(processed_dirs.count(),
-                                                      len(src_dirs_set)))
-        return 0
-
     def run(self):
-        """Run"""
-        records_rdd = BasePipeline.SPARK_CONTEXT.union([
-            self.to_rdd(self.our_storage().list_files(prefix))
-                .map(os.path.dirname)
-                .distinct()
-            for prefix in self.src_dir_prefixs])
+        if self.is_local():
+            self.src_dir_prefixs = [
+                '/fuel/data/output_data',
+            ]
 
-        processed_dirs = records_rdd.map(self.process_dir)
+        for prefix in self.src_dir_prefixs:
+            self.run_internal(prefix)
+
+    def run_internal(self, src_dir_prefix):
+        data_dir_rdd = (
+            self.to_rdd(self.our_storage().list_files(src_dir_prefix))
+                .map(os.path.dirname)
+                .distinct())
+
+        processed_dirs = data_dir_rdd.map(
+            lambda src_dir: self.process_dir(src_dir_prefix, src_dir))
 
         logging.info('Processed {} folders'.format(processed_dirs.count()))
 
-    def process_dir(self, src_dir):
+    def process_dir(self, src_dir_prefix, src_dir):
         """ Process files """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
@@ -52,12 +42,17 @@ class TrajectoryEvaluator(BasePipeline):
         if ('output_data_evaluated' in dest_dir_elements):
             dest_dir = "/".join(dest_dir_elements)
         else:
-            dest_dir = "/".join(src_dir_elements)
+            dest_dir_elements = src_dir_prefix.split("/")
+            while (dest_dir_elements[-1] == ''):
+                dest_dir_elements.pop()
+            dest_dir_elements[-1] += '_output_data_evaluated'
+            prefix_len = len(dest_dir_elements)
+            dest_dir_elements.extend(src_dir_elements[prefix_len:])
+            dest_dir = "/".join(dest_dir_elements)
 
         file_utils.makedirs(dest_dir)
 
         """Call planning C++ code."""
-        map_name = "sunnyvale_with_two_offices"
         command = (
             'cd /apollo && bash '
             'modules/tools/planning/data_pipelines/scripts/'

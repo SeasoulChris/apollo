@@ -16,36 +16,28 @@ class LearningDataGenerator(BasePipeline):
             'modules/planning/cleaned_data/',
         ]
 
-    def run_test(self):
-        """Run Test"""
-        self.src_dir_prefixs = [
-            '/fuel/data/cleaned_data/test/',
-        ]
-
-        src_dirs_set = set([])
-        for prefix in self.src_dir_prefixs:
-            for root, dirs, files in os.walk(prefix):
-                for file in files:
-                    src_dirs_set.add(root)
-
-        processed_dirs = self.to_rdd(src_dirs_set).map(self.process_dir)
-        logging.info('Processed {}/{} folders'.format(processed_dirs.count(),
-                                                      len(src_dirs_set)))
-        return 0
-
     def run(self):
-        """Run"""
-        records_rdd = BasePipeline.SPARK_CONTEXT.union([
-            self.to_rdd(self.our_storage().list_files(prefix))
+        if self.is_local():
+            self.src_dir_prefixs = [
+                '/fuel/data/cleaned_data/',
+            ]
+
+        for prefix in self.src_dir_prefixs:
+            self.run_internal(prefix)
+
+    def run_internal(self, src_dir_prefix):
+        data_dir_rdd = (
+            self.to_rdd(self.our_storage().list_files(src_dir_prefix))
                 .filter(record_utils.is_record_file)
                 .map(os.path.dirname)
-                .distinct()
-            for prefix in self.src_dir_prefixs])
+                .distinct())
 
-        processed_dirs = records_rdd.map(self.process_dir)
+        processed_dirs = data_dir_rdd.map(
+            lambda src_dir: self.process_dir(src_dir_prefix, src_dir))
+
         logging.info('Processed {} folders'.format(processed_dirs.count()))
 
-    def process_dir(self, src_dir):
+    def process_dir(self, src_dir_prefix, src_dir):
         """ Process Records """
         src_dir_elements = src_dir.split("/")
         # timestamp = [ i for i in src_dir_elements if i.startswith('ver_') ]
@@ -54,7 +46,13 @@ class LearningDataGenerator(BasePipeline):
         if ('learning_data' in dest_dir_elements):
             dest_dir = "/".join(dest_dir_elements)
         else:
-            dest_dir = "/".join(src_dir_elements)
+            dest_dir_elements = src_dir_prefix.split("/")
+            while (dest_dir_elements[-1] == ''):
+                dest_dir_elements.pop()
+            dest_dir_elements[-1] += '_learning_data'
+            prefix_len = len(dest_dir_elements)
+            dest_dir_elements.extend(src_dir_elements[prefix_len:])
+            dest_dir = "/".join(dest_dir_elements)
 
         map_name = "sunnyvale_with_two_offices"
         if ('san_mateo' in dest_dir_elements):

@@ -15,12 +15,13 @@ class PostProcessor(BasePipeline):
     def run(self):
         if self.is_local():
             # for Titan
-            self.src_dir_prefix = 'data/output_data_evaluated'
+            self.src_dir_prefix = '/fuel/data/output_data_evaluated'
             # self.src_dir_prefix = 'titan'
-            for data_folder in os.listdir(self.our_storage().abs_path(self.src_dir_prefix)):
-                src_dir_prefix = os.path.join(self.src_dir_prefix, data_folder)
-                logging.info(f'processing data folder {src_dir_prefix}')
-                self.run_internal(src_dir_prefix)
+            # for data_folder in os.listdir(self.our_storage().abs_path(self.src_dir_prefix)):
+            #    src_dir_prefix = os.path.join(self.src_dir_prefix, data_folder)
+            #    logging.info(f'processing data folder {src_dir_prefix}')
+            #    self.run_internal(src_dir_prefix)
+            self.run_internal(self.src_dir_prefix)
         else:
             self.src_dir_prefix = 'modules/planning/output_data_evaluated'
             self.run_internal(self.src_dir_prefix)
@@ -44,7 +45,7 @@ class PostProcessor(BasePipeline):
         # PairedRDD((dst_file_path, origin_file_name), data_frame)
         tag_data_frames = (
             tag_data_frames.map(
-                lambda elem: self._tagged_folder(elem)))
+                lambda elem: self._tagged_folder(self.src_dir_prefix, elem)))
         logging.debug(tag_data_frames.keys().first())
 
         # write single_frame to each bin to reduce memory usage
@@ -126,7 +127,7 @@ class PostProcessor(BasePipeline):
         return tag_data_frames
 
     @staticmethod
-    def _tagged_folder(dir_tag_data):
+    def _tagged_folder(src_dir_prefix, dir_tag_data):
         (file_path, origin_file_name), ((tag, tag_id), data) = dir_tag_data
         logging.debug("file_path: {}; origin_file_name: {}".format(file_path, origin_file_name))
         logging.debug("tag: {}; tag_id: {}".format(tag, tag_id))
@@ -144,9 +145,16 @@ class PostProcessor(BasePipeline):
         if ('output_data_categorized' in dst_dir_elements):
             dst_dir = "/".join(dst_dir_elements)
         else:
-            dst_dir = "/".join(src_dir_elements)
+            dst_dir_elements = src_dir_prefix.split("/")
+            while (dst_dir_elements[-1] == ''):
+                dst_dir_elements.pop()
+            dst_dir_elements[-1] += '_output_data_categorized'
+            prefix_len = len(dst_dir_elements)
+            dst_dir_elements.extend(src_dir_elements[prefix_len:])
+            dst_dir_elements.append(tag)
+            dst_dir_elements.append(tag_id)
+            dst_dir = "/".join(dst_dir_elements)
 
-        logging.debug("dst_dir: {}".format(dst_dir))
         return ((dst_dir, origin_file_name), data)
 
 
