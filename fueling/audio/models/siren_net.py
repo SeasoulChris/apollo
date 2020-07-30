@@ -206,17 +206,17 @@ class SirenNet(nn.Module):
 
 class SirenNetLoss():
     def loss_fn(self, y_pred, y_true):
+        eps = 1e-8
         true_label = y_true.topk(1)[1].view(-1)
-        loss_func = nn.CrossEntropyLoss()
-        return loss_func(y_pred, true_label)
+        loss_func = nn.NLLLoss()
+        return loss_func(torch.log(y_pred + eps), true_label)
 
     def loss_info(self, y_pred, y_true):
         y_pred = y_pred.cpu()
         y_true = y_true.cpu()
         pred_label = y_pred.topk(1)[1]
         true_label = y_true.topk(1)[1]
-        accuracy = (pred_label == true_label).type(torch.float).mean().item()
-        print("Accuracy is {:.3f} %".format(100 * accuracy))
+        accuracy = (pred_label == true_label).type(torch.float).mean()
         return accuracy
 
 
