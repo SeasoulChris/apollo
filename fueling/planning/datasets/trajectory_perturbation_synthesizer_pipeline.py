@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import argparse
 import os
 import shutil
 import time
 
+from absl import flags
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,25 +17,17 @@ import fueling.common.proto_utils as proto_utils
 from fueling.planning.datasets.trajectory_perturbation_synthesizer \
     import TrajectoryPerturbationSynthesizer
 
+flags.DEFINE_string('src_dir', None, 'data to be synthesized source folder')
+flags.DEFINE_string('output_dir', None, 'output data folder')
+flags.DEFINE_integer('max_past_history_len', 10,
+                     'points num in the past to be synthesized')
+flags.DEFINE_integer('max_future_history_len', 10,
+                     'points num in the future to be synthesized')
+flags.DEFINE_bool('is_dumping_txt', False, 'whether dump pb txt for debug')
+flags.DEFINE_bool('is_dumping_img', False, 'whether dump imgs for debug')
+
 
 class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
-
-    def __init__(self, src_dir, output_dir):
-        self.src_dir = src_dir
-        self.output_dir = output_dir
-        self.synthesizer = TrajectoryPerturbationSynthesizer()
-        self.max_past_history_len = 10
-        self.max_future_history_len = 10
-        self.is_dumping_txt = False
-        self.is_dumping_img = False
-
-        # Make output_dir
-        if os.path.isdir(self.output_dir):
-            logging.info(self.output_dir
-                         + " directory exists, delete it!")
-            shutil.rmtree(self.output_dir)
-        os.mkdir(self.output_dir)
-        logging.info("Making output directory: " + self.output_dir)
 
     def visualize_processed_frame(self, frame_file_path, past_trajectory, future_trajectory,
                                   perturbated_past_trajectory, perturbated_future_trajectory):
@@ -84,8 +76,21 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             future_trajectory[i, 1] = path_point.y
             future_trajectory[i, 2] = path_point.theta
 
+        perturbate_xy_range = self.FLAGS.get('perturbate_xy_range')
+        perturbate_heading_range = self.FLAGS.get(
+            'perturbate_heading_range')
+        ref_cost = self.FLAGS.get('ref_cost')
+        elastic_band_smoothing_cost = self.FLAGS.get(
+            'elastic_band_smoothing_cost')
+        max_curvature = self.FLAGS.get('max_curvature')
+
+        synthesizer = TrajectoryPerturbationSynthesizer(perturbate_xy_range,
+                                                        perturbate_heading_range,
+                                                        ref_cost,
+                                                        elastic_band_smoothing_cost,
+                                                        max_curvature)
         is_valid, perturbated_past_trajectory, perturbated_future_trajectory = \
-            self.synthesizer.synthesize_perturbation(
+            synthesizer.synthesize_perturbation(
                 past_trajectory, future_trajectory)
 
         if not is_valid:
@@ -107,7 +112,8 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
             path_point.theta = perturbated_future_trajectory[i, 2]
 
         file_name = os.path.basename(frame_file_path)
-        output_file_name = os.path.join(self.output_dir, file_name + '.synthesized.bin')
+        output_file_name = os.path.join(
+            self.output_dir, file_name + '.synthesized.bin')
         proto_utils.write_pb_to_bin_file(frame, output_file_name)
 
         if self.is_dumping_txt:
@@ -124,21 +130,22 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
 
         return output_file_name
 
-    def run_sequential(self):
-        '''
-        a process sequentially deal with .bin in LearningDataFrame
-        '''
-        start_time = time.time()
-        logging.info('Processing directory: {}'.format(self.src_dir))
-        all_file_paths = file_utils.list_files(self.src_dir)
-
-        for file_path in all_file_paths:
-            if 'future_status' not in file_path or 'bin' not in file_path:
-                continue
-            self.process_frame(file_path)
-        logging.info('time spent is {}'.format(time.time() - start_time))
-
     def run(self):
+        self.src_dir = self.FLAGS.get('src_dir')
+        self.output_dir = self.FLAGS.get('output_dir')
+        self.max_past_history_len = self.FLAGS.get('max_past_history_len')
+        self.max_future_history_len = self.FLAGS.get('max_future_history_len')
+        self.is_dumping_txt = self.FLAGS.get('is_dumping_txt')
+        self.is_dumping_img = self.FLAGS.get('is_dumping_img')
+
+        # Make output_dir
+        if os.path.isdir(self.output_dir):
+            logging.info(self.output_dir
+                         + " directory exists, delete it!")
+            shutil.rmtree(self.output_dir)
+        os.mkdir(self.output_dir)
+        logging.info("Making output directory: " + self.output_dir)
+
         start_time = time.time()
         logging.info('Processing directory: {}'.format(self.src_dir))
         all_file_paths = file_utils.list_files(self.src_dir)
@@ -156,16 +163,4 @@ class TrajectoryPerturbationSynthesizerPipeline(BasePipeline):
 
 
 if __name__ == "__main__":
-    # TODO(Jinyun): use absl flag
-    parser = argparse.ArgumentParser(description='source folder')
-    parser.add_argument('src_dir', type=str,
-                        help='data to be synthesized source folder')
-    parser.add_argument('output_dir', type=str,
-                        help='data to be synthesized source folder')
-    args = parser.parse_args()
-
-    synthesizer_pipeline = TrajectoryPerturbationSynthesizerPipeline(
-        args.src_dir, args.output_dir)
-
-    # synthesizer_pipeline.run_sequential()
-    synthesizer_pipeline.main()
+    TrajectoryPerturbationSynthesizerPipeline().main()

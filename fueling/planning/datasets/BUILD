@@ -122,9 +122,12 @@ py_binary(
     ],
 )
 
-py_binary(
+py_library(
     name = "trajectory_perturbation_synthesizer",
     srcs = ["trajectory_perturbation_synthesizer.py"],
+    deps = [
+        "//fueling/common:logging",
+    ],
 )
 
 py_binary(
