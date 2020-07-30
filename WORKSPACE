@@ -83,7 +83,7 @@ grpc_extra_deps()
 http_archive(
     name = "planning_analytics",
     url = "file:///fuel/deps/libs/planning_analytics.zip",
-    sha256 = "45210cf13c97bfcba1c38e8951d8d7fd0e4af4f8757c0c33160a24dc77e9f7de",
+    sha256 = "53e35a169a1e4b1feae0b2f10d9f3fb12b9dcf28be3111d5e5d0720fb02bf1d8",
     build_file = "planning_analytics.BUILD",
     strip_prefix = "planning_analytics",
 )

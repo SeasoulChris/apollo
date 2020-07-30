@@ -74,9 +74,14 @@ class DataConverter(BasePipeline):
 
         task_files = []
         with open(task_list_file, 'r') as f:
-            for day_task_folder in f:
+            for task_desc in f:
+                day_task_folder = task_desc.split(" ")[0]
+                task_filter = task_desc.split(" ")[1]
                 files = self.our_storage().list_files(day_task_folder)
                 for file in files:
+                    record_task = file.split(os.sep)[-2]
+                    if task_filter not in record_task:
+                        continue
                     if record_utils.is_record_file(file):
                         task_files.append(file)
 
