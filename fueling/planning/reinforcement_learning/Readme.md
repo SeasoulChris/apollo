@@ -12,6 +12,7 @@ The `main.py` includes:
 ## rl_algorithm
 The `rl_algorithm.py` has RL algorithms, including:
 * DDPG
+* TD3
 
 ## environment
 The `environment.py` defines an interactive simulator with the openAI gym interface. 

@@ -28,10 +28,13 @@ py_library(
     srcs = ["environment.py"],
     deps = [
         ":rl_math_util",
+        ":grading_result_py_pb2",
         "//fueling/common:coord_utils",
         "//fueling/common:logging",
         "//fueling/learning:train_utils",
         "//fueling/planning/input_feature_preprocessor:chauffeur_net_feature_generator",
+        "@apollo//cyber/python/cyber_py3:cyber",
+        "@apollo//cyber/python/cyber_py3:cyber_time",
         "@apollo//modules/canbus/proto:chassis_py_pb2",
         "@apollo//modules/planning/proto:learning_data_py_pb2",
         "@apollo//modules/planning/proto:planning_semantic_map_config_py_pb2",

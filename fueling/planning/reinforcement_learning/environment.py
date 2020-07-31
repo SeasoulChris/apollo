@@ -18,6 +18,7 @@ from fueling.learning.network_utils import generate_lstm_states
 from fueling.planning.input_feature_preprocessor.chauffeur_net_feature_generator \
     import ChauffeurNetFeatureGenerator
 from fueling.planning.reinforcement_learning.rl_math_util import NormalizeAngle
+from fueling.planning.reinforcement_learning import grading_result_pb2
 
 
 class ADSEnv(object):
@@ -109,32 +110,33 @@ class ADSEnv(object):
             point_relative_time += self.delta_t
 
         accumulated_s = 0.0
-        for i in range(0, len(planning_message.trajectory_point)):
-            point = planning_message.trajectory_point[i]
-            nextpoint = planning_message.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
             accumulated_s += math.sqrt((nextpoint.x - point.x)
                                        ** 2 + (nextpoint.y - point.y) ** 2)
-        for i in range(0, len(planning_message.trajectory_point)):
+            point.s = accumulated_s
+        for i in range(0, len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i]
             nextpoint = planning_message.trajectory_point[i + 1]
             point.a = (nextpoint.v - point.v) / self.delta_t
-        for i in range(0, len(planning_message.trajectory_point)):
+        for i in range(0, len(planning_message.trajectory_point) - 1):
             point = planning_message.trajectory_point[i]
             nextpoint = planning_message.trajectory_point[i + 1]
             point.da = (nextpoint.a - point.a) / self.delta_t
-        for i in range(0, len(planning_message.trajectory_point)):
-            point = planning_message.trajectory_point[i]
-            nextpoint = planning_message.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.kappa = (nextpoint.theta - point.theta) / \
                 (nextpoint.s - point.s)
-        for i in range(0, len(planning_message.trajectory_point)):
-            point = planning_message.trajectory_point[i]
-            nextpoint = planning_message.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.dkappa = (nextpoint.kappa - point.kappa) / \
                 (nextpoint.s - point.s)
-        for i in range(0, len(planning_message.trajectory_point)):
-            point = planning_message.trajectory_point[i]
-            nextpoint = planning_message.trajectory_point[i + 1]
+        for i in range(0, len(planning_message.trajectory_point) - 1):
+            point = planning_message.trajectory_point[i].path_point
+            nextpoint = planning_message.trajectory_point[i + 1].path_point
             point.ddkappa = (nextpoint.dkappa - point.dkappa) / \
                 (nextpoint.s - point.s)
 
