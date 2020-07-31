@@ -136,7 +136,7 @@ def get_job_used(objs):
     """
     for obj in objs:
         services = obj.get("services")
-        job_filters = [{"$match": {"vehicle_sn": obj["vehicle_sn"]}},
+        job_filters = [{"$match": {"vehicle_sn": obj["vehicle_sn"], "is_valid": True}},
                        {"$group": {"_id": "$job_type", "count": {"$sum": 1}}}]
         job_type_counts = job.job_collection.aggregate(job_filters)
         job_counts_dict = {}
