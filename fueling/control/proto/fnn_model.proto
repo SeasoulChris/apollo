@@ -23,6 +23,11 @@ message Layer {
     optional ActivationFunc layer_activation_func = 5;
 }
 
+message StandardizeFactor {
+    optional Vector input_mean = 1;
+    optional Vector input_std = 2;
+}
+
 message FnnModel {
     optional int32 dim_input = 1;
     optional Vector input_feature_mean = 2;

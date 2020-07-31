@@ -18,7 +18,7 @@ import fueling.common.logging as logging
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
-
+from fueling.control.proto.fnn_model_pb2 import StandardizeFactor
 
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
@@ -56,6 +56,7 @@ class DynamicModelDataset(Dataset):
             self.normalization_factors_file = os.path.join(
                 self.data_dir, 'normalization_factors.npy')
             self.set_standardization_factors()
+            self.save_standardize_factors_to_bin()
             self.set_normalization_factors()
         else:
             # for validation and test data, use same normalization factors as training data set.
@@ -73,6 +74,18 @@ class DynamicModelDataset(Dataset):
             logging.info(
                 f'loading normalization factors from {self.normalization_factors_file}'
                 + f'as {self.normalization_factors}')
+
+    def save_standardize_factors_to_bin(self):
+        standardize_factor = StandardizeFactor()
+        standardize_factor.input_mean.columns.extend(
+            self.standardization_factor['mean'].reshape(-1).tolist())
+        standardize_factor.input_std.columns.extend(
+            self.standardization_factor['std'].reshape(-1).tolist())
+        standardization_factors_bin_file =  os.path.join(
+                self.data_dir, 'standardization_factors.bin')
+        with open(standardization_factors_bin_file, 'wb') as bin_file:
+            bin_file.write(standardize_factor.SerializeToString())
+
 
     def get_pre_normalization_factors(self):
         """ if the model is pre-normalized, get the normalization factor"""
