@@ -106,7 +106,7 @@ class ChauffeurNetFeatureGenerator(object):
         for region in regions_list:
             hd_map = map_pb2.Map()
             map_path = os.path.join(
-                base_map_data_dir, region + "/base_map.bin")
+                base_map_data_dir, region + "/sim_map.bin")
             try:
                 with open(map_path, 'rb') as file_in:
                     hd_map.ParseFromString(file_in.read())
