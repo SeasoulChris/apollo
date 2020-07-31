@@ -142,7 +142,6 @@ class WaveNet(nn.Module):
             ('dropout2', nn.Dropout(0.5)),
             ('relu', nn.ReLU()),
             ('output', nn.Linear(64, 2)),
-            ('softmax', nn.Softmax(dim=1)),
         ]))
 
     def forward(self, X):
@@ -170,7 +169,6 @@ class MLNet(nn.Module):
             ('dropout2', nn.Dropout(0.5)),
             ('relu', nn.ReLU()),
             ('output', nn.Linear(64, 2)),
-            ('softmax', nn.Softmax(dim=1)),
         ]))
 
     def forward(self, X):
@@ -189,22 +187,21 @@ class SirenNet(nn.Module):
                                                              hop_length=512, n_mels=64)
 
     def forward(self, X):
-        eps = 1e-8
+        eps = 1e-20
         wavenet_out = self.wavenet(X)
         mfcc_out = self.mfcc(X)
         log_mel_out = torch.log(self.mel_spec(X) + eps)
         spec_features = torch.cat([mfcc_out, log_mel_out], -2)
         mlnet_out = self.mlnet(spec_features)
-        out = (wavenet_out + mlnet_out) / 2.0
+        out = wavenet_out + mlnet_out
         return out
 
 
 class SirenNetLoss():
     def loss_fn(self, y_pred, y_true):
-        eps = 1e-8
         true_label = y_true.topk(1)[1].view(-1)
-        loss_func = nn.NLLLoss()
-        return loss_func(torch.log(y_pred + eps), true_label)
+        loss_func = nn.CrossEntropyLoss()
+        return loss_func(y_pred, true_label)
 
     def loss_info(self, y_pred, y_true):
         y_pred = y_pred.cpu()
