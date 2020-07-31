@@ -56,9 +56,16 @@ class BasePipeline(object):
     # Helper functions.
     def to_rdd(self, data):
         """Get an RDD of data."""
-        if BasePipeline.SPARK_CONTEXT is None:
+        context = BasePipeline.SPARK_CONTEXT
+        if context is None:
             logging.fatal('Pipeline not inited. Please run init() first.')
-        return BasePipeline.SPARK_CONTEXT.parallelize(data)
+        # If we got more than 100k elements, slice them to (100*N) partitions.
+        count = len(data)
+        slices = None
+        if count > 100000:
+            slices = count // context.defaultParallelism // 100
+            logging.info(F'Slice {count} elements to {slices} slices.')
+        return context.parallelize(data, slices)
 
     def is_test(self):
         return self.FLAGS.get('running_mode') == 'TEST'
