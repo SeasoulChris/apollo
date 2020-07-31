@@ -7,7 +7,7 @@ py_library(
     srcs = ["nms_cpu.py"],
     deps = [
         "//fueling/perception/pointpillars/second/core:box_np_ops",
-	"@perception_pointpillars",
+        "@perception_pointpillars",
     ],
 )
 
