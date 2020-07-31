@@ -12,11 +12,11 @@ dependencies:
   - conda-forge::bayesian-optimization = 1.1.0  # usage = 4
   - conda-forge::casadi = 3.5.2  # usage = 1
   - conda-forge::easydict = 1.9
-  - conda-forge::eventlet = 0.25.2
-  - conda-forge::flask-restful = 0.3.8  # usage = 3
+  - conda-forge::eventlet = 0.26.1
+  - conda-forge::flask-restful = 0.3.8  # usage = 6
   - conda-forge::gpytorch = 1.1.1  # usage = 22
   - conda-forge::librosa = 0.8.0  # usage = 5
-  - conda-forge::optuna = 1.5.0  # usage = 6
+  - conda-forge::optuna = 2.0.0  # usage = 6
   - conda-forge::opt-einsum = 3.1.0
   - conda-forge::progressbar = 2.5  # usage = 2
   - conda-forge::pybind11 = 2.5.0
@@ -24,7 +24,7 @@ dependencies:
   - conda-forge::pydub = 0.23.1  # usage = 2
   - conda-forge::python-kubernetes = 11.0.0  # usage = 1
   - conda-forge::pywavelets = 1.1.1
-  - flask = 1.1.2  # usage = 12
+  - flask = 1.1.2  # usage = 13
   - flask-socketio = 4.3.0  # usage = 1
   - graphviz = 0.14
   - gunicorn = 20.0.4  # usage = 2
@@ -34,21 +34,21 @@ dependencies:
   - matplotlib = 3.2.2  # usage = 81
   - mpld3 = 0.3  # usage = 1
   - numba = 0.50.1  # usage = 10
-  - numpy = 1.18.5  # usage = 202
+  - numpy = 1.18.5  # usage = 203
   - opencv = 4.2.0  # usage = 49
   - pillow = 7.2.0
   - pip = 20.1.1  # usage = 1
   - plotly::plotly = 4.9.0
   - plotly::plotly-orca = 1.3.1
-  - protobuf = 3.12.3  # usage = 24
+  - protobuf = 3.12.3  # usage = 512
   - psutil = 5.7.0  # usage = 2
   - pycodestyle = 2.6.0  # usage = 1
   - pyflakes = 2.2.0  # usage = 1
   - pymongo = 3.9.0  # usage = 2
   - pyproj = 2.6.1.post1  # usage = 5
-  - pytorch::pytorch = 1.5.1  # usage = 263
-  - pytorch::torchaudio = 0.5.1  # usage = 1
-  - pytorch::torchvision = 0.6.1  # usage = 33
+  - pytorch::pytorch = 1.6.0  # usage = 264
+  - pytorch::torchaudio = 0.6.0  # usage = 1
+  - pytorch::torchvision = 0.7.0  # usage = 34
   - pytz = 2020.1  # usage = 2
   - redis-py = 3.5.3  # usage = 1
   - requests = 2.24.0  # usage = 4
