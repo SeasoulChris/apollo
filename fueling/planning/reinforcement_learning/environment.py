@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import threading
 import math
 import time
 
@@ -64,7 +63,7 @@ class ADSEnv(object):
         cyber.init()
         self.rl_node = cyber.Node("rl_node")
         self.gradingsub = self.rl_node.create_reader("/apollo/grading",
-                                                     grading_result.FrameResult,
+                                                     grading_result_pb2.FrameResult,
                                                      self.callback_grading)
         self.chassissub = self.rl_node.create_reader("/apollo/canbus/chassis",
                                                      chassis_pb2.Chassis,

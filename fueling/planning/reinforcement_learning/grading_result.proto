@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+package apollo.simulation;
+
+import "modules/common/proto/header.proto";
+
+// Per scenario grading results
+message GradingResult {
+  optional bool is_scenario_pass = 1;
+  repeated MetricResult metric_result = 2;
+  repeated FrameResult frame_result = 3;
+}
+
+// Per metric grading result over time
+message MetricResult {
+  optional string name = 1;
+  optional string description = 2;
+  optional bool is_metric_pass = 3;
+
+  repeated DetailedResult detailed_result = 4;
+}
+
+message DetailedResult {
+  optional double timestamp = 1;  // in seconds, w.r.t start of the record bag
+  optional bool is_pass = 2;  // boolean grading result
+  optional DebugInfo debug = 3;
+  optional string name = 4;  // metric name
+  optional double score = 5;  // value to indicate grading result if cannot be measured by boolean
+}
+
+message DebugInfo {
+  repeated string obj_id = 1;
+  optional string description = 2;
+}
+
+// Per time frame grading result for all metrics
+message FrameResult {
+  optional apollo.common.Header header = 1;
+  repeated DetailedResult detailed_result = 2;
+}

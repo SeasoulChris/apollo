@@ -1,0 +1,16 @@
+{
+  "name": "Multiple ADC with Random Location",
+  "map_dir": "modules/map/data/san_mateo",
+  "adc": [
+    {
+      "id": 1,
+      "route_type": 1,
+      "component": {
+        "dag_type": 0
+      }
+    }
+  ],
+  "agent": [],
+  "base_grade_config_file": "grading_system/conf/grading_metrics_octopus.conf",
+  "simulator_time": 60
+}

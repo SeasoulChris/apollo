@@ -1,4 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@apollo//tools:python_rules.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -49,5 +51,21 @@ py_binary(
         ":rl_algorithm",
         ":environment",
         "//fueling/learning:train_utils",
+    ],
+)
+
+proto_library(
+    name = "grading_result_proto",
+    srcs = ["grading_result.proto"],
+    deps = [
+        "@apollo//modules/common/proto:header_proto",
+    ],
+)
+
+py_proto_library(
+    name = "grading_result_py_pb2",
+    deps = [
+        ":grading_result_proto",
+        "@apollo//modules/common/proto:header_py_pb2",
     ],
 )
