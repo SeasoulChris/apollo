@@ -9,6 +9,7 @@ import os, sys, math
 import argparse
 from collections import deque
 import datetime
+import time
 
 import cv2
 from tqdm import tqdm
@@ -422,7 +423,6 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_st
                                           scheduler.get_lr()[0] * config.batch))
 
                 pbar.update(images.shape[0])
-                break
 
             if config.use_darknet_cfg:
                 eval_model = Darknet(config.cfgfile, inference=True)
@@ -453,7 +453,7 @@ def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_st
             writer.add_scalar('train/AR_large', stats[11], global_step)
             
 
-            if epoch % save_cp_step == 0:
+            if (epoch % save_cp_step == 0) or (epochs - epoch < 3):
                 try:
                     # os.mkdir(config.checkpoints)
                     os.makedirs(config.checkpoints, exist_ok=True)
@@ -648,14 +648,26 @@ def train_yolov4(is_local=False):
         logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
         cfg = get_args(**Cfg)
 
+    """Run training task"""
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
+    logging.info(F'cuda available? {torch.cuda.is_available()}')
+    logging.info(F'cuda version: {torch.version.cuda}')
+    logging.info(F'gpu device count: {torch.cuda.device_count()}')
 
     if cfg.use_darknet_cfg:
         model = Darknet(cfg.cfgfile)
     else:
         model = Yolov4(cfg.pretrained, n_classes=cfg.classes)
+
+        #TODO, load checkpoints
+        '''
+        WORK_FOLDER = '/mnt/bos/modules/perception/emergency_detection'
+        weightfile = os.path.join(WORK_FOLDER, 'checkpoints/Yolov4_epoch291.pth')
+        pretrained_dict = torch.load(weightfile, map_location=torch.device('cuda'))
+        model.load_state_dict(pretrained_dict)
+        '''
 
     if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)

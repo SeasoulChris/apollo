@@ -27,8 +27,13 @@ def get_label_string(img, boxes, ev_label, class_names):
             max_area_id = i
             max_area = area
 
+    if ev_label == '1':
+        result_type = 2
+    else:
+        result_type = 5
+
     if max_area_id < 0:
-        return ''
+        return '',result_type
 
     box = boxes[max_area_id]
     x1 = np.clip(int((box[0] - box[2] / 2.0) * width), 0, width-1)
@@ -39,10 +44,22 @@ def get_label_string(img, boxes, ev_label, class_names):
     cls_id = box[6]
     cls_name = class_names[cls_id]
 
-    if ev_label == '1' and (cls_name == 'car' or cls_name == 'bus' or cls_name == 'truck'):
-        return str(x1)+','+str(y1)+','+str(x2)+','+str(y2)+',1'
+    if ev_label == '1':
+        if cls_id == 1:
+            result_type = 0
+        else:
+            result_type = 1
     else:
-        return str(x1)+','+str(y1)+','+str(x2)+','+str(y2)+',0'
+        if cls_id == 0:
+            result_type = 3
+        else:
+            result_type = 4
+
+
+    if ev_label == '1' and (cls_name == 'car' or cls_name == 'bus' or cls_name == 'truck'):
+        return str(x1)+','+str(y1)+','+str(x2)+','+str(y2)+',1', result_type
+    else:
+        return str(x1)+','+str(y1)+','+str(x2)+','+str(y2)+',0', result_type
 
 def inference_yolov4(is_local=False):
     import sys
@@ -73,7 +90,7 @@ def inference_yolov4(is_local=False):
             WORK_FOLDER = '/mnt/bos/modules/perception/emergency_detection'
 
         weightfile = os.path.join(WORK_FOLDER, 'pretrained_model/yolov4.pth')
-        #weightfile = os.path.join(WORK_FOLDER, 'checkpoints/Yolov4_epoch4.pth')
+        weightfile = os.path.join(WORK_FOLDER, 'checkpoints/Yolov4_epoch600.pth')
         #weightfile = 'pretrain_model/yolov4.pth'
         imgfile = os.path.join(WORK_FOLDER, 'data/dog.jpg')
         height = 320
@@ -105,13 +122,14 @@ def inference_yolov4(is_local=False):
     class_names = load_class_names(namesfile)
 
     #image_files = glob.glob(os.path.join(WORK_FOLDER, 'data/emergency_vehicle/images/*.jpg'))
-    csv_file = os.path.join(WORK_FOLDER, 'data/emergency_vehicle/train_val_test.csv')
+    csv_file = os.path.join(WORK_FOLDER, 'data/emergency_vehicle/val.csv')
     with open(csv_file) as f:
         gt_log = list(csv.reader(f, skipinitialspace=True, delimiter=',', quoting=csv.QUOTE_NONE))
 
-    output_file = os.path.join(WORK_FOLDER, 'data/emergency_vehicle/train_val_test.txt')
+    output_file = os.path.join(WORK_FOLDER, 'data/emergency_vehicle/tmp.txt')
     f = open(output_file, "w")
 
+    statistics_array = [0,0,0,0,0,0]
     row_id = 0
     for row in gt_log:
         img_file, ev_label = row
@@ -132,16 +150,31 @@ def inference_yolov4(is_local=False):
         boxes = do_detect(model, sized, 0.4, 0.6, use_cuda)
         #plot_boxes_cv2(img, boxes[0], img_path.replace('images', 'predictions'), class_names)
 
-        label_string = get_label_string(img, boxes[0], ev_label, class_names)
+        label_string, result_type = get_label_string(img, boxes[0], ev_label, class_names)
         row = img_file + ' ' + label_string + '\n'
         if label_string != '':
             f.write(row)
         row_id += 1
         print(row_id, '/', len(gt_log),': ', row)
 
+        statistics_array[result_type] += 1
+
         print('************************************************************************')
         
     f.close()
+    tot_ev = statistics_array[0]+statistics_array[1]+statistics_array[2]
+    if tot_ev == 0:
+        tot_ev = 1
+    print('total emergency vehicle ', tot_ev)
+    print('number of correct: ', statistics_array[0], '  wrong: ', statistics_array[1], '  unknown: ', statistics_array[2])
+    print('ratio of correct: ', statistics_array[0]/tot_ev, '  wrong: ', statistics_array[1]/tot_ev, '  unknown: ', statistics_array[2]/tot_ev)
+
+    tot_gv = statistics_array[3]+statistics_array[4]+statistics_array[5]
+    if tot_gv == 0:
+        tot_gv = 1
+    print('total general vehicle ', tot_gv)
+    print('number of correct: ', statistics_array[3], '  wrong: ', statistics_array[4], '  unknown: ', statistics_array[5])
+    print('ratio of correct: ', statistics_array[3]/tot_gv, '  wrong: ', statistics_array[4]/tot_gv, '  unknown: ', statistics_array[5]/tot_gv)
 
 if __name__ == "__main__":
     inference_yolov4(is_local=True)
