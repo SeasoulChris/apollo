@@ -75,6 +75,7 @@ class DataConverter(BasePipeline):
         task_files = []
         with open(task_list_file, 'r') as f:
             for task_desc in f:
+                task_desc = task_desc.replace("\n","")
                 day_task_folder = task_desc.split(" ")[0]
                 task_filter = task_desc.split(" ")[1]
                 files = self.our_storage().list_files(day_task_folder)
