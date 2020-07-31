@@ -46,7 +46,7 @@ dependencies:
   - pyflakes
   - pymongo
   - pyproj
-  - pytorch::pytorch
+  - pytorch::pytorch = 1.5.1
   - pytorch::torchaudio
   - pytorch::torchvision
   - pytz

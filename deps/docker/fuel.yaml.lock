@@ -46,9 +46,9 @@ dependencies:
   - pyflakes = 2.2.0  # usage = 1
   - pymongo = 3.9.0  # usage = 2
   - pyproj = 2.6.1.post1  # usage = 5
-  - pytorch::pytorch = 1.6.0  # usage = 264
-  - pytorch::torchaudio = 0.6.0  # usage = 1
-  - pytorch::torchvision = 0.7.0  # usage = 34
+  - pytorch::pytorch = 1.5.1  # usage = 264
+  - pytorch::torchaudio = 0.5.1  # usage = 1
+  - pytorch::torchvision = 0.6.1  # usage = 34
   - pytz = 2020.1  # usage = 2
   - redis-py = 3.5.3  # usage = 1
   - requests = 2.24.0  # usage = 4
