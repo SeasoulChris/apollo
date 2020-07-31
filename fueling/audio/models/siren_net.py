@@ -24,7 +24,7 @@ class Urbansound8K(object):
         self.signal_length = int(sample_rate * length)
         self.signal_stride = int(sample_rate * stride)
 
-    def label_file(self, filepath, dest_pos_dir, dest_neg_dir):
+    def label_file(self, filepath):
         label = 0
         if fnmatch(filepath, '*-8-*-*.wav'):
             label = 1
@@ -58,23 +58,18 @@ class Urbansound8K(object):
                 continue
             logging.info('--- Dealing with {} ---'.format(file))
             origin_dir = os.path.dirname(file)
-            dest_pos_dir = origin_dir.replace('audio', 'features/positive', 1)
-            dest_neg_dir = origin_dir.replace('audio', 'features/negative', 1)
-            os.makedirs(dest_pos_dir, exist_ok=True)
-            os.makedirs(dest_neg_dir, exist_ok=True)
-            features, label = self.label_file(file, dest_pos_dir, dest_neg_dir)
+            dest_dir = origin_dir.replace('audio', 'features', 1)
+            os.makedirs(dest_dir, exist_ok=True)
+            features, label = self.label_file(file)
             if features is None or label is None:
                 logging.info('Skip none data')
                 continue
-            dest_dir = None
             if label == 1:
                 pos_file_count += 1
                 pos_data_count += len(features)
-                dest_dir = dest_pos_dir
             else:
                 neg_file_count += 1
                 neg_data_count += len(features)
-                dest_dir = dest_neg_dir
             _, origin_file_name = os.path.split(file)
             dest_file_name = origin_file_name.replace('wav', 'npy', 1)
             np.save(os.path.join(dest_dir, dest_file_name), features)
