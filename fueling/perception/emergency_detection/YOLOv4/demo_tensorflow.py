@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.python.platform import gfile
 
 import cv2
-from fueling.perception.emergency_detection.tool.utils import post_processing, load_class_names, plot_boxes_cv2
+from fueling.perception.emergency_detection.YOLOv4.tool.utils import post_processing, load_class_names, plot_boxes_cv2
 
 
 def demo_tensorflow(tfpb_file="./weight/yolov4.pb", image_path=None, print_sensor_name=False):

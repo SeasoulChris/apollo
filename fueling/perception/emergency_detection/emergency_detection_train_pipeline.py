@@ -6,7 +6,7 @@ from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
 
-from fueling.perception.emergency_detection.train import train_yolov4
+from fueling.perception.emergency_detection.YOLOv4.train import train_yolov4
 
 class EmergencyVehicleDetector(BasePipeline):
     """Demo pipeline."""

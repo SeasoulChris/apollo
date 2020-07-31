@@ -22,13 +22,13 @@ from torch.nn import functional as F
 from tensorboardX import SummaryWriter
 from easydict import EasyDict as edict
 
-from fueling.perception.emergency_detection.dataset import Yolo_dataset
-from fueling.perception.emergency_detection.cfg import Cfg
-from fueling.perception.emergency_detection.models import Yolov4
-from fueling.perception.emergency_detection.tool.darknet2pytorch import Darknet
-from fueling.perception.emergency_detection.tool.tv_reference.utils import collate_fn as val_collate
-from fueling.perception.emergency_detection.tool.tv_reference.coco_utils import convert_to_coco_api
-from fueling.perception.emergency_detection.tool.tv_reference.coco_eval import CocoEvaluator
+from fueling.perception.emergency_detection.YOLOv4.dataset import Yolo_dataset
+from fueling.perception.emergency_detection.YOLOv4.cfg import Cfg
+from fueling.perception.emergency_detection.YOLOv4.models import Yolov4
+from fueling.perception.emergency_detection.YOLOv4.tool.darknet2pytorch import Darknet
+from fueling.perception.emergency_detection.YOLOv4.tool.tv_reference.utils import collate_fn as val_collate
+from fueling.perception.emergency_detection.YOLOv4.tool.tv_reference.coco_utils import convert_to_coco_api
+from fueling.perception.emergency_detection.YOLOv4.tool.tv_reference.coco_eval import CocoEvaluator
 
 
 

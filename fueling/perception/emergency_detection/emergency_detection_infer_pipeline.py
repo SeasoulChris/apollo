@@ -17,7 +17,7 @@ sys.path.append("/fuel")
 from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
-from fueling.perception.emergency_detection.inference import inference_yolov4
+from fueling.perception.emergency_detection.YOLOv4.inference import inference_yolov4
 
 
 

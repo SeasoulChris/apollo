@@ -1,5 +1,5 @@
 import torch
-from fueling.perception.emergency_detection.tool.torch_utils import convert2cpu
+from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import convert2cpu
 
 
 def parse_cfg(cfgfile):

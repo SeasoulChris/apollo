@@ -1,6 +1,6 @@
 import sys
 import torch
-from fueling.perception.emergency_detection.tool.darknet2pytorch import Darknet
+from fueling.perception.emergency_detection.YOLOv4.tool.darknet2pytorch import Darknet
 
 
 def transform_to_onnx(cfgfile, weightfile, batch_size=1):

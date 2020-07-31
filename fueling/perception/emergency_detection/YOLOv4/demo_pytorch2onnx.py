@@ -7,7 +7,7 @@ import cv2
 import onnxruntime
 import torch
 
-from fueling.perception.emergency_detection.tool.utils import *
+from fueling.perception.emergency_detection.YOLOv4.tool.utils import *
 from models import Yolov4
 from demo_darknet2onnx import detect
 

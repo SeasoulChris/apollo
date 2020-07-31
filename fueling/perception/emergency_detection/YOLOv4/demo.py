@@ -14,9 +14,9 @@
 # import time
 # from PIL import Image, ImageDraw
 # from models.tiny_yolo import TinyYoloNet
-from fueling.perception.emergency_detection.tool.utils import *
-from fueling.perception.emergency_detection.tool.torch_utils import *
-from fueling.perception.emergency_detection.tool.darknet2pytorch import Darknet
+from fueling.perception.emergency_detection.YOLOv4.tool.utils import *
+from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import *
+from fueling.perception.emergency_detection.YOLOv4.tool.darknet2pytorch import Darknet
 import argparse
 
 """hyper parameters"""

@@ -2,8 +2,8 @@ import sys
 import torch
 from torch import nn
 import torch.nn.functional as F
-from fueling.perception.emergency_detection.tool.torch_utils import *
-from fueling.perception.emergency_detection.tool.yolo_layer import YoloLayer
+from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import *
+from fueling.perception.emergency_detection.YOLOv4.tool.yolo_layer import YoloLayer
 
 
 class Mish(torch.nn.Module):

@@ -6,9 +6,9 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import cv2
-from fueling.perception.emergency_detection.models import *
-from fueling.perception.emergency_detection.tool.utils import load_class_names, plot_boxes_cv2
-from fueling.perception.emergency_detection.tool.torch_utils import do_detect
+from fueling.perception.emergency_detection.YOLOv4.models import *
+from fueling.perception.emergency_detection.YOLOv4.tool.utils import load_class_names, plot_boxes_cv2
+from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import do_detect
 
 
 def get_label_string(img, boxes, ev_label, class_names):

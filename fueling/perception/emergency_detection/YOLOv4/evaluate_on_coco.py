@@ -23,9 +23,9 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
 from cfg import Cfg
-from fueling.perception.emergency_detection.tool.darknet2pytorch import Darknet
-from fueling.perception.emergency_detection.tool.utils import load_class_names
-from fueling.perception.emergency_detection.tool.torch_utils import do_detect
+from fueling.perception.emergency_detection.YOLOv4.tool.darknet2pytorch import Darknet
+from fueling.perception.emergency_detection.YOLOv4.tool.utils import load_class_names
+from fueling.perception.emergency_detection.YOLOv4.tool.torch_utils import do_detect
 
 
 def get_class_name(cat):
