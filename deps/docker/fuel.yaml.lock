@@ -6,7 +6,7 @@ dependencies:
   # TODO: Breaks tensorflow 1.14.
   # - nvidia::cudatoolkit = 10.2  # Align with nvidia-docker base image.
 
-  - absl-py = 0.9.0  # usage = 86
+  - absl-py = 0.9.0  # usage = 88
   - ansi2html = 1.5.2  # usage = 1
   - boto3 = 1.14.12  # usage = 4
   - conda-forge::bayesian-optimization = 1.1.0  # usage = 4
@@ -34,7 +34,7 @@ dependencies:
   - matplotlib = 3.2.2  # usage = 81
   - mpld3 = 0.3  # usage = 1
   - numba = 0.50.1  # usage = 10
-  - numpy = 1.18.5  # usage = 203
+  - numpy = 1.19.1  # usage = 203
   - opencv = 4.2.0  # usage = 49
   - pillow = 7.2.0
   - pip = 20.1.1  # usage = 1
@@ -51,7 +51,7 @@ dependencies:
   - pytorch::torchvision = 0.6.1  # usage = 34
   - pytz = 2020.1  # usage = 2
   - redis-py = 3.5.3  # usage = 1
-  - requests = 2.24.0  # usage = 4
+  - requests = 2.24.0  # usage = 5
   - scikit-learn = 0.23.1  # usage = 22
   - scipy = 1.5.0  # usage = 32
   - seaborn = 0.10.1  # usage = 2

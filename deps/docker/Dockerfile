@@ -1,4 +1,4 @@
-FROM apolloauto/apollo:dev-x86_64-18.04-20200728_0723
+FROM apolloauto/apollo:dev-x86_64-18.04-20200729_1839
 
 ENV LD_LIBRARY_PATH=/usr/local/fast-rtps/lib
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
