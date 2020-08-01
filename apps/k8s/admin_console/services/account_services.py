@@ -13,10 +13,12 @@ class AccountServices(flask_restful.Resource):
         parse.add_argument("id", type=str, required=True, help="Id cannot be blank!")
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
-            return {"desc": "Don't find the account obj, please check the id", "result": {}}
+            return {"code": 400,
+                    "desc": "Don't find the account obj, please check the id",
+                    "result": {}}
         accounts_used = account.get_job_used(accounts)
         accounts_objs = account.stamp_account_time(accounts_used)
-        return {"desc": "success", "result": accounts_objs[0]}
+        return {"code": 200, "desc": "success", "result": accounts_objs[0]}
 
     def post(self):
         parse = reqparse.RequestParser()
@@ -54,14 +56,16 @@ class AccountServices(flask_restful.Resource):
         accounts = account.account_db.get_account_info({"_id": account_id})
         accounts_used = account.get_job_used(accounts)
         accounts_objs = account.stamp_account_time(accounts_used)
-        return {"desc": "success", "result": accounts_objs[0]}
+        return {"code": 200, "desc": "success", "result": accounts_objs[0]}
 
     def put(self, account_id):
         parse = reqparse.RequestParser()
         parse.add_argument("id", type=str, required=True, help="Id cannot be blank!")
         accounts = account.account_db.get_account_info({"_id": account_id})
         if not accounts:
-            return {"desc": "Don't find the account obj, please check the id", "result": {}}
+            return {"code": 400,
+                    "desc": "Don't find the account obj, please check the id",
+                    "result": {}}
         account_obj = accounts[0]
         if account_obj["status"] == "Rejected":
             parse.add_argument("com_name", type=str, required=True,
@@ -111,8 +115,10 @@ class AccountServices(flask_restful.Resource):
             account_dict.pop("id")
             account.account_db.update_account_msg(account_id, account_dict)
         else:
-            return {"desc": "The status is error, the data hasn't changed"}
+            return {"code": 400,
+                    "desc": "The status is error, the data hasn't changed",
+                    "result": {}}
         new_accounts = account.account_db.get_account_info({"_id": account_id})
         accounts_used = account.get_job_used(new_accounts)
         accounts_objs = account.stamp_account_time(accounts_used)
-        return {"desc": "success", "result": accounts_objs[0]}
+        return {"code": 200, "desc": "success", "result": accounts_objs[0]}

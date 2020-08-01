@@ -265,7 +265,8 @@ def stamp_account_time(objs):
             account_data["due_date"] = time_utils.get_datetime_timestamp(account_data["due_date"])
         if operations:
             for opt in operations:
-                opt["time"] = time_utils.get_datetime_stamp(opt["time"])
+                opt["time"] = time_utils.get_datetime_timestamp(opt["time"])
+                opt["email"] = "administrator"
                 try:
                     opt["action"]["due_date"] = time_utils.get_datetime_timestamp(
                         opt["action"]["due_date"])
