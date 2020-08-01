@@ -45,6 +45,9 @@ def format_job_for_services(objs):
         start_time = job_data.get("start_time")
         end_time = job_data.get("end_time")
         operations = job_data.get("operations")
+        failure_code = job_data.get("failure_code")
+        failure_detail = job_data.get("failure_detail")
+        failure_dic = {}
         if start_time:
             job_data["start_time"] = time_utils.get_datetime_timestamp(job_data["start_time"])
         if end_time:
@@ -57,6 +60,14 @@ def format_job_for_services(objs):
             for opt in operations:
                 opt["email"] = "Administrator"
                 opt["time"] = time_utils.get_datetime_timestamp(opt["time"])
+        if failure_detail:
+            failure_dic["detail"] = failure_detail
+            job_data.pop("failure_detail")
+        if failure_code:
+            failure_dic["code"] = failure_code
+            job_data.pop("failure_code")
+            job_data["failure"] = failure_dic
+
         jobs.append(job_data)
     return jobs
 

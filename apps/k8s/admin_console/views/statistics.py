@@ -35,7 +35,7 @@ def statistics():
     vehicle_sn = flask.request.args.get("vehicle_sn")
     aggregated_selected = flask.request.args.get("aggregated_selected")
 
-    find_filter = {}
+    filter_list = []
     labels = []
     weeks = []
     num_list = {}
@@ -46,14 +46,13 @@ def statistics():
     aggregated_filed = {}
     selc_aggregated = ""
 
-    find_filter["is_partner"] = True
     # find_filter["is_valid"] = True
-
     if vehicle_sn:
-        find_filter["vehicle_sn"] = vehicle_sn
+        filter_list.append({"vehicle_sn": vehicle_sn})
     else:
+        filter_list.append({"vehicle_sn": {'$exists': True}})
         for black_sn in black_list:
-            find_filter["vehicle_sn"] = {'$ne': black_sn}
+            filter_list.append({"vehicle_sn": {'$ne': black_sn}})
 
     if aggregated_selected:
         selc_aggregated = aggregated_by[aggregated_selected]
@@ -75,6 +74,7 @@ def statistics():
 
     aggregated_filed = show_aggregated_by
 
+    find_filter = {"$and": filter_list}
     logging.info(f"job_selected: {job_selected}")
     if time_selected:
         if time_selected not in time_field:

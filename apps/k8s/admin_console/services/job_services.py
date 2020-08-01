@@ -43,12 +43,17 @@ class JobService(flask_restful.Resource):
         current_page_obj, (index_start, index_end) = job.get_job_paginator(offset / limit + 1,
                                                                            total_num, limit)
         if res["code"] != 200:
-            return json.dumps(res)
+            result["code"] = 400
+            result["desc"] = "Cannot find any job logs,please check the vehicle_sn!"
+            result["total_num"] = 0
+            result["result"] = []
+            return result
         job_list = res["data"]["job_objs"][index_start: index_end]
 
+        result["code"] = 200
         result["desc"] = "success"
         result["total_num"] = total_num
         result["result"] = job_list
         logging.info(f"(index_start, index_end): {(index_start, index_end)}")
         logging.info(f"res_data: {job_list}")
-        return json.dumps(result)
+        return result
