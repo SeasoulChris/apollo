@@ -84,6 +84,42 @@ def rasterize_vehicle_box(box_center_x_idx, box_center_y_idx, box_heading,
                              abs_transformed_delta_y < half_box_width).float()
 
 
+def rasterize_vehicle_three_circles_guassian(front_center_x_idx, front_center_y_idx,
+                                             mid_center_x_idx, mid_center_y_idx,
+                                             rear_center_x_idx, rear_center_y_idx,
+                                             front_center_guassian,
+                                             mid_center_guassian,
+                                             rear_center_guassian,
+                                             theta,
+                                             sigma_x,
+                                             sigma_y,
+                                             idx_mesh):
+    a = torch.pow(torch.cos(theta), 2) / (2 * torch.pow(sigma_x, 2)) + \
+        torch.pow(torch.sin(theta), 2) / (2 * torch.pow(sigma_y, 2))
+    b = torch.sin(2 * theta) / (4 * torch.pow(sigma_x, 2)) + \
+        torch.sin(2 * theta) / (4 * torch.pow(sigma_y, 2))
+    c = torch.pow(torch.sin(theta), 2) / (2 * torch.pow(sigma_x, 2)) + \
+        torch.pow(torch.cos(theta), 2) / (2 * torch.pow(sigma_y, 2))
+    x_coords = idx_mesh[:, :, :, 1]
+    y_coords = idx_mesh[:, :, :, 0]
+    front_center_guassian = torch.exp(-(a * torch.pow((x_coords - front_center_x_idx), 2)
+                                        + 2 * b * (x_coords - front_center_x_idx)
+                                        * (y_coords - front_center_y_idx)
+                                        + c * torch.pow((y_coords - front_center_y_idx), 2)))
+
+    mid_center_guassian = torch.exp(-(a * torch.pow((x_coords - mid_center_x_idx), 2)
+                                      + 2 * b * (x_coords - mid_center_x_idx)
+                                      * (y_coords - mid_center_y_idx)
+                                      + c * torch.pow((y_coords - mid_center_y_idx), 2)))
+
+    rear_center_guassian = torch.exp(-(a * torch.pow((x_coords - rear_center_x_idx), 2)
+                                       + 2 * b * (x_coords - rear_center_x_idx)
+                                       * (y_coords - rear_center_y_idx)
+                                       + c * torch.pow((y_coords - rear_center_y_idx), 2)))
+    max_prob = 1.0010
+    return (front_center_guassian + mid_center_guassian + rear_center_guassian) / max_prob
+
+
 class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
     def __init__(self, history_len, pred_horizon, input_img_size, img_resolution,
                  initial_box_x_idx, initial_box_y_idx,
@@ -126,10 +162,14 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
         self.idx_mesh = torch.stack((x_mesh, y_mesh), dim=2)
         self.initial_box_x_idx = initial_box_x_idx
         self.initial_box_y_idx = initial_box_y_idx
-        self.half_box_length = (
+        half_box_length = (
             vehicle_front_edge_to_center + vehicle_back_edge_to_center) / 2
-        self.half_box_width = vehicle_width
-        self.center_shift_distance = self.half_box_length - vehicle_back_edge_to_center
+        self.center_shift_distance = half_box_length - vehicle_back_edge_to_center
+        self.front_shift_distance = half_box_length * 2 - 2 * vehicle_back_edge_to_center
+        # use geometry algorithm to subdifferentiably draw the box
+        # self.half_box_length = ( vehicle_front_edge_to_center
+        #                       + vehicle_back_edge_to_center) / 2
+        # self.half_box_width = vehicle_width
 
     def forward(self, X):
         img_feature, hist_points, hist_points_step, ego_rendering_heading = X
@@ -176,6 +216,7 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
         #         torch.cat((img_embedding, pred_traj[:, t, :]), dim=1)))
         #     pred_boxs = torch.cat((pred_boxs, pred_box.clone().view(
         #         batch_size, 1, 1, self.input_img_size_h, self.input_img_size_w)), dim=1)
+        # return pred_boxs[:, 1:, :, :, :], pred_traj[:, 1:, :]
 
         pred_boxs = torch.zeros(
             (batch_size, self.pred_horizon, 1,
@@ -201,21 +242,67 @@ class TrajectoryImitationCNNLSTMWithAuxilaryEvaluationNet(nn.Module):
             center_to_initial_box_x_delta = center_to_rear_x_delta + rear_to_initial_box_x_delta
             center_to_initial_box_y_delta = center_to_rear_y_delta + rear_to_initial_box_y_delta
 
-            box_center_x_idx = (
-                self.initial_box_x_idx + center_to_initial_box_x_delta // self.img_resolution)
-            box_center_y_idx = (
-                self.initial_box_y_idx + center_to_initial_box_y_delta // self.img_resolution)
+            rear_center_x_idx = (
+                self.initial_box_x_idx + torch.div(rear_to_initial_box_x_delta,
+                                                   self.img_resolution))
+            rear_center_y_idx = (
+                self.initial_box_x_idx + torch.div(rear_to_initial_box_y_delta,
+                                                   self.img_resolution))
 
-            pred_boxs[:, t, 0, :, :] = rasterize_vehicle_box(
-                box_center_x_idx,
-                box_center_y_idx,
-                box_heading,
-                self.half_box_length / self.img_resolution,
-                self.half_box_width / self.img_resolution,
+            box_center_x_idx = (
+                self.initial_box_x_idx + torch.div(center_to_initial_box_x_delta,
+                                                   self.img_resolution))
+            box_center_y_idx = (
+                self.initial_box_y_idx + torch.div(center_to_initial_box_y_delta,
+                                                   self.img_resolution))
+
+            center_to_front_x_delta = torch.cos(
+                box_heading) * self.front_shift_distance
+            center_to_front_y_delta = torch.sin(
+                box_heading) * self.front_shift_distance
+
+            front_to_initial_box_x_delta = center_to_front_x_delta + rear_to_initial_box_x_delta
+            front_to_initial_box_y_delta = center_to_front_y_delta + rear_to_initial_box_y_delta
+
+            front_center_x_idx = (
+                self.initial_box_x_idx + torch.div(front_to_initial_box_x_delta,
+                                                   self.img_resolution))
+            front_center_y_idx = (
+                self.initial_box_x_idx + torch.div(front_to_initial_box_y_delta,
+                                                   self.img_resolution))
+
+            front_center_guassian = torch.zeros(
+                (batch_size, 1, self.input_img_size_h, self.input_img_size_w),
+                requires_grad=True, device=img_feature.device)
+            mid_center_guassian = torch.zeros(
+                (batch_size, 1, self.input_img_size_h, self.input_img_size_w),
+                requires_grad=True, device=img_feature.device)
+            rear_center_guassian = torch.zeros(
+                (batch_size, 1, self.input_img_size_h, self.input_img_size_w),
+                requires_grad=True, device=img_feature.device)
+            theta = torch.Tensor([0.0]).to(img_feature.device)
+            sigma_x = torch.Tensor([1.8]).to(img_feature.device)
+            sigma_y = torch.Tensor([1.8]).to(img_feature.device)
+            pred_boxs[:, t, 0, :, :] = rasterize_vehicle_three_circles_guassian(
+                front_center_x_idx, front_center_y_idx,
+                box_center_x_idx, box_center_y_idx,
+                rear_center_x_idx, rear_center_y_idx,
+                front_center_guassian[:, 0, :, :],
+                mid_center_guassian[:, 0, :, :],
+                rear_center_guassian[:, 0, :, :],
+                theta,
+                sigma_x,
+                sigma_y,
                 idx_mesh)
 
-        # Using a fc layers to try to approximate the process of rasterization
-        # return pred_boxs[:, 1:, :, :, :], pred_traj[:, 1:, :]
+            # use geometry algorithm to subdifferentiably draw the box
+            # pred_boxs[:, t, 0, :, :] = rasterize_vehicle_box(
+            #     box_center_x_idx,
+            #     box_center_y_idx,
+            #     box_heading,
+            #     self.half_box_length / self.img_resolution,
+            #     self.half_box_width / self.img_resolution,
+            #     idx_mesh)
 
         return pred_boxs, pred_traj[:, 1:, :]
 
