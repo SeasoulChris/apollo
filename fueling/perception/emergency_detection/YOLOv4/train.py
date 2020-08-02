@@ -32,19 +32,6 @@ from fueling.perception.emergency_detection.YOLOv4.tool.tv_reference.coco_eval i
 
 
 
-from absl import flags
-flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
-flags.DEFINE_string('load', None, 'Load model from a .pth file')
-flags.DEFINE_integer('gpu_id', -1, 'GPU')
-flags.DEFINE_string('data_dir', None, 'dataset dir')
-flags.DEFINE_string('pretrained', None, 'pretrained yolov4.conv.137')
-flags.DEFINE_integer('classes', 80, 'number of classes')
-flags.DEFINE_string('train_label_path', 'train.txt', 'train label path')
-flags.DEFINE_string('optimizer', 'adam', 'training optimizer')
-flags.DEFINE_string('iou_type', 'iou', 'iou type (iou, giou, diou, ciou)')
-flags.DEFINE_integer('keep_checkpoint_max', 10, 'maximum number of checkpoints to keep. If set 0, all checkpoints will be kept')
-
-
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True, GIoU=False, DIoU=False, CIoU=False):
     """Calculate the Intersection of Unions (IoUs) between bounding boxes.
     IoU is calculated as a ratio of area of the intersection
@@ -296,7 +283,6 @@ def collate(batch):
 
 
 def train(model, device, config, epochs=5, batch_size=1, save_cp_step=10, log_step=1, img_scale=0.5):
-    print(config)
     train_dataset = Yolo_dataset(config.train_label, config, train=True)
     val_dataset = Yolo_dataset(config.val_label, config, train=False)
 
@@ -640,21 +626,14 @@ def _get_date_str():
     return now.strftime('%Y-%m-%d_%H-%M')
 
 
-def train_yolov4(is_local=False):
+def train_yolov4(cfg, is_local=False):
     if is_local:
         logging = init_logger(log_dir='log')
         cfg = get_args_local(**Cfg)
     else:
         logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
-        cfg = get_args(**Cfg)
+        #cfg = get_args(**Cfg)
 
-    """Run training task"""
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f'Using device {device}')
-    logging.info(F'cuda available? {torch.cuda.is_available()}')
-    logging.info(F'cuda version: {torch.version.cuda}')
-    logging.info(F'gpu device count: {torch.cuda.device_count()}')
 
     if cfg.use_darknet_cfg:
         model = Darknet(cfg.cfgfile)
@@ -688,4 +667,15 @@ def train_yolov4(is_local=False):
 
 
 if __name__ == "__main__":
-    train_yolov4(is_local=True)
+    cfg = get_args(**Cfg)
+    print(config)
+    
+    """Run training task"""
+    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    logging.info(f'Using device {device}')
+    logging.info(F'cuda available? {torch.cuda.is_available()}')
+    logging.info(F'cuda version: {torch.version.cuda}')
+    logging.info(F'gpu device count: {torch.cuda.device_count()}')
+
+    train_yolov4(cfg, is_local=True)
