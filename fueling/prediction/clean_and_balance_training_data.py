@@ -10,6 +10,7 @@ import numpy as np
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.configure import semantic_map_config
+import fueling.common.context_utils as context_utils
 import fueling.common.logging as logging
 import fueling.common.spark_op as spark_op
 
@@ -36,9 +37,8 @@ OFFSET_Y = semantic_map_config['offset_y']
 class CleanTrainingDataPipeline(BasePipeline):
     def run(self):
         '''Run prod.'''
-        training_data_prefix = '/fuel/kinglong_data/train/'
-        if self.FLAGS.get('running_mode') == 'PROD':
-            training_data_prefix = 'modules/prediction/kinglong_train/'
+        training_data_prefix = ('/fuel/kinglong_data/train/' if context_utils.is_local() else
+                                'modules/prediction/kinglong_train/')
         training_data_file_rdd = (
             self.to_rdd(self.our_storage()
                         .list_files(training_data_prefix))

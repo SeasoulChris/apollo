@@ -4,6 +4,8 @@
 # Usage:
 #   tools/lint.sh [path]
 
+set -e
+
 # TODO(?): Avoid as many exceptions as possible.
 # E402: Module level import not at top of file
 # W503: line break before binary operator

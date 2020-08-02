@@ -21,10 +21,7 @@ class OpenserviceRegression(object):
         """post a request to spark_submitter"""
         requestdata = {'job_type': job_type,
                        'partner': {'id': self.partner_id,
-                                   'bos': {
-                                        'access_key': self.ak,
-                                        'secret_key': self.sk
-                                   }},
+                                   'bos': {'access_key': self.ak, 'secret_key': self.sk}},
                        'flags': job_flags}
         try:
             resp = requests.post(self.service_url, json=json.dumps(requestdata))
@@ -58,4 +55,3 @@ if __name__ == '__main__':
     openservice = OpenserviceRegression()
     msg, http_code = openservice.submit_virtual_lane_generation()
     logging.info(f'submit_virtual_lane_generation: {http_code}: {msg}')
-

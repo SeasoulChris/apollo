@@ -3,6 +3,7 @@ import os
 import time
 
 from fueling.common.base_pipeline import BasePipeline
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 
@@ -14,7 +15,7 @@ class TrajectoryEvaluator(BasePipeline):
         ]
 
     def run(self):
-        if self.is_local():
+        if context_utils.is_local():
             self.src_dir_prefixs = [
                 '/fuel/data/output_data',
             ]

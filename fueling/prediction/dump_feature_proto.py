@@ -7,6 +7,7 @@ from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.common.mongo_utils import Mongo
+import fueling.common.context_utils as context_utils
 import fueling.common.db_backed_utils as db_backed_utils
 import fueling.common.logging as logging
 import fueling.common.record_utils as record_utils
@@ -20,11 +21,11 @@ class DumpFeatureProto(BasePipeline):
 
     def run(self):
         """Run prod."""
-        origin_prefix = "/fuel/kinglong_data/records/"
-        target_prefix = "/fuel/kinglong_data/labels/"
-        if self.FLAGS.get('running_mode') == 'PROD':
-            origin_prefix = 'modules/prediction/kinglong/'
-            target_prefix = 'modules/prediction/kinglong_labels/'
+        origin_prefix = 'modules/prediction/kinglong/'
+        target_prefix = 'modules/prediction/kinglong_labels/'
+        if context_utils.is_local():
+            origin_prefix = "/fuel/kinglong_data/records/"
+            target_prefix = "/fuel/kinglong_data/labels/"
 
         records_dir = (
             # RDD(file), start with origin_prefix

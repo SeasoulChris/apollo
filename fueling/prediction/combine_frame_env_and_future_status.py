@@ -11,6 +11,7 @@ from modules.perception.proto import perception_obstacle_pb2
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.configure import semantic_map_config
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -42,9 +43,8 @@ class CombineFrameEnvAndFutureStatus(BasePipeline):
 
     def run(self):
         '''Run prod.'''
-        frame_env_prefix = '/fuel/kinglong_data/frame_envs/'
-        if self.FLAGS.get('running_mode') == 'PROD':
-            frame_env_prefix = 'modules/prediction/kinglong_frame_envs/'
+        frame_env_prefix = ('/fuel/kinglong_data/frame_envs/' if context_utils.is_local() else
+                            'modules/prediction/kinglong_frame_envs/')
 
         frame_env_dir = self.to_rdd(self.our_storage().list_end_dirs(frame_env_prefix))
 

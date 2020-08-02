@@ -81,11 +81,10 @@ class DynamicModelDataset(Dataset):
             self.standardization_factor['mean'].reshape(-1).tolist())
         standardize_factor.input_std.columns.extend(
             self.standardization_factor['std'].reshape(-1).tolist())
-        standardization_factors_bin_file =  os.path.join(
-                self.data_dir, 'standardization_factors.bin')
+        standardization_factors_bin_file = os.path.join(
+            self.data_dir, 'standardization_factors.bin')
         with open(standardization_factors_bin_file, 'wb') as bin_file:
             bin_file.write(standardize_factor.SerializeToString())
-
 
     def get_pre_normalization_factors(self):
         """ if the model is pre-normalized, get the normalization factor"""

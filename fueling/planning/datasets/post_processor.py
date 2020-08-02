@@ -6,14 +6,15 @@ import time
 from modules.planning.proto import learning_data_pb2
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
 
 
 class PostProcessor(BasePipeline):
     def run(self):
-        if self.is_local():
+        if context_utils.is_local():
             # for Titan
             self.src_dir_prefix = '/fuel/data/output_data_evaluated'
             # self.src_dir_prefix = 'titan'

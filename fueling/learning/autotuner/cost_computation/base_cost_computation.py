@@ -11,6 +11,7 @@ from absl import flags
 from fueling.common.base_pipeline import BasePipeline
 from fueling.learning.autotuner.client.sim_client import SimClient
 from fueling.learning.autotuner.common.utils import run_with_retry
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.proto_utils as proto_utils
@@ -84,7 +85,7 @@ class BaseCostComputation(BasePipeline):
         SimClient.set_channel(url)
 
     def pause_to_debug(self):
-        if self.FLAGS.get('running_mode') != 'PROD':
+        if not context_utils.is_cloud():
             time.sleep(600)  # keep the exec pod for some time if error
 
     def get_scenarios(self):

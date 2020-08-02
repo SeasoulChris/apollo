@@ -21,6 +21,7 @@ from fueling.common.mongo_utils import Mongo
 from fueling.common.storage.bazel_filesystem import BazelFilesystem
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
+import fueling.common.context_utils as context_utils
 import fueling.common.logging as logging
 
 
@@ -70,15 +71,12 @@ class BasePipeline(object):
     def is_test(self):
         return self.FLAGS.get('running_mode') == 'TEST'
 
-    def is_local(self):
-        return self.FLAGS.get('running_mode') == 'LOCAL'
-
     def our_storage(self):
         """Get a BOS client if in PROD mode, local filesystem if in LOCAL mode,
         or local Bazel test filesystem if in TEST mode."""
         if self.is_test():
             return BazelFilesystem()
-        return Filesystem() if self.is_local() else BosClient()
+        return Filesystem() if context_utils.is_local() else BosClient()
 
     @staticmethod
     def is_partner_job():
@@ -161,7 +159,7 @@ class BasePipeline(object):
             SparkSubmitterClient(self.entrypoint).submit()
             return
         try:
-            if flags.FLAGS.running_mode == 'PROD':
+            if context_utils.is_cloud():
                 JobUtils(flags.FLAGS.job_id).save_job_partner(bool(self.is_partner_job()))
         except Exception:
             logging.error('save job partner failed')
@@ -174,7 +172,7 @@ class BasePipeline(object):
             logging.error(traceback.format_exc())
         finally:
             self.stop()
-        if flags.FLAGS.running_mode == 'PROD':
+        if context_utils.is_cloud():
             self.__cloud_job_post_process__(job_failed)
         if job_failed:
             sys.exit(1)

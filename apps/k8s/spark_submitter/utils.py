@@ -144,8 +144,7 @@ class Utils(object):
             entrypoint = os.path.join(EXTRACTED_PATH, arg.job.entrypoint)
         cmd = (f'{site_package}/pyspark/bin/spark-submit --deploy-mode cluster '
                f'--master {K8S_MASTER} --name {job_name} {confs} '
-               f'"{entrypoint}" --running_mode=PROD {arg.job.flags} '
-               f'--job_owner="{submitter}" --job_id="{job_id}"')
+               f'"{entrypoint}" {arg.job.flags} --job_owner="{submitter}" --job_id="{job_id}"')
         # Execute command.
         logging.debug('SHELL > {}'.format(cmd))
         os.system(cmd)

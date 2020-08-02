@@ -15,6 +15,7 @@ import numpy as np
 from fueling.common.base_pipeline import BasePipeline
 from fueling.control.dynamic_model_2_0.conf.model_conf import \
     segment_index, feature_config, label_config, input_index, output_index
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
 import fueling.common.redis_utils as redis_utils
@@ -48,7 +49,7 @@ class PipelineLabelGenerator(BasePipeline):
         timestr = time.strftime('%Y-%m-%d-%H')
         src_prefix = flags.FLAGS.DM20_features
         dst_prefix = os.path.join(flags.FLAGS.DM20_labeled_features, timestr)
-        if self.is_local():
+        if context_utils.is_local():
             logging.info('at local')
             src_prefix = 'local_test/features'
             dst_prefix = os.path.join('local_test/labeled_data', timestr)

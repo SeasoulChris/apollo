@@ -3,8 +3,9 @@ import time
 from shutil import copyfile
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 class DataBalancer(BasePipeline):
@@ -18,7 +19,7 @@ class DataBalancer(BasePipeline):
                            'RIGHT_TURN': 0,
                            'U_TURN': 0,
                            'NO_TURN': 0}
-        if self.is_local():
+        if context_utils.is_local():
             # for Titan
             self.src_dir_prefix = 'data/output_data_categorized/lane_turn'
             self.dst_dir_prefix = 'data/output_data_balanced/lane_turn'

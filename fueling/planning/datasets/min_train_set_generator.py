@@ -3,8 +3,9 @@ import os
 from shutil import copyfile
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
+import fueling.common.context_utils as context_utils
 import fueling.common.file_utils as file_utils
+import fueling.common.logging as logging
 
 
 class MinTrainSetGenerator(BasePipeline):
@@ -15,7 +16,7 @@ class MinTrainSetGenerator(BasePipeline):
                                             'to_be_synthesized': 0.09,
                                             'validation': 0.05,
                                             'test': 0.05}
-        if self.is_local():
+        if context_utils.is_local():
             # for Titan
             self.src_dir = 'data/output_data_balanced/lane_turn'
             self.dst_dir = 'data/min_train_set/lane_turn'

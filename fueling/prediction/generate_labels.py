@@ -7,6 +7,7 @@ from absl import flags
 
 from fueling.common.base_pipeline import BasePipeline
 from fueling.prediction.common.online_to_offline import LabelGenerator
+import fueling.common.context_utils as context_utils
 import fueling.common.logging as logging
 import fueling.common.spark_op as spark_op
 
@@ -19,9 +20,8 @@ class GenerateLabels(BasePipeline):
 
     def run(self):
         """Run prod."""
-        source_prefix = '/fuel/kinglong_data/labels/'
-        if self.FLAGS.get('running_mode') == 'PROD':
-            source_prefix = 'modules/prediction/kinglong_labels/'
+        source_prefix = ('/fuel/kinglong_data/labels/' if context_utils.is_local() else
+                         'modules/prediction/kinglong_labels/')
 
         # RDD(bin_files)
         bin_files = (

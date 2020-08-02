@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -6,6 +6,7 @@ py_library(
     name = "base_pipeline",
     srcs = ["base_pipeline.py"],
     deps = [
+        ":context_utils",
         ":job_utils",
         ":kubectl_utils",
         ":mongo_utils",
@@ -13,6 +14,19 @@ py_library(
         "//fueling/common/storage:bazel_filesystem",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",
+    ],
+)
+
+py_library(
+    name = "context_utils",
+    srcs = ["context_utils.py"],
+)
+
+py_test(
+    name = "context_utils_test",
+    srcs = ["context_utils_test.py"],
+    deps = [
+        ":context_utils",
     ],
 )
 
