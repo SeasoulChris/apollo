@@ -34,7 +34,7 @@ class LocalMapPipeline(BasePipeline):
 
     def run_test(self):
         """Local mini test."""
-        dir_prefix = 'testdata/virtual_lane'
+        dir_prefix = '/fuel/testdata/virtual_lane'
         src_dir = self.our_storage().abs_path(dir_prefix)
         dst_prefix = os.path.join(src_dir, 'result')
         zone_id = self.FLAGS.get('zone_id')

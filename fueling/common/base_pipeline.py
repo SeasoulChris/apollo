@@ -18,14 +18,12 @@ from apps.k8s.spark_submitter.client import SparkSubmitterClient
 from fueling.common.job_utils import JobUtils
 from fueling.common.kubectl_utils import Kubectl
 from fueling.common.mongo_utils import Mongo
-from fueling.common.storage.bazel_filesystem import BazelFilesystem
 from fueling.common.storage.bos_client import BosClient
 from fueling.common.storage.filesystem import Filesystem
 import fueling.common.context_utils as context_utils
 import fueling.common.logging as logging
 
 
-flags.DEFINE_string('running_mode', 'LOCAL', 'Pipeline running mode: TEST, LOCAL, PROD.')
 flags.DEFINE_string('job_owner', 'apollo', 'Pipeline job owner.')
 flags.DEFINE_string('job_id', None, 'Pipeline job ID.')
 flags.DEFINE_string('input_data_path', None, 'Input data path which is commonly used by pipelines.')
@@ -68,14 +66,9 @@ class BasePipeline(object):
             logging.info(F'Slice {count} elements to {slices} slices.')
         return context.parallelize(data, slices)
 
-    def is_test(self):
-        return self.FLAGS.get('running_mode') == 'TEST'
-
     def our_storage(self):
         """Get a BOS client if in PROD mode, local filesystem if in LOCAL mode,
         or local Bazel test filesystem if in TEST mode."""
-        if self.is_test():
-            return BazelFilesystem()
         return Filesystem() if context_utils.is_local() else BosClient()
 
     @staticmethod

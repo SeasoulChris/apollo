@@ -5,13 +5,14 @@ import glob
 import os
 
 from fueling.common.storage.base_storage import BaseStorage
+import fueling.common.file_utils as file_utils
 
 
 class Filesystem(BaseStorage):
     """A local filesystem."""
 
     def __init__(self):
-        BaseStorage.__init__(self, '/fuel')
+        BaseStorage.__init__(self, file_utils.FUEL_ROOT)
 
     # Override
     def list_keys(self, prefix):

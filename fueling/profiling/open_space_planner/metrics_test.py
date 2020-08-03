@@ -25,7 +25,6 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         super().setUp(OpenSpacePlannerMetrics())
 
     def test_no_obstacle_with_report(self):
-        flags.FLAGS.running_mode = 'TEST'
         flags.FLAGS.input_data_path = file_utils.fuel_path(
             F'{self.TESTDATA_PATH}/no_obstacle')
         flags.FLAGS.output_data_path = file_utils.fuel_path(
@@ -71,7 +70,6 @@ class OpenSpacePlannerMetricsTest(BasePipelineTest):
         shutil.rmtree(flags.FLAGS.output_data_path)
 
     def test_obstacle_no_report(self):
-        flags.FLAGS.running_mode = 'TEST'
         flags.FLAGS.input_data_path = file_utils.fuel_path(
             F'{self.TESTDATA_PATH}/obstacle')
         flags.FLAGS.output_data_path = file_utils.fuel_path(

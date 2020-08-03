@@ -11,7 +11,6 @@ py_library(
         ":kubectl_utils",
         ":mongo_utils",
         "//apps/k8s/spark_submitter:client",
-        "//fueling/common/storage:bazel_filesystem",
         "//fueling/common/storage:bos_client",
         "//fueling/common/storage:filesystem",
     ],

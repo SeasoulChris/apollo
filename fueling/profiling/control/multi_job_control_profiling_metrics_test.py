@@ -69,7 +69,6 @@ class MultiJobControlProfilingMetricsTest(BasePipelineTest):
                              output_dict['weighted_score'])
 
     def test_run_data_mode(self):
-        flags.FLAGS.running_mode = 'TEST'
         flags.FLAGS.ctl_metrics_simulation_only_test = False
         flags.FLAGS.input_data_path = file_utils.fuel_path(
             F'{self.TESTDATA_PATH}road_test')
