@@ -62,8 +62,6 @@ def get_label_string(img, boxes, ev_label, class_names):
         return str(x1)+','+str(y1)+','+str(x2)+','+str(y2)+',0', result_type
 
 def inference_yolov4(is_local=False):
-    import sys
-    import cv2
 
     namesfile = None
     if len(sys.argv) == 6:
@@ -89,10 +87,10 @@ def inference_yolov4(is_local=False):
         else:
             WORK_FOLDER = '/mnt/bos/modules/perception/emergency_detection'
 
-        weightfile = os.path.join(WORK_FOLDER, 'pretrained_model/yolov4.pth')
+        #weightfile = os.path.join(WORK_FOLDER, 'pretrained_model/yolov4.pth')
         weightfile = os.path.join(WORK_FOLDER, 'checkpoints/Yolov4_epoch600.pth')
         #weightfile = 'pretrain_model/yolov4.pth'
-        imgfile = os.path.join(WORK_FOLDER, 'data/dog.jpg')
+        #imgfile = os.path.join(WORK_FOLDER, 'data/dog.jpg')
         height = 320
         width = 320
 

@@ -626,13 +626,8 @@ def _get_date_str():
     return now.strftime('%Y-%m-%d_%H-%M')
 
 
-def train_yolov4(cfg, is_local=False):
-    if is_local:
-        logging = init_logger(log_dir='log')
-        cfg = get_args_local(**Cfg)
-    else:
-        logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
-        #cfg = get_args(**Cfg)
+def train_yolov4(cfg):
+    logging = init_logger(log_dir=cfg.TRAIN_TENSORBOARD_DIR)
 
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -669,15 +664,12 @@ def train_yolov4(cfg, is_local=False):
 
 
 if __name__ == "__main__":
-    cfg = get_args(**Cfg)
-    print(config)
-    
-    """Run training task"""
-    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #cfg = get_args(**Cfg)
+    cfg = get_args_local(**Cfg)
+
     logging.info(f'Using device {device}')
     logging.info(F'cuda available? {torch.cuda.is_available()}')
     logging.info(F'cuda version: {torch.version.cuda}')
     logging.info(F'gpu device count: {torch.cuda.device_count()}')
 
-    train_yolov4(cfg, is_local=True)
+    train_yolov4(cfg)
