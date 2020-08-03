@@ -103,4 +103,3 @@ new_git_repository(
     shallow_since = "2020-07-20",
     build_file = "yolov4.BUILD",
 )
-

@@ -15,7 +15,6 @@ FLAKE="pyflakes"
 
 function LintDir {
   find "$1" -type f -name '*.py' | \
-      grep -v 'fueling/archive' | \
       grep -v 'fueling/common/record/kinglong/cybertron' | \
       grep -v 'prediction/learning/datasets/apollo_pedestrian_dataset/data_for_learning_pb2.py' | \
       xargs ${LINT}
@@ -24,8 +23,8 @@ function LintDir {
   find "$1" -type f -name '*.py' | \
       grep -v 'apps/k8s/warehouse/display_util.py' | \
       grep -v 'fueling/common/logging.py' | \
-      grep -v 'fueling/common/record/kinglong' | \
-      grep -e 'apps/' -e 'fueling/common' -e 'fueling/data' | \
+      grep -v 'fueling/common/record/kinglong/cybertron' | \
+      grep -e 'apps/' -e 'fueling/common' -e 'fueling/d' -e 'fueling/s' | \
       xargs ${FLAKE}
 }
 

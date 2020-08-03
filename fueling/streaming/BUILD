@@ -6,7 +6,6 @@ py_library(
     name = "streaming_utils",
     srcs = ["streaming_utils.py"],
     deps = [
-        "//fueling/common:file_utils",
         "//fueling/common:record_utils",
     ],
 )

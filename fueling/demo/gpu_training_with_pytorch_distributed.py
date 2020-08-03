@@ -32,7 +32,6 @@ import torchvision.transforms as transforms
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.distributed_data_parallel as ddp
 import fueling.common.logging as logging
-import fueling.common.socket_utils as socket_utils
 import fueling.common.storage.bos_client as bos_client
 
 
@@ -95,7 +94,6 @@ class PytorchTraining(BasePipeline):
                                                 download=True, transform=transform)
         validset = torchvision.datasets.CIFAR10(root=demo_data_path, train=False,
                                                 download=True, transform=transform)
-        classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
         # Regular model to distributed
         model = Net()
@@ -120,12 +118,12 @@ class PytorchTraining(BasePipeline):
         # loop over the dataset multiple times
         for epoch in range(3):
             running_loss = 0.0
-            last_data_piece, last_label_piece = None, None
+            # last_data_piece, last_label_piece = None, None
             for i, data in enumerate(trainloader, 0):
                 # get the inputs; data is a list of [inputs, labels]
                 # inputs, labels = data
                 inputs, labels = data[0].to(device_ids[0]), data[1].to(device_ids[0])
-                last_data_piece, last_label_piece = inputs, labels
+                # last_data_piece, last_label_piece = inputs, labels
                 # zero the parameter gradients
                 optimizer.zero_grad()
                 # forward + backward + optimize

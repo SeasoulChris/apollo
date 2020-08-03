@@ -6,8 +6,6 @@ Run with:
     bazel run //fueling/demo:stat_auto_mileage -- --cloud
 """
 
-import glob
-
 # Apollo packages
 from modules.canbus.proto.chassis_pb2 import Chassis
 from modules.localization.proto.localization_pb2 import LocalizationEstimate

@@ -4,7 +4,6 @@ This is a module to extraction logsim scenarios from records
 based on disengage info
 """
 import os
-import sys
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging

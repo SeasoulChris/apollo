@@ -43,7 +43,6 @@ py_binary(
     deps = [
         "//fueling/common:base_pipeline",
         "//fueling/common:distributed_data_parallel",
-        "//fueling/common:socket_utils",
         "//fueling/common/storage:bos_client",
     ],
 )

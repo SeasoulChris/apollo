@@ -3,7 +3,6 @@
 """Utility functions for the serialize job"""
 
 import os
-import sys
 import time
 
 import yaml
@@ -53,7 +52,7 @@ def parse_record(record_file, root_dir):
     yaml_file_path = '{}/{}/{}/{}'.format(root_dir,
                                           streaming_utils.STREAMING_PATH,
                                           streaming_utils.STREAMING_CONF, 'serialize_conf.yaml')
-    settings = list(yaml.load_all(file(yaml_file_path, 'r')))
+    settings = list(yaml.load_all(open(yaml_file_path, 'r')))
     record_file = record_file.strip()
     logging.info('Executor: processing record file : {}'.format(record_file))
     if not record_utils.is_record_file(record_file):
