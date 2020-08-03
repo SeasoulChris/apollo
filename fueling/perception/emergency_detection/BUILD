@@ -41,11 +41,3 @@ py_binary(
         "//fueling/common:base_pipeline"
     ]
 )
-
-py_binary(
-    name = "dataloader_cloud_test",
-    srcs = ["dataloader_cloud_test.py"],
-    deps = [
-        "//fueling/common:base_pipeline"
-    ]
-)
