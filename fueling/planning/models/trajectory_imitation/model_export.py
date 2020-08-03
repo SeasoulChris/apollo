@@ -29,7 +29,7 @@ def export(torch_model_file, export_model_file, device, export_form):
     # model = TrajectoryImitationConvRNNUnetResnet18v1([200, 200])
     # model = TrajectoryImitationConvRNNUnetResnet18v2([200, 200])
     model_state_dict = torch.load(torch_model_file)
-    model.load_state_dict(model_state_dict, strict=False)
+    model.load_state_dict(model_state_dict, strict=True)
     model.eval()
     X = torch.ones([1, 12, 200, 200])
     # X = (torch.ones([1, 12, 200, 200]), torch.ones(
@@ -61,6 +61,8 @@ def export(torch_model_file, export_model_file, device, export_form):
             # print(m.graph.node)
         else:
             torch.onnx.export(model.cpu(), (X,), export_model_file)
+    else:
+        logging.error('export_form not supported or mistyped')
 
 
 if __name__ == "__main__":
