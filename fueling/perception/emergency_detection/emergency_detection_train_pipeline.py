@@ -18,8 +18,8 @@ import torch
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
-from fueling.perception.emergency_detection.YOLOv4.train import train_yolov4
-from fueling.perception.emergency_detection.YOLOv4.cfg import Cfg
+from yolov4.train import train_yolov4
+from yolov4.cfg import Cfg
 
 
 flags.DEFINE_string('gpu_id', '0', 'GPU')

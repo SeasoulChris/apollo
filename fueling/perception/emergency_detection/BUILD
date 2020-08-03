@@ -28,7 +28,7 @@ py_binary(
     name = "emergency_detection_train_pipeline",
     srcs = ["emergency_detection_train_pipeline.py"],
     deps = [
-        ":YOLOv4",
+        "@yolov4",
         "//fueling/common:base_pipeline"
     ]
 )
