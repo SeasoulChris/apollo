@@ -634,6 +634,8 @@ def train_yolov4(cfg, is_local=False):
         logging = init_logger(log_dir='/mnt/bos/modules/perception/emergency_detection/log')
         #cfg = get_args(**Cfg)
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = cfg.gpu
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if cfg.use_darknet_cfg:
         model = Darknet(cfg.cfgfile)
