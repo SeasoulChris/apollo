@@ -1,11 +1,8 @@
-from collections import Iterable, defaultdict
-from copy import deepcopy
-from itertools import chain
+from collections import Iterable
 
 import torch
 from torch import nn
 from torch._utils import _unflatten_dense_tensors
-from torch.autograd import Variable
 from torch.nn.utils import parameters_to_vector
 
 bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
@@ -141,7 +138,7 @@ class OptimWrapper(torch.optim.Optimizer):
     def new(self, layer_groups):
         opt_func = getattr(self, 'opt_func', self.opt.__class__)
         split_groups = split_bn_bias(layer_groups)
-        opt = opt_func([{
+        opt_func([{
             'params': trainable_params(k),
             'lr': 0
         } for k in split_groups])

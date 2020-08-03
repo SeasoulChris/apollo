@@ -4,7 +4,6 @@
 from datetime import datetime
 import glob
 import os
-import shutil
 import time
 
 from absl import flags

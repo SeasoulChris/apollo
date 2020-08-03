@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-import os
-import sys
 import time
 
 import cv2 as cv
 
 from fueling.common.base_pipeline import BasePipeline
-import fueling.common.logging as logging
 from fueling.perception.pointpillars.second.create_data import nuscenes_data_prep
+import fueling.common.logging as logging
 
 
 class CreateDataNuscenes(BasePipeline):

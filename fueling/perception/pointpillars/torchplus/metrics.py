@@ -103,13 +103,13 @@ class Precision(nn.Module):
             weights = weights.float()
 
         pred_trues = pred_labels > 0
-        pred_falses = pred_labels == 0
+        # pred_falses = pred_labels == 0
         trues = labels > 0
         falses = labels == 0
         true_positives = (weights * (trues & pred_trues).float()).sum()
-        true_negatives = (weights * (falses & pred_falses).float()).sum()
+        # true_negatives = (weights * (falses & pred_falses).float()).sum()
         false_positives = (weights * (falses & pred_trues).float()).sum()
-        false_negatives = (weights * (trues & pred_falses).float()).sum()
+        # false_negatives = (weights * (trues & pred_falses).float()).sum()
         count = true_positives + false_positives
         # print(count, true_positives)
         if count > 0:
@@ -156,10 +156,10 @@ class Recall(nn.Module):
         pred_trues = pred_labels == 1
         pred_falses = pred_labels == 0
         trues = labels == 1
-        falses = labels == 0
+        # falses = labels == 0
         true_positives = (weights * (trues & pred_trues).float()).sum()
-        true_negatives = (weights * (falses & pred_falses).float()).sum()
-        false_positives = (weights * (falses & pred_trues).float()).sum()
+        # true_negatives = (weights * (falses & pred_falses).float()).sum()
+        # false_positives = (weights * (falses & pred_trues).float()).sum()
         false_negatives = (weights * (trues & pred_falses).float()).sum()
         count = true_positives + false_negatives
         if count > 0:

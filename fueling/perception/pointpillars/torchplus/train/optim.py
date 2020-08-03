@@ -1,9 +1,5 @@
-from collections import defaultdict, Iterable
-
 import torch
-from copy import deepcopy
-from itertools import chain
-from torch.autograd import Variable
+
 
 required = object()
 

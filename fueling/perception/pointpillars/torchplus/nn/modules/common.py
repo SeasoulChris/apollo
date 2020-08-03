@@ -2,7 +2,6 @@ import sys
 from collections import OrderedDict
 
 import torch
-from torch.nn import functional as F
 
 
 class Empty(torch.nn.Module):

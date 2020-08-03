@@ -4,7 +4,6 @@ This is a module to gen sim map
 """
 
 import os
-import glob
 
 from fueling.common.base_pipeline import BasePipeline
 import fueling.common.logging as logging
