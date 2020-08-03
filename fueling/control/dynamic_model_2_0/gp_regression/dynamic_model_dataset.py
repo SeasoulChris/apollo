@@ -14,18 +14,19 @@ import torch
 
 import fueling.common.file_utils as file_utils
 import fueling.common.logging as logging
+import fueling.common.proto_utils as proto_utils
 
 
 from fueling.control.dynamic_model_2_0.conf.model_conf import segment_index, feature_config
 from fueling.control.dynamic_model_2_0.conf.model_conf import input_index, output_index
-from fueling.control.proto.fnn_model_pb2 import StandardizeFactor
+from fueling.control.proto.fnn_model_pb2 import GPModelParam
 
 # Default (x,y) residual error correction cycle is 1s;
 # Default control/chassis command cycle is 0.01s;
 # Every 100 frames Input Vector correspond to 1 frame of output.
 INPUT_DIM = feature_config["input_dim"]
 OUTPUT_DIM = feature_config["output_dim"]
-WINDOW_SIZE = feature_config["window_size"]
+INPUT_WINDOW_SIZE = feature_config["input_window_size"]
 POLYNOMINAL_ORDER = feature_config["polynomial_order"]
 PI = 3.14159
 
@@ -56,7 +57,7 @@ class DynamicModelDataset(Dataset):
             self.normalization_factors_file = os.path.join(
                 self.data_dir, 'normalization_factors.npy')
             self.set_standardization_factors()
-            self.save_standardize_factors_to_bin()
+            self.save_standardization_factors_to_bin()
             self.set_normalization_factors()
         else:
             # for validation and test data, use same normalization factors as training data set.
@@ -75,16 +76,24 @@ class DynamicModelDataset(Dataset):
                 f'loading normalization factors from {self.normalization_factors_file}'
                 + f'as {self.normalization_factors}')
 
-    def save_standardize_factors_to_bin(self):
-        standardize_factor = StandardizeFactor()
-        standardize_factor.input_mean.columns.extend(
-            self.standardization_factor['mean'].reshape(-1).tolist())
-        standardize_factor.input_std.columns.extend(
-            self.standardization_factor['std'].reshape(-1).tolist())
+    def save_standardization_factors_to_bin(self):
+        """ dump params to bin file for on-line interface """
+        gp_model_param = GPModelParam()
+        gp_model_param.input_dim = INPUT_DIM
+        gp_model_param.output_dim = OUTPUT_DIM
+        gp_model_param.input_window_size = INPUT_WINDOW_SIZE
+        gp_model_param.standardization_factor.input_mean.columns.extend(
+            self.standardization_factors['mean'].reshape(-1).tolist())
+        gp_model_param.standardization_factor.input_std.columns.extend(
+            self.standardization_factors['std'].reshape(-1).tolist())
         standardization_factors_bin_file = os.path.join(
             self.data_dir, 'standardization_factors.bin')
         with open(standardization_factors_bin_file, 'wb') as bin_file:
-            bin_file.write(standardize_factor.SerializeToString())
+            bin_file.write(gp_model_param.SerializeToString())
+        # export proto to txt
+        txt_file_name = os.path.join(self.data_dir, 'standardization_factors.txt')
+        # export single frame to txt for debug
+        proto_utils.write_pb_to_text_file(gp_model_param, txt_file_name)
 
     def get_pre_normalization_factors(self):
         """ if the model is pre-normalized, get the normalization factor"""
