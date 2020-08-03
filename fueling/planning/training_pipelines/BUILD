@@ -46,6 +46,5 @@ py_binary(
     deps = [
         ":trajectory_imitation_model_training_pipeline",
         "//fueling/common:base_pipeline",
-
     ],
 )

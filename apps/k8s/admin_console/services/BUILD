@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -10,7 +12,7 @@ py_library(
     deps = [
         "//apps/k8s/admin_console/controllers:account",
         "//apps/k8s/admin_console/utils:conf_utils",
-    ]
+    ],
 )
 
 py_library(

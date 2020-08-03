@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 py_library(
@@ -13,7 +15,6 @@ py_library(
         "//apps/k8s/admin_console/utils:time_utils",
         "//fueling/common:account_utils",
         "//fueling/common:logging",
-
     ],
 )
 

@@ -7,7 +7,7 @@ cuda_library(
     srcs = ["nms_kernel.cu"],
     deps = [
         "@boost",
-        "@local_config_cuda//cuda:cudart",
         "@local_config_cuda//cuda:cuda_headers",
+        "@local_config_cuda//cuda:cudart",
     ],
 )

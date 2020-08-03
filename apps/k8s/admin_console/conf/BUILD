@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
@@ -13,23 +15,23 @@ py_library(
 py_binary(
     name = "develop_setting",
     srcs = ["develop_setting.py"],
-    deps = [ 
-        ":base_setting",      
+    deps = [
+        ":base_setting",
     ],
 )
 
 py_binary(
     name = "production_setting",
     srcs = ["production_setting.py"],
-    deps = [ 
-        ":base_setting",      
+    deps = [
+        ":base_setting",
     ],
 )
 
 py_binary(
     name = "test_setting",
     srcs = ["test_setting.py"],
-    deps = [ 
-        ":base_setting",      
+    deps = [
+        ":base_setting",
     ],
 )

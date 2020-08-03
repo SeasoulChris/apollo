@@ -40,7 +40,7 @@ py_library(
         ":cnn_fc_model",
         ":cnn_lstm_model",
         ":conv_rnn_model",
-        "//fueling/learning:train_utils",
         "//fueling/common:logging",
+        "//fueling/learning:train_utils",
     ],
 )
